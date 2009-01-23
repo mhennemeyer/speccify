@@ -21,61 +21,74 @@ require "minitest/unit"
 MiniTest::Unit.autorun
 
 module MidiSpec
-  class ExampleGroup < MiniTest::Unit::TestCase
-
-    def self.desc=(desc)
+  module ExampleGroupClassMethods
+    def desc=(desc)
       @desc = desc
     end
 
-    def self.desc
+    def desc
       @desc || ""
     end
 
-    def self.setup_proc=(proc)
+    def setup_proc=(proc)
       @setup_proc = proc
     end
 
-    def self.setup_proc
+    def setup_proc
       @setup_proc || lambda {}
     end
 
-    def self.teardown_proc=(proc)
+    def teardown_proc=(proc)
       @teardown_proc = proc
     end
 
-    def self.teardown_proc
+    def teardown_proc
       @teardown_proc || lambda {}
     end
 
-    def self.before(type = :each, &block)
+    def before(type = :each, &block)
       raise "unsupported before type: #{type}" unless type == :each
       passed_through_setup = self.setup_proc
       self.setup_proc = lambda { instance_eval(&passed_through_setup);instance_eval(&block) }
       define_method :setup, &self.setup_proc
     end
 
-    def self.after(type = :each, &block)
+    def after(type = :each, &block)
       raise "unsupported after type: #{type}" unless type == :each
       passed_through_teardown = self.teardown_proc
       self.teardown_proc = lambda {instance_eval(&block);instance_eval(&passed_through_teardown) }
       define_method :teardown, &self.teardown_proc
     end
     
-    def self.describe desc, &block
-      cls = Class.new(ExampleGroup)
+    def describe desc, &block
+      if defined?(Rails)
+        if self.name =~ /^(.*Controller)Test/
+          super_class = MidiSpec::RailsControllerExampleGroup
+        else
+          super_class = MidiSpec::RailsExampleGroup
+        end
+      else
+        super_class = MidiSpec::ExampleGroup
+      end
+      cls = Class.new(super_class)
       Object.const_set self.name + desc.to_s.split(/\W+/).map { |s| s.capitalize }.join, cls
       cls.setup_proc = self.setup_proc
       cls.teardown_proc = self.teardown_proc
       cls.desc = self.desc + " " + desc
+      if defined?(Rails)
+        self.name =~ /^(.*Controller)Test/ ? cls.tests($1.constantize) : nil
+      end
       cls.class_eval(&block)
     end
     
-    def self.it desc, &block
+    def it desc, &block
       self.before {}
       define_method "test_#{desc.gsub(/\W+/, '_').downcase}", &block
       self.after {}
     end
-    
+  end
+  
+  module ExampleGroupMethods
     def initialize name
       super
       $current_spec = self
@@ -84,6 +97,21 @@ module MidiSpec
     def mock
       MiniTest::Mock.new
     end
+  end
+  
+  class ExampleGroup < MiniTest::Unit::TestCase
+    extend ExampleGroupClassMethods
+    include ExampleGroupMethods
+  end
+  
+  class RailsControllerExampleGroup < defined?(Rails) ? ::ActionController::TestCase : MiniTest::Unit::TestCase
+    extend ExampleGroupClassMethods
+    include ExampleGroupMethods
+  end
+  
+  class RailsExampleGroup < defined?(Rails) ? ::ActiveSupport::TestCase : MiniTest::Unit::TestCase
+    extend ExampleGroupClassMethods
+    include ExampleGroupMethods
   end
   
   # Redefine MiniTest::Unit's way of formatting failuremessages
@@ -98,7 +126,7 @@ module MidiSpec
             @failures += 1
             
             # +++
-            return "Failure:\n #{klass.desc} #{meth.gsub(/^test_/,"").split("_").join(" ")} \n#{e.message}\n" if klass.superclass.to_s == "MidiSpec::ExampleGroup"
+            return "Failure:\n #{klass.desc} #{meth.gsub(/^test_/,"").split("_").join(" ")} \n#{e.message}\n" unless klass.superclass.to_s == "MiniTest::Unit::TestCase"
             # +++
             
             "Failure:\n#{meth}(#{klass}) [#{location e}]:\n#{e.message}\n"
@@ -107,7 +135,7 @@ module MidiSpec
             bt = MiniTest::filter_backtrace(e.backtrace).join("\n    ")
             
             # +++
-            return "Error:\n #{klass.desc} #{meth.gsub(/^test_/,"").split("_").join(" ")} \n#{e.message}\n    #{bt}\n" if klass.superclass.to_s == "MidiSpec::ExampleGroup"
+            return "Error:\n #{klass.desc} #{meth.gsub(/^test_/,"").split("_").join(" ")} \n#{e.message}\n    #{bt}\n" unless klass.superclass.to_s == "MiniTest::Unit::TestCase"
             # +++
             
             "Error:\n#{meth}(#{klass}):\n#{e.class}: #{e.message}\n    #{bt}\n"
@@ -171,11 +199,21 @@ module MidiSpec
   
   
   module Extension
-    def describe desc, &block
-      cls = Class.new(MidiSpec::ExampleGroup)
-      name = ("Test" + desc).to_s.split(/\W+/).map { |s| s.capitalize }.join
+    def describe *args, &block
+      cnst, desc = args
+      if defined?(Rails)
+        if cnst.to_s =~ /Controller$/
+          super_class = MidiSpec::RailsControllerExampleGroup
+        else
+          super_class = MidiSpec::RailsExampleGroup
+        end
+      else
+        super_class = MidiSpec::ExampleGroup
+      end  
+      name = cnst.instance_of?(String) ? (cnst.to_s + "Test").to_s.split(/\W+/).map { |s| s.capitalize }.join : cnst.to_s + "Test"
+      cls = Class.new(super_class)
       Object.const_set name, cls
-      cls.desc = desc
+      cls.desc = desc || cnst.to_s
       cls.class_eval(&block)
     end
     private :describe

@@ -1,18 +1,16 @@
-# todo make rdoc here
-#
 # MidiSpec
 #
-# A minispec like testing framework
-# that provides some rspec like functionality.
+# A testing framework like minispec that provides more rspec like functionality.
 #
 #  Features:
 #
-#  * fast
-#  * nested example groups with 'chained' before and after blocks
-#  * 'obj.should matcher' syntax
-#  * an easy way to define matchers
-#  * 1.9 compatible
-#  * 100% 
+#  * fast.
+#  * nested contexts with 'chained' before and after blocks.
+#  * 'obj.should matcher' syntax.
+#  * provides an easy way to define matchers. Even complex ones that 
+#    are taking args and may receive messages.
+#  * 1.9 compatible.
+#  * mock framework agnostic
 #
 # There are several examples coming after the framework definition
 #
@@ -20,73 +18,96 @@
 
 require "rubygems"
 require "minitest/unit"
-require "minitest/mock"
 MiniTest::Unit.autorun
 
 module MidiSpec
-  class ExampleGroup < MiniTest::Unit::TestCase
-
-    def self.desc=(desc)
+  module ExampleGroupClassMethods
+    def desc=(desc)
       @desc = desc
     end
 
-    def self.desc
+    def desc
       @desc || ""
     end
 
-    def self.setup_proc=(proc)
+    def setup_proc=(proc)
       @setup_proc = proc
     end
 
-    def self.setup_proc
+    def setup_proc
       @setup_proc || lambda {}
     end
 
-    def self.teardown_proc=(proc)
+    def teardown_proc=(proc)
       @teardown_proc = proc
     end
 
-    def self.teardown_proc
+    def teardown_proc
       @teardown_proc || lambda {}
     end
 
-    def self.before(type = :each, &block)
+    def before(type = :each, &block)
       raise "unsupported before type: #{type}" unless type == :each
       passed_through_setup = self.setup_proc
       self.setup_proc = lambda { instance_eval(&passed_through_setup);instance_eval(&block) }
       define_method :setup, &self.setup_proc
     end
 
-    def self.after(type = :each, &block)
+    def after(type = :each, &block)
       raise "unsupported after type: #{type}" unless type == :each
       passed_through_teardown = self.teardown_proc
       self.teardown_proc = lambda {instance_eval(&block);instance_eval(&passed_through_teardown) }
       define_method :teardown, &self.teardown_proc
     end
     
-    def self.describe desc, &block
-      cls = Class.new(ExampleGroup)
+    def describe desc, &block
+      if defined?(Rails)
+        if self.name =~ /^(.*Controller)Test/
+          super_class = RailsControllerExampleGroup
+        else
+          super_class = RailsExampleGroup
+        end
+      else
+        super_class = MidiSpec::ExampleGroup
+      end
+      cls = Class.new(super_class)
       Object.const_set self.name + desc.to_s.split(/\W+/).map { |s| s.capitalize }.join, cls
       cls.setup_proc = self.setup_proc
       cls.teardown_proc = self.teardown_proc
       cls.desc = self.desc + " " + desc
+      if defined?(Rails)
+        self.name =~ /^(.*Controller)Test/ ? cls.tests($1.constantize) : nil
+      end
       cls.class_eval(&block)
     end
     
-    def self.it desc, &block
+    def it desc, &block
       self.before {}
       define_method "test_#{desc.gsub(/\W+/, '_').downcase}", &block
       self.after {}
     end
-    
+  end
+  
+  module ExampleGroupMethods
     def initialize name
       super
       $current_spec = self
     end
-    
-    def mock
-      MiniTest::Mock.new
-    end
+  end
+  
+  class ExampleGroup < MiniTest::Unit::TestCase
+    extend ExampleGroupClassMethods
+    include ExampleGroupMethods
+  end
+  
+  class RailsControllerExampleGroup < defined?(Rails) ? ::ActionController::TestCase : MiniTest::Unit::TestCase
+    extend ExampleGroupClassMethods
+    include ExampleGroupMethods
+  end
+  
+  class RailsModelExampleGroup < defined?(Rails) ? ::ActiveSupport::TestCase : MiniTest::Unit::TestCase
+    extend ExampleGroupClassMethods
+    include ExampleGroupMethods
   end
   
   # Redefine MiniTest::Unit's way of formatting failuremessages
@@ -99,15 +120,19 @@ module MidiSpec
             "Skipped:\n#{meth}(#{klass}) [#{location e}]:\n#{e.message}\n"
           when MiniTest::Assertion then
             @failures += 1
-            
             # +++
-            return "Failure:\n #{klass.desc} #{meth.gsub(/^test_/,"").split("_").join(" ")} \n#{e.message}\n" if klass.superclass.to_s == "MidiSpec::ExampleGroup"
+            return "Failure:\n #{klass.desc} #{meth.gsub(/^test_/,"").split("_").join(" ")} \n#{e.message}\n" unless klass.superclass.to_s == "MiniTest::Unit::TestCase"
             # +++
             
             "Failure:\n#{meth}(#{klass}) [#{location e}]:\n#{e.message}\n"
           else
             @errors += 1
             bt = MiniTest::filter_backtrace(e.backtrace).join("\n    ")
+            
+            # +++
+            return "Error:\n #{klass.desc} #{meth.gsub(/^test_/,"").split("_").join(" ")} \n#{e.message}\n    #{bt}\n" if klass.superclass.to_s == "MidiSpec::ExampleGroup"
+            # +++
+            
             "Error:\n#{meth}(#{klass}):\n#{e.class}: #{e.message}\n    #{bt}\n"
           end
       @report << e
@@ -167,12 +192,23 @@ module MidiSpec
     end
   end
   
+  
   module Extension
-    def describe desc, &block
-      cls = Class.new(MidiSpec::ExampleGroup)
-      name = ("Test" + desc).to_s.split(/\W+/).map { |s| s.capitalize }.join
+    def describe *args, &block
+      cnst, desc = args
+      if defined?(Rails)
+        if cnst.to_s =~ /Controller$/
+          super_class = RailsControllerExampleGroup
+        else
+          super_class = RailsExampleGroup
+        end
+      else
+        super_class = MidiSpec::ExampleGroup
+      end  
+      name = cnst.instance_of?(String) ? (cnst.to_s + "Test").to_s.split(/\W+/).map { |s| s.capitalize }.join : cnst.to_s + "Test"
+      cls = Class.new(super_class)
       Object.const_set name, cls
-      cls.desc = desc
+      cls.desc = desc || cnst.to_s
       cls.class_eval(&block)
     end
     private :describe
@@ -281,7 +317,7 @@ describe "first level" do
         end
         describe "Variable defined in parent block " do
           it "should be available without calling before" do
-            @var.should_not be_nil
+            @var.should_not == nil
           end
         end
       end
@@ -309,13 +345,5 @@ describe "Change matcher" do
   
   it "should not pass if actual was not changed by given" do
     lambda { }.should_not change(lambda {@var})
-  end
-end
-
-# With MiniTest/Mock
-describe "with mock" do
-  it "should work with minitest/mock" do
-    mock_obj = mock.expect(:hello, "Hello", ["there"])
-    mock_obj.hello("there").should == "Hello"
   end
 end

@@ -26,6 +26,7 @@ describe "An example group containing a classic testcase definition" do
     $fn_name.should == :msg
     @var = Object.new
     @var.expects(:hello)
+    @var.hello
   end
   
   class TestInterop2 < MiniTest::Unit::TestCase

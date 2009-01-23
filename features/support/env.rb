@@ -1,16 +1,13 @@
 require 'rubygems'
 require 'tempfile'
-require 'spec'
-# todo use midispec!!!
+require File.dirname(__FILE__) + "/../../lib/midi_spec.rb"
 
-def smart_match(string_or_regexp)
-  simple_matcher string_or_regexp do |given|
-    if Regexp === string_or_regexp
-      (given =~ string_or_regexp) ? true : false
-    else 
-      (given.index string_or_regexp.to_s) ? true : false
-    end
-  end
+def_matcher :match do |given, matcher, args|
+  given.index(args[0]) != nil
+end
+
+def_matcher :be_blank do |given, matcher, args|
+  given == nil #|| given.blank? == true
 end
 
 def ruby(args, stderr=nil)
