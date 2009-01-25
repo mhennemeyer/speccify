@@ -1,2 +1,3 @@
 If using with minitest_tu_shim and rails,
-mocha0.9.4 causes errors. 
+mocha-0.9.4 causes errors. 
+

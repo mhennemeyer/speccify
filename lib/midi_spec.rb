@@ -10,11 +10,11 @@
 #  * provides an easy way to define matchers. Even complex ones that 
 #    are taking args and may receive messages.
 #  * 1.9 compatible.
-#  * mock framework agnostic
+#  * Works well with Rails (requires minitest_tu_shim and 'sudo use_minitest yes')
 #
 # There are several examples coming after the framework definition
 #
-# Based on Ryan Davis' MiniTest/Spec
+# Based on Ryan Davis' MiniTest
 
 require "rubygems"
 require "minitest/unit"
@@ -83,7 +83,7 @@ module MidiSpec
     
     def it desc, &block
       self.before {}
-      define_method "test_#{desc.gsub(/\W+/, '_').downcase}", &block
+      define_method "test_#{desc.gsub(/\W+/, '_').downcase}", &block if block_given?
       self.after {}
     end
   end
@@ -92,10 +92,6 @@ module MidiSpec
     def initialize name
       super
       $current_spec = self
-    end
-    
-    def mock
-      MiniTest::Mock.new
     end
   end
   
@@ -115,7 +111,7 @@ module MidiSpec
   end
   
   # Redefine MiniTest::Unit's way of formatting failuremessages
-  # Only the line between the +++ is added. Nothing else is touched.
+  # Only the lines between the +++ are added. Nothing else is touched.
   MiniTest::Unit.class_eval do 
     def puke klass, meth, e
       e = case e
@@ -245,5 +241,5 @@ module MidiSpec
       end
     end
   end # Extension
-end # 
+end # MidiSpec
 include MidiSpec::Extension

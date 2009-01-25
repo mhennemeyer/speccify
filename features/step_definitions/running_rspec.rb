@@ -27,7 +27,7 @@ Then /^the (.*) should match (.*)$/ do |stream, string|
     when 'stderr' then @stderr
     else raise "Unknown stream: #{stream}"
   end
-  written.should match(string)
+  assert(written.index(string), "Expected #{string}, got: #{written}, #{written.index(string)}")
 end
 
 Then /^the (.*) should be blank$/ do |stream|
@@ -36,7 +36,7 @@ Then /^the (.*) should be blank$/ do |stream|
     when 'stderr' then @stderr
     else raise "Unknown stream: #{stream}"
   end
-  written.should be_blank
+  assert(written.blank?)
 end
 
 Then /^the (.*) should not match (.*)$/ do |stream, string|
@@ -45,7 +45,7 @@ Then /^the (.*) should not match (.*)$/ do |stream, string|
     when 'stderr' then @stderr
     else raise "Unknown stream: #{stream}"
   end
-  written.should_not match(string)
+  assert(!written.index(string))
 end
 # 
 # Then /^the exit code should be (\d+)$/ do |exit_code|

@@ -10,11 +10,11 @@
 #  * provides an easy way to define matchers. Even complex ones that 
 #    are taking args and may receive messages.
 #  * 1.9 compatible.
-#  * mock framework agnostic
+#  * Works well with Rails (requires minitest_tu_shim and 'sudo use_minitest yes')
 #
 # There are several examples coming after the framework definition
 #
-# Based on Ryan Davis' MiniTest/Spec
+# Based on Ryan Davis' MiniTest
 
 require "rubygems"
 require "minitest/unit"

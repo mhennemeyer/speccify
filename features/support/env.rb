@@ -1,14 +1,13 @@
 require 'rubygems'
 require 'tempfile'
-require File.dirname(__FILE__) + "/../../lib/midi_spec.rb"
-
-def_matcher :match do |given, matcher, args|
-  given.index(args[0]) != nil
+require 'minitest/unit'
+# may cucumber be used without rspec?
+# require File.dirname(__FILE__) + "/../../lib/midi_spec.rb"
+World do |world|
+  world.extend(MiniTest::Assertions)
+  world
 end
 
-def_matcher :be_blank do |given, matcher, args|
-  given == nil #|| given.blank? == true
-end
 
 def ruby(args, stderr=nil)
   config       = ::Config::CONFIG
