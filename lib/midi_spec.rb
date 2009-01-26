@@ -1,47 +1,16 @@
-# MidiSpec
-#
-# A testing framework like minispec that provides more rspec like functionality.
-#
-#  Features:
-#
-#  * fast.
-#  * nested contexts with 'chained' before and after blocks.
-#  * 'obj.should matcher' syntax.
-#  * provides an easy way to define matchers. Even complex ones that 
-#    are taking args and may receive messages.
-#  * 1.9 compatible.
-#  * Works well with Rails (requires minitest_tu_shim and 'sudo use_minitest yes')
-#
-# There are several examples coming after the framework definition
-#
-# Based on Ryan Davis' MiniTest
-
 require "rubygems"
 require "minitest/unit"
 MiniTest::Unit.autorun
 
 module MidiSpec
   module ExampleGroupClassMethods
-    def desc=(desc)
-      @desc = desc
-    end
-
-    def desc
-      @desc || ""
-    end
-
-    def setup_proc=(proc)
-      @setup_proc = proc
-    end
-
+    attr_accessor :desc, :setup_proc, :teardown_proc
+    @desc ||= ""
+    
     def setup_proc
       @setup_proc || lambda {}
     end
-
-    def teardown_proc=(proc)
-      @teardown_proc = proc
-    end
-
+    
     def teardown_proc
       @teardown_proc || lambda {}
     end
@@ -61,16 +30,7 @@ module MidiSpec
     end
     
     def describe desc, &block
-      if defined?(Rails)
-        if self.name =~ /^(.*Controller)Test/
-          super_class = MidiSpec::RailsControllerExampleGroup
-        else
-          super_class = MidiSpec::RailsExampleGroup
-        end
-      else
-        super_class = MidiSpec::ExampleGroup
-      end
-      cls = Class.new(super_class)
+      cls = Class.new(MidiSpec::Functions::determine_superclass(self.name))
       Object.const_set self.name + desc.to_s.split(/\W+/).map { |s| s.capitalize }.join, cls
       cls.setup_proc = self.setup_proc
       cls.teardown_proc = self.teardown_proc
@@ -78,6 +38,7 @@ module MidiSpec
       if defined?(Rails)
         self.name =~ /^(.*Controller)Test/ ? cls.tests($1.constantize) : nil
       end
+      p cls
       cls.class_eval(&block)
     end
     
@@ -92,6 +53,30 @@ module MidiSpec
     def initialize name
       super
       $current_spec = self
+    end
+  end
+  
+  module Functions
+    def self.determine_superclass(cnst)
+      if defined?(Rails)
+        sc = (cnst.to_s =~ /Controller/) ?  MidiSpec::RailsControllerExampleGroup : MidiSpec::RailsExampleGroup
+      else
+        sc = MidiSpec::ExampleGroup
+      end
+      sc
+    end
+    
+    def self.determine_class_name(name)
+      name.to_s.split(/\W+/).map { |s| s[0..0].upcase + s[1..-1] }.join 
+    end
+    
+    def self.message(expected, actual, op, location) 
+            """
+              Expected: #{expected.to_s}
+                   got: #{actual.to_s} 
+       comparison with: #{op.to_s}
+              location: (#{location})
+            """
     end
   end
   
@@ -111,7 +96,6 @@ module MidiSpec
   end
   
   # Redefine MiniTest::Unit's way of formatting failuremessages
-  # Only the lines between the +++ are added. Nothing else is touched.
   MiniTest::Unit.class_eval do 
     def puke klass, meth, e
       e = case e
@@ -120,21 +104,19 @@ module MidiSpec
             "Skipped:\n#{meth}(#{klass}) [#{location e}]:\n#{e.message}\n"
           when MiniTest::Assertion then
             @failures += 1
-            
-            # +++
-            return "Failure:\n #{klass.desc} #{meth.gsub(/^test_/,"").split("_").join(" ")} \n#{e.message}\n" unless klass.superclass.to_s == "MiniTest::Unit::TestCase"
-            # +++
-            
-            "Failure:\n#{meth}(#{klass}) [#{location e}]:\n#{e.message}\n"
+            unless klass.superclass.to_s == "MiniTest::Unit::TestCase"
+              "Failure:\n #{klass.desc} #{meth.gsub(/^test_/,"").split("_").join(" ")} \n#{e.message}\n" 
+            else
+              "Failure:\n#{meth}(#{klass}) [#{location e}]:\n#{e.message}\n"
+            end
           else
             @errors += 1
             bt = MiniTest::filter_backtrace(e.backtrace).join("\n    ")
-            
-            # +++
-            return "Error:\n #{klass.desc} #{meth.gsub(/^test_/,"").split("_").join(" ")} \n#{e.message}\n    #{bt}\n" unless klass.superclass.to_s == "MiniTest::Unit::TestCase"
-            # +++
-            
-            "Error:\n#{meth}(#{klass}):\n#{e.class}: #{e.message}\n    #{bt}\n"
+            unless klass.superclass.to_s == "MiniTest::Unit::TestCase"
+              "Error:\n #{klass.desc} #{meth.gsub(/^test_/,"").split("_").join(" ")} \n#{e.message}\n #{bt}\n" 
+            else
+              "Error:\n#{meth}(#{klass}):\n#{e.class}: #{e.message}\n    #{bt}\n"
+            end
           end
       @report << e
       e[0, 1]
@@ -149,24 +131,11 @@ module MidiSpec
         end
 
         ['==', '===', '=~', '>', '>=', '<', '<='].each do |operator|
-          define_method(operator.to_sym) do |actual|
+          define_method(operator) do |actual|
             print_given  = (@given == nil) ? "nil" : @given
-            print_actual = (actual == nil) ? "nil" : actual
-            if type 
-              msg = """
-                    Expected: #{print_actual}
-                         got: #{print_given} 
-             comparison with: #{operator}
-                    """ 
-            else
-              msg = """
-                    Expected not: #{print_actual}
-                         but got: #{print_given} 
-                 comparison with: #{operator}
-                    """
-            end
-            comparison = type == @given.send(operator.to_sym,actual)
-            $current_spec.assert(comparison, msg  + "\n" + "(" + loc + ")")
+            print_actual = (type ? "" : "not ") + (actual.nil? ? "nil" : actual.to_s)
+            msg = MidiSpec::Functions::message(print_actual, print_given, operator, loc) 
+            $current_spec.assert(type == @given.send(operator,actual), msg)
           end
         end
       end
@@ -178,15 +147,17 @@ module MidiSpec
   Object.class_eval do
     def should matcher = nil
       if matcher
-        $current_spec.assert(matcher.matches?(self),matcher.positive_msg + "\n" + "(" + caller[0] + ")")
+        matcher.loc = caller[0]
+        $current_spec.assert(matcher.matches?(self), matcher.positive_msg)
       else
         OperatorMatcherProxy.create(self,caller[0])
       end
     end
 
     def should_not matcher = nil
-      if matcher 
-        $current_spec.assert(!matcher.matches?(self),matcher.negative_msg + "\n" + "(" + caller[0] + ")")
+      if matcher
+        matcher.loc = caller[0]
+        $current_spec.assert(!matcher.matches?(self), matcher.negative_msg)
       else 
         OperatorMatcherProxy.create(self,caller[0], false)
       end
@@ -197,43 +168,41 @@ module MidiSpec
   module Extension
     def describe *args, &block
       cnst, desc = args
-      if defined?(Rails)
-        if cnst.to_s =~ /Controller$/
-          super_class = MidiSpec::RailsControllerExampleGroup
-        else
-          super_class = MidiSpec::RailsExampleGroup
-        end
-      else
-        super_class = MidiSpec::ExampleGroup
-      end  
-      name = cnst.instance_of?(String) ? (cnst.to_s + "Test").to_s.split(/\W+/).map { |s| s.capitalize }.join : cnst.to_s + "Test"
-      cls = Class.new(super_class)
-      Object.const_set name, cls
+      p cnst
+      cls = Class.new(MidiSpec::Functions::determine_superclass(cnst))
+      Object.const_set MidiSpec::Functions::determine_class_name(cnst.to_s + "Test"), cls
+      p cls
       cls.desc = desc || cnst.to_s
       cls.class_eval(&block)
     end
     private :describe
     
     def def_matcher(matcher_name, &block)
+      name = matcher_name.to_s
       self.class.send :define_method, matcher_name do |*args|
         match_block = lambda do |actual, matcher|
           block.call(actual, matcher, args)
         end
         body = lambda do |klass|
-          attr_accessor :positive_msg, :negative_msg, :fn
+          @matcher_name = matcher_name.to_s
+          def self.matcher_name
+            @matcher_name
+          end
+          
+          attr_accessor :positive_msg, :negative_msg, :fn, :loc
           def initialize match_block
             @match_block = match_block
-            @positive_msg = "Expected "
-            @negative_msg = "Unexpected "
           end
           
           def method_missing id, *args, &block
             require 'ostruct'
-            self.fn = OpenStruct.new( "name" => id, "args" => args, "block" => block ) 
+            (self.fn ||= []) << OpenStruct.new( "name" => id, "args" => args, "block" => block ) 
             self
           end
 
           def matches? given
+            @positive_msg ||= MidiSpec::Functions::message("#{given} should #{self.class.matcher_name}", "no match", self.class.matcher_name , self.loc || "") 
+            @negative_msg ||= MidiSpec::Functions::message("#{given} should not #{self.class.matcher_name}", "match", self.class.matcher_name , self.loc || "")
             @match_block.call(given, self)
           end
         end

@@ -22,26 +22,13 @@ MiniTest::Unit.autorun
 
 module MidiSpec
   module ExampleGroupClassMethods
-    def desc=(desc)
-      @desc = desc
-    end
-
-    def desc
-      @desc || ""
-    end
-
-    def setup_proc=(proc)
-      @setup_proc = proc
-    end
-
+    attr_accessor :desc, :setup_proc, :teardown_proc
+    @desc ||= ""
+    
     def setup_proc
       @setup_proc || lambda {}
     end
-
-    def teardown_proc=(proc)
-      @teardown_proc = proc
-    end
-
+    
     def teardown_proc
       @teardown_proc || lambda {}
     end
@@ -63,9 +50,9 @@ module MidiSpec
     def describe desc, &block
       if defined?(Rails)
         if self.name =~ /^(.*Controller)Test/
-          super_class = RailsControllerExampleGroup
+          super_class = MidiSpec::RailsControllerExampleGroup
         else
-          super_class = RailsExampleGroup
+          super_class = MidiSpec::RailsExampleGroup
         end
       else
         super_class = MidiSpec::ExampleGroup
@@ -83,7 +70,7 @@ module MidiSpec
     
     def it desc, &block
       self.before {}
-      define_method "test_#{desc.gsub(/\W+/, '_').downcase}", &block
+      define_method "test_#{desc.gsub(/\W+/, '_').downcase}", &block if block_given?
       self.after {}
     end
   end
@@ -105,13 +92,13 @@ module MidiSpec
     include ExampleGroupMethods
   end
   
-  class RailsModelExampleGroup < defined?(Rails) ? ::ActiveSupport::TestCase : MiniTest::Unit::TestCase
+  class RailsExampleGroup < defined?(Rails) ? ::ActiveSupport::TestCase : MiniTest::Unit::TestCase
     extend ExampleGroupClassMethods
     include ExampleGroupMethods
   end
   
   # Redefine MiniTest::Unit's way of formatting failuremessages
-  # Only the line between the +++ is added. Nothing else is touched.
+  # Only the lines between the +++ are added. Nothing else is touched.
   MiniTest::Unit.class_eval do 
     def puke klass, meth, e
       e = case e
@@ -120,6 +107,7 @@ module MidiSpec
             "Skipped:\n#{meth}(#{klass}) [#{location e}]:\n#{e.message}\n"
           when MiniTest::Assertion then
             @failures += 1
+            
             # +++
             return "Failure:\n #{klass.desc} #{meth.gsub(/^test_/,"").split("_").join(" ")} \n#{e.message}\n" unless klass.superclass.to_s == "MiniTest::Unit::TestCase"
             # +++
@@ -130,7 +118,7 @@ module MidiSpec
             bt = MiniTest::filter_backtrace(e.backtrace).join("\n    ")
             
             # +++
-            return "Error:\n #{klass.desc} #{meth.gsub(/^test_/,"").split("_").join(" ")} \n#{e.message}\n    #{bt}\n" if klass.superclass.to_s == "MidiSpec::ExampleGroup"
+            return "Error:\n #{klass.desc} #{meth.gsub(/^test_/,"").split("_").join(" ")} \n#{e.message}\n    #{bt}\n" unless klass.superclass.to_s == "MiniTest::Unit::TestCase"
             # +++
             
             "Error:\n#{meth}(#{klass}):\n#{e.class}: #{e.message}\n    #{bt}\n"
@@ -198,9 +186,9 @@ module MidiSpec
       cnst, desc = args
       if defined?(Rails)
         if cnst.to_s =~ /Controller$/
-          super_class = RailsControllerExampleGroup
+          super_class = MidiSpec::RailsControllerExampleGroup
         else
-          super_class = RailsExampleGroup
+          super_class = MidiSpec::RailsExampleGroup
         end
       else
         super_class = MidiSpec::ExampleGroup
@@ -228,7 +216,7 @@ module MidiSpec
           
           def method_missing id, *args, &block
             require 'ostruct'
-            self.fn = OpenStruct.new( "name" => id, "args" => args, "block" => block ) 
+            (self.fn ||= []) << OpenStruct.new( "name" => id, "args" => args, "block" => block ) 
             self
           end
 
@@ -240,8 +228,9 @@ module MidiSpec
       end
     end
   end # Extension
-end # 
+end # MidiSpec
 include MidiSpec::Extension
+
 
 #
 ### Some examples:

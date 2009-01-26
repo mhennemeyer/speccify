@@ -1,3 +1,21 @@
+MidiSpec
+=========
+
+A testing framework like minispec that provides more rspec like functionality.
+
+Features:
+
+  * fast.
+  * nested contexts with 'chained' before and after blocks.
+  * 'obj.should matcher' syntax.
+  * provides an easy way to define matchers. Even complex ones that 
+    are taking args and may receive messages.
+  * 1.9 compatible.
+  * Works well with Rails (requires 'minitest_tu_shim' and 'sudo use_minitest yes')
+
+ Based on Ryan Davis' MiniTest
+
+
 If using with minitest_tu_shim and rails,
 mocha-0.9.4 causes errors. 
 
