@@ -16,7 +16,7 @@
 
 ### Sophisticated Expectations/Matchers System
 
-### Based on MiniTest
+### Based on [MiniTest](http://rubyforge.org/projects/bfts/)
 
 ### < 300 LOC
 
@@ -242,7 +242,7 @@ This issue is fixed in mocha's trunk and won't persist.
 ## Contribution
 
 * Bug? -> Lighthouse
-* source : github.com/mhennemeyer/speccify.git
+* source : http://github.com/mhennemeyer/speccify
 * Ideas? -> Group
 
 ## License
