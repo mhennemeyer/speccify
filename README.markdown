@@ -6,13 +6,21 @@
 
 ## Features:
 
-  * **Blazing Fast**
-  * **100% Ruby 1.9 compatible**
-  * **Rails!**
-  * **Nested Contexts**
-  * **Sophisticated Expectations/Matchers System**
-  * **Based on MiniTest**
-  * **< 300 LOC**
+### Blazing Fast
+
+### 100% Ruby 1.9 compatible
+
+### Rails!
+
+### Nested Contexts
+
+### Sophisticated Expectations/Matchers System
+
+### Based on MiniTest
+
+### < 300 LOC
+
+
 
 ## Install Speccify:
 
