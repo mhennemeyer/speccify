@@ -65,5 +65,14 @@ describe "Matcher: be_in_range" do
       end
     end
   end
+  describe "Given a" do
+    it "should be in range (a,c)" do
+      "a".should be_in_range("a","c")
+    end
+    
+    it "should be in range (a..z)" do
+      "a".should be_in_range("a".."z")
+    end
+  end
 end
 

@@ -2,7 +2,7 @@ require "rubygems"
 require "minitest/unit"
 MiniTest::Unit.autorun
 
-module MidiSpec
+module Speccify
   module ExampleGroupClassMethods
     attr_accessor :desc, :setup_proc, :teardown_proc
     @desc ||= ""
@@ -30,7 +30,7 @@ module MidiSpec
     end
     
     def describe desc, &block
-      cls = Class.new(MidiSpec::Functions::determine_superclass(self.name))
+      cls = Class.new(self.superclass)
       Object.const_set self.name + desc.to_s.split(/\W+/).map { |s| s.capitalize }.join, cls
       cls.setup_proc = self.setup_proc
       cls.teardown_proc = self.teardown_proc
@@ -38,7 +38,6 @@ module MidiSpec
       if defined?(Rails)
         self.name =~ /^(.*Controller)Test/ ? cls.tests($1.constantize) : nil
       end
-      p cls
       cls.class_eval(&block)
     end
     
@@ -59,15 +58,44 @@ module MidiSpec
   module Functions
     def self.determine_superclass(cnst)
       if defined?(Rails)
-        sc = (cnst.to_s =~ /Controller/) ?  MidiSpec::RailsControllerExampleGroup : MidiSpec::RailsExampleGroup
+        (cnst.to_s =~ /Controller/) ?  Speccify::RailsControllerExampleGroup : Speccify::RailsExampleGroup
       else
-        sc = MidiSpec::ExampleGroup
+        Speccify::ExampleGroup
       end
-      sc
     end
     
     def self.determine_class_name(name)
       name.to_s.split(/\W+/).map { |s| s[0..0].upcase + s[1..-1] }.join 
+    end
+    
+    def self.build_matcher(matcher_name, args, &block)
+      match_block = lambda do |actual, matcher|
+        block.call(actual, matcher, args)
+      end
+      body = lambda do |klass|
+        @matcher_name = matcher_name.to_s
+        def self.matcher_name
+          @matcher_name
+        end
+        
+        attr_accessor :positive_msg, :negative_msg, :msgs, :loc
+        def initialize match_block
+          @match_block = match_block
+        end
+        
+        def method_missing id, *args, &block
+          require 'ostruct'
+          (self.msgs ||= []) << OpenStruct.new( "name" => id, "args" => args, "block" => block ) 
+          self
+        end
+
+        def matches? given
+          @positive_msg ||= Speccify::Functions::message("#{given} should #{self.class.matcher_name}", "no match", self.class.matcher_name , self.loc || "") 
+          @negative_msg ||= Speccify::Functions::message("#{given} should not #{self.class.matcher_name}", "match", self.class.matcher_name , self.loc || "")
+          @match_block.call(given, self)
+        end
+      end
+      Class.new(&body).new(match_block)
     end
     
     def self.message(expected, actual, op, location) 
@@ -134,7 +162,7 @@ module MidiSpec
           define_method(operator) do |actual|
             print_given  = (@given == nil) ? "nil" : @given
             print_actual = (type ? "" : "not ") + (actual.nil? ? "nil" : actual.to_s)
-            msg = MidiSpec::Functions::message(print_actual, print_given, operator, loc) 
+            msg = Speccify::Functions::message(print_actual, print_given, operator, loc) 
             $current_spec.assert(type == @given.send(operator,actual), msg)
           end
         end
@@ -168,47 +196,54 @@ module MidiSpec
   module Extension
     def describe *args, &block
       cnst, desc = args
-      p cnst
-      cls = Class.new(MidiSpec::Functions::determine_superclass(cnst))
-      Object.const_set MidiSpec::Functions::determine_class_name(cnst.to_s + "Test"), cls
-      p cls
+      cls = Class.new(Speccify::Functions::determine_superclass(cnst))
+      Object.const_set Speccify::Functions::determine_class_name(cnst.to_s + "Test"), cls
       cls.desc = desc || cnst.to_s
       cls.class_eval(&block)
     end
     private :describe
     
     def def_matcher(matcher_name, &block)
-      name = matcher_name.to_s
       self.class.send :define_method, matcher_name do |*args|
-        match_block = lambda do |actual, matcher|
-          block.call(actual, matcher, args)
+        Speccify::Functions::build_matcher(matcher_name, args, &block)
+      end
+    end
+    
+    def method_missing(name, *args, &block)
+      if (name.to_s =~ /^be_(.+)/)
+        Speccify::Functions::build_matcher(name, args) do |given, matcher, args|
+          given.send(($1 + "?").to_sym)
         end
-        body = lambda do |klass|
-          @matcher_name = matcher_name.to_s
-          def self.matcher_name
-            @matcher_name
-          end
-          
-          attr_accessor :positive_msg, :negative_msg, :fn, :loc
-          def initialize match_block
-            @match_block = match_block
-          end
-          
-          def method_missing id, *args, &block
-            require 'ostruct'
-            (self.fn ||= []) << OpenStruct.new( "name" => id, "args" => args, "block" => block ) 
-            self
-          end
-
-          def matches? given
-            @positive_msg ||= MidiSpec::Functions::message("#{given} should #{self.class.matcher_name}", "no match", self.class.matcher_name , self.loc || "") 
-            @negative_msg ||= MidiSpec::Functions::message("#{given} should not #{self.class.matcher_name}", "match", self.class.matcher_name , self.loc || "")
-            @match_block.call(given, self)
-          end
-        end
-        Class.new(&body).new(match_block)
+      else
+        raise NoMethodError.new(name.to_s)
       end
     end
   end # Extension
-end # MidiSpec
-include MidiSpec::Extension
+end # Speccify
+include Speccify::Extension
+
+# A few matchers:
+
+def_matcher :be do |given, matcher, args|
+  given == args[0]
+end
+
+def change(&block)
+  Speccify::Functions::build_matcher(:change, []) do |given, matcher, args|
+    before = block.call
+    given.call
+    after = block.call
+    comparison = after != before
+    if list = matcher.msgs
+      comparison = case list[0].name
+      when :by          then (after == before + list[0].args[0] || after == before - list[0].args[0])
+      when :by_at_least then (after >= before + list[0].args[0] || after <= before - list[0].args[0])
+      when :by_at_most  then (after <= before + list[0].args[0] && after >= before - list[0].args[0])
+      when :from        then (before == list[0].args[0]) && (after == list[1].args[0])
+      end
+    end
+    matcher.positive_msg = "given block didn't alter the block attached to change, #{matcher.loc}"
+    matcher.negative_msg = "given block did alter the block attached to change, #{matcher.loc}"
+    comparison
+  end
+end

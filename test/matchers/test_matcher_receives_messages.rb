@@ -4,39 +4,39 @@ describe "def_matcher" do
   
   it "let you call msgs on given" do
     def_matcher :have do |given, matcher, args|
-      number = given.send(matcher.fn[0].name).length
+      number = given.send(matcher.msgs[0].name).length
       args[0] == number
     end
-    class AnswerToWithThreeEltList
+    class AnswerToMSGWithThreeEltList
       def msg
         [1,2,3]
       end
       self
     end
-    AnswerToWithThreeEltList.new.should have(3).msg
+    AnswerToMSGWithThreeEltList.new.should have(3).msg
   end
   
   describe "matcher" do
-    it "provides first msg that it has received as fn[0]" do
+    it "provides first msg that it has received as msgs[0]" do
       def_matcher :matcher_name do |given, matcher, args|
-        $fn_name, $fn_args, $fn_block = matcher.fn[0].name, matcher.fn[0].args, matcher.fn[0].block
+        $msg_name, $msg_args, $msg_block = matcher.msgs[0].name, matcher.msgs[0].args, matcher.msgs[0].block
         true
       end
       1.should matcher_name.msg(1,2,3) {"block"}
-      $fn_name.should == :msg
-      $fn_args.should == [1,2,3]
-      $fn_block.call.should == "block"
+      $msg_name.should == :msg
+      $msg_args.should == [1,2,3]
+      $msg_block.call.should == "block"
     end
 
-    it "provides second msg that it has received as fn[1]" do
+    it "provides second msg that it has received as msgs[1]" do
       def_matcher :matcher_name do |given, matcher, args|
-        $fn_name, $fn_args, $fn_block = matcher.fn[1].name, matcher.fn[1].args, matcher.fn[1].block
+        $msg_name, $msg_args, $msg_block = matcher.msgs[1].name, matcher.msgs[1].args, matcher.msgs[1].block
         true
       end
-      1.should matcher_name.msg1.msg2(1,2,3) {"block"}
-      $fn_name.should == :msg2
-      $fn_args.should == [1,2,3]
-      $fn_block.call.should == "block"
+      1.should matcher_name.msg1.msg2(1,2,3) {"block2"}
+      $msg_name.should == :msg2
+      $msg_args.should == [1,2,3]
+      $msg_block.call.should == "block2"
     end
   end
 end

@@ -1,4 +1,4 @@
-# MidiSpec
+# Speccify
 #
 # A testing framework like minispec that provides more rspec like functionality.
 #
@@ -20,7 +20,7 @@ require "rubygems"
 require "minitest/unit"
 MiniTest::Unit.autorun
 
-module MidiSpec
+module Speccify
   module ExampleGroupClassMethods
     attr_accessor :desc, :setup_proc, :teardown_proc
     @desc ||= ""
@@ -50,12 +50,12 @@ module MidiSpec
     def describe desc, &block
       if defined?(Rails)
         if self.name =~ /^(.*Controller)Test/
-          super_class = MidiSpec::RailsControllerExampleGroup
+          super_class = Speccify::RailsControllerExampleGroup
         else
-          super_class = MidiSpec::RailsExampleGroup
+          super_class = Speccify::RailsExampleGroup
         end
       else
-        super_class = MidiSpec::ExampleGroup
+        super_class = Speccify::ExampleGroup
       end
       cls = Class.new(super_class)
       Object.const_set self.name + desc.to_s.split(/\W+/).map { |s| s.capitalize }.join, cls
@@ -186,12 +186,12 @@ module MidiSpec
       cnst, desc = args
       if defined?(Rails)
         if cnst.to_s =~ /Controller$/
-          super_class = MidiSpec::RailsControllerExampleGroup
+          super_class = Speccify::RailsControllerExampleGroup
         else
-          super_class = MidiSpec::RailsExampleGroup
+          super_class = Speccify::RailsExampleGroup
         end
       else
-        super_class = MidiSpec::ExampleGroup
+        super_class = Speccify::ExampleGroup
       end  
       name = cnst.instance_of?(String) ? (cnst.to_s + "Test").to_s.split(/\W+/).map { |s| s.capitalize }.join : cnst.to_s + "Test"
       cls = Class.new(super_class)
@@ -228,8 +228,8 @@ module MidiSpec
       end
     end
   end # Extension
-end # MidiSpec
-include MidiSpec::Extension
+end # Speccify
+include Speccify::Extension
 
 
 #
@@ -246,8 +246,6 @@ end
 
 # With a minimal matcher:
 def_matcher :be_nil do |given, matcher, args|
-  matcher.positive_msg = "expected #{given} to be nil"
-  matcher.negative_msg = "expected not nil"
   given == nil
 end
 
