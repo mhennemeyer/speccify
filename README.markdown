@@ -24,7 +24,7 @@
 
 ## Install Speccify:
 
-> sudo gem install speccify
+> sudo gem install mhennemeyer-speccify
 
 ## Using Speccify
 
@@ -171,7 +171,7 @@ It holds a list of all methods that have been called on the matcher (for chainin
             matcher.msgs[0].block #=> proc {"and a block"}
           end
 
-If there is a failure, it knows the location:
+If there is a failure, it knows where:
 
           def_matcher :matcher_name do |given, matcher, args|
             matcher.loc #=> "./some/where.rb:55 ... "
@@ -235,9 +235,9 @@ If there is a failure, it knows the location:
 
 ## Problems
 
-If using speccify with `minitest_tu_shim` and rails,
-mocha-0.9.4 causes errors because of minitest incompatibility.
-This issue is fixed in mocha's trunk and won't be in 0.9.5
+If using speccify with `minitest_tu_shim` and rails,  
+mocha-0.9.4 causes errors because of minitest incompatibility.  
+This issue is fixed in mocha's trunk and won't persist.  
 
 ## Contribution
 
