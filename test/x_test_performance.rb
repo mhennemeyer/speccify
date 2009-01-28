@@ -15,7 +15,7 @@ end
 
 def_matcher :have do |given, matcher, args|
   number = args[0]
-  actual = given.send(matcher.fn[0].name).length
+  actual = given.send(matcher.msgs[0].name).length
   matcher.positive_msg = "Expected #{given} to have #{actual}, but found #{number} "
   actual == number
 end

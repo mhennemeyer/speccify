@@ -35,9 +35,7 @@ module Speccify
       cls.setup_proc = self.setup_proc
       cls.teardown_proc = self.teardown_proc
       cls.desc = self.desc + " " + desc
-      if defined?(Rails)
-        self.name =~ /^(.*Controller)Test/ ? cls.tests($1.constantize) : nil
-      end
+      cls.tests($1.constantize) if defined?(Rails) && self.name =~ /^(.*Controller)Test/
       cls.class_eval(&block)
     end
     
@@ -56,13 +54,6 @@ module Speccify
   end
   
   module Functions
-    def self.determine_superclass(cnst)
-      if defined?(Rails)
-        (cnst.to_s =~ /Controller/) ?  Speccify::RailsControllerExampleGroup : Speccify::RailsExampleGroup
-      else
-        Speccify::ExampleGroup
-      end
-    end
     
     def self.determine_class_name(name)
       name.to_s.split(/\W+/).map { |s| s[0..0].upcase + s[1..-1] }.join 
@@ -106,21 +97,6 @@ module Speccify
               location: (#{location})
             """
     end
-  end
-  
-  class ExampleGroup < MiniTest::Unit::TestCase
-    extend ExampleGroupClassMethods
-    include ExampleGroupMethods
-  end
-  
-  class RailsControllerExampleGroup < defined?(Rails) ? ::ActionController::TestCase : MiniTest::Unit::TestCase
-    extend ExampleGroupClassMethods
-    include ExampleGroupMethods
-  end
-  
-  class RailsExampleGroup < defined?(Rails) ? ::ActiveSupport::TestCase : MiniTest::Unit::TestCase
-    extend ExampleGroupClassMethods
-    include ExampleGroupMethods
   end
   
   # Redefine MiniTest::Unit's way of formatting failuremessages
@@ -195,10 +171,15 @@ module Speccify
   
   module Extension
     def describe *args, &block
+      super_super_class = (Hash === args.last && (args.last[:type] || args.last[:testcase])) || MiniTest::Unit::TestCase
+      super_class = Class.new(super_super_class) do 
+        extend ExampleGroupClassMethods
+        include ExampleGroupMethods
+      end
+      cls = Class.new(super_class)
       cnst, desc = args
-      cls = Class.new(Speccify::Functions::determine_superclass(cnst))
       Object.const_set Speccify::Functions::determine_class_name(cnst.to_s + "Test"), cls
-      cls.desc = desc || cnst.to_s
+      cls.desc = String === desc ? desc : cnst.to_s
       cls.class_eval(&block)
     end
     private :describe

@@ -69,32 +69,36 @@ Run it with the ruby command:
 
 ## Using Speccify with Rails
 
-Use the default rails test directory/structure, testhelpers, assertions and infrastructure.  
-
+Use the default rails test directory/structure, testhelpers, assertions and infrastructure.
 
 1. sudo use_minitest yes
 2. require 'speccify' in test_helper.rb
 3. There is no step three ...
 
-If you want to test a controller, just begin your examples with a description block
-that takes the name of the controller as the first argument:
+Tell Speccify what kind of test he is, by passing one of the following options to the describe method:
 
-				describe HorstsController do
-				  # Now i'm an ActionController::TestCase !
-				  it "should get index" do
-				    get :index
-				    assert_response :success
-				    assert_not_nil assigns(:horsts)
-				  end
-					describe "Whatever" do
-					  # I'm an ActionController::TestCase, too!
-					  it "should get index" do
-					    get :index
-					    assert_response :success
-					    assert_not_nil assigns(:horsts)
-					  end
-					end
-				end
+* :type => ActiveSupport::TestCase 
+* :type => ActionController::TestCase 
+* :type => ActionMailer::TestCase 
+* :type => ActionView::TestCase 
+
+### Example, Functional Test:
+
+		describe HorstsController, :type => ActionController::TestCase do
+		  it "should get index" do
+		    get :index
+		    assert_response :success
+		    assert_not_nil assigns(:horsts)
+		  end
+			describe "Whatever" do
+			  # I'm still a ActionController::TestCase
+			  it "should get index" do
+			    get :index
+			    assert_response :success
+			    assert_not_nil assigns(:horsts)
+			  end
+			end
+		end
 					
 I'm not sure if I should wrap the rails assertions in matchers.
 Using the default rails assertions works fine.
