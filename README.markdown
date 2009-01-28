@@ -213,7 +213,7 @@ If there is a failure, it knows where:
 
 ## Speccify vs. RSpec
 
-### Speccify provides the part of RSpec that actually matters (to me):
+### Speccify provides the parts of RSpec that actually matter (to me):
 
 * **The familiar describe/it syntax**
 * **nested contexts**
