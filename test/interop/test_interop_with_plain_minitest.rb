@@ -1,5 +1,6 @@
 require File.dirname(__FILE__) + "/../test_helper.rb"
 require 'rubygems'
+require "minitest/unit"
 
 class TestInterop < MiniTest::Unit::TestCase
   def test_whatever

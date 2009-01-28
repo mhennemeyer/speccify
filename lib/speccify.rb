@@ -1,8 +1,23 @@
-require "rubygems"
-require "minitest/unit"
-MiniTest::Unit.autorun
+unless defined?(SPECCIFY_CLASSIC_MODE)
+  require "rubygems"
+  require "minitest/unit"
+  MiniTest::Unit.autorun
+else
+  require 'test/unit'
+  Object.send(:remove_const, :MiniTest) if defined? MiniTest
+end
 
 module Speccify
+  
+  def self.test_case
+    if defined?(SPECCIFY_CLASSIC_MODE)
+      Test::Unit::TestCase.class_eval {def default_test;end}
+      Test::Unit::TestCase 
+    else
+      MiniTest::Unit::TestCase
+    end  
+  end
+  
   module ExampleGroupClassMethods
     attr_accessor :desc, :setup_proc, :teardown_proc
     @desc ||= ""
@@ -100,30 +115,32 @@ module Speccify
   end
   
   # Redefine MiniTest::Unit's way of formatting failuremessages
-  MiniTest::Unit.class_eval do 
-    def puke klass, meth, e
-      e = case e
-          when MiniTest::Skip then
-            @skips += 1
-            "Skipped:\n#{meth}(#{klass}) [#{location e}]:\n#{e.message}\n"
-          when MiniTest::Assertion then
-            @failures += 1
-            unless klass.superclass.to_s == "MiniTest::Unit::TestCase"
-              "Failure:\n #{klass.desc} #{meth.gsub(/^test_/,"").split("_").join(" ")} \n#{e.message}\n" 
+  if defined?(MiniTest) && !defined?(::SPECCIFY_CLASSIC_MODE)
+    MiniTest::Unit.class_eval do 
+      def puke klass, meth, e
+        e = case e
+            when MiniTest::Skip then
+              @skips += 1
+              "Skipped:\n#{meth}(#{klass}) [#{location e}]:\n#{e.message}\n"
+            when MiniTest::Assertion then
+              @failures += 1
+              unless klass.superclass.to_s == "MiniTest::Unit::TestCase"
+                "Failure:\n #{klass.desc} #{meth.gsub(/^test_/,"").split("_").join(" ")} \n#{e.message}\n" 
+              else
+                "Failure:\n#{meth}(#{klass}) [#{location e}]:\n#{e.message}\n"
+              end
             else
-              "Failure:\n#{meth}(#{klass}) [#{location e}]:\n#{e.message}\n"
+              @errors += 1
+              bt = MiniTest::filter_backtrace(e.backtrace).join("\n    ")
+              unless klass.superclass.to_s == "MiniTest::Unit::TestCase"
+                "Error:\n #{klass.desc} #{meth.gsub(/^test_/,"").split("_").join(" ")} \n#{e.message}\n #{bt}\n" 
+              else
+                "Error:\n#{meth}(#{klass}):\n#{e.class}: #{e.message}\n    #{bt}\n"
+              end
             end
-          else
-            @errors += 1
-            bt = MiniTest::filter_backtrace(e.backtrace).join("\n    ")
-            unless klass.superclass.to_s == "MiniTest::Unit::TestCase"
-              "Error:\n #{klass.desc} #{meth.gsub(/^test_/,"").split("_").join(" ")} \n#{e.message}\n #{bt}\n" 
-            else
-              "Error:\n#{meth}(#{klass}):\n#{e.class}: #{e.message}\n    #{bt}\n"
-            end
-          end
-      @report << e
-      e[0, 1]
+        @report << e
+        e[0, 1]
+      end
     end
   end
 
@@ -171,7 +188,7 @@ module Speccify
   
   module Extension
     def describe *args, &block
-      super_super_class = (Hash === args.last && (args.last[:type] || args.last[:testcase])) || MiniTest::Unit::TestCase
+      super_super_class = (Hash === args.last && (args.last[:type] || args.last[:testcase])) || Speccify.test_case
       super_class = Class.new(super_super_class) do 
         extend ExampleGroupClassMethods
         include ExampleGroupMethods
