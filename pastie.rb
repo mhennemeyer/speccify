@@ -1,6 +1,6 @@
 # Speccify
 #
-# A testing framework like minispec that provides more rspec like functionality.
+# A minimal testing framework that provides some rspecish functionality.
 #
 #  Features:
 #
@@ -10,15 +10,11 @@
 #  * provides an easy way to define matchers. Even complex ones that 
 #    are taking args and may receive messages.
 #  * 1.9 compatible.
-#  * Works well with Rails (requires minitest_tu_shim and 'sudo use_minitest yes')
+#  * Works well with Rails
 #
 # There are several examples coming after the framework definition
-#
-# Based on Ryan Davis' MiniTest
 
-require "rubygems"
-require "minitest/unit"
-MiniTest::Unit.autorun
+require 'test/unit'
 
 module Speccify
   module ExampleGroupClassMethods
@@ -48,23 +44,12 @@ module Speccify
     end
     
     def describe desc, &block
-      if defined?(Rails)
-        if self.name =~ /^(.*Controller)Test/
-          super_class = Speccify::RailsControllerExampleGroup
-        else
-          super_class = Speccify::RailsExampleGroup
-        end
-      else
-        super_class = Speccify::ExampleGroup
-      end
-      cls = Class.new(super_class)
+      cls = Class.new(self.superclass)
       Object.const_set self.name + desc.to_s.split(/\W+/).map { |s| s.capitalize }.join, cls
       cls.setup_proc = self.setup_proc
       cls.teardown_proc = self.teardown_proc
       cls.desc = self.desc + " " + desc
-      if defined?(Rails)
-        self.name =~ /^(.*Controller)Test/ ? cls.tests($1.constantize) : nil
-      end
+      cls.tests($1.constantize) if defined?(Rails) && self.name =~ /^(.*Controller)Test/
       cls.class_eval(&block)
     end
     
@@ -80,51 +65,54 @@ module Speccify
       super
       $current_spec = self
     end
+    def default_test
+      # test_number -= 1
+    end
   end
   
-  class ExampleGroup < MiniTest::Unit::TestCase
-    extend ExampleGroupClassMethods
-    include ExampleGroupMethods
-  end
-  
-  class RailsControllerExampleGroup < defined?(Rails) ? ::ActionController::TestCase : MiniTest::Unit::TestCase
-    extend ExampleGroupClassMethods
-    include ExampleGroupMethods
-  end
-  
-  class RailsExampleGroup < defined?(Rails) ? ::ActiveSupport::TestCase : MiniTest::Unit::TestCase
-    extend ExampleGroupClassMethods
-    include ExampleGroupMethods
-  end
-  
-  # Redefine MiniTest::Unit's way of formatting failuremessages
-  # Only the lines between the +++ are added. Nothing else is touched.
-  MiniTest::Unit.class_eval do 
-    def puke klass, meth, e
-      e = case e
-          when MiniTest::Skip then
-            @skips += 1
-            "Skipped:\n#{meth}(#{klass}) [#{location e}]:\n#{e.message}\n"
-          when MiniTest::Assertion then
-            @failures += 1
-            
-            # +++
-            return "Failure:\n #{klass.desc} #{meth.gsub(/^test_/,"").split("_").join(" ")} \n#{e.message}\n" unless klass.superclass.to_s == "MiniTest::Unit::TestCase"
-            # +++
-            
-            "Failure:\n#{meth}(#{klass}) [#{location e}]:\n#{e.message}\n"
-          else
-            @errors += 1
-            bt = MiniTest::filter_backtrace(e.backtrace).join("\n    ")
-            
-            # +++
-            return "Error:\n #{klass.desc} #{meth.gsub(/^test_/,"").split("_").join(" ")} \n#{e.message}\n    #{bt}\n" unless klass.superclass.to_s == "MiniTest::Unit::TestCase"
-            # +++
-            
-            "Error:\n#{meth}(#{klass}):\n#{e.class}: #{e.message}\n    #{bt}\n"
-          end
-      @report << e
-      e[0, 1]
+  module Functions
+    
+    def self.determine_class_name(name)
+      name.to_s.split(/\W+/).map { |s| s[0..0].upcase + s[1..-1] }.join 
+    end
+    
+    def self.build_matcher(matcher_name, args, &block)
+      match_block = lambda do |actual, matcher|
+        block.call(actual, matcher, args)
+      end
+      body = lambda do |klass|
+        @matcher_name = matcher_name.to_s
+        def self.matcher_name
+          @matcher_name
+        end
+        
+        attr_accessor :positive_msg, :negative_msg, :msgs, :loc
+        def initialize match_block
+          @match_block = match_block
+        end
+        
+        def method_missing id, *args, &block
+          require 'ostruct'
+          (self.msgs ||= []) << OpenStruct.new( "name" => id, "args" => args, "block" => block ) 
+          self
+        end
+
+        def matches? given
+          @positive_msg ||= Speccify::Functions::message("#{given} should #{self.class.matcher_name}", "no match", self.class.matcher_name , self.loc || "") 
+          @negative_msg ||= Speccify::Functions::message("#{given} should not #{self.class.matcher_name}", "match", self.class.matcher_name , self.loc || "")
+          @match_block.call(given, self)
+        end
+      end
+      Class.new(&body).new(match_block)
+    end
+    
+    def self.message(expected, actual, op, location) 
+            """
+              Expected: #{expected.to_s}
+                   got: #{actual.to_s} 
+       comparison with: #{op.to_s}
+              location: (#{location})
+            """
     end
   end
 
@@ -136,24 +124,11 @@ module Speccify
         end
 
         ['==', '===', '=~', '>', '>=', '<', '<='].each do |operator|
-          define_method(operator.to_sym) do |actual|
+          define_method(operator) do |actual|
             print_given  = (@given == nil) ? "nil" : @given
-            print_actual = (actual == nil) ? "nil" : actual
-            if type 
-              msg = """
-                    Expected: #{print_actual}
-                         got: #{print_given} 
-             comparison with: #{operator}
-                    """ 
-            else
-              msg = """
-                    Expected not: #{print_actual}
-                         but got: #{print_given} 
-                 comparison with: #{operator}
-                    """
-            end
-            comparison = type == @given.send(operator.to_sym,actual)
-            $current_spec.assert(comparison, msg  + "\n" + "(" + loc + ")")
+            print_actual = (type ? "" : "not ") + (actual.nil? ? "nil" : actual.to_s)
+            msg = Speccify::Functions::message(print_actual, print_given, operator, loc) 
+            $current_spec.assert(type == @given.send(operator,actual), msg)
           end
         end
       end
@@ -165,72 +140,81 @@ module Speccify
   Object.class_eval do
     def should matcher = nil
       if matcher
-        $current_spec.assert(matcher.matches?(self),matcher.positive_msg + "\n" + "(" + caller[0] + ")")
+        matcher.loc = caller[0]
+        $current_spec.assert(matcher.matches?(self), matcher.positive_msg)
       else
         OperatorMatcherProxy.create(self,caller[0])
       end
     end
 
     def should_not matcher = nil
-      if matcher 
-        $current_spec.assert(!matcher.matches?(self),matcher.negative_msg + "\n" + "(" + caller[0] + ")")
+      if matcher
+        matcher.loc = caller[0]
+        $current_spec.assert(!matcher.matches?(self), matcher.negative_msg)
       else 
         OperatorMatcherProxy.create(self,caller[0], false)
       end
     end
   end
-  
-  
+    
   module Extension
     def describe *args, &block
-      cnst, desc = args
-      if defined?(Rails)
-        if cnst.to_s =~ /Controller$/
-          super_class = Speccify::RailsControllerExampleGroup
-        else
-          super_class = Speccify::RailsExampleGroup
-        end
-      else
-        super_class = Speccify::ExampleGroup
-      end  
-      name = cnst.instance_of?(String) ? (cnst.to_s + "Test").to_s.split(/\W+/).map { |s| s.capitalize }.join : cnst.to_s + "Test"
+      super_super_class = (Hash === args.last && (args.last[:type] || args.last[:testcase])) || Test::Unit::TestCase 
+      super_class = Class.new(super_super_class) do 
+        extend ExampleGroupClassMethods
+        include ExampleGroupMethods
+      end
       cls = Class.new(super_class)
-      Object.const_set name, cls
-      cls.desc = desc || cnst.to_s
+      cnst, desc = args
+      Object.const_set Speccify::Functions::determine_class_name(cnst.to_s + "Test"), cls
+      cls.desc = String === desc ? desc : cnst.to_s
       cls.class_eval(&block)
     end
     private :describe
     
     def def_matcher(matcher_name, &block)
       self.class.send :define_method, matcher_name do |*args|
-        match_block = lambda do |actual, matcher|
-          block.call(actual, matcher, args)
+        Speccify::Functions::build_matcher(matcher_name, args, &block)
+      end
+    end
+    
+    def method_missing(name, *args, &block)
+      if (name.to_s =~ /^be_(.+)/)
+        Speccify::Functions::build_matcher(name, args) do |given, matcher, args|
+          given.send(($1 + "?").to_sym)
         end
-        body = lambda do |klass|
-          attr_accessor :positive_msg, :negative_msg, :fn
-          def initialize match_block
-            @match_block = match_block
-            @positive_msg = "Expected "
-            @negative_msg = "Unexpected "
-          end
-          
-          def method_missing id, *args, &block
-            require 'ostruct'
-            (self.fn ||= []) << OpenStruct.new( "name" => id, "args" => args, "block" => block ) 
-            self
-          end
-
-          def matches? given
-            @match_block.call(given, self)
-          end
-        end
-        Class.new(&body).new(match_block)
+      else
+        raise NoMethodError.new(name.to_s)
       end
     end
   end # Extension
 end # Speccify
 include Speccify::Extension
 
+# A few matchers:
+def_matcher :be do |given, matcher, args|
+  given == args[0]
+end
+
+def change(&block)
+  Speccify::Functions::build_matcher(:change, []) do |given, matcher, args|
+    before = block.call
+    given.call
+    after = block.call
+    comparison = after != before
+    if list = matcher.msgs
+      comparison = case list[0].name
+      when :by          then (after == before + list[0].args[0] || after == before - list[0].args[0])
+      when :by_at_least then (after >= before + list[0].args[0] || after <= before - list[0].args[0])
+      when :by_at_most  then (after <= before + list[0].args[0] && after >= before - list[0].args[0])
+      when :from        then (before == list[0].args[0]) && (after == list[1].args[0])
+      end
+    end
+    matcher.positive_msg = "given block didn't alter the block attached to change, #{matcher.loc}"
+    matcher.negative_msg = "given block did alter the block attached to change, #{matcher.loc}"
+    comparison
+  end
+end
 
 #
 ### Some examples:

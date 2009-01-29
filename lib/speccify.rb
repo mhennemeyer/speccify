@@ -1,54 +1,37 @@
-unless defined?(SPECCIFY_CLASSIC_MODE)
-  require "rubygems"
-  require "minitest/unit"
-  MiniTest::Unit.autorun
-else
-  require 'test/unit'
-  Object.send(:remove_const, :MiniTest) if defined? MiniTest
-end
+require 'test/unit'
 
 module Speccify
-  
-  def self.test_case
-    if defined?(SPECCIFY_CLASSIC_MODE)
-      Test::Unit::TestCase.class_eval {def default_test;end}
-      Test::Unit::TestCase 
-    else
-      MiniTest::Unit::TestCase
-    end  
-  end
-  
   module ExampleGroupClassMethods
-    attr_accessor :desc, :setup_proc, :teardown_proc
+    attr_accessor :desc, :setup_chained, :teardown_chained
     @desc ||= ""
     
-    def setup_proc
-      @setup_proc || lambda {}
+    def setup_chained
+      @setup_chained || lambda {}
     end
     
-    def teardown_proc
-      @teardown_proc || lambda {}
+    def teardown_chained
+      @teardown_chained || lambda {}
     end
 
     def before(type = :each, &block)
       raise "unsupported before type: #{type}" unless type == :each
-      passed_through_setup = self.setup_proc
-      self.setup_proc = lambda { instance_eval(&passed_through_setup);instance_eval(&block) }
-      define_method :setup, &self.setup_proc
+      passed_through_setup = self.setup_chained
+      self.setup_chained = lambda { instance_eval(&passed_through_setup);instance_eval(&block) }
+      define_method :setup, &self.setup_chained
     end
 
     def after(type = :each, &block)
       raise "unsupported after type: #{type}" unless type == :each
-      passed_through_teardown = self.teardown_proc
-      self.teardown_proc = lambda {instance_eval(&block);instance_eval(&passed_through_teardown) }
-      define_method :teardown, &self.teardown_proc
+      passed_through_teardown = self.teardown_chained
+      self.teardown_chained = lambda {instance_eval(&block);instance_eval(&passed_through_teardown) }
+      define_method :teardown, &self.teardown_chained
     end
     
     def describe desc, &block
       cls = Class.new(self.superclass)
       Object.const_set self.name + desc.to_s.split(/\W+/).map { |s| s.capitalize }.join, cls
-      cls.setup_proc = self.setup_proc
-      cls.teardown_proc = self.teardown_proc
+      cls.setup_chained = self.setup_chained
+      cls.teardown_chained = self.teardown_chained
       cls.desc = self.desc + " " + desc
       cls.tests($1.constantize) if defined?(Rails) && self.name =~ /^(.*Controller)Test/
       cls.class_eval(&block)
@@ -62,9 +45,13 @@ module Speccify
   end
   
   module ExampleGroupMethods
+
     def initialize name
       super
       $current_spec = self
+    end
+    def default_test
+      # todo test_count -= 1
     end
   end
   
@@ -113,36 +100,6 @@ module Speccify
             """
     end
   end
-  
-  # Redefine MiniTest::Unit's way of formatting failuremessages
-  if defined?(MiniTest) && !defined?(::SPECCIFY_CLASSIC_MODE)
-    MiniTest::Unit.class_eval do 
-      def puke klass, meth, e
-        e = case e
-            when MiniTest::Skip then
-              @skips += 1
-              "Skipped:\n#{meth}(#{klass}) [#{location e}]:\n#{e.message}\n"
-            when MiniTest::Assertion then
-              @failures += 1
-              unless klass.superclass.to_s == "MiniTest::Unit::TestCase"
-                "Failure:\n #{klass.desc} #{meth.gsub(/^test_/,"").split("_").join(" ")} \n#{e.message}\n" 
-              else
-                "Failure:\n#{meth}(#{klass}) [#{location e}]:\n#{e.message}\n"
-              end
-            else
-              @errors += 1
-              bt = MiniTest::filter_backtrace(e.backtrace).join("\n    ")
-              unless klass.superclass.to_s == "MiniTest::Unit::TestCase"
-                "Error:\n #{klass.desc} #{meth.gsub(/^test_/,"").split("_").join(" ")} \n#{e.message}\n #{bt}\n" 
-              else
-                "Error:\n#{meth}(#{klass}):\n#{e.class}: #{e.message}\n    #{bt}\n"
-              end
-            end
-        @report << e
-        e[0, 1]
-      end
-    end
-  end
 
   class OperatorMatcherProxy
     def self.create given, loc, type = true
@@ -184,11 +141,11 @@ module Speccify
       end
     end
   end
-  
-  
+    
   module Extension
+    #todo this should extend Kernel
     def describe *args, &block
-      super_super_class = (Hash === args.last && (args.last[:type] || args.last[:testcase])) || Speccify.test_case
+      super_super_class = (Hash === args.last && (args.last[:type] || args.last[:testcase])) || Test::Unit::TestCase 
       super_class = Class.new(super_super_class) do 
         extend ExampleGroupClassMethods
         include ExampleGroupMethods
@@ -200,13 +157,13 @@ module Speccify
       cls.class_eval(&block)
     end
     private :describe
-    
+    # todo this should really extend main
     def def_matcher(matcher_name, &block)
       self.class.send :define_method, matcher_name do |*args|
         Speccify::Functions::build_matcher(matcher_name, args, &block)
       end
     end
-    
+    # todo this should extend TestCase
     def method_missing(name, *args, &block)
       if (name.to_s =~ /^be_(.+)/)
         Speccify::Functions::build_matcher(name, args) do |given, matcher, args|
@@ -221,7 +178,6 @@ end # Speccify
 include Speccify::Extension
 
 # A few matchers:
-
 def_matcher :be do |given, matcher, args|
   given == args[0]
 end
@@ -234,6 +190,7 @@ def change(&block)
     comparison = after != before
     if list = matcher.msgs
       comparison = case list[0].name
+        # todo provide meaningful messages
       when :by          then (after == before + list[0].args[0] || after == before - list[0].args[0])
       when :by_at_least then (after >= before + list[0].args[0] || after <= before - list[0].args[0])
       when :by_at_most  then (after <= before + list[0].args[0] && after >= before - list[0].args[0])

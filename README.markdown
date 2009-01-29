@@ -16,8 +16,6 @@
 
 ### Sophisticated Expectations/Matchers System
 
-### Based on [MiniTest](http://rubyforge.org/projects/bfts/)
-
 ### < 300 LOC
 
 
@@ -58,7 +56,7 @@ Run it with the ruby command:
 >..  
 >Finished in 0.001820 seconds.  
 > 
->2 tests, 2 assertions, 0 failures, 0 errors, 0 skips  
+>2 tests, 2 assertions, 0 failures, 0 errors
 
 
 ## Using Speccify with autotest
@@ -245,9 +243,9 @@ This issue is fixed in mocha's trunk and won't persist.
 
 ## Contribution
 
-* Bug? -> Lighthouse
-* source : http://github.com/mhennemeyer/speccify
-* Ideas? -> Group
+* Idea?, Feature Request?, Bug? -> [Lighthouse](http://300.lighthouseapp.com/projects/24443/home)
+* source -> [GitHub](http://github.com/mhennemeyer/speccify)
+* talk? -> [GoogleGroup](http://groups.google.de/group/speccify)
 
 ## License
 

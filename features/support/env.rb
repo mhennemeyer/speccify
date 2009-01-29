@@ -1,10 +1,10 @@
 require 'rubygems'
 require 'tempfile'
-require 'minitest/unit'
+require 'test/unit'
 # may cucumber be used without rspec?
 # require File.dirname(__FILE__) + "/../../lib/midi_spec.rb"
 World do |world|
-  world.extend(MiniTest::Assertions)
+  world.extend(Test::Unit::Assertions)
   world
 end
 
