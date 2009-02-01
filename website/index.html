@@ -1,0 +1,287 @@
+<h1 id="speccify">Speccify</h1>
+
+<h2 id="alightweightalternativetorspec.">A lightweight alternative to RSpec.</h2>
+
+<h2 id="features:">Features:</h2>
+
+<h3 id="nestedcontexts">Nested Contexts</h3>
+
+<h3 id="custommatchersareno-brainerswithdef_matcher">Custom matchers are no-brainers with def_matcher</h3>
+
+<h3 id="blazingfast">Blazing Fast</h3>
+
+<h3 id="00ruby1.9and1.8compatible">100% Ruby 1.9 and 1.8 compatible</h3>
+
+<h3 id="railsoutofthebox">Rails out of the box!</h3>
+
+<h3 id="sophisticatedexpectationsmatcherssystem">Sophisticated Expectations/Matchers System</h3>
+
+<h3 id="00loc">&lt; 300 LOC</h3>
+
+<h2 id="installspeccify:">Install Speccify:</h2>
+
+<blockquote>
+  <p>sudo gem install speccify</p>
+</blockquote>
+
+<h2 id="usingspeccify">Using Speccify</h2>
+
+<p>Create a testfile:</p>
+
+<pre><code>        # test_object.rb  
+
+        require "rubygems"  
+        require "speccify"  
+
+        describe Object do  
+          before do  
+            @obj = Object.new  
+          end 
+
+          it "is not nil" do
+            @obj.should_not be_nil
+          end
+
+          it "can be frozen" do
+            @obj.freeze
+            @obj.should be_frozen
+          end
+        end
+</code></pre>
+
+<p>Run it with the ruby command:</p>
+
+<blockquote>
+  <p>$ ruby test_object.rb <br />
+  Loaded suite - <br />
+  Started <br />
+  .. <br />
+  Finished in 0.001820 seconds.  </p>
+  
+  <p>2 tests, 2 assertions, 0 failures, 0 errors</p>
+</blockquote>
+
+<h2 id="usingspeccifywithautotest">Using Speccify with autotest</h2>
+
+<ol>
+<li>Name your testfiles test_whatever.rb</li>
+<li>Start autotest</li>
+<li>There is no step three &#8230;</li>
+</ol>
+
+<h2 id="usingspeccifywithrails">Using Speccify with Rails</h2>
+
+<p>Use the default rails test directory/structure, testhelpers, assertions and infrastructure.</p>
+
+<ol>
+<li>sudo use_minitest yes</li>
+<li>require &#8216;speccify&#8217; in test_helper.rb</li>
+<li>There is no step three &#8230;</li>
+</ol>
+
+<p>Tell Speccify what kind of test he is, by passing one of the following options to the describe method:</p>
+
+<ul>
+<li>:type => ActiveSupport::TestCase </li>
+<li>:type => ActionController::TestCase </li>
+<li>:type => ActionMailer::TestCase </li>
+<li>:type => ActionView::TestCase </li>
+</ul>
+
+<h3 id="examplefunctionaltest:">Example, Functional Test:</h3>
+
+<pre><code>    describe HorstsController, :type =&gt; ActionController::TestCase do
+      it "should get index" do
+        get :index
+        @response.should be_success
+        assigns(:horsts).should_not be_nil
+      end
+        describe "Whatever" do
+          # I'm still a ActionController::TestCase
+          it "should get index" do
+            get :index
+            @response.should be_success
+            assigns(:horsts).should_not be_nil
+          end
+        end
+    end
+</code></pre>
+
+<p>I&#8217;m not sure if I should wrap all the rails assertions in matchers.
+Using the default rails assertions works fine.</p>
+
+<h2 id="builtinmatchers">Built in matchers</h2>
+
+<ul>
+<li><p>be_something, for any arbitrary something:  </p>
+
+<pre><code>@obj.should be_something
+# passes if @obj.something? is true
+</code></pre></li>
+<li><p>have(n).somethings, for any arbitrary something:</p>
+
+<pre><code>@obj.should have(3).somethings
+# passes if @obj.somethings.length == 3
+</code></pre></li>
+<li><p>change {something}</p>
+
+<pre><code>lambda {@var+=1}.should change {@var}
+# passes
+lambda { }.should change {@var}
+# fails
+@var = 1
+lambda {@var+=1}.should change {@var}.from(1).to(2)
+# passes
+</code></pre></li>
+<li><p>more</p></li>
+</ul>
+
+<h2 id="def_matcher">DEF_MATCHER</h2>
+
+<h3 id="asimpleexamplefirst:">A simple example first:</h3>
+
+<pre><code>    def_matcher :be_nil do |given, matcher, args|
+      given.nil?
+    end
+    nil.should be_nil
+</code></pre>
+
+<p>The <code>def_matcher</code> method is really simple to use. <br />
+You just provide it the name of your matcher and attach a block that defines it&#8217;s behavior.
+The return value of the block is a boolean that 
+actually will be expected (should) or not expected (<code>should_not</code>).</p>
+
+<p>There are three arguments available inside the matcher block:</p>
+
+<h3 id="given">given</h3>
+
+<p>This is the object that has received the should or <code>should_not</code>.</p>
+
+<h3 id="matcher">matcher</h3>
+
+<p>This is the matcher object. You can set the failure messages as attributes on this object:</p>
+
+<pre><code>      def_matcher :matcher_name do |given, matcher, args|
+        matcher.positive_msg = "You can see me if I am applied to should and I return a false value"
+        matcher.negative_msg = "You can see me if I am applied to should_not and I return a true value"
+      end
+</code></pre>
+
+<p>It holds a list of all methods that have been called on the matcher (for chaining):</p>
+
+<pre><code>      obj.should matcher_name.some_method(4,5,6) {"and a block"}.second
+      def_matcher :matcher_name do |given, matcher, args|
+        # this is an ostruct that holds all information about the first method 'some_method'
+        matcher.msgs[0] 
+        # this is an ostruct that holds all information about the second method 'second'
+        matcher.msgs[1] 
+        # this is the name of the first method:
+        matcher.msgs[0].name  #=&gt; :some_method
+                    # this is a list of arguments that have been passed to the first method:
+        matcher.msgs[0].args  #=&gt; [4,5,6]
+                    # this is the block that was attached:
+        matcher.msgs[0].block #=&gt; proc {"and a block"}
+      end
+</code></pre>
+
+<p>If there is a failure, it knows where:</p>
+
+<pre><code>      def_matcher :matcher_name do |given, matcher, args|
+        matcher.loc #=&gt; "./some/where.rb:55 ... "
+      end
+</code></pre>
+
+<h3 id="args">args</h3>
+
+<p>This is a list of all arguments that have been applied to the matcher. Like the 6 in: </p>
+
+<pre><code>     (3*3).should_not be(6)
+</code></pre>
+
+<h2 id="moredef_matcherexamples">More def_matcher examples</h2>
+
+<h3 id="alittlemorecomplex:">A little more complex:</h3>
+
+<pre><code>        def_matcher :be_in_range do |given, matcher, args|
+          range = args[1] ? (args[0]..args[1]) : args[0]
+          matcher.positive_msg = "expected #{given} to be in range (#{range})"
+          matcher.negative_msg = "expected #{given} not to be in range (#{range})"
+          range.include?(given)
+        end
+        2.should be_in_range(1,3)
+        "m".should be_in_range("a".."z")
+</code></pre>
+
+<h3 id="matchersmayreceivemessages:">Matchers may receive messages:</h3>
+
+<pre><code>        def_matcher :have do |given, matcher, args|
+          number = args[0]
+          actual = given.send(matcher.msgs[0].name).length
+          matcher.positive_msg = "Expected #{given} to have #{actual}, but found #{number} "
+          actual == number
+        end
+        class Thing
+          def widgets
+            @widgets ||= []
+          end
+        end
+        @thing.should have(3).widgets
+</code></pre>
+
+<h2 id="speccifyvs.rspec">Speccify vs. RSpec</h2>
+
+<h3 id="speccifyprovidesthepartsofrspecthatactuallymattertome:">Speccify provides the parts of RSpec that actually matter (to me):</h3>
+
+<ul>
+<li><strong>The familiar describe/it syntax</strong></li>
+<li><strong>nested contexts</strong></li>
+<li><strong>should/should_not</strong></li>
+<li><strong>matchers and custom matchers</strong></li>
+</ul>
+
+<h3 id="thingsthatactuallydoesntmattertome:">Things that actually doesn&#8217;t matter (to me):</h3>
+
+<ul>
+<li><strong>/spec directory instead of /test</strong></li>
+<li><strong><code>whatever_spec.rb</code> instead of <code>test_whatever.rb</code></strong></li>
+<li><strong>custom formatters</strong></li>
+<li><strong>custom runners</strong></li>
+<li><strong>html output</strong></li>
+<li><strong>special commandline tools</strong></li>
+<li><strong>shared example groups</strong></li>
+<li><strong>pending examples</strong></li>
+<li><strong><code>before_all, after_all, before_suite, after_suite</code></strong></li>
+</ul>
+
+<h2 id="contribution">Contribution</h2>
+
+<ul>
+<li>Idea?, Feature Request?, Bug? -> <a href="http://300.lighthouseapp.com/projects/24443/home">Lighthouse</a></li>
+<li>source -> <a href="http://github.com/mhennemeyer/speccify">GitHub</a></li>
+<li>talk? -> <a href="http://groups.google.de/group/speccify">GoogleGroup</a></li>
+</ul>
+
+<h2 id="license">License</h2>
+
+<p>(The MIT License)</p>
+
+<p>Copyright (c) Matthias Hennemeyer</p>
+
+<p>Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+&#8216;Software&#8217;), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:</p>
+
+<p>The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.</p>
+
+<p>THE SOFTWARE IS PROVIDED &#8216;AS IS&#8217;, WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
