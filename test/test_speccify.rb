@@ -9,6 +9,10 @@ describe "top level description block with one example" do
   it "example3" do
     @horst.should == "Horst"
   end
+  
+  it "should count" do
+    @horst.should == "Horst"
+  end
 
   describe "second level description block" do
 

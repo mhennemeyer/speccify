@@ -6,23 +6,25 @@
 
 ## Features:
 
+### Nested Contexts
+
+### Custom matchers are no-brainers with def_matcher
+
 ### Blazing Fast
 
-### 100% Ruby 1.9 compatible
+### 100% Ruby 1.9 and 1.8 compatible
 
-### Rails!
-
-### Nested Contexts
+### Rails out of the box!
 
 ### Sophisticated Expectations/Matchers System
 
-### < 300 LOC
+### < 300 LOC 
 
 
 
 ## Install Speccify:
 
-> sudo gem install mhennemeyer-speccify
+> sudo gem install speccify
 
 ## Using Speccify
 
@@ -85,20 +87,20 @@ Tell Speccify what kind of test he is, by passing one of the following options t
 		describe HorstsController, :type => ActionController::TestCase do
 		  it "should get index" do
 		    get :index
-		    assert_response :success
-		    assert_not_nil assigns(:horsts)
+		    @response.should be_success
+		    assigns(:horsts).should_not be_nil
 		  end
 			describe "Whatever" do
 			  # I'm still a ActionController::TestCase
 			  it "should get index" do
 			    get :index
-			    assert_response :success
-			    assert_not_nil assigns(:horsts)
+			    @response.should be_success
+			    assigns(:horsts).should_not be_nil
 			  end
 			end
 		end
 					
-I'm not sure if I should wrap the rails assertions in matchers.
+I'm not sure if I should wrap all the rails assertions in matchers.
 Using the default rails assertions works fine.
 
 
@@ -232,14 +234,8 @@ If there is a failure, it knows where:
 * **special commandline tools**
 * **shared example groups**
 * **pending examples**
-
-			
-
-## Problems
-
-If using speccify with `minitest_tu_shim` and rails,  
-mocha-0.9.4 causes errors because of minitest incompatibility.  
-This issue is fixed in mocha's trunk and won't persist.  
+* **`before_all, after_all, before_suite, after_suite`**
+ 
 
 ## Contribution
 

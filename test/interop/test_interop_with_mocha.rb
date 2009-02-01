@@ -8,4 +8,9 @@ describe "Testing with mocha" do
     @var.expects(:hello)
     @var.hello
   end
+  
+  it "still works with speccify matchers" do
+    1.should be(1)
+    nil.should be_nil
+  end
 end

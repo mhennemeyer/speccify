@@ -1,5 +1,14 @@
 require 'test/unit'
 
+
+unless defined?(MiniTest)
+  Test::Unit::TestCase.class_eval do 
+    def default_test
+      instance_eval { @_result.instance_eval { @run_count ||= 0; @run_count -= 1} if defined?(@_result)}
+    end
+  end # Test::Unit::TestCase
+end
+
 module Speccify
   module ExampleGroupClassMethods
     attr_accessor :desc, :setup_chained, :teardown_chained
@@ -39,24 +48,24 @@ module Speccify
     
     def it desc, &block
       self.before {}
-      define_method "test_#{desc.gsub(/\W+/, '_').downcase}", &block if block_given?
+      define_method "test_#{desc.gsub(/\W+/, '_').downcase}", &lambda {$current_spec = self; instance_eval(&block)} if block_given?
       self.after {}
     end
-  end
+  end # ExampleGroupClassMethods
   
   module ExampleGroupMethods
-
-    def initialize name
-      super
-      $current_spec = self
+    def method_missing(name, *args, &block)
+      if (name.to_s =~ /^be_(.+)/)
+        Speccify::Functions::build_matcher(name, args) do |given, matcher, args|
+          given.send(($1 + "?").to_sym)
+        end
+      else
+        raise NoMethodError.new(name.to_s)
+      end
     end
-    def default_test
-      # todo test_count -= 1
-    end
-  end
+  end # ExampleGroupMethods
   
-  module Functions
-    
+  module Functions   
     def self.determine_class_name(name)
       name.to_s.split(/\W+/).map { |s| s[0..0].upcase + s[1..-1] }.join 
     end
@@ -99,7 +108,7 @@ module Speccify
               location: (#{location})
             """
     end
-  end
+  end # Functions
 
   class OperatorMatcherProxy
     def self.create given, loc, type = true
@@ -112,7 +121,7 @@ module Speccify
           define_method(operator) do |actual|
             print_given  = (@given == nil) ? "nil" : @given
             print_actual = (type ? "" : "not ") + (actual.nil? ? "nil" : actual.to_s)
-            msg = Speccify::Functions::message(print_actual, print_given, operator, loc) 
+            msg = Speccify::Functions::message(print_actual, print_given, operator, loc)
             $current_spec.assert(type == @given.send(operator,actual), msg)
           end
         end
@@ -120,7 +129,7 @@ module Speccify
 
       return Class.new(&body).new(given)
     end
-  end
+  end # OperatorMatcherProxy
 
   Object.class_eval do
     def should matcher = nil
@@ -140,16 +149,20 @@ module Speccify
         OperatorMatcherProxy.create(self,caller[0], false)
       end
     end
-  end
+  end # Object
     
   module Extension
-    #todo this should extend Kernel
-    def describe *args, &block
-      super_super_class = (Hash === args.last && (args.last[:type] || args.last[:testcase])) || Test::Unit::TestCase 
-      super_class = Class.new(super_super_class) do 
-        extend ExampleGroupClassMethods
-        include ExampleGroupMethods
+    def def_matcher(matcher_name, &block)
+      self.class.send :define_method, matcher_name do |*args|
+        Speccify::Functions::build_matcher(matcher_name, args, &block)
       end
+    end
+  end # Extension
+  
+  module ::Kernel
+    def describe *args, &block
+      super_class = (Hash === args.last && (args.last[:type] || args.last[:testcase])) || Test::Unit::TestCase 
+      super_class.class_eval {extend ExampleGroupClassMethods; include ExampleGroupMethods}
       cls = Class.new(super_class)
       cnst, desc = args
       Object.const_set Speccify::Functions::determine_class_name(cnst.to_s + "Test"), cls
@@ -157,23 +170,7 @@ module Speccify
       cls.class_eval(&block)
     end
     private :describe
-    # todo this should really extend main
-    def def_matcher(matcher_name, &block)
-      self.class.send :define_method, matcher_name do |*args|
-        Speccify::Functions::build_matcher(matcher_name, args, &block)
-      end
-    end
-    # todo this should extend TestCase
-    def method_missing(name, *args, &block)
-      if (name.to_s =~ /^be_(.+)/)
-        Speccify::Functions::build_matcher(name, args) do |given, matcher, args|
-          given.send(($1 + "?").to_sym)
-        end
-      else
-        raise NoMethodError.new(name.to_s)
-      end
-    end
-  end # Extension
+  end # Kernel
 end # Speccify
 include Speccify::Extension
 
