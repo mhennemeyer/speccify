@@ -2,6 +2,9 @@
 
 ## The lightweight option.
 
+[Website](http://speccify.rubyforge.org) 
+[Lighthouse](http://300.lighthouseapp.com/projects/24443/home) 
+[GoogleGroup](http://groups.google.de/group/speccify)
 
 
 ## Features:
