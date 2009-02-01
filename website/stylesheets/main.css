@@ -1,0 +1,136 @@
+body {
+	color: #333;
+	font-family: Lucida Grande, Helvetica Neue, Verdana;
+	font-size: 14pt;
+	margin: 0;
+}
+
+.clearer {
+	clear: both;
+	height: 1px;
+	width: 10px;
+}
+
+ul.inline {
+	display: inline;
+}
+
+ul.inline li{
+	display: inline;
+	list-style-type: none;
+	padding: 0 0.5em;
+}
+
+/*wraps the whole page*/
+#page {
+  
+}
+
+#page-inner {
+	padding: 9px;
+	margin: 0 auto 0 auto;
+	width: 1001px;
+}
+	
+#header {
+	
+}
+
+#header-inner {
+	
+}
+
+#site-name {
+	margin: 0 auto 0 auto;
+	text-align: center;
+	height: 7em;
+}
+
+#site-name-inner {
+	height: 40px;
+	padding-left: 10px;
+	padding-top: 5px;
+}
+
+#site-name-inner h1 {
+  color: gray;
+  font-family: Zapfino;
+	font-size: 26pt;
+	margin: 0;
+}
+
+
+#navbar {
+	background-color: gray;
+	margin-top: -1.7em;
+	padding-top: 0.7em;
+	padding-bottom: 0.7em;
+	width: 100%;
+}
+
+#navbar-inner {
+  padding-left: 10px;
+  text-align: center;
+}
+
+#navbar-inner a {
+  color: white;
+  font-size: 16pt;
+	text-decoration: none;
+}
+
+#main {
+	margin-top: -1px;
+}
+
+#main-inner {
+	
+}
+							
+#content {
+	margin: 0 auto 0 auto;
+	width: 700px;
+}
+
+#content-inner {
+	padding: 10px 20px 0 20px;
+}
+
+#content-inner-container {
+  
+}
+
+h2 {
+  font-size: 32pt;
+  text-align:center;
+}
+.alt {
+  background-color: #EEE;
+}
+
+#feature-list {
+	list-style-type : none;
+}
+
+#feature-list li {
+  color: black;
+	font-size: 16pt;
+	padding: 10px;
+	text-align: center;
+}
+
+#install-quote {
+  color: black  ;
+  font-size: 30pt;
+  text-align: center;
+}
+							
+#footer {
+	width: 1001px;
+}
+
+#footer-inner {
+	margin: 0 auto 0 auto;
+	text-align: center;
+}
+

@@ -1,0 +1,126 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+  <link rel="stylesheet" href="stylesheets/main.css" type="text/css" media="screen" title="no title" charset="utf-8">
+  
+	<title>Speccify, the lightweight option</title>
+</head>
+
+<body>	
+	<div id="page">
+		<div id="page-inner">
+  		<div id="header">
+				<div id="header-inner">
+					<div id="site-name">
+						<div id="site-name-inner">
+							<h1>Speccify, the lightweight option.</h1>
+						</div>
+					</div>
+					
+					<div class="clearer">&nbsp;</div>
+				</div>
+			</div>
+			
+			<div class="clearer">&nbsp;</div>
+			
+			<div id="navbar">
+				<div id="navbar-inner">
+					<ul id="navbar-inner-links" class="inline">
+						<li><a href="index.html">Start</a></li>
+						<li><a href="rails.html">Rails</a></li>
+						<li><a href="matchers.html">Matchers</a></li>
+						<li><a href="mocking.html">Mocking</a></li>
+						<li><a href="http://300.lighthouseapp.com/projects/24443/home">Lighthouse</a></li>
+						<li><a href="http://groups.google.de/group/speccify">Group</a></li>
+						<li><a href="http://github.com/mhennemeyer/speccify">Source</a></li>
+					</ul>
+				</div>
+				<div class="clearer">&nbsp;</div>
+			</div>
+			
+			<div id="main">
+				<div id="main-inner">
+					
+					
+					<div id="content">
+						
+						<div id="content-inner">
+						  <h2 id="usingspeccifywithrails">Using Speccify with Rails</h2>
+
+							<p>Use the default rails test directory/structure, testhelpers, assertions and infrastructure.</p>
+
+							<ol>
+							<li>require &#8216;speccify&#8217; in test_helper.rb</li>
+							<li>write a spec</li>
+							<li>There is no step three &#8230;</li>
+							</ol>
+
+							<p>Tell Speccify what kind of test he is, by passing one of the following options to the describe method:</p>
+
+							<ul>
+							<li>:type => ActiveSupport::TestCase </li>
+							<li>:type => ActionController::TestCase </li>
+							<li>:type => ActionMailer::TestCase </li>
+							<li>:type => ActionView::TestCase </li>
+							</ul>
+
+							<h3 id="examplefunctionaltest:">Example, Functional Test:</h3>
+
+							<pre><code>    
+describe HorstsController, :type =&gt; ActionController::TestCase do
+     it "should get index" do
+       get :index
+       @response.should be_success
+       assigns(:horsts).should_not be_nil
+     end
+       describe "Whatever" do
+         # I'm still a ActionController::TestCase
+         it "should get index" do
+           get :index
+           @response.should be_success
+           assigns(:horsts).should_not be_nil
+         end
+       end
+   end
+							</code></pre>
+
+							<p>I&#8217;m not sure if I should wrap all the rails assertions in matchers.
+							Using the default rails assertions works fine.</p>
+						</div>
+					</div>
+					<div class="clearer">&nbsp;</div>
+				</div>
+				<div class="clearer">&nbsp;</div>
+			</div>
+			
+			<div class="clearer">&nbsp;</div>
+			
+			
+		</div>
+		
+		<div id="page-bottom">
+			&nbsp;
+		</div>
+		
+		<div id="footer">
+			<div id="footer-inner">
+				&copy; 2008 Matthias Hennemeyer
+			</div>
+		</div>
+		
+	</div>
+	
+</body>
+</html>
+
+
+
+
+
+
+
+
+

@@ -1,6 +1,6 @@
 # Speccify
 
-## A lightweight alternative to RSpec.
+## The lightweight option.
 
 
 
@@ -71,8 +71,8 @@ Run it with the ruby command:
 
 Use the default rails test directory/structure, testhelpers, assertions and infrastructure.
 
-1. sudo use_minitest yes
-2. require 'speccify' in test_helper.rb
+1. require 'speccify' in test_helper.rb
+2. write a spec.
 3. There is no step three ...
 
 Tell Speccify what kind of test he is, by passing one of the following options to the describe method:
