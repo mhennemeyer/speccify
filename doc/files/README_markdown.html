@@ -1,0 +1,500 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html 
+     PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>File: README.markdown</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+  <meta http-equiv="Content-Script-Type" content="text/javascript" />
+  <link rel="stylesheet" href=".././rdoc-style.css" type="text/css" media="screen" />
+  <script type="text/javascript">
+  // <![CDATA[
+
+  function popupCode( url ) {
+    window.open(url, "Code", "resizable=yes,scrollbars=yes,toolbar=no,status=no,height=150,width=400")
+  }
+
+  function toggleCode( id ) {
+    if ( document.getElementById )
+      elem = document.getElementById( id );
+    else if ( document.all )
+      elem = eval( "document.all." + id );
+    else
+      return false;
+
+    elemStyle = elem.style;
+    
+    if ( elemStyle.display != "block" ) {
+      elemStyle.display = "block"
+    } else {
+      elemStyle.display = "none"
+    }
+
+    return true;
+  }
+  
+  // Make codeblocks hidden by default
+  document.writeln( "<style type=\"text/css\">div.method-source-code { display: none }</style>" )
+  
+  // ]]>
+  </script>
+
+</head>
+<body>
+
+
+
+  <div id="fileHeader">
+    <h1>README.markdown</h1>
+    <table class="header-table">
+    <tr class="top-aligned-row">
+      <td><strong>Path:</strong></td>
+      <td>README.markdown
+      </td>
+    </tr>
+    <tr class="top-aligned-row">
+      <td><strong>Last Update:</strong></td>
+      <td>Sun Feb 01 22:34:38 +0100 2009</td>
+    </tr>
+    </table>
+  </div>
+  <!-- banner header -->
+
+  <div id="bodyContent">
+
+
+
+  <div id="contextContent">
+
+    <div id="description">
+      <p>
+# <a href="../classes/Speccify.html">Speccify</a>
+</p>
+<p>
+## The lightweight option.
+</p>
+<p>
+[Website](<a
+href="http://speccify.rubyforge.org">speccify.rubyforge.org</a>)
+[Lighthouse](<a
+href="http://300.lighthouseapp.com/projects/24443/home">300.lighthouseapp.com/projects/24443/home</a>)
+[GoogleGroup](<a
+href="http://groups.google.de/group/speccify">groups.google.de/group/speccify</a>)
+</p>
+<p>
+## Features:
+</p>
+<p>
+### Nested Contexts
+</p>
+<p>
+### Custom matchers are no-brainers with def_matcher
+</p>
+<p>
+### Blazing Fast
+</p>
+<p>
+### 100% Ruby 1.9 and 1.8 compatible
+</p>
+<p>
+### Rails out of the box!
+</p>
+<p>
+### Sophisticated Expectations/Matchers System
+</p>
+<p>
+### &lt; 300 LOC
+</p>
+<p>
+## Install <a href="../classes/Speccify.html">Speccify</a>:
+</p>
+<p>
+&gt; sudo gem install speccify
+</p>
+<p>
+## Using <a href="../classes/Speccify.html">Speccify</a>
+</p>
+<p>
+Create a testfile:
+</p>
+<pre>
+                        # test_object.rb
+
+                        require &quot;rubygems&quot;
+                        require &quot;speccify&quot;
+
+                        describe Object do
+                          before do
+                            @obj = Object.new
+                          end
+
+                          it &quot;is not nil&quot; do
+                            @obj.should_not be_nil
+                          end
+
+                          it &quot;can be frozen&quot; do
+                            @obj.freeze
+                            @obj.should be_frozen
+                          end
+                        end
+</pre>
+<p>
+Run it with the ruby command:
+</p>
+<p>
+&gt; $ ruby test_object.rb &gt;Loaded suite - &gt;Started &gt;..
+&gt;Finished in 0.001820 seconds. &gt; &gt;2 tests, 2 assertions, 0
+failures, 0 errors
+</p>
+<p>
+## Using <a href="../classes/Speccify.html">Speccify</a> with autotest
+</p>
+<ol>
+<li>Name your testfiles test_whatever.rb
+
+</li>
+<li>Start autotest
+
+</li>
+<li>There is no step three &#8230;
+
+</li>
+</ol>
+<p>
+## Using <a href="../classes/Speccify.html">Speccify</a> with Rails
+</p>
+<p>
+Use the default rails test directory/structure, testhelpers, assertions and
+infrastructure.
+</p>
+<ol>
+<li>require &#8216;speccify&#8217; in test_helper.rb
+
+</li>
+<li>write a spec.
+
+</li>
+<li>There is no step three &#8230;
+
+</li>
+</ol>
+<p>
+Tell <a href="../classes/Speccify.html">Speccify</a> what kind of test he
+is, by passing one of the following options to the describe method:
+</p>
+<ul>
+<li>:type =&gt; ActiveSupport::TestCase
+
+</li>
+<li>:type =&gt; ActionController::TestCase
+
+</li>
+<li>:type =&gt; ActionMailer::TestCase
+
+</li>
+<li>:type =&gt; ActionView::TestCase
+
+</li>
+</ul>
+<p>
+### Example, Functional Test:
+</p>
+<pre>
+                describe HorstsController, :type =&gt; ActionController::TestCase do
+                  it &quot;should get index&quot; do
+                    get :index
+                    @response.should be_success
+                    assigns(:horsts).should_not be_nil
+                  end
+                        describe &quot;Whatever&quot; do
+                          # I'm still a ActionController::TestCase
+                          it &quot;should get index&quot; do
+                            get :index
+                            @response.should be_success
+                            assigns(:horsts).should_not be_nil
+                          end
+                        end
+                end
+</pre>
+<p>
+I&#8216;m not sure if I should wrap all the rails assertions in matchers.
+Using the default rails assertions works fine.
+</p>
+<p>
+## Built in matchers
+</p>
+<ul>
+<li>be_something, for any arbitrary something:
+
+<pre>
+      @obj.should be_something
+      # passes if @obj.something? is true
+</pre>
+</li>
+<li>have(n).somethings, for any arbitrary something:
+
+<pre>
+      @obj.should have(3).somethings
+      # passes if @obj.somethings.length == 3
+</pre>
+</li>
+<li>change {something}
+
+<pre>
+      lambda {@var+=1}.should change {@var}
+      # passes
+      lambda { }.should change {@var}
+      # fails
+      @var = 1
+      lambda {@var+=1}.should change {@var}.from(1).to(2)
+      # passes
+</pre>
+</li>
+<li>more
+
+</li>
+</ul>
+<p>
+## DEF_MATCHER
+</p>
+<p>
+### A simple example first:
+</p>
+<pre>
+            def_matcher :be_nil do |given, matcher, args|
+              given.nil?
+            end
+            nil.should be_nil
+</pre>
+<p>
+The `def_matcher` method is really simple to use. You just provide it the
+name of your matcher and attach a block that defines it&#8216;s behavior.
+The return value of the block is a boolean that actually will be expected
+(should) or not expected (`should_not`).
+</p>
+<p>
+There are three arguments available inside the matcher block:
+</p>
+<p>
+### given
+</p>
+<pre>
+  This is the object that has received the should or `should_not`.
+</pre>
+<p>
+### matcher
+</p>
+<p>
+This is the matcher object. You can set the failure messages as attributes
+on this object:
+</p>
+<pre>
+          def_matcher :matcher_name do |given, matcher, args|
+            matcher.positive_msg = &quot;You can see me if I am applied to should and I return a false value&quot;
+            matcher.negative_msg = &quot;You can see me if I am applied to should_not and I return a true value&quot;
+          end
+</pre>
+<p>
+It holds a list of all methods that have been called on the matcher (for
+chaining):
+</p>
+<pre>
+          obj.should matcher_name.some_method(4,5,6) {&quot;and a block&quot;}.second
+          def_matcher :matcher_name do |given, matcher, args|
+            # this is an ostruct that holds all information about the first method 'some_method'
+            matcher.msgs[0]
+            # this is an ostruct that holds all information about the second method 'second'
+            matcher.msgs[1]
+            # this is the name of the first method:
+            matcher.msgs[0].name  #=&gt; :some_method
+                                                # this is a list of arguments that have been passed to the first method:
+            matcher.msgs[0].args  #=&gt; [4,5,6]
+                                                # this is the block that was attached:
+            matcher.msgs[0].block #=&gt; proc {&quot;and a block&quot;}
+          end
+</pre>
+<p>
+If there is a failure, it knows where:
+</p>
+<pre>
+          def_matcher :matcher_name do |given, matcher, args|
+            matcher.loc #=&gt; &quot;./some/where.rb:55 ... &quot;
+          end
+</pre>
+<p>
+### args
+</p>
+<pre>
+  This is a list of all arguments that have been applied to the matcher. Like the 6 in:
+
+         (3*3).should_not be(6)
+</pre>
+<p>
+## More def_matcher examples
+</p>
+<p>
+### A little more complex:
+</p>
+<pre>
+                        def_matcher :be_in_range do |given, matcher, args|
+                          range = args[1] ? (args[0]..args[1]) : args[0]
+                          matcher.positive_msg = &quot;expected #{given} to be in range (#{range})&quot;
+                          matcher.negative_msg = &quot;expected #{given} not to be in range (#{range})&quot;
+                          range.include?(given)
+                        end
+                        2.should be_in_range(1,3)
+                        &quot;m&quot;.should be_in_range(&quot;a&quot;..&quot;z&quot;)
+</pre>
+<p>
+### Matchers may receive messages:
+</p>
+<pre>
+                        def_matcher :have do |given, matcher, args|
+                          number = args[0]
+                          actual = given.send(matcher.msgs[0].name).length
+                          matcher.positive_msg = &quot;Expected #{given} to have #{actual}, but found #{number} &quot;
+                          actual == number
+                        end
+                        class Thing
+                          def widgets
+                            @widgets ||= []
+                          end
+                        end
+                        @thing.should have(3).widgets
+</pre>
+<p>
+## <a href="../classes/Speccify.html">Speccify</a> vs. RSpec
+</p>
+<p>
+### <a href="../classes/Speccify.html">Speccify</a> provides the parts of
+RSpec that actually matter (to me):
+</p>
+<ul>
+<li>**The familiar describe/it syntax**
+
+</li>
+<li>**nested contexts**
+
+</li>
+<li>**should/should_not**
+
+</li>
+<li>**matchers and custom matchers**
+
+</li>
+</ul>
+<p>
+### Things that actually doesn&#8216;t matter (to me):
+</p>
+<ul>
+<li>**/spec directory instead of /test**
+
+</li>
+<li>**`whatever_spec.rb` instead of `test_whatever.rb`**
+
+</li>
+<li>**custom formatters**
+
+</li>
+<li>**custom runners**
+
+</li>
+<li>**html output**
+
+</li>
+<li>**special commandline tools**
+
+</li>
+<li>**shared example groups**
+
+</li>
+<li>**pending examples**
+
+</li>
+<li>**`before_all, after_all, before_suite, after_suite`**
+
+</li>
+</ul>
+<p>
+## Contribution
+</p>
+<ul>
+<li>Idea?, Feature Request?, Bug? -&gt; [Lighthouse](<a
+href="http://300.lighthouseapp.com/projects/24443/home">300.lighthouseapp.com/projects/24443/home</a>)
+
+</li>
+<li>source -&gt; [GitHub](<a
+href="http://github.com/mhennemeyer/speccify">github.com/mhennemeyer/speccify</a>)
+
+</li>
+<li>talk? -&gt; [GoogleGroup](<a
+href="http://groups.google.de/group/speccify">groups.google.de/group/speccify</a>)
+
+</li>
+</ul>
+<p>
+## License
+</p>
+<p>
+(The MIT License)
+</p>
+<p>
+Copyright (c) Matthias Hennemeyer
+</p>
+<p>
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the
+&#8216;Software&#8217;), to deal in the Software without restriction,
+including without limitation the rights to use, copy, modify, merge,
+publish, distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to the
+following conditions:
+</p>
+<p>
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+</p>
+<p>
+THE SOFTWARE IS PROVIDED &#8216;AS IS&#8217;, WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+USE OR OTHER DEALINGS IN THE SOFTWARE.
+</p>
+
+    </div>
+
+
+   </div>
+
+
+  </div>
+
+
+    <!-- if includes -->
+
+    <div id="section">
+
+
+
+
+
+      
+
+
+    <!-- if method_list -->
+
+
+  </div>
+
+
+<div id="validator-badges">
+  <p><small><a href="http://validator.w3.org/check/referer">[Validate]</a></small></p>
+</div>
+
+</body>
+</html>

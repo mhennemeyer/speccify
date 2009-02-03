@@ -20,7 +20,7 @@ def_matcher :have do |given, matcher, args|
   actual == number
 end
 
-100.times do |i|
+1000.times do |i|
   
   describe "Matcher: be_in_range#{i}" do
     describe "With lower and upper bound seperately#{i}" do

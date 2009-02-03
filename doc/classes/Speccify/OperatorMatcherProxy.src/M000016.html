@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html 
+     PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html>
+<head>
+  <title>create (Speccify::OperatorMatcherProxy)</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+  <link rel="stylesheet" href="../../.././rdoc-style.css" type="text/css" media="screen" />
+</head>
+<body class="standalone-code">
+  <pre><span class="ruby-comment cmt"># File lib/speccify.rb, line 119</span>
+    <span class="ruby-keyword kw">def</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">create</span> <span class="ruby-identifier">given</span>, <span class="ruby-identifier">loc</span>, <span class="ruby-identifier">type</span> = <span class="ruby-keyword kw">true</span>
+      <span class="ruby-identifier">body</span> = <span class="ruby-identifier">lambda</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">klass</span><span class="ruby-operator">|</span>
+        <span class="ruby-identifier">define_method</span>(<span class="ruby-identifier">:initialize</span>) <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">given</span><span class="ruby-operator">|</span>
+          <span class="ruby-ivar">@given</span> = <span class="ruby-identifier">given</span>
+        <span class="ruby-keyword kw">end</span>
+
+        [<span class="ruby-value str">'=='</span>, <span class="ruby-value str">'==='</span>, <span class="ruby-value str">'=~'</span>, <span class="ruby-value str">'&gt;'</span>, <span class="ruby-value str">'&gt;='</span>, <span class="ruby-value str">'&lt;'</span>, <span class="ruby-value str">'&lt;='</span>].<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">operator</span><span class="ruby-operator">|</span>
+          <span class="ruby-identifier">define_method</span>(<span class="ruby-identifier">operator</span>) <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">actual</span><span class="ruby-operator">|</span>
+            <span class="ruby-identifier">print_given</span>  = (<span class="ruby-ivar">@given</span> <span class="ruby-operator">==</span> <span class="ruby-keyword kw">nil</span>) <span class="ruby-operator">?</span> <span class="ruby-value str">&quot;nil&quot;</span> <span class="ruby-operator">:</span> <span class="ruby-ivar">@given</span>
+            <span class="ruby-identifier">print_actual</span> = (<span class="ruby-identifier">type</span> <span class="ruby-value">? </span><span class="ruby-value str">&quot;&quot;</span> <span class="ruby-operator">:</span> <span class="ruby-value str">&quot;not &quot;</span>) <span class="ruby-operator">+</span> (<span class="ruby-identifier">actual</span>.<span class="ruby-identifier">nil?</span> <span class="ruby-value">? </span><span class="ruby-value str">&quot;nil&quot;</span> <span class="ruby-operator">:</span> <span class="ruby-identifier">actual</span>.<span class="ruby-identifier">to_s</span>)
+            <span class="ruby-identifier">msg</span> = <span class="ruby-constant">Speccify</span><span class="ruby-operator">::</span><span class="ruby-constant">Functions</span><span class="ruby-operator">::</span><span class="ruby-identifier">message</span>(<span class="ruby-identifier">print_actual</span>, <span class="ruby-identifier">print_given</span>, <span class="ruby-identifier">operator</span>, <span class="ruby-identifier">loc</span>)
+            <span class="ruby-identifier">$current_spec</span>.<span class="ruby-identifier">assert</span>(<span class="ruby-identifier">type</span> <span class="ruby-operator">==</span> <span class="ruby-ivar">@given</span>.<span class="ruby-identifier">send</span>(<span class="ruby-identifier">operator</span>,<span class="ruby-identifier">actual</span>), <span class="ruby-identifier">msg</span>)
+          <span class="ruby-keyword kw">end</span>
+        <span class="ruby-keyword kw">end</span>
+      <span class="ruby-keyword kw">end</span>
+
+      <span class="ruby-keyword kw">return</span> <span class="ruby-constant">Class</span>.<span class="ruby-identifier">new</span>(<span class="ruby-operator">&amp;</span><span class="ruby-identifier">body</span>).<span class="ruby-identifier">new</span>(<span class="ruby-identifier">given</span>)
+    <span class="ruby-keyword kw">end</span></pre>
+</body>
+</html>

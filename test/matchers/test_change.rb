@@ -12,6 +12,12 @@ describe "change {something}" do
   it "should_not" do
     lambda { }.should_not change {@something}
   end
+  
+  it "works also with local variables" do
+    var = 1
+    lambda {var += 1}.should change {var}.by(1)
+    lambda {var += 2}.should change {var}.from(2).to(4)
+  end
 end
 
 describe "change {numerical}.by(number)" do

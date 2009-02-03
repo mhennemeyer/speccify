@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html 
+     PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html>
+<head>
+  <title>build_matcher (Speccify::Functions)</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+  <link rel="stylesheet" href="../../.././rdoc-style.css" type="text/css" media="screen" />
+</head>
+<body class="standalone-code">
+  <pre><span class="ruby-comment cmt"># File lib/speccify.rb, line 76</span>
+    <span class="ruby-keyword kw">def</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">build_matcher</span>(<span class="ruby-identifier">matcher_name</span>, <span class="ruby-identifier">args</span>, <span class="ruby-operator">&amp;</span><span class="ruby-identifier">block</span>)
+      <span class="ruby-identifier">match_block</span> = <span class="ruby-identifier">lambda</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">actual</span>, <span class="ruby-identifier">matcher</span><span class="ruby-operator">|</span>
+        <span class="ruby-identifier">block</span>.<span class="ruby-identifier">call</span>(<span class="ruby-identifier">actual</span>, <span class="ruby-identifier">matcher</span>, <span class="ruby-identifier">args</span>)
+      <span class="ruby-keyword kw">end</span>
+      <span class="ruby-identifier">body</span> = <span class="ruby-identifier">lambda</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">klass</span><span class="ruby-operator">|</span>
+        <span class="ruby-ivar">@matcher_name</span> = <span class="ruby-identifier">matcher_name</span>.<span class="ruby-identifier">to_s</span>
+        <span class="ruby-keyword kw">def</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">matcher_name</span> <span class="ruby-comment cmt">#:nodoc:</span>
+          <span class="ruby-ivar">@matcher_name</span>
+        <span class="ruby-keyword kw">end</span>
+        
+        <span class="ruby-identifier">attr_accessor</span> <span class="ruby-identifier">:positive_msg</span>, <span class="ruby-identifier">:negative_msg</span>, <span class="ruby-identifier">:msgs</span>, <span class="ruby-identifier">:loc</span>
+        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">initialize</span> <span class="ruby-identifier">match_block</span> <span class="ruby-comment cmt">#:nodoc:</span>
+          <span class="ruby-ivar">@match_block</span> = <span class="ruby-identifier">match_block</span>
+        <span class="ruby-keyword kw">end</span>
+        
+        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">method_missing</span> <span class="ruby-identifier">id</span>, <span class="ruby-operator">*</span><span class="ruby-identifier">args</span>, <span class="ruby-operator">&amp;</span><span class="ruby-identifier">block</span> 
+          <span class="ruby-identifier">require</span> <span class="ruby-value str">'ostruct'</span>
+          (<span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">msgs</span> <span class="ruby-operator">||=</span> []) <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-constant">OpenStruct</span>.<span class="ruby-identifier">new</span>( <span class="ruby-value str">&quot;name&quot;</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">id</span>, <span class="ruby-value str">&quot;args&quot;</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">args</span>, <span class="ruby-value str">&quot;block&quot;</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">block</span> ) 
+          <span class="ruby-keyword kw">self</span>
+        <span class="ruby-keyword kw">end</span>
+
+        <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">matches?</span> <span class="ruby-identifier">given</span> <span class="ruby-comment cmt">#:nodoc:</span>
+          <span class="ruby-ivar">@positive_msg</span> <span class="ruby-operator">||=</span> <span class="ruby-constant">Speccify</span><span class="ruby-operator">::</span><span class="ruby-constant">Functions</span><span class="ruby-operator">::</span><span class="ruby-identifier">message</span>(
+            <span class="ruby-node">&quot;#{given} should #{self.class.matcher_name}&quot;</span>, <span class="ruby-value str">&quot;no match&quot;</span>, <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">class</span>.<span class="ruby-identifier">matcher_name</span> , <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">loc</span> <span class="ruby-operator">||</span> <span class="ruby-value str">&quot;&quot;</span>) 
+          <span class="ruby-ivar">@negative_msg</span> <span class="ruby-operator">||=</span> <span class="ruby-constant">Speccify</span><span class="ruby-operator">::</span><span class="ruby-constant">Functions</span><span class="ruby-operator">::</span><span class="ruby-identifier">message</span>(
+            <span class="ruby-node">&quot;#{given} should not #{self.class.matcher_name}&quot;</span>, <span class="ruby-value str">&quot;match&quot;</span>, <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">class</span>.<span class="ruby-identifier">matcher_name</span> , <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">loc</span> <span class="ruby-operator">||</span> <span class="ruby-value str">&quot;&quot;</span>)
+          <span class="ruby-ivar">@match_block</span>.<span class="ruby-identifier">call</span>(<span class="ruby-identifier">given</span>, <span class="ruby-keyword kw">self</span>)
+        <span class="ruby-keyword kw">end</span>
+      <span class="ruby-keyword kw">end</span>
+      <span class="ruby-constant">Class</span>.<span class="ruby-identifier">new</span>(<span class="ruby-operator">&amp;</span><span class="ruby-identifier">body</span>).<span class="ruby-identifier">new</span>(<span class="ruby-identifier">match_block</span>)
+    <span class="ruby-keyword kw">end</span></pre>
+</body>
+</html>

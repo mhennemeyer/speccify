@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + "/test_helper.rb"
+require File.dirname(__FILE__) + "/../test_helper.rb"
 
 describe "top level description block with one example" do
   
