@@ -1,0 +1,1 @@
+require File.dirname(__FILE__) + "/rails_root/test/test_helper.rb"

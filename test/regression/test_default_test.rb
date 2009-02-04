@@ -1,9 +1,15 @@
 require File.dirname(__FILE__) + "/../test_helper.rb"
 
 class MyTestCase < Test::Unit::TestCase
+  def hello
+    "hello"
+  end
 end
 
-describe "With custom TestCase", :type => MyTestCase do
+describe "Custom TestCase", :type => MyTestCase do
+  it "says hello" do
+    hello.should == "hello"
+  end
 end
 
 describe "default test" do

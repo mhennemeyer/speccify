@@ -5,6 +5,7 @@
 [Website](http://speccify.rubyforge.org) 
 [Lighthouse](http://300.lighthouseapp.com/projects/24443/home) 
 [GoogleGroup](http://groups.google.de/group/speccify)
+[RDoc](http://speccify.rubyforge.org/doc/index.html)
 
 
 ## Features:
@@ -21,7 +22,7 @@
 
 ### Sophisticated Expectations/Matchers System
 
-### < 300 LOC 
+### < 300 LOC (sans doc)
 
 
 
@@ -74,7 +75,7 @@ Run it with the ruby command:
 
 Use the default rails test directory/structure, testhelpers, assertions and infrastructure.
 
-1. require 'speccify' in test_helper.rb
+1. require 'speccify' in `test_helper.rb`
 2. write a spec.
 3. There is no step three ...
 

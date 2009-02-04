@@ -1,11 +1,9 @@
 require 'test/unit'
 # No test/unit default_test whining. 
-unless defined?(MiniTest)
-  Test::Unit::TestCase.class_eval do 
-    def default_test # :nodoc:
-      instance_eval { @_result.instance_eval { @run_count ||= 0; @run_count -= 1} if defined?(@_result)}
-    end
-  end # Test::Unit::TestCase
+Test::Unit::TestCase.class_eval do 
+  def default_test # :nodoc:
+    instance_eval { @_result.instance_eval { @run_count ||= 0; @run_count -= 1} if defined?(@_result)}
+  end
 end
 
 module Speccify
@@ -47,7 +45,10 @@ module Speccify
     # ==Define an Example Group. 
     # Alike TestCase.
     def describe desc, &block
-      cls = Class.new(self.superclass)
+      modules = self.ancestors
+      cls = Class.new(self.superclass) do |klass|
+        modules.each {|mod| include mod if (mod.class.to_s == "Module" && !(self < mod))}
+      end
       Object.const_set self.name + desc.to_s.split(/\W+/).map { |s| s.capitalize }.join, cls
       cls.setup_chained = self.setup_chained
       cls.teardown_chained = self.teardown_chained
@@ -60,32 +61,12 @@ module Speccify
     # Alike 'def test_whatever ..' test definition.
     def it desc, &block
       self.before {}
+      desc = Speccify::Functions.make_constantizeable(desc)
       define_method "test_#{desc.gsub(/\W+/, '_').downcase}", &lambda {$current_spec = self; instance_eval(&block)} if block_given?
       self.after {}
     end
   end # ExampleGroupClassMethods
-  
-  # Included as instance methods into the ExampleGroups.
-  # The methods defined in this module will be available 
-  # inside the examples ('it' blocks).
-  module ExampleGroupMethods
-    
-    # ==be_*something*
-    # ===This method_missing acts as a matcher builder method. 
-    # If a call to 
-    # be_xyz() reaches this method_missing (say: obj.should be_xyz), 
-    # a matcher with the name xyz will be built, whose defining property
-    # is that it returns the value of obj.xyz? for matches?.
-    def method_missing(name, *args, &block)
-      if (name.to_s =~ /^be_(.+)/)
-        Speccify::Functions::build_matcher(name, args) do |given, matcher, args|
-          given.send(($1 + "?").to_sym)
-        end
-      else
-        raise NoMethodError.new(name.to_s)
-      end
-    end
-  end # ExampleGroupMethods
+
   # == Temporary
   # A temporary module that holds functionality
   # that awaits to be refactored to the right place.
@@ -139,6 +120,15 @@ module Speccify
       Class.new(&body).new(match_block)
     end
     
+    def self.make_constantizeable(string)
+      return string unless string.class.to_s == "String"
+      string = string.gsub(/[^\w\s]/,"").gsub(/^[\d\s]*/,"")
+      raise ArgumentError.new(
+          "Invalid argument. Must not be empty after removing '\W'-class chars."
+      ) if string.gsub(/\s/,"").empty?
+      string
+    end
+    
     def self.message(expected, actual, op, location)  # :nodoc:
             """
               Expected: #{expected.to_s}
@@ -161,7 +151,7 @@ module Speccify
             print_given  = (@given == nil) ? "nil" : @given
             print_actual = (type ? "" : "not ") + (actual.nil? ? "nil" : actual.to_s)
             msg = Speccify::Functions::message(print_actual, print_given, operator, loc)
-            $current_spec.assert(type == @given.send(operator,actual), msg)
+            $current_spec.assert(type == (@given.send(operator,actual) ? true : false), msg)
           end
         end
       end
@@ -251,9 +241,10 @@ module Speccify
   module ::Kernel
     def describe *args, &block
       super_class = (Hash === args.last && (args.last[:type] || args.last[:testcase])) || Test::Unit::TestCase 
-      super_class.class_eval {extend ExampleGroupClassMethods; include ExampleGroupMethods}
+      super_class.class_eval {extend ExampleGroupClassMethods}
       cls = Class.new(super_class)
       cnst, desc = args
+      cnst = Speccify::Functions.make_constantizeable(cnst)
       Object.const_set Speccify::Functions::determine_class_name(cnst.to_s + "Test"), cls
       cls.desc = String === desc ? desc : cnst.to_s
       cls.class_eval(&block)
@@ -263,9 +254,24 @@ module Speccify
 end # Speccify
 include Speccify::Extension
 
-# 
+# same as should == ...
 def_matcher :be do |given, matcher, args|
   given == args[0]
+end
+# expect obj.eql?(arg)
+def_matcher :eql do |given, matcher, args|
+  given.eql?(args[0])
+end
+# expect an exception
+def_matcher :raise_error do |given, matcher, args|
+  raised = false
+  begin
+    given.call
+  rescue Exception => e
+    raised = true
+  end
+  # todo clean this up
+  raised && (args[0].kind_of?(Regexp) ? e.message =~ args[0] : (args[0].nil? ? true : args[0] == e.message))
 end
 # == lambda {do_something}.should change {something}
 # * lambda {var += 1}.should change {var}.by(1)
@@ -290,5 +296,20 @@ def change(&block)
     matcher.positive_msg = "given block didn't alter the block attached to change, #{matcher.loc}"
     matcher.negative_msg = "given block did alter the block attached to change, #{matcher.loc}"
     comparison
+  end
+end
+
+# ==be_*something*
+# ===This method_missing acts as a matcher builder method. 
+# If a call to be_xyz() reaches this method_missing (say: obj.should be_xyz), 
+# a matcher with the name xyz will be built, whose defining property
+# is that it returns the value of obj.xyz? for matches?.
+def method_missing(name, *args, &block)
+  if (name.to_s =~ /^be_(.+)/)
+    Speccify::Functions::build_matcher(name, args) do |given, matcher, args|
+      given.send(($1 + "?").to_sym)
+    end
+  else
+    raise NoMethodError.new(name.to_s)
   end
 end
