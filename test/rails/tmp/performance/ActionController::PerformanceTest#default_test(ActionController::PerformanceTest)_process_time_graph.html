@@ -1,0 +1,207 @@
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <style media="all" type="text/css">
+    table {
+      border-collapse: collapse;
+      border: 1px solid #CCC;
+      font-family: Verdana, Arial, Helvetica, sans-serif;
+      font-size: 9pt;
+      line-height: normal;
+      width: 100%;
+    }
+
+    th {
+      text-align: center;
+      border-top: 1px solid #FB7A31;
+      border-bottom: 1px solid #FB7A31;
+      background: #FFC;
+      padding: 0.3em;
+      border-left: 1px solid silver;
+    }
+
+    tr.break td {
+      border: 0;
+      border-top: 1px solid #FB7A31;
+      padding: 0;
+      margin: 0;
+    }
+
+    tr.method td {
+      font-weight: bold;
+    }
+
+    td {
+      padding: 0.3em;
+    }
+
+    td:first-child {
+      width: 190px;
+      }
+
+    td {
+      border-left: 1px solid #CCC;
+      text-align: center;
+    } 
+
+    .method_name {
+      text-align: left;
+    }
+  </style>
+  </head>
+  <body>
+    <h1>Profile Report</h1>
+    <!-- Threads Table -->
+    <table>
+      <tr>
+        <th>Thread ID</th>
+        <th>Total Time</th>
+      </tr>
+      
+      <tr>
+        <td><a href="#107390">107390</a></td>
+        <td>0.002933</td>
+      </tr>
+      
+    </table>
+
+    <!-- Methods Tables -->
+    
+      <h2><a name="107390">Thread 107390</a></h2>
+
+      <table>
+        <tr>
+          <th>  %Total</th>
+          <th>   %Self</th>
+          <th>     Total</th>
+          <th>      Self</th>
+          <th>      Wait</th>
+          <th>       Child</th>
+          <th>               Calls</th>
+          <th class="method_name">Name</th>
+          <th>Line</th>
+        </tr>
+
+        
+          
+            <!-- Parents -->
+            
+
+            <tr class="method">
+              <td> 100.00%</td>
+              <td>  99.28%</td>
+              <td>      0.00</td>
+              <td>      0.00</td>
+              <td>      0.00</td>
+              <td>      0.00</td>
+              <td>                   1</td>
+              <td class="method_name"><a name="ActiveSupport__Testing__Performance__Profiler_run_107390">ActiveSupport::Testing::Performance::Profiler#run</a></td>
+              <td><a href="file:///Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/testing/performance.rb#line=177" title="/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/testing/performance.rb:177">177</a></td>
+            </tr>
+
+            <!-- Children -->
+            
+            
+              <tr>
+                <td>&nbsp;</td>
+                <td>&nbsp;</td>
+                <td>      0.00</td>
+                <td>      0.00</td>
+                <td>      0.00</td>
+                <td>      0.00</td>
+                
+                <td>                 1/1</td>
+                <td class="method_name"><a href="#Kernel___send___107390">Kernel#__send__</a></td>
+                <td><a href="file:///Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/testing/performance.rb#line=57" title="/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/testing/performance.rb:57">57</a></td>
+              </tr>
+            
+            <!-- Create divider row -->
+            <tr class="break"><td colspan="9"></td></tr>
+        
+          
+            <!-- Parents -->
+            
+              <tr>
+                <td>&nbsp;</td>
+                <td>&nbsp;</td>
+                <td>      0.00</td>
+                <td>      0.00</td>
+                <td>      0.00</td>
+                <td>      0.00</td>
+                
+                <td>                 1/1</td>
+                <td class="method_name"><a href="#ActiveSupport__Testing__Performance__Profiler_run_107390">ActiveSupport::Testing::Performance::Profiler#run</a></td>
+                <td><a href="file:///Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/testing/performance.rb#line=57" title="/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/testing/performance.rb:57">57</a></td>
+              </tr>
+            
+
+            <tr class="method">
+              <td>   0.72%</td>
+              <td>   0.55%</td>
+              <td>      0.00</td>
+              <td>      0.00</td>
+              <td>      0.00</td>
+              <td>      0.00</td>
+              <td>                   1</td>
+              <td class="method_name"><a name="Kernel___send___107390">Kernel#__send__</a></td>
+              <td><a href="file:///Users/macbook/Projekte/speccify/test/rails/ruby_runtime#line=0" title="/Users/macbook/Projekte/speccify/test/rails/ruby_runtime:0">0</a></td>
+            </tr>
+
+            <!-- Children -->
+            
+            
+              <tr>
+                <td>&nbsp;</td>
+                <td>&nbsp;</td>
+                <td>      0.00</td>
+                <td>      0.00</td>
+                <td>      0.00</td>
+                <td>      0.00</td>
+                
+                <td>                 1/1</td>
+                <td class="method_name"><a href="#ActiveSupport__Testing__Default_default_test_107390">ActiveSupport::Testing::Default#default_test</a></td>
+                <td><a href="file:///Users/macbook/Projekte/speccify/test/rails/ruby_runtime#line=57" title="/Users/macbook/Projekte/speccify/test/rails/ruby_runtime:57">57</a></td>
+              </tr>
+            
+            <!-- Create divider row -->
+            <tr class="break"><td colspan="9"></td></tr>
+        
+          
+            <!-- Parents -->
+            
+              <tr>
+                <td>&nbsp;</td>
+                <td>&nbsp;</td>
+                <td>      0.00</td>
+                <td>      0.00</td>
+                <td>      0.00</td>
+                <td>      0.00</td>
+                
+                <td>                 1/1</td>
+                <td class="method_name"><a href="#Kernel___send___107390">Kernel#__send__</a></td>
+                <td><a href="file:///Users/macbook/Projekte/speccify/test/rails/ruby_runtime#line=57" title="/Users/macbook/Projekte/speccify/test/rails/ruby_runtime:57">57</a></td>
+              </tr>
+            
+
+            <tr class="method">
+              <td>   0.17%</td>
+              <td>   0.17%</td>
+              <td>      0.00</td>
+              <td>      0.00</td>
+              <td>      0.00</td>
+              <td>      0.00</td>
+              <td>                   1</td>
+              <td class="method_name"><a name="ActiveSupport__Testing__Default_default_test_107390">ActiveSupport::Testing::Default#default_test</a></td>
+              <td><a href="file:///Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/testing/default.rb#line=5" title="/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/testing/default.rb:5">5</a></td>
+            </tr>
+
+            <!-- Children -->
+            
+            <!-- Create divider row -->
+            <tr class="break"><td colspan="9"></td></tr>
+        
+      </table>
+    
+  </body>
+</html>

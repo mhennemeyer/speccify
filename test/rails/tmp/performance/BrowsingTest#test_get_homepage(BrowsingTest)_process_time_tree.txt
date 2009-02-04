@@ -1,0 +1,6054 @@
+events: process_time
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Kernel::is_a?-34776640
+0 124
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/integration.rb
+fn=ActionController::Integration::Runner::get
+495 60
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::__send__-25971020
+calls=1 498
+498 58095
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::include?
+calls=1 497
+497 30
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/object/misc.rb
+cfn=Object::returning
+calls=1 498
+498 168
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/module/attribute_accessors.rb
+fn=ActionController::Integration::ControllerCapture::ClassMethods::last_instantiation-1093636
+25 17
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Array::pop
+0 16
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=<Class::Hash>::allocate
+0 412
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Symbol::inspect
+0 17
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=String::initialize_copy
+0 18
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/request.rb
+fn=ActionController::Request::query_string
+332 37
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::split
+calls=1 333
+333 21
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::[]
+calls=1 333
+333 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=2 333
+333 15
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/blank.rb
+cfn=Object::present?
+calls=1 333
+333 25
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/hash/indifferent_access.rb
+fn=HashWithIndifferentAccess::include?-1093636
+59 38
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::key?
+calls=1 60
+60 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/hash/indifferent_access.rb
+cfn=HashWithIndifferentAccess::convert_key
+calls=1 60
+60 25
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::key?
+calls=1 60
+60 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/hash/indifferent_access.rb
+cfn=HashWithIndifferentAccess::convert_key
+calls=1 60
+60 22
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/params_parser.rb
+fn=ActionController::ParamsParser::parse_formatted_parameters-1093636
+19 38
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/request.rb
+cfn=ActionController::Request::content_length
+calls=1 22
+22 49
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Class::new
+calls=1 20
+20 35
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Fixnum::zero?
+calls=1 22
+22 9
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/rewindable_input.rb
+fn=ActionController::RewindableInput::RewindableIO::method_missing-1093636
+9 102
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Class::new
+calls=1 11
+11 42
+cfl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/lint.rb
+cfn=Rack::Lint::InputWrapper::read
+calls=1 11
+11 251
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::__send__
+calls=2 15
+15 39
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::__send__
+calls=3 15
+15 54
+
+fl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/utils.rb
+fn=Rack::Utils::HeaderHash::delete-1093636
+181 59
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::downcase
+calls=4 182
+182 32
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::delete
+calls=8 182
+182 89
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Array::reverse_each-1093636
+0 40
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/callbacks.rb
+cfn=ActiveSupport::Callbacks::Callback::call
+calls=2 90
+90 681
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Module::included-1093636
+0 9
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=String::upcase
+0 18
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=<Class::Object>::allocate
+0 106
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=String::to_i
+0 30
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/response.rb
+fn=ActionController::Response::content_type
+75 132
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::split
+calls=1 76
+76 18
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::[]
+calls=1 76
+76 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::String
+calls=1 76
+76 29
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=2 76
+76 34
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/blank.rb
+cfn=NilClass::blank?
+calls=1 77
+77 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::split
+calls=1 76
+76 10
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::[]
+calls=1 76
+76 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/blank.rb
+cfn=String::blank?
+calls=1 77
+77 11
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::String
+calls=1 76
+76 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=1 76
+76 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::split
+calls=1 76
+76 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::[]
+calls=1 76
+76 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/blank.rb
+cfn=String::blank?
+calls=1 77
+77 10
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::String
+calls=1 76
+76 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=1 76
+76 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::split
+calls=1 76
+76 10
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::[]
+calls=1 76
+76 6
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/blank.rb
+cfn=String::blank?
+calls=1 77
+77 10
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::String
+calls=1 76
+76 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=1 76
+76 8
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/request.rb
+fn=ActionController::Request::method-1093636
+42 51
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::==
+calls=1 43
+43 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/request.rb
+cfn=ActionController::Request::request_method
+calls=2 43
+43 55
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::==
+calls=1 43
+43 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/request.rb
+cfn=ActionController::Request::request_method
+calls=2 43
+43 52
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Array::size-1093636
+0 108
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_view/test_case.rb
+fn=ActionView::Base::initialize
+6 33
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Class::new
+calls=1 7
+7 30
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_view/base.rb
+cfn=ActionView::Base::initialize_without_template_tracking
+calls=1 8
+8 261
+
+fl=/Users/macbook/Projekte/speccify/test/rails/(__DELEGATION__)
+fn=ActionController::Response::default_charset-1093636
+1 20
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::__send__
+calls=1 2
+2 24
+
+fl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/lint.rb
+fn=Rack::Lint::check_env-1093636
+57 232
+cfl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/lint.rb
+cfn=Rack::Lint::check_error
+calls=1 164
+164 304
+cfl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/lint.rb
+cfn=Rack::Lint::Assertion::assert
+calls=9 195
+195 560
+cfl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/lint.rb
+cfn=Rack::Lint::check_input
+calls=1 162
+162 312
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::inspect
+calls=1 157
+157 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::each
+calls=2 135
+135 878
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Module::to_s
+calls=2 153
+153 16
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::inspect
+calls=1 61
+61 667
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=6 184
+184 43
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::each
+calls=1 142
+142 1625
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::class
+calls=2 153
+153 16
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Module::include-1093636
+0 19
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/vendor/builder-2.1.2/blankslate.rb
+cfn=Module::append_features
+calls=1 207
+207 64
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Module::included
+calls=1 207
+207 9
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/integration.rb
+fn=ActionController::Integration::ControllerCapture::ClassMethods::clear_last_instantiation!-1093636
+473 17
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/module/attribute_accessors.rb
+cfn=ActionController::Integration::ControllerCapture::ClassMethods::last_instantiation=
+calls=1 474
+474 9
+
+fl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/lint.rb
+fn=Rack::Lint::check_content_type-1093636
+357 19
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::each
+calls=1 358
+358 163
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activerecord/lib/active_record/query_cache.rb
+fn=ActiveRecord::QueryCache::ClassMethods::cache-1093636
+5 54
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::blank?
+calls=1 6
+6 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activerecord/lib/active_record/connection_adapters/abstract/query_cache.rb
+cfn=ActiveRecord::ConnectionAdapters::QueryCache::cache
+calls=1 9
+9 41515
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/class/attribute_accessors.rb
+cfn=<Class::ActiveRecord::Base>::configurations
+calls=1 6
+6 10
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activerecord/lib/active_record/connection_adapters/abstract/connection_specification.rb
+cfn=<Class::ActiveRecord::Base>::connection
+calls=1 9
+9 178
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/class/attribute_accessors.rb
+fn=<Class::ActionController::Base>::protected_instance_variables-1093636
+17 9
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activerecord/lib/active_record/connection_adapters/abstract/query_cache.rb
+fn=ActiveRecord::ConnectionAdapters::QueryCache::clear_query_cache
+54 14
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::clear
+calls=1 55
+55 10
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/base.rb
+fn=ActionController::Base::initialize_current_url-1093636
+1229 31
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Class::new
+calls=1 1230
+1230 36
+cfl=/Users/macbook/Projekte/speccify/test/rails/(eval)
+cfn=ActionController::Base::request
+calls=1 1230
+1230 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/(eval)
+cfn=ActionController::Base::params
+calls=1 1230
+1230 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::clone
+calls=1 1230
+1230 35
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Exception::message-1093636
+0 23
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Exception::to_s
+calls=1 85
+85 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Exception::to_s
+calls=1 2
+2 9
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=String::to_sym-1093636
+0 37
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/response.rb
+fn=ActionController::Response::charset=
+82 26
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]=
+calls=1 85
+85 10
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/response.rb
+cfn=ActionController::Response::content_type
+calls=1 85
+85 72
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/request.rb
+fn=ActionController::Request::request_method-1093636
+34 51
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=1 35
+35 8
+cfl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/request.rb
+cfn=Rack::Request::request_method
+calls=1 35
+35 20
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=1 35
+35 9
+cfl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/request.rb
+cfn=Rack::Request::request_method
+calls=1 35
+35 19
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Hash::include?-1093636
+0 144
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=IO::write
+0 91
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Hash::merge
+0 772
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=<Class::Hash>::allocate
+calls=45 59
+59 304
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::initialize_copy
+calls=45 59
+59 459
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=<Class::Hash>::allocate
+calls=1 381
+381 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::initialize_copy
+calls=1 381
+381 12
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=<Class::Hash>::allocate
+calls=1 22
+22 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::initialize_copy
+calls=1 22
+22 13
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=<Class::Hash>::allocate
+calls=1 22
+22 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::initialize_copy
+calls=1 22
+22 12
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/mime_type.rb
+fn=Mime::Type::to_s-1093636
+152 25
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/base.rb
+fn=ActionController::Base::process_cleanup
+1340 6
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/rack_ext/multipart.rb
+fn=<Module::Rack::Utils::Multipart>::parse_multipart
+5 54
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/rewindable_input.rb
+cfn=ActionController::RewindableInput::RewindableIO::method_missing
+calls=2 9
+9 387
+cfl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/utils.rb
+cfn=<Module::Rack::Utils::Multipart>::parse_multipart_without_rewind
+calls=1 6
+6 27
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=2 9
+9 14
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Kernel::String-1093636
+0 70
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=NilClass::to_s
+calls=1 76
+76 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=NilClass::to_s
+calls=1 92
+92 8
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/request.rb
+fn=ActionController::Request::path_parameters-1093636
+401 17
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]=
+calls=1 402
+402 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=1 402
+402 18
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/callbacks.rb
+fn=ActiveSupport::Callbacks::Callback::should_run_callback?-1093636
+194 80
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Enumerable::all?
+calls=2 196
+196 40
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::compact
+calls=4 196
+196 28
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=4 196
+196 62
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Enumerable::any?
+calls=2 196
+196 38
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::flatten
+calls=4 196
+196 34
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_view/base.rb
+fn=ActionView::Base::_copy_ivars_from_controller-1093636
+291 53
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::-
+calls=1 294
+294 27
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/class/attribute_accessors.rb
+cfn=ActionController::Base::protected_instance_variables
+calls=1 294
+294 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::each
+calls=1 295
+295 74
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::respond_to?
+calls=1 294
+294 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::instance_variable_names
+calls=1 293
+293 26
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/buffered_logger.rb
+fn=ActiveSupport::BufferedLogger::clear_buffer-1093636
+123 60
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::delete
+calls=1 124
+124 20
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=<Class::Thread>::current
+calls=1 124
+124 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::delete
+calls=1 124
+124 18
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=<Class::Thread>::current
+calls=1 124
+124 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::delete
+calls=1 124
+124 18
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=<Class::Thread>::current
+calls=1 124
+124 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::delete
+calls=1 124
+124 18
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=<Class::Thread>::current
+calls=1 124
+124 7
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=String::==-1093636
+0 181
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=String::scan
+0 16
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/hash/indifferent_access.rb
+fn=HashWithIndifferentAccess::initialize
+6 75
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/hash/indifferent_access.rb
+cfn=HashWithIndifferentAccess::update
+calls=1 9
+9 30
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::is_a?
+calls=1 7
+7 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::initialize
+calls=1 8
+8 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/hash/indifferent_access.rb
+cfn=HashWithIndifferentAccess::update
+calls=1 9
+9 26
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::is_a?
+calls=1 7
+7 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::initialize
+calls=1 8
+8 7
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/request.rb
+fn=ActionController::Request::remote_ip-1093636
+217 74
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::empty?
+calls=1 222
+222 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::reject
+calls=1 221
+221 36
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::scan
+calls=1 218
+218 16
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::include?
+calls=1 226
+226 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::blank?
+calls=1 220
+220 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=4 247
+247 39
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activerecord/lib/active_record/connection_adapters/abstract/connection_pool.rb
+fn=ActiveRecord::ConnectionAdapters::ConnectionHandler::retrieve_connection-1093636
+324 27
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activerecord/lib/active_record/connection_adapters/abstract/connection_pool.rb
+cfn=ActiveRecord::ConnectionAdapters::ConnectionHandler::retrieve_connection_pool
+calls=1 325
+325 42
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activerecord/lib/active_record/connection_adapters/abstract/connection_pool.rb
+cfn=ActiveRecord::ConnectionAdapters::ConnectionPool::connection
+calls=1 326
+326 64
+
+fl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/utils.rb
+fn=Rack::Utils::parse_query_without_ajax_body_cleanup-1093636
+33 46
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::split
+calls=1 36
+36 13
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::each
+calls=1 36
+36 8
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/class/attribute_accessors.rb
+fn=ActionController::Base::consider_all_requests_local-1093636
+21 10
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/testing/performance.rb
+fn=ActiveSupport::Testing::Performance::Profiler::run
+177 3287
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::__send__
+calls=1 57
+57 58415
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=String::to_s-1093636
+0 86
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Kernel::__send__
+0 116
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/integration.rb
+cfn=ActionController::Integration::Session::get
+calls=1 498
+498 58076
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=StringIO::rewind
+calls=1 15
+15 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::respond_to?
+calls=1 15
+15 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=StringIO::rewind
+calls=1 15
+15 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=StringIO::read
+calls=1 15
+15 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::respond_to?
+calls=1 15
+15 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/class/attribute_accessors.rb
+cfn=<Class::ActionController::Base>::default_charset
+calls=1 2
+2 9
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/buffered_logger.rb
+fn=ActiveSupport::BufferedLogger::buffer-1093636
+119 183
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]=
+calls=1 120
+120 18
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=<Class::Thread>::current
+calls=1 120
+120 10
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=1 120
+120 30
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=<Class::Thread>::current
+calls=1 120
+120 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=1 120
+120 17
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=<Class::Thread>::current
+calls=2 120
+120 14
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=2 120
+120 32
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]=
+calls=1 120
+120 20
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=<Class::Thread>::current
+calls=1 120
+120 10
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=1 120
+120 30
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=<Class::Thread>::current
+calls=1 120
+120 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=1 120
+120 17
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=<Class::Thread>::current
+calls=2 120
+120 16
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=2 120
+120 33
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]=
+calls=1 120
+120 18
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=<Class::Thread>::current
+calls=1 120
+120 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=1 120
+120 27
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=<Class::Thread>::current
+calls=1 120
+120 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=1 120
+120 17
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=<Class::Thread>::current
+calls=2 120
+120 15
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=2 120
+120 32
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]=
+calls=1 120
+120 18
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=<Class::Thread>::current
+calls=1 120
+120 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=1 120
+120 28
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Fixnum::<=-1093636
+0 9
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=String::sub
+0 2142
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_view/renderable.rb
+fn=ActionView::Renderable::method_name
+48 112
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::to_sym
+calls=1 55
+55 12
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/memoizable.rb
+cfn=ActionView::Renderable::method_name_without_locals
+calls=1 53
+53 38
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Enumerable::any?
+calls=1 49
+49 25
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::to_sym
+calls=1 55
+55 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/memoizable.rb
+cfn=ActionView::Renderable::method_name_without_locals
+calls=1 53
+53 32
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Enumerable::any?
+calls=1 49
+49 24
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::to_sym
+calls=1 55
+55 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/memoizable.rb
+cfn=ActionView::Renderable::method_name_without_locals
+calls=1 53
+53 34
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Enumerable::any?
+calls=1 49
+49 25
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::to_sym
+calls=1 55
+55 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/memoizable.rb
+cfn=ActionView::Renderable::method_name_without_locals
+calls=1 53
+53 34
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Enumerable::any?
+calls=1 49
+49 24
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Kernel::__send__-1093636
+0 15
+cfl=/Users/macbook/Projekte/speccify/lib/speccify.rb
+cfn=BrowsingTest::test_get_homepage
+calls=1 57
+57 58400
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=String::<=>-1093636
+0 8
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/blank.rb
+fn=NilClass::blank?
+23 28
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=<Class::Array>::allocate
+0 8
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Array::reverse
+0 9
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/response.rb
+fn=ActionController::Response::charset
+91 96
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::split
+calls=1 92
+92 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::[]
+calls=1 92
+92 6
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::String
+calls=1 92
+92 20
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=2 92
+92 34
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/blank.rb
+cfn=NilClass::blank?
+calls=1 93
+93 6
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::split
+calls=1 92
+92 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::[]
+calls=1 92
+92 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::String
+calls=1 92
+92 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=1 92
+92 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/blank.rb
+cfn=NilClass::blank?
+calls=1 93
+93 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::split
+calls=1 92
+92 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::[]
+calls=1 92
+92 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::String
+calls=1 92
+92 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=1 92
+92 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/blank.rb
+cfn=NilClass::blank?
+calls=1 93
+93 7
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=String::strip-1093636
+0 21
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Fixnum::>
+0 23
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/response.rb
+fn=ActionController::Response::last_modified?
+102 12
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::include?
+calls=1 103
+103 8
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Fixnum::>=-1093636
+0 37
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Hash::default=
+0 10
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Array::join
+0 46
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/rescuable.rb
+fn=ActiveSupport::Rescuable::rescue_with_handler
+71 19
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/rescuable.rb
+cfn=ActiveSupport::Rescuable::handler_for_rescue
+calls=1 72
+72 181
+
+fl=/Users/macbook/Projekte/speccify/test/rails/generated code (/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/routing/route.rb:205)
+fn=<Object::ActionController::Routing::Route>::recognize-1093636
+1 86
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Regexp::match
+calls=1 2
+2 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Regexp::match
+calls=5 2
+2 36
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activerecord/lib/active_record/connection_adapters/abstract/query_cache.rb
+fn=ActiveRecord::ConnectionAdapters::QueryCache::cache-1093636
+31 50
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Proc::call
+calls=1 29
+29 41441
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activerecord/lib/active_record/connection_adapters/abstract/query_cache.rb
+cfn=ActiveRecord::ConnectionAdapters::QueryCache::clear_query_cache
+calls=1 36
+36 24
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=<Class::Regexp>::allocate-1093636
+0 8
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/integration.rb
+fn=ActionController::Integration::Session::https?
+116 21
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Hash::initialize
+0 32
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Kernel::raise
+0 139
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Exception::set_backtrace
+calls=1 66
+66 11
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Exception::backtrace
+calls=1 66
+66 10
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=<Class::Exception>::exception
+calls=1 66
+66 55
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Hash::clear-1093636
+0 10
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/response.rb
+fn=ActionController::Response::handle_conditional_get!
+200 34
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/response.rb
+cfn=ActionController::Response::etag?
+calls=1 201
+201 19
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/response.rb
+cfn=ActionController::Response::nonempty_ok_response?
+calls=1 203
+203 45
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/response.rb
+cfn=ActionController::Response::last_modified?
+calls=1 201
+201 20
+
+fl=/Users/macbook/Projekte/speccify/test/rails/generated code (/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/routing/route.rb:205)
+fn=<Object::ActionController::Routing::Route>::recognize-1093636
+1 84
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Regexp::match
+calls=1 2
+2 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Regexp::match
+calls=5 2
+2 39
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Enumerable::find-1093636
+0 63
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::each
+calls=5 59
+59 3567
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/routing/route_set.rb
+fn=ActionController::Routing::RouteSet::recognize-1093636
+436 33
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/routing/recognition_optimisation.rb
+cfn=ActionController::Routing::RouteSet::recognize_path
+calls=1 437
+437 4951
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/request.rb
+cfn=ActionController::Request::path
+calls=1 437
+437 143
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/routing/route_set.rb
+cfn=ActionController::Routing::RouteSet::extract_request_environment
+calls=1 437
+437 104
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Symbol::to_sym-1093636
+0 10
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/dispatcher.rb
+fn=ActionController::Dispatcher::call
+82 17
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/rack_ext/lock.rb
+cfn=Rack::Lock::call
+calls=1 83
+83 42470
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/class/attribute_accessors.rb
+fn=<Class::ActiveRecord::Base>::connection_handler-1093636
+17 8
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=String::size
+0 197
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Kernel::instance_variable_names
+0 47
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/hash/indifferent_access.rb
+fn=HashWithIndifferentAccess::default
+15 82
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::is_a?
+calls=1 16
+16 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::default
+calls=1 19
+19 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::is_a?
+calls=1 16
+16 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Symbol::to_s
+calls=1 16
+16 10
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::default
+calls=1 19
+19 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/hash/indifferent_access.rb
+cfn=HashWithIndifferentAccess::include?
+calls=1 16
+16 54
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::is_a?
+calls=1 16
+16 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Symbol::to_s
+calls=1 16
+16 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::default
+calls=1 19
+19 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/hash/indifferent_access.rb
+cfn=HashWithIndifferentAccess::include?
+calls=1 16
+16 47
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/dispatcher.rb
+fn=ActionController::Dispatcher::dispatch-1093636
+62 100
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/routing/route_set.rb
+cfn=ActionController::Routing::RouteSet::call
+calls=1 65
+65 5289
+cfl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/response.rb
+cfn=Rack::Response::to_a
+calls=1 68
+68 101
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/rescue.rb
+cfn=ActionController::Rescue::ClassMethods::call_with_exception
+calls=1 68
+68 34799
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/callbacks.rb
+cfn=ActiveSupport::Callbacks::run_callbacks
+calls=2 73
+73 1061
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Module::===
+calls=1 65
+65 7
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Kernel::object_id-1093636
+0 7
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/response.rb
+fn=ActionController::Response::convert_expires!
+247 14
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=1 248
+248 17
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/hash/except.rb
+fn=ActiveSupport::CoreExtensions::Hash::Except::except!-1093636
+17 32
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::map!
+calls=1 18
+18 188
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::each
+calls=1 19
+19 236
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::respond_to?
+calls=1 18
+18 8
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/base.rb
+fn=ActionController::Base::performed?-1093636
+1280 11
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/class/attribute_accessors.rb
+fn=ActionController::Base::rescue_templates
+21 9
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Module::extend_object
+0 54
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/test_process.rb
+fn=ActionController::ProcessWithTest::set_test_assigns
+559 38
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::-
+calls=1 561
+561 22
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::each
+calls=1 561
+561 185
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/class/attribute_accessors.rb
+cfn=<Class::ActionController::Base>::protected_instance_variables
+calls=1 561
+561 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::class
+calls=1 561
+561 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::instance_variable_names
+calls=1 561
+561 21
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Class::new-1093636
+0 51
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=<Class::Hash>::allocate
+calls=1 7
+7 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::initialize
+calls=1 7
+7 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_view/base.rb
+cfn=ActionView::Base::ProxyModule::initialize
+calls=1 217
+217 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=<Class::Module>::allocate
+calls=1 217
+217 10
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=<Class::Array>::allocate
+calls=1 196
+196 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_view/paths.rb
+cfn=ActionView::PathSet::initialize
+calls=1 196
+196 99
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Array::include?-1093636
+0 59
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::==
+calls=2 497
+497 14
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::==
+calls=1 158
+158 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::==
+calls=1 417
+417 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::==
+calls=1 417
+417 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Fixnum::==
+calls=2 99
+99 14
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/class/attribute_accessors.rb
+fn=<Class::ActionController::Base>::default_charset-1093636
+17 9
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_view/template.rb
+fn=ActionView::Template::render_template
+181 36
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_view/test_case.rb
+cfn=ActionView::Renderable::render
+calls=1 182
+182 1414
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_view/test_case.rb
+cfn=ActionView::Renderable::render
+calls=1 182
+182 1016
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/rescue.rb
+fn=ActionController::Rescue::clean_backtrace-1093636
+177 40
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/backtrace_cleaner.rb
+cfn=ActiveSupport::BacktraceCleaner::clean
+calls=1 178
+178 22608
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/railties/lib/initializer.rb
+cfn=<Module::Rails>::backtrace_cleaner
+calls=1 178
+178 10
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Exception::backtrace
+calls=1 178
+178 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::respond_to?
+calls=1 178
+178 8
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/session/cookie_store.rb
+fn=ActionController::Session::CookieStore::call-1093636
+89 72
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::is_a?
+calls=1 98
+98 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Class::new
+calls=1 90
+90 59
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]=
+calls=2 91
+91 16
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/rewindable_input.rb
+cfn=ActionController::RewindableInput::call
+calls=1 93
+93 42146
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::send
+calls=1 98
+98 24
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=3 98
+98 22
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Class::new-1093636
+0 335
+cfl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/utils.rb
+cfn=Rack::Utils::HeaderHash::initialize
+calls=1 328
+328 503
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=<Class::Object>::allocate
+calls=1 317
+317 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=<Class::Hash>::allocate
+calls=1 328
+328 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=<Class::StringIO>::allocate
+calls=2 292
+292 14
+cfl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/lint.rb
+cfn=Rack::Lint::initialize
+calls=1 317
+317 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=StringIO::initialize
+calls=2 292
+292 39
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=<Class::Object>::allocate
+calls=2 42
+42 21
+cfl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/lint.rb
+cfn=Rack::Lint::ErrorWrapper::initialize
+calls=1 42
+42 9
+cfl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/lint.rb
+cfn=Rack::Lint::InputWrapper::initialize
+calls=1 41
+41 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/session/abstract_store.rb
+cfn=ActionController::Session::AbstractStore::SessionHash::initialize
+calls=1 90
+90 32
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=<Class::Hash>::allocate
+calls=1 90
+90 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=<Class::Object>::allocate
+calls=1 24
+24 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/rewindable_input.rb
+cfn=ActionController::RewindableInput::RewindableIO::initialize
+calls=1 24
+24 26
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=<Class::Object>::allocate
+calls=1 20
+20 7
+cfl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/request.rb
+cfn=Rack::Request::initialize
+calls=1 20
+20 10
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=<Class::Object>::allocate
+calls=1 431
+431 8
+cfl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/request.rb
+cfn=Rack::Request::initialize
+calls=1 431
+431 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=<Class::Object>::allocate
+calls=2 64
+64 13
+cfl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/request.rb
+cfn=Rack::Request::initialize
+calls=1 63
+63 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/response.rb
+cfn=ActionController::Response::initialize
+calls=1 64
+64 101
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=<Class::Object>::allocate
+calls=1 1211
+1211 6
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_view/test_case.rb
+cfn=ActionView::Base::initialize
+calls=1 1211
+1211 324
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=<Class::StringIO>::allocate
+calls=1 11
+11 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=StringIO::initialize
+calls=1 11
+11 20
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/url_encoded_pair_parser.rb
+cfn=ActionController::UrlEncodedPairParser::initialize
+calls=1 19
+19 43
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=<Class::StringScanner>::allocate
+calls=1 19
+19 10
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=<Class::Hash>::allocate
+calls=1 130
+130 27
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/hash/indifferent_access.rb
+cfn=HashWithIndifferentAccess::initialize
+calls=1 130
+130 93
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=<Class::Object>::allocate
+calls=1 1230
+1230 6
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/url_rewriter.rb
+cfn=ActionController::UrlRewriter::initialize
+calls=1 1230
+1230 11
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=<Class::Hash>::allocate
+calls=1 85
+85 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/hash/indifferent_access.rb
+cfn=HashWithIndifferentAccess::initialize
+calls=1 85
+85 70
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Regexp::initialize
+calls=1 181
+181 16
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=<Class::Regexp>::allocate
+calls=1 181
+181 8
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Fixnum::<-1093636
+0 65
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Kernel::kind_of?
+0 268
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/request.rb
+fn=ActionController::Request::content_length
+80 19
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::to_i
+calls=1 81
+81 11
+cfl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/request.rb
+cfn=Rack::Request::content_length
+calls=1 81
+81 19
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/class/inheritable_attributes.rb
+fn=Class::inheritable_attributes-1093636
+91 17
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=<Class::Time>::allocate
+0 9
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=String::sub!
+0 37
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Array::push
+0 17
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/dispatcher.rb
+fn=ActionController::Dispatcher::_call
+86 19
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/dispatcher.rb
+cfn=ActionController::Dispatcher::dispatch
+calls=1 88
+88 41357
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Symbol::to_s-1093636
+0 136
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Exception::initialize
+0 12
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/base.rb
+fn=<Class::ActionController::Base>::view_paths-5
+424 14
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/base.rb
+fn=ActionController::Base::request_origin
+1308 39
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/request.rb
+cfn=ActionController::Request::remote_ip-1226011
+calls=1 1311
+1311 190
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=<Class::Time>::now
+calls=1 1311
+1311 37
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/time/conversions.rb
+cfn=ActiveSupport::CoreExtensions::Time::Conversions::to_s
+calls=1 1311
+1311 74
+cfl=/Users/macbook/Projekte/speccify/test/rails/(eval)
+cfn=ActionController::Base::request
+calls=1 1311
+1311 8
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Kernel::respond_to?-1093636
+0 494
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/base.rb
+fn=<Class::ActionController::Base>::view_paths
+424 27
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Class::superclass
+calls=1 428
+428 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/base.rb
+cfn=<Class::ActionController::Base>::view_paths
+calls=1 428
+428 14
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Fixnum::==-1093636
+0 65
+
+fl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/lint.rb
+fn=Rack::Lint::initialize
+6 9
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Hash::default
+0 233
+
+fl=/usr/local/lib/ruby/1.8/set.rb
+fn=Set::include?
+153 21
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::include?
+calls=1 154
+154 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::include?
+calls=1 154
+154 7
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_view/test_case.rb
+fn=ActionView::Renderable::render-1093636
+14 106
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::is_a?
+calls=2 17
+17 15
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]=
+calls=1 18
+18 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::instance_variable_get
+calls=1 16
+16 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_view/renderable.rb
+cfn=ActionView::Renderable::render_without_template_tracking
+calls=1 20
+20 1308
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=1 18
+18 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::respond_to?
+calls=1 15
+15 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::is_a?
+calls=2 17
+17 12
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::instance_variable_get
+calls=1 16
+16 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_view/renderable.rb
+cfn=ActionView::Renderable::render_without_template_tracking
+calls=1 20
+20 935
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=1 18
+18 6
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::respond_to?
+calls=1 15
+15 8
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Fixnum::to_s-1093636
+0 72
+
+fl=/Users/macbook/Projekte/speccify/test/rails/(eval)
+fn=<Class::ActionController::Dispatcher>::after_dispatch_callback_chain
+7 28
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Class::superclass
+calls=1 10
+10 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::respond_to?
+calls=1 10
+10 8
+
+fl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/utils.rb
+fn=Rack::Utils::HeaderHash::initialize-1093636
+162 21
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::each
+calls=1 164
+164 482
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/routing/route_set.rb
+fn=ActionController::Routing::RouteSet::call-1093636
+430 26
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Class::new
+calls=1 431
+431 32
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/routing/route_set.rb
+cfn=ActionController::Routing::RouteSet::recognize
+calls=1 432
+432 5231
+
+fl=/Users/macbook/Projekte/speccify/test/rails/generated code (/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/routing/route.rb:205)
+fn=<Object::ActionController::Routing::Route>::recognize-1093636
+1 90
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Regexp::match
+calls=1 2
+2 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Regexp::match
+calls=5 2
+2 36
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_view/base.rb
+fn=ActionView::Base::initialize_without_template_tracking-1093636
+212 35
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Class::new
+calls=1 217
+217 36
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_view/base.rb
+cfn=ActionView::Base::view_paths=
+calls=1 218
+218 190
+
+fl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/lint.rb
+fn=Rack::Lint::check_status-1093636
+314 20
+cfl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/lint.rb
+cfn=Rack::Lint::Assertion::assert
+calls=1 316
+316 71
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/buffered_logger.rb
+fn=ActiveSupport::BufferedLogger::fatal-1093636
+70 19
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/buffered_logger.rb
+cfn=ActiveSupport::BufferedLogger::add
+calls=1 71
+71 504
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=<Class::Thread>::current-1093636
+0 147
+
+fl=/Users/macbook/Projekte/speccify/test/rails/(eval)
+fn=<Class::ActionController::Base>::master_helper_module
+1 14
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/class/inheritable_attributes.rb
+cfn=Class::read_inheritable_attribute
+calls=1 2
+2 38
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/base.rb
+fn=ActionController::Base::assign_shortcuts-1093636
+1217 45
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/request.rb
+cfn=ActionController::Request::parameters
+calls=1 1218
+1218 1885
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/request.rb
+cfn=ActionController::Request::session
+calls=1 1221
+1221 20
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Hash::each_pair-1093636
+0 23
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_view/base.rb
+fn=ActionView::Base::_evaluate_assigns_and_ivars
+283 55
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::each
+calls=1 285
+285 12
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_view/base.rb
+cfn=ActionView::Base::_copy_ivars_from_controller
+calls=1 286
+286 197
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=<Class::Regexp>::quote-1093636
+0 10
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Kernel::dup
+0 96
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=<Class::Object>::allocate
+calls=1 33
+33 6
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::initialize_copy
+calls=1 33
+33 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=<Class::Object>::allocate
+calls=1 59
+59 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::initialize_copy
+calls=1 59
+59 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::initialize_copy
+calls=1 125
+125 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=<Class::String>::allocate
+calls=1 125
+125 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=<Class::Hash>::allocate
+calls=1 44
+44 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::initialize_copy
+calls=1 44
+44 13
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::initialize_copy
+calls=1 11
+11 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=<Class::String>::allocate
+calls=1 11
+11 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=<Class::Hash>::allocate
+calls=1 21
+21 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::initialize_copy
+calls=1 21
+21 10
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Hash::each-1093636
+0 1623
+cfl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/lint.rb
+cfn=Rack::Lint::Assertion::assert
+calls=14 144
+144 702
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::inspect
+calls=14 144
+144 117
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::include?
+calls=22 143
+143 142
+cfl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/lint.rb
+cfn=Rack::Lint::Assertion::assert
+calls=24 342
+342 1077
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::+
+calls=4 342
+342 30
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::each
+calls=3 343
+343 493
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::each
+calls=1 343
+343 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Module::to_s
+calls=8 342
+342 57
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::class
+calls=8 342
+342 51
+cfl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/lint.rb
+cfn=Rack::Lint::Assertion::assert
+calls=1 363
+363 79
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::downcase
+calls=1 362
+362 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::==
+calls=1 362
+362 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Fixnum::to_s
+calls=1 363
+363 9
+cfl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/lint.rb
+cfn=Rack::Lint::Assertion::assert
+calls=3 414
+414 171
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::downcase
+calls=8 384
+384 61
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::==
+calls=9 408
+408 56
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Fixnum::to_s
+calls=2 414
+414 14
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=1 408
+408 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/response.rb
+cfn=ActionController::Response::each
+calls=1 399
+399 1900
+cfl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/utils.rb
+cfn=Rack::Utils::HeaderHash::[]=
+calls=4 164
+164 402
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Object::initialize-1093636
+0 28
+
+fl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/lint.rb
+fn=Rack::Lint::check_error
+272 15
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::each
+calls=1 274
+274 289
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Array::initialize-1093636
+0 10
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/blank.rb
+fn=Object::present?
+17 16
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/blank.rb
+cfn=String::blank?
+calls=1 18
+18 9
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/buffered_logger.rb
+fn=ActiveSupport::BufferedLogger::flush-1093636
+95 53
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Mutex::synchronize
+calls=1 96
+96 238
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Mutex::synchronize
+calls=1 96
+96 227
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Mutex::synchronize
+calls=1 96
+96 209
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Mutex::synchronize
+calls=1 96
+96 157
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/base.rb
+fn=ActionController::Base::send_response-1093636
+530 32
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/response.rb
+cfn=ActionController::Response::prepare!
+calls=1 531
+531 910
+cfl=/Users/macbook/Projekte/speccify/test/rails/(eval)
+cfn=ActionController::Base::response
+calls=2 532
+532 13
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/hash/indifferent_access.rb
+fn=ActiveSupport::CoreExtensions::Hash::IndifferentAccess::with_indifferent_access-1093636
+129 27
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Class::new
+calls=1 130
+130 140
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::default
+calls=1 131
+131 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::default=
+calls=1 131
+131 10
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/session/abstract_store.rb
+fn=ActionController::Session::AbstractStore::SessionHash::initialize-1093636
+13 24
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::initialize
+calls=1 14
+14 8
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=<Class::String>::allocate-1093636
+0 15
+
+fl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/utils.rb
+fn=<Module::Rack::Utils::Multipart>::parse_multipart_without_rewind
+259 19
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=1 261
+261 8
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Module::===-1093636
+0 112
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Module::<
+0 16
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/rewindable_input.rb
+fn=ActionController::RewindableInput::call
+23 32
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Class::new
+calls=1 24
+24 50
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]=
+calls=1 24
+24 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/params_parser.rb
+cfn=ActionController::ParamsParser::call
+calls=1 25
+25 42048
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=1 24
+24 8
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Kernel::eql?-1093636
+0 8
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_view/base.rb
+fn=<Class::ActionView::Base>::process_view_paths
+195 22
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Class::new
+calls=1 196
+196 126
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::Array
+calls=1 196
+196 9
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/rewindable_input.rb
+fn=ActionController::RewindableInput::RewindableIO::initialize-1093636
+4 18
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::is_a?
+calls=1 6
+6 8
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Kernel::inspect-1093636
+0 80
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::to_s
+calls=2 61
+61 21
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=FalseClass::to_s
+calls=1 61
+61 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=TrueClass::to_s
+calls=3 61
+61 21
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Fixnum::to_s
+calls=2 61
+61 15
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Regexp::initialize-1093636
+0 16
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_view/paths.rb
+fn=ActionView::PathSet::initialize
+11 19
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::map!
+calls=1 12
+12 70
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::initialize
+calls=1 12
+12 10
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Module::==-1093636
+0 8
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Kernel::=~
+0 16
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activerecord/lib/active_record/connection_adapters/abstract/connection_specification.rb
+fn=<Class::ActiveRecord::Base>::retrieve_connection
+122 23
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activerecord/lib/active_record/connection_adapters/abstract/connection_pool.rb
+cfn=ActiveRecord::ConnectionAdapters::ConnectionHandler::retrieve_connection
+calls=1 123
+123 133
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/class/attribute_accessors.rb
+cfn=<Class::ActiveRecord::Base>::connection_handler
+calls=1 123
+123 8
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/response.rb
+fn=ActionController::Response::initialize-1093636
+42 42
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::lambda
+calls=1 46
+46 24
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::dup
+calls=1 44
+44 35
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Array::--1093636
+0 49
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/integration.rb
+fn=ActionController::Integration::Session::get
+195 19
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/integration.rb
+cfn=ActionController::Integration::Session::process
+calls=1 196
+196 58057
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/buffered_logger.rb
+fn=ActiveSupport::BufferedLogger::add-1093636
+58 182
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::<<
+calls=1 64
+64 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::[]
+calls=1 63
+63 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::to_s
+calls=1 60
+60 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Fixnum::>
+calls=1 59
+59 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Fixnum::==
+calls=1 63
+63 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/buffered_logger.rb
+cfn=ActiveSupport::BufferedLogger::auto_flush
+calls=1 65
+65 336
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/buffered_logger.rb
+cfn=ActiveSupport::BufferedLogger::buffer
+calls=1 64
+64 76
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::<<
+calls=1 64
+64 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::[]
+calls=1 63
+63 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::to_s
+calls=1 60
+60 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Fixnum::>
+calls=1 59
+59 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Fixnum::==
+calls=1 63
+63 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/buffered_logger.rb
+cfn=ActiveSupport::BufferedLogger::auto_flush
+calls=1 65
+65 325
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/buffered_logger.rb
+cfn=ActiveSupport::BufferedLogger::buffer
+calls=1 64
+64 79
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::<<
+calls=1 64
+64 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::[]
+calls=1 63
+63 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::to_s
+calls=1 60
+60 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Fixnum::>
+calls=1 59
+59 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Fixnum::==
+calls=1 63
+63 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/buffered_logger.rb
+cfn=ActiveSupport::BufferedLogger::auto_flush
+calls=1 65
+65 303
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/buffered_logger.rb
+cfn=ActiveSupport::BufferedLogger::buffer
+calls=1 64
+64 69
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Array::flatten-1093636
+0 34
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Module::to_s
+0 116
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Hash::key?
+0 25
+
+fl=/Users/macbook/Projekte/speccify/test/rails/generated code (/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/routing/route.rb:205)
+fn=<Object::ActionController::Routing::Route>::recognize
+1 90
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Regexp::match
+calls=1 2
+2 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Regexp::match
+calls=5 2
+2 36
+
+fl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/request.rb
+fn=Rack::Request::POST-1093636
+107 143
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]=
+calls=4 115
+115 31
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::eql?
+calls=1 108
+108 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/rewindable_input.rb
+cfn=ActionController::RewindableInput::RewindableIO::method_missing
+calls=3 116
+116 101
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/rack_ext/multipart.rb
+cfn=<Module::Rack::Utils::Multipart>::parse_multipart
+calls=1 112
+112 482
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/request.rb
+cfn=ActionController::Request::form_data?
+calls=1 110
+110 170
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=8 118
+118 67
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/rack_ext/parse_query.rb
+cfn=<Module::Rack::Utils>::parse_query
+calls=1 115
+115 157
+
+fl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/lint.rb
+fn=Rack::Lint::InputWrapper::read-1093636
+238 55
+cfl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/lint.rb
+cfn=Rack::Lint::Assertion::assert
+calls=2 248
+248 171
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Fixnum::==
+calls=1 242
+242 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::size
+calls=1 242
+242 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=StringIO::read
+calls=1 247
+247 10
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Array::reject-1093636
+0 1025
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::=~
+calls=1 221
+221 11
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Proc::call
+calls=77 66
+66 9718
+
+fl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/lint.rb
+fn=Rack::Lint::each-1093636
+432 23
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/response.rb
+cfn=ActionController::Response::each
+calls=1 435
+435 3562
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Kernel::instance_variable_set-1093636
+0 65
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/rescue.rb
+fn=ActionController::Rescue::rescue_action
+72 28
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/rescuable.rb
+cfn=ActiveSupport::Rescuable::rescue_with_handler
+calls=1 74
+74 200
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/rescue.rb
+cfn=ActionController::Rescue::rescue_action_without_handler
+calls=1 74
+74 28261
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=String::include?-1093636
+0 2007
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=TrueClass::to_s
+0 21
+
+fl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/head.rb
+fn=Rack::Head::call
+8 34
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activerecord/lib/active_record/query_cache.rb
+cfn=ActiveRecord::QueryCache::call
+calls=1 9
+9 41794
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::==
+calls=1 11
+11 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=1 11
+11 8
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_view/paths.rb
+fn=<Class::ActionView::PathSet>::type_cast-1093636
+3 20
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::is_a?
+calls=1 4
+4 9
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/callbacks.rb
+fn=ActiveSupport::Callbacks::Callback::call-1093636
+165 64
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/callbacks.rb
+cfn=ActiveSupport::Callbacks::Callback::should_run_callback?
+calls=2 166
+166 282
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/callbacks.rb
+cfn=ActiveSupport::Callbacks::Callback::evaluate_method
+calls=2 166
+166 335
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/class/attribute_accessors.rb
+fn=<Class::ActiveRecord::Base>::configurations-1093636
+17 10
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Time::initialize
+0 8
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_view/template.rb
+fn=ActionView::Template::EagerPath::[]
+76 21
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=1 77
+77 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=1 77
+77 9
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Array::+-1093636
+0 9
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Hash::[]=
+0 328
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::hash
+calls=1 120
+120 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::hash
+calls=1 120
+120 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::hash
+calls=1 120
+120 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::hash
+calls=1 120
+120 8
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/object/misc.rb
+fn=Object::returning-1093636
+38 26
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/integration.rb
+cfn=ActionController::Integration::Runner::copy_session_variables!
+calls=1 499
+499 142
+
+fl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/response.rb
+fn=Rack::Response::to_a-1093636
+96 39
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::to_i
+calls=2 104
+104 19
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::include?
+calls=1 99
+99 27
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::to_hash
+calls=1 104
+104 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=1 103
+103 7
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/response.rb
+fn=ActionController::Response::assign_default_content_type_and_charset!-1093636
+136 49
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/response.rb
+cfn=ActionController::Response::sending_file?
+calls=1 138
+138 39
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/response.rb
+cfn=ActionController::Response::charset
+calls=1 138
+138 68
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/response.rb
+cfn=ActionController::Response::charset=
+calls=1 138
+138 108
+cfl=/Users/macbook/Projekte/speccify/test/rails/(__DELEGATION__)
+cfn=ActionController::Response::default_charset
+calls=1 138
+138 44
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/response.rb
+cfn=ActionController::Response::content_type
+calls=1 137
+137 73
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_view/template.rb
+fn=ActionView::Template::recompile?-1093636
+197 16
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Hash::blank?
+0 8
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/request.rb
+fn=ActionController::Request::xhr?
+202 19
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::=~
+calls=1 203
+203 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=1 203
+203 18
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/dispatcher.rb
+fn=ActionController::Dispatcher::flush_logger-1093636
+106 20
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/buffered_logger.rb
+cfn=ActiveSupport::BufferedLogger::flush
+calls=1 107
+107 170
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/class/attribute_accessors.rb
+cfn=<Class::ActionController::Base>::logger
+calls=1 107
+107 9
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Integer::to_i-1093636
+0 29
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=StringIO::read
+0 17
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/base.rb
+fn=ActionController::Base::render_for_file
+1177 84
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/class/attribute_accessors.rb
+cfn=ActionController::Base::logger
+calls=2 1179
+1179 13
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/base.rb
+cfn=ActionController::Base::render_for_text
+calls=1 1180
+1180 236
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_view/base.rb
+cfn=ActionView::Base::render
+calls=1 1180
+1180 1223
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::+
+calls=1 1179
+1179 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/memoizable.rb
+cfn=ActionView::Template::path_without_format_and_extension
+calls=1 1178
+1178 38
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/buffered_logger.rb
+cfn=ActiveSupport::BufferedLogger::info
+calls=1 1179
+1179 481
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Symbol::to_s
+calls=1 1179
+1179 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::respond_to?
+calls=1 1178
+1178 8
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Kernel::lambda-1093636
+0 24
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Hash::empty?
+0 16
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/filters.rb
+fn=ActionController::Filters::InstanceMethods::process
+604 23
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/base.rb
+cfn=ActionController::Base::process_without_filters
+calls=1 606
+606 34421
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Array::each-1093636
+0 5137
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::include?
+calls=288 22
+22 1865
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/class/attribute_accessors.rb
+fn=ActionController::Base::rescue_responses-1093636
+21 8
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/hash/indifferent_access.rb
+fn=HashWithIndifferentAccess::dup
+84 11
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Class::new
+calls=1 85
+85 97
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Array::each-1093636
+0 2177
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Module::<
+calls=2 307
+307 16
+cfl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/lint.rb
+cfn=Rack::Lint::Assertion::assert
+calls=12 136
+136 564
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::[]
+calls=2 136
+136 16
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=NilClass::to_s
+calls=2 136
+136 15
+cfl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/lint.rb
+cfn=Rack::Lint::Assertion::assert
+calls=3 204
+204 149
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::to_s
+calls=3 204
+204 29
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Symbol::to_s
+calls=3 204
+204 23
+cfl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/lint.rb
+cfn=Rack::Lint::Assertion::assert
+calls=3 275
+275 145
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::to_s
+calls=3 275
+275 24
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Symbol::to_s
+calls=3 275
+275 23
+cfl=/Users/macbook/Projekte/speccify/test/rails/generated code (/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/routing/route.rb:205)
+cfn=<Object::ActionController::Routing::Route>::recognize
+calls=5 59
+59 104
+cfl=/Users/macbook/Projekte/speccify/test/rails/generated code (/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/routing/route.rb:205)
+cfn=<Object::ActionController::Routing::Route>::recognize
+calls=5 59
+59 106
+cfl=/Users/macbook/Projekte/speccify/test/rails/generated code (/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/routing/route.rb:205)
+cfn=<Object::ActionController::Routing::Route>::recognize
+calls=5 59
+59 107
+cfl=/Users/macbook/Projekte/speccify/test/rails/generated code (/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/routing/route.rb:205)
+cfn=<Object::ActionController::Routing::Route>::recognize
+calls=5 59
+59 109
+cfl=/Users/macbook/Projekte/speccify/test/rails/generated code (/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/routing/route.rb:205)
+cfn=<Object::ActionController::Routing::Route>::recognize
+calls=5 59
+59 107
+cfl=/Users/macbook/Projekte/speccify/test/rails/generated code (/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/routing/route.rb:205)
+cfn=<Object::ActionController::Routing::Route>::recognize
+calls=5 59
+59 105
+cfl=/Users/macbook/Projekte/speccify/test/rails/generated code (/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/routing/route.rb:205)
+cfn=<Object::ActionController::Routing::Route>::recognize
+calls=5 59
+59 105
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::merge
+calls=45 59
+59 1485
+cfl=/Users/macbook/Projekte/speccify/test/rails/generated code (/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/routing/route.rb:205)
+cfn=<Object::ActionController::Routing::Route>::recognize
+calls=5 59
+59 109
+cfl=/Users/macbook/Projekte/speccify/test/rails/generated code (/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/routing/route.rb:205)
+cfn=<Object::ActionController::Routing::Route>::recognize
+calls=5 59
+59 107
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/hash/indifferent_access.rb
+cfn=HashWithIndifferentAccess::delete
+calls=4 19
+19 164
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::map
+calls=4 58
+58 11696
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::reject
+calls=2 66
+66 10718
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::instance_variable_set
+calls=2 295
+295 16
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::instance_variable_get
+calls=2 295
+295 16
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::to_s
+calls=1 183
+183 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/mime_type.rb
+cfn=Mime::Type::to_s
+calls=1 183
+183 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::=~
+calls=2 183
+183 16
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]=
+calls=4 564
+564 31
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::[]
+calls=2 562
+562 18
+cfl=/Users/macbook/Projekte/speccify/test/rails/(eval)
+cfn=ActionController::Base::response
+calls=4 564
+564 24
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::instance_variable_get
+calls=2 562
+562 15
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::instance_variable_set
+calls=3 546
+546 24
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::__send__
+calls=3 546
+546 27
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_view/base.rb
+fn=ActionView::Base::render-1093636
+237 159
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_view/template.rb
+cfn=ActionView::Template::render_template
+calls=1 247
+247 1433
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_view/base.rb
+cfn=ActionView::Base::template_format
+calls=1 246
+246 270
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_view/paths.rb
+cfn=ActionView::PathSet::find_template
+calls=1 246
+246 55
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=4 247
+247 36
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/hash/reverse_merge.rb
+cfn=ActiveSupport::CoreExtensions::Hash::ReverseMerge::reverse_merge
+calls=1 242
+242 52
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Module::===
+calls=1 241
+241 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_view/template.rb
+cfn=ActionView::Template::render_template
+calls=1 247
+247 1033
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_view/base.rb
+cfn=ActionView::Base::template_format
+calls=1 246
+246 12
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_view/paths.rb
+cfn=ActionView::PathSet::find_template
+calls=1 246
+246 23
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=4 247
+247 26
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/hash/reverse_merge.rb
+cfn=ActiveSupport::CoreExtensions::Hash::ReverseMerge::reverse_merge
+calls=1 242
+242 47
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Module::===
+calls=1 241
+241 8
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/response.rb
+fn=ActionController::Response::convert_language!-1093636
+243 14
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=1 244
+244 17
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Hash::[]-1093636
+0 1073
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::default
+calls=1 87
+87 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::default
+calls=2 64
+64 15
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::default
+calls=1 428
+428 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::default
+calls=1 108
+108 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::default
+calls=1 422
+422 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::default
+calls=1 402
+402 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/hash/indifferent_access.rb
+cfn=HashWithIndifferentAccess::default
+calls=1 1285
+1285 40
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/hash/indifferent_access.rb
+cfn=HashWithIndifferentAccess::default
+calls=1 1242
+1242 108
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::default
+calls=1 224
+224 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::hash
+calls=1 120
+120 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::default
+calls=1 120
+120 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::hash
+calls=1 120
+120 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::hash
+calls=2 120
+120 14
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::hash
+calls=1 120
+120 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::default
+calls=1 120
+120 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::hash
+calls=1 120
+120 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::hash
+calls=2 120
+120 13
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::default
+calls=1 243
+243 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/hash/indifferent_access.rb
+cfn=HashWithIndifferentAccess::default
+calls=1 184
+184 102
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::default
+calls=1 203
+203 6
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::default
+calls=2 76
+76 13
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::default
+calls=2 92
+92 13
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::hash
+calls=1 120
+120 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::default
+calls=1 120
+120 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::hash
+calls=1 120
+120 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::hash
+calls=2 120
+120 12
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::default
+calls=1 133
+133 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::default
+calls=1 236
+236 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::default
+calls=1 228
+228 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::default
+calls=1 244
+244 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::default
+calls=1 248
+248 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::default
+calls=1 252
+252 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::default
+calls=4 196
+196 26
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::hash
+calls=1 120
+120 6
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::default
+calls=1 120
+120 8
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/rescue.rb
+fn=ActionController::Rescue::rescues_path-1093636
+165 33
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_view/template.rb
+cfn=ActionView::Template::EagerPath::[]
+calls=1 166
+166 20
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_view/template.rb
+cfn=ActionView::Template::EagerPath::[]
+calls=1 166
+166 18
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=<Class::Module>::allocate-1093636
+0 10
+
+fl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/lint.rb
+fn=Rack::Lint::ErrorWrapper::initialize
+284 9
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Kernel::instance_of?
+0 365
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/response.rb
+fn=ActionController::Response::nonempty_ok_response?
+215 22
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::==
+calls=1 216
+216 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::[]
+calls=1 216
+216 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::to_s
+calls=1 216
+216 7
+
+fl=/Users/macbook/Projekte/speccify/test/rails/(eval)
+fn=ActionController::Base::response-1093636
+1 79
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Kernel::initialize_copy
+0 15
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Enumerable::inject
+0 16
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::each
+calls=1 373
+373 13
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/params_parser.rb
+fn=ActionController::ParamsParser::call-1093636
+10 29
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/params_parser.rb
+cfn=ActionController::ParamsParser::parse_formatted_parameters
+calls=1 11
+11 131
+cfl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/methodoverride.rb
+cfn=Rack::MethodOverride::call
+calls=1 15
+15 41888
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Time::strftime-1093636
+0 27
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/response.rb
+fn=ActionController::Response::each
+151 96
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::is_a?
+calls=1 155
+155 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::each_line
+calls=1 156
+156 1839
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::respond_to?
+calls=1 152
+152 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::is_a?
+calls=1 155
+155 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::each_line
+calls=1 156
+156 3496
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::respond_to?
+calls=1 152
+152 8
+
+fl=/Users/macbook/Projekte/speccify/test/rails/(recognize_optimized)
+fn=<Object::ActionController::Routing::RouteSet>::recognize_optimized-1093636
+2 258
+cfl=/Users/macbook/Projekte/speccify/test/rails/generated code (/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/routing/route.rb:205)
+cfn=<Object::ActionController::Routing::Route>::recognize
+calls=1 8
+8 25
+cfl=/Users/macbook/Projekte/speccify/test/rails/generated code (/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/routing/route.rb:205)
+cfn=<Object::ActionController::Routing::Route>::recognize
+calls=1 8
+8 28
+cfl=/Users/macbook/Projekte/speccify/test/rails/generated code (/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/routing/route.rb:205)
+cfn=<Object::ActionController::Routing::Route>::recognize
+calls=1 8
+8 25
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Fixnum::+
+calls=9 9
+9 59
+cfl=/Users/macbook/Projekte/speccify/test/rails/generated code (/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/routing/route.rb:205)
+cfn=<Object::ActionController::Routing::Route>::recognize
+calls=1 8
+8 26
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::[]
+calls=9 8
+8 59
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::size
+calls=10 9
+9 65
+cfl=/Users/macbook/Projekte/speccify/test/rails/generated code (/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/routing/route.rb:205)
+cfn=<Object::ActionController::Routing::Route>::recognize
+calls=1 8
+8 27
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Fixnum::<
+calls=10 9
+9 65
+cfl=/Users/macbook/Projekte/speccify/test/rails/generated code (/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/routing/route.rb:205)
+cfn=<Object::ActionController::Routing::Route>::recognize
+calls=1 8
+8 25
+cfl=/Users/macbook/Projekte/speccify/test/rails/generated code (/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/routing/route.rb:205)
+cfn=<Object::ActionController::Routing::Route>::recognize
+calls=1 8
+8 26
+cfl=/Users/macbook/Projekte/speccify/test/rails/generated code (/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/routing/route.rb:205)
+cfn=<Object::ActionController::Routing::Route>::recognize
+calls=1 8
+8 25
+cfl=/Users/macbook/Projekte/speccify/test/rails/generated code (/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/routing/route.rb:205)
+cfn=<Object::ActionController::Routing::Route>::recognize
+calls=1 8
+8 41
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/routing/recognition_optimisation.rb
+cfn=ActionController::Routing::RouteSet::to_plain_segments
+calls=1 3
+3 110
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Kernel::instance_eval-1093636
+0 24
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/integration.rb
+cfn=ActionController::Integration::Runner::get
+calls=1 6
+6 58353
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/status_codes.rb
+fn=ActionController::StatusCodes::interpret_status-1093636
+74 29
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Fixnum::to_s
+calls=1 77
+77 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=1 77
+77 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::strip
+calls=1 77
+77 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Module::===
+calls=1 76
+76 8
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=<Class::StringScanner>::allocate-1093636
+0 10
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=NilClass::to_s
+0 47
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=<Class::Time>::now
+0 20
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Time::initialize
+calls=1 1311
+1311 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=<Class::Time>::allocate
+calls=1 1311
+1311 9
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/buffered_logger.rb
+fn=ActiveSupport::BufferedLogger::info?-1093636
+74 13
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Fixnum::>=
+calls=1 75
+75 8
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/hash/indifferent_access.rb
+fn=HashWithIndifferentAccess::update-1093636
+45 33
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::each_pair
+calls=1 46
+46 12
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::each_pair
+calls=1 46
+46 11
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/status_codes.rb
+fn=ActionController::StatusCodes::interpret_status-1093636
+74 35
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=1 80
+80 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/status_codes.rb
+cfn=ActionController::StatusCodes::interpret_status
+calls=1 80
+80 63
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Module::===
+calls=2 78
+78 13
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activerecord/lib/active_record/query_cache.rb
+fn=ActiveRecord::QueryCache::call-1093636
+27 29
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activerecord/lib/active_record/query_cache.rb
+cfn=ActiveRecord::QueryCache::ClassMethods::cache
+calls=1 28
+28 41765
+
+fl=/usr/local/lib/ruby/1.8/erb.rb
+fn=ERB::Util::h-1093636
+782 26
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::gsub
+calls=4 783
+783 43
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::to_s
+calls=1 783
+783 7
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=String::each_line-1093636
+0 2347
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::kind_of?
+calls=32 400
+400 198
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::size
+calls=32 405
+405 188
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Fixnum::+
+calls=32 405
+405 194
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::respond_to?
+calls=32 405
+405 206
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::<<
+calls=32 339
+339 210
+cfl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/lint.rb
+cfn=Rack::Lint::Assertion::assert
+calls=32 437
+437 1701
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::inspect
+calls=32 437
+437 291
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Hash::to_hash-1093636
+0 9
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/callbacks.rb
+fn=ActiveSupport::Callbacks::Callback::evaluate_method
+174 54
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::send
+calls=2 178
+178 254
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::shift
+calls=2 177
+177 13
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Module::===
+calls=2 176
+176 14
+
+fl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/utils.rb
+fn=Rack::Utils::HeaderHash::[]=-1093636
+175 136
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::downcase
+calls=4 177
+177 30
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]=
+calls=8 178
+178 56
+cfl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/utils.rb
+cfn=Rack::Utils::HeaderHash::delete
+calls=4 176
+176 180
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Array::<<-1093636
+0 33
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/failsafe.rb
+fn=ActionController::Failsafe::call
+10 21
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/session/cookie_store.rb
+cfn=ActionController::Session::CookieStore::call
+calls=1 11
+11 42348
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Kernel::===-1093636
+0 12
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::==
+calls=1 1194
+1194 7
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Kernel::clone-1093636
+0 15
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=<Class::Hash>::allocate
+calls=1 1230
+1230 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::initialize_copy
+calls=1 1230
+1230 13
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/base.rb
+fn=ActionController::Base::initialize_template_class-1093636
+1210 66
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Class::new
+calls=1 1211
+1211 351
+cfl=/Users/macbook/Projekte/speccify/test/rails/(eval)
+cfn=<Class::ActionController::Base>::master_helper_module
+calls=1 1212
+1212 52
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/base.rb
+cfn=<Class::ActionController::Base>::view_paths
+calls=1 1211
+1211 48
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::send
+calls=1 1212
+1212 181
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::class
+calls=2 1212
+1212 15
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activerecord/lib/active_record/connection_adapters/abstract/connection_specification.rb
+fn=<Class::ActiveRecord::Base>::connection-1093636
+114 14
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activerecord/lib/active_record/connection_adapters/abstract/connection_specification.rb
+cfn=<Class::ActiveRecord::Base>::retrieve_connection
+calls=1 115
+115 164
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/response.rb
+fn=ActionController::Response::prepare!-1093636
+141 70
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/response.rb
+cfn=ActionController::Response::handle_conditional_get!
+calls=1 143
+143 118
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/response.rb
+cfn=ActionController::Response::assign_default_content_type_and_charset!
+calls=1 142
+142 381
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/response.rb
+cfn=ActionController::Response::convert_cookies!
+calls=1 148
+148 79
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/response.rb
+cfn=ActionController::Response::convert_expires!
+calls=1 147
+147 31
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/response.rb
+cfn=ActionController::Response::convert_language!
+calls=1 146
+146 31
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/response.rb
+cfn=ActionController::Response::convert_content_type!
+calls=1 145
+145 45
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/response.rb
+cfn=ActionController::Response::set_content_length!
+calls=1 144
+144 155
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Enumerable::any?-1093636
+0 913
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::each
+calls=58 22
+22 7002
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::each
+calls=1 49
+49 12
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::each
+calls=1 49
+49 10
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::each
+calls=1 182
+182 79
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::each
+calls=1 49
+49 11
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::each
+calls=1 49
+49 11
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::each
+calls=2 196
+196 13
+
+fl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/lint.rb
+fn=Rack::Lint::check_input-1093636
+201 16
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::each
+calls=1 203
+203 296
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Regexp::match-1093636
+0 407
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Hash::inspect
+0 203
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::inspect
+calls=6 61
+61 112
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::inspect
+calls=37 61
+61 299
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::inspect
+calls=1 61
+61 78
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Symbol::inspect
+calls=2 66
+66 17
+
+fl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/utils.rb
+fn=Rack::Utils::HeaderHash::[]-1093636
+171 20
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::downcase
+calls=1 172
+172 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=2 172
+172 24
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/integration.rb
+fn=ActionController::Integration::ControllerCapture::ClassMethods::new-1093636
+477 33
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/module/attribute_accessors.rb
+cfn=ActionController::Integration::ControllerCapture::ClassMethods::last_instantiation
+calls=1 479
+479 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/module/attribute_accessors.rb
+cfn=ActionController::Integration::ControllerCapture::ClassMethods::last_instantiation=
+calls=1 479
+479 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Class::new_without_capture
+calls=1 478
+478 42
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Hash::update-1093636
+0 34
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/blank.rb
+fn=Object::blank?
+12 15
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::respond_to?
+calls=1 13
+13 10
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/base.rb
+fn=ActionController::Base::log_processing-1093636
+1233 51
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/class/attribute_accessors.rb
+cfn=ActionController::Base::logger
+calls=2 1234
+1234 14
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/buffered_logger.rb
+cfn=ActiveSupport::BufferedLogger::info?
+calls=1 1234
+1234 21
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/base.rb
+cfn=ActionController::Base::log_processing_for_parameters
+calls=1 1236
+1236 649
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/base.rb
+cfn=ActionController::Base::log_processing_for_request_id
+calls=1 1235
+1235 1260
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=String::split-1093636
+0 119
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Kernel::==
+0 53
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Exception::set_backtrace
+0 11
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Array::blank?
+0 8
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Module::name
+0 36
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_view/renderable.rb
+fn=ActionView::Renderable::compile
+60 70
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_view/renderable.rb
+cfn=ActionView::Renderable::method_name
+calls=1 61
+61 108
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_view/template.rb
+cfn=ActionView::Template::recompile?
+calls=1 63
+63 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Module::method_defined?
+calls=1 63
+63 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_view/renderable.rb
+cfn=ActionView::Renderable::method_name
+calls=1 61
+61 93
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_view/template.rb
+cfn=ActionView::Template::recompile?
+calls=1 63
+63 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Module::method_defined?
+calls=1 63
+63 8
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Kernel::to_s-1093636
+0 74
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Array::empty?
+0 106
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=String::+
+0 56
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=<Class::StringIO>::allocate
+0 21
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Array::[]
+0 169
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/buffered_logger.rb
+fn=ActiveSupport::BufferedLogger::auto_flush
+115 88
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/buffered_logger.rb
+cfn=ActiveSupport::BufferedLogger::flush
+calls=1 116
+116 252
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::size
+calls=1 116
+116 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Fixnum::>=
+calls=1 116
+116 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/buffered_logger.rb
+cfn=ActiveSupport::BufferedLogger::buffer
+calls=1 116
+116 39
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/buffered_logger.rb
+cfn=ActiveSupport::BufferedLogger::flush
+calls=1 116
+116 240
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::size
+calls=1 116
+116 10
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Fixnum::>=
+calls=1 116
+116 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/buffered_logger.rb
+cfn=ActiveSupport::BufferedLogger::buffer
+calls=1 116
+116 39
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/buffered_logger.rb
+cfn=ActiveSupport::BufferedLogger::flush
+calls=1 116
+116 222
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::size
+calls=1 116
+116 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Fixnum::>=
+calls=1 116
+116 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/buffered_logger.rb
+cfn=ActiveSupport::BufferedLogger::buffer
+calls=1 116
+116 37
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/request.rb
+fn=ActionController::Request::path-1093636
+363 51
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::[]
+calls=1 364
+364 13
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::to_s
+calls=1 364
+364 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/request.rb
+cfn=ActionController::Request::request_uri
+calls=1 364
+364 34
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/class/attribute_accessors.rb
+cfn=<Class::ActionController::Base>::relative_url_root
+calls=1 365
+365 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=NilClass::to_s
+calls=1 365
+365 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::sub!
+calls=1 365
+365 19
+
+fl=/Users/macbook/Projekte/speccify/test/rails/generated code (/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/routing/route.rb:205)
+fn=<Object::ActionController::Routing::Route>::recognize-1093636
+1 87
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Regexp::match
+calls=1 2
+2 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Regexp::match
+calls=5 2
+2 36
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/callbacks.rb
+fn=ActiveSupport::Callbacks::run_callbacks-1093636
+275 62
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Symbol::to_s
+calls=2 276
+276 16
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/callbacks.rb
+cfn=ActiveSupport::Callbacks::CallbackChain::run
+calls=2 276
+276 851
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::send
+calls=2 276
+276 117
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::class
+calls=2 276
+276 15
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/callbacks.rb
+fn=ActiveSupport::Callbacks::CallbackChain::run-1093636
+86 59
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::block_given?
+calls=2 89
+89 15
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::send
+calls=2 90
+90 751
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=2 87
+87 26
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/request.rb
+fn=ActionController::Request::request_uri-1093636
+338 27
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=1 339
+339 7
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/deprecation.rb
+fn=<Module::ActiveSupport::Deprecation>::silence-1093636
+42 92
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/class/attribute_accessors.rb
+cfn=ActionController::Base::logger
+calls=1 84
+84 6
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::join
+calls=1 84
+84 16
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::+
+calls=2 84
+84 18
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/rescue.rb
+cfn=ActionController::Rescue::clean_backtrace
+calls=1 84
+84 22674
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/buffered_logger.rb
+cfn=ActiveSupport::BufferedLogger::fatal
+calls=1 84
+84 523
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Module::to_s
+calls=1 84
+84 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Exception::message
+calls=1 84
+84 22
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::class
+calls=1 84
+84 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Module::===
+calls=1 81
+81 8
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/url_encoded_pair_parser.rb
+fn=<Class::ActionController::UrlEncodedPairParser>::parse_hash_parameters-1093636
+18 35
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Class::new
+calls=1 19
+19 70
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::dup
+calls=1 21
+21 34
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::empty?
+calls=1 22
+22 9
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Array::map!-1093636
+0 107
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_view/paths.rb
+cfn=<Class::ActionView::PathSet>::type_cast
+calls=1 12
+12 29
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::class
+calls=1 12
+12 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/hash/indifferent_access.rb
+cfn=HashWithIndifferentAccess::convert_key
+calls=4 18
+18 114
+
+fl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/request.rb
+fn=Rack::Request::request_method-1093636
+25 23
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=1 25
+25 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=1 25
+25 7
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Array::select-1093636
+0 91
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Enumerable::find
+calls=5 59
+59 3630
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=String::each-1093636
+0 165
+cfl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/lint.rb
+cfn=Rack::Lint::Assertion::assert
+calls=6 349
+349 260
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::inspect
+calls=3 349
+349 26
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Module::to_s
+calls=3 345
+345 23
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::class
+calls=3 345
+345 19
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Kernel::instance_variable_get-1093636
+0 63
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Module::method_defined?
+0 17
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_view/base.rb
+fn=ActionView::Base::view_paths=
+223 26
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_view/base.rb
+cfn=<Class::ActionView::Base>::process_view_paths
+calls=1 224
+224 157
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::class
+calls=1 224
+224 7
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Kernel::hash-1093636
+0 177
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/routing/recognition_optimisation.rb
+fn=ActionController::Routing::RouteSet::to_plain_segments
+124 41
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::<<
+calls=1 129
+129 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::split
+calls=1 128
+128 11
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::dup
+calls=1 125
+125 32
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::sub!
+calls=2 127
+127 18
+
+fl=/Users/macbook/Projekte/speccify/test/rails/(eval)
+fn=ActionController::Base::rescue_handlers-1093636
+5 18
+cfl=/Users/macbook/Projekte/speccify/test/rails/(eval)
+cfn=<Class::ActionController::Base>::rescue_handlers
+calls=1 6
+6 48
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::class
+calls=1 6
+6 7
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/memoizable.rb
+fn=ActionView::Renderable::method_name_without_locals-1093636
+69 79
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::[]
+calls=1 73
+73 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::empty?
+calls=1 70
+70 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::[]
+calls=1 73
+73 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::empty?
+calls=1 70
+70 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::[]
+calls=1 73
+73 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::empty?
+calls=1 70
+70 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::[]
+calls=1 73
+73 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::empty?
+calls=1 70
+70 7
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/rescue.rb
+fn=ActionController::Rescue::log_error-1093636
+79 22
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/deprecation.rb
+cfn=<Module::ActiveSupport::Deprecation>::silence
+calls=1 80
+80 23376
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_view/base.rb
+fn=ActionView::Base::ProxyModule::initialize-1093636
+202 9
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/railties/lib/initializer.rb
+fn=<Module::Rails>::backtrace_cleaner
+43 10
+
+fl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/methodoverride.rb
+fn=Rack::MethodOverride::call
+12 29
+cfl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/head.rb
+cfn=Rack::Head::call
+calls=1 24
+24 41844
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::==
+calls=1 13
+13 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=1 13
+13 8
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/response.rb
+fn=ActionController::Response::sending_file?-1093636
+132 14
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::==
+calls=1 133
+133 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=1 133
+133 18
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/templates/rescues/routing_error.erb
+fn=ActionView::Base::CompiledTemplates::_run_erb_vendor47rails47actionpack47lib47action_controller47templates47rescues47routing_error46erb-1093636
+0 85
+cfl=/usr/local/lib/ruby/1.8/erb.rb
+cfn=ERB::Util::h
+calls=1 2
+2 76
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::to_s
+calls=1 2
+2 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::empty?
+calls=1 3
+3 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Exception::message
+calls=1 2
+2 19
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::concat
+calls=5 10
+10 37
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=StringScanner::initialize-1093636
+0 10
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/integration.rb
+fn=ActionController::Integration::Session::encode_cookies
+372 19
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Enumerable::inject
+calls=1 373
+373 29
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activerecord/lib/active_record/connection_adapters/abstract/connection_pool.rb
+fn=ActiveRecord::ConnectionAdapters::ConnectionPool::current_connection_id-1093636
+226 18
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=<Class::Thread>::current
+calls=1 227
+227 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::object_id
+calls=1 227
+227 7
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/base.rb
+fn=ActionController::Base::render_for_text-1093636
+1183 69
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::to_s
+calls=1 1195
+1195 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/(eval)
+cfn=ActionController::Base::response
+calls=2 1192
+1192 12
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::===
+calls=1 1194
+1194 19
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/status_codes.rb
+cfn=ActionController::StatusCodes::interpret_status
+calls=1 1186
+1186 120
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Module::===
+calls=1 1193
+1193 9
+
+fl=/Users/macbook/Projekte/speccify/test/rails/generated code (/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/routing/route.rb:205)
+fn=<Object::ActionController::Routing::Route>::recognize-1093636
+1 88
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Regexp::match
+calls=1 2
+2 10
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Regexp::match
+calls=5 2
+2 36
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=StringIO::rewind-1093636
+0 16
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Hash::initialize_copy
+0 532
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/integration.rb
+fn=ActionController::Integration::Runner::copy_session_variables!
+543 21
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::each
+calls=1 545
+545 121
+
+fl=/Users/macbook/Projekte/speccify/test/rails/generated code (/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/routing/route.rb:205)
+fn=<Object::ActionController::Routing::Route>::recognize-1093636
+1 88
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Regexp::match
+calls=1 2
+2 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Regexp::match
+calls=5 2
+2 38
+
+fl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/lint.rb
+fn=Rack::Lint::check_headers-1093636
+320 39
+cfl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/lint.rb
+cfn=Rack::Lint::Assertion::assert
+calls=1 322
+322 52
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Module::to_s
+calls=1 322
+322 11
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::each
+calls=1 325
+325 2192
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::class
+calls=1 322
+322 7
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Proc::call-1093636
+0 8492
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::instance_of?
+calls=1 249
+249 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::size
+calls=1 240
+240 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::nil?
+calls=1 249
+249 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Fixnum::<=
+calls=1 240
+240 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::sub
+calls=232 21
+21 2142
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Enumerable::any?
+calls=58 22
+22 7823
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/response.rb
+fn=ActionController::Response::convert_content_type!-1093636
+226 20
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=2 228
+228 25
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/routing/route_set.rb
+fn=ActionController::Routing::RouteSet::extract_request_environment-1093636
+483 16
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/request.rb
+cfn=ActionController::Request::method
+calls=1 484
+484 88
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_view/base.rb
+fn=ActionView::Base::template_format-1093636
+265 53
+cfl=/Users/macbook/Projekte/speccify/test/rails/(eval)
+cfn=ActionController::Base::request
+calls=1 269
+269 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Symbol::to_sym
+calls=1 269
+269 10
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/request.rb
+cfn=ActionController::Request::template_format
+calls=1 269
+269 205
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::respond_to?
+calls=1 268
+268 7
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Array::inspect-1093636
+0 31
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::inspect
+calls=2 61
+61 34
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Fixnum::==
+calls=2 61
+61 13
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Proc::call-1093636
+0 2346
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::instance_of?
+calls=2 154
+154 15
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::==
+calls=3 196
+196 19
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::include?
+calls=1 158
+158 18
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::include?
+calls=3 185
+185 22
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=9 196
+196 59
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::include?
+calls=12 137
+137 83
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::instance_of?
+calls=14 145
+145 92
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::respond_to?
+calls=3 205
+205 26
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::respond_to?
+calls=3 276
+276 22
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/dispatcher.rb
+cfn=ActionController::Dispatcher::_call
+calls=1 59
+59 41376
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::dup
+calls=1 59
+59 32
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Integer::to_i
+calls=1 316
+316 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Fixnum::>=
+calls=1 316
+316 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::respond_to?
+calls=1 323
+323 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::downcase
+calls=4 331
+331 34
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::instance_of?
+calls=4 328
+328 27
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::==
+calls=4 331
+331 27
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::respond_to?
+calls=4 342
+342 27
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::instance_of?
+calls=3 346
+346 21
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Integer::to_i
+calls=1 364
+364 7
+cfl=/usr/local/lib/ruby/1.8/set.rb
+cfn=Set::include?
+calls=1 364
+364 20
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Integer::to_i
+calls=1 389
+389 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::==
+calls=1 415
+415 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Fixnum::to_s
+calls=1 415
+415 8
+cfl=/usr/local/lib/ruby/1.8/set.rb
+cfn=Set::include?
+calls=1 389
+389 16
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::instance_of?
+calls=32 438
+438 201
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_view/paths.rb
+fn=ActionView::PathSet::find_template-1093636
+35 62
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::respond_to?
+calls=1 36
+36 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::respond_to?
+calls=1 36
+36 7
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=FalseClass::to_s-1093636
+0 9
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/hash/indifferent_access.rb
+fn=HashWithIndifferentAccess::convert_key
+109 139
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::kind_of?
+calls=1 110
+110 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::kind_of?
+calls=4 110
+110 26
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Symbol::to_s
+calls=4 110
+110 28
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::kind_of?
+calls=4 110
+110 27
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::kind_of?
+calls=1 110
+110 9
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/rescue.rb
+fn=ActionController::Rescue::template_path_for_local_rescue-1093636
+169 36
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Module::name
+calls=1 170
+170 10
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/class/attribute_accessors.rb
+cfn=ActionController::Base::rescue_templates
+calls=1 170
+170 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=1 170
+170 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/rescue.rb
+cfn=ActionController::Rescue::rescues_path
+calls=1 170
+170 38
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::class
+calls=1 170
+170 8
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=String::<<-1093636
+0 231
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Fixnum::zero?
+0 9
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/backtrace_cleaner.rb
+fn=ActiveSupport::BacktraceCleaner::silence
+64 20
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::each
+calls=1 65
+65 10757
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/base.rb
+fn=ActionController::RoutingError::initialize-1093636
+15 15
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Exception::initialize
+calls=1 16
+16 12
+
+fl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/lint.rb
+fn=Rack::Lint::InputWrapper::initialize-1093636
+213 9
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=StringIO::length
+0 8
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/time/conversions.rb
+fn=ActiveSupport::CoreExtensions::Time::Conversions::to_s
+47 28
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Time::strftime
+calls=1 49
+49 27
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=1 48
+48 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::respond_to?
+calls=1 49
+49 10
+
+fl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/lint.rb
+fn=Rack::Lint::Assertion::assert-1093636
+14 2537
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Proc::call
+calls=1 15
+15 19
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Proc::call
+calls=9 15
+15 368
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Proc::call
+calls=12 15
+15 321
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Proc::call
+calls=14 15
+15 396
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Proc::call
+calls=3 15
+15 87
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Proc::call
+calls=3 15
+15 82
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Proc::call
+calls=2 15
+15 117
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Proc::call
+calls=1 15
+15 42
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Proc::call
+calls=1 15
+15 31
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Proc::call
+calls=24 15
+15 601
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Proc::call
+calls=6 15
+15 138
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Proc::call
+calls=1 15
+15 58
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Proc::call
+calls=3 15
+15 109
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Proc::call
+calls=32 15
+15 843
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/memoizable.rb
+fn=ActionView::Template::mime_type-1093636
+69 39
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::[]
+calls=1 73
+73 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::empty?
+calls=1 70
+70 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::[]
+calls=1 73
+73 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::empty?
+calls=1 70
+70 7
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/integration.rb
+fn=ActionController::Integration::Session::process-1093636
+257 398
+cfl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/utils.rb
+cfn=Rack::Utils::HeaderHash::[]
+calls=1 330
+330 53
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Integer::to_i
+calls=1 325
+325 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Class::new
+calls=4 328
+328 643
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::is_a?
+calls=2 336
+336 15
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/integration.rb
+cfn=ActionController::Integration::Session::requestify
+calls=1 258
+258 76
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/integration.rb
+cfn=ActionController::Integration::Session::https?
+calls=3 278
+278 21
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::upcase
+calls=1 273
+273 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]=
+calls=2 269
+269 17
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::==
+calls=1 264
+264 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/module/attribute_accessors.rb
+cfn=ActionController::Integration::ControllerCapture::ClassMethods::last_instantiation
+calls=1 342
+342 8
+cfl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/lint.rb
+cfn=Rack::Lint::call
+calls=1 320
+320 52582
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::[]
+calls=1 260
+260 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/(eval)
+cfn=ActionController::Base::response
+calls=1 344
+344 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Fixnum::+
+calls=1 321
+321 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/(eval)
+cfn=ActionController::Base::request
+calls=1 343
+343 8
+cfl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/lint.rb
+cfn=Rack::Lint::each
+calls=1 339
+339 3585
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Comparable::>=
+calls=1 316
+316 22
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::each
+calls=2 330
+330 71
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Fixnum::to_s
+calls=1 286
+286 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Fixnum::==
+calls=1 260
+260 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/integration.rb
+cfn=ActionController::Integration::ControllerCapture::ClassMethods::clear_last_instantiation!
+calls=1 312
+312 26
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Symbol::to_s
+calls=1 273
+273 10
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::send
+calls=1 345
+345 296
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::each
+calls=1 300
+300 11
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=2 326
+326 16
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::update
+calls=1 286
+286 24
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::extend
+calls=1 358
+358 53
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/integration.rb
+cfn=ActionController::Integration::Session::encode_cookies
+calls=1 286
+286 48
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=StringIO::length
+calls=1 286
+286 8
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/base.rb
+fn=ActionController::Base::log_processing_for_parameters-1093636
+1248 51
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/hash/indifferent_access.rb
+cfn=HashWithIndifferentAccess::dup
+calls=1 1249
+1249 108
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/hash/except.rb
+cfn=ActiveSupport::CoreExtensions::Hash::Except::except!
+calls=1 1250
+1250 464
+cfl=/Users/macbook/Projekte/speccify/test/rails/(eval)
+cfn=ActionController::Base::params
+calls=1 1249
+1249 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::empty?
+calls=1 1252
+1252 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::respond_to?
+calls=1 1249
+1249 12
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Kernel::send-1093636
+0 111
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/templates/rescues/routing_error.erb
+cfn=ActionView::Base::CompiledTemplates::_run_erb_vendor47rails47actionpack47lib47action_controller47templates47rescues47routing_error46erb
+calls=1 35
+35 232
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_view/base.rb
+cfn=ActionView::Base::_evaluate_assigns_and_ivars
+calls=1 32
+32 254
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_view/base.rb
+cfn=ActionView::Base::_set_controller_content_type
+calls=1 33
+33 370
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_view/base.rb
+cfn=ActionView::Base::_evaluate_assigns_and_ivars
+calls=1 32
+32 10
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/templates/rescues/layout.erb
+cfn=ActionView::Base::CompiledTemplates::_run_erb_vendor47rails47actionpack47lib47action_controller47templates47rescues47layout46erb
+calls=1 35
+35 409
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_view/base.rb
+cfn=ActionView::Base::_set_controller_content_type
+calls=1 33
+33 117
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/dispatcher.rb
+cfn=ActionController::Dispatcher::flush_logger
+calls=1 178
+178 199
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/dispatcher.rb
+cfn=ActionController::Dispatcher::checkin_connections
+calls=1 178
+178 27
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Kernel::block_given?-1093636
+0 15
+
+fl=/Users/macbook/Projekte/speccify/test/rails/generated code (/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/routing/route.rb:205)
+fn=<Object::ActionController::Routing::Route>::recognize
+1 105
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Regexp::match
+calls=1 2
+2 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Regexp::match
+calls=5 2
+2 35
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=NilClass::nil?-1093636
+0 24
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Kernel::send
+0 113
+cfl=/Users/macbook/Projekte/speccify/test/rails/(eval)
+cfn=<Class::ActionController::Dispatcher>::after_dispatch_callback_chain
+calls=1 276
+276 43
+cfl=/Users/macbook/Projekte/speccify/test/rails/(eval)
+cfn=<Class::ActionController::Dispatcher>::before_dispatch_callback_chain
+calls=1 276
+276 43
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::each
+calls=1 90
+90 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::reverse_each
+calls=1 90
+90 721
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_view/base.rb
+cfn=ActionView::Base::ProxyModule::include
+calls=1 1212
+1212 165
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/rescue.rb
+cfn=ActionController::Rescue::rescue_action
+calls=1 523
+523 28489
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/session/abstract_store.rb
+cfn=ActionController::Session::AbstractStore::SessionHash::loaded?
+calls=1 98
+98 10
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/test_process.rb
+cfn=ActionController::ProcessWithTest::set_test_assigns
+calls=1 345
+345 282
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Fixnum::+-1093636
+0 262
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Array::shift
+0 13
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=NilClass::to_a
+0 9
+
+fl=/Users/macbook/Projekte/speccify/test/rails/(eval)
+fn=<Class::ActionController::Base>::rescue_handlers
+1 15
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/class/inheritable_attributes.rb
+cfn=Class::read_inheritable_attribute
+calls=1 2
+2 33
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=<Class::Exception>::exception-1093636
+0 21
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=<Class::Object>::allocate
+calls=1 66
+66 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/base.rb
+cfn=ActionController::RoutingError::initialize
+calls=1 66
+66 27
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/blank.rb
+fn=String::blank?-1093636
+49 47
+
+fl=/Users/macbook/Projekte/speccify/test/rails/(eval)
+fn=<Class::ActionController::Dispatcher>::before_dispatch_callback_chain
+7 24
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Class::superclass
+calls=1 10
+10 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::respond_to?
+calls=1 10
+10 11
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Module::blankslate_original_append_features-1093636
+0 29
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/class/inheritable_attributes.rb
+fn=Class::read_inheritable_attribute
+112 39
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=1 113
+113 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/class/inheritable_attributes.rb
+cfn=Class::inheritable_attributes
+calls=1 113
+113 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=1 113
+113 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/class/inheritable_attributes.rb
+cfn=Class::inheritable_attributes
+calls=1 113
+113 8
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/buffered_logger.rb
+fn=ActiveSupport::BufferedLogger::info-1093636
+70 30
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/buffered_logger.rb
+cfn=ActiveSupport::BufferedLogger::add
+calls=1 71
+71 516
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/buffered_logger.rb
+cfn=ActiveSupport::BufferedLogger::add
+calls=1 71
+71 467
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=String::[]-1093636
+0 112
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/class/attribute_accessors.rb
+fn=<Class::ActionController::Base>::relative_url_root
+17 9
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=StringIO::initialize
+0 38
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Object::initialize
+calls=2 292
+292 14
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Object::initialize
+calls=1 11
+11 7
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Module::extended-1093636
+0 15
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=String::downcase
+0 186
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/request.rb
+fn=ActionController::Request::request_parameters
+427 31
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/url_encoded_pair_parser.rb
+cfn=<Class::ActionController::UrlEncodedPairParser>::parse_hash_parameters
+calls=1 428
+428 148
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]=
+calls=1 428
+428 8
+cfl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/request.rb
+cfn=Rack::Request::POST
+calls=1 428
+428 1159
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=1 428
+428 20
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Kernel::class-1093636
+0 184
+
+fl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/request.rb
+fn=Rack::Request::content_length
+27 11
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=1 27
+27 8
+
+fl=/Users/macbook/Projekte/speccify/test/rails/(eval)
+fn=ActionController::Base::params-1093636
+1 27
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Enumerable::all?
+0 27
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::each
+calls=2 195
+195 13
+
+fl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/lint.rb
+fn=Rack::Lint::check_content_length-1093636
+375 33
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::each
+calls=2 383
+383 2475
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Mutex::synchronize-1093636
+0 229
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=IO::write
+calls=1 99
+99 38
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::join
+calls=1 99
+99 11
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/buffered_logger.rb
+cfn=ActiveSupport::BufferedLogger::clear_buffer
+calls=1 104
+104 45
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::empty?
+calls=1 97
+97 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/buffered_logger.rb
+cfn=ActiveSupport::BufferedLogger::buffer
+calls=2 98
+98 72
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=IO::write
+calls=1 99
+99 31
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::join
+calls=1 99
+99 10
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/buffered_logger.rb
+cfn=ActiveSupport::BufferedLogger::clear_buffer
+calls=1 104
+104 42
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::empty?
+calls=1 97
+97 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/buffered_logger.rb
+cfn=ActiveSupport::BufferedLogger::buffer
+calls=2 98
+98 74
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=IO::write
+calls=1 99
+99 22
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::join
+calls=1 99
+99 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/buffered_logger.rb
+cfn=ActiveSupport::BufferedLogger::clear_buffer
+calls=1 104
+104 40
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::empty?
+calls=1 97
+97 6
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/buffered_logger.rb
+cfn=ActiveSupport::BufferedLogger::buffer
+calls=2 98
+98 71
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/buffered_logger.rb
+cfn=ActiveSupport::BufferedLogger::clear_buffer
+calls=1 104
+104 39
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::empty?
+calls=1 97
+97 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/buffered_logger.rb
+cfn=ActiveSupport::BufferedLogger::buffer
+calls=1 97
+97 70
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/rack_ext/parse_query.rb
+fn=<Module::Rack::Utils>::parse_query-1093636
+10 43
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::==
+calls=1 12
+12 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::[]
+calls=1 12
+12 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::dup
+calls=1 11
+11 32
+cfl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/utils.rb
+cfn=Rack::Utils::parse_query_without_ajax_body_cleanup
+calls=1 13
+13 67
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/base.rb
+fn=ActionController::Base::assign_names-1093636
+1284 23
+cfl=/Users/macbook/Projekte/speccify/test/rails/(eval)
+cfn=ActionController::Base::params
+calls=1 1285
+1285 6
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=1 1285
+1285 54
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/backtrace_cleaner.rb
+fn=ActiveSupport::BacktraceCleaner::filter-1093636
+56 19
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::each
+calls=1 57
+57 11787
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Mutex::synchronize-1093636
+0 32
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/failsafe.rb
+cfn=ActionController::Failsafe::call
+calls=1 15
+15 42369
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Exception::backtrace-1093636
+0 18
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Kernel::nil?
+0 8
+
+fl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/request.rb
+fn=Rack::Request::initialize
+16 26
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/url_encoded_pair_parser.rb
+fn=ActionController::UrlEncodedPairParser::initialize
+66 26
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=StringScanner::initialize
+calls=1 67
+67 10
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::each
+calls=1 69
+69 7
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/rack_ext/lock.rb
+fn=Rack::Lock::call-1093636
+13 44
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Mutex::synchronize
+calls=1 15
+15 42401
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]=
+calls=2 17
+17 17
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=1 14
+14 8
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/request.rb
+fn=ActionController::Request::parameters-1093636
+380 58
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/request.rb
+cfn=ActionController::Request::request_parameters
+calls=1 381
+381 1366
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/request.rb
+cfn=ActionController::Request::path_parameters
+calls=1 381
+381 43
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/hash/indifferent_access.rb
+cfn=ActiveSupport::CoreExtensions::Hash::IndifferentAccess::with_indifferent_access
+calls=1 381
+381 184
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::merge
+calls=1 381
+381 36
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/request.rb
+cfn=ActionController::Request::query_parameters
+calls=1 381
+381 195
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::update
+calls=1 381
+381 10
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=String::concat-1093636
+0 224
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/hash/indifferent_access.rb
+fn=HashWithIndifferentAccess::delete
+95 62
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::delete
+calls=4 96
+96 26
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/hash/indifferent_access.rb
+cfn=HashWithIndifferentAccess::convert_key
+calls=4 96
+96 76
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/class/attribute_accessors.rb
+fn=ActionController::Base::logger-1093636
+21 48
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Kernel::Array
+0 30
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=NilClass::to_a
+calls=1 252
+252 9
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/mime_type.rb
+fn=Mime::Type::=~-1093636
+179 51
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Class::new
+calls=1 181
+181 38
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::+
+calls=1 182
+182 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Regexp::to_s
+calls=1 181
+181 11
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=<Class::Regexp>::quote
+calls=1 181
+181 10
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Enumerable::any?
+calls=1 182
+182 92
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/blank.rb
+cfn=Object::blank?
+calls=1 180
+180 25
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/url_encoded_pair_parser.rb
+fn=<Class::ActionController::UrlEncodedPairParser>::parse_query_parameters-1093636
+4 22
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/blank.rb
+cfn=String::blank?
+calls=1 5
+5 7
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_view/base.rb
+fn=ActionView::Base::_set_controller_content_type-1093636
+299 66
+cfl=/Users/macbook/Projekte/speccify/test/rails/(eval)
+cfn=ActionController::Base::response
+calls=1 301
+301 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/response.rb
+cfn=ActionController::Response::content_type
+calls=1 301
+301 136
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/response.rb
+cfn=ActionController::Response::content_type=
+calls=1 301
+301 180
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::respond_to?
+calls=1 300
+300 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/(eval)
+cfn=ActionController::Base::response
+calls=1 301
+301 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/response.rb
+cfn=ActionController::Response::content_type
+calls=1 301
+301 74
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::respond_to?
+calls=1 300
+300 7
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Kernel::extend-1093636
+0 36
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Module::extended
+calls=1 208
+208 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Module::extend_object
+calls=1 208
+208 26
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Module::extended
+calls=1 358
+358 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Module::extend_object
+calls=1 358
+358 28
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/rescuable.rb
+fn=ActiveSupport::Rescuable::handler_for_rescue-1093636
+78 56
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::reverse
+calls=1 81
+81 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/(eval)
+cfn=ActionController::Base::rescue_handlers
+calls=1 81
+81 73
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::Array
+calls=1 81
+81 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Enumerable::detect
+calls=1 81
+81 22
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Module::===
+calls=2 103
+103 13
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Array::compact-1093636
+0 37
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_view/renderable.rb
+fn=ActionView::Renderable::render_without_template_tracking
+26 146
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::pop
+calls=1 44
+44 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::push
+calls=1 30
+30 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_view/renderable.rb
+cfn=ActionView::Renderable::method_name
+calls=1 35
+35 92
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_view/renderable.rb
+cfn=ActionView::Renderable::compile
+calls=1 27
+27 167
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::instance_variable_get
+calls=1 29
+29 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/memoizable.rb
+cfn=ActionView::Template::mime_type
+calls=1 33
+33 36
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::send
+calls=3 35
+35 900
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::respond_to?
+calls=1 33
+33 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::pop
+calls=1 44
+44 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::push
+calls=1 30
+30 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_view/renderable.rb
+cfn=ActionView::Renderable::method_name
+calls=1 35
+35 92
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_view/renderable.rb
+cfn=ActionView::Renderable::compile
+calls=1 27
+27 137
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::instance_variable_get
+calls=1 29
+29 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/memoizable.rb
+cfn=ActionView::Template::mime_type
+calls=1 33
+33 33
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::send
+calls=3 35
+35 575
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::respond_to?
+calls=1 33
+33 8
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/rescue.rb
+fn=ActionController::Rescue::ClassMethods::call_with_exception-1093636
+62 52
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Class::new
+calls=2 64
+64 158
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]=
+calls=2 64
+64 17
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/filters.rb
+cfn=ActionController::Filters::InstanceMethods::process
+calls=1 65
+65 34444
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=2 64
+64 35
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/integration.rb
+cfn=ActionController::Integration::ControllerCapture::ClassMethods::new
+calls=1 65
+65 93
+
+fl=/Users/macbook/Projekte/speccify/lib/speccify.rb
+fn=BrowsingTest::test_get_homepage-1093636
+65 23
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::instance_eval
+calls=1 65
+65 58377
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activerecord/lib/active_record/connection_adapters/abstract/connection_pool.rb
+fn=ActiveRecord::ConnectionAdapters::ConnectionHandler::retrieve_connection_pool-1093636
+347 24
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Module::name
+calls=1 348
+348 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=1 348
+348 9
+
+fl=/Users/macbook/Projekte/speccify/test/rails/generated code (/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/routing/route.rb:205)
+fn=<Object::ActionController::Routing::Route>::recognize-1093636
+1 82
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Regexp::match
+calls=1 2
+2 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Regexp::match
+calls=5 2
+2 38
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Exception::to_s-1093636
+0 18
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/url_rewriter.rb
+fn=ActionController::UrlRewriter::initialize
+157 11
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=String::inspect
+0 751
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/backtrace_cleaner.rb
+fn=ActiveSupport::BacktraceCleaner::clean
+23 25
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/backtrace_cleaner.rb
+cfn=ActiveSupport::BacktraceCleaner::silence
+calls=1 24
+24 10777
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/backtrace_cleaner.rb
+cfn=ActiveSupport::BacktraceCleaner::filter
+calls=1 24
+24 11806
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/memoizable.rb
+fn=ActionView::Template::path_without_format_and_extension-1093636
+69 21
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::[]
+calls=1 73
+73 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::empty?
+calls=1 70
+70 8
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=String::gsub-1093636
+0 43
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=String::=~
+0 27
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Class::superclass
+0 22
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/module/attribute_accessors.rb
+fn=ActionController::Integration::ControllerCapture::ClassMethods::last_instantiation=
+45 18
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Array::map
+0 3039
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Proc::call
+calls=232 58
+58 8657
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Hash::delete-1093636
+0 135
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::hash
+calls=1 124
+124 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::hash
+calls=1 124
+124 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::hash
+calls=1 124
+124 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::hash
+calls=1 124
+124 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::hash
+calls=4 182
+182 25
+
+fl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/lint.rb
+fn=Rack::Lint::call-1093636
+32 21
+cfl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/lint.rb
+cfn=Rack::Lint::_call
+calls=1 33
+33 52528
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::dup
+calls=1 33
+33 33
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/mime_type.rb
+fn=<Class::Mime::Type>::lookup-1093636
+65 12
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=1 66
+66 9
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/rescue.rb
+fn=ActionController::Rescue::rescue_action_without_handler-1093636
+141 79
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/class/attribute_accessors.rb
+cfn=ActionController::Base::consider_all_requests_local
+calls=1 151
+151 10
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/class/attribute_accessors.rb
+cfn=ActionController::Base::logger
+calls=1 142
+142 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/rescue.rb
+cfn=ActionController::Rescue::rescue_action_locally
+calls=1 152
+152 4746
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/rescue.rb
+cfn=ActionController::Rescue::log_error
+calls=1 142
+142 23398
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::respond_to?
+calls=1 147
+147 10
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/base.rb
+cfn=ActionController::Base::performed?
+calls=1 143
+143 11
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Comparable::>=-1093636
+0 14
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::<=>
+calls=1 316
+316 8
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/integration.rb
+fn=ActionController::Integration::Session::requestify-1093636
+397 45
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=NilClass::nil?
+calls=1 409
+409 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Module::===
+calls=3 405
+405 23
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/response.rb
+fn=ActionController::Response::etag?-1093636
+114 11
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::include?
+calls=1 115
+115 8
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/response.rb
+fn=ActionController::Response::content_type=-1093636
+65 77
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]=
+calls=1 68
+68 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=NilClass::nil?
+calls=1 67
+67 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/response.rb
+cfn=ActionController::Response::charset
+calls=1 67
+67 112
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=NilClass::to_s
+calls=1 68
+68 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::=~
+calls=1 67
+67 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]=
+calls=1 68
+68 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=NilClass::nil?
+calls=1 67
+67 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/response.rb
+cfn=ActionController::Response::charset
+calls=1 67
+67 68
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/mime_type.rb
+cfn=Mime::Type::=~
+calls=1 67
+67 236
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/mime_type.rb
+cfn=Mime::Type::to_s
+calls=1 68
+68 7
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/dispatcher.rb
+fn=ActionController::Dispatcher::checkin_connections-1093636
+110 18
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::key?
+calls=1 112
+112 9
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/rescue.rb
+fn=ActionController::Rescue::response_code_for_rescue-1093636
+173 25
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Module::name
+calls=1 174
+174 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/class/attribute_accessors.rb
+cfn=ActionController::Base::rescue_responses
+calls=1 174
+174 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=1 174
+174 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::class
+calls=1 174
+174 8
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/hash/reverse_merge.rb
+fn=ActiveSupport::CoreExtensions::Hash::ReverseMerge::reverse_merge-1093636
+21 24
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::merge
+calls=1 22
+22 39
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::merge
+calls=1 22
+22 36
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Class::new_without_capture-1093636
+0 28
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=<Class::Object>::allocate
+calls=1 478
+478 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Object::initialize
+calls=1 478
+478 7
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/request.rb
+fn=ActionController::Request::query_parameters-1093636
+421 31
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]=
+calls=1 422
+422 10
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/url_encoded_pair_parser.rb
+cfn=<Class::ActionController::UrlEncodedPairParser>::parse_query_parameters
+calls=1 422
+422 29
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/request.rb
+cfn=ActionController::Request::query_string
+calls=1 422
+422 106
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=1 422
+422 19
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/request.rb
+fn=ActionController::Request::content_type-1093636
+88 50
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::downcase
+calls=1 91
+91 11
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/mime_type.rb
+cfn=<Class::Mime::Type>::lookup
+calls=1 91
+91 21
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=1 90
+90 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::strip
+calls=1 91
+91 12
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/base.rb
+fn=ActionController::Base::process_without_filters-1093636
+514 96
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/base.rb
+cfn=ActionController::Base::assign_names
+calls=1 520
+520 83
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/base.rb
+cfn=ActionController::Base::initialize_current_url
+calls=1 519
+519 118
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/base.rb
+cfn=ActionController::Base::assign_shortcuts
+calls=1 518
+518 1950
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/base.rb
+cfn=ActionController::Base::initialize_template_class
+calls=1 517
+517 713
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/base.rb
+cfn=ActionController::Base::process_cleanup
+calls=1 527
+527 6
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::send
+calls=1 523
+523 28505
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/base.rb
+cfn=ActionController::Base::send_response
+calls=1 525
+525 955
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/base.rb
+cfn=ActionController::Base::log_processing
+calls=1 522
+522 1995
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Enumerable::detect-1093636
+0 15
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::each
+calls=1 81
+81 7
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/routing/recognition_optimisation.rb
+fn=ActionController::Routing::RouteSet::recognize_path-1093636
+55 72
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::inspect
+calls=1 66
+66 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/(recognize_optimized)
+cfn=<Object::ActionController::Routing::RouteSet>::recognize_optimized
+calls=1 56
+56 864
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::include?
+calls=1 61
+61 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::empty?
+calls=1 63
+63 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::raise
+calls=1 66
+66 215
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::inspect
+calls=1 66
+66 42
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::select
+calls=1 59
+59 3721
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=2 61
+61 13
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/response.rb
+fn=ActionController::Response::set_content_length!-1093636
+233 62
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]=
+calls=1 239
+239 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::size
+calls=1 239
+239 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::==
+calls=2 238
+238 12
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::[]
+calls=2 238
+238 16
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::to_s
+calls=2 238
+238 13
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Fixnum::to_s
+calls=1 239
+239 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=1 236
+236 17
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::respond_to?
+calls=1 238
+238 9
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/templates/rescues/layout.erb
+fn=ActionView::Base::CompiledTemplates::_run_erb_vendor47rails47actionpack47lib47action_controller47templates47rescues47layout46erb-1093636
+0 215
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::to_s
+calls=1 26
+26 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::concat
+calls=30 29
+29 187
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/class/attribute_accessors.rb
+fn=<Class::ActionController::Base>::logger-1093636
+17 9
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/rescue.rb
+fn=ActionController::Rescue::rescue_action_locally
+130 108
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/base.rb
+cfn=ActionController::Base::render_for_file
+calls=1 137
+137 2100
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/rescue.rb
+cfn=ActionController::Rescue::template_path_for_local_rescue
+calls=1 133
+133 109
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_view/base.rb
+cfn=ActionView::Base::render
+calls=1 133
+133 1940
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::instance_variable_set
+calls=3 133
+133 25
+cfl=/Users/macbook/Projekte/speccify/test/rails/(eval)
+cfn=ActionController::Base::response
+calls=1 136
+136 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/rescue.rb
+cfn=ActionController::Rescue::response_code_for_rescue
+calls=1 137
+137 57
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/response.rb
+cfn=ActionController::Response::content_type=
+calls=1 136
+136 367
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/rescue.rb
+cfn=ActionController::Rescue::rescues_path
+calls=1 137
+137 33
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/request.rb
+fn=ActionController::Request::template_format-1093636
+183 35
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/request.rb
+cfn=ActionController::Request::parameters
+calls=1 184
+184 7
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=1 184
+184 117
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/request.rb
+cfn=ActionController::Request::xhr?
+calls=1 188
+188 46
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/class/attribute_accessors.rb
+fn=ActionController::Base::protected_instance_variables-1093636
+21 9
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_view/base.rb
+fn=ActionView::Base::ProxyModule::include
+206 21
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Module::include
+calls=1 207
+207 92
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::extend
+calls=1 208
+208 52
+
+fl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/lint.rb
+fn=Rack::Lint::_call-1093636
+36 113
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Class::new
+calls=2 42
+42 85
+cfl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/lint.rb
+cfn=Rack::Lint::Assertion::assert
+calls=1 38
+38 47
+cfl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/lint.rb
+cfn=Rack::Lint::check_headers
+calls=1 49
+49 2301
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]=
+calls=2 42
+42 16
+cfl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/lint.rb
+cfn=Rack::Lint::check_content_length
+calls=1 52
+52 2508
+cfl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/lint.rb
+cfn=Rack::Lint::check_content_type
+calls=1 51
+51 182
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/dispatcher.rb
+cfn=ActionController::Dispatcher::call
+calls=1 45
+45 42487
+cfl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/lint.rb
+cfn=Rack::Lint::check_status
+calls=1 47
+47 91
+cfl=/usr/local/lib/ruby/gems/1.8/gems/rack-0.9.1/lib/rack/lint.rb
+cfn=Rack::Lint::check_env
+calls=1 39
+39 4662
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=2 42
+42 36
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/vendor/builder-2.1.2/blankslate.rb
+fn=Module::append_features-1093636
+105 27
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Module::blankslate_original_append_features
+calls=1 106
+106 29
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Module::==
+calls=1 107
+107 8
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/request.rb
+fn=ActionController::Request::form_data?-1093636
+416 27
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/request.rb
+cfn=ActionController::Request::content_type
+calls=1 417
+417 103
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::include?
+calls=1 417
+417 30
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/mime_type.rb
+cfn=Mime::Type::to_s
+calls=1 417
+417 10
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/response.rb
+fn=ActionController::Response::convert_cookies!-1093636
+251 21
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]=
+calls=1 252
+252 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Array::compact
+calls=1 252
+252 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::Array
+calls=1 252
+252 22
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=1 252
+252 18
+
+fl=/Users/macbook/Projekte/speccify/test/rails/(eval)
+fn=ActionController::Base::request-1093636
+1 39
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/session/abstract_store.rb
+fn=ActionController::Session::AbstractStore::SessionHash::loaded?
+56 10
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activerecord/lib/active_record/connection_adapters/abstract/connection_pool.rb
+fn=ActiveRecord::ConnectionAdapters::ConnectionPool::connection
+94 23
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activerecord/lib/active_record/connection_adapters/abstract/connection_pool.rb
+cfn=ActiveRecord::ConnectionAdapters::ConnectionPool::current_connection_id
+calls=1 95
+95 34
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=1 95
+95 7
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/base.rb
+fn=ActionController::Base::log_processing_for_request_id-1093636
+1240 95
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/core_ext/class/attribute_accessors.rb
+cfn=ActionController::Base::logger
+calls=1 1245
+1245 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::<<
+calls=1 1243
+1243 21
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/request.rb
+cfn=ActionController::Request::method
+calls=1 1243
+1243 85
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=String::upcase
+calls=1 1243
+1243 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/base.rb
+cfn=ActionController::Base::request_origin
+calls=1 1243
+1243 348
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Module::name
+calls=1 1241
+1241 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/(eval)
+cfn=ActionController::Base::request
+calls=1 1243
+1243 8
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/buffered_logger.rb
+cfn=ActiveSupport::BufferedLogger::info
+calls=1 1245
+1245 532
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Symbol::to_s
+calls=1 1243
+1243 9
+cfl=/Users/macbook/Projekte/speccify/test/rails/(eval)
+cfn=ActionController::Base::params
+calls=1 1242
+1242 6
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=1 1242
+1242 122
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::class
+calls=1 1241
+1241 8
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Regexp::to_s-1093636
+0 11
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/actionpack/lib/action_controller/request.rb
+fn=ActionController::Request::session
+436 11
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Hash::[]
+calls=1 437
+437 9
+

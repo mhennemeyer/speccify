@@ -6,5 +6,5 @@ spec = Gem::Specification.new do |spec|
   spec.email = 'mhennemeyer@gmail.com' 
   spec.homepage = 'http://github.com/mhennemeyer/speccify' 
   spec.files = ["README.markdown", "lib/speccify.rb"] 
-  spec.version = '0.3.0'
+  spec.version = '0.3.1'
 end

@@ -1,0 +1,22 @@
+events: process_time
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/testing/default.rb
+fn=ActiveSupport::Testing::Default::default_test-34776640
+5 5
+
+fl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+fn=Kernel::__send__
+0 16
+cfl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/testing/default.rb
+cfn=ActiveSupport::Testing::Default::default_test-38125300
+calls=1 57
+57 5
+
+fl=/Users/macbook/Projekte/speccify/test/rails/rails_root/vendor/rails/activesupport/lib/active_support/testing/performance.rb
+fn=ActiveSupport::Testing::Performance::Profiler::run-1093636
+177 2912
+cfl=/Users/macbook/Projekte/speccify/test/rails/ruby_runtime
+cfn=Kernel::__send__
+calls=1 57
+57 21
+

@@ -1,0 +1,9 @@
+Thread ID: 107390
+Total: 0.002933
+
+ %self     total     self     wait    child    calls  name
+ 99.28      0.00     0.00     0.00     0.00        1  ActiveSupport::Testing::Performance::Profiler#run
+  0.55      0.00     0.00     0.00     0.00        1  Kernel#__send__
+  0.17      0.00     0.00     0.00     0.00        1  ActiveSupport::Testing::Default#default_test
+
+
