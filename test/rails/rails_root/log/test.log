@@ -1,0 +1,322 @@
+  [4;36;1mMyModel Create (0.7ms)[0m   [0;1mINSERT INTO "my_models" ("updated_at", "title", "created_at") VALUES('2009-02-04 15:09:23', NULL, '2009-02-04 15:09:23')[0m
+
+
+Processing MyModelsController#index (for 0.0.0.0 at 2009-02-04 16:23:36) [GET]
+  [4;36;1mMyModel Load (1.5ms)[0m   [0;1mSELECT * FROM "my_models" [0m
+Rendering template within layouts/my_models
+Rendering my_models/index
+Completed in 131ms (View: 109, DB: 3) | 200 OK [http://test.host/my_models]
+
+
+Processing MyModelsController#index (for 0.0.0.0 at 2009-02-04 16:23:36) [GET]
+  [4;35;1mMyModel Load (1.5ms)[0m   [0mSELECT * FROM "my_models" [0m
+Rendering template within layouts/my_models
+Rendering my_models/index
+Completed in 20ms (View: 13, DB: 2) | 200 OK [http://test.host/my_models]
+
+
+Processing MyModelsController#index (for 0.0.0.0 at 2009-02-04 16:24:10) [GET]
+  [4;36;1mMyModel Load (1.5ms)[0m   [0;1mSELECT * FROM "my_models" [0m
+Rendering template within layouts/my_models
+Rendering my_models/index
+Completed in 131ms (View: 109, DB: 3) | 200 OK [http://test.host/my_models]
+
+
+Processing MyModelsController#index (for 0.0.0.0 at 2009-02-04 16:24:10) [GET]
+  [4;35;1mMyModel Load (1.5ms)[0m   [0mSELECT * FROM "my_models" [0m
+Rendering template within layouts/my_models
+Rendering my_models/index
+Completed in 20ms (View: 14, DB: 1) | 200 OK [http://test.host/my_models]
+
+
+Processing MyModelsController#index (for 0.0.0.0 at 2009-02-04 16:24:54) [GET]
+  [4;36;1mMyModel Load (1.6ms)[0m   [0;1mSELECT * FROM "my_models" [0m
+Rendering template within layouts/my_models
+Rendering my_models/index
+Completed in 130ms (View: 27, DB: 3) | 200 OK [http://test.host/my_models]
+
+
+Processing MyModelsController#index (for 0.0.0.0 at 2009-02-04 16:24:54) [GET]
+  [4;35;1mMyModel Load (1.5ms)[0m   [0mSELECT * FROM "my_models" [0m
+Rendering template within layouts/my_models
+Rendering my_models/index
+Completed in 20ms (View: 14, DB: 1) | 200 OK [http://test.host/my_models]
+  [4;36;1mMyModel Load (1.1ms)[0m   [0;1mSELECT * FROM "my_models" WHERE ("my_models"."id" = 953125641) [0m
+  [4;36;1mMyModel Load (1.2ms)[0m   [0;1mSELECT * FROM "my_models" WHERE ("my_models"."id" = 953125641) [0m
+  [4;36;1mMyModel Load (1.1ms)[0m   [0;1mSELECT * FROM "my_models" WHERE ("my_models"."id" = 953125641) [0m
+  [4;36;1mMyModel Load (1.2ms)[0m   [0;1mSELECT * FROM "my_models" WHERE ("my_models"."id" = 953125641) [0m
+  [4;35;1mMyModel Load (1.1ms)[0m   [0mSELECT * FROM "my_models" WHERE ("my_models"."id" = 953125641) [0m
+  [4;36;1mMyModel Load (1.2ms)[0m   [0;1mSELECT * FROM "my_models" WHERE ("my_models"."id" = 953125641) [0m
+
+
+Processing ApplicationController#index (for 127.0.0.1 at 2009-02-04 18:35:12) [GET]
+
+ActionController::RoutingError (No route matches "/" with {:method=>:get}):
+  /Users/macbook/Projekte/speccify/test/rails/integration_test.rb:9
+  /Users/macbook/Projekte/speccify/test/rails/integration_test.rb:9
+  test/./../../../lib/speccify.rb:65:in `instance_eval'
+  test/./../../../lib/speccify.rb:65:in `test_tests'
+  mocha (0.9.5) lib/mocha/test_case_adapter.rb:69:in `__send__'
+  mocha (0.9.5) lib/mocha/test_case_adapter.rb:69:in `run'
+  /usr/local/lib/ruby/1.8/test/unit/testsuite.rb:34:in `run'
+  /usr/local/lib/ruby/1.8/test/unit/testsuite.rb:33:in `each'
+  /usr/local/lib/ruby/1.8/test/unit/testsuite.rb:33:in `run'
+  /usr/local/lib/ruby/1.8/test/unit/testsuite.rb:34:in `run'
+  /usr/local/lib/ruby/1.8/test/unit/testsuite.rb:33:in `each'
+  /usr/local/lib/ruby/1.8/test/unit/testsuite.rb:33:in `run'
+  /usr/local/lib/ruby/1.8/test/unit/ui/testrunnermediator.rb:46:in `run_suite'
+  /usr/local/lib/ruby/1.8/test/unit/ui/console/testrunner.rb:67:in `start_mediator'
+  /usr/local/lib/ruby/1.8/test/unit/ui/console/testrunner.rb:41:in `start'
+  /usr/local/lib/ruby/1.8/test/unit/ui/testrunnerutilities.rb:29:in `run'
+  /usr/local/lib/ruby/1.8/test/unit/autorunner.rb:216:in `run'
+  /usr/local/lib/ruby/1.8/test/unit/autorunner.rb:12:in `run'
+  /usr/local/lib/ruby/1.8/test/unit.rb:278
+  /Users/macbook/Projekte/speccify/test/rails/integration_test.rb:4
+
+Rendering rescues/layout (not_found)
+  [4;35;1mMyModel Load (1.1ms)[0m   [0mSELECT * FROM "my_models" WHERE ("my_models"."id" = 953125641) [0m
+  [4;36;1mMyModel Load (1.1ms)[0m   [0;1mSELECT * FROM "my_models" WHERE ("my_models"."id" = 953125641) [0m
+
+
+Processing ApplicationController#index (for 127.0.0.1 at 2009-02-04 18:36:34) [GET]
+
+ActionController::RoutingError (No route matches "/" with {:method=>:get}):
+  /Users/macbook/Projekte/speccify/test/rails/integration_test.rb:9
+  /Users/macbook/Projekte/speccify/test/rails/integration_test.rb:9
+  test/./../../../lib/speccify.rb:65:in `instance_eval'
+  test/./../../../lib/speccify.rb:65:in `test_tests'
+  mocha (0.9.5) lib/mocha/test_case_adapter.rb:69:in `__send__'
+  mocha (0.9.5) lib/mocha/test_case_adapter.rb:69:in `run'
+  /usr/local/lib/ruby/1.8/test/unit/testsuite.rb:34:in `run'
+  /usr/local/lib/ruby/1.8/test/unit/testsuite.rb:33:in `each'
+  /usr/local/lib/ruby/1.8/test/unit/testsuite.rb:33:in `run'
+  /usr/local/lib/ruby/1.8/test/unit/testsuite.rb:34:in `run'
+  /usr/local/lib/ruby/1.8/test/unit/testsuite.rb:33:in `each'
+  /usr/local/lib/ruby/1.8/test/unit/testsuite.rb:33:in `run'
+  /usr/local/lib/ruby/1.8/test/unit/ui/testrunnermediator.rb:46:in `run_suite'
+  /usr/local/lib/ruby/1.8/test/unit/ui/console/testrunner.rb:67:in `start_mediator'
+  /usr/local/lib/ruby/1.8/test/unit/ui/console/testrunner.rb:41:in `start'
+  /usr/local/lib/ruby/1.8/test/unit/ui/testrunnerutilities.rb:29:in `run'
+  /usr/local/lib/ruby/1.8/test/unit/autorunner.rb:216:in `run'
+  /usr/local/lib/ruby/1.8/test/unit/autorunner.rb:12:in `run'
+  /usr/local/lib/ruby/1.8/test/unit.rb:278
+  /Users/macbook/Projekte/speccify/test/rails/integration_test.rb:4
+
+Rendering rescues/layout (not_found)
+  [4;35;1mMyModel Load (1.1ms)[0m   [0mSELECT * FROM "my_models" WHERE ("my_models"."id" = 953125641) [0m
+
+
+Processing ApplicationController#index (for 127.0.0.1 at 2009-02-04 18:36:34) [GET]
+
+ActionController::RoutingError (No route matches "/" with {:method=>:get}):
+  /Users/macbook/Projekte/speccify/test/rails/integration_test.rb:16
+  /Users/macbook/Projekte/speccify/test/rails/integration_test.rb:16
+  test/./../../../lib/speccify.rb:65:in `instance_eval'
+  test/./../../../lib/speccify.rb:65:in `test_still_tests'
+  mocha (0.9.5) lib/mocha/test_case_adapter.rb:69:in `__send__'
+  mocha (0.9.5) lib/mocha/test_case_adapter.rb:69:in `run'
+  /usr/local/lib/ruby/1.8/test/unit/testsuite.rb:34:in `run'
+  /usr/local/lib/ruby/1.8/test/unit/testsuite.rb:33:in `each'
+  /usr/local/lib/ruby/1.8/test/unit/testsuite.rb:33:in `run'
+  /usr/local/lib/ruby/1.8/test/unit/testsuite.rb:34:in `run'
+  /usr/local/lib/ruby/1.8/test/unit/testsuite.rb:33:in `each'
+  /usr/local/lib/ruby/1.8/test/unit/testsuite.rb:33:in `run'
+  /usr/local/lib/ruby/1.8/test/unit/ui/testrunnermediator.rb:46:in `run_suite'
+  /usr/local/lib/ruby/1.8/test/unit/ui/console/testrunner.rb:67:in `start_mediator'
+  /usr/local/lib/ruby/1.8/test/unit/ui/console/testrunner.rb:41:in `start'
+  /usr/local/lib/ruby/1.8/test/unit/ui/testrunnerutilities.rb:29:in `run'
+  /usr/local/lib/ruby/1.8/test/unit/autorunner.rb:216:in `run'
+  /usr/local/lib/ruby/1.8/test/unit/autorunner.rb:12:in `run'
+  /usr/local/lib/ruby/1.8/test/unit.rb:278
+  /Users/macbook/Projekte/speccify/test/rails/integration_test.rb:4
+
+Rendering rescues/layout (not_found)
+  [4;36;1mMyModel Load (1.2ms)[0m   [0;1mSELECT * FROM "my_models" WHERE ("my_models"."id" = 953125641) [0m
+
+
+Processing ApplicationController#index (for 127.0.0.1 at 2009-02-04 18:37:22) [GET]
+
+ActionController::RoutingError (No route matches "/" with {:method=>:get}):
+  /Users/macbook/Projekte/speccify/test/rails/integration_test.rb:9
+  test/./../../../lib/speccify.rb:65:in `instance_eval'
+  test/./../../../lib/speccify.rb:65:in `test_tests'
+  mocha (0.9.5) lib/mocha/test_case_adapter.rb:69:in `__send__'
+  mocha (0.9.5) lib/mocha/test_case_adapter.rb:69:in `run'
+  /usr/local/lib/ruby/1.8/test/unit/testsuite.rb:34:in `run'
+  /usr/local/lib/ruby/1.8/test/unit/testsuite.rb:33:in `each'
+  /usr/local/lib/ruby/1.8/test/unit/testsuite.rb:33:in `run'
+  /usr/local/lib/ruby/1.8/test/unit/testsuite.rb:34:in `run'
+  /usr/local/lib/ruby/1.8/test/unit/testsuite.rb:33:in `each'
+  /usr/local/lib/ruby/1.8/test/unit/testsuite.rb:33:in `run'
+  /usr/local/lib/ruby/1.8/test/unit/ui/testrunnermediator.rb:46:in `run_suite'
+  /usr/local/lib/ruby/1.8/test/unit/ui/console/testrunner.rb:67:in `start_mediator'
+  /usr/local/lib/ruby/1.8/test/unit/ui/console/testrunner.rb:41:in `start'
+  /usr/local/lib/ruby/1.8/test/unit/ui/testrunnerutilities.rb:29:in `run'
+  /usr/local/lib/ruby/1.8/test/unit/autorunner.rb:216:in `run'
+  /usr/local/lib/ruby/1.8/test/unit/autorunner.rb:12:in `run'
+  /usr/local/lib/ruby/1.8/test/unit.rb:278
+  /Users/macbook/Projekte/speccify/test/rails/integration_test.rb:4
+
+Rendering rescues/layout (not_found)
+  [4;35;1mMyModel Load (1.2ms)[0m   [0mSELECT * FROM "my_models" WHERE ("my_models"."id" = 953125641) [0m
+
+
+Processing ApplicationController#index (for 127.0.0.1 at 2009-02-04 18:37:22) [GET]
+
+ActionController::RoutingError (No route matches "/" with {:method=>:get}):
+  /Users/macbook/Projekte/speccify/test/rails/integration_test.rb:17
+  /Users/macbook/Projekte/speccify/test/rails/integration_test.rb:17
+  test/./../../../lib/speccify.rb:65:in `instance_eval'
+  test/./../../../lib/speccify.rb:65:in `test_still_tests'
+  mocha (0.9.5) lib/mocha/test_case_adapter.rb:69:in `__send__'
+  mocha (0.9.5) lib/mocha/test_case_adapter.rb:69:in `run'
+  /usr/local/lib/ruby/1.8/test/unit/testsuite.rb:34:in `run'
+  /usr/local/lib/ruby/1.8/test/unit/testsuite.rb:33:in `each'
+  /usr/local/lib/ruby/1.8/test/unit/testsuite.rb:33:in `run'
+  /usr/local/lib/ruby/1.8/test/unit/testsuite.rb:34:in `run'
+  /usr/local/lib/ruby/1.8/test/unit/testsuite.rb:33:in `each'
+  /usr/local/lib/ruby/1.8/test/unit/testsuite.rb:33:in `run'
+  /usr/local/lib/ruby/1.8/test/unit/ui/testrunnermediator.rb:46:in `run_suite'
+  /usr/local/lib/ruby/1.8/test/unit/ui/console/testrunner.rb:67:in `start_mediator'
+  /usr/local/lib/ruby/1.8/test/unit/ui/console/testrunner.rb:41:in `start'
+  /usr/local/lib/ruby/1.8/test/unit/ui/testrunnerutilities.rb:29:in `run'
+  /usr/local/lib/ruby/1.8/test/unit/autorunner.rb:216:in `run'
+  /usr/local/lib/ruby/1.8/test/unit/autorunner.rb:12:in `run'
+  /usr/local/lib/ruby/1.8/test/unit.rb:278
+  /Users/macbook/Projekte/speccify/test/rails/integration_test.rb:4
+
+Rendering rescues/layout (not_found)
+  [4;36;1mMyModel Load (1.1ms)[0m   [0;1mSELECT * FROM "my_models" WHERE ("my_models"."id" = 953125641) [0m
+
+
+Processing MyModelsController#index (for 127.0.0.1 at 2009-02-04 18:37:49) [GET]
+  [4;35;1mMyModel Load (1.5ms)[0m   [0mSELECT * FROM "my_models" [0m
+Rendering template within layouts/my_models
+Rendering my_models/index
+Completed in 45ms (View: 23, DB: 4) | 200 OK [http://www.example.com/my_models]
+  [4;36;1mMyModel Load (1.1ms)[0m   [0;1mSELECT * FROM "my_models" WHERE ("my_models"."id" = 953125641) [0m
+
+
+Processing ApplicationController#index (for 127.0.0.1 at 2009-02-04 18:37:49) [GET]
+
+ActionController::RoutingError (No route matches "/" with {:method=>:get}):
+  /Users/macbook/Projekte/speccify/test/rails/integration_test.rb:17
+  /Users/macbook/Projekte/speccify/test/rails/integration_test.rb:17
+  test/./../../../lib/speccify.rb:65:in `instance_eval'
+  test/./../../../lib/speccify.rb:65:in `test_still_tests'
+  mocha (0.9.5) lib/mocha/test_case_adapter.rb:69:in `__send__'
+  mocha (0.9.5) lib/mocha/test_case_adapter.rb:69:in `run'
+  /usr/local/lib/ruby/1.8/test/unit/testsuite.rb:34:in `run'
+  /usr/local/lib/ruby/1.8/test/unit/testsuite.rb:33:in `each'
+  /usr/local/lib/ruby/1.8/test/unit/testsuite.rb:33:in `run'
+  /usr/local/lib/ruby/1.8/test/unit/testsuite.rb:34:in `run'
+  /usr/local/lib/ruby/1.8/test/unit/testsuite.rb:33:in `each'
+  /usr/local/lib/ruby/1.8/test/unit/testsuite.rb:33:in `run'
+  /usr/local/lib/ruby/1.8/test/unit/ui/testrunnermediator.rb:46:in `run_suite'
+  /usr/local/lib/ruby/1.8/test/unit/ui/console/testrunner.rb:67:in `start_mediator'
+  /usr/local/lib/ruby/1.8/test/unit/ui/console/testrunner.rb:41:in `start'
+  /usr/local/lib/ruby/1.8/test/unit/ui/testrunnerutilities.rb:29:in `run'
+  /usr/local/lib/ruby/1.8/test/unit/autorunner.rb:216:in `run'
+  /usr/local/lib/ruby/1.8/test/unit/autorunner.rb:12:in `run'
+  /usr/local/lib/ruby/1.8/test/unit.rb:278
+  /Users/macbook/Projekte/speccify/test/rails/integration_test.rb:4
+
+Rendering rescues/layout (not_found)
+  [4;36;1mMyModel Load (1.1ms)[0m   [0;1mSELECT * FROM "my_models" WHERE ("my_models"."id" = 953125641) [0m
+
+
+Processing MyModelsController#index (for 127.0.0.1 at 2009-02-04 18:38:14) [GET]
+  [4;35;1mMyModel Load (1.6ms)[0m   [0mSELECT * FROM "my_models" [0m
+Rendering template within layouts/my_models
+Rendering my_models/index
+Completed in 45ms (View: 23, DB: 4) | 200 OK [http://www.example.com/my_models]
+  [4;36;1mMyModel Load (1.1ms)[0m   [0;1mSELECT * FROM "my_models" WHERE ("my_models"."id" = 953125641) [0m
+
+
+Processing MyModelsController#index (for 127.0.0.1 at 2009-02-04 18:38:14) [GET]
+  [4;35;1mMyModel Load (1.5ms)[0m   [0mSELECT * FROM "my_models" [0m
+Rendering template within layouts/my_models
+Rendering my_models/index
+Completed in 20ms (View: 14, DB: 3) | 200 OK [http://www.example.com/my_models]
+  [4;36;1mMyModel Load (1.1ms)[0m   [0;1mSELECT * FROM "my_models" WHERE ("my_models"."id" = 953125641) [0m
+
+
+Processing MyModelsController#index (for 127.0.0.1 at 2009-02-04 18:38:49) [GET]
+  [4;35;1mMyModel Load (1.7ms)[0m   [0mSELECT * FROM "my_models" [0m
+Rendering template within layouts/my_models
+Rendering my_models/index
+Completed in 45ms (View: 23, DB: 4) | 200 OK [http://www.example.com/my_models]
+  [4;36;1mMyModel Load (1.1ms)[0m   [0;1mSELECT * FROM "my_models" WHERE ("my_models"."id" = 953125641) [0m
+
+
+Processing MyModelsController#index (for 127.0.0.1 at 2009-02-04 18:38:49) [GET]
+  [4;35;1mMyModel Load (1.4ms)[0m   [0mSELECT * FROM "my_models" [0m
+Rendering template within layouts/my_models
+Rendering my_models/index
+Completed in 20ms (View: 14, DB: 3) | 200 OK [http://www.example.com/my_models]
+
+
+Processing MyModelsController#index (for 127.0.0.1 at 2009-02-04 18:39:45) [GET]
+  [4;36;1mMyModel Load (1.7ms)[0m   [0;1mSELECT * FROM "my_models" [0m
+Rendering template within layouts/my_models
+Rendering my_models/index
+Completed in 53ms (View: 31, DB: 3) | 200 OK [http://www.example.com/my_models]
+  [4;35;1mMyModel Load (1.1ms)[0m   [0mSELECT * FROM "my_models" WHERE ("my_models"."id" = 953125641) [0m
+
+
+Processing MyModelsController#index (for 127.0.0.1 at 2009-02-04 18:39:45) [GET]
+  [4;36;1mMyModel Load (1.5ms)[0m   [0;1mSELECT * FROM "my_models" [0m
+Rendering template within layouts/my_models
+Rendering my_models/index
+Completed in 20ms (View: 14, DB: 3) | 200 OK [http://www.example.com/my_models]
+  [4;35;1mMyModel Load (1.1ms)[0m   [0mSELECT * FROM "my_models" WHERE ("my_models"."id" = 953125641) [0m
+
+
+Processing ApplicationController#index (for 127.0.0.1 at 2009-02-04 18:46:02) [GET]
+
+ActionController::RoutingError (No route matches "/" with {:method=>:get}):
+  /Users/macbook/Projekte/speccify/test/rails/performance_test.rb:6
+  test/./../../../lib/speccify.rb:65:in `instance_eval'
+  test/./../../../lib/speccify.rb:65:in `test_get_homepage'
+  /usr/local/lib/ruby/1.8/test/unit/testsuite.rb:34:in `run'
+  /usr/local/lib/ruby/1.8/test/unit/testsuite.rb:33:in `each'
+  /usr/local/lib/ruby/1.8/test/unit/testsuite.rb:33:in `run'
+  /usr/local/lib/ruby/1.8/test/unit/testsuite.rb:34:in `run'
+  /usr/local/lib/ruby/1.8/test/unit/testsuite.rb:33:in `each'
+  /usr/local/lib/ruby/1.8/test/unit/testsuite.rb:33:in `run'
+  /usr/local/lib/ruby/1.8/test/unit/ui/testrunnermediator.rb:46:in `run_suite'
+  /usr/local/lib/ruby/1.8/test/unit/ui/console/testrunner.rb:67:in `start_mediator'
+  /usr/local/lib/ruby/1.8/test/unit/ui/console/testrunner.rb:41:in `start'
+  /usr/local/lib/ruby/1.8/test/unit/ui/testrunnerutilities.rb:29:in `run'
+  /usr/local/lib/ruby/1.8/test/unit/autorunner.rb:216:in `run'
+  /usr/local/lib/ruby/1.8/test/unit/autorunner.rb:12:in `run'
+  /usr/local/lib/ruby/1.8/test/unit.rb:278
+  /Users/macbook/Projekte/speccify/test/rails/performance_test.rb:4
+
+Rendering rescues/layout (not_found)
+
+
+Processing ApplicationController#index (for 127.0.0.1 at 2009-02-04 18:46:02) [GET]
+
+ActionController::RoutingError (No route matches "/" with {:method=>:get}):
+  /Users/macbook/Projekte/speccify/test/rails/performance_test.rb:6
+  test/./../../../lib/speccify.rb:65:in `instance_eval'
+  test/./../../../lib/speccify.rb:65:in `test_get_homepage'
+  (__DELEGATION__):2:in `__send__'
+  (__DELEGATION__):2:in `run_test'
+  /usr/local/lib/ruby/1.8/test/unit/testsuite.rb:34:in `run'
+  /usr/local/lib/ruby/1.8/test/unit/testsuite.rb:33:in `each'
+  /usr/local/lib/ruby/1.8/test/unit/testsuite.rb:33:in `run'
+  /usr/local/lib/ruby/1.8/test/unit/testsuite.rb:34:in `run'
+  /usr/local/lib/ruby/1.8/test/unit/testsuite.rb:33:in `each'
+  /usr/local/lib/ruby/1.8/test/unit/testsuite.rb:33:in `run'
+  /usr/local/lib/ruby/1.8/test/unit/ui/testrunnermediator.rb:46:in `run_suite'
+  /usr/local/lib/ruby/1.8/test/unit/ui/console/testrunner.rb:67:in `start_mediator'
+  /usr/local/lib/ruby/1.8/test/unit/ui/console/testrunner.rb:41:in `start'
+  /usr/local/lib/ruby/1.8/test/unit/ui/testrunnerutilities.rb:29:in `run'
+  /usr/local/lib/ruby/1.8/test/unit/autorunner.rb:216:in `run'
+  /usr/local/lib/ruby/1.8/test/unit/autorunner.rb:12:in `run'
+  /usr/local/lib/ruby/1.8/test/unit.rb:278
+  /Users/macbook/Projekte/speccify/test/rails/performance_test.rb:4
+
+Rendering rescues/layout (not_found)

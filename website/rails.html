@@ -65,9 +65,11 @@
 							<li>:type => ActionController::TestCase </li>
 							<li>:type => ActionMailer::TestCase </li>
 							<li>:type => ActionView::TestCase </li>
+							<li>:type => ActionController::IntegrationTest</li>
+							<li>:type => ActionController::PerformanceTest (you have to require 'performance_test_help')</li>
 							</ul>
 
-							<h3 id="examplefunctionaltest:">Example, Functional Test:</h3>
+							<h3 id="examplefunctionaltest:">Example 1. Functional Test:</h3>
 
 							<pre><code>    
 describe HorstsController, :type =&gt; ActionController::TestCase do
@@ -85,6 +87,107 @@ describe HorstsController, :type =&gt; ActionController::TestCase do
          end
        end
    end
+							</code></pre>
+							
+							<h3 id="exampleunittest:">Example 2. Unit Test:</h3>
+
+							<pre><code>    
+describe MyModel, :type => ActiveSupport::TestCase do
+  before do
+    @my_model = MyModel.create!
+  end
+
+  it "is my model" do
+    @my_model.should be(@my_model)
+  end
+
+  it "has a title" do
+    @my_model.title = "Title"
+    @my_model.save!
+    @my_model.title.should eql("Title")
+  end
+end
+							</code></pre>
+							
+							
+							<h3 id="examplemailertest:">Example 3. Mailer Test:</h3>
+
+							<pre><code>    
+describe MyMailer, :type => ActionMailer::TestCase do
+
+  before do
+    @expected.subject = 'MyMailer#confirm'
+    @expected.body    = read_fixture('confirm')
+    @expected.date    = Time.now
+  end
+
+  it "sends confirm mail" do
+    MyMailer.create_confirm(@expected.date).encoded.should eql(@expected.encoded)
+  end
+
+  describe "nested context" do
+    it "still sends confirm mail" do
+      MyMailer.create_confirm(@expected.date).encoded.should eql(@expected.encoded)
+    end
+  end
+end
+							</code></pre>
+							
+							<h3 id="examplehelpertest:">Example 4. Helper Test:</h3>
+
+							<pre><code>    
+module MyModelsHelper
+  def helper_method
+    'helpful'
+  end
+end
+
+describe MyModelsHelper, :type => ActionView::TestCase do
+
+  it "is helpful" do
+    helper_method.should =~ /helpful/
+  end
+
+  describe "nested context" do
+    it "is still helpful" do
+      helper_method.should =~ /helpful/
+    end
+  end
+
+end
+							</code></pre>
+							
+							<h3 id="exampleintegrationtest:">Example 5. Integration Test:</h3>
+
+							<pre><code>    
+describe "MyModelStories", :type => ActionController::IntegrationTest do
+  fixtures :all
+
+  it "get my_models" do
+    get my_models_path
+    @response.should be_success
+  end
+
+  describe "nested context" do
+
+    it "still get my_models" do
+      get my_models_path
+      @response.should be_success
+    end
+  end
+end
+							</code></pre>
+							
+							<h3 id="exampleperformancetest:">Example 6. Performance Test:</h3>
+
+							<pre><code>    
+require 'performance_test_help'
+
+describe "Browsing", :type => ActionController::PerformanceTest do
+  it "get homepage" do
+    get '/'
+  end
+end
 							</code></pre>
 
 							<p>I&#8217;m not sure if I should wrap all the rails assertions in matchers.

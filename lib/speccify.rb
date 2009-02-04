@@ -53,7 +53,7 @@ module Speccify
       cls.setup_chained = self.setup_chained
       cls.teardown_chained = self.teardown_chained
       cls.desc = self.desc + " " + desc
-      cls.tests($1.constantize) if defined?(Rails) && self.name =~ /^(.*Controller)Test/
+      cls.tests($1.constantize) if defined?(Rails) && self.name =~ /^(.*(Controller|Helper|Mailer))Test/
       cls.class_eval(&block)
     end
     
