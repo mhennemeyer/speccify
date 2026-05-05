@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    name: lint + tests + spec-smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      - name: Set up Python (from .python-version)
+        run: uv python install
+
+      - name: Sync workspace
+        run: uv sync --all-packages
+
+      - name: Ruff check
+        run: uv run --with ruff ruff check core cli
+
+      - name: Pytest
+        run: uv run pytest
+
+      - name: flowcation lint reference specs
+        run: uv run flowcation lint specs/*.yaml
