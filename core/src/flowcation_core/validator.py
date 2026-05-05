@@ -11,9 +11,7 @@ from jsonschema import Draft202012Validator
 from jsonschema import exceptions as js_exceptions
 
 # Repo-Root → schema/spec.schema.json. core/src/flowcation_core/validator.py → ../../../schema/...
-DEFAULT_SCHEMA_PATH: Path = (
-    Path(__file__).resolve().parents[3] / "schema" / "spec.schema.json"
-)
+DEFAULT_SCHEMA_PATH: Path = Path(__file__).resolve().parents[3] / "schema" / "spec.schema.json"
 
 
 @dataclass(frozen=True)
@@ -56,8 +54,7 @@ class SchemaValidator:
     def iter_issues(self, data: Any) -> list[ValidationIssue]:
         errors = sorted(self._validator.iter_errors(data), key=lambda e: list(e.absolute_path))
         return [
-            ValidationIssue(path=_format_json_pointer(err), message=err.message)
-            for err in errors
+            ValidationIssue(path=_format_json_pointer(err), message=err.message) for err in errors
         ]
 
     def is_valid(self, data: Any) -> bool:

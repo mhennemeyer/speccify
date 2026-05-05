@@ -12,6 +12,9 @@ members = ["core", "cli", "mcp"]
 [dependency-groups]
 dev = [
     "pytest>=8.0",
+    "ruff>=0.6",
+    "mypy>=1.10",
+    "types-PyYAML>=6.0",
     "flowcation-core",
     "flowcation-cli",
 ]

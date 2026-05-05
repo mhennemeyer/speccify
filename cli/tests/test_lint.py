@@ -7,21 +7,9 @@ from typer.testing import CliRunner
 
 runner = CliRunner()
 
-VALID = (
-    "id: flow://x\n"
-    "version: 1.0.0\n"
-    "kind: ui-component\n"
-    "title: X\n"
-    "summary: y\n"
-)
+VALID = "id: flow://x\nversion: 1.0.0\nkind: ui-component\ntitle: X\nsummary: y\n"
 
-INVALID = (
-    "id: NOT_VALID\n"
-    "version: 1.0\n"
-    "kind: ui-component\n"
-    "title: X\n"
-    "summary: y\n"
-)
+INVALID = "id: NOT_VALID\nversion: 1.0\nkind: ui-component\ntitle: X\nsummary: y\n"
 
 
 def test_lint_passes_for_valid_spec(tmp_path: Path) -> None:
