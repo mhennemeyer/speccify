@@ -5,9 +5,13 @@ description = "Flowcation CLI — `flowcation` command (init, add, pull, lock, v
 requires-python = ">=3.12"
 license = { text = "MIT" }
 authors = [{ name = "Marc Hennemeyer" }]
-dependencies = ["flowcation-core"]
+dependencies = [
+    "flowcation-core",
+    "typer>=0.12",
+]
 
-# [project.scripts] flowcation = "flowcation_cli.__main__:main"  # Phase 0: noch keine main()
+[project.scripts]
+flowcation = "flowcation_cli.__main__:main"
 
 [build-system]
 requires = ["hatchling"]

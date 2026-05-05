@@ -5,7 +5,10 @@ description = "Flowcation core — shared spec loader, schema validator, resolve
 requires-python = ">=3.12"
 license = { text = "MIT" }
 authors = [{ name = "Marc Hennemeyer" }]
-dependencies = []
+dependencies = [
+    "pyyaml>=6.0",
+    "jsonschema>=4.21",
+]
 
 [build-system]
 requires = ["hatchling"]

@@ -9,6 +9,13 @@ authors = [{ name = "Marc Hennemeyer" }]
 [tool.uv.workspace]
 members = ["core", "cli", "mcp"]
 
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "flowcation-core",
+    "flowcation-cli",
+]
+
 [tool.uv.sources]
 flowcation-core = { workspace = true }
 flowcation-cli = { workspace = true }
