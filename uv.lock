@@ -1,0 +1,43 @@
+version = 1
+revision = 3
+requires-python = ">=3.12"
+
+[manifest]
+members = [
+    "flowcation-cli",
+    "flowcation-core",
+    "flowcation-mcp",
+    "flowcation-workspace",
+]
+
+[[package]]
+name = "flowcation-cli"
+version = "0.0.0"
+source = { editable = "cli" }
+dependencies = [
+    { name = "flowcation-core" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "flowcation-core", editable = "core" }]
+
+[[package]]
+name = "flowcation-core"
+version = "0.0.0"
+source = { editable = "core" }
+
+[[package]]
+name = "flowcation-mcp"
+version = "0.0.0"
+source = { editable = "mcp" }
+dependencies = [
+    { name = "flowcation-core" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "flowcation-core", editable = "core" }]
+
+[[package]]
+name = "flowcation-workspace"
+version = "0.0.0"
+source = { virtual = "." }

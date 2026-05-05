@@ -3,7 +3,7 @@
 > **Status**: 📋 Entwurf – Vorstellung im internen Team-Bereich
 > **Erstellt**: 2026-04-29
 > **Update 2026-04-29**: Entscheid für Desktop-Stack getroffen → **Tauri** (Rust + System-WebView). Gleichzeitig willkommene Gelegenheit, Rust im Team aufzubauen.
-> **Update 2026-05-04 (Refinement)**: Fokus geschärft auf **CLI + MCP + Registry zuerst** („npm-artiger Workflow"). Desktop-App **geparkt** (Re-Aktivierungs-Kriterien siehe Phase 4). Browser-Playground läuft **parallel** zum CLI als minimale Demo-Oberfläche. Visuelles Tooling zerlegt: Asset-Refs in der Spec sofort, Galerie/Live-Preview/Figma nachgelagert. Package-Manager-Designentscheidungen siehe [flowcation/package-manager-comparison.md](flowcation/package-manager-comparison.md).
+> **Update 2026-05-04 (Refinement)**: Fokus geschärft auf **CLI + MCP + Registry zuerst** („npm-artiger Workflow"). Desktop-App **geparkt** (Re-Aktivierungs-Kriterien siehe Phase 4). Browser-Playground läuft **parallel** zum CLI als minimale Demo-Oberfläche. Visuelles Tooling zerlegt: Asset-Refs in der Spec sofort, Galerie/Live-Preview/Figma nachgelagert. Package-Manager-Designentscheidungen siehe [flowcation/package-manager-comparison.md](archive/package-manager-comparison.md).
 > **Ziel**: Eine Plattform, auf der Komponenten nicht als Code in einem konkreten Framework, sondern als **präzise, sprach- und ökosystem-unabhängige Spezifikationen** entwickelt, refined, gesucht und geteilt werden. Ein AI-Agent kann anhand einer Spezifikation und einem stabilen Identifier (`<comp-id>`) die Komponente in beliebigen Ziel-Stacks (SwiftUI, Angular, React, Flutter, Jetpack Compose, Backend-Services, CLI-Tools …) deterministisch umsetzen. Distribution zuerst über CLI + MCP-Server + Website/Playground; Desktop-App optional und nachgelagert.
 > **Arbeitsname**: `flowcation` (Flow + Specification)
 
@@ -177,7 +177,7 @@ conformance:
 
 ## npm-artiger Workflow konkret
 
-> Vollständige Begründung der Designentscheidungen: [flowcation/package-manager-comparison.md](flowcation/package-manager-comparison.md). Hier die Zusammenfassung als Vertrag für CLI, Registry und MCP.
+> Vollständige Begründung der Designentscheidungen: [flowcation/package-manager-comparison.md](archive/package-manager-comparison.md). Hier die Zusammenfassung als Vertrag für CLI, Registry und MCP.
 
 ### Was wir aus existierenden PMs übernehmen
 
@@ -405,7 +405,7 @@ Wenn dieser Spike die Hypothese stützt („Spec + Agent = reproduzierbarer Code
 ## Vorarbeiten / Klären, bevor wir loslegen
 
 - [x] Domain `flowcation.com` gesichert (Markenrecherche steht aus)
-- [x] Package-Manager-Designentscheidungen geklärt → [flowcation/package-manager-comparison.md](flowcation/package-manager-comparison.md)
+- [x] Package-Manager-Designentscheidungen geklärt → [flowcation/package-manager-comparison.md](archive/package-manager-comparison.md)
 - [ ] Repo anlegen (eigenständig, getrennt vom Agent-Fundamentals-Projekt)
 - [ ] Spec-Schema v0 als JSON-Schema veröffentlichen (Phase 0)
 - [ ] CLI-/MCP-Spike (siehe Spike-Vorschlag) – Go/No-Go für Phase 2 ff.

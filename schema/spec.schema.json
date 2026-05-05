@@ -1,0 +1,143 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://flowcation.dev/schema/spec.schema.json",
+  "title": "Flowcation Spec v0",
+  "description": "Schema v0 für flowcation.yaml-Specs. Phase 0 — bewusst liberal; einzelne Felder werden in späteren Phasen verschärft (siehe Open Questions im Phase-0-Plan).",
+  "type": "object",
+  "required": ["id", "version", "kind", "title", "summary"],
+  "additionalProperties": true,
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Spec-Identität. Form: flow://<name> oder @scope/<name>, optional mit @<semver>-Suffix.",
+      "pattern": "^(flow://[a-z0-9][a-z0-9-]*|@[a-z0-9][a-z0-9-]*/[a-z0-9][a-z0-9-]*)(@[0-9A-Za-z.\\-+]+)?$"
+    },
+    "version": {
+      "type": "string",
+      "description": "SemVer 2.0.0.",
+      "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$"
+    },
+    "kind": {
+      "type": "string",
+      "description": "Komponentenklasse. v0 offener String; ab Phase 1 voraussichtlich enum (ui-component, ui-workflow, logic, workflow, screen).",
+      "minLength": 1
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1
+    },
+    "authors": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "license": {
+      "type": "string",
+      "minLength": 1
+    },
+    "inputs": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/ioField" }
+    },
+    "outputs": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/ioField" }
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "additionalProperties": true,
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "payload": {}
+        }
+      }
+    },
+    "uses": {
+      "type": "array",
+      "description": "Liste referenzierter Specs. v0: nur syntaktische Prüfung (Resolver kommt in Phase 1). Erlaubt sind id-Patterns mit optionalen Versions-Range-Suffixen wie @^1.0 oder @~2.",
+      "items": {
+        "type": "string",
+        "pattern": "^(flow://[a-z0-9][a-z0-9-]*|@[a-z0-9][a-z0-9-]*/[a-z0-9][a-z0-9-]*)(@[\\^~]?[0-9A-Za-z.\\-+*x]+)?$"
+      }
+    },
+    "acceptance": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "anyOf": [
+          { "required": ["then"] },
+          { "required": ["when"] }
+        ],
+        "properties": {
+          "given": { "type": "string" },
+          "when": { "type": "string" },
+          "then": { "type": "string" }
+        }
+      }
+    },
+    "ux": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "references": {
+          "type": "array",
+          "description": "Asset-Referenzen. v0 bewusst liberal: relative Pfade, asset://, figma://, http(s):// erlaubt.",
+          "items": {
+            "type": "string",
+            "pattern": "^(\\.{1,2}/.+|[a-zA-Z][a-zA-Z0-9+.\\-]*://.+)$"
+          }
+        },
+        "a11y": { "type": "string" },
+        "i18n": { "type": "string" }
+      }
+    },
+    "non_functional": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "performance": { "type": "string" },
+        "security": {
+          "oneOf": [
+            { "type": "string" },
+            { "type": "array", "items": { "type": "string" } }
+          ]
+        }
+      }
+    },
+    "conformance": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "fixtures": { "type": "string" },
+        "golden_renders": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "ioField": {
+      "type": "object",
+      "required": ["name", "type"],
+      "additionalProperties": true,
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "type": { "type": "string", "minLength": 1 },
+        "constraints": {
+          "oneOf": [
+            { "type": "string" },
+            { "type": "array", "items": { "type": "string" } }
+          ]
+        }
+      }
+    }
+  }
+}

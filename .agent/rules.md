@@ -1,0 +1,1 @@
+/Users/mhennemeyer/.agent/rules.md
