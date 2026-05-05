@@ -1,0 +1,31 @@
+[project]
+name = "flowcation-workspace"
+version = "0.0.0"
+description = "Flowcation monorepo workspace — Spec-First component platform for AI agents."
+requires-python = ">=3.12"
+license = { text = "MIT" }
+authors = [{ name = "Marc Hennemeyer" }]
+
+[tool.uv.workspace]
+members = ["core", "cli", "mcp"]
+
+[tool.uv.sources]
+flowcation-core = { workspace = true }
+flowcation-cli = { workspace = true }
+flowcation-mcp = { workspace = true }
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = false
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["core", "cli", "mcp"]
+addopts = "-q"
