@@ -1,5 +1,26 @@
 # Log: Flowcation
 
+## 2026-05-06
+- Plan-Hygiene durchgeführt: bestehende Pläne in `.agent/plans/` auf Status geprüft.
+- Phase 0 final geclosed:
+  - ADR-Light-Tabelle für Q1–Q5 in `phase-0-wrap-up.md` ergänzt
+    (Q1 strikte `kind`-Enum ab Phase 1, Q2 Asset-Ref-Whitelist
+    `relativ + asset:// + figma:// + https://`, Q3 Resolver in Phase 1a,
+    Q4 `$schema`-Pin auf Draft 2020-12 + Validator-Check in Phase 1,
+    Q5 Conformance-Runner erst Phase 3).
+  - Handover-Sektion auf `phase-1a-resolver-lockfile.md` und Master-Plan-Phase-1
+    ergänzt.
+  - Status `Done` (2026-05-06) im Plan-Header gesetzt.
+- Pläne archiviert (`git mv` nach `.agent/plans/archive/`):
+  - `phase-0-wrap-up.md` (Wrap-up abgeschlossen).
+  - `phase-0-closeout.md` (überholt durch wrap-up; nicht ausgeführt).
+  - `phase-0-wrap-up-decisions.md` (in wrap-up integriert).
+- Querverweise umgebogen: `README.md` zeigt auf Archiv-Pfade + Phase-1a-Plan;
+  `AGENTS.md` *Aktuelle Phase* auf Phase 1a umgestellt.
+- `status.md` aktualisiert: Phase = *Phase 0 abgeschlossen — Phase 1a aktiv*,
+  nächster Schritt = Phase-1a-Plan + Naming-Entscheidung.
+- Annotated Tag `v0.0.0-phase0` auf den Wrap-up-Commit gesetzt.
+
 ## 2026-05-05
 - Projekt initialisiert
 - Phase-0-Abschluss-Tooling ergänzt:

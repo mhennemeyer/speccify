@@ -12,9 +12,11 @@ Langfristige Quelle der Wahrheit: [`.agent/plans/flowcation-plan.md`](./.agent/p
 
 ## Aktuelle Phase
 
-**Phase 0 — Spec-Schema v0 + `flowcation lint` + 5 Referenz-Specs.**
+**Phase 1a — Resolver + Lockfile + `add`/`pull`/`verify` (Stub-Codegen).**
 
-Konkreter Implementierungs-Plan: [`.agent/plans/phase-0-spec-schema-spike.md`](./.agent/plans/archive/phase-0-spec-schema-spike.md) (archiviert; Wrap-up: [`phase-0-wrap-up.md`](./.agent/plans/phase-0-wrap-up.md)).
+Aktiver Plan: [`.agent/plans/phase-1a-resolver-lockfile.md`](./.agent/plans/phase-1a-resolver-lockfile.md).
+
+Phase 0 abgeschlossen (Tag `v0.0.0-phase0`): Schema v0, `flowcation lint`, 5 Referenz-Specs. Archiviert: [`phase-0-spec-schema-spike.md`](./.agent/plans/archive/phase-0-spec-schema-spike.md), [`phase-0-wrap-up.md`](./.agent/plans/archive/phase-0-wrap-up.md) (enthält ADR-Light Q1–Q5).
 
 ## Repo-Layout
 

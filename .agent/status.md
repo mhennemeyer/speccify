@@ -2,9 +2,9 @@
 
 ## Meta
 - **Typ:** Code
-- **Phase:** Phase 0 abgeschlossen — Wrap-up läuft (Open Questions + Übergang zu Phase 1)
+- **Phase:** Phase 0 abgeschlossen (Tag `v0.0.0-phase0`) — Phase 1a aktiv
 - **Priorität:** Mittel
-- **Zuletzt aktualisiert:** 2026-05-05
+- **Zuletzt aktualisiert:** 2026-05-06
 
 ## Beschreibung
 Spec-First-Plattform für sprach-/framework-unabhängige Komponenten-Spezifikationen.
@@ -23,12 +23,11 @@ Fundament für alle weiteren Phasen.
   Mypy + Pytest + `flowcation lint` ab.
 
 ## Nächste Schritte
-- [ ] Wrap-up-Plan abarbeiten: [`.agent/plans/phase-0-wrap-up.md`](./plans/phase-0-wrap-up.md)
-      — Open Questions entscheiden (`kind`-Enum, Asset-Ref-URI-Schema, `$schema`-Pin,
-      Conformance-Runner nach Phase 3) und Entscheidungstabelle füllen.
-- [ ] Optionaler Release-Tag `v0.0.0-phase0`.
-- [ ] Separater Phasen-Plan für Phase 1 (CLI-MVP `init`/`add`/`pull`/`lock`,
-      MCP-Server, erstes Codegen-Target SwiftUI, Web-Playground).
+- [ ] Phase 1a umsetzen: [`.agent/plans/phase-1a-resolver-lockfile.md`](./plans/phase-1a-resolver-lockfile.md)
+      — Manifest, lokale Pseudo-Registry, MVS-Resolver, `flowcation.lock`,
+      CLI-Befehle `add`/`lock`/`pull`/`verify`, Stub-Codegen (Markdown).
+- [ ] Naming-Entscheidung treffen: [`.agent/plans/naming-plan.md`](./plans/naming-plan.md)
+      (Rebrand wegen Marken-Konflikt mit „Flowcation" Frankfurt).
 
 ## Blocker
 Keine.

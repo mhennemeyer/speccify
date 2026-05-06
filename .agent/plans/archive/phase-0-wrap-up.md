@@ -3,6 +3,31 @@ sessionId: session-260505-181449-1wqk
 isActive: false
 ---
 
+> **Status**: ✅ Done — Phase 0 formal abgeschlossen
+> **Abgeschlossen**: 2026-05-06
+> **Vorgänger**: [`archive/phase-0-spec-schema-spike.md`](./archive/phase-0-spec-schema-spike.md)
+> **Folge-Plan**: [`phase-1a-resolver-lockfile.md`](./phase-1a-resolver-lockfile.md)
+
+## ADR-Light: Entscheidungen zu den 5 Open Questions
+
+| # | Frage | Entscheidung | Rationale | Schema-Impact | Ziel-Phase |
+|---|---|---|---|---|---|
+| 1 | `kind`-Enum vs. offener String | **Strikte Enum** ab Phase 1: `ui-component`, `ui-workflow`, `logic`, `workflow`, `screen` | Determinismus für Codegen-Routing; pre-1.0 darf brechen | Schema-Breaking (Phase 1) | Phase 1 |
+| 2 | Asset-Refs URI-Schema | **Whitelist**: relative Pfade + `asset://` + `figma://` + `https://` | Erlaubt portable + Tool-spezifische Refs ohne Wildwuchs | Pattern-Verschärfung in `ux.references` | Phase 1 |
+| 3 | `uses:`-Auflösung | Phase 0 nur Syntax-Check; **Resolver in `flowcation-core` ab Phase 1a** | Trennt Schema-Validierung von Dependency-Resolution | Keiner (Schema bleibt) | Phase 1a |
+| 4 | `$schema`-Pin | **Pin auf `https://json-schema.org/draft/2020-12/schema`**; Validator erzwingt Pin ab Phase 1 | Reproduzierbare Validierung über Tool-Versionen hinweg | Validator-Check in Phase 1 | Phase 1 |
+| 5 | Conformance-Tests | **Field bleibt deklarativ** in v0; Runner erst Phase 3 | Vertrag ohne Runner-Komplexität festschreiben | Keiner | Phase 3 |
+
+## Handover an Phase 1
+
+- Schema-Migrationen aus Q1/Q2/Q4 → Eingang in `phase-1a-resolver-lockfile.md` bzw. einen separaten Schema-v1-Bump.
+- Validator-Pflicht: `$schema`-Pin explizit prüfen (Q4-Implementierung).
+- Resolver für `uses:` in `flowcation-core` (Q3) → bereits in `phase-1a-resolver-lockfile.md` verankert.
+- Master-Plan-Verweis: [`flowcation-plan.md` — Phase 1 — CLI-MVP + MCP + ein Codegen-Target + Playground](./flowcation-plan.md).
+- Release-Tag `v0.0.0-phase0` (annotated) markiert den Phase-0-Stand.
+
+---
+
 # Requirements
 
 ### Overview & Goals

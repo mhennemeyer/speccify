@@ -20,12 +20,13 @@ uv run ruff check .
 
 - [`AGENTS.md`](./AGENTS.md) — Onboarding für Coding-Agents (Vision, Repo-Layout, Konventionen).
 - [`.agent/plans/flowcation-plan.md`](./.agent/plans/flowcation-plan.md) — Master-Plan (langfristige Vision & Roadmap).
-- [`.agent/plans/phase-0-wrap-up.md`](./.agent/plans/phase-0-wrap-up.md) — Phase-0-Wrap-up (Open Questions + Übergang zu Phase 1).
+- [`.agent/plans/archive/phase-0-wrap-up.md`](./.agent/plans/archive/phase-0-wrap-up.md) — Phase-0-Wrap-up (abgeschlossen, ADR-Light für Q1–Q5).
+- [`.agent/plans/phase-1a-resolver-lockfile.md`](./.agent/plans/phase-1a-resolver-lockfile.md) — Nächster Schritt: Resolver + Lockfile + `add`/`pull`/`verify`.
 - [`.agent/plans/archive/phase-0-spec-schema-spike.md`](./.agent/plans/archive/phase-0-spec-schema-spike.md) — Phase-0-Implementierungs-Plan (abgeschlossen, archiviert).
 
 ## Status
 
-Phase 0 — Spec-Schema v0 + `flowcation lint` + 5 Referenz-Specs. Kein produktiver Code.
+Phase 0 abgeschlossen (Schema v0 + `flowcation lint` + 5 Referenz-Specs, Tag `v0.0.0-phase0`). Aktiv: Phase 1a — Resolver + Lockfile.
 
 ## Lizenz
 
