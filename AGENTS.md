@@ -14,9 +14,9 @@ Langfristige Quelle der Wahrheit: [`.agent/plans/speccify-plan.md`](./.agent/pla
 
 ## Aktuelle Phase
 
-**Phase 1a abgeschlossen — Resolver + Lockfile + Stub-Codegen + `add`/`lock`/`pull`/`verify`. Nächste Phase: 1b (echtes React-Codegen + `speccify init`).**
+**Phase 1b geplant — Phasen-Plan geschrieben, Step 1 (`speccify init`) ist als Nächstes dran. Phase 1a (Resolver + Lockfile + Stub-Codegen + `add`/`lock`/`pull`/`verify`) abgeschlossen.**
 
-Abgeschlossener Plan: [`.agent/plans/phase-1a-resolver-lockfile.md`](./.agent/plans/phase-1a-resolver-lockfile.md). Phase 1b hat noch keinen Plan; nächster Schritt ist, einen `phase-1b-react-codegen.md` zu schreiben (Vorschlag), bevor Code geschrieben wird.
+Aktiver Plan: [`.agent/plans/phase-1b-react-codegen.md`](./.agent/plans/phase-1b-react-codegen.md) (LLM-Codegen mit Replay-Cache, `--offline` Flag für CI, minimaler `init`, TSX mit Props/Types). Abgeschlossener Plan: [`.agent/plans/phase-1a-resolver-lockfile.md`](./.agent/plans/phase-1a-resolver-lockfile.md).
 
 Phase 0 abgeschlossen (Tag `v0.0.0-phase0`): Schema v0, `speccify lint`, 5 Referenz-Specs. Phase 1a-0 (Rebrand `flowcation` → `speccify`, Tag `v0.0.1-speccify-rebrand`) ebenfalls abgeschlossen. Archiviert: [`phase-0-spec-schema-spike.md`](./.agent/plans/archive/phase-0-spec-schema-spike.md), [`phase-0-wrap-up.md`](./.agent/plans/archive/phase-0-wrap-up.md), [`phase-1a0-rename-to-speccify.md`](./.agent/plans/archive/phase-1a0-rename-to-speccify.md).
 

@@ -2,7 +2,7 @@
 
 ## Meta
 - **Typ:** Code
-- **Phase:** Phase 1a (Resolver + Lockfile + Stub-Codegen) abgeschlossen — bereit für Phase 1b (echtes React-Codegen + `speccify init`)
+- **Phase:** Phase 1b geplant (Phasen-Plan geschrieben) — bereit für Step 1 (`speccify init`). Phase 1a abgeschlossen.
 - **Priorität:** Mittel
 - **Zuletzt aktualisiert:** 2026-05-06
 
@@ -23,9 +23,20 @@ Fundament für alle weiteren Phasen.
   Mypy + Pytest + `speccify lint` ab.
 
 ## Nächste Schritte
-- [ ] Phase 1b — echtes React-Codegen + `speccify init`, neuen Phasen-Plan
-      schreiben (Vorschlag: `.agent/plans/phase-1b-react-codegen.md`).
-- [ ] Optional: annotated Tag `v0.1.0-phase-1a` setzen.
+- [ ] Phase 1b Step 1 — `speccify init <name> [--target react]` (minimal:
+      nur `speccify.yaml`, kein Skeleton). Tests + Status/Log/Plan-Sync.
+- [ ] Phase 1b Step 2 — Lockfile-Schema-Erweiterung `generator.oneOf`
+      (`template`/`llm`), `GeneratorPin` als Union.
+- [ ] Phase 1b Step 3 — Replay-Cache + `LlmClient`-Protokoll
+      (`speccify_core.codegen.replay`).
+- [ ] Phase 1b Step 4 — React-LLM-Adapter + Codegen-Dispatcher
+      (`render_for_target`).
+- [ ] Phase 1b Step 5 — `speccify pull --target react --offline` + CI-E2E mit
+      eingechecktem Replay-Cache.
+- [ ] Phase 1b Step 6 — Master-Plan-Sync + Tag-Vorschlag `v0.2.0-phase-1b`.
+- [ ] Optional: annotated Tag `v0.1.0-phase-1a` setzen (Phase 1a abgeschlossen).
+- [x] Phasen-Plan `.agent/plans/phase-1b-react-codegen.md` geschrieben
+      (LLM-Codegen mit Replay-Cache, minimaler `init`, TSX mit Props/Types).
 - [x] Phase 1a Step 5 — `speccify verify`, `lint`-Anpassung, CI-Step (E2E im
       example-project: lock + pull + verify), Master-Plan-Sync (React-first,
       Template-Pin, Sub-Spikes 1a–1d), `.gitignore` für example-project-Artefakte.

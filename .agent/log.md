@@ -1,5 +1,28 @@
 # Log: Speccify
 
+## 2026-05-06 (Phase 1b geplant)
+- **Phasen-Plan `phase-1b-react-codegen.md` geschrieben** — reines Plan-Dokument
+  als nächster atomarer Commit, bevor Code für Phase 1b angefasst wird
+  (Plan-Disziplin Regel #1, `AGENTS.md`).
+- Kern-Entscheidungen mit User abgestimmt:
+  - **LLM-Codegen** (Variante B aus Master-Plan) statt Templates für React —
+    direkt der Zielzustand. CI nutzt einen eingecheckten Replay-Cache statt
+    Live-API-Calls (`--offline` Flag), Cache-Key über
+    `(spec_sha256, target, model, prompt_version, seed)`.
+  - **`speccify init` minimal**: nur `speccify.yaml` mit `target` + leerer
+    `dependencies`, kein `package.json`/Skeleton-Projekt.
+  - **TSX-Output minimal**: ein File pro Spec mit Props/Types aus Inputs/Events
+    + Komponenten-Skeleton mit `// TODO`-Markern. Keine Tests/Stories.
+- Plan zerlegt in 6 atomare Steps: (1) `init`, (2) Lockfile-Schema-Erweiterung
+  (`generator.oneOf` für `template`/`llm`), (3) Replay-Cache + `LlmClient`-
+  Protokoll, (4) React-LLM-Adapter + Codegen-Dispatcher, (5)
+  `pull --target react --offline` + CI + Fixtures, (6) Master-Plan-Sync + Tag
+  `v0.2.0-phase-1b`.
+- Offene Fragen vor Step 4 im Plan dokumentiert: Provider-Default,
+  Normalisierungs-Tiefe, TSX-Validitäts-Check, Cache-Fixture-Ort.
+- `AGENTS.md` „Aktuelle Phase" und `.agent/status.md` auf „Phase 1b geplant,
+  Step 1 als Nächstes" umgestellt.
+
 ## 2026-05-06 (Phase 1a abgeschlossen)
 - **Phase 1a Step 4 + Step 5 abgeschlossen** — Stub-Codegen, `speccify pull`,
   `speccify verify`, `lint`-Anpassung, CI-Step und Master-Plan-Sync. Damit ist
