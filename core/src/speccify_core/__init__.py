@@ -13,6 +13,15 @@ from speccify_core.registry import (
     Spec,
     Version,
 )
+from speccify_core.resolver import (
+    Range,
+    RangeConflictError,
+    Resolution,
+    ResolvedGraph,
+    Resolver,
+    ResolverError,
+    VersionNotFoundError,
+)
 from speccify_core.validator import (
     DEFAULT_SCHEMA_PATH,
     SchemaValidator,
@@ -28,12 +37,19 @@ __all__ = [
     "LocalRegistry",
     "ManifestError",
     "ProjectManifest",
+    "Range",
+    "RangeConflictError",
     "RegistryError",
+    "Resolution",
+    "ResolvedGraph",
+    "Resolver",
+    "ResolverError",
     "SchemaValidator",
     "Spec",
     "SpecLoader",
     "SpecLoaderError",
     "ValidationIssue",
     "Version",
+    "VersionNotFoundError",
     "__version__",
 ]

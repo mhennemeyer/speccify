@@ -338,8 +338,8 @@ Phase 1a weicht in zwei sichtbaren Punkten vom Master-Plan ab. Step 5 synchronis
 - Re-Exports in `core/src/speccify_core/__init__.py` ergänzen.
 - Tests `core/tests/test_manifest.py` (Round-Trip, Schema-Fehler, fehlendes Pflichtfeld) und `core/tests/test_registry.py` (Lookup-Happy-Path, fehlende Version, Sortierung).
 
-###   Step 2: Step 2: MVS-Resolver mit transitiver Auflösung und Diamond-Test
-`Resolver.resolve(manifest) -> ResolvedGraph` liefert deterministisch das transitive Auflösungsergebnis.
+###   Step 2: Step 2: MVS-Resolver mit transitiver Auflösung und Diamond-Test ✅
+`Resolver.resolve(manifest) -> ResolvedGraph` liefert deterministisch das transitive Auflösungsergebnis. *(Abgeschlossen 2026-05-06: `speccify_core.resolver` mit `Range`/`Resolution`/`ResolvedGraph`/`Resolver`, `ResolverError`-Hierarchie inkl. `VersionNotFoundError`/`RangeConflictError`. 12 neue Tests grün; Diamond liefert deterministisch `button@0.1.1` (`onboarding-wizard.uses: ^0.1` + `login-screen.uses: ^0.1.1`).)*
 
 - Neues Modul `speccify_core.resolver` mit `Version`, `Range` (in 1a nur `^X.Y`/`^X.Y.Z` und exakt; `~`/Pre-Releases ausgeklammert), `Resolution`, `ResolvedGraph`, `Resolver`, `ResolverError`-Hierarchie.
 - MVS-Algorithmus strikt nach Go-Vorbild: pro Spec-Id Maximum aller geforderten Mindestversionen wählen, das alle Ranges erfüllt.

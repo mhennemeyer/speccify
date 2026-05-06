@@ -1,5 +1,26 @@
 # Log: Speccify
 
+## 2026-05-06 (noch später)
+- **Phase 1a Step 2 abgeschlossen** — MVS-Resolver:
+  - Neues Modul `speccify_core.resolver` mit `Range` (Caret `^X.Y`/`^X.Y.Z` + exakt
+    `X.Y.Z`), `Resolution`, `ResolvedGraph`, `Resolver` und `ResolverError`-Hierarchie
+    (`VersionNotFoundError`, `RangeConflictError`).
+  - MVS-Algorithmus strikt nach Go-Vorbild: Maximum aller geforderten
+    Mindestversionen, danach kleinste verfügbare Version, die alle Ranges
+    erfüllt. Transitive Auflösung über `uses:` via Worklist.
+  - Spec-Hashing: `sha256` der Original-Bytes der Spec-Datei (nicht re-serialisiert)
+    → `Resolution.spec_sha256`. Resolutions deterministisch alphabetisch sortiert.
+  - Re-Exports in `speccify_core.__init__` ergänzt.
+  - 12 neue Tests in `core/tests/test_resolver.py`: Range-Parser (Caret/Exact/Invalid),
+    Happy-Path, transitive `uses:`-Auflösung, Diamond mit `button@0.1.1` als
+    Resultat (`onboarding-wizard.uses: ^0.1` + `login-screen.uses: ^0.1.1`),
+    sortierte Resolutions, fehlende Version, unbekannte Spec, inkompatible Ranges,
+    ungültige Range im Manifest.
+  - Verifikation lokal grün: `uv run pytest` (46 Tests, +12 neu),
+    `uv run ruff check`/`format --check`, `uv run mypy core/src cli/src`.
+  - Plan-Status: Phase 1a Step 3 (Lockfile + `speccify add`/`lock`) ist als
+    Nächstes dran.
+
 ## 2026-05-06 (später)
 - **Phase 1a Step 1 abgeschlossen** — Manifest- und Pseudo-Registry-Layer:
   - Neues JSON-Schema `schema/manifest.schema.json` (Draft 2020-12) für

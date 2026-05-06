@@ -1,0 +1,220 @@
+"""MVS-Resolver für Phase 1a.
+
+Strikt nach Go-Vorbild: pro Spec-Id wird das Maximum aller geforderten Mindestversionen
+gewählt. Anschließend wird verifiziert, dass die gewählte Version mit allen Ranges
+kompatibel ist. Phase 1a unterstützt nur exakte Versionen und Caret-Ranges
+(`^X.Y` / `^X.Y.Z`); Pre-Releases werden ignoriert (mit Warnung).
+"""
+
+from __future__ import annotations
+
+import hashlib
+import logging
+import re
+from collections import deque
+from dataclasses import dataclass, field
+
+from speccify_core.manifest import ProjectManifest
+from speccify_core.registry import LocalRegistry, RegistryError, Spec, Version
+
+logger = logging.getLogger(__name__)
+
+_RANGE_PATTERN = re.compile(
+    r"^(?P<op>\^?)(?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)(?:\.(?P<patch>0|[1-9]\d*))?$"
+)
+_USES_PATTERN = re.compile(r"^(?P<id>@[a-z0-9][a-z0-9-]*/[a-z0-9][a-z0-9-]*)(?:@(?P<range>.+))?$")
+
+
+class ResolverError(Exception):
+    """Resolver konnte das Dependency-Closure nicht auflösen."""
+
+
+class VersionNotFoundError(ResolverError):
+    """Keine Version im Registry erfüllt die geforderte Range."""
+
+
+class RangeConflictError(ResolverError):
+    """Die geforderten Ranges sind untereinander inkompatibel."""
+
+
+@dataclass(frozen=True)
+class Range:
+    """Versions-Range. Phase 1a: exakt (`exact=True`) oder Caret (`exact=False`).
+
+    Caret `^X.Y[.Z]` => `>= X.Y.Z, < (X+1).0.0` (für X >= 1)
+    bzw. `^0.Y[.Z]` => `>= 0.Y.Z, < 0.(Y+1).0` (Caret-Konvention für 0.x).
+    Exakte Range: nur die genannte Version.
+    """
+
+    raw: str
+    exact: bool
+    min_version: Version
+    upper_exclusive: Version | None  # None nur bei exact
+
+    @classmethod
+    def parse(cls, raw: str) -> Range:
+        match = _RANGE_PATTERN.match(raw)
+        if not match:
+            raise ResolverError(
+                f"Ungültige Range '{raw}': Phase 1a erlaubt nur '^X.Y', '^X.Y.Z' "
+                f"oder exakte 'X.Y.Z'."
+            )
+        major = int(match.group("major"))
+        minor = int(match.group("minor"))
+        patch_raw = match.group("patch")
+        op = match.group("op")
+        if op == "^":
+            patch = int(patch_raw) if patch_raw is not None else 0
+            min_v = Version(major, minor, patch)
+            if major > 0:
+                upper = Version(major + 1, 0, 0)
+            else:
+                upper = Version(0, minor + 1, 0)
+            return cls(raw=raw, exact=False, min_version=min_v, upper_exclusive=upper)
+        # exact
+        if patch_raw is None:
+            raise ResolverError(f"Ungültige Range '{raw}': exakte Versionen brauchen 'X.Y.Z'.")
+        v = Version(major, minor, int(patch_raw))
+        return cls(raw=raw, exact=True, min_version=v, upper_exclusive=None)
+
+    def contains(self, version: Version) -> bool:
+        if self.exact:
+            return version == self.min_version
+        if version < self.min_version:
+            return False
+        assert self.upper_exclusive is not None
+        return version < self.upper_exclusive
+
+
+@dataclass(frozen=True)
+class Resolution:
+    spec_id: str
+    version: Version
+    spec_sha256: str
+    via: str = "registry-fixtures"
+
+
+@dataclass(frozen=True)
+class ResolvedGraph:
+    target: str
+    resolutions: list[Resolution] = field(default_factory=list)
+
+
+@dataclass(frozen=True)
+class _Constraint:
+    spec_id: str
+    range: Range
+    source: str  # Trace-Quelle, z.B. "<root>" oder "@org/onboarding-wizard@0.1.0"
+
+
+def _sha256_hex(data: bytes) -> str:
+    return "sha256:" + hashlib.sha256(data).hexdigest()
+
+
+def _parse_uses_entry(entry: str) -> tuple[str, str]:
+    match = _USES_PATTERN.match(entry)
+    if not match:
+        raise ResolverError(f"Ungültiger uses-Eintrag '{entry}': erwartet '@scope/name[@<range>]'.")
+    spec_id = match.group("id")
+    range_raw = match.group("range") or "^0.0"  # Fallback, sollte selten vorkommen
+    return spec_id, range_raw
+
+
+class Resolver:
+    """MVS-Resolver gegen ein `LocalRegistry`."""
+
+    def __init__(self, registry: LocalRegistry) -> None:
+        self._registry = registry
+
+    def resolve(self, manifest: ProjectManifest) -> ResolvedGraph:
+        constraints: dict[str, list[_Constraint]] = {}
+        for spec_id, raw_range in manifest.dependencies.items():
+            constraints.setdefault(spec_id, []).append(
+                _Constraint(spec_id=spec_id, range=Range.parse(raw_range), source="<root>")
+            )
+
+        resolved: dict[str, tuple[Version, Spec]] = {}
+        queue: deque[str] = deque(constraints.keys())
+
+        while queue:
+            spec_id = queue.popleft()
+            if spec_id not in constraints:
+                continue
+            chosen = self._select_version(spec_id, constraints[spec_id])
+            previous = resolved.get(spec_id)
+            if previous is not None and previous[0] == chosen:
+                continue
+            spec = self._registry.fetch(spec_id, chosen)
+            resolved[spec_id] = (chosen, spec)
+
+            # Neue transitive Constraints aus uses: aufnehmen.
+            data = spec.parsed()
+            uses = data.get("uses") or []
+            source = f"{spec_id}@{chosen}"
+            changed_ids: set[str] = set()
+            for entry in uses:
+                if not isinstance(entry, str):
+                    continue
+                dep_id, range_raw = _parse_uses_entry(entry)
+                try:
+                    dep_range = Range.parse(range_raw)
+                except ResolverError as exc:
+                    raise ResolverError(f"Ungültige Range in {source} → {entry}: {exc}") from exc
+                bucket = constraints.setdefault(dep_id, [])
+                already = any(c.range.raw == dep_range.raw and c.source == source for c in bucket)
+                if not already:
+                    bucket.append(_Constraint(spec_id=dep_id, range=dep_range, source=source))
+                    changed_ids.add(dep_id)
+
+            for changed in changed_ids:
+                queue.append(changed)
+            # Wenn sich Constraints für bereits aufgelöste Specs ändern, neu evaluieren.
+            for cid in list(resolved.keys()):
+                if cid in changed_ids:
+                    queue.append(cid)
+
+        resolutions = [
+            Resolution(
+                spec_id=spec_id,
+                version=ver,
+                spec_sha256=_sha256_hex(spec.raw_bytes),
+            )
+            for spec_id, (ver, spec) in sorted(resolved.items())
+        ]
+        return ResolvedGraph(target=manifest.target, resolutions=resolutions)
+
+    # --- intern ---------------------------------------------------------
+
+    def _select_version(self, spec_id: str, constraints: list[_Constraint]) -> Version:
+        try:
+            available = self._registry.list_versions(spec_id)
+        except RegistryError as exc:
+            raise ResolverError(str(exc)) from exc
+        # Pre-Releases sind in Phase 1a per Version.parse bereits ausgeschlossen.
+        if not available:
+            sources = ", ".join(f"{c.source} ({c.range.raw})" for c in constraints)
+            raise VersionNotFoundError(
+                f"Keine Versionen für '{spec_id}' im Registry gefunden. "
+                f"Geforderte Ranges: {sources}."
+            )
+
+        # Maximum aller Mindestversionen.
+        min_required = max(c.range.min_version for c in constraints)
+
+        # Kandidaten: alle verfügbaren Versionen, die >= min_required sind und alle Ranges erfüllen.
+        candidates = [
+            v
+            for v in available
+            if v >= min_required and all(c.range.contains(v) for c in constraints)
+        ]
+        if not candidates:
+            sources = "; ".join(
+                f"{c.source} fordert {c.range.raw} (min {c.range.min_version})" for c in constraints
+            )
+            avail = ", ".join(str(v) for v in available)
+            raise RangeConflictError(
+                f"Konnte keine Version für '{spec_id}' finden, die alle Constraints erfüllt. "
+                f"{sources}. Verfügbar: [{avail}]."
+            )
+        # MVS: kleinster Kandidat ab Mindestversion.
+        return min(candidates)
