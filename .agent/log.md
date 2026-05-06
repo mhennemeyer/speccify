@@ -1,6 +1,15 @@
 # Log: Flowcation
 
 ## 2026-05-06
+- Naming-Plan: zwei Owner-Eigenvorschläge (`speccify`, `zouop`) ergänzt + bewertet.
+  - `speccify`: npm/GH-Org frei, `.dev`/`.io` frei, `.com` registriert (geparkt seit
+    2022, kein Server). Plus: Owner hat OSS-Vorbenutzung
+    (`mhennemeyer/speccify`). Inhaltlich stärkster Kandidat (Spec→Verb).
+  - `zouop`: `.com` bereits in Owner-Besitz, npm + `.dev`/`.io` frei,
+    aber GitHub-User `zOuOp` blockiert Org-Anlage und Wort hat keinen
+    semantischen Bezug zum Produkt. Eingeordnet als Backup.
+  - Persönlicher Kurzfavorit neu sortiert: 1) `speccify`, 2) `forgepkg`,
+    3) `mosaicspec`, 4) `anvilspec`, 5) `zouop`.
 - Plan-Hygiene durchgeführt: bestehende Pläne in `.agent/plans/` auf Status geprüft.
 - Phase 0 final geclosed:
   - ADR-Light-Tabelle für Q1–Q5 in `phase-0-wrap-up.md` ergänzt

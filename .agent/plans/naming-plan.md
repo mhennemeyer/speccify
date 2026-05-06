@@ -3,6 +3,7 @@
 > **Status**: 📋 Entwurf – Namensfindung & Markenrecherche
 > **Erstellt**: 2026-05-05
 > **Update 2026-05-05**: Vollständige Verfügbarkeitsrecherche (Domain `.com/.dev/.io`, GitHub-Org/-User, npm-Registry, aktive Webseite) für alle Kandidaten der vorherigen Liste. Disqualifizierte Namen sind unten dokumentiert. Liste enthält jetzt nur Kandidaten, die diesen Vor-Check bestanden haben.
+> **Update 2026-05-06**: Zwei Eigenvorschläge des Owners ergänzt und bewertet: **`speccify`** (Anschluss an früheres OSS-Projekt `mhennemeyer/speccify`, mit Vorbenutzungs-Argument) und **`zouop`** (Kunstwort, `.com` bereits im Besitz). Persönlicher Eindruck zur bisherigen Top-5: erste vier Namen wirken auf den Owner unprofunden, einzig `speconaut` „witzig", aber Witz nicht prioritär.
 > **Hinweis zum Dateinamen**: Der bestehende `flowcation-plan.md` enthält den **Produkt-Plan** (Spec-First Komponenten-Plattform). Dieser Plan hier behandelt die **Umbenennung** und liegt deshalb separat unter `naming-plan.md`. Sobald ein neuer Name feststeht, sollten beide Dokumente (und der GitHub-Space, Domains, Branding) konsistent umgezogen werden.
 
 ---
@@ -145,13 +146,84 @@ Pro Finalist mit 1–5 bewerten:
 
 ---
 
+## 🆕 Eigenvorschläge des Owners (2026-05-06)
+
+### A) `speccify`
+
+**Hintergrund**: Owner (`mhennemeyer`) hatte vor langer Zeit ein gleichnamiges GitHub-Projekt (<https://github.com/mhennemeyer/speccify>) mit echten Nutzern. Dadurch existiert eine **eigene Vorbenutzung** als gewichtiges Argument gegen spätere Kollisionen.
+
+**Verfügbarkeits-Check (2026-05-06)**:
+
+| Achse | Status | Detail |
+|---|---|---|
+| `speccify.com` | ⚠️ registriert | Reg. seit 2022-12-15 (Squarespace Domains II); HTTP-Test → kein Server (Verbindung schlägt fehl). Domain wahrscheinlich nur geparkt/unbenutzt. Erwerb verhandelbar, aber **nicht garantiert frei**. |
+| `speccify.dev` | ✅ frei | Auf TLD-WHOIS-Ebene kein Eintrag. |
+| `speccify.io` | ✅ frei | „Domain not found." |
+| GitHub-Org `speccify` | ✅ frei | 404. |
+| GitHub-User `mhennemeyer/speccify` | ✅ Owner-Vorbenutzung | Bestehendes Repo des Owners → **prior use**-Argument. |
+| npm `speccify` | ✅ frei | 404 in Registry. |
+| Marken (DPMA/EUIPO/USPTO) | ⏳ noch zu prüfen | Lt. Owner-Aussage „kein Problem zu erwarten" — formal aber bei Finalisierung zu validieren. |
+
+**Bewertung (Raster)**:
+
+| Kriterium | Score (1–5) | Bemerkung |
+|---|---|---|
+| Konzept-Fit (Spec / Komposition / Agent / Forge) | **5** | Wortstamm „spec" + Verb-Suffix „-ify" („to specify") = exakt das Produktversprechen. |
+| Aussprache & Internationalität | **4** | DE/EN beide sauber, Doppel-„c" ist beim Diktieren minimal fehleranfällig. |
+| Einprägsamkeit / Markenpotenzial | **4** | Klingt wie ein echtes SaaS-Produkt (vgl. `Spotify`, `Shopify`). |
+| `.com` frei | **2** | Nur registriert/geparkt, nicht frei. Erwerb möglich, aber unsicher/teuer. |
+| GitHub-Org frei | **5** | Org `speccify` ist 404. |
+| npm-Scope frei | **5** | Paketname und damit `@speccify`-Scope frei. |
+| Keine offensichtlichen Markenkonflikte | **4** | Owner-Vorbenutzung als OSS-Projekt stärkt eigene Position; formale DPMA/EUIPO-Recherche steht aus. |
+| Tippsicher / kurz | **3** | 8 Buchstaben mit Doppelkonsonant. |
+
+**Gesamteindruck**: Inhaltlich der **stärkste Kandidat** der gesamten Liste — Suffix `-ify` macht das Produkt zum Verb. Einziger echter Schwachpunkt: `.com` ist nicht frei und müsste angekauft werden (oder man startet sauber auf `.dev`). Empfehlung: **als Top-Finalist aufnehmen**, sobald geklärt ist, ob `.com` realistisch erwerbbar ist (Anfrage über Squarespace-Marketplace oder Sedo/DAN).
+
+---
+
+### B) `zouop`
+
+**Hintergrund**: Kunstwort vom Owner, phonetisch gedacht (Klang zwischen „Suppe" und „Zupp"). `zouop.com` ist bereits im Besitz des Owners — entfällt damit als Akquise-Risiko.
+
+**Verfügbarkeits-Check (2026-05-06)**:
+
+| Achse | Status | Detail |
+|---|---|---|
+| `zouop.com` | ✅ in Owner-Besitz | HTTP 200 (eigene Seite/Parkseite). |
+| `zouop.dev` | ✅ frei | TLD-WHOIS ohne Eintrag. |
+| `zouop.io` | ✅ frei | „Domain not found." |
+| GitHub-Org `zouop` | ⚠️ Username belegt | GH-User `zOuOp` (id 147283086, 2023 angelegt) existiert — Case-Variante, aber GitHub ist case-insensitive bei Name-Reservierung. **Org-Anlage `zouop` ist damit blockiert**, ähnlich Lage wie `speconaut`. |
+| npm `zouop` | ✅ frei | 404 in Registry. |
+| Marken | ✅ vermutlich kollisionsfrei | Kunstwort ohne semantischen Inhalt. |
+
+**Bewertung (Raster)**:
+
+| Kriterium | Score (1–5) | Bemerkung |
+|---|---|---|
+| Konzept-Fit (Spec / Komposition / Agent / Forge) | **1** | Sagt nichts aus — null inhaltlicher Bezug zu Spec/Komposition/Codegen. |
+| Aussprache & Internationalität | **2** | DE/EN-Aussprache divergiert deutlich; „zou-op" wirkt im EN-Kontext fragend, im FR/ES potenziell ungewohnt. Beim Diktieren erklärungsbedürftig. |
+| Einprägsamkeit / Markenpotenzial | **3** | Kurz und einzigartig, aber bedeutungsleer → muss durch Marketing aufgeladen werden. |
+| `.com` frei | **5** | Bereits im Besitz. **Größter Pluspunkt.** |
+| GitHub-Org frei | **2** | User `zOuOp` blockiert Org `zouop`. Plan B: anderer Org-Name. |
+| npm-Scope frei | **5** | Frei. |
+| Keine offensichtlichen Markenkonflikte | **5** | Kunstwort, sauber. |
+| Tippsicher / kurz | **4** | 5 Buchstaben, aber „zou" tippt sich auf QWERTZ ungewohnt. |
+
+**Gesamteindruck**: Klassischer Kunstwort-Trade-off: rechtlich/operativ sauber, aber **erklärungsbedürftig** und ohne semantischen Anker. Für ein Dev-Tool (zielgruppenorientiert auf Devs, die das Konzept in einem Wort erfassen sollen) ist das **inhaltlich problematisch** — vergleichbar mit `Bun`, `Deno`, `Vite`, die aber alle entweder kurze Anlehnungen an reale Wörter sind oder durch starkes Marketing geladen wurden. Empfehlung: **als Outsider/Backup behalten**, vor allem für den Fall, dass alle inhaltlichen Kandidaten aus Marken-/Domain-Gründen scheitern. Die geparkte `.com` ist ein echtes Asset, sollte aber nicht über die strategische Frage entscheiden, ob das Produkt einen sprechenden Namen verdient.
+
+---
+
 ## Engerer Kreis: persönlicher Kurzfavorit
 
-1. **forgepkg** (`forgepkg.com`) – pragmatisch, devnah, sofort verständlich; alle drei Achsen (Domain, GitHub, npm) sauber frei.
-2. **mosaicspec** (`mosaicspec.com`) – starkes Bild für Komposition aus Teilen (`uses:`-Verkettungen); sauber frei.
-3. **anvilspec** (`anvilspec.com`) – Forge-Bildwelt, prägnant; sauber frei.
+> **Update 2026-05-06**: Liste neu sortiert nach Owner-Feedback. Die ursprünglichen Top-4 (`forgepkg`, `mosaicspec`, `anvilspec`, `canonspec`) bleiben formal valide, fühlen sich für den Owner aber „nicht eingänglich" an. `speconaut` wirkt am freundlichsten, ist aber bewusst „witzig" gewählt — Witz ist nicht das Ziel.
 
-`canonspec` und `speconaut` sind weiterhin starke Optionen; `speconaut` mit kleinem Schönheitsfehler (leerer GitHub-User vorhanden, Org-Variante `speconauts` als Plan B).
+1. **speccify** — inhaltlich stärkster Kandidat (Spec→Verb), starke Owner-Vorbenutzung, npm/GH-Org frei. Achillesferse: `.com` registriert (kein Server) → Akquise-Klärung nötig.
+2. **forgepkg** (`forgepkg.com`) — pragmatisch, devnah, sofort verständlich; alle drei Achsen (Domain, GitHub, npm) sauber frei.
+3. **mosaicspec** (`mosaicspec.com`) — starkes Bild für Komposition aus Teilen (`uses:`-Verkettungen); sauber frei.
+4. **anvilspec** (`anvilspec.com`) — Forge-Bildwelt, prägnant; sauber frei.
+5. **zouop** — operativ sauber + `.com` im Eigenbesitz, aber semantisch leer → Backup-Kandidat.
+
+`canonspec` und `speconaut` bleiben in der erweiterten Auswahl; `speconaut` mit kleinem Schönheitsfehler (leerer GitHub-User vorhanden, Org-Variante `speconauts` als Plan B).
 
 ---
 
