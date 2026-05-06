@@ -7,6 +7,7 @@ isActive: true
 
 > **Status**: 🚧 In Arbeit
 > **Erstellt**: 2026-05-06
+> **Update 2026-05-06**: Domains `speccify.io` und `speccify.de` durch Owner registriert (df.eu). `speccify.dev` ist beim aktuellen Anbieter (df.eu) **nicht verfügbar** — defensives Halten von `.dev` damit aufgeschoben (siehe Risiken-Sektion).
 > **Vorgänger**: `archive/naming-plan.md` (Recherche & Entscheidung)
 > **Nachfolger**: `phase-1a-resolver-lockfile.md` (echte Phase-1a-Implementierung)
 > **Begründung der Phasen-Nummer „1a-0"**: Vor Phase 1a, weil CLI-Binary, Schema-`$id`, Manifest-Dateiname, Spec-ID-URI-Schema (`flow://` → `spec://`) und Python-Paketnamen umgestellt sein müssen, **bevor** Phase 1a Resolver/Lockfile/`add`/`pull` einführt — sonst doppelter Breaking-Change-Aufwand.
@@ -18,9 +19,9 @@ isActive: true
 - **Neuer Name**: `speccify` (final, 2026-05-06).
 - **Begründung**: Inhaltlich stärkster Kandidat (Spec→Verb, vgl. `Spotify`/`Shopify`), Owner-Vorbenutzung über `mhennemeyer/speccify`, npm/GH-Org/`.io`/`.dev` frei.
 - **Domain-Strategie** (siehe `archive/naming-plan.md`):
-  - `speccify.io` = kanonische Produkt-/Doku-URL (international).
-  - `speccify.de` = DE-Marketing-Anker.
-  - `speccify.dev` = defensiv.
+  - `speccify.io` = kanonische Produkt-/Doku-URL (international). **✅ registriert (2026-05-06, df.eu)**.
+  - `speccify.de` = DE-Marketing-Anker. **✅ registriert (2026-05-06, df.eu)**.
+  - `speccify.dev` = defensiv geplant, aber **bei df.eu nicht verfügbar/anbietbar** — vorerst nicht registriert. Optional über Spezialanbieter (z. B. Google Domains-Nachfolger Squarespace, Namecheap, Cloudflare Registrar — `.dev` ist Google-betriebene gTLD und HTTPS-Pflicht via HSTS-Preload) nachziehen, falls aktiv benötigt.
   - `speccify.com` = aufschiebbar (geparkt seit 2022); ggf. später anfragen, Limit 500–3.000 USD.
   - `.ch`/`.at`/`.eu`/`.ai`/`.app` = nicht im Initial-Setup.
 

@@ -1,6 +1,11 @@
 # Log: Flowcation
 
 ## 2026-05-06
+- Domain-Status: Owner hat `speccify.io` + `speccify.de` bei df.eu registriert.
+  `speccify.dev` ist bei df.eu nicht verfügbar/anbietbar — defensives Halten
+  von `.dev` aufgeschoben (optional später via Cloudflare Registrar / Namecheap /
+  Squarespace). Status-Update in `phase-1a0-rename-to-speccify.md` (Header +
+  Domain-Liste) und `archive/naming-plan.md` (Header-Update-Zeile) ergänzt.
 - Naming-Entscheidung final: **`speccify`** (Begründung im archivierten
   `archive/naming-plan.md`: Spec→Verb, Owner-Vorbenutzung, npm/GH-Org/`.io`/`.dev`
   frei).
