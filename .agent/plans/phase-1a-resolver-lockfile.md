@@ -349,8 +349,8 @@ Phase 1a weicht in zwei sichtbaren Punkten vom Master-Plan ab. Step 5 synchronis
 - Pre-Releases im Registry werden ignoriert (mit Warnung über `logging.getLogger(__name__).warning`).
 - Tests in `core/tests/test_resolver.py`: Happy-Path, transitiver `uses:`-Pfad, Diamond mit `button@^0.1` aus zwei Quellen → erwartet `0.1.1`, Konflikt zwischen unvereinbaren Major-Ranges, fehlende Spec im Registry, fehlende Version, Pre-Release-Ignore.
 
-###   Step 3: Step 3: Lockfile-Format, `speccify lock` und `speccify add`
-Lockfile kann gelesen, geschrieben und über die CLI mutiert werden.
+###   Step 3: Step 3: Lockfile-Format, `speccify lock` und `speccify add` ✅
+Lockfile kann gelesen, geschrieben und über die CLI mutiert werden. *(Abgeschlossen 2026-05-06: `schema/lockfile.schema.json`, `speccify_core.lockfile` mit `Lockfile`/`LockEntry`/`GeneratorPin`/`GeneratedFile`/`build_lockfile`, CLI-Commands `speccify lock` und `speccify add` (gemeinsamer `WorkspaceContext`, `add` ruft implizit `lock`). 16 neue Tests grün; Lockfile schreibt deterministisch alphabetisch sortiert.)*
 
 - `schema/lockfile.schema.json` mit `schema_version: 1`, `specs[]` inkl. `id`, `version`, `sha256`, `resolved_via`, `target`, `generator{kind: template, template_set, template_version}` und `generated_files_sha256[]`.
 - `speccify_core.lockfile` mit `Lockfile.load`/`write` (deterministischer YAML-Dump, sortierte Keys, alphabetisch nach `id`).

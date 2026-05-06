@@ -1,5 +1,38 @@
 # Log: Speccify
 
+## 2026-05-06 (noch später²)
+- **Phase 1a Step 3 abgeschlossen** — Lockfile-Format + `speccify lock`/`add`:
+  - Neues JSON-Schema `schema/lockfile.schema.json` (Draft 2020-12) mit
+    `schema_version=1`, `target`, `specs[]` (id, version, sha256, resolved_via,
+    target, generator{kind=template, template_set, template_version},
+    generated_files_sha256[]).
+  - Neues Modul `speccify_core.lockfile` mit `Lockfile`/`LockEntry`/`GeneratorPin`/
+    `GeneratedFile`, `LockfileError`, `Lockfile.load`/`write` (deterministischer
+    YAML-Dump mit fixer Key-Reihenfolge, alphabetisch nach `id`),
+    `Lockfile.with_generated_files` (für Step 4) und Top-Level-Helper
+    `build_lockfile(target, resolutions)`.
+  - Defaults-Konstanten `DEFAULT_TEMPLATE_SET="phase-1a-stub"` und
+    `DEFAULT_TEMPLATE_VERSION="0.1.0"` zentralisiert (Step 4 importiert sie aus
+    `speccify_core.codegen.stub`, bis dahin liegen sie hier).
+  - Re-Exports in `speccify_core.__init__` ergänzt.
+  - CLI-Subcommand-Layer neu: `cli/src/speccify_cli/commands/__init__.py`,
+    `_workspace.py` (gemeinsamer `WorkspaceContext` mit Manifest+Registry-Lookup,
+    `--registry`-Override), `lock.py` (`speccify lock`) und `add.py`
+    (`speccify add @scope/name[@<range>]`, Default-Range `^<major.minor>` aus
+    latest-Registry-Version, ruft implizit `lock`).
+  - 16 neue Tests:
+    - `core/tests/test_lockfile.py` — Round-Trip, alphabetische Sortierung beim
+      Schreiben, Schema-Violation, `with_generated_files`-Verhalten,
+      `build_lockfile` aus echtem Resolver-Graph.
+    - `cli/tests/test_lock.py` — Smoke gegen Fixtures, Determinismus zweier
+      Aufrufe, unbekannte Dependency, fehlendes Manifest, `--registry`-Override.
+    - `cli/tests/test_add.py` — Default-Range, expliziter Caret, exakte Version,
+      unbekannte Spec, ungültige Spec-Referenz.
+  - Verifikation lokal grün: `uv run pytest` (62 Tests, +16 neu),
+    `uv run ruff check`/`format --check`, `uv run mypy core/src cli/src`.
+  - Plan-Status: Phase 1a Step 4 (Stub-Codegen + `speccify pull`) ist als
+    Nächstes dran.
+
 ## 2026-05-06 (noch später)
 - **Phase 1a Step 2 abgeschlossen** — MVS-Resolver:
   - Neues Modul `speccify_core.resolver` mit `Range` (Caret `^X.Y`/`^X.Y.Z` + exakt

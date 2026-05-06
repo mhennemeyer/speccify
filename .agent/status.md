@@ -23,10 +23,13 @@ Fundament für alle weiteren Phasen.
   Mypy + Pytest + `speccify lint` ab.
 
 ## Nächste Schritte
-- [ ] Phase 1a Step 3 — Lockfile-Format, `speccify lock` und `speccify add`.
 - [ ] Phase 1a Step 4 — Stub-Codegen + `speccify pull --target react`.
 - [ ] Phase 1a Step 5 — `speccify verify`, `lint`-Anpassung, CI-Step,
       Master-Plan-Sync, Tag `v0.1.0-phase-1a`.
+- [x] Phase 1a Step 3 — Lockfile-Format, `speccify lock` und `speccify add`
+      (`schema/lockfile.schema.json`, `speccify_core.lockfile`,
+      `speccify_cli.commands.lock`/`.add` mit gemeinsamem `WorkspaceContext`,
+      16 neue Tests grün, deterministischer YAML-Dump).
 - [x] Phase 1a Step 2 — MVS-Resolver mit transitiver Auflösung + Diamond-Test
       (`speccify_core.resolver`, `Range`/`Resolver`/`ResolverError`-Hierarchie,
       Diamond `button@0.1.1` über `login-screen.uses: ^0.1.1`).

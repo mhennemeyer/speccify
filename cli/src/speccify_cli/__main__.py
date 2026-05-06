@@ -8,12 +8,18 @@ from pathlib import Path
 import typer
 from speccify_core import SchemaValidator, SpecLoader, SpecLoaderError
 
+from speccify_cli.commands.add import add_command
+from speccify_cli.commands.lock import lock_command
+
 app = typer.Typer(
     name="speccify",
     help="Speccify CLI — Spec-First Komponenten-Plattform.",
     no_args_is_help=True,
     add_completion=False,
 )
+
+app.command("lock")(lock_command)
+app.command("add")(add_command)
 
 
 @app.callback()

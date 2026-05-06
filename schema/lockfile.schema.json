@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://speccify.io/schema/lockfile/v1.json",
+  "title": "Speccify Lockfile v1",
+  "description": "Schema v1 für speccify.lock — deterministisches Auflösungs- und Output-Hash-Manifest. In Phase 1a wird der Generator-Pin als 'template' (template_set + template_version) modelliert; LLM-Varianten kommen in einer späteren Phase.",
+  "type": "object",
+  "required": ["schema_version", "target", "specs"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "target": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Codegen-Ziel, gespiegelt aus dem Manifest zum Zeitpunkt des `lock`-Aufrufs."
+    },
+    "specs": {
+      "type": "array",
+      "description": "Aufgelöste Specs, alphabetisch nach `id` sortiert.",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "version",
+          "sha256",
+          "resolved_via",
+          "target",
+          "generator",
+          "generated_files_sha256"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^(spec://[a-z0-9][a-z0-9-]*|@[a-z0-9][a-z0-9-]*/[a-z0-9][a-z0-9-]*)$"
+          },
+          "version": {
+            "type": "string",
+            "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)$"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          },
+          "resolved_via": {
+            "type": "string",
+            "minLength": 1
+          },
+          "target": {
+            "type": "string",
+            "minLength": 1
+          },
+          "generator": {
+            "type": "object",
+            "required": ["kind", "template_set", "template_version"],
+            "additionalProperties": false,
+            "properties": {
+              "kind": { "type": "string", "const": "template" },
+              "template_set": { "type": "string", "minLength": 1 },
+              "template_version": {
+                "type": "string",
+                "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)$"
+              }
+            }
+          },
+          "generated_files_sha256": {
+            "type": "array",
+            "description": "Output-Datei-Hashes nach `pull`. Nach reinem `lock` ist die Liste leer.",
+            "items": {
+              "type": "object",
+              "required": ["path", "sha256"],
+              "additionalProperties": false,
+              "properties": {
+                "path": { "type": "string", "minLength": 1 },
+                "sha256": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
