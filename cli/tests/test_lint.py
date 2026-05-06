@@ -2,12 +2,12 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from flowcation_cli.__main__ import app
+from speccify_cli.__main__ import app
 from typer.testing import CliRunner
 
 runner = CliRunner()
 
-VALID = "id: flow://x\nversion: 1.0.0\nkind: ui-component\ntitle: X\nsummary: y\n"
+VALID = "id: spec://x\nversion: 1.0.0\nkind: ui-component\ntitle: X\nsummary: y\n"
 
 INVALID = "id: NOT_VALID\nversion: 1.0\nkind: ui-component\ntitle: X\nsummary: y\n"
 

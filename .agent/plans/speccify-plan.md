@@ -5,7 +5,7 @@
 > **Update 2026-04-29**: Entscheid für Desktop-Stack getroffen → **Tauri** (Rust + System-WebView). Gleichzeitig willkommene Gelegenheit, Rust im Team aufzubauen.
 > **Update 2026-05-04 (Refinement)**: Fokus geschärft auf **CLI + MCP + Registry zuerst** („npm-artiger Workflow"). Desktop-App **geparkt** (Re-Aktivierungs-Kriterien siehe Phase 4). Browser-Playground läuft **parallel** zum CLI als minimale Demo-Oberfläche. Visuelles Tooling zerlegt: Asset-Refs in der Spec sofort, Galerie/Live-Preview/Figma nachgelagert. Package-Manager-Designentscheidungen siehe [flowcation/package-manager-comparison.md](archive/package-manager-comparison.md).
 > **Ziel**: Eine Plattform, auf der Komponenten nicht als Code in einem konkreten Framework, sondern als **präzise, sprach- und ökosystem-unabhängige Spezifikationen** entwickelt, refined, gesucht und geteilt werden. Ein AI-Agent kann anhand einer Spezifikation und einem stabilen Identifier (`<comp-id>`) die Komponente in beliebigen Ziel-Stacks (SwiftUI, Angular, React, Flutter, Jetpack Compose, Backend-Services, CLI-Tools …) deterministisch umsetzen. Distribution zuerst über CLI + MCP-Server + Website/Playground; Desktop-App optional und nachgelagert.
-> **Arbeitsname**: `flowcation` (Flow + Specification)
+> **Arbeitsname**: `speccify` (Flow + Specification)
 
 ---
 
@@ -31,13 +31,13 @@ Mit AI-Agenten verschiebt sich der Engpass: **Code zu generieren ist billig gewo
 
 Eine Komponente in flowcation ist eine **abgeschlossene Spezifikation**, die alles enthält, was ein AI-Agent braucht, um sie in einem beliebigen Stack korrekt umzusetzen:
 
-- Eindeutige Identität (`flow://login-with-otp@1.4.0` oder `@org/login-with-otp`)
+- Eindeutige Identität (`spec://login-with-otp@1.4.0` oder `@org/login-with-otp`)
 - Maschinenlesbares Manifest (YAML/JSON-Schema)
 - Menschen- und LLM-lesbare Beschreibung (Markdown mit definierter Struktur)
 - Akzeptanzkriterien & Beispielinteraktionen (Given/When/Then, Test-Cases)
 - Visuelle Referenzen (Screenshots, Wireframes, Figma-Embeds, Bilder von „so soll es aussehen / nicht aussehen")
 - Inputs/Outputs/Events mit Typen (sprachunabhängig, ähnlich JSON Schema / Protobuf)
-- Abhängigkeiten zu anderen Komponenten (`uses: [flow://otp-input@^1, flow://api-call@^2]`)
+- Abhängigkeiten zu anderen Komponenten (`uses: [spec://otp-input@^1, spec://api-call@^2]`)
 - Stilistische Constraints (Accessibility, Performance-Budget, Security-Anforderungen)
 - Referenzimplementierungen pro Framework (optional, vom Agent generiert, vom Menschen validiert) als „Conformance-Tests"
 
@@ -52,10 +52,10 @@ Workflows referenzieren andere Komponenten per ID → **Komposition statt Copy-P
 ### Was ein AI-Agent damit macht
 
 ```
-flowcation pull flow://login-with-otp@1.4.0 --target swiftui --out ./Sources
+speccify pull spec://login-with-otp@1.4.0 --target swiftui --out ./Sources
 ```
 oder im Editor:
-> „Bau mir einen Onboarding-Flow mit `flow://login-with-otp` und `flow://profile-setup`, Ziel: Angular 18, Style: Tailwind."
+> „Bau mir einen Onboarding-Flow mit `spec://login-with-otp` und `spec://profile-setup`, Ziel: Angular 18, Style: Tailwind."
 
 Der Agent
 1. Resolved die Spec(s) inkl. transitiver Abhängigkeiten,
@@ -82,10 +82,10 @@ Der Agent
 
 > **Reihenfolge nach Refinement (2026-05-04)**: CLI + MCP-Server + Website/Playground bilden den Kern. Desktop-App ist **geparkt**. Visuelles Tooling kommt schrittweise nach echter Nutzung.
 
-### ✅ CLI (`flowcation`) – primäre Nutzungs-Oberfläche
+### ✅ CLI (`speccify`) – primäre Nutzungs-Oberfläche
 - MVP-Befehle (Phase 1): `init`, `add`, `pull --target`, `lock`, `verify`, `publish`, `yank`, `search`, `lint`.
 - Spätere Befehle (Phase 2+): `diff`, `why`, `outdated`, `workspace`.
-- Integration in CI: `flowcation verify` prüft Spec- *und* Output-Hashes (siehe Lockfile unten).
+- Integration in CI: `speccify verify` prüft Spec- *und* Output-Hashes (siehe Lockfile unten).
 - Teilt Resolver-/Codegen-Logik mit dem MCP-Server (eine Implementierung, zwei Schnittstellen).
 
 ### ✅ Agent-API / MCP-Server – gleichberechtigt mit CLI, ab Phase 1
@@ -121,7 +121,7 @@ Der Agent
 ## Spec-Format (Entwurf)
 
 ```yaml
-id: flow://login-with-otp
+id: spec://login-with-otp
 version: 1.4.0
 kind: ui-workflow            # ui-component | logic | workflow
 title: Login mit Einmal-Passwort
@@ -144,8 +144,8 @@ events:
     payload: { reason: enum[invalid_otp, expired, locked] }
 
 uses:
-  - flow://otp-input@^1.0
-  - flow://rate-limiter@^2
+  - spec://otp-input@^1.0
+  - spec://rate-limiter@^2
 
 acceptance:
   - given: User gibt gültige E-Mail ein
@@ -205,7 +205,7 @@ Caret-Default (`^1.2.3`), `unpublish` < 72h, flat Namespace ohne Scope, Backtrac
 4. **MCP-Resolver** gleichberechtigt zur CLI.
 5. **Doppelter Hash** im Lockfile: Spec-Bundle UND generierte Dateien.
 
-### `flowcation.lock` (Auszug)
+### `speccify.lock` (Auszug)
 
 ```yaml
 - id: "@org/login-with-otp"
@@ -226,19 +226,19 @@ Caret-Default (`^1.2.3`), `unpublish` < 72h, flat Namespace ohne Scope, Backtrac
 
 ```bash
 # Initialisieren
-flowcation init my-app --target swiftui
+speccify init my-app --target swiftui
 
-# Spec hinzufügen (schreibt in flowcation.yaml + flowcation.lock)
-flowcation add @org/login-with-otp@1.4.0
+# Spec hinzufügen (schreibt in speccify.yaml + speccify.lock)
+speccify add @org/login-with-otp@1.4.0
 
 # Code generieren
-flowcation pull --target swiftui --out ./Sources
+speccify pull --target swiftui --out ./Sources
 
 # Lockfile reproduzierbar prüfen (CI)
-flowcation verify
+speccify verify
 
 # Eigene Spec publishen (immutable, signiert)
-flowcation publish
+speccify publish
 
 # Aus einem Coding-Agent heraus (MCP):
 #   resolve(@org/login-with-otp@^1) → render(target=swiftui) → validate(code, id)
@@ -277,14 +277,14 @@ Yank-Politik im Detail (Grace-Period, Auto-Yank bei CVE), Pre-Release-Workflow, 
 - Spec-Schema v0 finalisieren, JSON-Schema veröffentlichen.
 - Asset-Refs (Screenshots/Wireframes/Negativ-Beispiele) als first-class im Schema.
 - 5 Referenz-Specs handgeschrieben (1 Button, 1 Form, 1 API-Client, 1 Workflow, 1 Screen).
-- Validator-CLI (`flowcation lint`).
+- Validator-CLI (`speccify lint`).
 
 ### Phase 1: CLI-MVP + MCP + ein Codegen-Target + Playground
 - **CLI-MVP**: `init`, `add`, `pull --target`, `lock`, `verify`, `publish`, `yank`, `search`, `lint`.
 - **MCP-Server** (gleiche Resolver-/Codegen-Logik wie CLI): `resolve`, `search`, `render`, `validate`, `lock`, `verify`.
 - **Ein Codegen-Target zuerst**: SwiftUI (Entscheidung: nicht alle drei parallel; Validierung der Hypothese mit einem fokussierten Target).
 - **Browser-Playground**: Spec im Browser eingeben → Live-Generierung; nutzt dieselbe Codegen-Pipeline.
-- `flowcation.lock` mit Hashes + Generator-Pin (Modell, Prompt-Version, Seed) + Output-Hashes.
+- `speccify.lock` mit Hashes + Generator-Pin (Modell, Prompt-Version, Seed) + Output-Hashes.
 - Demo: Junie/Claude Code zieht `@org/...` via MCP und baut eine SwiftUI-Komponente.
 
 ### Phase 2: Registry-MVP
@@ -327,7 +327,7 @@ Yank-Politik im Detail (Grace-Period, Auto-Yank bei CVE), Pre-Release-Workflow, 
 
 - **Determinismus**: Wie ähnlich sind Outputs verschiedener Agenten für dieselbe Spec? (Strukturelle Diff-Distanz)
 - **Coverage**: Anteil Specs, deren Conformance-Tests in ≥3 Targets grün laufen
-- **Time-to-Component**: Sekunden von „flowcation pull" bis lauffähiger Code
+- **Time-to-Component**: Sekunden von „speccify pull" bis lauffähiger Code
 - **Refinement-Loop-Länge**: durchschnittliche Iterationen, bis eine Spec „agent-ready" ist
 - **Community-KPIs**: aktive Autoren, neue Specs/Woche, Pulls/Woche
 
@@ -352,7 +352,7 @@ Yank-Politik im Detail (Grace-Period, Auto-Yank bei CVE), Pre-Release-Workflow, 
 - **Visuelle Referenzen rechtssicher**: Hosting-Strategie für Bilder/Figma-Embeds.
 - **Lizenz-Modell**: MIT/Apache für Specs? Dual-Lizenz für Marketplace?
 - **Wer „besitzt" eine Komponente?**: Forking-Modell (à la GitHub) vs. zentrales Registry.
-- **Naming**: `flowcation` final? Domain-Check, Markenrecht.
+- **Naming**: `speccify` final? Domain-Check, Markenrecht.
 - **Plattform-Strategie**: SaaS-only oder self-hosted Edition?
 - **Rust-Lernkurve im Team / WebKitGTK / Mac-Native als Fallback**: Durch das Parken der Desktop-App (Phase 4) aktuell entschärft. Bleibt für die Re-Aktivierung dokumentiert.
 - **UI-lastige Komponenten ohne visuelle Refs**: Im CLI-/MCP-only-Workflow reichen Asset-Refs in der Spec eventuell nicht für stark visuelle Komponenten. → Bewusst akzeptierter Trade-off in der Frühphase; visuelles Tooling kommt in Phase 5, sobald reale Lücken bekannt sind.
@@ -367,7 +367,7 @@ Yank-Politik im Detail (Grace-Period, Auto-Yank bei CVE), Pre-Release-Workflow, 
 1. Spec-Schema v0 (YAML + JSON-Schema), inkl. Asset-Refs.
 2. **Eine** handgeschriebene Spec für eine nicht-triviale Komponente (z. B. Date-Range-Picker mit i18n, a11y, Edge-Cases).
 3. **Eine** Codegen-Pipeline: SwiftUI (Entscheidung im Refinement).
-4. CLI-MVP (`init`, `add`, `pull --target`, `lock`, `verify`) mit `flowcation.lock` inkl. Generator-Pin.
+4. CLI-MVP (`init`, `add`, `pull --target`, `lock`, `verify`) mit `speccify.lock` inkl. Generator-Pin.
 5. **MCP-Bridge**, die dieselbe Resolver-/Codegen-Logik exponiert.
 6. Conformance-Test-Runner für die SwiftUI-Pipeline.
 7. Demo: aus Junie/Claude Code heraus per MCP `resolve → render(target=swiftui) → validate` → lauffähige Komponente → **interner Pitch**.

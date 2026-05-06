@@ -5,7 +5,7 @@ isActive: true
 
 # Phase 1a-0 — Rebrand „flowcation" → „speccify"
 
-> **Status**: 🚧 In Arbeit
+> **Status**: ✅ Done (2026-05-06)
 > **Erstellt**: 2026-05-06
 > **Update 2026-05-06**: Domains `speccify.io` und `speccify.de` durch Owner registriert (df.eu). `speccify.dev` ist beim aktuellen Anbieter (df.eu) **nicht verfügbar** — defensives Halten von `.dev` damit aufgeschoben (siehe Risiken-Sektion).
 > **Vorgänger**: `archive/naming-plan.md` (Recherche & Entscheidung)
@@ -63,50 +63,50 @@ isActive: true
 
 ### Stage 1 — Pakete & Build-Metadaten
 
-- [ ] `pyproject.toml` (root): `name`, `description`, `[tool.uv.workspace.members]` (Pfade bleiben `core/cli/mcp`), `[tool.uv.sources]` (Schlüssel `flowcation-*` → `speccify-*`), Dev-Deps `flowcation-core/cli` → `speccify-core/cli`.
-- [ ] `core/pyproject.toml`: `name`, `description`, `[tool.hatch.build.targets.wheel].packages` (`src/flowcation_core` → `src/speccify_core`).
-- [ ] `cli/pyproject.toml`: `name`, `description`, `dependencies` (`flowcation-core` → `speccify-core`), `[project.scripts]` (`flowcation = ...` → `speccify = speccify_cli.__main__:main`), Hatch-Wheel-Pfad.
-- [ ] `mcp/pyproject.toml`: analog.
+- [x] `pyproject.toml` (root): `name`, `description`, `[tool.uv.workspace.members]` (Pfade bleiben `core/cli/mcp`), `[tool.uv.sources]` (Schlüssel `flowcation-*` → `speccify-*`), Dev-Deps `flowcation-core/cli` → `speccify-core/cli`.
+- [x] `core/pyproject.toml`: `name`, `description`, `[tool.hatch.build.targets.wheel].packages` (`src/flowcation_core` → `src/speccify_core`).
+- [x] `cli/pyproject.toml`: `name`, `description`, `dependencies` (`flowcation-core` → `speccify-core`), `[project.scripts]` (`flowcation = ...` → `speccify = speccify_cli.__main__:main`), Hatch-Wheel-Pfad.
+- [x] `mcp/pyproject.toml`: analog.
 
 ### Stage 2 — Python-Paket-Verzeichnisse
 
-- [ ] `core/src/flowcation_core/` → `core/src/speccify_core/` (`git mv`).
-- [ ] `cli/src/flowcation_cli/` → `cli/src/speccify_cli/` (`git mv`).
-- [ ] Importe + Symbole in den Quellen aktualisieren (`from flowcation_core ...` → `from speccify_core ...`).
-- [ ] Tests (`core/tests/`, `cli/tests/`): Importe + Fixtures.
+- [x] `core/src/flowcation_core/` → `core/src/speccify_core/` (`git mv`).
+- [x] `cli/src/flowcation_cli/` → `cli/src/speccify_cli/` (`git mv`).
+- [x] Importe + Symbole in den Quellen aktualisieren (`from flowcation_core ...` → `from speccify_core ...`).
+- [x] Tests (`core/tests/`, `cli/tests/`): Importe + Fixtures.
 
 ### Stage 3 — Schema, Specs, Doku-Begriffe
 
-- [ ] `schema/spec.schema.json`: `$id` auf `https://speccify.io/schema/spec/v0.json` (oder vereinbarter Namespace), `title`, `description` neutralisieren oder umstellen.
-- [ ] `schema/README.md`: Begriffe.
-- [ ] `specs/*.flowcation.yaml` → `specs/*.speccify.yaml` (`git mv`); pro Spec interne `id`-Felder und Beispiele (falls `flow://` enthalten) auf `spec://` umstellen.
-- [ ] CLI-`lint`-Default-Glob (falls hardcoded auf `*.flowcation.yaml`) → `*.speccify.yaml`.
+- [x] `schema/spec.schema.json`: `$id` auf `https://speccify.io/schema/spec/v0.json` (oder vereinbarter Namespace), `title`, `description` neutralisieren oder umstellen.
+- [x] `schema/README.md`: Begriffe.
+- [x] `specs/*.flowcation.yaml` → `specs/*.speccify.yaml` (`git mv`); pro Spec interne `id`-Felder und Beispiele (falls `flow://` enthalten) auf `spec://` umstellen.
+- [x] CLI-`lint`-Default-Glob (falls hardcoded auf `*.flowcation.yaml`) → `*.speccify.yaml`.
 
 ### Stage 4 — Doku & Pläne
 
-- [ ] `README.md` (root): Vision-Satz, Quickstart-Befehle (`flowcation` → `speccify`), Plan-Querverweise.
-- [ ] `AGENTS.md`: Vision, Repo-Layout-Tabelle (`flowcation-core/-cli/-mcp` → `speccify-core/-cli/-mcp`), Konventionen (Manifest, Lockfile, CLI-Binary, Spec-Identität), Phase-Verweis.
-- [ ] `core/README.md`, `cli/README.md`, `mcp/README.md`, `registry/README.md`, `schema/README.md`.
-- [ ] `.agent/agent.md` (Sprache/Onboarding bleibt; nur Begriff anpassen, falls auftaucht).
-- [ ] `.agent/status.md`: Begriffe + neue Phase „Phase 1a-0 abgeschlossen — Phase 1a aktiv" nach Abschluss.
-- [ ] `.agent/log.md`: Eintrag 2026-05-06 mit Rebrand.
-- [ ] `.agent/plans/flowcation-plan.md` → `.agent/plans/speccify-plan.md` (`git mv`); inhaltlich umstellen (Vision-Satz, IDs, CLI-Befehle).
-- [ ] `.agent/plans/phase-1a-resolver-lockfile.md`: alle Vorkommen `flowcation` (Manifest, Lockfile, Binary, Pakete, IDs `flow://`) auf `speccify` / `spec://` umstellen.
+- [x] `README.md` (root): Vision-Satz, Quickstart-Befehle (`flowcation` → `speccify`), Plan-Querverweise.
+- [x] `AGENTS.md`: Vision, Repo-Layout-Tabelle (`flowcation-core/-cli/-mcp` → `speccify-core/-cli/-mcp`), Konventionen (Manifest, Lockfile, CLI-Binary, Spec-Identität), Phase-Verweis.
+- [x] `core/README.md`, `cli/README.md`, `mcp/README.md`, `registry/README.md`, `schema/README.md`.
+- [x] `.agent/agent.md` (Sprache/Onboarding bleibt; nur Begriff anpassen, falls auftaucht).
+- [x] `.agent/status.md`: Begriffe + neue Phase „Phase 1a-0 abgeschlossen — Phase 1a aktiv" nach Abschluss.
+- [x] `.agent/log.md`: Eintrag 2026-05-06 mit Rebrand.
+- [x] `.agent/plans/flowcation-plan.md` → `.agent/plans/speccify-plan.md` (`git mv`); inhaltlich umstellen (Vision-Satz, IDs, CLI-Befehle).
+- [x] `.agent/plans/phase-1a-resolver-lockfile.md`: alle Vorkommen `flowcation` (Manifest, Lockfile, Binary, Pakete, IDs `flow://`) auf `speccify` / `spec://` umstellen.
 
 ### Stage 5 — Verifikation
 
-- [ ] `uv sync` (kann Workspace-Re-Resolution erfordern, da Paketnamen sich ändern).
-- [ ] `uv run pytest` (12 Tests müssen grün bleiben).
-- [ ] `uv run ruff check .` + `uv run ruff format --check .`.
-- [ ] `uv run mypy core/src cli/src`.
-- [ ] `uv run speccify lint specs/*.speccify.yaml` (neuer Binary-Name, neuer Suffix).
-- [ ] CI-Workflow `.github/workflows/ci.yml`: Befehl `flowcation lint ...` auf `speccify lint specs/*.speccify.yaml` umstellen.
+- [x] `uv sync` (kann Workspace-Re-Resolution erfordern, da Paketnamen sich ändern).
+- [x] `uv run pytest` (12 Tests müssen grün bleiben).
+- [x] `uv run ruff check .` + `uv run ruff format --check .`.
+- [x] `uv run mypy core/src cli/src`.
+- [x] `uv run speccify lint specs/*.speccify.yaml` (neuer Binary-Name, neuer Suffix).
+- [x] CI-Workflow `.github/workflows/ci.yml`: Befehl `flowcation lint ...` auf `speccify lint specs/*.speccify.yaml` umstellen.
 
 ### Stage 6 — Commit + Tag
 
-- [ ] Conventional Commit: `chore(rebrand): rename flowcation to speccify`.
-- [ ] Annotated Tag: `v0.0.1-speccify-rebrand` (Markiert Punkt vor Beginn von Phase 1a unter neuem Namen).
-- [ ] `naming-plan.md` ist bereits archiviert; Querverweise im neuen Plan + status/log auf `archive/naming-plan.md` korrekt.
+- [x] Conventional Commit: `chore(rebrand): rename flowcation to speccify`.
+- [x] Annotated Tag: `v0.0.1-speccify-rebrand` (Markiert Punkt vor Beginn von Phase 1a unter neuem Namen).
+- [x] `naming-plan.md` ist bereits archiviert; Querverweise im neuen Plan + status/log auf `archive/naming-plan.md` korrekt.
 
 ---
 
@@ -123,8 +123,8 @@ isActive: true
 ## Done-Definition
 
 - [x] Naming-Entscheidung dokumentiert (oben).
-- [ ] Alle Stages 1–6 abgehakt.
-- [ ] Tests grün.
-- [ ] Commit + Tag gesetzt.
-- [ ] Querverweise in `README.md`/`AGENTS.md`/`status.md` zeigen auf `phase-1a-resolver-lockfile.md` als nächstes aktives Plandokument unter neuen Namen.
-- [ ] Plan nach Abschluss → `.agent/plans/archive/`.
+- [x] Alle Stages 1–6 abgehakt.
+- [x] Tests grün.
+- [x] Commit + Tag gesetzt.
+- [x] Querverweise in `README.md`/`AGENTS.md`/`status.md` zeigen auf `phase-1a-resolver-lockfile.md` als nächstes aktives Plandokument unter neuen Namen.
+- [x] Plan nach Abschluss → `.agent/plans/archive/`.

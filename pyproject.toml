@@ -1,7 +1,7 @@
 [project]
-name = "flowcation-workspace"
+name = "speccify-workspace"
 version = "0.0.0"
-description = "Flowcation monorepo workspace — Spec-First component platform for AI agents."
+description = "Speccify monorepo workspace — Spec-First component platform for AI agents."
 requires-python = ">=3.12"
 license = { text = "MIT" }
 authors = [{ name = "Marc Hennemeyer" }]
@@ -15,14 +15,14 @@ dev = [
     "ruff>=0.6",
     "mypy>=1.10",
     "types-PyYAML>=6.0",
-    "flowcation-core",
-    "flowcation-cli",
+    "speccify-core",
+    "speccify-cli",
 ]
 
 [tool.uv.sources]
-flowcation-core = { workspace = true }
-flowcation-cli = { workspace = true }
-flowcation-mcp = { workspace = true }
+speccify-core = { workspace = true }
+speccify-cli = { workspace = true }
+speccify-mcp = { workspace = true }
 
 [tool.ruff]
 line-length = 100

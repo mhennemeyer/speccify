@@ -1,16 +1,16 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://flowcation.dev/schema/spec.schema.json",
-  "title": "Flowcation Spec v0",
-  "description": "Schema v0 für flowcation.yaml-Specs. Phase 0 — bewusst liberal; einzelne Felder werden in späteren Phasen verschärft (siehe Open Questions im Phase-0-Plan).",
+  "$id": "https://speccify.io/schema/spec/v0.json",
+  "title": "Speccify Spec v0",
+  "description": "Schema v0 für speccify.yaml-Specs. Phase 0 — bewusst liberal; einzelne Felder werden in späteren Phasen verschärft (siehe Open Questions im Phase-0-Plan).",
   "type": "object",
   "required": ["id", "version", "kind", "title", "summary"],
   "additionalProperties": true,
   "properties": {
     "id": {
       "type": "string",
-      "description": "Spec-Identität. Form: flow://<name> oder @scope/<name>, optional mit @<semver>-Suffix.",
-      "pattern": "^(flow://[a-z0-9][a-z0-9-]*|@[a-z0-9][a-z0-9-]*/[a-z0-9][a-z0-9-]*)(@[0-9A-Za-z.\\-+]+)?$"
+      "description": "Spec-Identität. Form: spec://<name> oder @scope/<name>, optional mit @<semver>-Suffix.",
+      "pattern": "^(spec://[a-z0-9][a-z0-9-]*|@[a-z0-9][a-z0-9-]*/[a-z0-9][a-z0-9-]*)(@[0-9A-Za-z.\\-+]+)?$"
     },
     "version": {
       "type": "string",
@@ -63,7 +63,7 @@
       "description": "Liste referenzierter Specs. v0: nur syntaktische Prüfung (Resolver kommt in Phase 1). Erlaubt sind id-Patterns mit optionalen Versions-Range-Suffixen wie @^1.0 oder @~2.",
       "items": {
         "type": "string",
-        "pattern": "^(flow://[a-z0-9][a-z0-9-]*|@[a-z0-9][a-z0-9-]*/[a-z0-9][a-z0-9-]*)(@[\\^~]?[0-9A-Za-z.\\-+*x]+)?$"
+        "pattern": "^(spec://[a-z0-9][a-z0-9-]*|@[a-z0-9][a-z0-9-]*/[a-z0-9][a-z0-9-]*)(@[\\^~]?[0-9A-Za-z.\\-+*x]+)?$"
       }
     },
     "acceptance": {

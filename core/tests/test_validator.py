@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from flowcation_core import SchemaValidator
+from speccify_core import SchemaValidator
 
 
 def _minimal() -> dict:
     return {
-        "id": "flow://x",
+        "id": "spec://x",
         "version": "1.0.0",
         "kind": "ui-component",
         "title": "X",
@@ -45,5 +45,5 @@ def test_invalid_semver_fails() -> None:
 def test_uses_pattern_accepts_range_suffix() -> None:
     v = SchemaValidator()
     spec = _minimal()
-    spec["uses"] = ["flow://otp-input@^1.0", "@org/widget@~2.3"]
+    spec["uses"] = ["spec://otp-input@^1.0", "@org/widget@~2.3"]
     assert v.is_valid(spec)

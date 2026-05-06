@@ -1,4 +1,4 @@
-"""Entry-Point für das `flowcation`-CLI."""
+"""Entry-Point für das `speccify`-CLI."""
 
 from __future__ import annotations
 
@@ -6,11 +6,11 @@ import sys
 from pathlib import Path
 
 import typer
-from flowcation_core import SchemaValidator, SpecLoader, SpecLoaderError
+from speccify_core import SchemaValidator, SpecLoader, SpecLoaderError
 
 app = typer.Typer(
-    name="flowcation",
-    help="Flowcation CLI — Spec-First Komponenten-Plattform.",
+    name="speccify",
+    help="Speccify CLI — Spec-First Komponenten-Plattform.",
     no_args_is_help=True,
     add_completion=False,
 )
@@ -18,7 +18,7 @@ app = typer.Typer(
 
 @app.callback()
 def _root() -> None:
-    """Flowcation — Spec-First Komponenten-Plattform."""
+    """Speccify — Spec-First Komponenten-Plattform."""
 
 
 @app.command("lint")
@@ -29,7 +29,7 @@ def lint(
         file_okay=True,
         dir_okay=False,
         readable=True,
-        help="Pfade zu flowcation.yaml-Specs.",
+        help="Pfade zu speccify.yaml-Specs.",
     ),
     schema: Path | None = typer.Option(  # noqa: B008
         None,

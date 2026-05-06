@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from flowcation_core import SpecLoader, SpecLoaderError
+from speccify_core import SpecLoader, SpecLoaderError
 
 
 def _write(tmp_path: Path, name: str, content: str) -> Path:
@@ -16,10 +16,10 @@ def test_load_happy_path(tmp_path: Path) -> None:
     p = _write(
         tmp_path,
         "spec.yaml",
-        "id: flow://x\nversion: 1.0.0\nkind: ui-component\ntitle: X\nsummary: y\n",
+        "id: spec://x\nversion: 1.0.0\nkind: ui-component\ntitle: X\nsummary: y\n",
     )
     data = SpecLoader.load(p)
-    assert data["id"] == "flow://x"
+    assert data["id"] == "spec://x"
     assert data["version"] == "1.0.0"
 
 
@@ -29,7 +29,7 @@ def test_load_missing_file(tmp_path: Path) -> None:
 
 
 def test_load_invalid_yaml(tmp_path: Path) -> None:
-    p = _write(tmp_path, "bad.yaml", "id: flow://x\n  version: : :\n")
+    p = _write(tmp_path, "bad.yaml", "id: spec://x\n  version: : :\n")
     with pytest.raises(SpecLoaderError):
         SpecLoader.load(p)
 

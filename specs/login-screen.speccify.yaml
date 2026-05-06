@@ -1,17 +1,17 @@
-id: flow://login-screen
+id: spec://login-screen
 version: 0.1.0
 kind: screen
 title: Login-Screen mit OTP
 summary: >
   Login-Screen per E-Mail/Telefon und 6-stelligem OTP. Inkludiert Resend-Logik,
   Lockout nach 5 Fehlversuchen und Accessibility AA. Orientiert sich am
-  Master-Plan-Beispiel flow://login-with-otp.
-authors: [marc@flowcation.com]
+  Master-Plan-Beispiel spec://login-with-otp.
+authors: [marc@speccify.io]
 license: MIT
 
 uses:
-  - flow://button@^0.1
-  - flow://http-api-client@^0.1
+  - spec://button@^0.1
+  - spec://http-api-client@^0.1
 
 inputs:
   - name: identifier

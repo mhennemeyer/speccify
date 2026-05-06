@@ -1,4 +1,4 @@
-id: flow://http-api-client
+id: spec://http-api-client
 version: 0.1.0
 kind: logic
 title: HTTP-API-Client
@@ -6,7 +6,7 @@ summary: >
   Typisierter HTTP-Client mit get/post, konfigurierbarem Timeout, exponentiellem
   Retry und Bearer-Auth. Framework-unabhängig — Codegen-Targets mappen auf
   URLSession (Swift), fetch (TS), OkHttp (Kotlin) etc.
-authors: [marc@flowcation.com]
+authors: [marc@speccify.io]
 license: MIT
 
 inputs:

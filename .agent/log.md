@@ -1,6 +1,21 @@
-# Log: Flowcation
+# Log: Speccify
 
 ## 2026-05-06
+- **Phase 1a-0 (Rebrand) abgeschlossen**: Repository komplett von `flowcation` auf
+  `speccify` umgestellt. Python-Pakete (`flowcation_core/cli/mcp` →
+  `speccify_core/cli/mcp`), Distribution-Namen, Workspace-Name, CLI-Binary
+  (`flowcation` → `speccify`), Schema-`$id` (`https://speccify.io/schema/spec/v0.json`),
+  Spec-ID-URI-Schema (`flow://` → `spec://`), Spec-Datei-Suffix
+  (`*.flowcation.yaml` → `*.speccify.yaml`), Manifest-/Lockfile-Konvention
+  (`speccify.yaml`/`speccify.lock`), Master-Plan in `speccify-plan.md` umbenannt.
+- Doku konsistent: `README.md`, `AGENTS.md`, alle `*/README.md`, `.agent/*.md`,
+  `phase-1a-resolver-lockfile.md` umgestellt. CI-Workflow ruft jetzt
+  `speccify lint specs/*.speccify.yaml`.
+- Verifikation grün: `uv lock` + `uv sync --reinstall` + `uv run pytest`
+  (12 Tests) + `ruff check`/`format --check` + `mypy core/src cli/src` +
+  `speccify lint specs/*.speccify.yaml` (5 Specs).
+- Plan `phase-1a0-rename-to-speccify.md` nach `archive/` verschoben (Status →
+  Done). Annotated Tag `v0.0.1-speccify-rebrand` als Marker vor Phase 1a.
 - Domain-Status: Owner hat `speccify.io` + `speccify.de` bei df.eu registriert.
   `speccify.dev` ist bei df.eu nicht verfügbar/anbietbar — defensives Halten
   von `.dev` aufgeschoben (optional später via Cloudflare Registrar / Namecheap /
@@ -10,8 +25,8 @@
   `archive/naming-plan.md`: Spec→Verb, Owner-Vorbenutzung, npm/GH-Org/`.io`/`.dev`
   frei).
 - Neuer Plan `phase-1a0-rename-to-speccify.md` angelegt (Code-Rebrand:
-  Python-Pakete `flowcation_*` → `speccify_*`, CLI-Binary `flowcation` → `speccify`,
-  Schema-`$id`, Manifest-/Lockfile-Name, Spec-ID-Schema `flow://` → `spec://`,
+  Python-Pakete `flowcation_*` → `speccify_*`, CLI-Binary `speccify` → `speccify`,
+  Schema-`$id`, Manifest-/Lockfile-Name, Spec-ID-Schema `spec://` → `spec://`,
   Doku-Querverweise; Stages 1–6 mit Verifikation und Tag `v0.0.1-speccify-rebrand`).
 - `naming-plan.md` nach `archive/` verschoben (Entscheidung getroffen,
   Recherche-Plan erfüllt). `status.md` umgebogen: Phase 1a-0 als nächster
@@ -61,12 +76,12 @@
   - `ruff`, `mypy`, `types-PyYAML` als Dev-Deps in Workspace-`pyproject.toml` gepinnt
     (passt zur Tooling-Aussage in `AGENTS.md`).
   - Repo mit `ruff format` formatiert (2 Dateien angepasst:
-    `cli/tests/test_lint.py`, `core/src/flowcation_core/validator.py`).
+    `cli/tests/test_lint.py`, `core/src/speccify_core/validator.py`).
   - GitHub-Actions-Workflow `.github/workflows/ci.yml` um Format-Check + Mypy
     erweitert (vorher nur `ruff check` + Tests + lint).
 - Verifiziert lokal: `uv run ruff check .`, `uv run ruff format --check .`,
   `uv run mypy core/src cli/src`, `uv run pytest` (12 Tests),
-  `uv run flowcation lint specs/*.yaml` — alle grün.
+  `uv run speccify lint specs/*.yaml` — alle grün.
 - Phase 0 inhaltlich vollständig (Stages 1–8 abgedeckt); offen sind nur die
   im Phase-0-Plan genannten Open Questions sowie der Übergang zu Phase 1.
 - Phase-0-Abschluss formalisiert:

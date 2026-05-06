@@ -42,5 +42,5 @@ jobs:
       - name: Pytest
         run: uv run pytest
 
-      - name: flowcation lint reference specs
-        run: uv run flowcation lint specs/*.yaml
+      - name: speccify lint reference specs
+        run: uv run speccify lint specs/*.speccify.yaml

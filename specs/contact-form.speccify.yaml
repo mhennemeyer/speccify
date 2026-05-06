@@ -1,15 +1,15 @@
-id: flow://contact-form
+id: spec://contact-form
 version: 0.1.0
 kind: ui-component
 title: Kontaktformular
 summary: >
   Kontaktformular mit Name, E-Mail und Nachricht. Validiert clientseitig,
   emittiert submit-Event mit dem Payload und unterstützt Server-Fehler.
-authors: [marc@flowcation.com]
+authors: [marc@speccify.io]
 license: MIT
 
 uses:
-  - flow://button@^0.1
+  - spec://button@^0.1
 
 inputs:
   - name: initial_name

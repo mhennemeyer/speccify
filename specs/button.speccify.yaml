@@ -1,11 +1,11 @@
-id: flow://button
+id: spec://button
 version: 0.1.0
 kind: ui-component
 title: Button
 summary: >
   Generischer, zugänglicher Button mit Variants (primary, secondary, ghost),
   Größen (sm, md, lg), Disabled- und Loading-States.
-authors: [marc@flowcation.com]
+authors: [marc@speccify.io]
 license: MIT
 
 inputs:

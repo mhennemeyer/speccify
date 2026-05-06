@@ -1,4 +1,4 @@
-"""JSON-Schema-Validator für Flowcation-Specs (Draft-2020-12)."""
+"""JSON-Schema-Validator für Speccify-Specs (Draft-2020-12)."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from typing import Any
 from jsonschema import Draft202012Validator
 from jsonschema import exceptions as js_exceptions
 
-# Repo-Root → schema/spec.schema.json. core/src/flowcation_core/validator.py → ../../../schema/...
+# Repo-Root → schema/spec.schema.json. core/src/speccify_core/validator.py → ../../../schema/...
 DEFAULT_SCHEMA_PATH: Path = Path(__file__).resolve().parents[3] / "schema" / "spec.schema.json"
 
 

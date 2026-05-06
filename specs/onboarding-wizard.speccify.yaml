@@ -1,16 +1,16 @@
-id: flow://onboarding-wizard
+id: spec://onboarding-wizard
 version: 0.1.0
 kind: workflow
 title: Onboarding-Wizard
 summary: >
   Mehrstufiger Onboarding-Workflow: Begrüßung → Profil-Daten (Kontaktformular)
   → Bestätigung. Erlaubt Zurück-Navigation und persistiert Zwischenstände.
-authors: [marc@flowcation.com]
+authors: [marc@speccify.io]
 license: MIT
 
 uses:
-  - flow://button@^0.1
-  - flow://contact-form@^0.1
+  - spec://button@^0.1
+  - spec://contact-form@^0.1
 
 inputs:
   - name: resume_token

@@ -1,7 +1,7 @@
-"""flowcation-core — shared spec loader, schema validator, resolver, codegen pipeline."""
+"""speccify-core — shared spec loader, schema validator, resolver, codegen pipeline."""
 
-from flowcation_core.loader import SpecLoader, SpecLoaderError
-from flowcation_core.validator import (
+from speccify_core.loader import SpecLoader, SpecLoaderError
+from speccify_core.validator import (
     DEFAULT_SCHEMA_PATH,
     SchemaValidator,
     ValidationIssue,
