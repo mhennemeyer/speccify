@@ -1,4 +1,4 @@
-# Plan: Projekt „flowcation.com" – Spec-First Komponenten-Plattform für AI-Agenten
+# Plan: Projekt „speccify.io/de" – Spec-First Komponenten-Plattform für AI-Agenten
 
 > **Status**: 📋 Entwurf – Vorstellung im internen Team-Bereich
 > **Erstellt**: 2026-04-29
