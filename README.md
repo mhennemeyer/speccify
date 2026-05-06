@@ -20,7 +20,8 @@ uv run ruff check .
 
 - [`AGENTS.md`](./AGENTS.md) — Onboarding für Coding-Agents (Vision, Repo-Layout, Konventionen).
 - [`.agent/plans/flowcation-plan.md`](./.agent/plans/flowcation-plan.md) — Master-Plan (langfristige Vision & Roadmap).
-- [`.agent/plans/phase-0-spec-schema-spike.md`](./.agent/plans/phase-0-spec-schema-spike.md) — aktueller Implementierungs-Plan (Phase 0).
+- [`.agent/plans/phase-0-wrap-up.md`](./.agent/plans/phase-0-wrap-up.md) — Phase-0-Wrap-up (Open Questions + Übergang zu Phase 1).
+- [`.agent/plans/archive/phase-0-spec-schema-spike.md`](./.agent/plans/archive/phase-0-spec-schema-spike.md) — Phase-0-Implementierungs-Plan (abgeschlossen, archiviert).
 
 ## Status
 

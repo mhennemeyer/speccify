@@ -2,7 +2,7 @@
 
 ## Meta
 - **Typ:** Code
-- **Phase:** Phase 0 — Spec-Schema v0 + `flowcation lint` + 5 Referenz-Specs (Abschluss)
+- **Phase:** Phase 0 abgeschlossen — Wrap-up läuft (Open Questions + Übergang zu Phase 1)
 - **Priorität:** Mittel
 - **Zuletzt aktualisiert:** 2026-05-05
 
@@ -23,11 +23,12 @@ Fundament für alle weiteren Phasen.
   Mypy + Pytest + `flowcation lint` ab.
 
 ## Nächste Schritte
-- [ ] Phase 0 final abnehmen (optionaler Tag `v0.0.0-phase0`).
-- [ ] Phasen-Plan für Phase 1 erstellen (CLI-MVP `init`/`add`/`pull`/`lock`,
+- [ ] Wrap-up-Plan abarbeiten: [`.agent/plans/phase-0-wrap-up.md`](./plans/phase-0-wrap-up.md)
+      — Open Questions entscheiden (`kind`-Enum, Asset-Ref-URI-Schema, `$schema`-Pin,
+      Conformance-Runner nach Phase 3) und Entscheidungstabelle füllen.
+- [ ] Optionaler Release-Tag `v0.0.0-phase0`.
+- [ ] Separater Phasen-Plan für Phase 1 (CLI-MVP `init`/`add`/`pull`/`lock`,
       MCP-Server, erstes Codegen-Target SwiftUI, Web-Playground).
-- [ ] Open Questions aus Phase-0-Plan entscheiden (`kind`-Enum, Asset-Ref-URI-Schema,
-      `$schema`-Pin, Conformance-Runner-Verschiebung in Phase 3).
 
 ## Blocker
 Keine.

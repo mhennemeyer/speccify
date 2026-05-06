@@ -14,7 +14,7 @@ Langfristige Quelle der Wahrheit: [`.agent/plans/flowcation-plan.md`](./.agent/p
 
 **Phase 0 — Spec-Schema v0 + `flowcation lint` + 5 Referenz-Specs.**
 
-Konkreter Implementierungs-Plan: [`.agent/plans/phase-0-spec-schema-spike.md`](./.agent/plans/phase-0-spec-schema-spike.md).
+Konkreter Implementierungs-Plan: [`.agent/plans/phase-0-spec-schema-spike.md`](./.agent/plans/archive/phase-0-spec-schema-spike.md) (archiviert; Wrap-up: [`phase-0-wrap-up.md`](./.agent/plans/phase-0-wrap-up.md)).
 
 ## Repo-Layout
 

@@ -14,3 +14,12 @@
   `uv run flowcation lint specs/*.yaml` — alle grün.
 - Phase 0 inhaltlich vollständig (Stages 1–8 abgedeckt); offen sind nur die
   im Phase-0-Plan genannten Open Questions sowie der Übergang zu Phase 1.
+- Phase-0-Abschluss formalisiert:
+  - `phase-0-spec-schema-spike.md` abgehakt (Status `Done`, alle Stages mit ✅
+    und Artefakt-Verweis, Validation-Block markiert).
+  - Neuer Plan `.agent/plans/phase-0-wrap-up.md` angelegt (Open Questions +
+    Phase-1-Übergabe + ADR-artige Entscheidungstabelle).
+  - Phase-0-Plan via `git mv` nach `.agent/plans/archive/` verschoben.
+  - Querverweise in `AGENTS.md` und `README.md` auf den archivierten Pfad
+    bzw. den neuen Wrap-up-Plan umgebogen.
+  - `status.md` auf *Phase 0 abgeschlossen — Wrap-up läuft* gesetzt.
