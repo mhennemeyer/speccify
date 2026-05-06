@@ -1,5 +1,68 @@
 # Log: Speccify
 
+## 2026-05-06 (Phase 1a abgeschlossen)
+- **Phase 1a Step 4 + Step 5 abgeschlossen** — Stub-Codegen, `speccify pull`,
+  `speccify verify`, `lint`-Anpassung, CI-Step und Master-Plan-Sync. Damit ist
+  der vollständige Resolver/Lockfile/Codegen/Verify-Kreis für Phase 1a zu.
+  - Neues Codegen-Modul `speccify_core.codegen` (Re-Exports) + `codegen/stub.py`
+    mit Konstanten `TEMPLATE_SET="phase-1a-stub"` / `TEMPLATE_VERSION="0.1.0"`,
+    `render(spec, target)` und `render_to_files(spec, target)`. Output-Pfad
+    folgt `<scope>/<name>.md`.
+  - Jinja2-Template `core/src/speccify_core/codegen/templates/stub.md.j2` mit
+    YAML-Frontmatter (`target`, `spec_id`, `spec_version`, `template_set`,
+    `template_version`), Markdown-Tabellen für Inputs/Outputs/Events/Acceptance
+    und einer `Uses`-Liste. Determinismus: `keep_trailing_newline=True`,
+    keine Datums-/Zufallswerte.
+  - `jinja2>=3.1` als Runtime-Dependency in `core/pyproject.toml`; Hatch
+    `force-include` für die `.j2`-Datei (sonst landet sie nicht im Wheel).
+  - Lockfile-Defaults (`DEFAULT_TEMPLATE_SET`/`DEFAULT_TEMPLATE_VERSION`)
+    werden jetzt aus `speccify_core.codegen.stub` re-exportiert (single source
+    of truth, wie im Plan vorgesehen).
+  - Neuer CLI-Command `speccify pull` (`commands/pull.py`): liest Lockfile,
+    fordert Specs aus der `LocalRegistry`, ruft Stub-Codegen, schreibt Dateien
+    atomar (`tempfile` + `os.replace`), aktualisiert
+    `generated_files_sha256` pro Eintrag via `Lockfile.with_generated_files`.
+    Klare Fehler bei fehlendem Lockfile oder Target-Mismatch zum Lockfile.
+  - Neuer CLI-Command `speccify verify` (`commands/verify.py`): re-resolved das
+    Manifest, vergleicht (id, version, sha256, target) mit dem Lockfile,
+    re-rendert jede Spec und vergleicht Output-Hashes, prüft schließlich auch
+    die tatsächlichen Dateien auf Disk gegen die Lockfile-Hashes
+    (Drift-Detection). Sammelt alle Probleme und beendet bei Drift mit Exit 1.
+  - `speccify lint` angepasst: Specs ohne Top-Level `kind`-Feld (Projekt-
+    Manifeste wie `speccify.yaml`) werden mit Hinweis übersprungen statt
+    fälschlich gegen `spec.schema.json` validiert. Manifest-Schema-Validierung
+    läuft weiter beim Manifest-Load in `lock`/`add`.
+  - 12 neue Tests:
+    - `core/tests/test_codegen_stub.py` — Determinismus, Output-Pfad-Konvention,
+      Frontmatter, `Uses`-Block für Workflow-Specs.
+    - `cli/tests/test_pull.py` — E2E (lock + pull, Hash im Lockfile passt zur
+      Disk-Datei), Determinismus über zwei `pull`-Aufrufe, fehlendes Lockfile,
+      Target-Mismatch zum Lockfile.
+    - `cli/tests/test_verify.py` — Happy-Path, manueller Disk-Drift → Exit 1
+      mit „Disk-Drift", fehlendes Lockfile, fehlender `pull` (leere
+      `generated_files_sha256`).
+  - End-to-End im `example-project/` lokal grün:
+    `uv run speccify lock` → 3 Specs (button, login-screen via Diamond,
+    onboarding-wizard), `uv run speccify pull --out ./out` → 3 Markdown-Dateien,
+    `uv run speccify verify --out ./out` → konsistent.
+  - CI-Workflow `.github/workflows/ci.yml` um E2E-Smoke ergänzt
+    (`cd example-project && lock && pull && verify`).
+  - `.gitignore` ergänzt um `example-project/out/` und
+    `example-project/speccify.lock` (werden in CI bei jedem Lauf neu gebaut).
+  - Master-Plan `.agent/plans/speccify-plan.md` synchronisiert:
+    - Lockfile-Beispiel hat jetzt zwei Varianten: `kind: template` (Phase 1a,
+      ohne API-Keys reproduzierbar) und `kind: llm` (Phase 1b+).
+    - Phase 1 explizit in Sub-Spikes 1a / 1b / 1c / 1d zerlegt; 1a verlinkt
+      auf den abgeschlossenen Phasen-Plan.
+    - Erstes Codegen-Target ist React (statt SwiftUI), Begründung dokumentiert;
+      Phase 3 zieht SwiftUI/Angular nach.
+  - Verifikation lokal grün: `uv run pytest` (74 Tests, +12 neu seit Step 3),
+    `uv run ruff check`, `uv run ruff format --check`,
+    `uv run mypy core/src cli/src`, `uv run speccify lint specs/*.speccify.yaml`,
+    sowie der CI-E2E-Pfad im `example-project/`.
+  - Phase-1a-Plan: Steps 4 und 5 sind als ✅ markiert; `status.md` und
+    `AGENTS.md` auf „Phase 1a abgeschlossen → Phase 1b" umgestellt.
+
 ## 2026-05-06 (noch später²)
 - **Phase 1a Step 3 abgeschlossen** — Lockfile-Format + `speccify lock`/`add`:
   - Neues JSON-Schema `schema/lockfile.schema.json` (Draft 2020-12) mit

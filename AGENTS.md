@@ -2,6 +2,8 @@
 
 > Lies dieses Dokument zuerst. Es ist der Einstiegspunkt für jede Junie-/Claude-Code-/Cursor-Session in diesem Repo.
 
+> Bitte beachte auch .agent/agent.md und die dort referenzierten Regeln. Und bleibe bitte im Bearbeitungsmodus.
+
 ## Vision
 
 > *„npm für Spezifikationen statt für Code — Komponenten beschreiben, nicht implementieren. Der AI-Agent ist der Compiler in das Ziel-Framework."*
@@ -12,11 +14,11 @@ Langfristige Quelle der Wahrheit: [`.agent/plans/speccify-plan.md`](./.agent/pla
 
 ## Aktuelle Phase
 
-**Phase 1a-0 — Rebrand `flowcation` → `speccify` (in Arbeit). Danach Phase 1a — Resolver + Lockfile + `add`/`pull`/`verify` (Stub-Codegen).**
+**Phase 1a abgeschlossen — Resolver + Lockfile + Stub-Codegen + `add`/`lock`/`pull`/`verify`. Nächste Phase: 1b (echtes React-Codegen + `speccify init`).**
 
-Aktive Pläne: [`.agent/plans/phase-1a0-rename-to-speccify.md`](./.agent/plans/phase-1a0-rename-to-speccify.md), gefolgt von [`.agent/plans/phase-1a-resolver-lockfile.md`](./.agent/plans/phase-1a-resolver-lockfile.md).
+Abgeschlossener Plan: [`.agent/plans/phase-1a-resolver-lockfile.md`](./.agent/plans/phase-1a-resolver-lockfile.md). Phase 1b hat noch keinen Plan; nächster Schritt ist, einen `phase-1b-react-codegen.md` zu schreiben (Vorschlag), bevor Code geschrieben wird.
 
-Phase 0 abgeschlossen (Tag `v0.0.0-phase0`): Schema v0, `speccify lint`, 5 Referenz-Specs. Archiviert: [`phase-0-spec-schema-spike.md`](./.agent/plans/archive/phase-0-spec-schema-spike.md), [`phase-0-wrap-up.md`](./.agent/plans/archive/phase-0-wrap-up.md) (enthält ADR-Light Q1–Q5).
+Phase 0 abgeschlossen (Tag `v0.0.0-phase0`): Schema v0, `speccify lint`, 5 Referenz-Specs. Phase 1a-0 (Rebrand `flowcation` → `speccify`, Tag `v0.0.1-speccify-rebrand`) ebenfalls abgeschlossen. Archiviert: [`phase-0-spec-schema-spike.md`](./.agent/plans/archive/phase-0-spec-schema-spike.md), [`phase-0-wrap-up.md`](./.agent/plans/archive/phase-0-wrap-up.md), [`phase-1a0-rename-to-speccify.md`](./.agent/plans/archive/phase-1a0-rename-to-speccify.md).
 
 ## Repo-Layout
 
