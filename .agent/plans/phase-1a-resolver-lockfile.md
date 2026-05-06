@@ -284,7 +284,7 @@ Klassischer pytest-Ansatz analog Phase 0: Unit-Tests pro `core`-Modul, CLI-Smoke
 - **Manifest-Round-Trip**: Lade `speccify.yaml`, schreibe es zurück, Bytes sind identisch.
 - **Registry-Lookup**: `LocalRegistry.fetch("@org/button", Version("0.1.0"))` liefert die richtige Spec; `list_versions` ist sortiert.
 - **Resolver Happy-Path**: Manifest mit zwei direkten Deps, eine davon hat `uses:` → erwartete drei Resolutions.
-- **Resolver Diamond**: `onboarding-wizard` braucht `button@^0.1`, `login-screen` braucht `button@^0.1.0` → MVS wählt `0.1.1` (Maximum der Mindestversionen, das beide erfüllt).
+- **Resolver Diamond**: In den Fixtures (Step 1) wurde `login-screen.uses` auf `@org/button@^0.1.1` angehoben, damit reines Go-MVS deterministisch `0.1.1` als Maximum der Mindestversionen wählt (`onboarding-wizard` fordert `^0.1` → Min `0.1.0`; `login-screen` fordert `^0.1.1` → Min `0.1.1`).
 - **`speccify add @org/button` E2E**: leeres Manifest + Pseudo-Registry → `speccify.yaml` enthält `"@org/button": "^0.1"`, Lockfile hat einen Eintrag mit korrektem Hash.
 - **`speccify pull --target react --out ./out` E2E**: Output-Datei `out/org/button.md` existiert und enthält Title + Acceptance; Lockfile hat `generated_files_sha256` mit passendem Hash.
 - **`speccify verify` Happy-Path**: Nach `pull` läuft `verify` mit exit 0.
@@ -327,8 +327,8 @@ Phase 1a weicht in zwei sichtbaren Punkten vom Master-Plan ab. Step 5 synchronis
 
 # Delivery Steps
 
-###   Step 1: Step 1: Manifest und Pseudo-Registry-Layer
-`speccify.yaml`-Projektmanifest und das lokale Pseudo-Registry können geladen, validiert und durchsucht werden.
+###   Step 1: Step 1: Manifest und Pseudo-Registry-Layer ✅
+`speccify.yaml`-Projektmanifest und das lokale Pseudo-Registry können geladen, validiert und durchsucht werden. *(Abgeschlossen 2026-05-06: Schema, `speccify_core.manifest`, `speccify_core.registry`, `registry-fixtures/` (5 Specs + `button@0.1.1`), `example-project/`, 22 neue Tests grün.)*
 
 - `schema/manifest.schema.json` neu anlegen mit Feldern `schema_version`, `target`, `dependencies`, optional `registry.path` (Draft 2020-12, analog zu `spec.schema.json`).
 - `speccify_core.manifest.ProjectManifest` als immutable `@dataclass(frozen=True)` mit `load(path)`/`write(path)` und deterministischer Key-Reihenfolge.

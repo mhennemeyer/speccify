@@ -1,0 +1,66 @@
+id: "@org/contact-form"
+version: 0.1.0
+kind: ui-component
+title: Kontaktformular
+summary: >
+  Kontaktformular mit Name, E-Mail und Nachricht. Validiert clientseitig,
+  emittiert submit-Event mit dem Payload und unterstützt Server-Fehler.
+authors: [marc@speccify.io]
+license: MIT
+
+uses:
+  - "@org/button@^0.1"
+
+inputs:
+  - name: initial_name
+    type: string
+    constraints: ["optional"]
+  - name: initial_email
+    type: string
+    constraints: ["optional", "email"]
+  - name: submitting
+    type: boolean
+    constraints: ["default=false"]
+  - name: server_error
+    type: string
+    constraints: ["optional"]
+
+outputs:
+  - name: payload
+    type: "object{name: string, email: string, message: string}"
+
+events:
+  - name: submit
+    payload:
+      name: string
+      email: string
+      message: string
+  - name: validation_failed
+    payload:
+      fields: "array[string]"
+
+acceptance:
+  - given: name leer, email gültig, message >= 10 Zeichen
+    when: Nutzer drückt Submit
+    then: validation_failed mit fields=[name]; kein submit-Event
+  - given: alle Felder gültig
+    when: Nutzer drückt Submit
+    then: submit-Event mit gefülltem Payload; Submit-Button geht in loading
+  - given: submitting=true
+    when: Nutzer drückt Submit erneut
+    then: kein zweites submit-Event (Doppel-Submit-Schutz)
+  - given: server_error gesetzt
+    then: Fehlertext wird sichtbar; Felder bleiben befüllt
+
+ux:
+  references:
+    - ./screenshots/contact-form-empty.png
+    - ./screenshots/contact-form-error.png
+    - ./screenshots/contact-form-success.png
+  a11y: WCAG-2.2-AA
+  i18n: required
+
+non_functional:
+  security:
+    - "keine PII im LocalStorage"
+    - "E-Mail-Validierung clientseitig + serverseitig"

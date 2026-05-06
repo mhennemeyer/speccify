@@ -1,0 +1,7 @@
+schema_version: 1
+target: react
+registry:
+  path: ../registry-fixtures
+dependencies:
+  "@org/button": "^0.1"
+  "@org/onboarding-wizard": "^0.1"

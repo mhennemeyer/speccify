@@ -1,5 +1,39 @@
 # Log: Speccify
 
+## 2026-05-06 (später)
+- **Phase 1a Step 1 abgeschlossen** — Manifest- und Pseudo-Registry-Layer:
+  - Neues JSON-Schema `schema/manifest.schema.json` (Draft 2020-12) für
+    `speccify.yaml`-Projektmanifest: `schema_version=1`, `target`,
+    optional `registry.path`, `dependencies` als Map `@scope/name → range`
+    (Phase 1a: nur exakte Versionen oder Caret `^X.Y` / `^X.Y.Z`).
+  - `speccify_core.manifest.ProjectManifest` als immutable `@dataclass(frozen=True)`
+    mit `load`/`write` (deterministischer YAML-Dump, sortierte Dependency-Keys),
+    `resolved_registry_path()` (relativ zum Manifest), `ManifestError`-Hierarchie.
+  - `speccify_core.registry`: `Version` (`major.minor.patch`, Pre-Releases in 1a
+    bewusst ausgeklammert), `Spec` (mit Original-Bytes für stabile Hashes),
+    `LocalRegistry` (Layout `<root>/<scope>/<name>/<version>/spec.speccify.yaml`,
+    `list_versions` sortiert, `fetch` mit Available-Versions-Hint im Fehler),
+    `RegistryError`.
+  - Re-Exports in `core/src/speccify_core/__init__.py` ergänzt.
+  - `registry-fixtures/` mit den 5 Phase-0-Specs als `0.1.0` plus
+    `org/button/0.1.1/` für den späteren Diamond-Test angelegt; IDs/`uses`
+    von `spec://...` auf `@org/...` umgeschrieben. Diamond-Setup so gewählt,
+    dass reines Go-MVS deterministisch `button@0.1.1` liefert: `login-screen`
+    fordert `@org/button@^0.1.1`, `onboarding-wizard` bleibt `@org/button@^0.1`
+    (Mindestversionen `0.1.1` vs. `0.1.0`, Maximum = `0.1.1`).
+  - `example-project/speccify.yaml` als Minimal-Manifest (Deps: `@org/button`,
+    `@org/onboarding-wizard`).
+  - Tests: `core/tests/test_manifest.py` (Round-Trip, Default-Registry-Pfad,
+    fehlende/ungültige Felder, unbekannte Top-Level-Felder) und
+    `core/tests/test_registry.py` (Version-Parsing/Order, sortierte Liste,
+    Fetch-Bytes-Stabilität, Available-Versions-Hint, ID-Format-Check,
+    Root-Validierung, alle 5 Specs vorhanden).
+  - Verifikation lokal grün: `uv run pytest` (34 Tests, alt: 12, neu: 22),
+    `uv run ruff check`/`format --check`, `uv run mypy core/src cli/src`,
+    `uv run speccify lint registry-fixtures/.../spec.speccify.yaml` (alle 6
+    Fixtures gegen `spec.schema.json` valide).
+  - Plan-Status: Phase 1a Step 2 (MVS-Resolver) ist als Nächstes dran.
+
 ## 2026-05-06
 - **Phase 1a-0 (Rebrand) abgeschlossen**: Repository komplett von `flowcation` auf
   `speccify` umgestellt. Python-Pakete (`flowcation_core/cli/mcp` →

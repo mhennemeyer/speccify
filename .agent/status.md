@@ -23,9 +23,17 @@ Fundament für alle weiteren Phasen.
   Mypy + Pytest + `speccify lint` ab.
 
 ## Nächste Schritte
-- [ ] Phase 1a umsetzen: [`.agent/plans/phase-1a-resolver-lockfile.md`](./plans/phase-1a-resolver-lockfile.md)
-      — Manifest, lokale Pseudo-Registry, MVS-Resolver, `speccify.lock`,
-      CLI-Befehle `add`/`lock`/`pull`/`verify`, Stub-Codegen (Markdown).
+- [ ] Phase 1a Step 2 — MVS-Resolver mit transitiver Auflösung und Diamond-Test
+      (`speccify_core.resolver` mit `Version`/`Range`/`Resolver`/`ResolverError`,
+      Diamond gegen `registry-fixtures/`).
+- [ ] Phase 1a Step 3 — Lockfile-Format, `speccify lock` und `speccify add`.
+- [ ] Phase 1a Step 4 — Stub-Codegen + `speccify pull --target react`.
+- [ ] Phase 1a Step 5 — `speccify verify`, `lint`-Anpassung, CI-Step,
+      Master-Plan-Sync, Tag `v0.1.0-phase-1a`.
+- [x] Phase 1a Step 1 — Manifest und Pseudo-Registry-Layer
+      (`schema/manifest.schema.json`, `speccify_core.manifest`,
+      `speccify_core.registry`, `registry-fixtures/` mit 5 Specs +
+      `button@0.1.1`, `example-project/`).
 - [x] **Phase 1a-0 — Rebrand auf `speccify`** abgeschlossen
       (siehe [`.agent/plans/archive/phase-1a0-rename-to-speccify.md`](./plans/archive/phase-1a0-rename-to-speccify.md)).
 - [x] Naming-Entscheidung getroffen: `speccify`

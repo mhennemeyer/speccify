@@ -1,0 +1,65 @@
+id: "@org/http-api-client"
+version: 0.1.0
+kind: logic
+title: HTTP-API-Client
+summary: >
+  Typisierter HTTP-Client mit get/post, konfigurierbarem Timeout, exponentiellem
+  Retry und Bearer-Auth. Framework-unabhängig — Codegen-Targets mappen auf
+  URLSession (Swift), fetch (TS), OkHttp (Kotlin) etc.
+authors: [marc@speccify.io]
+license: MIT
+
+inputs:
+  - name: base_url
+    type: string
+    constraints: ["url", "https-required"]
+  - name: timeout_ms
+    type: integer
+    constraints: ["default=10000", "min=100", "max=60000"]
+  - name: max_retries
+    type: integer
+    constraints: ["default=3", "min=0", "max=10"]
+  - name: auth_token
+    type: string
+    constraints: ["optional", "bearer"]
+
+outputs:
+  - name: response
+    type: "object{status: integer, headers: map[string,string], body: bytes}"
+
+events:
+  - name: request_started
+    payload:
+      method: "enum[GET, POST]"
+      path: string
+  - name: request_succeeded
+    payload:
+      status: integer
+      duration_ms: integer
+  - name: request_failed
+    payload:
+      reason: "enum[timeout, network, http_4xx, http_5xx]"
+      status: integer
+
+acceptance:
+  - given: Server antwortet mit 200 in < timeout_ms
+    when: get(path) wird aufgerufen
+    then: response.status=200, request_succeeded emittiert, kein Retry
+  - given: Server antwortet 500, max_retries=3
+    when: post(path, body) wird aufgerufen
+    then: bis zu 3 Retries mit exponentiellem Backoff; request_failed wenn alle fehlschlagen
+  - given: Request überschreitet timeout_ms
+    then: request_failed mit reason=timeout
+  - given: auth_token gesetzt
+    when: Beliebiger Request
+    then: Header Authorization=Bearer <token> ist gesetzt
+
+non_functional:
+  performance: "P95-Latenz inkl. Retries < 2 * timeout_ms"
+  security:
+    - "Tokens niemals loggen"
+    - "TLS-Validierung niemals deaktivierbar"
+    - "keine Credentials in URL-Querystrings"
+
+conformance:
+  fixtures: ./fixtures/*.json

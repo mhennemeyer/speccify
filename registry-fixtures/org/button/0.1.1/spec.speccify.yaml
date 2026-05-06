@@ -1,0 +1,55 @@
+id: "@org/button"
+version: 0.1.1
+kind: ui-component
+title: Button
+summary: >
+  Generischer, zugänglicher Button mit Variants (primary, secondary, ghost),
+  Größen (sm, md, lg), Disabled- und Loading-States.
+authors: [marc@speccify.io]
+license: MIT
+
+inputs:
+  - name: label
+    type: string
+    constraints: ["minLength=1"]
+  - name: variant
+    type: enum[primary, secondary, ghost]
+    constraints: ["default=primary"]
+  - name: size
+    type: enum[sm, md, lg]
+    constraints: ["default=md"]
+  - name: disabled
+    type: boolean
+    constraints: ["default=false"]
+  - name: loading
+    type: boolean
+    constraints: ["default=false"]
+  - name: icon_leading
+    type: string
+    constraints: ["optional", "icon-name"]
+
+events:
+  - name: pressed
+  - name: long_pressed
+
+acceptance:
+  - given: variant=primary, disabled=false, loading=false
+    when: Nutzer tippt/klickt den Button
+    then: pressed-Event wird genau einmal emittiert
+  - given: disabled=true
+    when: Nutzer tippt/klickt den Button
+    then: kein pressed-Event; Button ist visuell und semantisch (aria-disabled) deaktiviert
+  - given: loading=true
+    when: Button wird gerendert
+    then: Spinner ersetzt Label-Bereich, pressed-Events werden unterdrückt
+
+ux:
+  references:
+    - ./screenshots/button-primary.png
+    - ./screenshots/button-loading.png
+  a11y: WCAG-2.2-AA
+  i18n: required
+
+non_functional:
+  performance: "Render < 16ms auf Mid-Tier-Geräten"
+  security: ["kein HTML-Injection über label"]
