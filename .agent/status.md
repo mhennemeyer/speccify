@@ -2,7 +2,7 @@
 
 ## Meta
 - **Typ:** Code
-- **Phase:** Phase 1a-0 (Rebrand `flowcation` → `speccify`) abgeschlossen (Tag `v0.0.1-speccify-rebrand`) — Phase 1a aktiv
+- **Phase:** Phase 1a (Resolver + Lockfile + Stub-Codegen) abgeschlossen — bereit für Phase 1b (echtes React-Codegen + `speccify init`)
 - **Priorität:** Mittel
 - **Zuletzt aktualisiert:** 2026-05-06
 
@@ -23,9 +23,15 @@ Fundament für alle weiteren Phasen.
   Mypy + Pytest + `speccify lint` ab.
 
 ## Nächste Schritte
-- [ ] Phase 1a Step 4 — Stub-Codegen + `speccify pull --target react`.
-- [ ] Phase 1a Step 5 — `speccify verify`, `lint`-Anpassung, CI-Step,
-      Master-Plan-Sync, Tag `v0.1.0-phase-1a`.
+- [ ] Phase 1b — echtes React-Codegen + `speccify init`, neuen Phasen-Plan
+      schreiben (Vorschlag: `.agent/plans/phase-1b-react-codegen.md`).
+- [ ] Optional: annotated Tag `v0.1.0-phase-1a` setzen.
+- [x] Phase 1a Step 5 — `speccify verify`, `lint`-Anpassung, CI-Step (E2E im
+      example-project: lock + pull + verify), Master-Plan-Sync (React-first,
+      Template-Pin, Sub-Spikes 1a–1d), `.gitignore` für example-project-Artefakte.
+- [x] Phase 1a Step 4 — Stub-Codegen + `speccify pull --target react`
+      (`speccify_core.codegen.stub` + Jinja-Template, atomares Schreiben,
+      Lockfile-Update via `with_generated_files`, 8 neue Tests grün).
 - [x] Phase 1a Step 3 — Lockfile-Format, `speccify lock` und `speccify add`
       (`schema/lockfile.schema.json`, `speccify_core.lockfile`,
       `speccify_cli.commands.lock`/`.add` mit gemeinsamem `WorkspaceContext`,

@@ -207,20 +207,40 @@ Caret-Default (`^1.2.3`), `unpublish` < 72h, flat Namespace ohne Scope, Backtrac
 
 ### `speccify.lock` (Auszug)
 
+Generator-Pin in zwei Varianten:
+
 ```yaml
+# Variante A (Phase 1a, deterministisch ohne API-Keys): Template-Pin
+- id: "@org/button"
+  version: 0.1.0
+  sha256: "sha256:…spec-bundle-digest…"
+  resolved_via: "registry-fixtures"
+  target: react
+  generator:
+    kind: template
+    template_set: phase-1a-stub
+    template_version: 0.1.0
+  generated_files_sha256:
+    - path: org/button.md
+      sha256: "sha256:…"
+
+# Variante B (Phase 1b+, sobald LLM-Codegen stabil ist): Modell-Pin
 - id: "@org/login-with-otp"
   version: 1.4.0
-  sha256: "…spec-bundle-digest…"
-  resolved_via: "registry.flowcation.com"
-  target: swiftui
+  sha256: "sha256:…spec-bundle-digest…"
+  resolved_via: "registry.speccify.io"
+  target: react
   generator:
+    kind: llm
     model: claude-sonnet-4.5-2026-03
     prompt_version: 7
     seed: 1234
   generated_files_sha256:
-    - path: Sources/Login/LoginView.swift
-      sha256: "…"
+    - path: src/Login/LoginView.tsx
+      sha256: "sha256:…"
 ```
+
+Begründung: deterministische Templates sind in CI ohne API-Keys reproduzierbar; das Lockfile-Format ist so gestaltet, dass der LLM-Pin nahtlos hinzukommt, sobald der Resolver/Lockfile-Vertrag stabil ist.
 
 ### So fühlt sich der Workflow an
 
@@ -280,12 +300,18 @@ Yank-Politik im Detail (Grace-Period, Auto-Yank bei CVE), Pre-Release-Workflow, 
 - Validator-CLI (`speccify lint`).
 
 ### Phase 1: CLI-MVP + MCP + ein Codegen-Target + Playground
+
+Phase 1 ist im Refinement 2026-05-06 in vier Sub-Spikes zerlegt worden, damit jeder Vertrag (Resolver/Lockfile, echtes Codegen, MCP, Playground) für sich validierbar bleibt:
+
+- **Phase 1a** (Resolver/Lockfile/Stub-Codegen, abgeschlossen 2026-05-06): MVS-Resolver, `speccify.yaml`/`speccify.lock`, deterministisches Stub-Codegen (Template-Pin), CLI `lock`/`add`/`pull`/`verify`, lokales Pseudo-Registry. Plan: [`.agent/plans/phase-1a-resolver-lockfile.md`](phase-1a-resolver-lockfile.md).
+- **Phase 1b**: echtes React-Codegen + `speccify init` (statt Stub-Markdown). Erstes Ziel-Framework wird **React** statt SwiftUI — Begründung: Phase-1d-Browser-Playground wird mit React-Output direkt live; SwiftUI bleibt zweites Target in Phase 3.
+- **Phase 1c**: MCP-Server, der `speccify_core` ans MCP-Protokoll bindet (`resolve`, `search`, `render`, `validate`, `lock`, `verify`).
+- **Phase 1d**: Browser-Playground auf der Website, der dieselbe Codegen-Pipeline nutzt.
+
 - **CLI-MVP**: `init`, `add`, `pull --target`, `lock`, `verify`, `publish`, `yank`, `search`, `lint`.
 - **MCP-Server** (gleiche Resolver-/Codegen-Logik wie CLI): `resolve`, `search`, `render`, `validate`, `lock`, `verify`.
-- **Ein Codegen-Target zuerst**: SwiftUI (Entscheidung: nicht alle drei parallel; Validierung der Hypothese mit einem fokussierten Target).
-- **Browser-Playground**: Spec im Browser eingeben → Live-Generierung; nutzt dieselbe Codegen-Pipeline.
-- `speccify.lock` mit Hashes + Generator-Pin (Modell, Prompt-Version, Seed) + Output-Hashes.
-- Demo: Junie/Claude Code zieht `@org/...` via MCP und baut eine SwiftUI-Komponente.
+- **`speccify.lock`** mit Hashes + Generator-Pin (Phase 1a: `kind: template`; ab 1b zusätzlich `kind: llm` mit Modell/Prompt-Version/Seed) + Output-Hashes.
+- Demo: Junie/Claude Code zieht `@org/...` via MCP und baut eine React-Komponente.
 
 ### Phase 2: Registry-MVP
 - Django-Backend: Komponenten anlegen, versionieren, suchen, `yank`.
@@ -295,7 +321,7 @@ Yank-Politik im Detail (Grace-Period, Auto-Yank bei CVE), Pre-Release-Workflow, 
 - Federation vorgesehen, registry-gebundene Scopes.
 
 ### Phase 3: Zweites + drittes Codegen-Target, Conformance-Runner
-- React und Angular als Targets (oder Jetpack Compose, je nach Pilot-Use-Case).
+- SwiftUI und Angular als Targets (oder Jetpack Compose, je nach Pilot-Use-Case). React ist bereits in Phase 1b geliefert.
 - Conformance-Runner pro Target: Docker + Playwright + Snapshot-Tests.
 - Conformance-Tests aus `acceptance` automatisch generieren.
 

@@ -359,8 +359,8 @@ Lockfile kann gelesen, geschrieben und über die CLI mutiert werden. *(Abgeschlo
 - Beide Commands in `cli/src/speccify_cli/__main__.py` registrieren; `lint` unangetastet.
 - Tests: `core/tests/test_lockfile.py` (Round-Trip, Schema-Fehler, sortierte Reihenfolge), `cli/tests/test_lock.py` und `cli/tests/test_add.py` (Smoke gegen `example-project/` + `registry-fixtures/`).
 
-###   Step 4: Step 4: Stub-Codegen und `speccify pull --target react`
-`speccify pull` rendert resolved Specs deterministisch nach Markdown und füllt Output-Hashes im Lockfile.
+###   Step 4: Step 4: Stub-Codegen und `speccify pull --target react` ✅
+`speccify pull` rendert resolved Specs deterministisch nach Markdown und füllt Output-Hashes im Lockfile. *(Abgeschlossen 2026-05-06: `speccify_core.codegen.stub` + `templates/stub.md.j2`, `speccify pull`-CLI mit atomarem Schreiben und Lockfile-Update via `with_generated_files`. 8 neue Tests grün; `DEFAULT_TEMPLATE_SET`/`DEFAULT_TEMPLATE_VERSION` wandern wie geplant nach `codegen.stub` und werden vom Lockfile importiert.)*
 
 - `speccify_core.codegen.stub` mit Konstanten `TEMPLATE_SET="phase-1a-stub"` und `TEMPLATE_VERSION="0.1.0"` sowie Funktion `render(spec, target) -> dict[str, bytes]`.
 - Jinja2-Template `core/src/speccify_core/codegen/templates/stub.md.j2`: Frontmatter (`target`), `# <title>`, Summary, Inputs/Outputs/Events/Acceptance als Markdown-Tabellen.
@@ -370,8 +370,8 @@ Lockfile kann gelesen, geschrieben und über die CLI mutiert werden. *(Abgeschlo
 - `jinja2` als Runtime-Dependency in `core/pyproject.toml` aufnehmen.
 - Tests: `core/tests/test_codegen_stub.py` (Determinismus über zwei Aufrufe, korrekte Output-Pfade), `cli/tests/test_pull.py` (E2E gegen `example-project/`, Hash-Update im Lockfile, Pflicht `lock` vorher → klarer Fehler).
 
-###   Step 5: Step 5: `speccify verify`, `lint`-Anpassung, CI-Step und Master-Plan-Sync
-Verify schließt den Reproduzierbarkeits-Kreis und Phase 1a wird operativ wie dokumentarisch abgeschlossen.
+###   Step 5: Step 5: `speccify verify`, `lint`-Anpassung, CI-Step und Master-Plan-Sync ✅
+Verify schließt den Reproduzierbarkeits-Kreis und Phase 1a wird operativ wie dokumentarisch abgeschlossen. *(Abgeschlossen 2026-05-06: `speccify verify` mit Re-Resolve + Re-Render + Disk-Drift-Detection, `lint` skippt Projekt-Manifeste ohne `kind`, CI-Step im example-project (lock + pull + verify), Master-Plan-Sync (React-first, Template-Pin, Phase-1-Sub-Spikes), `.gitignore` für example-project-Artefakte. 4 neue Tests grün, gesamt 74 Tests grün.)*
 
 - `cli/src/speccify_cli/commands/verify.py`: re-resolved Manifest, re-rendered in Temp-Verzeichnis, vergleicht *beide* Hash-Sätze (Spec-Bundle und Output-Dateien); exit 0 nur bei vollständiger Übereinstimmung; bei Drift exit 1 mit Liste betroffener Pfade.
 - `cli/src/speccify_cli/__main__.py` `lint`-Logik anpassen: `speccify.yaml` (kein `kind`-Feld) wird übersprungen oder gegen `manifest.schema.json` validiert, statt fälschlich gegen Spec-Schema.

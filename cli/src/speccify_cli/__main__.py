@@ -10,6 +10,8 @@ from speccify_core import SchemaValidator, SpecLoader, SpecLoaderError
 
 from speccify_cli.commands.add import add_command
 from speccify_cli.commands.lock import lock_command
+from speccify_cli.commands.pull import pull_command
+from speccify_cli.commands.verify import verify_command
 
 app = typer.Typer(
     name="speccify",
@@ -20,6 +22,8 @@ app = typer.Typer(
 
 app.command("lock")(lock_command)
 app.command("add")(add_command)
+app.command("pull")(pull_command)
+app.command("verify")(verify_command)
 
 
 @app.callback()
@@ -61,6 +65,13 @@ def lint(
             typer.echo(f"✗ {file_path}: {exc}", err=True)
             total_errors += 1
             failed_files += 1
+            continue
+
+        # Projekt-Manifeste (`speccify.yaml`) haben kein `kind`-Feld; sie gehören
+        # nicht in den Spec-Validator. Sie werden in Phase 1a beim `lint` einfach
+        # übersprungen (eigene Manifest-Validation läuft beim Laden in `lock`/`add`).
+        if "kind" not in data:
+            typer.echo(f"↷ {file_path} (übersprungen: Projekt-Manifest, kein Spec-`kind`)")
             continue
 
         issues = validator.iter_issues(data)

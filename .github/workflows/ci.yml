@@ -44,3 +44,10 @@ jobs:
 
       - name: speccify lint reference specs
         run: uv run speccify lint specs/*.speccify.yaml
+
+      - name: speccify end-to-end smoke (lock + pull + verify)
+        working-directory: example-project
+        run: |
+          uv run speccify lock
+          uv run speccify pull --out ./out
+          uv run speccify verify --out ./out

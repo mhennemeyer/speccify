@@ -41,3 +41,7 @@ build/
 # Env
 .env
 .env.local
+
+# Speccify smoke artifacts (regeneriert in CI; example-project hat keine permanente Output-Spur)
+example-project/out/
+example-project/speccify.lock

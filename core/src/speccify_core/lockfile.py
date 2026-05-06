@@ -20,10 +20,12 @@ import yaml
 from jsonschema import Draft202012Validator
 from jsonschema import exceptions as js_exceptions
 
-# Default-Generator-Pin für Phase 1a (Stub-Codegen). Step 4 importiert diese Konstanten
-# aus `speccify_core.codegen.stub`; bis dahin sind sie hier zentralisiert.
-DEFAULT_TEMPLATE_SET: str = "phase-1a-stub"
-DEFAULT_TEMPLATE_VERSION: str = "0.1.0"
+from speccify_core.codegen.stub import TEMPLATE_SET, TEMPLATE_VERSION
+
+# Default-Generator-Pin für Phase 1a (Stub-Codegen). Single source of truth ist
+# `speccify_core.codegen.stub`.
+DEFAULT_TEMPLATE_SET: str = TEMPLATE_SET
+DEFAULT_TEMPLATE_VERSION: str = TEMPLATE_VERSION
 
 # core/src/speccify_core/lockfile.py → ../../../schema/lockfile.schema.json
 DEFAULT_LOCKFILE_SCHEMA_PATH: Path = (
