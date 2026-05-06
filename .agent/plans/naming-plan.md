@@ -4,6 +4,7 @@
 > **Erstellt**: 2026-05-05
 > **Update 2026-05-05**: Vollständige Verfügbarkeitsrecherche (Domain `.com/.dev/.io`, GitHub-Org/-User, npm-Registry, aktive Webseite) für alle Kandidaten der vorherigen Liste. Disqualifizierte Namen sind unten dokumentiert. Liste enthält jetzt nur Kandidaten, die diesen Vor-Check bestanden haben.
 > **Update 2026-05-06**: Zwei Eigenvorschläge des Owners ergänzt und bewertet: **`speccify`** (Anschluss an früheres OSS-Projekt `mhennemeyer/speccify`, mit Vorbenutzungs-Argument) und **`zouop`** (Kunstwort, `.com` bereits im Besitz). Persönlicher Eindruck zur bisherigen Top-5: erste vier Namen wirken auf den Owner unprofunden, einzig `speconaut` „witzig", aber Witz nicht prioritär.
+> **Update 2026-05-06 (Domain-Strategie)**: Für `speccify` ist Strategie **`.io` (international) + `.de` (DE-Markt)** als kanonisches Setup festgelegt; `.com` ist *nice to have*, aber kein Muss für Dev-Tool-Zielgruppe. Details siehe neuer Abschnitt „Domain-Strategie für `speccify`".
 > **Hinweis zum Dateinamen**: Der bestehende `flowcation-plan.md` enthält den **Produkt-Plan** (Spec-First Komponenten-Plattform). Dieser Plan hier behandelt die **Umbenennung** und liegt deshalb separat unter `naming-plan.md`. Sobald ein neuer Name feststeht, sollten beide Dokumente (und der GitHub-Space, Domains, Branding) konsistent umgezogen werden.
 
 ---
@@ -210,6 +211,68 @@ Pro Finalist mit 1–5 bewerten:
 | Tippsicher / kurz | **4** | 5 Buchstaben, aber „zou" tippt sich auf QWERTZ ungewohnt. |
 
 **Gesamteindruck**: Klassischer Kunstwort-Trade-off: rechtlich/operativ sauber, aber **erklärungsbedürftig** und ohne semantischen Anker. Für ein Dev-Tool (zielgruppenorientiert auf Devs, die das Konzept in einem Wort erfassen sollen) ist das **inhaltlich problematisch** — vergleichbar mit `Bun`, `Deno`, `Vite`, die aber alle entweder kurze Anlehnungen an reale Wörter sind oder durch starkes Marketing geladen wurden. Empfehlung: **als Outsider/Backup behalten**, vor allem für den Fall, dass alle inhaltlichen Kandidaten aus Marken-/Domain-Gründen scheitern. Die geparkte `.com` ist ein echtes Asset, sollte aber nicht über die strategische Frage entscheiden, ob das Produkt einen sprechenden Namen verdient.
+
+---
+
+## Domain-Strategie für `speccify` (2026-05-06)
+
+**Ausgangslage**: Owner ist deutsche Firma mit DE-Kontakten; Vermarktung primär organisch über Dev-Community + DE-Netzwerk. `speccify.com` ist registriert (Squarespace, geparkt seit 2022, kein Server), `speccify.io` und `speccify.dev` frei, `speccify.de` voraussichtlich frei.
+
+**Entscheidung**: **`.io` als internationale Haupt-/Produkt-Domain, `.de` als deutscher Marketing-Anker**. `.com` ist *nice to have*, aber für Dev-Tool-Zielgruppe und Go-to-Market **kein Muss**.
+
+### Warum `.io` für Dev-Tools tragfähig ist
+
+Eine ganze Generation erfolgreicher Dev-Tools/Infrastruktur-Produkte läuft unter `.io` — oft bewusst, weil die Marke „technisch" wirken soll:
+
+- **Package-/Build-Tooling**: `pnpm.io`, `bun.sh`, `vitejs.dev`, `turbo.build`, `nx.dev`, `astro.build`
+- **Spec-/API-Tooling**: `swagger.io`, `stoplight.io`, `buf.build`, `redocly.com`
+- **Infra/Platform**: `fly.io`, `sentry.io`, `dagger.io`, `linear.app`, `posthog.com`, `supabase.com`
+- **DE-Beispiele**: `n8n.io` (deutsche Firma, kein `.com`), `appwrite.io`
+
+Pattern: Dev-Tools werden über GitHub, Hacker News, Konferenzen, Discord/Slack getragen — nicht über klassische SEO-Direktnavigation. Im Funnel zählt der **Name**, nicht die **TLD**. Bei `npm install speccify` / `npx speccify init` sieht der User die TLD ohnehin nie. Im Tweet/in der Doku steht `speccify.io/docs` — `.io` signalisiert für Devs „Tooling/Infra".
+
+### Wo `.com` real Vorteile bringt (bewusst nicht aufgeschoben)
+
+| Faktor | Bedeutung für `speccify` |
+|---|---|
+| Nicht-technisches Publikum (Investor-Decks, Enterprise-Procurement) | Aktuell nicht in Pipeline → aufschiebbar |
+| E-Mail-Reputation (Cold-Outbound an Nicht-Devs) | Kleiner Effekt; SPF/DKIM/DMARC wichtiger als TLD |
+| Defensive Aufstellung (Squatter mit konkurrierendem Inhalt) | Niedrig, solange `.com` geparkt bleibt |
+| Typo-Traffic / Direktnavigation | Klein bei via npm/Docs gefundenen Tools |
+| Marken-Anmeldung | **TLD-unabhängig**, EU-/DPMA-Wortmarke schützt das Wort |
+
+### Konkreter Plan
+
+1. **Sofort sichern (sobald Naming-Entscheidung steht)**:
+   - `speccify.io` registrieren (kanonische Produkt-/Doku-URL)
+   - `speccify.de` registrieren (DE-Marketing-Anker, Impressum, lokale Inhalte)
+   - `speccify.dev` registrieren (defensiv)
+   - GitHub-Org `speccify` anlegen
+   - npm-Scope `@speccify` reservieren
+   - Social Handles: X, BlueSky, Mastodon, LinkedIn (defensiv)
+   - Geschätzte Gesamtkosten: ~50 €/Jahr — **nicht verhandelbar**, sobald Name fix ist
+2. **`speccify.com` anfragen, mit Limit**: Über Squarespace Domains Marketplace oder anonyme Anfrage. Realistischer Korridor für seit 2022 geparkte Domain ohne Brand-Wert: **500–3.000 USD**. Bei > 5.000 USD: nicht kaufen — `.io` reicht.
+3. **Wenn `.com` nicht erwerbbar**: tragfähig. `speccify.io` = kanonisch, `speccify.de` = DE-Hub, `.com` halbjährlich beobachten (`whois` + Wayback). Falls dort später konkurrierende Inhalte aufschlagen und Wortmarke `speccify` eingetragen ist → **UDRP-Option**.
+4. **Markenanmeldung priorisieren**: Das gesparte `.com`-Akquise-Geld besser in DPMA/EUIPO-Wortmarke `speccify` (ab 290 € DPMA bzw. 850 € EUIPO/Klasse) investieren — die schützt substanziell, die TLD nicht.
+
+### Heuristik (deine konkrete Lage)
+
+| Frage | Antwort | Folgerung |
+|---|---|---|
+| Zielgruppe primär Devs? | Ja | `.io` reicht |
+| Bottom-up / PLG / OSS-getrieben? | Ja | `.io` reicht |
+| Enterprise-Sales an Nicht-Devs in Pipeline? | Nein | `.com` aufschiebbar |
+| Wortmarke geplant? | Ja, Phase 1+ | TLD-unabhängig |
+| `.com`-Halter hostet konkurrierende Inhalte? | Nein (geparkt seit 3+ Jahren) | Kein Akut-Druck |
+| Reversibel, wenn `.com` später doch nötig? | Ja, jederzeit anfragbar | Geringes Risiko |
+
+**Fazit**: Mit `.io` (international) + `.de` (DE) live gehen. `.com` jederzeit später anfragbar; einziger nicht-reversibler Schritt wäre Verlust an Konkurrenten — bei geparkter Domain unwahrscheinlich.
+
+### Bewusst nicht im Setup
+
+- **`.ai`**: trendy, aber teuer (~70–100 €/Jahr) und semantisch zu eng auf „AI" — `speccify` ist Spec-First *unterstützt durch* AI, nicht *primär* AI. Optional zusätzlich, nicht als Ersatz.
+- **`.app`**: für Web-App nett, aber `speccify` ist primär CLI-/Spec-Tool — Terminal ist Hauptoberfläche.
+- **Keine Rechtsberatung**: ersetzt keine Markenanwalts-Sichtprüfung vor formaler Anmeldung.
 
 ---
 

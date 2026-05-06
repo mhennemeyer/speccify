@@ -1,6 +1,12 @@
 # Log: Flowcation
 
 ## 2026-05-06
+- Naming-Plan: Domain-Strategie-Abschnitt für `speccify` ergänzt
+  (`.io` international + `.de` DE-Markt als Setup, `.com` aufschiebbar/optional).
+  Enthält: Begründung mit Dev-Tool-Präzedenzfällen (`pnpm.io`, `n8n.io`,
+  `fly.io`, `sentry.io`, ...), `.com`-Vorteile-Tabelle, Konkretplan
+  (Sofort-Sicherung der freien Assets, `.com`-Anfrage mit Limit 500–3k USD),
+  Heuristik-Tabelle und bewusste Auslassungen (`.ai`, `.app`).
 - Naming-Plan: zwei Owner-Eigenvorschläge (`speccify`, `zouop`) ergänzt + bewertet.
   - `speccify`: npm/GH-Org frei, `.dev`/`.io` frei, `.com` registriert (geparkt seit
     2022, kein Server). Plus: Owner hat OSS-Vorbenutzung
