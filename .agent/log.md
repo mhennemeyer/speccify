@@ -1,6 +1,16 @@
 # Log: Flowcation
 
 ## 2026-05-06
+- Naming-Entscheidung final: **`speccify`** (Begründung im archivierten
+  `archive/naming-plan.md`: Spec→Verb, Owner-Vorbenutzung, npm/GH-Org/`.io`/`.dev`
+  frei).
+- Neuer Plan `phase-1a0-rename-to-speccify.md` angelegt (Code-Rebrand:
+  Python-Pakete `flowcation_*` → `speccify_*`, CLI-Binary `flowcation` → `speccify`,
+  Schema-`$id`, Manifest-/Lockfile-Name, Spec-ID-Schema `flow://` → `spec://`,
+  Doku-Querverweise; Stages 1–6 mit Verifikation und Tag `v0.0.1-speccify-rebrand`).
+- `naming-plan.md` nach `archive/` verschoben (Entscheidung getroffen,
+  Recherche-Plan erfüllt). `status.md` umgebogen: Phase 1a-0 als nächster
+  Schritt vor Phase 1a.
 - Naming-Plan: Abschnitt „Weitere TLDs (`.ch`/`.at`/`.eu`)" ergänzt —
   Empfehlung: **nicht ins Initial-Setup**, da kein dedizierter Marketing-Hub
   und kein akutes Defensiv-Risiko. Tabelle mit Kosten/Nutzen + Nachzieh-Trigger

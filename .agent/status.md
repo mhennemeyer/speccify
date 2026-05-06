@@ -23,11 +23,15 @@ Fundament für alle weiteren Phasen.
   Mypy + Pytest + `flowcation lint` ab.
 
 ## Nächste Schritte
+- [ ] **Phase 1a-0 — Rebrand auf `speccify`**:
+      [`.agent/plans/phase-1a0-rename-to-speccify.md`](./plans/phase-1a0-rename-to-speccify.md)
+      — Python-Pakete, CLI-Binary, Schema-`$id`, Manifest-/Lockfile-Name,
+      Spec-ID-Schema (`flow://` → `spec://`), Doku.
 - [ ] Phase 1a umsetzen: [`.agent/plans/phase-1a-resolver-lockfile.md`](./plans/phase-1a-resolver-lockfile.md)
-      — Manifest, lokale Pseudo-Registry, MVS-Resolver, `flowcation.lock`,
+      — Manifest, lokale Pseudo-Registry, MVS-Resolver, `speccify.lock`,
       CLI-Befehle `add`/`lock`/`pull`/`verify`, Stub-Codegen (Markdown).
-- [ ] Naming-Entscheidung treffen: [`.agent/plans/naming-plan.md`](./plans/naming-plan.md)
-      (Rebrand wegen Marken-Konflikt mit „Flowcation" Frankfurt).
+- [x] Naming-Entscheidung getroffen: `speccify`
+      (siehe [`.agent/plans/archive/naming-plan.md`](./plans/archive/naming-plan.md)).
 
 ## Blocker
 Keine.
