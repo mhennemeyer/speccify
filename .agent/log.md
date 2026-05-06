@@ -1,6 +1,10 @@
 # Log: Flowcation
 
 ## 2026-05-06
+- Naming-Plan: Abschnitt „Weitere TLDs (`.ch`/`.at`/`.eu`)" ergänzt —
+  Empfehlung: **nicht ins Initial-Setup**, da kein dedizierter Marketing-Hub
+  und kein akutes Defensiv-Risiko. Tabelle mit Kosten/Nutzen + Nachzieh-Trigger
+  (CH/AT-Kunden, EU-Förderprogramme, Squatting). Header-Update-Zeile ergänzt.
 - Naming-Plan: Domain-Strategie-Abschnitt für `speccify` ergänzt
   (`.io` international + `.de` DE-Markt als Setup, `.com` aufschiebbar/optional).
   Enthält: Begründung mit Dev-Tool-Präzedenzfällen (`pnpm.io`, `n8n.io`,

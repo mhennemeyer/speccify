@@ -5,6 +5,7 @@
 > **Update 2026-05-05**: Vollständige Verfügbarkeitsrecherche (Domain `.com/.dev/.io`, GitHub-Org/-User, npm-Registry, aktive Webseite) für alle Kandidaten der vorherigen Liste. Disqualifizierte Namen sind unten dokumentiert. Liste enthält jetzt nur Kandidaten, die diesen Vor-Check bestanden haben.
 > **Update 2026-05-06**: Zwei Eigenvorschläge des Owners ergänzt und bewertet: **`speccify`** (Anschluss an früheres OSS-Projekt `mhennemeyer/speccify`, mit Vorbenutzungs-Argument) und **`zouop`** (Kunstwort, `.com` bereits im Besitz). Persönlicher Eindruck zur bisherigen Top-5: erste vier Namen wirken auf den Owner unprofunden, einzig `speconaut` „witzig", aber Witz nicht prioritär.
 > **Update 2026-05-06 (Domain-Strategie)**: Für `speccify` ist Strategie **`.io` (international) + `.de` (DE-Markt)** als kanonisches Setup festgelegt; `.com` ist *nice to have*, aber kein Muss für Dev-Tool-Zielgruppe. Details siehe neuer Abschnitt „Domain-Strategie für `speccify`".
+> **Update 2026-05-06 (weitere TLDs)**: `.ch` / `.at` / `.eu` sind frei, werden aber **nicht ins Initial-Setup** aufgenommen — kein dedizierter Marketing-Hub, kein akutes Defensiv-Risiko. Begründung + Nachzieh-Trigger im Abschnitt „Weitere TLDs".
 > **Hinweis zum Dateinamen**: Der bestehende `flowcation-plan.md` enthält den **Produkt-Plan** (Spec-First Komponenten-Plattform). Dieser Plan hier behandelt die **Umbenennung** und liegt deshalb separat unter `naming-plan.md`. Sobald ein neuer Name feststeht, sollten beide Dokumente (und der GitHub-Space, Domains, Branding) konsistent umgezogen werden.
 
 ---
@@ -268,10 +269,30 @@ Pattern: Dev-Tools werden über GitHub, Hacker News, Konferenzen, Discord/Slack 
 
 **Fazit**: Mit `.io` (international) + `.de` (DE) live gehen. `.com` jederzeit später anfragbar; einziger nicht-reversibler Schritt wäre Verlust an Konkurrenten — bei geparkter Domain unwahrscheinlich.
 
+### Weitere TLDs: `.ch`, `.at`, `.eu` — brauchen wir die?
+
+**Kurzantwort**: Nein, nicht zwingend. Defensiv-Registrierung ist günstig (~10–25 €/Jahr je TLD), aber für Go-to-Market irrelevant. Empfehlung: **nicht im Initial-Setup**, ggf. später nachziehen, wenn DACH-/EU-Marketing konkret wird.
+
+| TLD | Kosten/Jahr | Strategischer Wert für `speccify` | Empfehlung |
+|---|---|---|---|
+| `.ch` | ~10–15 € | Schweizer Markt ist klein, Devs nutzen ohnehin `.io`/`.com`. Kein eigener Marketing-Hub geplant. | **Skip** im Initial-Setup. Nachziehen, falls CH-Kunden/Niederlassung. |
+| `.at` | ~10–15 € | Wie `.ch`: österreichische Devs sind über DE-Inhalte/`.de` voll abgedeckt; eigener AT-Hub unrealistisch für Phase 1–2. | **Skip**. Defensiv nur, falls jemand AT-Squatting vermuten lässt. |
+| `.eu` | ~5–10 € | Politisch/regulatorisch interessant (EU-Branding, GDPR-Signal), aber im Dev-Tooling-Funnel praktisch unsichtbar. Keiner navigiert auf `*.eu`. | **Skip**, außer du planst explizit EU-institutionelle Vermarktung (Procurement, EU-Förderprogramme). |
+
+**Begründung in einem Satz**: TLDs zahlen nur ein, wo es einen **dedizierten Marketing-Hub oder ein Defensiv-Risiko** gibt. `.io` (Doku/Produkt) + `.de` (DE-Anker) deckt 95 % deiner Zielgruppe; `.ch/.at/.eu` würden parallel gepflegte Redirects ohne Mehrwert produzieren.
+
+**Wann doch nachziehen**:
+- `.ch`/`.at`: Sobald eine konkrete Kundenliste/Niederlassung in CH oder AT entsteht.
+- `.eu`: Sobald EU-Förderanträge, EU-Procurement oder explizites „EU-souveränes Tooling"-Branding Teil der Positionierung wird.
+- Allgemein: Falls ein Squatter eine dieser TLDs registriert und damit Inhalte hostet, die deinen Markenraum berühren — dann reaktiv handeln (UDRP via eingetragene Wortmarke).
+
+**Kosten/Nutzen-Faustregel**: Für ~30 €/Jahr alle drei defensiv halten ist verteidigbar, falls du Ruhe haben willst. Aber strategisch *notwendig* ist es nicht — und du investierst die ~30 € besser in die DPMA-/EUIPO-Markenanmeldung, die alle TLDs gleichzeitig schützt.
+
 ### Bewusst nicht im Setup
 
 - **`.ai`**: trendy, aber teuer (~70–100 €/Jahr) und semantisch zu eng auf „AI" — `speccify` ist Spec-First *unterstützt durch* AI, nicht *primär* AI. Optional zusätzlich, nicht als Ersatz.
 - **`.app`**: für Web-App nett, aber `speccify` ist primär CLI-/Spec-Tool — Terminal ist Hauptoberfläche.
+- **`.ch` / `.at` / `.eu`**: siehe Tabelle oben — kein zwingender Initial-Bedarf.
 - **Keine Rechtsberatung**: ersetzt keine Markenanwalts-Sichtprüfung vor formaler Anmeldung.
 
 ---
