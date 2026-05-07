@@ -2,7 +2,7 @@
 
 ## Meta
 - **Typ:** Code
-- **Phase:** Phase 1b Step 2 (Lockfile-Schema-Erweiterung `kind: llm`) abgeschlossen — bereit für Step 3 (Replay-Cache + `LlmClient`-Protokoll). Phase 1a abgeschlossen.
+- **Phase:** Phase 1b Step 3 (Replay-Cache + `LlmClient`-Protokoll) abgeschlossen — bereit für Step 4 (React-LLM-Adapter + Codegen-Dispatcher). Phase 1a abgeschlossen.
 - **Priorität:** Mittel
 - **Zuletzt aktualisiert:** 2026-05-07
 
@@ -31,8 +31,10 @@ Fundament für alle weiteren Phasen.
       `TemplateGeneratorPin`-Alias für Rückwärtskompatibilität. 4 neue Tests
       grün (LLM mit/ohne `seed`, gemischtes Lockfile, Schema-Reject bei
       kombinierten Feldern), 85 Tests gesamt grün, ruff/format/mypy clean.
-- [ ] Phase 1b Step 3 — Replay-Cache + `LlmClient`-Protokoll
-      (`speccify_core.codegen.replay`).
+- [x] Phase 1b Step 3 — Replay-Cache + `LlmClient`-Protokoll
+      (`speccify_core.codegen.replay`: `CacheKey`/`ReplayCache`/`CacheMissError` +
+      `LlmClient`-Protokoll + `ReplayCacheClient`-Wrapper mit `bind_key`-Vertrag).
+      15 neue Tests grün, 100 Tests gesamt, ruff/format/mypy clean.
 - [ ] Phase 1b Step 4 — React-LLM-Adapter + Codegen-Dispatcher
       (`render_for_target`).
 - [ ] Phase 1b Step 5 — `speccify pull --target react --offline` + CI-E2E mit

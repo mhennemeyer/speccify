@@ -229,10 +229,12 @@ scripts/record_llm_cache.py           # NEU, manueller Run
 - [x] 4 neue Round-Trip-Tests in `core/tests/test_lockfile.py`: LLM mit `seed`, LLM ohne `seed`, gemischtes Lockfile (template + llm in einem `specs[]`), Schema-Reject bei kombinierten Template-/LLM-Feldern (`oneOf`-Verletzung). Default-Verhalten (`build_lockfile` → Template-Pin) unverändert; bestehende Tests bleiben grün.
 - [x] Status/Log/Plan-Sync.
 
-### Step 3 — Replay-Cache + `LlmClient`-Protokoll
-- [ ] `speccify_core.codegen.replay` mit `CacheKey`/`ReplayCache`/`CacheMissError`.
-- [ ] `LlmClient`-Protokoll, `ReplayCacheClient`-Wrapper.
-- [ ] Tests gegen tmp-Cache; Cache-Key-Stabilität (kanonisches JSON).
+### Step 3 — Replay-Cache + `LlmClient`-Protokoll ✅
+- [x] `speccify_core.codegen.replay` mit `CacheKey` (frozen dataclass, kanonischer JSON-`digest()` über `sort_keys`+kompakte Separators), `ReplayCache` (Disk-Layout `<root>/<digest>.json` mit `{key, response}`, atomares `put` via tempfile + `replace`, `get`/`has`/`put`), `CacheMissError`.
+- [x] `LlmClient`-Protokoll (`complete(*, prompt, model, seed) -> str`) und `ReplayCacheClient`-Wrapper mit `offline`-Flag, optionalem `inner`-Live-Client und `bind_key(...)`-Vertrag (Aufrufer setzt Spec-Kontext explizit; Key wird nach Erfolg konsumiert).
+- [x] Re-Exports in `speccify_core.codegen.__init__` und `speccify_core.__init__` (`CacheKey`, `CacheMissError`, `LlmClient`, `ReplayCache`, `ReplayCacheClient`).
+- [x] 15 neue Tests in `core/tests/test_replay_cache.py`: `CacheKey`-Digest-Stabilität + Feld-Sensitivität, `ReplayCache` Get/Put/Has/Round-Trip/kanonisches JSON/Overwrite/Corrupt-Entry, `ReplayCacheClient` Offline-Miss/Offline-Hit/Online-Miss-Fallback (+Cache-Eintrag)/Online-Hit (kein Inner-Call)/`bind_key`-Pflicht/Key-Mismatch/Key-Konsum nach Use, Protocol-Strukturalität.
+- [x] Status/Log/Plan-Sync.
 
 ### Step 4 — React-LLM-Adapter + Codegen-Dispatcher
 - [ ] `speccify_core.codegen.react_llm` (`render`, `render_to_files`, Prompt-Template, Normalisierung).

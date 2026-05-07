@@ -1,5 +1,32 @@
 # Log: Speccify
 
+## 2026-05-07 (Phase 1b Step 3 — Replay-Cache + `LlmClient`-Protokoll)
+- **Step 3 abgeschlossen**: neues Modul `speccify_core.codegen.replay` mit
+  `CacheKey` (frozen dataclass; `digest()` über kanonisches JSON mit
+  `sort_keys=True` und kompakten Separators → SHA-256-Hex), `ReplayCache`
+  (Disk-Layout `<root>/<digest>.json` mit `{key, response}`; atomares `put`
+  via tempfile + `replace`; `get`/`has`/`put`; korruptes Entry → `CacheMissError`),
+  und `CacheMissError`.
+- `LlmClient`-Protokoll mit Signatur `complete(*, prompt, model, seed) -> str`
+  und `ReplayCacheClient`-Wrapper: `offline=True` → Cache-Miss wirft direkt;
+  `offline=False` + `inner` → Live-Call mit Cache-Einlagerung; `bind_key(...)`
+  setzt Spec-Kontext explizit (kein impliziter Threading-Kanal); Key wird
+  nach erfolgreichem Call konsumiert; Mismatch zwischen `bind_key.model/seed`
+  und `complete.model/seed` → `CacheMissError`.
+- Re-Exports in `speccify_core.codegen.__init__` und `speccify_core.__init__`
+  (`CacheKey`, `CacheMissError`, `LlmClient`, `ReplayCache`,
+  `ReplayCacheClient`); `__all__` aktualisiert.
+- 15 neue Tests in `core/tests/test_replay_cache.py`: Digest-Stabilität +
+  Feld-Sensitivität (alle 7 Varianten verschieden), Get/Put/Has/Round-Trip,
+  kanonisches JSON-Layout, Overwrite, Corrupt-Entry-Reject, Offline-Miss/-Hit,
+  Online-Miss-Fallback (inkl. Cache-Speicherung), Online-Hit (kein
+  Inner-Call), `bind_key`-Pflicht, Key-Mismatch, Key-Konsum nach Use,
+  Protocol-Strukturalität.
+- Verifikation: `uv run pytest` 100 grün (85 alt + 15 neu), `ruff check`,
+  `ruff format --check`, `mypy core/src cli/src` alle clean.
+- Plan-/Status-Sync: Step 3 ✅ in `phase-1b-react-codegen.md`,
+  `.agent/status.md` Phase + Nächste-Schritte aktualisiert.
+
 ## 2026-05-07 (Phase 1b Step 2 — Lockfile-Schema `kind: llm`)
 - **Step 2 abgeschlossen**: `schema/lockfile.schema.json` `generator` jetzt
   `oneOf` mit `kind: template` (template_set + template_version) und
