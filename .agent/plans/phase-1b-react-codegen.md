@@ -253,8 +253,8 @@ scripts/record_llm_cache.py           # NEU, manueller Run
 - [ ] `.agent/status.md` + `.agent/log.md` synchronisieren.
 - [ ] Vorschlag annotated Tag `v0.2.0-phase-1b` an User (nicht selbst setzen).
 
-### Open Questions (vor Step 4 zu klären)
-1. **Provider-Default**: Anthropic Claude Sonnet 4.5 fix in 1b, oder soll `LlmClient` per Env-Var `SPECCIFY_LLM_PROVIDER` umstellbar sein?
-2. **Normalisierungs-Tiefe**: Reicht Whitespace + Quote-Style + Trailing-Newline, oder brauchen wir Import-Sortierung (deterministische Reihenfolge bei mehreren `uses:`)?
-3. **TSX-Validitäts-Check**: Klammer-Balancing-Heuristik vs. echter TS-Parser via `tree-sitter` (zusätzliche Native-Dep).
-4. **Cache-Fixture-Ort**: `tests/fixtures/llm-cache/` (bei Tests) oder `registry-fixtures/llm-cache/` (bei Specs) — Konsistenz-Frage.
+### Open Questions (vor Step 4 geklärt)
+1. **Provider-Default** ✅ — Anthropic Claude Sonnet 4.5 fix verdrahtet (Modell-String hart im Code, kein Env-Var-Switch in 1b). Provider-Switch via `LlmClient`-Protokoll bleibt für 1c+ offen.
+2. **Normalisierungs-Tiefe** ✅ — Minimal: Trailing-Whitespace strippen, CRLF→LF, finale Newline erzwingen. Keine Quote-/Import-Normalisierung in 1b.
+3. **TSX-Validitäts-Check** ✅ — Leichtgewichtige Heuristik: Klammer-/Tag-Balancing in Python, kein externer Parser.
+4. **Cache-Fixture-Ort** ✅ — `tests/fixtures/llm-cache/` auf Repo-Root (klar als Test-Artefakt erkennbar).
