@@ -1,11 +1,15 @@
 """speccify-core — shared spec loader, schema validator, resolver, codegen pipeline."""
 
-from speccify_core.codegen.replay import (
+from speccify_core.codegen import (
+    SUPPORTED_TARGETS,
     CacheKey,
     CacheMissError,
+    CodegenError,
     LlmClient,
     ReplayCache,
     ReplayCacheClient,
+    TargetRender,
+    render_for_target,
 )
 from speccify_core.loader import SpecLoader, SpecLoaderError
 from speccify_core.lockfile import (
@@ -61,6 +65,7 @@ __all__ = [
     "AnyGeneratorPin",
     "CacheKey",
     "CacheMissError",
+    "CodegenError",
     "GeneratedFile",
     "GeneratorPin",
     "LlmClient",
@@ -77,6 +82,8 @@ __all__ = [
     "ReplayCache",
     "ReplayCacheClient",
     "Resolution",
+    "SUPPORTED_TARGETS",
+    "TargetRender",
     "ResolvedGraph",
     "Resolver",
     "ResolverError",
@@ -90,4 +97,5 @@ __all__ = [
     "VersionNotFoundError",
     "__version__",
     "build_lockfile",
+    "render_for_target",
 ]

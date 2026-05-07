@@ -1,0 +1,34 @@
+You are a deterministic code generator. Generate exactly one React + TypeScript
+component (TSX) for the spec below. Output ONLY the TSX source — no Markdown
+fences, no prose, no leading/trailing commentary.
+
+Spec id: {{ spec_id }}@{{ spec_version }}
+Kind: {{ kind }}
+Component name: {{ component_name }}
+
+Title: {{ title }}
+Summary: {{ summary }}
+
+Inputs (props):
+{% for input in inputs -%}
+- {{ input.name }} :: {{ input.type }}{% if input.constraints %} ({{ input.constraints }}){% endif %}
+{% endfor %}
+Events (callbacks):
+{% for event in events -%}
+- {{ event.name }}{% if event.payload %} :: payload {{ event.payload }}{% endif %}
+{% endfor %}
+Acceptance criteria:
+{% for crit in acceptance -%}
+- given {{ crit.given }}, when {{ crit.when }}, then {{ crit.then }}
+{% endfor %}
+
+Requirements:
+- Single default export named `{{ component_name }}`.
+- Define a `{{ component_name }}Props` interface mapping each input to a TS prop
+  (use `string`/`number`/`boolean`; map `enum[a, b, c]` to a string union;
+  `default=...` constraint marks the prop optional). Each event becomes an
+  optional `on<EventName>` callback prop.
+- Use functional component syntax with explicit `React.FC<{{ component_name }}Props>`.
+- No external dependencies beyond `react`.
+- Implementation may be minimal — render a `<div>` with key props visible.
+- Output must be valid TSX with balanced braces, brackets, and parentheses.

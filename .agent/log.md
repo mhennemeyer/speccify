@@ -1,5 +1,43 @@
 # Log: Speccify
 
+## 2026-05-07 (Phase 1b Step 4 — React-LLM-Adapter + Codegen-Dispatcher)
+- **Step 4 abgeschlossen**: neuer Adapter `speccify_core.codegen.react_llm`
+  mit Pin-Konstanten (`PROVIDER="anthropic"`,
+  `MODEL="anthropic/claude-sonnet-4.5@2026-03-01"`, `PROMPT_VERSION="0.1.0"`,
+  `DEFAULT_SEED=1`, `TARGET="react"`), `build_prompt`, `normalize_tsx`
+  (Markdown-Fence-Strip + CRLF→LF + Trailing-WS + finale Newline; bewusst
+  minimal nach User-Entscheidung), `validate_tsx` (Klammer-Heuristik mit
+  String-/Kommentar-Awareness — fängt grobe LLM-Fehler ohne Native-Toolchain),
+  `make_cache_key`, `render`/`render_to_files` (auto-`bind_key` für
+  `ReplayCacheClient`), `CodegenError`, `ReactRenderResult`. Output-Pfad
+  `<scope>/<PascalCase(name)>.tsx`.
+- Prompt-Template `core/src/speccify_core/codegen/templates/react_llm.prompt.j2`
+  (deterministisch, Single-Default-Export, TSX-only-Anweisung); Hatch
+  `force-include` für die `.j2`-Datei in `core/pyproject.toml` ergänzt.
+- Dispatcher `speccify_core.codegen.render_for_target` + `TargetRender(files,
+  cache_key)` + `SUPPORTED_TARGETS=("react",)`. Phase-1a-Stub-Re-Exports
+  (`render`, `render_to_files`) bleiben erhalten — `pull`/`verify` werden
+  explizit erst in Step 5 auf den Dispatcher umgestellt.
+- Re-Exports in `speccify_core.__init__` (`CodegenError`, `SUPPORTED_TARGETS`,
+  `TargetRender`, `render_for_target`); `__all__` aktualisiert.
+- 20 neue Tests in `core/tests/test_react_llm.py`: `normalize_tsx`
+  (Trailing-WS/CRLF, finale Newline, Markdown-Fences), `validate_tsx`
+  (balanced/leer/unbalanced/Klammern in Strings+Kommentaren ignoriert/
+  unterminated string), `build_prompt` (Spec-Id + Props + Events sichtbar),
+  `make_cache_key` (Determinismus + Pin-Felder), `render`/`render_to_files`
+  (Cache-Hit, Offline-Miss → `CacheMissError`, PascalCase-Pfad, ungültiges
+  TSX → `CodegenError`, Fence-Strip), Dispatcher (React-Pfad, fehlender
+  Client → `CodegenError`, unbekanntes Target → `NotImplementedError`,
+  `SUPPORTED_TARGETS`-Membership, byte-Identität über zwei Runs).
+- Plan-Open-Questions vor Step 4 mit User geklärt und im Plan verankert:
+  Anthropic Claude Sonnet 4.5 fix verdrahtet, minimale Normalisierung,
+  Klammer-Heuristik in Python, Cache-Fixtures unter `tests/fixtures/llm-cache/`
+  (Eincheck-Pfad in Step 5).
+- Verifikation: `uv run pytest` 120 grün (100 alt + 20 neu), `ruff check`,
+  `ruff format --check`, `mypy core/src cli/src` alle clean.
+- Plan-/Status-Sync: Step 4 ✅ in `phase-1b-react-codegen.md`,
+  `.agent/status.md` Phase + Nächste-Schritte aktualisiert.
+
 ## 2026-05-07 (Phase 1b Step 3 — Replay-Cache + `LlmClient`-Protokoll)
 - **Step 3 abgeschlossen**: neues Modul `speccify_core.codegen.replay` mit
   `CacheKey` (frozen dataclass; `digest()` über kanonisches JSON mit

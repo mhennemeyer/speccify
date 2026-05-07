@@ -236,10 +236,14 @@ scripts/record_llm_cache.py           # NEU, manueller Run
 - [x] 15 neue Tests in `core/tests/test_replay_cache.py`: `CacheKey`-Digest-Stabilität + Feld-Sensitivität, `ReplayCache` Get/Put/Has/Round-Trip/kanonisches JSON/Overwrite/Corrupt-Entry, `ReplayCacheClient` Offline-Miss/Offline-Hit/Online-Miss-Fallback (+Cache-Eintrag)/Online-Hit (kein Inner-Call)/`bind_key`-Pflicht/Key-Mismatch/Key-Konsum nach Use, Protocol-Strukturalität.
 - [x] Status/Log/Plan-Sync.
 
-### Step 4 — React-LLM-Adapter + Codegen-Dispatcher
-- [ ] `speccify_core.codegen.react_llm` (`render`, `render_to_files`, Prompt-Template, Normalisierung).
-- [ ] `speccify_core.codegen.render_for_target`-Dispatcher.
-- [ ] Tests mit `ReplayCacheClient` und einem hand-erstellten Cache-Eintrag pro Phase-0-Spec (zunächst minimal: 1 Eintrag für `@org/button@0.1.0`, restliche in Step 5 nachgezogen).
+### Step 4 — React-LLM-Adapter + Codegen-Dispatcher ✅
+- [x] `speccify_core.codegen.react_llm` mit Pin-Konstanten (`PROVIDER="anthropic"`, `MODEL="anthropic/claude-sonnet-4.5@2026-03-01"`, `PROMPT_VERSION="0.1.0"`, `DEFAULT_SEED=1`, `TARGET="react"`), `build_prompt`, `normalize_tsx` (Markdown-Fence-Strip + CRLF→LF + Trailing-WS + finale Newline), `validate_tsx` (Klammer-Heuristik mit String-/Kommentar-Awareness), `make_cache_key`, `render`/`render_to_files` (auto-`bind_key` für `ReplayCacheClient`), `CodegenError`, `ReactRenderResult`. Output-Pfad `<scope>/<PascalCase(name)>.tsx`.
+- [x] Prompt-Template `core/src/speccify_core/codegen/templates/react_llm.prompt.j2` (deterministisch, Single-Default-Export, TSX-only-Anweisung, kein Markdown). Hatch `force-include` für die `.j2`-Datei in `core/pyproject.toml`.
+- [x] `speccify_core.codegen.render_for_target`-Dispatcher + `TargetRender(files, cache_key)` + `SUPPORTED_TARGETS=("react",)`. `pull`/`verify` bleiben in Step 4 noch beim Stub-Codegen — Umstellung auf den Dispatcher ist explizit Teil von Step 5.
+- [x] Re-Exports in `speccify_core.__init__` (`CodegenError`, `SUPPORTED_TARGETS`, `TargetRender`, `render_for_target`).
+- [x] 20 neue Tests in `core/tests/test_react_llm.py`: `normalize_tsx` (CRLF/Trailing-WS/finale Newline/Markdown-Fences), `validate_tsx` (balanced/leer/unbalanced/String+Kommentar-Klammern ignorieren/unterminated string), `build_prompt` (Spec-Id + Props + Events sichtbar), `make_cache_key` (deterministisch + Pin-Felder), `render`/`render_to_files` (Cache-Hit, Offline-Miss → `CacheMissError`, PascalCase-Pfad, ungültiges TSX → `CodegenError`, Fence-Strip), Dispatcher (React-Pfad, fehlender Client, unbekanntes Target, byte-Identität über zwei Runs).
+- [x] Plan-Open-Questions vor Step 4 mit User geklärt: Anthropic Claude Sonnet 4.5 fix, minimale Normalisierung, Klammer-Heuristik in Python, Cache-Fixtures unter `tests/fixtures/llm-cache/` (Eincheck-Pfad ist Step-5-Aufgabe).
+- [x] Status/Log/Plan-Sync.
 
 ### Step 5 — `speccify pull --target react --offline` + CI
 - [ ] `pull` ruft Dispatcher; `--offline` Flag; persistiert `kind: llm`-Pin.

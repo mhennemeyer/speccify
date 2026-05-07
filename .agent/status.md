@@ -2,7 +2,7 @@
 
 ## Meta
 - **Typ:** Code
-- **Phase:** Phase 1b Step 3 (Replay-Cache + `LlmClient`-Protokoll) abgeschlossen — bereit für Step 4 (React-LLM-Adapter + Codegen-Dispatcher). Phase 1a abgeschlossen.
+- **Phase:** Phase 1b Step 4 (React-LLM-Adapter + Codegen-Dispatcher) abgeschlossen — bereit für Step 5 (`speccify pull --target react --offline` + CI + Replay-Cache-Fixtures). Phase 1a abgeschlossen.
 - **Priorität:** Mittel
 - **Zuletzt aktualisiert:** 2026-05-07
 
@@ -35,8 +35,13 @@ Fundament für alle weiteren Phasen.
       (`speccify_core.codegen.replay`: `CacheKey`/`ReplayCache`/`CacheMissError` +
       `LlmClient`-Protokoll + `ReplayCacheClient`-Wrapper mit `bind_key`-Vertrag).
       15 neue Tests grün, 100 Tests gesamt, ruff/format/mypy clean.
-- [ ] Phase 1b Step 4 — React-LLM-Adapter + Codegen-Dispatcher
-      (`render_for_target`).
+- [x] Phase 1b Step 4 — React-LLM-Adapter (`speccify_core.codegen.react_llm`)
+      mit Anthropic-Pin (Claude Sonnet 4.5), Prompt-Template, minimaler
+      Normalisierung, Klammer-Heuristik für TSX-Validität, PascalCase-Output
+      (`<scope>/<Name>.tsx`); Dispatcher `render_for_target` + `TargetRender` +
+      `SUPPORTED_TARGETS=("react",)`; Re-Exports in `speccify_core.__init__`.
+      20 neue Tests grün, 120 Tests gesamt, ruff/format/mypy clean. `pull`/`verify`
+      bleiben in Step 4 noch beim Stub — Umstellung ist Step-5-Aufgabe.
 - [ ] Phase 1b Step 5 — `speccify pull --target react --offline` + CI-E2E mit
       eingechecktem Replay-Cache.
 - [ ] Phase 1b Step 6 — Master-Plan-Sync + Tag-Vorschlag `v0.2.0-phase-1b`.
