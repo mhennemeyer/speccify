@@ -1,5 +1,30 @@
 # Log: Speccify
 
+## 2026-05-07 (Phase 1b Step 2 — Lockfile-Schema `kind: llm`)
+- **Step 2 abgeschlossen**: `schema/lockfile.schema.json` `generator` jetzt
+  `oneOf` mit `kind: template` (template_set + template_version) und
+  `kind: llm` (provider, model, prompt_version, optional `seed` ≥ 0,
+  `cache_key` als sha256-Pattern).
+- `speccify_core.lockfile`: neuer `LlmGeneratorPin` (frozen dataclass);
+  bestehender `GeneratorPin` bleibt als Template-Pin und wird zusätzlich als
+  `TemplateGeneratorPin` aliasiert; Type-Alias `AnyGeneratorPin = GeneratorPin
+  | LlmGeneratorPin`. `LockEntry.generator: AnyGeneratorPin`. Serialisierung/
+  Parsing per `kind` verzweigt; `seed` wird im YAML weggelassen, wenn nicht
+  gesetzt.
+- Re-Exports in `speccify_core.__init__` ergänzt (`AnyGeneratorPin`,
+  `LlmGeneratorPin`, `TemplateGeneratorPin`); `__all__` aktualisiert.
+- 4 neue Round-Trip-Tests in `core/tests/test_lockfile.py`: LLM-Pin mit `seed`
+  (inkl. Re-Read und `"seed: 42"` im YAML), LLM-Pin ohne `seed` (kein
+  `seed:`-Key im Output), gemischtes Lockfile (template + llm in einem
+  `specs[]`, Round-Trip-Equality), Schema-Reject bei kombinierten Template-/
+  LLM-Feldern (`oneOf`-Verletzung).
+- Default-Verhalten unverändert: `build_lockfile` und alle bestehenden Tests/
+  Fixtures laufen weiter mit Template-Pin.
+- Verifikation: `uv run pytest` 85 grün (81 alt + 4 neu), `ruff check`,
+  `ruff format --check`, `mypy core/src cli/src` alle clean.
+- Plan-/Status-Sync: Step 2 ✅ in `phase-1b-react-codegen.md`,
+  `.agent/status.md` Nächste-Schritte aktualisiert.
+
 ## 2026-05-06 (Phase 1b Step 1 — `speccify init`)
 - **Step 1 abgeschlossen**: neuer CLI-Command `speccify init <name>
   [--target react]` (`cli/src/speccify_cli/commands/init.py`).

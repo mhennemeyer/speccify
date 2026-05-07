@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://speccify.io/schema/lockfile/v1.json",
   "title": "Speccify Lockfile v1",
-  "description": "Schema v1 für speccify.lock — deterministisches Auflösungs- und Output-Hash-Manifest. In Phase 1a wird der Generator-Pin als 'template' (template_set + template_version) modelliert; LLM-Varianten kommen in einer späteren Phase.",
+  "description": "Schema v1 für speccify.lock — deterministisches Auflösungs- und Output-Hash-Manifest. Der `generator`-Pin ist eine Union: `kind: template` (template_set + template_version, Phase 1a) oder `kind: llm` (provider, model, prompt_version, optional seed, cache_key; ab Phase 1b für React-Codegen).",
   "type": "object",
   "required": ["schema_version", "target", "specs"],
   "additionalProperties": false,
@@ -53,17 +53,40 @@
             "minLength": 1
           },
           "generator": {
-            "type": "object",
-            "required": ["kind", "template_set", "template_version"],
-            "additionalProperties": false,
-            "properties": {
-              "kind": { "type": "string", "const": "template" },
-              "template_set": { "type": "string", "minLength": 1 },
-              "template_version": {
-                "type": "string",
-                "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)$"
+            "oneOf": [
+              {
+                "type": "object",
+                "required": ["kind", "template_set", "template_version"],
+                "additionalProperties": false,
+                "properties": {
+                  "kind": { "type": "string", "const": "template" },
+                  "template_set": { "type": "string", "minLength": 1 },
+                  "template_version": {
+                    "type": "string",
+                    "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)$"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "required": ["kind", "provider", "model", "prompt_version", "cache_key"],
+                "additionalProperties": false,
+                "properties": {
+                  "kind": { "type": "string", "const": "llm" },
+                  "provider": { "type": "string", "minLength": 1 },
+                  "model": { "type": "string", "minLength": 1 },
+                  "prompt_version": {
+                    "type": "string",
+                    "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)$"
+                  },
+                  "seed": { "type": "integer", "minimum": 0 },
+                  "cache_key": {
+                    "type": "string",
+                    "pattern": "^sha256:[0-9a-f]{64}$"
+                  }
+                }
               }
-            }
+            ]
           },
           "generated_files_sha256": {
             "type": "array",

@@ -2,9 +2,9 @@
 
 ## Meta
 - **Typ:** Code
-- **Phase:** Phase 1b Step 1 (`speccify init`) abgeschlossen — bereit für Step 2 (Lockfile-Schema-Erweiterung `kind: llm`). Phase 1a abgeschlossen.
+- **Phase:** Phase 1b Step 2 (Lockfile-Schema-Erweiterung `kind: llm`) abgeschlossen — bereit für Step 3 (Replay-Cache + `LlmClient`-Protokoll). Phase 1a abgeschlossen.
 - **Priorität:** Mittel
-- **Zuletzt aktualisiert:** 2026-05-06
+- **Zuletzt aktualisiert:** 2026-05-07
 
 ## Beschreibung
 Spec-First-Plattform für sprach-/framework-unabhängige Komponenten-Spezifikationen.
@@ -26,8 +26,11 @@ Fundament für alle weiteren Phasen.
 - [x] Phase 1b Step 1 — `speccify init <name> [--target react]` (minimal:
       nur `speccify.yaml`, kein Skeleton). 7 neue CLI-Tests grün, alle 81
       Tests grün, ruff/format/mypy clean.
-- [ ] Phase 1b Step 2 — Lockfile-Schema-Erweiterung `generator.oneOf`
-      (`template`/`llm`), `GeneratorPin` als Union.
+- [x] Phase 1b Step 2 — Lockfile-Schema-Erweiterung `generator.oneOf`
+      (`template`/`llm`), neuer `LlmGeneratorPin` + `AnyGeneratorPin`-Union,
+      `TemplateGeneratorPin`-Alias für Rückwärtskompatibilität. 4 neue Tests
+      grün (LLM mit/ohne `seed`, gemischtes Lockfile, Schema-Reject bei
+      kombinierten Feldern), 85 Tests gesamt grün, ruff/format/mypy clean.
 - [ ] Phase 1b Step 3 — Replay-Cache + `LlmClient`-Protokoll
       (`speccify_core.codegen.replay`).
 - [ ] Phase 1b Step 4 — React-LLM-Adapter + Codegen-Dispatcher

@@ -222,10 +222,12 @@ scripts/record_llm_cache.py           # NEU, manueller Run
 - [x] Tests `cli/tests/test_init.py` (7 neue Tests): Happy-Path, Default-Target, Custom-Target, Manifest-Loadbarkeit via `ProjectManifest.load`, leeres existierendes Verzeichnis, nicht-leeres Verzeichnis (Exit 1, kein Manifest geschrieben), ungültiger Name.
 - [x] Status/Log/Plan-Sync.
 
-### Step 2 — Lockfile-Schema-Erweiterung (`kind: llm`)
-- [ ] `schema/lockfile.schema.json` `generator.oneOf`.
-- [ ] `speccify_core.lockfile.GeneratorPin` als Union (`TemplateGeneratorPin`/`LlmGeneratorPin`).
-- [ ] Round-Trip-Tests beider Varianten; Default-Verhalten unverändert.
+### Step 2 — Lockfile-Schema-Erweiterung (`kind: llm`) ✅
+- [x] `schema/lockfile.schema.json` `generator.oneOf` mit Varianten `kind: template` (template_set + template_version) und `kind: llm` (provider, model, prompt_version, optional `seed`, `cache_key`).
+- [x] `speccify_core.lockfile`: neuer `LlmGeneratorPin` (frozen dataclass), `TemplateGeneratorPin` als Alias auf bestehenden `GeneratorPin` (Rückwärtskompatibilität), Type-Alias `AnyGeneratorPin = GeneratorPin | LlmGeneratorPin`. `LockEntry.generator: AnyGeneratorPin`. Serialisierung/Parsing per `kind` verzweigt (`_generator_to_dict` / `_generator_from_dict`); `seed` bleibt im YAML weg, wenn nicht gesetzt.
+- [x] Re-Exports in `speccify_core.__init__` (`AnyGeneratorPin`, `LlmGeneratorPin`, `TemplateGeneratorPin`).
+- [x] 4 neue Round-Trip-Tests in `core/tests/test_lockfile.py`: LLM mit `seed`, LLM ohne `seed`, gemischtes Lockfile (template + llm in einem `specs[]`), Schema-Reject bei kombinierten Template-/LLM-Feldern (`oneOf`-Verletzung). Default-Verhalten (`build_lockfile` → Template-Pin) unverändert; bestehende Tests bleiben grün.
+- [x] Status/Log/Plan-Sync.
 
 ### Step 3 — Replay-Cache + `LlmClient`-Protokoll
 - [ ] `speccify_core.codegen.replay` mit `CacheKey`/`ReplayCache`/`CacheMissError`.

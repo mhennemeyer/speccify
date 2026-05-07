@@ -39,9 +39,39 @@ class LockfileError(Exception):
 
 @dataclass(frozen=True)
 class GeneratorPin:
+    """Template-basierter Generator-Pin (`kind: template`).
+
+    Aliasiert über `TemplateGeneratorPin` und Teil der `AnyGeneratorPin`-Union.
+    Eigener Klassenname bleibt aus Rückwärtskompatibilitätsgründen `GeneratorPin`.
+    """
+
     kind: str = "template"
     template_set: str = DEFAULT_TEMPLATE_SET
     template_version: str = DEFAULT_TEMPLATE_VERSION
+
+
+# Alias für klareren Code an Stellen, an denen die Variante explizit benannt werden soll.
+TemplateGeneratorPin = GeneratorPin
+
+
+@dataclass(frozen=True)
+class LlmGeneratorPin:
+    """LLM-basierter Generator-Pin (`kind: llm`, ab Phase 1b).
+
+    `seed` ist optional (manche Provider unterstützen kein Seeding). `cache_key` referenziert
+    den Replay-Cache-Eintrag, der bei `pull --offline` ohne Live-LLM-Call wiederverwendet wird.
+    """
+
+    provider: str
+    model: str
+    prompt_version: str
+    cache_key: str
+    seed: int | None = None
+    kind: str = "llm"
+
+
+# Union-Typ für `LockEntry.generator` — Lockfile-Schema bildet beide Varianten via `oneOf` ab.
+AnyGeneratorPin = GeneratorPin | LlmGeneratorPin
 
 
 @dataclass(frozen=True)
@@ -57,7 +87,7 @@ class LockEntry:
     sha256: str
     resolved_via: str
     target: str
-    generator: GeneratorPin = field(default_factory=GeneratorPin)
+    generator: AnyGeneratorPin = field(default_factory=GeneratorPin)
     generated_files_sha256: tuple[GeneratedFile, ...] = ()
 
 
@@ -196,12 +226,28 @@ def _entry_to_dict(entry: LockEntry) -> dict[str, Any]:
         "sha256": entry.sha256,
         "resolved_via": entry.resolved_via,
         "target": entry.target,
-        "generator": {
-            "kind": entry.generator.kind,
-            "template_set": entry.generator.template_set,
-            "template_version": entry.generator.template_version,
-        },
+        "generator": _generator_to_dict(entry.generator),
         "generated_files_sha256": [{"path": f.path, "sha256": f.sha256} for f in sorted_files],
+    }
+
+
+def _generator_to_dict(generator: AnyGeneratorPin) -> dict[str, Any]:
+    if isinstance(generator, LlmGeneratorPin):
+        out: dict[str, Any] = {
+            "kind": "llm",
+            "provider": generator.provider,
+            "model": generator.model,
+            "prompt_version": generator.prompt_version,
+            "cache_key": generator.cache_key,
+        }
+        if generator.seed is not None:
+            out["seed"] = generator.seed
+        return out
+    # GeneratorPin (Template).
+    return {
+        "kind": generator.kind,
+        "template_set": generator.template_set,
+        "template_version": generator.template_version,
     }
 
 
@@ -217,12 +263,26 @@ def _entry_from_dict(item: dict[str, Any]) -> LockEntry:
         sha256=item["sha256"],
         resolved_via=item["resolved_via"],
         target=item["target"],
-        generator=GeneratorPin(
-            kind=gen["kind"],
-            template_set=gen["template_set"],
-            template_version=gen["template_version"],
-        ),
+        generator=_generator_from_dict(gen),
         generated_files_sha256=files,
+    )
+
+
+def _generator_from_dict(gen: dict[str, Any]) -> AnyGeneratorPin:
+    kind = gen.get("kind")
+    if kind == "llm":
+        return LlmGeneratorPin(
+            provider=gen["provider"],
+            model=gen["model"],
+            prompt_version=gen["prompt_version"],
+            cache_key=gen["cache_key"],
+            seed=gen.get("seed"),
+        )
+    # Default / "template".
+    return GeneratorPin(
+        kind=gen["kind"],
+        template_set=gen["template_set"],
+        template_version=gen["template_version"],
     )
 
 
