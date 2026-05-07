@@ -2,7 +2,7 @@
 
 ## Meta
 - **Typ:** Code
-- **Phase:** Phase 1b Step 4 (React-LLM-Adapter + Codegen-Dispatcher) abgeschlossen — bereit für Step 5 (`speccify pull --target react --offline` + CI + Replay-Cache-Fixtures). Phase 1a abgeschlossen.
+- **Phase:** Phase 1b Step 5a (Live-`AnthropicClient` + `record_llm_cache.py`) abgeschlossen — bereit für Maintainer-Live-Aufnahme der Cache-Fixtures, danach Step 5b (`pull`/`verify` auf Dispatcher umstellen). Phase 1a abgeschlossen.
 - **Priorität:** Mittel
 - **Zuletzt aktualisiert:** 2026-05-07
 
@@ -42,8 +42,21 @@ Fundament für alle weiteren Phasen.
       `SUPPORTED_TARGETS=("react",)`; Re-Exports in `speccify_core.__init__`.
       20 neue Tests grün, 120 Tests gesamt, ruff/format/mypy clean. `pull`/`verify`
       bleiben in Step 4 noch beim Stub — Umstellung ist Step-5-Aufgabe.
-- [ ] Phase 1b Step 5 — `speccify pull --target react --offline` + CI-E2E mit
-      eingechecktem Replay-Cache.
+- [x] Phase 1b Step 5a — Live-`AnthropicClient`
+      (`speccify_core.codegen.anthropic_client`) mit Lazy-Import des
+      `anthropic` SDK + Provider/Date-Stripping, `anthropic>=0.34` als
+      optional-Dep `speccify-core[anthropic]`, Maintainer-Skript
+      `scripts/record_llm_cache.py` (idempotent, walks
+      `registry-fixtures/<scope>/<name>/<version>/`). 7 neue Tests grün
+      (Modell-Stripping, leerer API-Key, fehlendes SDK, Text-Block-Extraktion
+      via Fake-SDK), 127 Tests gesamt, ruff/format/mypy clean.
+- [ ] Phase 1b Step 5b — `pull`/`verify` auf `render_for_target` umstellen,
+      `--offline` + `--cache-dir` Flags, `LlmGeneratorPin` ins Lockfile,
+      Tests auf TSX migrieren. **Voraussetzung:** Live-Cache-Aufnahme durch
+      Maintainer.
+- [ ] Phase 1b Step 5c — CI-Workflow um E2E-Smoke
+      (`init` + `add` + `pull --offline` + `verify --offline`) erweitern,
+      `record_llm_cache.py` in `README.md` dokumentieren.
 - [ ] Phase 1b Step 6 — Master-Plan-Sync + Tag-Vorschlag `v0.2.0-phase-1b`.
 - [ ] Optional: annotated Tag `v0.1.0-phase-1a` setzen (Phase 1a abgeschlossen).
 - [x] Phasen-Plan `.agent/plans/phase-1b-react-codegen.md` geschrieben

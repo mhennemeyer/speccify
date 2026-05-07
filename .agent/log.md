@@ -1,5 +1,37 @@
 # Log: Speccify
 
+## 2026-05-07 (Phase 1b Step 5a — Live-`AnthropicClient` + Recorder-Skript)
+- **Step 5a abgeschlossen**: neuer Live-Adapter
+  `speccify_core.codegen.anthropic_client.AnthropicClient` (frozen
+  dataclass) mit Lazy-Import des `anthropic` SDK, Provider-Präfix-Strip
+  (`anthropic/...`) + Date-Suffix-Strip (`...@2026-03-01`), Single-Shot
+  `messages.create` mit `temperature=0.0`, deterministischer
+  Text-Block-Extraktion. `seed` wird bewusst nicht durchgereicht (SDK-fremd) —
+  Reproduzierbarkeit kommt aus dem Replay-Cache. Klare Fehler bei leerem
+  `api_key` und fehlender SDK-Installation (`AnthropicClientError`).
+- `anthropic>=0.34` als **optional-Dep** `speccify-core[anthropic]` in
+  `core/pyproject.toml` ergänzt — CI installiert das SDK nicht, da
+  `pull --offline` ausschließlich gegen den Replay-Cache läuft.
+- Neues Maintainer-Tool `scripts/record_llm_cache.py`: walkt
+  `registry-fixtures/<scope>/<name>/<version>/spec.speccify.yaml`
+  deterministisch, baut pro Spec einen `CacheKey` via
+  `react_llm.make_cache_key`, ruft Live-`AnthropicClient`, normalisiert +
+  validiert TSX (Klammer-Heuristik) und schreibt den **rohen** Response in
+  den Replay-Cache. Idempotent (skip bei Cache-Hit; `--force` überschreibt).
+  Fail-Fast ohne `ANTHROPIC_API_KEY`. Zielverzeichnis:
+  `tests/fixtures/llm-cache/`.
+- 7 neue Tests in `core/tests/test_anthropic_client.py`: Provider/Date-Strip
+  (4 Varianten), `AnthropicClientError` ohne API-Key, klare
+  Fehler-Message bei fehlendem SDK (Lazy-Import-Pfad), Text-Block-Extraktion
+  via Fake-SDK (Filter auf `type=='text'`, mehrere Blöcke).
+- Verifikation: `uv run pytest` 127 grün (120 alt + 7 neu), `ruff check`,
+  `ruff format`, `mypy core/src cli/src` alle clean.
+- **Offen für Maintainer**: Live-Aufnahme der 6 Phase-0-Cache-Einträge mit
+  `ANTHROPIC_API_KEY` und Eincheck unter `tests/fixtures/llm-cache/`.
+  Sub-Step 5b (`pull`/`verify` auf Dispatcher umstellen) hängt davon ab.
+- Plan-/Status-Sync: Step 5 in `phase-1b-react-codegen.md` in 5a/5b/5c
+  zerlegt, 5a ✅; `.agent/status.md` aktualisiert.
+
 ## 2026-05-07 (Phase 1b Step 4 — React-LLM-Adapter + Codegen-Dispatcher)
 - **Step 4 abgeschlossen**: neuer Adapter `speccify_core.codegen.react_llm`
   mit Pin-Konstanten (`PROVIDER="anthropic"`,

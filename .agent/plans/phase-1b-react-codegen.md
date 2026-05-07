@@ -246,10 +246,24 @@ scripts/record_llm_cache.py           # NEU, manueller Run
 - [x] Status/Log/Plan-Sync.
 
 ### Step 5 — `speccify pull --target react --offline` + CI
-- [ ] `pull` ruft Dispatcher; `--offline` Flag; persistiert `kind: llm`-Pin.
-- [ ] Replay-Cache-Fixtures für alle 6 Phase-0-Outputs eingecheckt unter `tests/fixtures/llm-cache/`.
-- [ ] CI-Workflow `.github/workflows/ci.yml`: E2E-Smoke `init` (tmp) + `pull --offline` + `verify --offline`.
-- [ ] `scripts/record_llm_cache.py` als Maintainer-Tool dokumentiert.
+
+#### Sub-Step 5a — Live-`AnthropicClient` + Recorder ✅
+- [x] `speccify_core.codegen.anthropic_client.AnthropicClient` (frozen dataclass) mit Lazy-Import des `anthropic` SDK, Provider-Präfix-/Date-Suffix-Stripping, Temperatur 0, Single-Shot `messages.create`, Text-Block-Extraktion. `seed` wird bewusst nicht durchgereicht (SDK-fremd) — Reproduzierbarkeit kommt aus dem Replay-Cache.
+- [x] `anthropic>=0.34` als optional-Dep `speccify-core[anthropic]` (CI installiert sie nicht).
+- [x] `scripts/record_llm_cache.py` als Maintainer-Tool: Walk über `registry-fixtures/<scope>/<name>/<version>/`, idempotent (skip bei Cache-Hit, `--force` zum Überschreiben), normalisiert + validiert TSX vor dem `cache.put`. Ergebnis-Layout: `tests/fixtures/llm-cache/<digest>.json`.
+- [x] 7 Tests in `core/tests/test_anthropic_client.py` (Modell-String-Stripping, leerer API-Key, fehlendes SDK, Text-Block-Extraktion via Fake-SDK). Alle 127 Tests grün, ruff/mypy clean.
+- [ ] Live-Aufnahme durch Maintainer (User) mit `ANTHROPIC_API_KEY` → Cache-Fixtures committen.
+
+#### Sub-Step 5b — `pull`/`verify` auf Dispatcher umstellen
+- [ ] `pull` ruft `render_for_target` mit `ReplayCacheClient` (Cache-Wurzel `<project>/.speccify-cache/`, `--cache-dir`-Override). `--offline` Flag (Cache-Miss → Exit 1).
+- [ ] Lockfile-Pin pro Spec auf `LlmGeneratorPin` (mit `cache_key=key.digest()`) gesetzt.
+- [ ] `verify` re-rendert via Replay-Client (offline) und prüft Modell-/Prompt-/Cache-Key-Drift gegen Lockfile-Pin.
+- [ ] Tests `cli/tests/test_pull.py` + `cli/tests/test_verify.py` auf TSX umgestellt; Cache-Fixtures werden in den Project-Cache kopiert.
+- [ ] `example-project/`-E2E aktualisiert.
+
+#### Sub-Step 5c — CI
+- [ ] CI-Workflow `.github/workflows/ci.yml`: E2E-Smoke `init` (tmp) + `add` + `pull --offline` + `verify --offline`.
+- [ ] `scripts/record_llm_cache.py` in `README.md` dokumentiert.
 
 ### Step 6 — Master-Plan-Sync + Tag
 - [ ] `speccify-plan.md`: Phase 1b auf "abgeschlossen" markieren, React-LLM-Strategie + Replay-Cache-Ansatz dokumentieren.
