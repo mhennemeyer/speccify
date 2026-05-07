@@ -2,7 +2,7 @@
 
 ## Meta
 - **Typ:** Code
-- **Phase:** Phase 1b geplant (Phasen-Plan geschrieben) — bereit für Step 1 (`speccify init`). Phase 1a abgeschlossen.
+- **Phase:** Phase 1b Step 1 (`speccify init`) abgeschlossen — bereit für Step 2 (Lockfile-Schema-Erweiterung `kind: llm`). Phase 1a abgeschlossen.
 - **Priorität:** Mittel
 - **Zuletzt aktualisiert:** 2026-05-06
 
@@ -23,8 +23,9 @@ Fundament für alle weiteren Phasen.
   Mypy + Pytest + `speccify lint` ab.
 
 ## Nächste Schritte
-- [ ] Phase 1b Step 1 — `speccify init <name> [--target react]` (minimal:
-      nur `speccify.yaml`, kein Skeleton). Tests + Status/Log/Plan-Sync.
+- [x] Phase 1b Step 1 — `speccify init <name> [--target react]` (minimal:
+      nur `speccify.yaml`, kein Skeleton). 7 neue CLI-Tests grün, alle 81
+      Tests grün, ruff/format/mypy clean.
 - [ ] Phase 1b Step 2 — Lockfile-Schema-Erweiterung `generator.oneOf`
       (`template`/`llm`), `GeneratorPin` als Union.
 - [ ] Phase 1b Step 3 — Replay-Cache + `LlmClient`-Protokoll

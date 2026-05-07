@@ -1,5 +1,22 @@
 # Log: Speccify
 
+## 2026-05-06 (Phase 1b Step 1 — `speccify init`)
+- **Step 1 abgeschlossen**: neuer CLI-Command `speccify init <name>
+  [--target react]` (`cli/src/speccify_cli/commands/init.py`).
+- Output ist bewusst minimal (User-Entscheidung): `speccify.yaml` mit
+  `schema_version: 1`, `target` (Default `react`), `dependencies: {}`.
+  Kein `registry`-Block, kein `package.json`/Skeleton.
+- Verhalten: Verzeichnis wird angelegt, falls nicht existent; existierendes
+  leeres Verzeichnis wird befüllt; nicht-leeres Verzeichnis oder ungültiger
+  Name (Slash/Backslash) → Exit 1 mit Fehlermeldung, kein Manifest geschrieben.
+- 7 neue CLI-Tests (`cli/tests/test_init.py`): Happy-Path, Default-Target,
+  Custom-Target, Round-Trip via `ProjectManifest.load`, leeres existierendes
+  Verzeichnis, nicht-leeres Verzeichnis (Exit 1), ungültiger Name.
+- Verifikation: `uv run pytest` 81 grün (74 alt + 7 neu), `ruff check`,
+  `ruff format --check`, `mypy core/src cli/src` alle clean.
+- Plan-/Status-Sync: Step 1 ✅ in `phase-1b-react-codegen.md`,
+  `.agent/status.md` Nächste-Schritte aktualisiert.
+
 ## 2026-05-06 (Phase 1b geplant)
 - **Phasen-Plan `phase-1b-react-codegen.md` geschrieben** — reines Plan-Dokument
   als nächster atomarer Commit, bevor Code für Phase 1b angefasst wird

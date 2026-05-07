@@ -9,6 +9,7 @@ import typer
 from speccify_core import SchemaValidator, SpecLoader, SpecLoaderError
 
 from speccify_cli.commands.add import add_command
+from speccify_cli.commands.init import init_command
 from speccify_cli.commands.lock import lock_command
 from speccify_cli.commands.pull import pull_command
 from speccify_cli.commands.verify import verify_command
@@ -20,6 +21,7 @@ app = typer.Typer(
     add_completion=False,
 )
 
+app.command("init")(init_command)
 app.command("lock")(lock_command)
 app.command("add")(add_command)
 app.command("pull")(pull_command)

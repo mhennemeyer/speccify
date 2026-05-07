@@ -215,10 +215,12 @@ scripts/record_llm_cache.py           # NEU, manueller Run
 
 > Atomare Schritte nach `rules.md` ("Ein Prompt = ein Commit"). Jeder Step liefert grüne Tests + sauberen Lint.
 
-### Step 1 — `speccify init` + Manifest-Default
-- [ ] CLI-Command `speccify init <name> [--target react]`.
-- [ ] Tests: Happy-Path, Verzeichnis-existiert-und-nicht-leer, Default-Target.
-- [ ] Status/Log/Plan-Sync.
+### Step 1 — `speccify init` + Manifest-Default ✅
+- [x] CLI-Command `speccify init <name> [--target react]` (`cli/src/speccify_cli/commands/init.py`, `run_init` + `init_command`).
+- [x] Minimaler Output: `speccify.yaml` mit `schema_version: 1`, `target` (Default `react`), `dependencies: {}`. Kein `registry`-Block, kein Skeleton.
+- [x] Fehler bei nicht-leerem Zielverzeichnis und ungültigem Namen (`/`/`\`); leeres existierendes Verzeichnis wird befüllt.
+- [x] Tests `cli/tests/test_init.py` (7 neue Tests): Happy-Path, Default-Target, Custom-Target, Manifest-Loadbarkeit via `ProjectManifest.load`, leeres existierendes Verzeichnis, nicht-leeres Verzeichnis (Exit 1, kein Manifest geschrieben), ungültiger Name.
+- [x] Status/Log/Plan-Sync.
 
 ### Step 2 — Lockfile-Schema-Erweiterung (`kind: llm`)
 - [ ] `schema/lockfile.schema.json` `generator.oneOf`.
