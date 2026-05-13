@@ -1,5 +1,34 @@
 # Log: Speccify
 
+## 2026-05-13 (Tags gesetzt + Phase-1c-Plan angelegt)
+- **Tags lokal gesetzt** (User-Freigabe in diesem Prompt: „Bitte setze
+  den Tag und mache ausnahmsweise die aktionen im Git"):
+  - `v0.1.0-phase-1a` annotated → `d28cb33` ("Complete Phase 1a:
+    Finalize Codegen and CLI Enhancements"), Message: "Phase 1a:
+    Resolver + Lockfile + Stub-Codegen + add/lock/pull/verify".
+  - `v0.2.0-phase-1b` annotated → `8c90511` ("Complete Phase 1b:
+    Finalize Step 6 with Master-Plan Sync"), Message: "Phase 1b:
+    React-LLM-Codegen + speccify init + Replay-Cache + pull/verify
+    --offline + CI-E2E".
+  - `git remote -v` ist leer → kein Push möglich. User kann später bei
+    Bedarf `git remote add` + `git push --tags` ausführen.
+- **Phase 1c gestartet — Phasen-Plan geschrieben**:
+  `.agent/plans/phase-1c-mcp-server.md` mit Scope (MCP-Server
+  `speccify-mcp`, offizielles `mcp[cli]`-SDK, stdio-only, 6 Tools
+  spiegeln CLI 1:1: `resolve`/`lock`/`render`/`pull`/`verify`/`lint`,
+  plus Resources `spec://`+`speccify://manifest|lockfile` und Prompt
+  `add-spec`), Technical Design (Modul-Layout `mcp/src/speccify_mcp/`
+  mit `cli.py`/`server.py`/`tools/`/`resources.py`/`prompts.py`,
+  Replay-Cache bleibt in `speccify_core`, MCP ist stateless),
+  Implementation Plan (Steps 0–6: SDK pinnen → Skeleton → Read-Tools →
+  Write-Tools + Cross-Consistency CLI↔MCP → Resources/Prompts →
+  CI-Smoke+Doku → Wrap-up). Tag-Vorschlag `v0.3.0-phase-1c`.
+- **Status-Sync**: `.agent/status.md` Meta-Phase auf "Phase 1c
+  gestartet" gesetzt; Tag-Setzung und Plan-Anlage als `[x]` markiert;
+  neue `[ ]`-Bullets für Steps 0–6.
+- **Nächster Schritt**: Phase 1c Step 0 — `mcp[cli]`-Version
+  recherchieren und in `mcp/pyproject.toml` pinnen.
+
 ## 2026-05-13 (Phase 1b Step 6 — Master-Plan-Sync + Phase-1b-Abschluss)
 - **Step 6 abgeschlossen, Phase 1b damit komplett.** Sync der Plan-Dokumente
   nach dem Step-5c-Commit; keine Code-Änderungen.
