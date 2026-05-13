@@ -158,21 +158,48 @@ class Lockfile:
         files: list[GeneratedFile],
     ) -> Lockfile:
         """Erzeugt eine neue Lockfile-Instanz mit aktualisierter Output-Hash-Liste für `spec_id`."""
+        return self._replace_entry(
+            spec_id,
+            lambda e: LockEntry(
+                id=e.id,
+                version=e.version,
+                sha256=e.sha256,
+                resolved_via=e.resolved_via,
+                target=e.target,
+                generator=e.generator,
+                generated_files_sha256=tuple(files),
+            ),
+        )
+
+    def with_generator(
+        self,
+        spec_id: str,
+        generator: AnyGeneratorPin,
+    ) -> Lockfile:
+        """Erzeugt eine neue Lockfile-Instanz mit aktualisiertem Generator-Pin für `spec_id`."""
+        return self._replace_entry(
+            spec_id,
+            lambda e: LockEntry(
+                id=e.id,
+                version=e.version,
+                sha256=e.sha256,
+                resolved_via=e.resolved_via,
+                target=e.target,
+                generator=generator,
+                generated_files_sha256=e.generated_files_sha256,
+            ),
+        )
+
+    def _replace_entry(
+        self,
+        spec_id: str,
+        transform: Any,
+    ) -> Lockfile:
         new_entries: list[LockEntry] = []
         replaced = False
         for entry in self.entries:
             if entry.id == spec_id:
-                new_entries.append(
-                    LockEntry(
-                        id=entry.id,
-                        version=entry.version,
-                        sha256=entry.sha256,
-                        resolved_via=entry.resolved_via,
-                        target=entry.target,
-                        generator=entry.generator,
-                        generated_files_sha256=tuple(files),
-                    )
-                )
+                new_entries.append(transform(entry))
                 replaced = True
             else:
                 new_entries.append(entry)

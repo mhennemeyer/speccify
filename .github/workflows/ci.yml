@@ -45,9 +45,30 @@ jobs:
       - name: speccify lint reference specs
         run: uv run speccify lint specs/*.speccify.yaml
 
-      - name: speccify end-to-end smoke (lock + pull + verify)
+      - name: speccify end-to-end smoke (lock + pull + verify, offline)
         working-directory: example-project
         run: |
           uv run speccify lock
-          uv run speccify pull --out ./out
-          uv run speccify verify --out ./out
+          uv run speccify pull --offline --out ./out
+          uv run speccify verify --offline --out ./out
+
+      - name: speccify init + add + pull + verify smoke (offline)
+        env:
+          REPO_ROOT: ${{ github.workspace }}
+          SPECCIFY: ${{ github.workspace }}/.venv/bin/speccify
+          REGISTRY: ${{ github.workspace }}/registry-fixtures
+          CACHE_DIR: ${{ github.workspace }}/tests/fixtures/llm-cache
+        run: |
+          set -euo pipefail
+          SMOKE_DIR="$(mktemp -d)"
+          pushd "$SMOKE_DIR" >/dev/null
+          "$SPECCIFY" init smoke-app --target react
+          cd smoke-app
+          "$SPECCIFY" add @org/button --registry "$REGISTRY"
+          "$SPECCIFY" lock --registry "$REGISTRY"
+          "$SPECCIFY" pull --offline --registry "$REGISTRY" \
+            --cache-dir "$CACHE_DIR" --out ./out
+          "$SPECCIFY" verify --offline --registry "$REGISTRY" \
+            --cache-dir "$CACHE_DIR" --out ./out
+          popd >/dev/null
+          rm -rf "$SMOKE_DIR"

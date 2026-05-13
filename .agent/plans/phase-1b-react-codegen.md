@@ -247,19 +247,21 @@ scripts/record_llm_cache.py           # NEU, manueller Run
 
 ### Step 5 — `speccify pull --target react --offline` + CI
 
-#### Sub-Step 5a — Live-`AnthropicClient` + Recorder ✅
-- [x] `speccify_core.codegen.anthropic_client.AnthropicClient` (frozen dataclass) mit Lazy-Import des `anthropic` SDK, Provider-Präfix-/Date-Suffix-Stripping, Temperatur 0, Single-Shot `messages.create`, Text-Block-Extraktion. `seed` wird bewusst nicht durchgereicht (SDK-fremd) — Reproduzierbarkeit kommt aus dem Replay-Cache.
-- [x] `anthropic>=0.34` als optional-Dep `speccify-core[anthropic]` (CI installiert sie nicht).
-- [x] `scripts/record_llm_cache.py` als Maintainer-Tool: Walk über `registry-fixtures/<scope>/<name>/<version>/`, idempotent (skip bei Cache-Hit, `--force` zum Überschreiben), normalisiert + validiert TSX vor dem `cache.put`. Ergebnis-Layout: `tests/fixtures/llm-cache/<digest>.json`.
-- [x] 7 Tests in `core/tests/test_anthropic_client.py` (Modell-String-Stripping, leerer API-Key, fehlendes SDK, Text-Block-Extraktion via Fake-SDK). Alle 127 Tests grün, ruff/mypy clean.
-- [ ] Live-Aufnahme durch Maintainer (User) mit `ANTHROPIC_API_KEY` → Cache-Fixtures committen.
+#### Sub-Step 5a — Live-`BedrockClient` + Recorder ✅
+- [x] **Provider-Switch von Anthropic auf AWS Bedrock** (User-Entscheidung): firmenweit steht Bedrock zur Verfügung, kein direkter Anthropic-API-Pfad mehr. Modell-Pin auf `bedrock/eu.anthropic.claude-opus-4-7` (`eu-central-1`).
+- [x] `speccify_core.codegen.bedrock_client.BedrockClient` (frozen dataclass) mit Lazy-Import von `boto3`, Provider-Präfix-/Date-Suffix-Stripping, Single-Shot `bedrock-runtime.converse`, Text-Block-Extraktion. `seed` und `temperature` werden bewusst nicht durchgereicht (Bedrock-`converse` kennt `seed` nicht; `temperature` ist für Claude-Opus-4-7 deprecated). Reproduzierbarkeit kommt aus dem Replay-Cache. AWS-Credentials per Standard-Chain (`AWS_REGION`/`AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY`/`AWS_PROFILE`).
+- [x] `boto3>=1.35` als optional-Dep `speccify-core[bedrock]` + Workspace-Mirror (`speccify[bedrock]`); CI installiert das Extra nicht.
+- [x] `scripts/record_llm_cache.py` als Maintainer-Tool: Walk über `registry-fixtures/<scope>/<name>/<version>/`, idempotent (skip bei Cache-Hit, `--force` zum Überschreiben), normalisiert + validiert TSX vor dem `cache.put`. Lädt `.env` am Repo-Root automatisch (minimaler eigener `_load_dotenv`, ohne `python-dotenv`-Dep). Ergebnis-Layout: `tests/fixtures/llm-cache/<digest>.json`.
+- [x] 10 Tests in `core/tests/test_bedrock_client.py` (Modell-String-Stripping, fehlendes SDK, Text-Block-Extraktion via Fake-boto3, Region-Durchreichung, Default-Chain, Schema-Fehler, Exception-Wrapping). Alle 131 Tests grün, ruff/mypy clean.
+- [x] **Live-Aufnahme erfolgreich**: 6/6 Cache-Einträge unter `tests/fixtures/llm-cache/` (~36 KB) live via Bedrock `converse` rekorded und eingecheckt.
 
-#### Sub-Step 5b — `pull`/`verify` auf Dispatcher umstellen
-- [ ] `pull` ruft `render_for_target` mit `ReplayCacheClient` (Cache-Wurzel `<project>/.speccify-cache/`, `--cache-dir`-Override). `--offline` Flag (Cache-Miss → Exit 1).
-- [ ] Lockfile-Pin pro Spec auf `LlmGeneratorPin` (mit `cache_key=key.digest()`) gesetzt.
-- [ ] `verify` re-rendert via Replay-Client (offline) und prüft Modell-/Prompt-/Cache-Key-Drift gegen Lockfile-Pin.
-- [ ] Tests `cli/tests/test_pull.py` + `cli/tests/test_verify.py` auf TSX umgestellt; Cache-Fixtures werden in den Project-Cache kopiert.
-- [ ] `example-project/`-E2E aktualisiert.
+#### Sub-Step 5b — `pull`/`verify` auf Dispatcher umstellen ✅
+- [x] `pull` ruft `render_for_target` mit `ReplayCacheClient` (Default-Cache-Wurzel `tests/fixtures/llm-cache/`, Override via `--cache-dir` und `SPECCIFY_CACHE_DIR`). `--offline/--no-offline` Flag (Default `--offline`; Cache-Miss → Exit 1 mit klarer Meldung). Gemeinsamer Helper `speccify_cli.commands._llm_client.build_replay_client`.
+- [x] Lockfile-Pin pro Spec auf `LlmGeneratorPin` (`provider=bedrock`, `model`, `prompt_version`, `seed`, `cache_key=sha256:<digest>`) gesetzt; Helper-Methode `Lockfile.with_generator(spec_id, generator)` in `core/src/speccify_core/lockfile.py`.
+- [x] `verify` re-rendert via Replay-Client (`--offline/--cache-dir` analog zu `pull`) und prüft Modell-/Prompt-Version-/Seed-/Cache-Key-Drift gegen Lockfile-`LlmGeneratorPin`.
+- [x] Tests neu/erweitert (9): `cli/tests/test_pull.py` (5: TSX-Output + Lockfile-Pin, Determinismus byte-identisch, Fail ohne Lockfile, Target-Mismatch, Cache-Miss bei leerem `--cache-dir`) und `cli/tests/test_verify.py` (6: Happy-Path, Disk-Drift, Fail ohne Lockfile, Fail ohne `pull`, Modell-Drift via manuell editiertes Lockfile, Cache-Miss). 134 Tests gesamt grün, ruff/format clean. mypy-Vor-Bestands-Fehler in Test-Dateien anderer Steps bleiben offen (siehe `.agent/resume.md`).
+- [x] `example-project/`-E2E aktualisiert: alte Stub-`.md`-Outputs entfernt, 3 TSX-Dateien (`out/org/Button.tsx`, `out/org/ContactForm.tsx`, `out/org/OnboardingWizard.tsx`) regeneriert; `speccify.lock` enthält LLM-Pins; `speccify verify` läuft grün.
+- [x] Status/Log/Plan-Sync (siehe `.agent/log.md` Eintrag 2026-05-12, `.agent/status.md`, `.agent/resume.md`).
 
 #### Sub-Step 5c — CI
 - [ ] CI-Workflow `.github/workflows/ci.yml`: E2E-Smoke `init` (tmp) + `add` + `pull --offline` + `verify --offline`.

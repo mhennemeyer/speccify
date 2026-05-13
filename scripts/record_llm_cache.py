@@ -6,15 +6,17 @@ Spec, der Prompt oder der Modell-Pin ändert, müssen die Cache-Einträge neu
 aufgenommen werden — genau dafür ist dieses Skript da.
 
 Voraussetzung:
-- `ANTHROPIC_API_KEY` in der Umgebung,
-- `anthropic` SDK installiert (`uv sync --extra anthropic`).
+- AWS-Credentials in der Umgebung (`AWS_REGION`, `AWS_ACCESS_KEY_ID`,
+  `AWS_SECRET_ACCESS_KEY` — oder ein `AWS_PROFILE`); eine `.env`-Datei am
+  Repo-Root wird automatisch geladen, falls vorhanden,
+- `boto3` SDK installiert (`uv sync --extra bedrock`).
 
 Verhalten:
 - Lädt alle Specs aus `registry-fixtures/` (alle Versionen).
 - Für jede Spec: baut Cache-Key via `react_llm.make_cache_key`, prüft ob ein
   Eintrag im Ziel-Cache existiert. Wenn ja → skip (idempotent), außer
   `--force`.
-- Bei Cache-Miss: ruft Live-`AnthropicClient`, normalisiert TSX, validiert
+- Bei Cache-Miss: ruft Live-`BedrockClient`, normalisiert TSX, validiert
   Klammer-Heuristik und legt das Ergebnis im Cache ab.
 - Druckt eine Zusammenfassung (recorded / cached / failed).
 
@@ -32,6 +34,29 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_FIXTURES = REPO_ROOT / "registry-fixtures"
 DEFAULT_CACHE_DIR = REPO_ROOT / "tests" / "fixtures" / "llm-cache"
+
+
+def _load_dotenv(path: Path) -> None:
+    """Minimaler `.env`-Loader: setzt `KEY=VALUE` in `os.environ`, ohne `python-dotenv`.
+
+    Bestehende Env-Vars werden nicht überschrieben (Shell-Exports gewinnen).
+    Kommentare (`#`) und leere Zeilen werden ignoriert; einfache/doppelte
+    Quotes um den Wert werden entfernt. Bewusst sehr defensiv — eine fehlende
+    Datei ist ein No-Op.
+    """
+    if not path.is_file():
+        return
+    for raw_line in path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, _, value = line.partition("=")
+        key = key.strip()
+        value = value.strip()
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in ("'", '"'):
+            value = value[1:-1]
+        if key and key not in os.environ:
+            os.environ[key] = value
 
 
 def _iter_specs(fixtures_root: Path):  # type: ignore[no-untyped-def]
@@ -73,14 +98,19 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    api_key = os.environ.get("ANTHROPIC_API_KEY", "")
-    if not api_key:
-        print("ERROR: ANTHROPIC_API_KEY ist nicht gesetzt.", file=sys.stderr)
+    _load_dotenv(REPO_ROOT / ".env")
+    region = os.environ.get("AWS_REGION") or os.environ.get("AWS_DEFAULT_REGION")
+    if not (os.environ.get("AWS_ACCESS_KEY_ID") or os.environ.get("AWS_PROFILE")):
+        print(
+            "ERROR: Keine AWS-Credentials gefunden (`AWS_ACCESS_KEY_ID` oder "
+            "`AWS_PROFILE`). Bitte `.env` setzen oder Vars exportieren.",
+            file=sys.stderr,
+        )
         return 1
 
     # Imports erst hier, damit `--help` ohne installierte Deps funktioniert.
     from speccify_core.codegen import ReplayCache
-    from speccify_core.codegen.anthropic_client import AnthropicClient, AnthropicClientError
+    from speccify_core.codegen.bedrock_client import BedrockClient, BedrockClientError
     from speccify_core.codegen.react_llm import (
         MODEL,
         build_prompt,
@@ -90,7 +120,7 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     cache = ReplayCache(args.cache_dir)
-    client = AnthropicClient(api_key=api_key)
+    client = BedrockClient(region=region)
 
     recorded = 0
     cached = 0
@@ -108,8 +138,8 @@ def main(argv: list[str] | None = None) -> int:
         print(f"  [record] {label} (model={MODEL})")
         try:
             raw = client.complete(prompt=prompt, model=MODEL, seed=key.seed)
-        except AnthropicClientError as exc:
-            print(f"    ✗ Anthropic-Fehler: {exc}", file=sys.stderr)
+        except BedrockClientError as exc:
+            print(f"    ✗ Bedrock-Fehler: {exc}", file=sys.stderr)
             failed.append((label, str(exc)))
             continue
 

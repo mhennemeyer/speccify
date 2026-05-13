@@ -1,5 +1,163 @@
 # Log: Speccify
 
+## 2026-05-13 (Phase 1b Step 5c — CI-E2E-Smoke + README-Doku)
+- **Step 5c abgeschlossen.** CI deckt jetzt End-to-End beide Pfade ab:
+  bestehendes `example-project/` (`lock` + `pull --offline` + `verify --offline`)
+  und einen **frischen Smoke-Pfad** aus `tmp` (`init` + `add` + `lock` +
+  `pull --offline` + `verify --offline`) gegen `registry-fixtures/` und
+  den eingecheckten Replay-Cache.
+- **`.github/workflows/ci.yml`**:
+  - Bestehender Step `speccify end-to-end smoke (lock + pull + verify)`
+    erhält `--offline` Flags für `pull` und `verify` (Default-Verhalten,
+    aber explizit für CI-Klarheit).
+  - Neuer Step `speccify init + add + pull + verify smoke (offline)`:
+    legt in `mktemp -d` ein Projekt via `speccify init smoke-app
+    --target react` an, fügt `@org/button` hinzu (`--registry`-Override
+    auf `registry-fixtures/`), lockt, pullt und verifiziert offline gegen
+    `tests/fixtures/llm-cache/`. Ruft das Binary direkt aus dem venv
+    (`$GITHUB_WORKSPACE/.venv/bin/speccify`), weil `uv run` aus einer
+    fremden CWD den Workspace-Kontext verliert.
+- **`README.md`** überarbeitet:
+  - Neuer Abschnitt **End-to-End Smoke (offline)** mit den exakten
+    Befehlen aus dem CI-Smoke (example-project + frisches Projekt).
+  - Neuer Abschnitt **Replay-Cache neu aufnehmen (Maintainer)**
+    dokumentiert `scripts/record_llm_cache.py` (Voraussetzungen:
+    `uv sync --extra bedrock`, AWS-Credentials via Env oder `.env`;
+    `--force` für Re-Record).
+  - „Wo es weitergeht“ aktualisiert: Phase 1b verlinkt, Phase 1a
+    abgeschlossen markiert, Rebrand-Plan ins Archiv verlinkt.
+  - Status-Absatz auf Phase 1b umgestellt.
+- **Lokale Verifikation der CI-Sequenz** (1:1 nachgestellt mit
+  `.venv/bin/speccify`): beide Smoke-Pfade laufen grün, der frische
+  Pfad erzeugt `out/org/Button.tsx`, der example-project-Pfad bleibt
+  byte-identisch.
+- **Side-Quest**: lokales `.venv` war durch macOS/iCloud-Duplikate
+  korrumpiert (`_editable_impl_speccify_cli 2.pth` neben dem Original →
+  `site` ignorierte beide Pfade). Fix: `.venv` gelöscht und neu
+  `uv sync --all-packages`. Kein Repo-Change nötig, nur als Hinweis im
+  Log.
+- **Verifikation**: `uv run pytest` → 134 grün; `uv run ruff check .` +
+  `uv run ruff format --check .` clean.
+- **Nächster Schritt** (Step 6): Master-Plan-Sync, ggf. annotated Tag
+  `v0.2.0-phase-1b`; optional `v0.1.0-phase-1a` für die abgeschlossene
+  Phase 1a nachziehen.
+
+## 2026-05-12 (Phase 1b Step 5b — `pull`/`verify` auf Dispatcher + Replay-Cache umgestellt)
+- **Step 5b abgeschlossen.** `speccify pull` und `speccify verify` rufen
+  jetzt den Codegen-Dispatcher `speccify_core.render_for_target(spec,
+  target, llm_client=...)` statt direkt den Stub-Adapter. Für
+  `target == "react"` wird ein `ReplayCacheClient` über dem eingecheckten
+  Cache (`tests/fixtures/llm-cache/`) eingespeist.
+- **Neue CLI-Flags** auf `pull` und `verify`:
+  - `--offline/--no-offline` (Default `--offline`): Cache-Miss → Exit 1
+    mit klarer Fehlermeldung, kein Live-Bedrock-Call.
+  - `--cache-dir <pfad>`: überschreibt Default und Env-Var
+    `SPECCIFY_CACHE_DIR`. Default ist der repo-lokale Cache-Pfad
+    `tests/fixtures/llm-cache/` (in `cli/src/speccify_cli/commands/_llm_client.py`).
+- **Gemeinsamer Helper** `speccify_cli.commands._llm_client`
+  (`resolve_cache_dir`, `build_replay_client`) — `pull` und `verify`
+  teilen sich Pfad-Resolution und Client-Bau. `inner`-Hook für späteren
+  Live-Fallback ist vorgesehen, aber in 5b nicht verdrahtet (Live-
+  Aufnahme bleibt `scripts/record_llm_cache.py`).
+- **Lockfile schreibt `LlmGeneratorPin`** pro Spec bei `pull`:
+  `provider=bedrock`, `model=bedrock/eu.anthropic.claude-opus-4-7`,
+  `prompt_version=0.1.0`, `seed=1`,
+  `cache_key=sha256:<digest(spec_sha256+target+model+prompt_version+seed)>`.
+  Helper-Methode `Lockfile.with_generator(spec_id, generator)` neu in
+  `core/src/speccify_core/lockfile.py` (gemeinsam mit
+  `with_generated_files` über interne `_replace_entry`-Hilfe).
+- **`verify` prüft Pin-Konsistenz**: Modell-/Prompt-Version-/Seed-/
+  Cache-Key-Drift zwischen Lockfile-`LlmGeneratorPin` und Re-Render-
+  `cache_key` werden als separate Problem-Strings gemeldet (zusätzlich
+  zu den bestehenden Spec-Hash- und Disk-Hash-Checks).
+- **example-project regeneriert**: alte `*.md`-Stub-Outputs entfernt;
+  `out/org/Button.tsx`, `out/org/ContactForm.tsx`,
+  `out/org/OnboardingWizard.tsx` neu generiert (alle 3 aus Replay-Cache,
+  byte-identisch reproduzierbar). `speccify.lock` enthält nun für jede
+  Spec einen LLM-Pin mit `cache_key`. `speccify verify` läuft grün.
+- **Tests neu/erweitert** (9 neu):
+  - `cli/tests/test_pull.py` (5): TSX-Output + Lockfile-Pin, Determinismus
+    (zwei `pull`-Aufrufe → byte-identisch), Fail ohne Lockfile,
+    Target-Mismatch, Cache-Miss bei leerem `--cache-dir`.
+  - `cli/tests/test_verify.py` (6): Happy-Path, Disk-Drift,
+    Fail ohne Lockfile, Fail ohne `pull`, Modell-Drift (manuell editiertes
+    Lockfile), Cache-Miss bei leerem `--cache-dir`.
+- **Verifikation**: `uv run pytest` → **134 grün**, `uv run ruff check .`
+  clean, `uv run ruff format .` clean. `mypy` zeigt Vor-Bestands-Fehler
+  in `cli/tests/test_init.py`, `core/tests/test_bedrock_client.py` und
+  `core/tests/test_lockfile.py` — **nicht von Step 5b verursacht** (in
+  ungetauchten Test-Dateien aus Step 1/5a, bestehender Drift seit Step 5a-
+  Status-Doku "mypy clean" behauptete). Wird in Step 5c bzw. separat
+  bereinigt.
+- **Nächster Schritt** (Step 5c): CI-Workflow um E2E-Smoke
+  `init` + `add` + `pull --offline` + `verify --offline` erweitern;
+  `record_llm_cache.py` im `README.md` dokumentieren. Danach Step 6
+  (Master-Plan-Sync + Tag `v0.2.0-phase-1b`).
+
+## 2026-05-08 (Phase 1b Step 5a — Provider-Switch: Anthropic → AWS Bedrock + Live-Aufnahme)
+- **User-Entscheidung**: firmenweit nutzen wir AWS Bedrock statt der direkten
+  Anthropic-API (`toshpy`, `himi-ai` als Referenz). Phase 1b stellt komplett
+  auf Bedrock um, bevor Step 5b startet.
+- **Ersetzt**: `speccify_core.codegen.anthropic_client.AnthropicClient` → neuer
+  `speccify_core.codegen.bedrock_client.BedrockClient` (frozen dataclass) mit
+  Lazy-Import von `boto3`, Provider-Präfix-Strip (`bedrock/...`) +
+  Date-Suffix-Strip, Single-Shot `bedrock-runtime.converse`,
+  deterministischer Text-Block-Extraktion aus `output.message.content`. AWS-
+  Credentials via Standard-Chain (`AWS_REGION` / `AWS_ACCESS_KEY_ID` /
+  `AWS_SECRET_ACCESS_KEY` / `AWS_PROFILE`); `region` optional am Client.
+- **Bedrock-Spezifika**:
+  - `seed` nicht durchgereicht (kennt `converse` nicht).
+  - `temperature` bewusst **weggelassen** — `eu.anthropic.claude-opus-4-7`
+    lehnt das Feld als deprecated mit `ValidationException` ab (initialer
+    Run hatte `temperature: 0.0` und 6/6 Specs schlugen fehl). Determinismus
+    kommt aus dem Replay-Cache.
+  - Modell-Pin in `react_llm.py` von `anthropic/claude-sonnet-4.5@2026-03-01`
+    auf `bedrock/eu.anthropic.claude-opus-4-7` umgestellt (Standard-Modell
+    aus `toshpy/.env`).
+- **Optional-Dep**: `anthropic>=0.34` → `boto3>=1.35`; Extras umbenannt von
+  `[anthropic]` auf `[bedrock]` (Sub-Paket `core/pyproject.toml` +
+  Workspace-Root `pyproject.toml`).
+- **Recorder umgestellt** (`scripts/record_llm_cache.py`): Live-Client jetzt
+  `BedrockClient`, AWS-Credential-Check (`AWS_ACCESS_KEY_ID` oder
+  `AWS_PROFILE`) statt `ANTHROPIC_API_KEY`. Eingebauter minimaler
+  `_load_dotenv` (ohne `python-dotenv`-Dep): liest `.env` am Repo-Root,
+  setzt Vars nur falls nicht bereits exportiert (Shell wins). `.env` aus
+  `toshpy` nach Repo-Root kopiert (`.gitignore` deckte `.env` bereits ab,
+  daher keine Versehensgefahr).
+- **Tests**: `core/tests/test_anthropic_client.py` (7 Tests) entfernt, neu
+  `core/tests/test_bedrock_client.py` mit 10 Tests (Provider/Date-Strip,
+  fehlendes `boto3`, Text-Block-Extraktion via Fake-boto3,
+  Region-Durchreichung, Default-Chain-Pfad, Schema-Fehler, leere
+  Text-Blöcke, Exception-Wrapping).
+- **Live-Aufnahme erfolgreich**: `uv sync --extra bedrock` +
+  `uv run python scripts/record_llm_cache.py` → 6/6 Cache-Einträge unter
+  `tests/fixtures/llm-cache/` (~36 KB total) live via Bedrock `converse`
+  rekorded und eingecheckt. Erste Iteration schlug an deprecated
+  `temperature` ab, zweite (ohne `temperature`) lief sauber durch.
+- **Verifikation**: `uv run pytest` 131 grün (120 alt + 10 neu + 1
+  Lockfile-Korrektur unverändert), `ruff check`, `ruff format`,
+  `mypy core/src cli/src` alle clean.
+- Plan-/AGENTS-Sync: Step 5a in `phase-1b-react-codegen.md` auf Bedrock
+  umformuliert + abgehakt (inkl. Live-Aufnahme); Sub-Step 5b nun unblocked.
+
+## 2026-05-07 (Phase 1b Step 5a-Fix — Workspace-Extra `anthropic`)
+- **Bugfix für Live-Aufnahme**: `uv sync --extra anthropic` schlug am Repo-Root
+  mit `Extra `anthropic` is not defined in the project's `optional-dependencies`
+  table` fehl, weil das Extra nur im Sub-Paket `core/pyproject.toml` deklariert
+  war, `uv sync` am Workspace-Root aber das Root-`pyproject.toml` konsultiert.
+- Fix: `[project.optional-dependencies]` im Root-`pyproject.toml` ergänzt mit
+  `anthropic = ["speccify-core[anthropic]"]` — spiegelt das Sub-Paket-Extra auf
+  Workspace-Ebene, sodass der im Phasen-Plan/AGENTS-Anleitung dokumentierte
+  Aufruf `uv sync --extra anthropic` direkt funktioniert. CI-Default
+  (`uv sync` ohne Extra) bleibt unverändert.
+- Verifikation: `uv sync --extra anthropic` installiert `anthropic`, `httpx`,
+  `pydantic` etc. sauber; `uv run pytest` 127 grün; `ruff`/`mypy` clean.
+- **Maintainer kann jetzt aufnehmen**:
+  ```
+  uv sync --extra anthropic
+  ANTHROPIC_API_KEY=sk-... uv run python scripts/record_llm_cache.py
+  ```
+
 ## 2026-05-07 (Phase 1b Step 5a — Live-`AnthropicClient` + Recorder-Skript)
 - **Step 5a abgeschlossen**: neuer Live-Adapter
   `speccify_core.codegen.anthropic_client.AnthropicClient` (frozen

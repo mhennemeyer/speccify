@@ -2,9 +2,9 @@
 
 ## Meta
 - **Typ:** Code
-- **Phase:** Phase 1b Step 5a (Live-`AnthropicClient` + `record_llm_cache.py`) abgeschlossen — bereit für Maintainer-Live-Aufnahme der Cache-Fixtures, danach Step 5b (`pull`/`verify` auf Dispatcher umstellen). Phase 1a abgeschlossen.
+- **Phase:** Phase 1b Step 5c abgeschlossen — CI deckt End-to-End beide Pfade ab (`example-project` + frischer `init`+`add`+`lock`+`pull --offline`+`verify --offline` aus `tmp`), README dokumentiert Smoke + `record_llm_cache.py`. Step 6 (Master-Plan-Sync + Tag-Vorschlag `v0.2.0-phase-1b`) ist als Nächstes dran.
 - **Priorität:** Mittel
-- **Zuletzt aktualisiert:** 2026-05-07
+- **Zuletzt aktualisiert:** 2026-05-13
 
 ## Beschreibung
 Spec-First-Plattform für sprach-/framework-unabhängige Komponenten-Spezifikationen.
@@ -36,27 +36,50 @@ Fundament für alle weiteren Phasen.
       `LlmClient`-Protokoll + `ReplayCacheClient`-Wrapper mit `bind_key`-Vertrag).
       15 neue Tests grün, 100 Tests gesamt, ruff/format/mypy clean.
 - [x] Phase 1b Step 4 — React-LLM-Adapter (`speccify_core.codegen.react_llm`)
-      mit Anthropic-Pin (Claude Sonnet 4.5), Prompt-Template, minimaler
-      Normalisierung, Klammer-Heuristik für TSX-Validität, PascalCase-Output
-      (`<scope>/<Name>.tsx`); Dispatcher `render_for_target` + `TargetRender` +
-      `SUPPORTED_TARGETS=("react",)`; Re-Exports in `speccify_core.__init__`.
-      20 neue Tests grün, 120 Tests gesamt, ruff/format/mypy clean. `pull`/`verify`
-      bleiben in Step 4 noch beim Stub — Umstellung ist Step-5-Aufgabe.
-- [x] Phase 1b Step 5a — Live-`AnthropicClient`
-      (`speccify_core.codegen.anthropic_client`) mit Lazy-Import des
-      `anthropic` SDK + Provider/Date-Stripping, `anthropic>=0.34` als
-      optional-Dep `speccify-core[anthropic]`, Maintainer-Skript
-      `scripts/record_llm_cache.py` (idempotent, walks
-      `registry-fixtures/<scope>/<name>/<version>/`). 7 neue Tests grün
-      (Modell-Stripping, leerer API-Key, fehlendes SDK, Text-Block-Extraktion
-      via Fake-SDK), 127 Tests gesamt, ruff/format/mypy clean.
-- [ ] Phase 1b Step 5b — `pull`/`verify` auf `render_for_target` umstellen,
-      `--offline` + `--cache-dir` Flags, `LlmGeneratorPin` ins Lockfile,
-      Tests auf TSX migrieren. **Voraussetzung:** Live-Cache-Aufnahme durch
-      Maintainer.
-- [ ] Phase 1b Step 5c — CI-Workflow um E2E-Smoke
-      (`init` + `add` + `pull --offline` + `verify --offline`) erweitern,
-      `record_llm_cache.py` in `README.md` dokumentieren.
+      mit LLM-Pin, Prompt-Template, minimaler Normalisierung, Klammer-Heuristik
+      für TSX-Validität, PascalCase-Output (`<scope>/<Name>.tsx`); Dispatcher
+      `render_for_target` + `TargetRender` + `SUPPORTED_TARGETS=("react",)`;
+      Re-Exports in `speccify_core.__init__`. 20 neue Tests grün, 120 Tests
+      gesamt, ruff/format/mypy clean. `pull`/`verify` bleiben in Step 4 noch
+      beim Stub — Umstellung ist Step-5-Aufgabe.
+- [x] Phase 1b Step 5a — **Provider-Switch von Anthropic auf AWS Bedrock**
+      (firmenweite Default-Infrastruktur). Live-`BedrockClient`
+      (`speccify_core.codegen.bedrock_client`) via `boto3` `converse`,
+      Modell-Pin `bedrock/eu.anthropic.claude-opus-4-7` (`eu-central-1`),
+      `temperature` weggelassen (deprecated für Opus-4-7),
+      Standard-AWS-Credential-Chain. `boto3>=1.35` als optional-Dep
+      `speccify-core[bedrock]` (+ Workspace-Mirror). Maintainer-Skript
+      `scripts/record_llm_cache.py` umgestellt, eingebauter `.env`-Loader.
+      10 neue Tests in `core/tests/test_bedrock_client.py` (Modell-Strip,
+      fehlendes `boto3`, Text-Block-Extraktion via Fake-boto3, Region,
+      Default-Chain, Schema-Fehler, Exception-Wrapping). **Live-Aufnahme
+      erfolgreich**: 6/6 Cache-Einträge unter `tests/fixtures/llm-cache/`
+      (~36 KB) eingecheckt. 131 Tests grün, ruff/format/mypy clean.
+- [x] Phase 1b Step 5b — `pull`/`verify` umgestellt auf
+      `render_for_target(spec, target, llm_client=...)`. Neue Flags
+      `--offline/--no-offline` (Default offline) und `--cache-dir`
+      (Default-Repo-Pfad `tests/fixtures/llm-cache`, Env-Override
+      `SPECCIFY_CACHE_DIR`) auf `pull` und `verify`. Gemeinsamer Helper
+      `speccify_cli.commands._llm_client.build_replay_client`. `pull`
+      schreibt `LlmGeneratorPin` (`provider=bedrock`, `model`,
+      `prompt_version`, `seed`, `cache_key=sha256:<digest>`) pro Spec
+      ins Lockfile. `verify` prüft Modell-/Prompt-/Seed-/Cache-Key-Drift
+      gegen Re-Render und meldet harte Cache-Misses. Neue Helper-Methode
+      `Lockfile.with_generator(spec_id, generator)`. example-project
+      regeneriert: 3 TSX-Dateien (`org/Button.tsx`, `org/ContactForm.tsx`,
+      `org/OnboardingWizard.tsx`), Lockfile enthält LLM-Pins. 9 neue
+      CLI-Tests (5 `test_pull.py` inkl. Determinismus + offline-Miss,
+      6 `test_verify.py` inkl. Modell-Drift + Disk-Drift). **134 Tests
+      grün**, ruff/format clean.
+- [x] Phase 1b Step 5c — CI-Workflow um E2E-Smoke erweitert: bestehender
+      `example-project`-Step nutzt explizit `--offline` für `pull`/`verify`;
+      neuer Step `init + add + lock + pull + verify` läuft in `mktemp -d`
+      gegen `registry-fixtures/` und `tests/fixtures/llm-cache/` (Binary
+      direkt aus `.venv/bin/speccify`, weil `uv run` aus fremder CWD den
+      Workspace-Kontext verliert). `README.md` erweitert um End-to-End-
+      Smoke und Maintainer-Doku zu `scripts/record_llm_cache.py`. Lokal
+      1:1 nachgestellt — beide Smoke-Pfade grün. 134 Tests grün,
+      ruff/format clean.
 - [ ] Phase 1b Step 6 — Master-Plan-Sync + Tag-Vorschlag `v0.2.0-phase-1b`.
 - [ ] Optional: annotated Tag `v0.1.0-phase-1a` setzen (Phase 1a abgeschlossen).
 - [x] Phasen-Plan `.agent/plans/phase-1b-react-codegen.md` geschrieben

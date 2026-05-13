@@ -8,7 +8,8 @@ Live-LLM-Call nötig ist.
 Determinismus-Strategie:
 - **Modell-Pin**: Modell-String + `prompt_version` + `seed` sind hart verdrahtet
   und fließen in den Cache-Key ein. Provider-Switch ist bewusst auf 1c+
-  vertagt — Anthropic Claude Sonnet 4.5 ist der einzige Pfad in 1b.
+  vertagt — AWS Bedrock (`eu.anthropic.claude-opus-4-7`) ist der einzige Pfad
+  in 1b. Firmenweit nutzen wir Bedrock statt der direkten Anthropic-API.
 - **Normalisierung**: Trailing-Whitespace strippen, CRLF→LF, finale Newline
   erzwingen. Keine Quote-/Import-Normalisierung in 1b (User-Entscheidung,
   Plan-Open-Question 2).
@@ -31,8 +32,8 @@ from speccify_core.registry import Spec
 
 # --- Pin-Konstanten (single source of truth für Lockfile-Generator-Pin) -------
 
-PROVIDER: str = "anthropic"
-MODEL: str = "anthropic/claude-sonnet-4.5@2026-03-01"
+PROVIDER: str = "bedrock"
+MODEL: str = "bedrock/eu.anthropic.claude-opus-4-7"
 PROMPT_VERSION: str = "0.1.0"
 DEFAULT_SEED: int = 1
 TARGET: str = "react"

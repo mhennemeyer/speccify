@@ -1,0 +1,10 @@
+{
+  "key": {
+    "model": "bedrock/eu.anthropic.claude-opus-4-7",
+    "prompt_version": "0.1.0",
+    "seed": 1,
+    "spec_sha256": "36034506959357104e7b3b1ed9fed9831bf156a1e4983dd191125e898cc51266",
+    "target": "react"
+  },
+  "response": "import React from 'react';\n\nexport interface HttpApiClientProps {\n  base_url: string;\n  timeout_ms?: number;\n  max_retries?: number;\n  auth_token?: string;\n  onRequestStarted?: (payload: { method: 'GET' | 'POST'; path: string }) => void;\n  onRequestSucceeded?: (payload: { status: number; duration_ms: number }) => void;\n  onRequestFailed?: (payload: { reason: 'timeout' | 'network' | 'http_4xx' | 'http_5xx'; status: number }) => void;\n}\n\nconst HttpApiClient: React.FC<HttpApiClientProps> = ({\n  base_url,\n  timeout_ms = 10000,\n  max_retries = 3,\n  auth_token,\n}) => {\n  return (\n    <div data-component=\"HttpApiClient\">\n      <div>base_url: {base_url}</div>\n      <div>timeout_ms: {timeout_ms}</div>\n      <div>max_retries: {max_retries}</div>\n      <div>auth_token: {auth_token ? 'set' : 'unset'}</div>\n    </div>\n  );\n};\n\nexport default HttpApiClient;"
+}

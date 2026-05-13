@@ -12,9 +12,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-# Live-Anthropic-Pfad nur für Maintainer (`scripts/record_llm_cache.py`); CI
+# Live-Bedrock-Pfad nur für Maintainer (`scripts/record_llm_cache.py`); CI
 # läuft offline gegen den Replay-Cache und braucht das SDK nicht.
-anthropic = ["anthropic>=0.34"]
+bedrock = ["boto3>=1.35"]
 
 [build-system]
 requires = ["hatchling"]

@@ -1,13 +1,13 @@
 """`speccify verify`: schließt den Reproduzierbarkeits-Kreis.
 
-Phase 1a:
-- Liest Manifest und Lockfile.
-- Re-resolved Manifest gegen die Registry und vergleicht (id, version, sha256, target).
-- Re-rendered jede Spec in einem Temp-Verzeichnis und vergleicht Output-Hashes mit
-  `generated_files_sha256` aus dem Lockfile.
-- Liest die tatsächlichen Output-Dateien aus `--out` und prüft, dass sie mit den
-  Lockfile-Hashes übereinstimmen (Drift-Detection).
-- Exit 0 nur, wenn *alle* Vergleiche grün sind; sonst Exit 1 mit Liste der Probleme.
+Phase 1b Step 5b:
+- Re-render läuft über den Codegen-Dispatcher `render_for_target`, der für
+  `target == "react"` einen `ReplayCacheClient` braucht (Default: eingecheckter
+  Replay-Cache; Override via `--cache-dir`/`SPECCIFY_CACHE_DIR`).
+- Neue Flags `--offline/--no-offline` und `--cache-dir` analog zu `pull`.
+- Zusätzlich wird der Generator-Pin pro LLM-Eintrag verifiziert: `model`,
+  `prompt_version`, `seed` und `cache_key` müssen mit dem aktuellen
+  Re-Render-Lauf übereinstimmen — verhindert Modell-/Prompt-Drift.
 """
 
 from __future__ import annotations
@@ -17,15 +17,19 @@ from pathlib import Path
 
 import typer
 from speccify_core import (
+    CacheMissError,
+    CodegenError,
+    LlmGeneratorPin,
     Lockfile,
     LockfileError,
     Resolver,
     ResolverError,
+    render_for_target,
 )
-from speccify_core.codegen import render_to_files
 from speccify_core.manifest import ManifestError
 from speccify_core.registry import RegistryError, Version
 
+from speccify_cli.commands._llm_client import build_replay_client
 from speccify_cli.commands._workspace import WorkspaceContext
 
 
@@ -33,6 +37,9 @@ def run_verify(
     project_dir: Path,
     out_dir: Path,
     registry_override: Path | None = None,
+    *,
+    offline: bool = True,
+    cache_dir: Path | None = None,
 ) -> list[str]:
     """Gibt eine Liste von Problemen zurück. Leere Liste = grün."""
     problems: list[str] = []
@@ -72,14 +79,49 @@ def run_verify(
                 f"Lockfile={entry.sha256}, neu berechnet={resolution.spec_sha256}."
             )
 
-    # 2) Re-rendere jede Spec und vergleiche Output-Hashes.
+    # 2) Re-rendere jede Spec und vergleiche Output-Hashes + Generator-Pin.
+    llm_client = build_replay_client(offline=offline, cache_dir=cache_dir)
     for entry in lockfile.entries:
         try:
             spec = ctx.registry.fetch(entry.id, Version.parse(entry.version))
         except RegistryError as exc:
             problems.append(str(exc))
             continue
-        rendered = render_to_files(spec, lockfile.target)
+        try:
+            rendered = render_for_target(spec, lockfile.target, llm_client=llm_client)
+        except (CacheMissError, CodegenError) as exc:
+            problems.append(f"Re-Render für {entry.id}@{entry.version} fehlgeschlagen: {exc}")
+            continue
+
+        # Generator-Pin-Konsistenz für LLM-Einträge.
+        if isinstance(entry.generator, LlmGeneratorPin):
+            if rendered.cache_key is None:
+                problems.append(
+                    f"Generator-Pin-Drift für {entry.id}: Lockfile=llm, Re-Render=template."
+                )
+            else:
+                expected_cache_key = f"sha256:{rendered.cache_key.digest()}"
+                if entry.generator.model != rendered.cache_key.model:
+                    problems.append(
+                        f"Modell-Drift für {entry.id}: Lockfile={entry.generator.model}, "
+                        f"Re-Render={rendered.cache_key.model}."
+                    )
+                if entry.generator.prompt_version != rendered.cache_key.prompt_version:
+                    problems.append(
+                        f"Prompt-Version-Drift für {entry.id}: "
+                        f"Lockfile={entry.generator.prompt_version}, "
+                        f"Re-Render={rendered.cache_key.prompt_version}."
+                    )
+                if entry.generator.seed != rendered.cache_key.seed:
+                    problems.append(
+                        f"Seed-Drift für {entry.id}: Lockfile={entry.generator.seed}, "
+                        f"Re-Render={rendered.cache_key.seed}."
+                    )
+                if entry.generator.cache_key != expected_cache_key:
+                    problems.append(
+                        f"Cache-Key-Drift für {entry.id}: Lockfile={entry.generator.cache_key}, "
+                        f"Re-Render={expected_cache_key}."
+                    )
 
         expected = {f.path: f.sha256 for f in entry.generated_files_sha256}
         if not expected:
@@ -89,7 +131,7 @@ def run_verify(
             )
             continue
 
-        rendered_paths = set(rendered.keys())
+        rendered_paths = set(rendered.files.keys())
         expected_paths = set(expected.keys())
         for path in sorted(rendered_paths - expected_paths):
             problems.append(f"Output {path} (re-rendered) nicht im Lockfile.")
@@ -97,7 +139,7 @@ def run_verify(
             problems.append(f"Output {path} (Lockfile) nicht erneut gerendert.")
 
         for path in sorted(rendered_paths & expected_paths):
-            digest = f"sha256:{hashlib.sha256(rendered[path]).hexdigest()}"
+            digest = f"sha256:{hashlib.sha256(rendered.files[path]).hexdigest()}"
             if digest != expected[path]:
                 problems.append(
                     f"Re-Render-Drift für {path}: Lockfile={expected[path]}, neu={digest}."
@@ -144,11 +186,30 @@ def verify_command(
         readable=True,
         help="Optionale Registry-Pfad-Überschreibung.",
     ),
+    offline: bool = typer.Option(  # noqa: B008
+        True,
+        "--offline/--no-offline",
+        help="Nur Replay-Cache benutzen (Default).",
+    ),
+    cache_dir: Path | None = typer.Option(  # noqa: B008
+        None,
+        "--cache-dir",
+        file_okay=False,
+        dir_okay=True,
+        help="Replay-Cache-Pfad (Default: tests/fixtures/llm-cache im Repo "
+        "bzw. $SPECCIFY_CACHE_DIR).",
+    ),
 ) -> None:
     """Prüft, dass Manifest, Lockfile und gerenderte Dateien zueinander passen."""
     project = project_dir or Path.cwd()
     try:
-        problems = run_verify(project, out_dir=out, registry_override=registry)
+        problems = run_verify(
+            project,
+            out_dir=out,
+            registry_override=registry,
+            offline=offline,
+            cache_dir=cache_dir,
+        )
     except (ManifestError, RegistryError, LockfileError, ResolverError, FileNotFoundError) as exc:
         typer.echo(f"✗ speccify verify fehlgeschlagen: {exc}", err=True)
         raise typer.Exit(code=1) from exc
