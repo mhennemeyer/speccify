@@ -2,7 +2,7 @@
 
 ## Meta
 - **Typ:** Code
-- **Phase:** Phase 1b Step 5c abgeschlossen — CI deckt End-to-End beide Pfade ab (`example-project` + frischer `init`+`add`+`lock`+`pull --offline`+`verify --offline` aus `tmp`), README dokumentiert Smoke + `record_llm_cache.py`. Step 6 (Master-Plan-Sync + Tag-Vorschlag `v0.2.0-phase-1b`) ist als Nächstes dran.
+- **Phase:** Phase 1b **abgeschlossen** — Step 6 (Master-Plan-Sync) durch: `speccify-plan.md` markiert Phase 1b als abgeschlossen mit React-LLM/Replay-Cache-Dokumentation, `AGENTS.md` auf Phase 1c umgestellt, status/log synchron. Offen nur noch der **annotated Tag `v0.2.0-phase-1b`** (User soll setzen) und optional `v0.1.0-phase-1a`. Nächste Phase: 1c (MCP-Server).
 - **Priorität:** Mittel
 - **Zuletzt aktualisiert:** 2026-05-13
 
@@ -80,8 +80,10 @@ Fundament für alle weiteren Phasen.
       Smoke und Maintainer-Doku zu `scripts/record_llm_cache.py`. Lokal
       1:1 nachgestellt — beide Smoke-Pfade grün. 134 Tests grün,
       ruff/format clean.
-- [ ] Phase 1b Step 6 — Master-Plan-Sync + Tag-Vorschlag `v0.2.0-phase-1b`.
+- [x] Phase 1b Step 6 — Master-Plan-Sync: `speccify-plan.md` markiert Phase 1b als abgeschlossen (React-LLM/Bedrock/Replay-Cache + `pull`/`verify --offline` + CI-E2E), `AGENTS.md` „Aktuelle Phase" auf 1c umgestellt, Phasen-Plan-Step 5c + 6 abgehakt. Tag `v0.2.0-phase-1b` als Vorschlag an User offen (nicht selbst gesetzt).
+- [ ] **User-Action**: annotated Tag `v0.2.0-phase-1b` setzen.
 - [ ] Optional: annotated Tag `v0.1.0-phase-1a` setzen (Phase 1a abgeschlossen).
+- [ ] **Nächste Phase 1c** — MCP-Server, der `speccify_core` ans MCP-Protokoll bindet (`resolve`/`search`/`render`/`validate`/`lock`/`verify`). Phasen-Plan noch zu schreiben.
 - [x] Phasen-Plan `.agent/plans/phase-1b-react-codegen.md` geschrieben
       (LLM-Codegen mit Replay-Cache, minimaler `init`, TSX mit Props/Types).
 - [x] Phase 1a Step 5 — `speccify verify`, `lint`-Anpassung, CI-Step (E2E im

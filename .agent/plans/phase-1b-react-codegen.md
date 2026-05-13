@@ -263,14 +263,15 @@ scripts/record_llm_cache.py           # NEU, manueller Run
 - [x] `example-project/`-E2E aktualisiert: alte Stub-`.md`-Outputs entfernt, 3 TSX-Dateien (`out/org/Button.tsx`, `out/org/ContactForm.tsx`, `out/org/OnboardingWizard.tsx`) regeneriert; `speccify.lock` enthält LLM-Pins; `speccify verify` läuft grün.
 - [x] Status/Log/Plan-Sync (siehe `.agent/log.md` Eintrag 2026-05-12, `.agent/status.md`, `.agent/resume.md`).
 
-#### Sub-Step 5c — CI
-- [ ] CI-Workflow `.github/workflows/ci.yml`: E2E-Smoke `init` (tmp) + `add` + `pull --offline` + `verify --offline`.
-- [ ] `scripts/record_llm_cache.py` in `README.md` dokumentiert.
+#### Sub-Step 5c — CI ✅
+- [x] CI-Workflow `.github/workflows/ci.yml`: bestehender `example-project`-Step explizit auf `--offline` für `pull`/`verify`; neuer Step `speccify init + add + pull + verify smoke (offline)` legt in `mktemp -d` ein frisches Projekt an (`init` → `add @org/button --registry registry-fixtures` → `lock` → `pull --offline --cache-dir tests/fixtures/llm-cache` → `verify --offline`). Binary wird direkt aus `$GITHUB_WORKSPACE/.venv/bin/speccify` aufgerufen, weil `uv run` aus fremder CWD den Workspace-Kontext verliert.
+- [x] `README.md` um Abschnitt "End-to-End Smoke (offline)" (example-project + frisches Projekt) und "Replay-Cache neu aufnehmen (Maintainer)" erweitert; `scripts/record_llm_cache.py` mit Voraussetzungen (`uv sync --extra bedrock`, AWS-Credentials via Env/.env) und `--force` dokumentiert.
+- [x] Lokale 1:1-Nachstellung der CI-Sequenz: beide Smoke-Pfade grün, `out/org/Button.tsx` im frischen Pfad erzeugt; 134 Tests grün, ruff/format clean.
 
-### Step 6 — Master-Plan-Sync + Tag
-- [ ] `speccify-plan.md`: Phase 1b auf "abgeschlossen" markieren, React-LLM-Strategie + Replay-Cache-Ansatz dokumentieren.
-- [ ] `AGENTS.md` "Aktuelle Phase" auf 1c umstellen.
-- [ ] `.agent/status.md` + `.agent/log.md` synchronisieren.
+### Step 6 — Master-Plan-Sync + Tag ✅
+- [x] `speccify-plan.md`: Phase 1b auf "abgeschlossen" markieren, React-LLM-Strategie (Bedrock-Modell-Pin `bedrock/eu.anthropic.claude-opus-4-7`) + Replay-Cache-Ansatz dokumentieren.
+- [x] `AGENTS.md` "Aktuelle Phase" auf 1c umstellen.
+- [x] `.agent/status.md` + `.agent/log.md` synchronisieren.
 - [ ] Vorschlag annotated Tag `v0.2.0-phase-1b` an User (nicht selbst setzen).
 
 ### Open Questions (vor Step 4 geklärt)

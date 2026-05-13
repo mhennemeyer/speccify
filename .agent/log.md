@@ -1,5 +1,37 @@
 # Log: Speccify
 
+## 2026-05-13 (Phase 1b Step 6 — Master-Plan-Sync + Phase-1b-Abschluss)
+- **Step 6 abgeschlossen, Phase 1b damit komplett.** Sync der Plan-Dokumente
+  nach dem Step-5c-Commit; keine Code-Änderungen.
+- **`.agent/plans/speccify-plan.md`**: Phase 1b in der Sub-Spike-Liste auf
+  "abgeschlossen 2026-05-13" gesetzt; React-LLM-Strategie (Bedrock-Modell
+  `bedrock/eu.anthropic.claude-opus-4-7` via `converse`, Reproduzierbarkeit
+  durch Replay-Cache mit Cache-Key über `spec_sha256 + target + model +
+  prompt_version + seed`, Lockfile-Generator-Pin um `kind: llm` erweitert,
+  `pull`/`verify --offline/--cache-dir`, CI-E2E gegen `tests/fixtures/llm-cache/`,
+  `scripts/record_llm_cache.py` als Maintainer-Tool) im Plan inline dokumentiert.
+  Phase 1c als "nächster Schritt" markiert. Tag-Vorschlag `v0.2.0-phase-1b`
+  im Plan vermerkt.
+- **`AGENTS.md`** "Aktuelle Phase" auf "Phase 1b abgeschlossen, Phase 1c
+  als nächste" umgestellt; Tag-Vorschläge `v0.2.0-phase-1b` und optional
+  `v0.1.0-phase-1a` aufgeführt.
+- **`.agent/plans/phase-1b-react-codegen.md`**: Sub-Step 5c und Step 6
+  abgehakt (drei `[x]`-Bullets unter Step 6 für Plan-/AGENTS-/Sync-Arbeit;
+  Tag-Bullet bewusst `[ ]`, da User-Action).
+- **`.agent/status.md`**: Meta-Phase auf "Phase 1b abgeschlossen" gesetzt;
+  Step-6-Bullet als `[x]` markiert; offene `[ ]`-Punkte: User-Tag-Setzung
+  `v0.2.0-phase-1b`, optional `v0.1.0-phase-1a`, Phase-1c-Plan schreiben.
+- **Verifikation**: `uv run pytest` → 134 grün, `uv run ruff check .` und
+  `uv run ruff format --check .` clean (Plan-Sync ist Doku-only, kein
+  Code-Drift erwartet).
+- **Tag-Vorschlag an User**: `git tag -a v0.2.0-phase-1b -m "Phase 1b:
+  React-LLM-Codegen + speccify init + Replay-Cache + pull/verify --offline + CI-E2E"`
+  (bewusst nicht selbst gesetzt — `rules.md` "Ein Prompt = ein Commit",
+  Tagging ist User-Entscheidung).
+- **Nächster Schritt**: Phasen-Plan `phase-1c-mcp-server.md` skizzieren
+  (MCP-Server, der `speccify_core` ans Protokoll bindet: `resolve`,
+  `search`, `render`, `validate`, `lock`, `verify`).
+
 ## 2026-05-13 (Phase 1b Step 5c — CI-E2E-Smoke + README-Doku)
 - **Step 5c abgeschlossen.** CI deckt jetzt End-to-End beide Pfade ab:
   bestehendes `example-project/` (`lock` + `pull --offline` + `verify --offline`)

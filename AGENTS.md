@@ -14,9 +14,9 @@ Langfristige Quelle der Wahrheit: [`.agent/plans/speccify-plan.md`](./.agent/pla
 
 ## Aktuelle Phase
 
-**Phase 1b geplant — Phasen-Plan geschrieben, Step 1 (`speccify init`) ist als Nächstes dran. Phase 1a (Resolver + Lockfile + Stub-Codegen + `add`/`lock`/`pull`/`verify`) abgeschlossen.**
+**Phase 1b abgeschlossen (Tag-Vorschlag `v0.2.0-phase-1b`) — React-LLM-Codegen (Bedrock `claude-opus-4-7`) mit Replay-Cache, `speccify init`, `pull`/`verify --offline`, CI-E2E-Smoke. Nächste Phase: 1c (MCP-Server).**
 
-Aktiver Plan: [`.agent/plans/phase-1b-react-codegen.md`](./.agent/plans/phase-1b-react-codegen.md) (LLM-Codegen mit Replay-Cache, `--offline` Flag für CI, minimaler `init`, TSX mit Props/Types). Abgeschlossener Plan: [`.agent/plans/phase-1a-resolver-lockfile.md`](./.agent/plans/phase-1a-resolver-lockfile.md).
+Abgeschlossener Plan (aktuell aktiv für Tag-Setzung & Wrap-up): [`.agent/plans/phase-1b-react-codegen.md`](./.agent/plans/phase-1b-react-codegen.md). Phase 1a (Resolver + Lockfile + Stub-Codegen + `add`/`lock`/`pull`/`verify`): [`.agent/plans/phase-1a-resolver-lockfile.md`](./.agent/plans/phase-1a-resolver-lockfile.md), Tag-Vorschlag `v0.1.0-phase-1a` (optional).
 
 Phase 0 abgeschlossen (Tag `v0.0.0-phase0`): Schema v0, `speccify lint`, 5 Referenz-Specs. Phase 1a-0 (Rebrand `flowcation` → `speccify`, Tag `v0.0.1-speccify-rebrand`) ebenfalls abgeschlossen. Archiviert: [`phase-0-spec-schema-spike.md`](./.agent/plans/archive/phase-0-spec-schema-spike.md), [`phase-0-wrap-up.md`](./.agent/plans/archive/phase-0-wrap-up.md), [`phase-1a0-rename-to-speccify.md`](./.agent/plans/archive/phase-1a0-rename-to-speccify.md).
 
