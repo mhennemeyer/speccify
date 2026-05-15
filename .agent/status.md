@@ -2,9 +2,9 @@
 
 ## Meta
 - **Typ:** Code
-- **Phase:** Phase 1b **abgeschlossen** und getaggt (`v0.1.0-phase-1a` → `d28cb33`, `v0.2.0-phase-1b` → `8c90511`, lokal annotated; kein Git-Remote konfiguriert, also kein Push). **Phase 1c gestartet**: Phasen-Plan `.agent/plans/phase-1c-mcp-server.md` geschrieben (MCP-Server `speccify-mcp` via offizielles `mcp[cli]`-SDK, stdio-only, 6 Tools spiegeln CLI 1:1, offline-CI). Nächster Schritt: Step 0 (SDK-Version pinnen).
+- **Phase:** Phase 1b **abgeschlossen** und getaggt (`v0.1.0-phase-1a` → `d28cb33`, `v0.2.0-phase-1b` → `8c90511`, lokal annotated; kein Git-Remote konfiguriert, also kein Push). **Phase 1c läuft**: Phasen-Plan `.agent/plans/phase-1c-mcp-server.md` aktiv. **Step 0 abgeschlossen** (2026-05-15): `mcp[cli]>=1.27.1,<2.0` in `mcp/pyproject.toml` gepinnt, `uv.lock` aktualisiert, 134 Tests grün, ruff clean. Nächster Schritt: Step 1 (Server-Skeleton `speccify_mcp.cli`/`server.py` + leere `tools/list`).
 - **Priorität:** Mittel
-- **Zuletzt aktualisiert:** 2026-05-13
+- **Zuletzt aktualisiert:** 2026-05-15
 
 ## Beschreibung
 Spec-First-Plattform für sprach-/framework-unabhängige Komponenten-Spezifikationen.
@@ -83,7 +83,7 @@ Fundament für alle weiteren Phasen.
 - [x] Phase 1b Step 6 — Master-Plan-Sync: `speccify-plan.md` markiert Phase 1b als abgeschlossen (React-LLM/Bedrock/Replay-Cache + `pull`/`verify --offline` + CI-E2E), `AGENTS.md` „Aktuelle Phase" auf 1c umgestellt, Phasen-Plan-Step 5c + 6 abgehakt. Tag `v0.2.0-phase-1b` als Vorschlag an User offen (nicht selbst gesetzt).
 - [x] Annotated Tags lokal gesetzt: `v0.1.0-phase-1a` (→ `d28cb33`) und `v0.2.0-phase-1b` (→ `8c90511`). Kein Git-Remote vorhanden → Push entfällt; User kann später `git push --tags` ausführen.
 - [x] Phasen-Plan `.agent/plans/phase-1c-mcp-server.md` geschrieben (MCP-Server `speccify-mcp`, stdio-only, 6 Tools = CLI-1:1, Replay-Cache-offline-CI, Tag-Vorschlag `v0.3.0-phase-1c`).
-- [ ] **Phase 1c Step 0** — `mcp[cli]`-SDK-Version recherchieren + in `mcp/pyproject.toml` pinnen; `uv sync --all-packages` + `uv run pytest` weiter grün.
+- [x] **Phase 1c Step 0** — `mcp[cli]>=1.27.1,<2.0` in `mcp/pyproject.toml` gepinnt (PyPI-Latest 1.27.1, Extra `cli`, `requires_python>=3.10`); `uv sync --all-packages` + `uv.lock` aktualisiert; `uv run pytest` → 134 grün; ruff clean.
 - [ ] Phase 1c Step 1 — Server-Skeleton (`speccify_mcp.cli` + `server.py`) + `tools/list` leer.
 - [ ] Phase 1c Step 2/3 — Read-only Tools (`resolve`/`lint`/`render`) und Write-Tools (`lock`/`pull`/`verify`) mit Cross-Consistency-Test CLI ↔ MCP.
 - [ ] Phase 1c Step 4 — Resources (`spec://`, `speccify://manifest|lockfile`) + Prompt `add-spec`.

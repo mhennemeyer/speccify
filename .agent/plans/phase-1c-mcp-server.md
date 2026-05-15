@@ -135,8 +135,8 @@ Jede Tool-Datei: schmaler Adapter, der Input-Modell (pydantic) validiert, in `sp
 # Implementation Plan
 
 ### Step 0 — Setup & Pin
-- [ ] `mcp[cli]`-Version recherchieren und exakt pinnen (in `mcp/pyproject.toml`).
-- [ ] `uv sync --all-packages` grün, `uv run pytest` weiter 134 grün.
+- [x] `mcp[cli]`-Version recherchieren und exakt pinnen (in `mcp/pyproject.toml`). → PyPI-Latest `mcp 1.27.1` (Extra `cli`, `requires_python>=3.10`); gepinnt auf `mcp[cli]>=1.27.1,<2.0` (SemVer-Major-Korridor; harte Untergrenze auf der heute auf PyPI verfügbaren Version).
+- [x] `uv sync --all-packages` grün, `uv run pytest` weiter 134 grün. → 23 neue Pakete installiert (`mcp==1.27.1` + Transitive: `anyio`, `httpx`, `httpx-sse`, `pydantic` 2.13, `pydantic-settings`, `python-multipart`, `sse-starlette`, `starlette`, `uvicorn`, …), `uv.lock` aktualisiert; 134 Tests grün; ruff + format clean. **Side-Quest** (vgl. Log): `.venv` musste mit `--reinstall` neu gebaut werden wegen präexistierender `_editable_impl_*.pth`-Artefakte ohne Trailing-Newline — kein Repo-Change nötig.
 
 ### Step 1 — Server-Skeleton + `tools/list`
 - [ ] `speccify_mcp.cli:main` mit `--project`/`--log-level`.

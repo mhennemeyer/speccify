@@ -1,5 +1,28 @@
 # Log: Speccify
 
+## 2026-05-15 (Phase 1c Step 0 — `mcp[cli]`-SDK gepinnt)
+- **Step 0 abgeschlossen.** Aktuelle Latest-Version auf PyPI ist
+  `mcp 1.27.1` (mit Extras `cli`, `rich`, `ws`; `requires-python>=3.10`).
+- **`mcp/pyproject.toml`**: `dependencies` um `mcp[cli]>=1.27.1,<2.0`
+  erweitert (kompatibler Major-Korridor laut SemVer; harte Untergrenze
+  auf der aktuell auf PyPI verfügbaren Version).
+- **`uv sync --all-packages`**: 23 neue Pakete installiert (`mcp==1.27.1`
+  + Transitive: `anyio`, `httpx`, `httpx-sse`, `pydantic` 2.13,
+  `pydantic-settings`, `python-multipart`, `sse-starlette`, `starlette`,
+  `uvicorn`, …). `uv.lock` aktualisiert.
+- **Side-Quest**: `.venv` hatte erneut präexistierende Editable-Pakete
+  ohne abschließendes Newline in den `_editable_impl_*.pth`-Dateien
+  (klassisches macOS/iCloud-Artefakt, vgl. Step 5c). Folge: `speccify_cli`/
+  `speccify_mcp` waren nach `uv sync` nicht mehr importierbar, obwohl
+  `uv pip list` sie als installiert anzeigte. Fix: `uv sync
+  --all-packages --reinstall`. Kein Repo-Change nötig, nur als Hinweis.
+- **Verifikation**: `uv run pytest` → **134 grün**; `uv run ruff check .`
+  + `uv run ruff format --check .` clean.
+- **Nächster Schritt** (Step 1): Server-Skeleton in
+  `mcp/src/speccify_mcp/` anlegen (`cli.py` mit `--project`/`--log-level`,
+  `server.py` mit leerem Tool-Registry + Health-Check), Unit-Test:
+  Server instanziierbar und `tools/list` antwortet leer.
+
 ## 2026-05-13 (Tags gesetzt + Phase-1c-Plan angelegt)
 - **Tags lokal gesetzt** (User-Freigabe in diesem Prompt: „Bitte setze
   den Tag und mache ausnahmsweise die aktionen im Git"):

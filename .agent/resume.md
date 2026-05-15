@@ -3,18 +3,22 @@
 > Diese Datei ist der **Single-File-Wiedereinstieg** nach einem Rechner-
 > Neustart. Wenn du als Agent eine neue Session beginnst: lies zuerst
 > `.agent/agent.md`, dann **diese Datei**, dann `.agent/status.md` für
-> den vollen Phasenstand und `.agent/plans/phase-1b-react-codegen.md`
+> den vollen Phasenstand und `.agent/plans/phase-1c-mcp-server.md`
 > für den aktiven Plan.
 
-## Stand 2026-05-12
+## Stand 2026-05-15
 
-- **Aktive Phase:** Phase 1b — React-Codegen.
-- **Letzter abgeschlossener Schritt:** **Step 5b** (`pull`/`verify` auf
-  `render_for_target` umgestellt; `--offline`/`--cache-dir`-Flags;
-  `LlmGeneratorPin` ins Lockfile; Pin-Drift-Checks im `verify`).
-- **Nächster offener Schritt:** **Step 5c** (CI-E2E-Smoke + README-Doku
-  für `record_llm_cache.py`). Danach **Step 6** (Plan-Sync + Tag
-  `v0.2.0-phase-1b`).
+- **Aktive Phase:** Phase 1c — MCP-Server (`speccify-mcp`).
+- **Letzter abgeschlossener Schritt:** **Step 0** (`mcp[cli]>=1.27.1,<2.0`
+  in `mcp/pyproject.toml` gepinnt, `uv.lock` aktualisiert, 134 Tests
+  grün, ruff/format clean).
+- **Nächster offener Schritt:** **Step 1** — Server-Skeleton
+  (`speccify_mcp.cli` mit `--project`/`--log-level`, `server.py` mit
+  leerem Tool-Set + Health-Check) + Unit-Test, der den Server
+  instanziiert und ein leeres `tools/list` zurückbekommt.
+- **Phase 1b ist abgeschlossen und lokal getaggt** (`v0.1.0-phase-1a`
+  → `d28cb33`, `v0.2.0-phase-1b` → `8c90511`). Kein Git-Remote → kein
+  Push.
 
 ## Was läuft grün
 
@@ -24,7 +28,7 @@ uv run ruff check .       # clean
 uv run ruff format .      # clean
 ```
 
-E2E im `example-project/`:
+E2E im `example-project/` (Phase-1b-Smoke, immer noch grün):
 
 ```bash
 cd example-project
@@ -35,26 +39,32 @@ uv run speccify verify --out ./out    # ✓ konsistent
 ```
 
 Default-Cache: `tests/fixtures/llm-cache/` (im Repo eingecheckt, 6
-Einträge aus Step 5a).
+Einträge).
 
-## Bekannte Lose Enden
+## Bekannte lose Enden
 
 - **mypy zeigt Vor-Bestand-Fehler** in:
-  - `cli/tests/test_init.py` (CliRunner-Result-Typing aus Step 1),
+  - `cli/tests/test_init.py` (CliRunner-Result-Typing aus Phase 1b
+    Step 1),
   - `core/tests/test_bedrock_client.py` (Dict-Invarianz, Step 5a),
   - `core/tests/test_lockfile.py:126` (Union-Attribut nach Step 2).
 
-  **Nicht durch Step 5b verursacht** — Status-Doku "mypy clean" war
-  bereits in Step 5a leicht ungenau. In Step 5c (CI) sollten diese
-  Fehler entweder behoben oder mypy auf `core/src cli/src` eingegrenzt
-  werden (so wie es im 5a-Log dokumentiert ist).
+  Nicht durch Phase-1c-Arbeit verursacht. Bei Bedarf in einem
+  Phase-1c-Step gemeinsam mit dem MCP-Test-Setup einsammeln oder
+  `mypy` auf `core/src cli/src mcp/src` eingrenzen.
+- **`.venv`-Artefakt-Falle**: nach `uv sync --all-packages` können
+  präexistierende `_editable_impl_*.pth`-Dateien ohne Trailing-Newline
+  dazu führen, dass `speccify_*` nicht mehr importierbar sind, obwohl
+  `uv pip list` sie zeigt. Fix: `uv sync --all-packages --reinstall`
+  oder `.venv` löschen + neu bauen. Vgl. Log 2026-05-15 + 2026-05-13
+  Step 5c.
 
 ## Wichtige Pfade
 
 | Was | Pfad |
 |---|---|
 | Master-Plan | `.agent/plans/speccify-plan.md` |
-| Aktiver Phasen-Plan | `.agent/plans/phase-1b-react-codegen.md` |
+| Aktiver Phasen-Plan | `.agent/plans/phase-1c-mcp-server.md` |
 | Vollständiger Status | `.agent/status.md` |
 | Session-Log (chronologisch, neuestes oben) | `.agent/log.md` |
 | Replay-Cache (eingecheckt) | `tests/fixtures/llm-cache/` |
@@ -62,50 +72,31 @@ Einträge aus Step 5a).
 | Codegen-Dispatcher | `core/src/speccify_core/codegen/__init__.py` (`render_for_target`) |
 | React-LLM-Adapter | `core/src/speccify_core/codegen/react_llm.py` |
 | Live-Recorder (Bedrock) | `scripts/record_llm_cache.py` |
-| example-project | `example-project/` (jetzt TSX, nicht mehr Markdown) |
+| MCP-Paket (Skeleton folgt in Step 1) | `mcp/src/speccify_mcp/` |
+| example-project | `example-project/` (TSX-Outputs) |
 
-## Worktree-Status beim Verlassen
+## Worktree-Status
 
-`git status -s` (uncommitted):
+Phase-1c-Step-0-Änderungen (uncommitted):
 
 ```
  M .agent/log.md
- M .agent/plans/phase-1b-react-codegen.md
+ M .agent/plans/phase-1c-mcp-server.md
+ M .agent/resume.md
  M .agent/status.md
- M cli/src/speccify_cli/commands/pull.py
- M cli/src/speccify_cli/commands/verify.py
- M cli/tests/test_pull.py
- M cli/tests/test_verify.py
- M core/pyproject.toml
- D core/src/speccify_core/codegen/anthropic_client.py
- M core/src/speccify_core/codegen/react_llm.py
- M core/src/speccify_core/lockfile.py
- D core/tests/test_anthropic_client.py
- M pyproject.toml
- M scripts/record_llm_cache.py
+ M mcp/pyproject.toml
  M uv.lock
-?? .agent/resume.md
-?? cli/src/speccify_cli/commands/_llm_client.py
-?? core/src/speccify_core/codegen/bedrock_client.py
-?? core/tests/test_bedrock_client.py
-?? tests/
 ```
 
-Letzter Commit (auf `main` o. ä.): `4160787 Complete Phase 1b Step 5:
-Implement Anthropic Client for Live LLM Interaction` — d.h. Step 5a
-(Bedrock-Switch + Live-Aufnahme) und Step 5b sind **noch nicht
-committet**. Empfohlener nächster Commit-Schnitt:
-
-1. `feat: switch LLM provider from Anthropic to AWS Bedrock` (Step 5a).
-2. `feat(cli): wire pull/verify to render_for_target with replay cache`
-   (Step 5b).
-3. Danach Step 5c als separater Commit.
+Empfohlener Commit-Schnitt nach Step 0:
+`chore(mcp): pin mcp[cli]>=1.27.1,<2.0 (phase-1c step 0)`.
 
 ## Wiederaufnahme-Rezept
 
-1. `uv sync` (Workspace).
+1. `uv sync --all-packages` (Workspace). Falls Importe nach dem Sync
+   fehlschlagen: `uv sync --all-packages --reinstall`.
 2. `uv run pytest` → muss 134 grün zeigen.
 3. `cat .agent/resume.md` (diese Datei) lesen.
 4. `cat .agent/status.md` für Phasen-Stand.
-5. `cat .agent/plans/phase-1b-react-codegen.md` → Step 5c als
-   nächsten offenen Punkt suchen und starten.
+5. `cat .agent/plans/phase-1c-mcp-server.md` → Step 1 als nächsten
+   offenen Punkt suchen und starten (Skeleton + leeres `tools/list`).

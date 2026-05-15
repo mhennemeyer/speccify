@@ -5,7 +5,10 @@ description = "Speccify MCP server — exposes resolve/search/render/validate to
 requires-python = ">=3.12"
 license = { text = "MIT" }
 authors = [{ name = "Marc Hennemeyer" }]
-dependencies = ["speccify-core"]
+dependencies = [
+    "speccify-core",
+    "mcp[cli]>=1.27.1,<2.0",
+]
 
 [build-system]
 requires = ["hatchling"]
