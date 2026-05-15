@@ -139,9 +139,9 @@ Jede Tool-Datei: schmaler Adapter, der Input-Modell (pydantic) validiert, in `sp
 - [x] `uv sync --all-packages` grün, `uv run pytest` weiter 134 grün. → 23 neue Pakete installiert (`mcp==1.27.1` + Transitive: `anyio`, `httpx`, `httpx-sse`, `pydantic` 2.13, `pydantic-settings`, `python-multipart`, `sse-starlette`, `starlette`, `uvicorn`, …), `uv.lock` aktualisiert; 134 Tests grün; ruff + format clean. **Side-Quest** (vgl. Log): `.venv` musste mit `--reinstall` neu gebaut werden wegen präexistierender `_editable_impl_*.pth`-Artefakte ohne Trailing-Newline — kein Repo-Change nötig.
 
 ### Step 1 — Server-Skeleton + `tools/list`
-- [ ] `speccify_mcp.cli:main` mit `--project`/`--log-level`.
-- [ ] `server.py` registriert leeres Tool-Set + Health-Check.
-- [ ] Unit-Test: Server lässt sich instanziieren; `tools/list` antwortet leer.
+- [x] `speccify_mcp.cli:main` mit `--project`/`--log-level` (Argparse, Env-Fallback `SPECCIFY_PROJECT_ROOT`/`SPECCIFY_LOG_LEVEL`, stderr-Logging via `logging.basicConfig`, ruft `server.run(transport="stdio")`).
+- [x] `server.py` exponiert `ServerConfig` (frozen dataclass mit `project_root`) und `build_server(config)`-Fabrik, die eine `FastMCP`-Instanz (`name="speccify-mcp"`, `instructions` mit Project-Root) ohne registrierte Tools/Resources/Prompts zurückgibt. Console-Script `speccify-mcp = "speccify_mcp.cli:main"` in `mcp/pyproject.toml` eingetragen.
+- [x] Unit-Tests in `mcp/tests/test_server_skeleton.py` (9 Tests): `build_server` liefert benannte Instanz; `tools/list`, `resources/list`, `prompts/list` antworten leer; Parser-Defaults und Argumentparsing; `resolve_project_root` Prioritäten CLI > Env > CWD. Alle 143 Tests grün, ruff/format clean.
 
 ### Step 2 — Tools (read-only): `resolve`, `lint`, `render`
 - [ ] Adapter + Tests pro Tool (Happy + Fehlerpfad).

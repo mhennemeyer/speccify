@@ -2,7 +2,7 @@
 
 ## Meta
 - **Typ:** Code
-- **Phase:** Phase 1b **abgeschlossen** und getaggt (`v0.1.0-phase-1a` → `d28cb33`, `v0.2.0-phase-1b` → `8c90511`, lokal annotated; kein Git-Remote konfiguriert, also kein Push). **Phase 1c läuft**: Phasen-Plan `.agent/plans/phase-1c-mcp-server.md` aktiv. **Step 0 abgeschlossen** (2026-05-15): `mcp[cli]>=1.27.1,<2.0` in `mcp/pyproject.toml` gepinnt, `uv.lock` aktualisiert, 134 Tests grün, ruff clean. Nächster Schritt: Step 1 (Server-Skeleton `speccify_mcp.cli`/`server.py` + leere `tools/list`).
+- **Phase:** Phase 1b **abgeschlossen** und getaggt (`v0.1.0-phase-1a` → `d28cb33`, `v0.2.0-phase-1b` → `8c90511`, lokal annotated; kein Git-Remote konfiguriert, also kein Push). **Phase 1c läuft**: Phasen-Plan `.agent/plans/phase-1c-mcp-server.md` aktiv. **Steps 0 + 1 abgeschlossen** (2026-05-15): SDK `mcp[cli]>=1.27.1,<2.0` gepinnt; Server-Skeleton `speccify_mcp.cli`/`server.py` mit `FastMCP`, `ServerConfig`, leerem Tool-/Resource-/Prompt-Set, Console-Script `speccify-mcp`, 9 neuen Unit-Tests; **143 Tests grün**, ruff/format clean. Nächster Schritt: Step 2 (Read-only Tools `resolve`/`lint`/`render`).
 - **Priorität:** Mittel
 - **Zuletzt aktualisiert:** 2026-05-15
 
@@ -84,7 +84,7 @@ Fundament für alle weiteren Phasen.
 - [x] Annotated Tags lokal gesetzt: `v0.1.0-phase-1a` (→ `d28cb33`) und `v0.2.0-phase-1b` (→ `8c90511`). Kein Git-Remote vorhanden → Push entfällt; User kann später `git push --tags` ausführen.
 - [x] Phasen-Plan `.agent/plans/phase-1c-mcp-server.md` geschrieben (MCP-Server `speccify-mcp`, stdio-only, 6 Tools = CLI-1:1, Replay-Cache-offline-CI, Tag-Vorschlag `v0.3.0-phase-1c`).
 - [x] **Phase 1c Step 0** — `mcp[cli]>=1.27.1,<2.0` in `mcp/pyproject.toml` gepinnt (PyPI-Latest 1.27.1, Extra `cli`, `requires_python>=3.10`); `uv sync --all-packages` + `uv.lock` aktualisiert; `uv run pytest` → 134 grün; ruff clean.
-- [ ] Phase 1c Step 1 — Server-Skeleton (`speccify_mcp.cli` + `server.py`) + `tools/list` leer.
+- [x] **Phase 1c Step 1** — Server-Skeleton: `speccify_mcp.server.build_server(ServerConfig)` liefert `FastMCP(name="speccify-mcp")` ohne Tools/Resources/Prompts; `speccify_mcp.cli:main` mit Argparse (`--project`/`--log-level`), Env-Fallback (`SPECCIFY_PROJECT_ROOT`/`SPECCIFY_LOG_LEVEL`), stderr-Logging, `server.run(transport="stdio")`. Console-Script `speccify-mcp` in `mcp/pyproject.toml`. 9 neue Unit-Tests in `mcp/tests/test_server_skeleton.py` (leeres tools/resources/prompts-list, Parser, Project-Root-Auflösung). **143 Tests grün**, ruff/format clean.
 - [ ] Phase 1c Step 2/3 — Read-only Tools (`resolve`/`lint`/`render`) und Write-Tools (`lock`/`pull`/`verify`) mit Cross-Consistency-Test CLI ↔ MCP.
 - [ ] Phase 1c Step 4 — Resources (`spec://`, `speccify://manifest|lockfile`) + Prompt `add-spec`.
 - [ ] Phase 1c Step 5 — CI-Smoke `speccify-mcp` (stdio, offline) + README/`mcp/README.md`.

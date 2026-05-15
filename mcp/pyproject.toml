@@ -10,6 +10,9 @@ dependencies = [
     "mcp[cli]>=1.27.1,<2.0",
 ]
 
+[project.scripts]
+speccify-mcp = "speccify_mcp.cli:main"
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"

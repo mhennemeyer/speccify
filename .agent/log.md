@@ -1,5 +1,41 @@
 # Log: Speccify
 
+## 2026-05-15 (Phase 1c Step 1 — Server-Skeleton + leeres `tools/list`)
+- **Step 1 abgeschlossen.** Skeleton-Module unter
+  `mcp/src/speccify_mcp/` angelegt:
+  - `server.py`: `ServerConfig` (frozen dataclass mit `project_root`)
+    + `build_server(config)` → `FastMCP(name="speccify-mcp",
+    instructions=…)` **ohne** registrierte Tools/Resources/Prompts.
+    Bewusst minimal — Tools kommen erst in Step 2/3.
+  - `cli.py`: `build_parser`, `resolve_project_root` (CLI > Env
+    `SPECCIFY_PROJECT_ROOT` > CWD), `configure_logging` (stderr, weil
+    stdout für MCP-stdio-Frames reserviert ist), `main` ruft
+    `server.run(transport="stdio")`.
+  - `__init__.py` re-exportiert `main`, `build_server`, `ServerConfig`,
+    `SERVER_NAME`.
+- **`mcp/pyproject.toml`**: `[project.scripts] speccify-mcp =
+  "speccify_mcp.cli:main"` ergänzt. `uv sync --all-packages` baut
+  `speccify-mcp` neu; danach 1× `--reinstall` nötig (bekannte
+  Editable-`.pth`-Artefakt-Falle).
+- **Tests** (`mcp/tests/test_server_skeleton.py`, 9 Stück): Server
+  benannt, `tools/resources/prompts list` jeweils leer
+  (`asyncio.run(server.list_*())` gegen die `FastMCP`-API); Parser-
+  Defaults und `--project`/`--log-level`-Parsing; `resolve_project_root`
+  Priorität CLI > Env > CWD (jeweils via `monkeypatch.setenv`/`chdir`).
+- **Verifikation**: `uv run pytest` → **143 grün** (134 + 9 neu);
+  `uv run ruff check .` + `uv run ruff format --check .` clean
+  (44 Dateien). MCP-SDK-API-Erkundung: `FastMCP.list_tools()`/
+  `list_resources()`/`list_prompts()` sind Coroutinen und liefern bei
+  einem leer registrierten Server `[]`.
+- **Bewusst weggelassen**: kein expliziter Health-Check-Tool — MCPs
+  Server-Liveness wird durch das stdio-Handshake nachgewiesen, ein
+  zusätzliches Tool würde den „Tools spiegeln CLI 1:1"-Vertrag aus
+  Decision 4 aufweichen. Falls Step 5 (CI-Smoke) ein eigenständiges
+  Liveness-Signal braucht, ziehen wir `tools/list` heran.
+- **Nächster Schritt** (Step 2): Read-only Tools `resolve`, `lint`,
+  `render` als dünne Adapter über `speccify_core` mit Happy- und
+  Fehlerpfad-Tests + Integrationstest gegen `example-project/` offline.
+
 ## 2026-05-15 (Phase 1c Step 0 — `mcp[cli]`-SDK gepinnt)
 - **Step 0 abgeschlossen.** Aktuelle Latest-Version auf PyPI ist
   `mcp 1.27.1` (mit Extras `cli`, `rich`, `ws`; `requires-python>=3.10`).
