@@ -1,5 +1,51 @@
 # Log: Speccify
 
+## 2026-05-15 (Phase 1c Step 2 — Read-only Tools `resolve`/`lint`/`render`)
+- **Step 2 abgeschlossen.** Neue Modul-Hierarchie unter
+  `mcp/src/speccify_mcp/tools/`:
+  - `resolve.py`: `run_resolve(project_root, manifest_path?, registry_path?)`
+    → `ResolveResult{target, resolutions: [{spec_id, version, spec_sha256}]}`
+    via `ProjectManifest` + `LocalRegistry` + `Resolver`. Schreibt nichts
+    (Pendant zu `speccify lock` ohne Lockfile-Write).
+  - `lint.py`: `run_lint(spec_path, schema_path?)` → `LintResult{spec_path,
+    ok, skipped, issues}` über `SpecLoader` + `SchemaValidator`. Projekt-
+    Manifeste (kein `kind`) werden wie in der CLI als `skipped=True`
+    durchgereicht.
+  - `render.py`: `run_render(project_root, spec_id, target?, offline=True,
+    cache_dir?)` → `RenderResult{spec_id, target, files: {path: utf8-text},
+    generator_pin}`. Lädt Lockfile, fetcht Spec aus Registry, ruft
+    `render_for_target` mit `ReplayCacheClient` (Default-Cache
+    `tests/fixtures/llm-cache`, Env-Override `SPECCIFY_CACHE_DIR`,
+    `cache_dir`-Override pro Call). Target-Drift gegen Lockfile-Target und
+    fehlendes Lockfile werden als `LockfileError` signalisiert; unbekannte
+    `spec_id` als `LookupError`.
+- **`server.py`**: `_register_readonly_tools(server, config)` registriert
+  die drei Tools über `FastMCP.tool()` mit englischen Descriptions. Bytes
+  werden als utf-8-Text in `{path: text}` ausgeliefert (TSX/Markdown sind
+  beide Text; Base64 bleibt späteren Targets vorbehalten).
+- **Tests** (`mcp/tests/test_tools_readonly.py`, 12 Stück): `resolve`
+  happy + fehlendes Manifest; `lint` valide Spec + Projekt-Manifest-Skip
+  + Schema-Issues + fehlende Datei + invalides YAML; `render` happy path
+  für `@org/button` (TSX + `generator_pin.kind=llm`), unbekannte spec_id,
+  Target-Drift, fehlendes Lockfile, offline Cache-Miss. Test-Helper
+  kopiert `example-project/` **und** `registry-fixtures/` nach
+  `tmp_path`, weil `registry.path: ../registry-fixtures` aus dem
+  Manifest sonst ins Leere zeigt — kleine, aber wichtige Erkenntnis für
+  spätere Subprocess-Integrationstests in Step 3.
+- **`test_server_skeleton.py`**: Test umgebaut von "leeres `tools/list`"
+  auf "exakt `['lint','render','resolve']`". Resources/Prompts bleiben
+  leer (Step 4).
+- **Verifikation**: `uv run pytest` → **155 grün** (143 + 12 neu);
+  `uv run ruff check .` + `uv run ruff format --check .` clean
+  (49 Dateien). Side-Quest: nach Hinzufügen des `tools/`-Unterpakets
+  einmalig `uv sync --all-packages --reinstall` nötig (bekannte
+  `_editable_impl_*.pth`-Falle, vgl. Step 5c / Step 0).
+- **Nächster Schritt** (Step 3): Write-Tools `lock`, `pull`, `verify`
+  als dünne Adapter über `speccify_cli.commands.lock.run_lock` /
+  `pull.run_pull` / `verify.run_verify` (oder direkt `speccify_core`),
+  plus Cross-Consistency-Test CLI ↔ MCP (gleiche Inputs → byte-identischer
+  `out/`-Inhalt).
+
 ## 2026-05-15 (Phase 1c Step 1 — Server-Skeleton + leeres `tools/list`)
 - **Step 1 abgeschlossen.** Skeleton-Module unter
   `mcp/src/speccify_mcp/` angelegt:

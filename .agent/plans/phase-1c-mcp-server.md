@@ -144,8 +144,8 @@ Jede Tool-Datei: schmaler Adapter, der Input-Modell (pydantic) validiert, in `sp
 - [x] Unit-Tests in `mcp/tests/test_server_skeleton.py` (9 Tests): `build_server` liefert benannte Instanz; `tools/list`, `resources/list`, `prompts/list` antworten leer; Parser-Defaults und Argumentparsing; `resolve_project_root` Prioritäten CLI > Env > CWD. Alle 143 Tests grün, ruff/format clean.
 
 ### Step 2 — Tools (read-only): `resolve`, `lint`, `render`
-- [ ] Adapter + Tests pro Tool (Happy + Fehlerpfad).
-- [ ] Integrationstest gegen `example-project/` (offline, gegen `tests/fixtures/llm-cache`).
+- [x] Adapter pro Tool unter `mcp/src/speccify_mcp/tools/{resolve,lint,render}.py` als reine Funktionen `run_resolve`/`run_lint`/`run_render` (jeweils mit Dataclass-Result + `to_dict`-Serialisierung). Registriert über `FastMCP.tool()` in `server._register_readonly_tools` mit englischen `description`-Strings. `render` nutzt `ReplayCacheClient` direkt (Default-Cache `tests/fixtures/llm-cache`, Env-Override `SPECCIFY_CACHE_DIR`, `cache_dir`-Override pro Call). Bytes werden als utf-8-Text in `{path: text}` ausgeliefert (TSX/Markdown).
+- [x] Tests in `mcp/tests/test_tools_readonly.py` (12 Stück): `resolve` happy path + fehlendes Manifest; `lint` valide Spec + Projekt-Manifest-Skip + Schema-Issues + fehlende Datei + invalides YAML; `render` happy path (`@org/button` → TSX + `generator_pin.kind=llm`) + unbekannte spec_id + Target-Drift + fehlendes Lockfile + offline Cache-Miss. Test-Helper kopiert `example-project/` + `registry-fixtures/` nach `tmp_path`, damit `registry.path: ../registry-fixtures` aufgeht. `test_server_skeleton.py` angepasst: `tools/list` enthält jetzt genau `["lint", "render", "resolve"]`. **155 Tests grün**, ruff/format clean.
 
 ### Step 3 — Tools (write): `lock`, `pull`, `verify`
 - [ ] Adapter + Tests; `pull`/`verify` mit `--offline`-Default, wenn keine Live-Creds.

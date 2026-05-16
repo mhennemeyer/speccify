@@ -1,17 +1,21 @@
 """MCP-Server-Konstruktion für Speccify.
 
-In Phase 1c Step 1 ist der Server bewusst leer: keine Tools, keine
-Resources, keine Prompts. Er dient als Skeleton, gegen das die
-folgenden Steps (read-only Tools in Step 2, write-Tools in Step 3,
-Resources/Prompts in Step 4) inkrementell aufbauen.
+Phase 1c Step 1: Skeleton (leeres `tools/list`).
+Phase 1c Step 2: Read-only Tools `resolve`, `lint`, `render` über
+`speccify_mcp.tools` registriert (dünne Adapter über `speccify_core`).
+Write-Tools (`lock`/`pull`/`verify`) folgen in Step 3, Resources/Prompts
+in Step 4.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 from mcp.server.fastmcp import FastMCP
+
+from .tools import run_lint, run_render, run_resolve
 
 SERVER_NAME = "speccify-mcp"
 
@@ -21,19 +25,89 @@ class ServerConfig:
     """Startup-Konfiguration des MCP-Servers.
 
     `project_root` ist der Projektpfad, gegen den alle stateless Tools
-    in späteren Steps standardmäßig arbeiten (vgl. Phase-1c-Plan,
-    Decision 3: Project-Root als Startup-Argument).
+    standardmäßig arbeiten (vgl. Phase-1c-Plan, Decision 3:
+    Project-Root als Startup-Argument).
     """
 
     project_root: Path
 
 
 def build_server(config: ServerConfig) -> FastMCP:
-    """Baut eine `FastMCP`-Instanz ohne Tools/Resources/Prompts.
+    """Baut eine `FastMCP`-Instanz mit registrierten Read-only Tools.
 
     Wir tragen `project_root` als Instructions-Metadatum mit, damit
     Clients beim Handshake sehen, gegen welches Projekt der Server
-    läuft. Die eigentliche Verwendung passiert ab Step 2.
+    läuft. Tools nehmen das Projekt-Root implizit aus `config`; ein
+    optionales `manifest_path`-Argument erlaubt Override pro Call.
     """
     instructions = f"Speccify MCP server bound to project root: {config.project_root}"
-    return FastMCP(name=SERVER_NAME, instructions=instructions)
+    server = FastMCP(name=SERVER_NAME, instructions=instructions)
+    _register_readonly_tools(server, config)
+    return server
+
+
+def _register_readonly_tools(server: FastMCP, config: ServerConfig) -> None:
+    """Registriert die Phase-1c-Step-2-Tools über `FastMCP.tool()`.
+
+    Alle Tools sind stateless und schreiben nichts auf Disk. Project-Root
+    kommt aus der `ServerConfig`; `manifest_path`/`registry_path` etc.
+    sind optionale Overrides für Sonderfälle (z.B. Tests).
+    """
+
+    @server.tool(
+        name="resolve",
+        description=(
+            "Resolve the manifest's dependencies via MVS without writing "
+            "a lockfile. Returns the resolved target and per-spec "
+            "{spec_id, version, spec_sha256}."
+        ),
+    )
+    def resolve(
+        manifest_path: str | None = None,
+        registry_path: str | None = None,
+    ) -> dict[str, Any]:
+        result = run_resolve(
+            project_root=config.project_root,
+            manifest_path=Path(manifest_path) if manifest_path else None,
+            registry_path=Path(registry_path) if registry_path else None,
+        )
+        return result.to_dict()
+
+    @server.tool(
+        name="lint",
+        description=(
+            "Validate a single YAML spec against the Speccify spec schema "
+            "v0. Project manifests (no `kind` field) are reported as "
+            "`skipped=True`."
+        ),
+    )
+    def lint(spec_path: str, schema_path: str | None = None) -> dict[str, Any]:
+        result = run_lint(
+            spec_path=Path(spec_path),
+            schema_path=Path(schema_path) if schema_path else None,
+        )
+        return result.to_dict()
+
+    @server.tool(
+        name="render",
+        description=(
+            "Render a single spec from the project's lockfile for the "
+            "lockfile's target. Does NOT write to disk; returns a "
+            "{path: utf8-text} mapping and the generator pin for LLM "
+            "targets. Offline by default (cache-miss is an error)."
+        ),
+    )
+    def render(
+        spec_id: str,
+        target: str | None = None,
+        offline: bool = True,
+        cache_dir: str | None = None,
+    ) -> dict[str, Any]:
+        result = run_render(
+            project_root=config.project_root,
+            spec_id=spec_id,
+            target=target,
+            offline=offline,
+            cache_dir=Path(cache_dir) if cache_dir else None,
+        )
+        return result.to_dict()
