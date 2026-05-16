@@ -22,13 +22,13 @@ def test_build_server_returns_named_fastmcp_instance(tmp_path: Path) -> None:
     assert server.name == SERVER_NAME
 
 
-def test_tools_list_contains_step2_readonly_tools(tmp_path: Path) -> None:
-    # Step 2 registriert genau die drei Read-only-Tools. Write-Tools
-    # (`lock`/`pull`/`verify`) kommen in Step 3, daher hier exakt 3.
+def test_tools_list_contains_step2_and_step3_tools(tmp_path: Path) -> None:
+    # Step 2 (`resolve`/`lint`/`render`) + Step 3 (`lock`/`pull`/`verify`).
+    # Resources/Prompts kommen in Step 4.
     server = build_server(ServerConfig(project_root=tmp_path))
     tools = asyncio.run(server.list_tools())
     names = sorted(t.name for t in tools)
-    assert names == ["lint", "render", "resolve"]
+    assert names == ["lint", "lock", "pull", "render", "resolve", "verify"]
 
 
 def test_resources_list_is_empty_in_step1(tmp_path: Path) -> None:

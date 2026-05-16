@@ -1,5 +1,71 @@
 # Log: Speccify
 
+## 2026-05-16 (Phase 1c Step 3 — Write-Tools `lock`/`pull`/`verify` + Cross-Consistency CLI ↔ MCP)
+- **Step 3 abgeschlossen.** Drei neue Adapter-Module unter
+  `mcp/src/speccify_mcp/tools/`:
+  - `lock.py`: `run_lock(project_root, registry_path?)` → `LockResult{target,
+    lockfile_path, entries: [{spec_id, version, spec_sha256}]}`. Nutzt
+    `Resolver` + `build_lockfile` und schreibt `<project_root>/speccify.lock`
+    (Pendant zu `speccify lock`).
+  - `pull.py`: `run_pull(project_root, out_dir, target?, registry_path?,
+    offline=True, cache_dir?)` → `PullResult{target, out_dir, lockfile_path,
+    files_written}`. Spiegelt `speccify pull` 1:1: lädt Lockfile, fetcht jede
+    Spec, ruft `render_for_target` mit `ReplayCacheClient`, schreibt
+    Output-Dateien atomar nach `out_dir`, aktualisiert `generated_files_sha256`
+    + `LlmGeneratorPin` (`provider=bedrock`, `model`, `prompt_version`, `seed`,
+    `cache_key=sha256:<digest>`) im Lockfile.
+  - `verify.py`: `run_verify(project_root, out_dir, registry_path?,
+    offline=True, cache_dir?)` → `VerifyResult{ok, problems}`. Fehler werden
+    **strukturiert** im Result gemeldet, nicht als MCP-Exception — Agents
+    bekommen `ok=False` + Problemliste statt `isError`. Drift-Checks 1:1 wie
+    in `cli.commands.verify.run_verify` (Target/Versions/Spec-Hash/Generator-
+    Pin/Re-Render/Disk).
+- **`tools/_workspace.py`**: Eigener `WorkspaceContext` + `build_replay_client`
+  + `resolve_cache_dir` ohne `speccify-cli`-Dep (Layering: MCP hängt nur an
+  `speccify-core`). Repo-lokaler Default-Cache `tests/fixtures/llm-cache`,
+  Env-Override `SPECCIFY_CACHE_DIR`. `render.py` aus Step 2 wird in einem
+  Follow-up entkoppelt (heute zwei kleine Duplikate, funktional identisch).
+- **`server.py`**: Neue Funktion `_register_write_tools(server, config)` mit
+  drei `@server.tool()`-Wrappern (`lock`/`pull`/`verify`), englische
+  `description`-Strings, Project-Root implizit aus `ServerConfig`, optionale
+  Overrides für `out_dir`/`target`/`registry_path`/`offline`/`cache_dir` pro
+  Call. `tools/__init__.py` re-exportiert die neuen `run_*`-Funktionen und
+  Dataclasses.
+- **Tests** (`mcp/tests/test_tools_write.py`, 10 Stück):
+  - `lock`: happy path (Lockfile geschrieben, Target react, sha256-Präfix);
+    fehlendes Manifest → `FileNotFoundError`.
+  - `pull`: happy path (alle Dateien auf Disk, Lockfile mit `generated_files
+    _sha256`); fehlendes Lockfile → `LockfileError`; Target-Mismatch →
+    `LockfileError`; offline + leerer Cache → `CacheMissError`.
+  - `verify`: grün nach `pull`; Disk-Drift (TSX manipuliert) → `ok=False` mit
+    "Disk-Drift"-Eintrag; fehlendes Lockfile → `ok=False` mit
+    "Kein Lockfile"-Eintrag (strukturiert, **kein** Raise).
+  - **Cross-Consistency CLI ↔ MCP**: `test_cli_and_mcp_pull_produce_identical
+    _output` ruft `speccify_cli.commands.pull.run_pull` und
+    `speccify_mcp.tools.run_pull` gegen je eine eigene `example-project/`-Kopie
+    und vergleicht **alle Output-Bytes + speccify.lock byte-identisch**. Damit
+    ist Decision 4 ("Tools spiegeln CLI 1:1") als Test verankert — jede
+    künftige Refaktorierung muss diese Invariante halten.
+- **`test_server_skeleton.py`**: Test umbenannt auf
+  `test_tools_list_contains_step2_and_step3_tools`; erwartet jetzt
+  `['lint','lock','pull','render','resolve','verify']`. Resources/Prompts
+  bleiben leer (Step 4).
+- **Verifikation**: `uv run pytest` → **165 grün** (155 + 10 neu);
+  `uv run ruff check .` + `uv run ruff format --check .` clean (54 Dateien
+  nach Format-Run). Side-Quest: `uv sync --all-packages --reinstall` einmalig
+  nötig (bekannte `_editable_impl_*.pth`-Falle, identisch zu Steps 0/1/2).
+- **Bewusst weggelassen**:
+  - **Kein** `subprocess`-Cross-Test gegen die `speccify`-Binary — der
+    direkte `cli.run_pull`-Aufruf deckt dieselbe Codepath-Drift ab und ist
+    ~10× schneller. Subprocess-Roundtrip kommt in Step 5 (CI-Smoke) als
+    end-to-end-Test über stdio, dort gehört es hin.
+  - **Kein** Wrap von `verify`-Fehlern in MCP-Exceptions: `verify` darf
+    `ok=False` zurückgeben, ohne das Tool selbst als „fehlgeschlagen" zu
+    markieren — sonst kann der Agent die `problems`-Liste nicht lesen.
+- **Nächster Schritt** (Step 4): Resources `spec://<scope>/<name>@<version>`
+  gegen `LocalRegistry`, `speccify://manifest` + `speccify://lockfile` für
+  das Startup-Projekt, plus Prompt `add-spec` (Vorlage für Agents).
+
 ## 2026-05-15 (Phase 1c Step 2 — Read-only Tools `resolve`/`lint`/`render`)
 - **Step 2 abgeschlossen.** Neue Modul-Hierarchie unter
   `mcp/src/speccify_mcp/tools/`:

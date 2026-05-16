@@ -2,9 +2,9 @@
 
 ## Meta
 - **Typ:** Code
-- **Phase:** Phase 1b **abgeschlossen** und getaggt (`v0.1.0-phase-1a` → `d28cb33`, `v0.2.0-phase-1b` → `8c90511`, lokal annotated; kein Git-Remote konfiguriert, also kein Push). **Phase 1c läuft**: Phasen-Plan `.agent/plans/phase-1c-mcp-server.md` aktiv. **Steps 0–2 abgeschlossen** (2026-05-15): SDK `mcp[cli]>=1.27.1,<2.0` gepinnt; Server-Skeleton + Read-only Tools `resolve`/`lint`/`render` via `FastMCP.tool()` registriert (dünne Adapter über `speccify_core`, `ReplayCacheClient`-offline-Default). **155 Tests grün**, ruff/format clean. Nächster Schritt: Step 3 (Write-Tools `lock`/`pull`/`verify` + Cross-Consistency-Test CLI ↔ MCP).
+- **Phase:** Phase 1b **abgeschlossen** und getaggt (`v0.1.0-phase-1a` → `d28cb33`, `v0.2.0-phase-1b` → `8c90511`, lokal annotated; kein Git-Remote konfiguriert, also kein Push). **Phase 1c läuft**: Phasen-Plan `.agent/plans/phase-1c-mcp-server.md` aktiv. **Steps 0–3 abgeschlossen** (2026-05-16): SDK `mcp[cli]>=1.27.1,<2.0` gepinnt; Server-Skeleton + Read-only Tools `resolve`/`lint`/`render` + Write-Tools `lock`/`pull`/`verify` via `FastMCP.tool()` registriert (dünne Adapter über `speccify_core`, `ReplayCacheClient`-offline-Default); Cross-Consistency-Test CLI ↔ MCP grün (byte-identische Outputs + Lockfile). **165 Tests grün**, ruff/format clean. Nächster Schritt: Step 4 (Resources `spec://` + `speccify://manifest|lockfile` + Prompt `add-spec`).
 - **Priorität:** Mittel
-- **Zuletzt aktualisiert:** 2026-05-15
+- **Zuletzt aktualisiert:** 2026-05-16
 
 ## Beschreibung
 Spec-First-Plattform für sprach-/framework-unabhängige Komponenten-Spezifikationen.
@@ -86,7 +86,7 @@ Fundament für alle weiteren Phasen.
 - [x] **Phase 1c Step 0** — `mcp[cli]>=1.27.1,<2.0` in `mcp/pyproject.toml` gepinnt (PyPI-Latest 1.27.1, Extra `cli`, `requires_python>=3.10`); `uv sync --all-packages` + `uv.lock` aktualisiert; `uv run pytest` → 134 grün; ruff clean.
 - [x] **Phase 1c Step 1** — Server-Skeleton: `speccify_mcp.server.build_server(ServerConfig)` liefert `FastMCP(name="speccify-mcp")` ohne Tools/Resources/Prompts; `speccify_mcp.cli:main` mit Argparse (`--project`/`--log-level`), Env-Fallback (`SPECCIFY_PROJECT_ROOT`/`SPECCIFY_LOG_LEVEL`), stderr-Logging, `server.run(transport="stdio")`. Console-Script `speccify-mcp` in `mcp/pyproject.toml`. 9 neue Unit-Tests in `mcp/tests/test_server_skeleton.py` (leeres tools/resources/prompts-list, Parser, Project-Root-Auflösung). **143 Tests grün**, ruff/format clean.
 - [x] **Phase 1c Step 2** — Read-only Tools: `mcp/src/speccify_mcp/tools/{resolve,lint,render}.py` als reine Adapter-Funktionen, registriert über `FastMCP.tool()` in `server._register_readonly_tools`; `render` mit `ReplayCacheClient` (Default `tests/fixtures/llm-cache`, Env-Override `SPECCIFY_CACHE_DIR`, offline-Default). 12 neue Tests in `mcp/tests/test_tools_readonly.py` (happy + Fehlerpfad pro Tool, Test-Helper kopiert `example-project/`+`registry-fixtures/`). **155 Tests grün**, ruff/format clean.
-- [ ] Phase 1c Step 3 — Write-Tools (`lock`/`pull`/`verify`) mit Cross-Consistency-Test CLI ↔ MCP.
+- [x] **Phase 1c Step 3** — Write-Tools `lock`/`pull`/`verify` als Adapter unter `mcp/src/speccify_mcp/tools/{lock,pull,verify}.py` (eigener `_workspace.py` ohne `speccify-cli`-Dep, gleiche Konventionen wie CLI: atomares Schreiben, LLM-Pin im Lockfile, `--offline`-Default, Env-Override `SPECCIFY_CACHE_DIR`). Registriert über `FastMCP.tool()` in neuem `server._register_write_tools`. 10 neue Tests in `mcp/tests/test_tools_write.py` (lock happy + fehlendes Manifest; pull happy + fehlendes Lockfile + Target-Mismatch + offline Cache-Miss; verify grün + Disk-Drift + fehlendes Lockfile; **Cross-Consistency CLI ↔ MCP**: `cli.commands.pull.run_pull` und `speccify_mcp.tools.run_pull` produzieren byte-identische TSX-Outputs + Lockfile). **165 Tests grün**, ruff/format clean.
 - [ ] Phase 1c Step 4 — Resources (`spec://`, `speccify://manifest|lockfile`) + Prompt `add-spec`.
 - [ ] Phase 1c Step 5 — CI-Smoke `speccify-mcp` (stdio, offline) + README/`mcp/README.md`.
 - [ ] Phase 1c Step 6 — Master-Plan-Sync + Tag-Vorschlag `v0.3.0-phase-1c`.
