@@ -31,16 +31,24 @@ def test_tools_list_contains_step2_and_step3_tools(tmp_path: Path) -> None:
     assert names == ["lint", "lock", "pull", "render", "resolve", "verify"]
 
 
-def test_resources_list_is_empty_in_step1(tmp_path: Path) -> None:
+def test_resources_list_contains_step4_resources(tmp_path: Path) -> None:
+    # Step 4: zwei fixe Resources (manifest + lockfile) + ein Template
+    # (`spec://...`). Templates landen in `list_resource_templates`,
+    # nicht in `list_resources`.
     server = build_server(ServerConfig(project_root=tmp_path))
     resources = asyncio.run(server.list_resources())
-    assert resources == []
+    uris = sorted(str(r.uri) for r in resources)
+    assert uris == ["speccify://lockfile", "speccify://manifest"]
+    templates = asyncio.run(server.list_resource_templates())
+    template_uris = [t.uriTemplate for t in templates]
+    assert "spec://{scope}/{name}@{version}" in template_uris
 
 
-def test_prompts_list_is_empty_in_step1(tmp_path: Path) -> None:
+def test_prompts_list_contains_add_spec(tmp_path: Path) -> None:
     server = build_server(ServerConfig(project_root=tmp_path))
     prompts = asyncio.run(server.list_prompts())
-    assert prompts == []
+    names = sorted(p.name for p in prompts)
+    assert names == ["add-spec"]
 
 
 def test_parser_defaults() -> None:

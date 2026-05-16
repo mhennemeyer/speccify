@@ -3,7 +3,9 @@
 Phase 1c Step 1: Skeleton (leeres `tools/list`).
 Phase 1c Step 2: Read-only Tools `resolve`, `lint`, `render` registriert.
 Phase 1c Step 3: Write-Tools `lock`, `pull`, `verify` registriert
-(dünne Adapter über `speccify_core`). Resources/Prompts folgen in Step 4.
+(dünne Adapter über `speccify_core`).
+Phase 1c Step 4: Resources `speccify://manifest|lockfile` und
+`spec://{scope}/{name}@{version}` + Prompt `add-spec` registriert.
 """
 
 from __future__ import annotations
@@ -43,6 +45,13 @@ def build_server(config: ServerConfig) -> FastMCP:
     server = FastMCP(name=SERVER_NAME, instructions=instructions)
     _register_readonly_tools(server, config)
     _register_write_tools(server, config)
+    # Lazy imports brechen den Modul-Zyklus (`resources`/`prompts`
+    # importieren `ServerConfig` aus diesem Modul).
+    from .prompts import register_prompts
+    from .resources import register_resources
+
+    register_resources(server, config)
+    register_prompts(server, config)
     return server
 
 

@@ -1,5 +1,55 @@
 # Log: Speccify
 
+## 2026-05-16 (Phase 1c Step 4 — Resources `speccify://manifest|lockfile` + `spec://...` + Prompt `add-spec`)
+- **Step 4 abgeschlossen.** Zwei neue Module unter `mcp/src/speccify_mcp/`:
+  - `resources.py`: `register_resources(server, config)` verdrahtet drei
+    Read-only Resources über `@server.resource(uri)`:
+    - `speccify://manifest` → liest `<project_root>/speccify.yaml` als
+      UTF-8-YAML (mime_type `application/yaml`). Fehlende Datei →
+      `FileNotFoundError`, FastMCP wickelt → `ResourceError`.
+    - `speccify://lockfile` → liest `<project_root>/speccify.lock`.
+      **Fehlt das Lockfile, geben wir bewusst keinen Fehler zurück**,
+      sondern einen kurzen YAML-Kommentar-Hinweis (`# No speccify.lock
+      … Call the lock tool …`). Begründung: „Lockfile fehlt" ist ein
+      normaler Workflow-Zustand (frisch initialisiertes Projekt).
+    - `spec://{scope}/{name}@{version}` als Template-Resource — Lazy
+      via `WorkspaceContext.load` + `LocalRegistry.fetch` →
+      `Spec.raw_bytes.decode("utf-8")`. Manifest wird pro Call neu
+      geladen, damit Änderungen an `registry.path` ohne Neustart
+      sichtbar sind (kein Caching, vgl. Decision 5).
+  - `prompts.py`: Ein einziger Prompt `add-spec(spec_ref, out_dir=
+    "./src/components")` rendert eine vierstufige Anleitung (resolve →
+    lock → pull → verify) und nennt den Projekt-Root. Bewusst klein —
+    Prompt-Form lernen wir in Phase 1d.
+- **`server.py`**: `build_server` ruft jetzt zusätzlich
+  `register_resources` und `register_prompts`. Die Imports sind lazy
+  innerhalb von `build_server`, weil `resources.py`/`prompts.py`
+  ihrerseits `ServerConfig` aus `server.py` importieren — ohne Lazy-
+  Import gäbe das einen Modul-Zyklus.
+- **Tests** (`mcp/tests/test_resources_prompts.py`, 8 Stück):
+  manifest happy + missing (→ `ResourceError`); lockfile happy +
+  missing (→ Hint-Text, kein Fehler); spec happy + unbekannte
+  Version (FastMCP wickelt `RegistryError` in `ValueError` während
+  der Template-Instanziierung); prompt happy + Custom-`out_dir`.
+  `test_server_skeleton.py` aktualisiert: `resources/list` enthält 2
+  fixe Resources (`speccify://manifest|lockfile`), `list_resource_
+  templates` enthält das `spec://{scope}/{name}@{version}`-Template,
+  `prompts/list` enthält `add-spec`.
+- **Verifikation**: `uv run pytest` → **173 grün** (165 + 8 neu);
+  `uv run ruff check .` + `uv run ruff format --check .` clean
+  (57 Dateien). Side-Quest: nach Hinzufügen der neuen Module
+  einmalig `uv sync --all-packages --reinstall` nötig (bekannte
+  `_editable_impl_*.pth`-Falle).
+- **Bewusst weggelassen**: Kein eigenes Tool/Resource für „liste alle
+  verfügbaren Specs in der Registry" — `LocalRegistry` hat noch
+  keinen Index (Phase 2). Agents nutzen `spec://...` mit bekannten
+  Refs.
+- **Nächster Schritt** (Step 5): CI-Smoke-Step `speccify-mcp` (stdio,
+  offline) — Subprocess startet den Server, fährt MCP-Handshake,
+  ruft `tools/list` + `tools/call render @org/button` + liest
+  `speccify://manifest` und vergleicht gegen erwartete Bytes. Plus
+  README/`mcp/README.md`-Doku mit Junie-/Claude-Code-Config-Snippet.
+
 ## 2026-05-16 (Phase 1c Step 3 — Write-Tools `lock`/`pull`/`verify` + Cross-Consistency CLI ↔ MCP)
 - **Step 3 abgeschlossen.** Drei neue Adapter-Module unter
   `mcp/src/speccify_mcp/tools/`:

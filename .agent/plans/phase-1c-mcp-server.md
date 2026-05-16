@@ -152,9 +152,10 @@ Jede Tool-Datei: schmaler Adapter, der Input-Modell (pydantic) validiert, in `sp
 - [x] Cross-Consistency-Test CLI ↔ MCP in `mcp/tests/test_tools_write.py::test_cli_and_mcp_pull_produce_identical_output`: ruft `speccify_cli.commands.pull.run_pull` und `speccify_mcp.tools.run_pull` gegen je eine Kopie von `example-project/` und vergleicht alle Output-Bytes + Lockfile byte-identisch. Plus 9 weitere Unit-Tests (`lock` happy/missing-manifest, `pull` happy/missing-lock/target-mismatch/offline-cache-miss, `verify` green/disk-drift/missing-lock). `test_server_skeleton` an 6-Tool-Liste angepasst. **165 Tests grün** (155 + 10), ruff/format clean.
 
 ### Step 4 — Resources + Prompts
-- [ ] `spec://` Resource-Provider gegen Registry-Resolution.
-- [ ] `speccify://manifest|lockfile`.
-- [ ] `add-spec` Prompt.
+- [x] `spec://{scope}/{name}@{version}` Resource-Provider gegen Registry-Resolution: lazy via `LocalRegistry.fetch` aus dem aktuellen `WorkspaceContext`, gibt `Spec.raw_bytes` als UTF-8-YAML zurück (mime_type `application/yaml`). Template-Resource via `FastMCP.resource(...)`.
+- [x] `speccify://manifest` + `speccify://lockfile`: fixe Resources auf den `project_root` gebunden; `manifest` raised bei fehlender Datei `FileNotFoundError` (FastMCP wickelt → `ResourceError`); `lockfile` gibt einen kurzen Kommentar-Hinweis zurück, wenn die Datei fehlt (kein Fehler, weil „noch nicht aufgelöst" ein normaler Zustand ist).
+- [x] `add-spec` Prompt mit Argumenten `spec_ref` (required) und `out_dir` (default `./src/components`); rendert eine Schritt-für-Schritt-Anweisung (`resolve` → `lock` → `pull` → `verify`) und nennt den Projekt-Root.
+- [x] Neue Module `mcp/src/speccify_mcp/{resources,prompts}.py` werden in `server.build_server` registriert (Lazy-Import bricht den Modul-Zyklus). Tests in `mcp/tests/test_resources_prompts.py` (8 Stück): manifest/lockfile happy + missing-Pfade, spec happy + unbekannte Version, prompt mit/ohne `out_dir`-Override. `test_server_skeleton` aktualisiert: `resources/list` enthält 2 fixe Resources, `resource_templates/list` enthält `spec://...`-Template, `prompts/list` enthält `add-spec`. **173 Tests grün** (165 + 8), ruff/format clean.
 
 ### Step 5 — CI + Doku
 - [ ] CI-Step `speccify-mcp smoke (stdio, offline)`.
