@@ -158,8 +158,8 @@ Jede Tool-Datei: schmaler Adapter, der Input-Modell (pydantic) validiert, in `sp
 - [x] Neue Module `mcp/src/speccify_mcp/{resources,prompts}.py` werden in `server.build_server` registriert (Lazy-Import bricht den Modul-Zyklus). Tests in `mcp/tests/test_resources_prompts.py` (8 Stück): manifest/lockfile happy + missing-Pfade, spec happy + unbekannte Version, prompt mit/ohne `out_dir`-Override. `test_server_skeleton` aktualisiert: `resources/list` enthält 2 fixe Resources, `resource_templates/list` enthält `spec://...`-Template, `prompts/list` enthält `add-spec`. **173 Tests grün** (165 + 8), ruff/format clean.
 
 ### Step 5 — CI + Doku
-- [ ] CI-Step `speccify-mcp smoke (stdio, offline)`.
-- [ ] `README.md` + `mcp/README.md` aktualisieren.
+- [x] CI-Step `speccify-mcp smoke (stdio, offline)`: neues Skript `scripts/mcp_smoke.py` startet `python -m speccify_mcp.cli --project <tmp example-project>` via offiziellem `mcp` Python-Client (stdio), prüft `tools/list` (exakt 6 Tools), `tools/call render @org/button` (offline, `generator_pin.kind=llm`, TSX enthält `export`) und `resources/read speccify://manifest`. Hartes Strip von `ANTHROPIC_API_KEY`/AWS-Creds + `SPECCIFY_CACHE_DIR` auf den Repo-Cache pinnen. Pytest-Wrapper `mcp/tests/test_stdio_smoke.py` ruft dasselbe Skript als Subprocess (Symmetrie zur CI). CI-Step in `.github/workflows/ci.yml`: `uv run python scripts/mcp_smoke.py` nach den CLI-Smokes.
+- [x] `mcp/README.md` neu geschrieben: Installation/Start, Tools-/Resources-/Prompts-Tabellen, Client-Config-Snippets (Claude Code/Junie/Cursor + uv-Variante), Smoke-Aufruf. `README.md` (Top-Level) ergänzt: neuer Abschnitt „MCP-Server (`speccify-mcp`)" mit Config-Snippet + Verweis auf `mcp/README.md`; Plan-Liste auf Phase 1c umgestellt, Status-Block aktualisiert.
 
 ### Step 6 — Wrap-up
 - [ ] `speccify-plan.md` Phase 1c als abgeschlossen markieren + MCP-Tool-Vertrag inline dokumentieren.

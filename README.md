@@ -57,11 +57,36 @@ Das Skript läuft niemals in CI — es greift aufs Netz zu. Ergebnis sind
 JSON-Einträge unter `tests/fixtures/llm-cache/`, die mit eingecheckt
 werden.
 
+## MCP-Server (`speccify-mcp`)
+
+Speccify bringt einen MCP-Server mit, der Coding-Agents (Claude Code,
+Junie, Cursor, Aider) denselben Workflow wie die CLI gibt — ohne dass
+die Agents Spec-/Lockfile-Wissen mitbringen müssen. Tools spiegeln die
+CLI-Subkommandos 1:1 (`resolve`, `lock`, `pull`, `verify`, `render`,
+`lint`); zusätzlich gibt es Resources (`speccify://manifest`,
+`speccify://lockfile`, `spec://{scope}/{name}@{version}`) und einen
+`add-spec`-Prompt.
+
+```json
+{
+  "mcpServers": {
+    "speccify": {
+      "command": "speccify-mcp",
+      "args": ["--project", "."]
+    }
+  }
+}
+```
+
+Details und der Smoke-Aufruf (`uv run python scripts/mcp_smoke.py`)
+stehen in [`mcp/README.md`](./mcp/README.md).
+
 ## Wo es weitergeht
 
 - [`AGENTS.md`](./AGENTS.md) — Onboarding für Coding-Agents (Vision, Repo-Layout, Konventionen).
 - [`.agent/plans/speccify-plan.md`](./.agent/plans/speccify-plan.md) — Master-Plan (langfristige Vision & Roadmap).
-- [`.agent/plans/phase-1b-react-codegen.md`](./.agent/plans/phase-1b-react-codegen.md) — Aktiver Plan: React-LLM-Codegen + Replay-Cache + `init`.
+- [`.agent/plans/phase-1c-mcp-server.md`](./.agent/plans/phase-1c-mcp-server.md) — Aktiver Plan: MCP-Server `speccify-mcp` (stdio).
+- [`.agent/plans/phase-1b-react-codegen.md`](./.agent/plans/phase-1b-react-codegen.md) — Abgeschlossen: React-LLM-Codegen + Replay-Cache + `init`.
 - [`.agent/plans/phase-1a-resolver-lockfile.md`](./.agent/plans/phase-1a-resolver-lockfile.md) — Abgeschlossen: Resolver + Lockfile + `add`/`pull`/`verify`.
 - [`.agent/plans/archive/phase-0-wrap-up.md`](./.agent/plans/archive/phase-0-wrap-up.md) — Phase-0-Wrap-up (abgeschlossen, ADR-Light für Q1–Q5).
 - [`.agent/plans/archive/phase-0-spec-schema-spike.md`](./.agent/plans/archive/phase-0-spec-schema-spike.md) — Phase-0-Implementierungs-Plan (abgeschlossen, archiviert).
@@ -69,10 +94,11 @@ werden.
 
 ## Status
 
-Phase 1b läuft (LLM-React-Codegen mit Replay-Cache, `init`, `pull`/`verify --offline`).
+Phase 1c läuft (MCP-Server `speccify-mcp` über stdio: Tools, Resources, Prompts; offline-Smoke in CI).
 Abgeschlossen: Phase 0 (Schema v0 + `speccify lint`, Tag `v0.0.0-phase0`),
 Phase 1a-0 (Rebrand auf `speccify`, Tag `v0.0.1-speccify-rebrand`),
-Phase 1a (Resolver + Lockfile + Stub-Codegen + `add`/`lock`/`pull`/`verify`).
+Phase 1a (Resolver + Lockfile + Stub-Codegen + `add`/`lock`/`pull`/`verify`, Tag `v0.1.0-phase-1a`),
+Phase 1b (React-LLM-Codegen + Replay-Cache + `init`, Tag `v0.2.0-phase-1b`).
 
 ## Lizenz
 

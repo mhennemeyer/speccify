@@ -1,5 +1,61 @@
 # Log: Speccify
 
+## 2026-05-16 (Phase 1c Step 5 — CI-Smoke `speccify-mcp` (stdio, offline) + Doku)
+- **Step 5 abgeschlossen.** Neues Skript `scripts/mcp_smoke.py` ist
+  der einzige Smoke-Aufruf für den MCP-Server und wird gleichzeitig
+  in CI (`.github/workflows/ci.yml`, Step `speccify-mcp smoke (stdio,
+  offline)`) und im Repo-Pytest (`mcp/tests/test_stdio_smoke.py`)
+  benutzt — derselbe Code, zwei Trigger.
+- **Was das Skript prüft** (alles über echtes stdio, kein In-Process-
+  Shortcut):
+  1. Kopiert `example-project/` + `registry-fixtures/` nach `tmp`
+     (Manifest verweist relativ auf `../registry-fixtures`).
+  2. Startet `python -m speccify_mcp.cli --project <tmp/example-
+     project>` als Subprocess via `mcp.client.stdio.stdio_client`
+     mit `mcp.ClientSession`. Console-Script `speccify-mcp` wäre in
+     CI brüchig (Pfad/Venv), deshalb der explizite `-m`-Aufruf mit
+     `sys.executable`.
+  3. `session.initialize()` (MCP-Handshake).
+  4. `tools/list` muss exakt `{lint,lock,pull,render,resolve,verify}`
+     liefern (sichert den Phase-1c-Vertrag).
+  5. `tools/call render` für `@org/button` → `structuredContent.files`
+     enthält mindestens eine Datei mit `export`, `generator_pin.kind
+     == "llm"`. Damit ist der Replay-Cache-Path über stdio verifiziert.
+  6. `resources/read speccify://manifest` muss `schema_version: 1` +
+     `target: react` enthalten.
+- **Offline-Garantie**: `SPECCIFY_CACHE_DIR` wird auf den eingecheckten
+  Repo-Cache (`tests/fixtures/llm-cache/`) gepinnt, **und**
+  `ANTHROPIC_API_KEY` / `AWS_*` werden aus der Env hart entfernt
+  bevor der Subprocess startet. Damit produziert auch eine
+  Dev-Maschine mit gültigen Bedrock-Creds reproducible Smokes.
+- **Pytest-Wrapper** (`mcp/tests/test_stdio_smoke.py`): ruft das
+  Skript via `subprocess.run([sys.executable, …])` und prüft
+  Exit-Code 0 + `"speccify-mcp stdio smoke: OK"` auf stderr. Bewusst
+  dünn — Detail-Assertions leben im Skript, damit CI-Logs sprechen.
+- **Doku**: `mcp/README.md` neu geschrieben (war Phase-0-Stub):
+  Installation/Start, Env-Vars, Tools-/Resources-/Prompts-Tabellen,
+  `verify`-Vertrag (Drift ist Antwort, kein Error), Client-Configs für
+  Claude Code/Junie/Cursor inkl. `uv`-Fallback, Smoke-Aufruf.
+  Top-Level-`README.md` hat einen neuen Abschnitt „MCP-Server
+  (`speccify-mcp`)" mit Config-Snippet + Verweis auf `mcp/README.md`;
+  Phase-Liste und Status-Block auf Phase 1c aktualisiert.
+- **CI**: Step `speccify-mcp smoke (stdio, offline)` als Letztes —
+  `uv run python scripts/mcp_smoke.py`. Lokal verifiziert.
+- **Verifikation**: `uv run pytest` → **174 grün** (173 + 1 neu;
+  `test_mcp_stdio_smoke_offline`), `uv run ruff check .` + `uv run
+  ruff format --check .` clean. Side-Quest: nach Erstellen der neuen
+  Skript/Test-Dateien `uv sync --all-packages --reinstall` einmalig
+  nötig (bekannte `_editable_impl_*.pth`-Falle).
+- **Bewusst weggelassen**: Kein Cross-Consistency CLI↔MCP-stdio-
+  Subprocess-Test — der direkte Funktions-Cross-Consistency in
+  `test_tools_write.py::test_cli_and_mcp_pull_produce_identical_
+  output` deckt Datendrift ab; der stdio-Test deckt Protokoll-Drift
+  ab. Doppel würde nur die CI-Zeit verdoppeln.
+- **Nächster Schritt** (Step 6 — Wrap-up): `speccify-plan.md` Phase
+  1c als abgeschlossen markieren + MCP-Tool-Vertrag inline
+  dokumentieren; `AGENTS.md` „Aktuelle Phase" auf 1d umstellen;
+  Tag-Vorschlag `v0.3.0-phase-1c` an User (nicht selbst setzen).
+
 ## 2026-05-16 (Phase 1c Step 4 — Resources `speccify://manifest|lockfile` + `spec://...` + Prompt `add-spec`)
 - **Step 4 abgeschlossen.** Zwei neue Module unter `mcp/src/speccify_mcp/`:
   - `resources.py`: `register_resources(server, config)` verdrahtet drei

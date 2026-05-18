@@ -72,3 +72,6 @@ jobs:
             --cache-dir "$CACHE_DIR" --out ./out
           popd >/dev/null
           rm -rf "$SMOKE_DIR"
+
+      - name: speccify-mcp smoke (stdio, offline)
+        run: uv run python scripts/mcp_smoke.py
