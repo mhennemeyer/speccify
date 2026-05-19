@@ -81,24 +81,45 @@ CLI-Subkommandos 1:1 (`resolve`, `lock`, `pull`, `verify`, `render`,
 Details und der Smoke-Aufruf (`uv run python scripts/mcp_smoke.py`)
 stehen in [`mcp/README.md`](./mcp/README.md).
 
+## Browser-Playground (`apps/web/`)
+
+Neben CLI und MCP-Server gibt es einen Browser-Playground unter
+`apps/web/` (Phase 1d). Frontend ist Next.js 15 / React 19 /
+TypeScript, Backend ist FastAPI (in-process `speccify-core`). Der
+Playground rendert eingecheckte Referenz-Specs **byte-identisch zur
+CLI/MCP** — verifiziert per Cross-Consistency-Test
+(`apps/web/backend/tests/test_cross_consistency.py`). Offline-only
+gegen den eingecheckten Replay-Cache; kein Live-LLM.
+
+```bash
+# Terminal A:
+uv run speccify-web-backend --host 127.0.0.1 --port 8000
+# Terminal B:
+cd apps/web/frontend && pnpm install && pnpm dev
+```
+
+Details: [`apps/web/README.md`](./apps/web/README.md).
+
 ## Wo es weitergeht
 
 - [`AGENTS.md`](./AGENTS.md) — Onboarding für Coding-Agents (Vision, Repo-Layout, Konventionen).
 - [`.agent/plans/speccify-plan.md`](./.agent/plans/speccify-plan.md) — Master-Plan (langfristige Vision & Roadmap).
-- [`.agent/plans/phase-1c-mcp-server.md`](./.agent/plans/phase-1c-mcp-server.md) — Aktiver Plan: MCP-Server `speccify-mcp` (stdio).
-- [`.agent/plans/phase-1b-react-codegen.md`](./.agent/plans/phase-1b-react-codegen.md) — Abgeschlossen: React-LLM-Codegen + Replay-Cache + `init`.
-- [`.agent/plans/phase-1a-resolver-lockfile.md`](./.agent/plans/phase-1a-resolver-lockfile.md) — Abgeschlossen: Resolver + Lockfile + `add`/`pull`/`verify`.
+- [`.agent/plans/phase-1d-browser-playground.md`](./.agent/plans/phase-1d-browser-playground.md) — Aktiver Plan: Browser-Playground (`apps/web/`).
+- [`.agent/plans/archive/phase-1c-mcp-server.md`](./.agent/plans/archive/phase-1c-mcp-server.md) — Abgeschlossen: MCP-Server `speccify-mcp` (stdio).
+- [`.agent/plans/archive/phase-1b-react-codegen.md`](./.agent/plans/archive/phase-1b-react-codegen.md) — Abgeschlossen: React-LLM-Codegen + Replay-Cache + `init`.
+- [`.agent/plans/archive/phase-1a-resolver-lockfile.md`](./.agent/plans/archive/phase-1a-resolver-lockfile.md) — Abgeschlossen: Resolver + Lockfile + `add`/`pull`/`verify`.
 - [`.agent/plans/archive/phase-0-wrap-up.md`](./.agent/plans/archive/phase-0-wrap-up.md) — Phase-0-Wrap-up (abgeschlossen, ADR-Light für Q1–Q5).
 - [`.agent/plans/archive/phase-0-spec-schema-spike.md`](./.agent/plans/archive/phase-0-spec-schema-spike.md) — Phase-0-Implementierungs-Plan (abgeschlossen, archiviert).
 - [`.agent/plans/archive/phase-1a0-rename-to-speccify.md`](./.agent/plans/archive/phase-1a0-rename-to-speccify.md) — Rebrand `flowcation` → `speccify` (abgeschlossen).
 
 ## Status
 
-Phase 1c läuft (MCP-Server `speccify-mcp` über stdio: Tools, Resources, Prompts; offline-Smoke in CI).
+Phase 1d läuft (Browser-Playground unter `apps/web/`: FastAPI-Backend + Next.js-Frontend, byte-identisch zu CLI/MCP via Cross-Consistency-Test; Steps 0–4 abgeschlossen, Step 5/6 = CI + Wrap-up).
 Abgeschlossen: Phase 0 (Schema v0 + `speccify lint`, Tag `v0.0.0-phase0`),
 Phase 1a-0 (Rebrand auf `speccify`, Tag `v0.0.1-speccify-rebrand`),
 Phase 1a (Resolver + Lockfile + Stub-Codegen + `add`/`lock`/`pull`/`verify`, Tag `v0.1.0-phase-1a`),
-Phase 1b (React-LLM-Codegen + Replay-Cache + `init`, Tag `v0.2.0-phase-1b`).
+Phase 1b (React-LLM-Codegen + Replay-Cache + `init`, Tag `v0.2.0-phase-1b`),
+Phase 1c (MCP-Server `speccify-mcp` über stdio, Tag-Vorschlag `v0.3.0-phase-1c`).
 
 ## Lizenz
 

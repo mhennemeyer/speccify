@@ -192,9 +192,10 @@ apps/web/frontend/
 - [ ] Playwright-Smoke `tests/e2e/playground.spec.ts` — verschoben in Step 5 (CI-Job), weil Backend + Frontend gleichzeitig hochfahren müssen und das im pytest-Setup keinen Platz hat.
 
 ### Step 4 — Cross-Consistency + Doku
-- [ ] `test_cross_consistency.py` deckt CLI ↔ MCP ↔ Web byte-identisch ab (mind. 1 Referenz-Spec).
-- [ ] `apps/web/README.md` final (Stack, Quickstart `uv run uvicorn ... & pnpm dev`, Limitierungen, Replay-Cache-Hinweis).
-- [ ] Top-Level-`README.md`: neuer Abschnitt „Browser-Playground" + Verweise.
+- [x] `apps/web/backend/tests/test_cross_consistency.py` deckt CLI ↔ MCP ↔ Web byte-identisch ab: rendert `@org/button@0.1.0` über `speccify_cli.commands.pull.run_pull`, `speccify_mcp.tools.run_pull` und `speccify_web_backend.services.render.render_spec_from_yaml` und vergleicht `org/Button.tsx`-Bytes. **183 Pytest grün** (182 + 1 neu), ruff clean.
+- [x] `apps/web/README.md` final inkl. neuem Abschnitt „Cross-Consistency CLI ↔ MCP ↔ Web" mit Verweis auf den Test.
+- [x] Top-Level-`README.md`: neuer Abschnitt „Browser-Playground (`apps/web/`)" + Quickstart + Verweis auf `apps/web/README.md`; Plan-Verweise auf archivierte Phasen 1a/1b/1c umgestellt, aktive Phase 1d verlinkt; Status-Block auf Phase 1d aktualisiert.
+- [x] **Plan-Abweichung dokumentiert**: `pyproject.toml` Dev-Group um `speccify-mcp` erweitert (war bislang nur transitiv über `mcp/tests/` da, der neue Cross-Test im `apps/web/backend/`-Pfad braucht es explizit). `uv sync --reinstall` nötig (bekanntes editable-Side-Quest, siehe Phase 1c Step 0).
 
 ### Step 5 — CI
 - [ ] Neue CI-Jobs: `apps/web backend (offline)` (Pytest) + `apps/web frontend build` (pnpm build, offline mit `--frozen-lockfile`).

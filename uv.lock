@@ -1130,6 +1130,7 @@ dev = [
     { name = "ruff" },
     { name = "speccify-cli" },
     { name = "speccify-core" },
+    { name = "speccify-mcp" },
     { name = "speccify-web-backend" },
     { name = "types-pyyaml" },
 ]
@@ -1146,6 +1147,7 @@ dev = [
     { name = "ruff", specifier = ">=0.6" },
     { name = "speccify-cli", editable = "cli" },
     { name = "speccify-core", editable = "core" },
+    { name = "speccify-mcp", editable = "mcp" },
     { name = "speccify-web-backend", editable = "apps/web/backend" },
     { name = "types-pyyaml", specifier = ">=6.0" },
 ]

@@ -45,6 +45,15 @@ Der Next-Dev-Server proxied `/api/v1/*` automatisch auf
 **Fehler-Codes:** `cache_miss` (422), `spec_invalid` (400), `unknown_target`
 (400), `bad_request` (400). Selbe Codes wie CLI/MCP.
 
+## Cross-Consistency CLI ↔ MCP ↔ Web
+
+Der Vertrag „CLI, MCP-Server und Browser-Playground nutzen dieselbe
+Codegen-Pipeline" ist als Test verdrahtet:
+`apps/web/backend/tests/test_cross_consistency.py` rendert `@org/button@0.1.0`
+über alle drei Pfade (`speccify_cli.commands.pull.run_pull`,
+`speccify_mcp.tools.run_pull`, `speccify_web_backend.services.render.render_spec_from_yaml`)
+und vergleicht die TSX-Bytes byte-identisch.
+
 ## Limitierungen (Phase 1d)
 
 - Nur Target `react`.

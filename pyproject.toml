@@ -25,6 +25,7 @@ dev = [
     "httpx>=0.27",
     "speccify-core",
     "speccify-cli",
+    "speccify-mcp",
     "speccify-web-backend",
 ]
 
