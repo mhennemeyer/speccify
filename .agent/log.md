@@ -1,5 +1,43 @@
 # Log: Speccify
 
+## 2026-05-18 (Phase 1c Step 6 — Wrap-up + Master-Plan-Sync)
+- **Step 6 abgeschlossen, Phase 1c damit fertig.** Reine Doku-/Plan-
+  Synchronisation, kein Code-Change am Server.
+- **`speccify-plan.md`** (Master-Plan): Eintrag „Phase 1c" von „nächster
+  Schritt" auf „abgeschlossen 2026-05-16" umgestellt und inline um den
+  öffentlichen MCP-Tool-Vertrag erweitert (Tools mit Signaturen, `verify`
+  liefert strukturiert `{ok, problems}`, Resources `speccify://manifest|
+  lockfile` + Template `spec://{scope}/{name}@{version}`, Prompt `add-
+  spec`, Defaults `--offline` + `SPECCIFY_CACHE_DIR`, Project-Root als
+  Startup-Argument, Smoke-Skript + CI-Step). Damit ist der Vertrag jetzt
+  im Master-Plan dokumentiert, nicht nur im Phasen-Plan. Phase 1d steht
+  als „nächster Schritt" markiert (Browser-Playground).
+- **`AGENTS.md`** „Aktuelle Phase" auf „Phase 1c abgeschlossen (Tag-
+  Vorschlag `v0.3.0-phase-1c`), nächste Phase 1d (Browser-Playground)"
+  umgestellt; Verweise konsolidiert (Phase-1c-Plan als aktiv-für-Wrap-
+  up, Phase 1a/1b-Tags zusammengefasst).
+- **`.agent/plans/phase-1c-mcp-server.md`**: Step 6 viermal abgehakt;
+  Front-Matter `isActive: false` (Plan abgeschlossen).
+- **`.agent/status.md`**: Meta-Block auf „Phase 1c abgeschlossen
+  (2026-05-18)" umgestellt, Schritt-6-Eintrag in der „Nächste Schritte"-
+  Liste abgehakt, „nächster Schritt" auf Phase-1d-Plan-Entwurf nach
+  User-Tag-Setzung.
+- **Tag-Vorschlag `v0.3.0-phase-1c`**: bewusst **nicht** selbst gesetzt
+  (vgl. `.agent/rules.md`: Tags sind User-Aktion, ebenso wie Commits).
+  Empfohlener Annotated-Tag-Schnitt nach dem nächsten User-Commit:
+  ```bash
+  git tag -a v0.3.0-phase-1c -m "Phase 1c: speccify-mcp (stdio) — tools/resources/prompts + offline smoke"
+  ```
+- **Verifikation**: `uv run pytest` → **174 grün**; `uv run ruff check
+  .` + `uv run ruff format --check .` clean (60 Dateien). Keine Code-
+  Änderungen, daher keine `.venv`-Side-Quest.
+- **Nächster Schritt**: Phase-1d-Plan-Entwurf (`.agent/plans/phase-1d-
+  playground.md`) — Browser-Playground, der dieselbe Codegen-Pipeline
+  (React-LLM + Replay-Cache) im Web ausführt. Vor Plan-Schreiben mit
+  User abklären: Hosting-Stack (Next.js? Vite? SvelteKit?), Pyodide vs.
+  Server-Side-Codegen, und ob der Playground den Replay-Cache aus dem
+  Repo bündelt oder ein eigenes Cache-Layout bekommt.
+
 ## 2026-05-16 (Phase 1c Step 5 — CI-Smoke `speccify-mcp` (stdio, offline) + Doku)
 - **Step 5 abgeschlossen.** Neues Skript `scripts/mcp_smoke.py` ist
   der einzige Smoke-Aufruf für den MCP-Server und wird gleichzeitig
@@ -902,3 +940,19 @@
   - Querverweise in `AGENTS.md` und `README.md` auf den archivierten Pfad
     bzw. den neuen Wrap-up-Plan umgebogen.
   - `status.md` auf *Phase 0 abgeschlossen — Wrap-up läuft* gesetzt.
+
+## 2026-05-19 — Phase-1d-Plan-Entwurf
+- Neuer Phasen-Plan `.agent/plans/phase-1d-browser-playground.md` angelegt
+  (Single Source of Truth für Phase 1d).
+- Inhalt: Browser-Playground unter `apps/web/` (Next.js 15 + React 19,
+  FastAPI-Backend in-process über `speccify-core`), MVP-Endpoints
+  `GET /api/v1/specs` + `POST /api/v1/render`, **offline-only über
+  Replay-Cache** (kein Live-Bedrock, vom User explizit so entschieden),
+  Cross-Consistency CLI ↔ MCP ↔ Web byte-identisch, Tag-Vorschlag
+  `v0.4.0-phase-1d`.
+- Stack-Entscheidungen (vom User bestätigt): Next.js (statt SvelteKit),
+  Replay-Cache-MVP (statt Backend-Proxy zu Bedrock).
+- Plan-Doku: 6 Implementation-Steps + 5 Open Questions; noch keine
+  Implementierung.
+- Nächster Schritt: User-Review des Plans, dann optional Tag
+  `v0.3.0-phase-1c` setzen, dann Phase-1d Step 0 starten.

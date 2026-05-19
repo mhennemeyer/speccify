@@ -14,9 +14,9 @@ Langfristige Quelle der Wahrheit: [`.agent/plans/speccify-plan.md`](./.agent/pla
 
 ## Aktuelle Phase
 
-**Phase 1b abgeschlossen (Tag-Vorschlag `v0.2.0-phase-1b`) — React-LLM-Codegen (Bedrock `claude-opus-4-7`) mit Replay-Cache, `speccify init`, `pull`/`verify --offline`, CI-E2E-Smoke. Nächste Phase: 1c (MCP-Server).**
+**Phase 1c abgeschlossen (Tag-Vorschlag `v0.3.0-phase-1c`) — MCP-Server `speccify-mcp` über `stdio`: Tools `lint`/`lock`/`pull`/`render`/`resolve`/`verify` (dünne Adapter über `speccify-core`, CLI ↔ MCP byte-identisch), Resources `speccify://manifest`, `speccify://lockfile`, `spec://{scope}/{name}@{version}`, Prompt `add-spec`, offline-Smoke in CI. Nächste Phase: 1d (Browser-Playground).**
 
-Abgeschlossener Plan (aktuell aktiv für Tag-Setzung & Wrap-up): [`.agent/plans/phase-1b-react-codegen.md`](./.agent/plans/phase-1b-react-codegen.md). Phase 1a (Resolver + Lockfile + Stub-Codegen + `add`/`lock`/`pull`/`verify`): [`.agent/plans/phase-1a-resolver-lockfile.md`](./.agent/plans/phase-1a-resolver-lockfile.md), Tag-Vorschlag `v0.1.0-phase-1a` (optional).
+Abgeschlossener Plan (aktuell aktiv für Tag-Setzung & Wrap-up): [`.agent/plans/phase-1c-mcp-server.md`](./.agent/plans/phase-1c-mcp-server.md). Vorherige Phasen: [`phase-1b-react-codegen.md`](./.agent/plans/phase-1b-react-codegen.md) (Tag `v0.2.0-phase-1b`), [`phase-1a-resolver-lockfile.md`](./.agent/plans/phase-1a-resolver-lockfile.md) (Tag `v0.1.0-phase-1a`).
 
 Phase 0 abgeschlossen (Tag `v0.0.0-phase0`): Schema v0, `speccify lint`, 5 Referenz-Specs. Phase 1a-0 (Rebrand `flowcation` → `speccify`, Tag `v0.0.1-speccify-rebrand`) ebenfalls abgeschlossen. Archiviert: [`phase-0-spec-schema-spike.md`](./.agent/plans/archive/phase-0-spec-schema-spike.md), [`phase-0-wrap-up.md`](./.agent/plans/archive/phase-0-wrap-up.md), [`phase-1a0-rename-to-speccify.md`](./.agent/plans/archive/phase-1a0-rename-to-speccify.md).
 

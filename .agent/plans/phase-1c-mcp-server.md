@@ -1,6 +1,6 @@
 ---
 sessionId: session-260513-141400-1c
-isActive: true
+isActive: false
 ---
 
 # Requirements
@@ -162,10 +162,10 @@ Jede Tool-Datei: schmaler Adapter, der Input-Modell (pydantic) validiert, in `sp
 - [x] `mcp/README.md` neu geschrieben: Installation/Start, Tools-/Resources-/Prompts-Tabellen, Client-Config-Snippets (Claude Code/Junie/Cursor + uv-Variante), Smoke-Aufruf. `README.md` (Top-Level) ergänzt: neuer Abschnitt „MCP-Server (`speccify-mcp`)" mit Config-Snippet + Verweis auf `mcp/README.md`; Plan-Liste auf Phase 1c umgestellt, Status-Block aktualisiert.
 
 ### Step 6 — Wrap-up
-- [ ] `speccify-plan.md` Phase 1c als abgeschlossen markieren + MCP-Tool-Vertrag inline dokumentieren.
-- [ ] `AGENTS.md` auf 1d umstellen.
-- [ ] `.agent/status.md`/`.agent/log.md` Sync.
-- [ ] Tag-Vorschlag `v0.3.0-phase-1c` an User (nicht selbst setzen).
+- [x] `speccify-plan.md` Phase 1c als abgeschlossen markieren + MCP-Tool-Vertrag inline dokumentieren (Tools-Liste mit Signaturen, Resources-/Prompts-/Defaults-Block, Smoke-Beschreibung, Tag-Vorschlag).
+- [x] `AGENTS.md` „Aktuelle Phase" auf „Phase 1c abgeschlossen, nächste Phase 1d" umgestellt; Verweise auf Phase-1c-Plan und vorherige Tag-Vorschläge konsolidiert.
+- [x] `.agent/status.md`/`.agent/log.md` Sync (Step 6 abgehakt, nächster Schritt = Phase-1d-Plan-Entwurf nach User-Tag).
+- [x] Tag-Vorschlag `v0.3.0-phase-1c` an User dokumentiert (selbst nicht gesetzt, vgl. `rules.md`).
 
 ### Open Questions (vor Step 1 zu klären)
 1. **Welche MCP-SDK-Version pinnen?** — `mcp[cli]` Latest auf PyPI prüfen; ggf. `>=x.y,<x.(y+1)`.
