@@ -956,3 +956,10 @@
   Implementierung.
 - Nächster Schritt: User-Review des Plans, dann optional Tag
   `v0.3.0-phase-1c` setzen, dann Phase-1d Step 0 starten.
+
+## 2026-05-19 — Phase 1c Tag gesetzt + Phase 1d Step 0
+- Tag `v0.3.0-phase-1c` lokal annotated auf Commit `6e4fa86` (Phase-1c-Wrap-up) gesetzt.
+- Phase 1d Step 0: `apps/web/backend/` als uv-Workspace-Member `speccify-web-backend` angelegt (FastAPI + uvicorn[standard] + speccify-core). Skeleton mit `create_app()` + `/api/v1/health`, `cli.main` (argparse, lazy uvicorn-Import), `tests/test_health.py` (TestClient-Smoke).
+- Top-Level `pyproject.toml` erweitert: workspace member, source-pin `speccify-web-backend`, dev-group + `httpx`, pytest testpaths.
+- `uv sync --all-packages` (nach `--reinstall` wegen bekanntem editable-`.pth`-Side-Quest aus Phase 1c Step 0), **175 Tests grün** (174 + 1 neu), ruff/format clean.
+- Nächster Schritt: Step 1 — Backend-MVP (`/api/v1/specs`, `/api/v1/render` offline mit `ReplayCacheClient`, Fehler-Mapping, Pytest-Suite).

@@ -6,12 +6,11 @@
 - **Priorität:** Mittel
 - **Zuletzt aktualisiert:** 2026-05-19
 
-## Phase 1d (Plan-Entwurf, 2026-05-19)
-- Neuer Phasen-Plan `.agent/plans/phase-1d-browser-playground.md` liegt zur User-Review vor.
-- Stack-Entscheidungen (User-bestätigt): **Next.js 15 + React 19** unter `apps/web/frontend/`, **FastAPI**-Backend in-process unter `apps/web/backend/` (uv-Workspace-Member, `speccify-web-backend`), **offline-only Replay-Cache** (kein Live-Bedrock im Browser/Backend).
-- MVP-Endpoints: `GET /api/v1/specs`, `POST /api/v1/render` (offline). Cross-Consistency CLI ↔ MCP ↔ Web byte-identisch in Tests verankert.
-- 6 Implementation-Steps + 5 Open Questions; Tag-Vorschlag nach Abschluss: `v0.4.0-phase-1d`.
-- Nächster Schritt: User-Review des Plans → ggf. Step 0 starten (Workspace + FastAPI-Skeleton). Parallel weiter offen: User-seitiges Setzen des Tags `v0.3.0-phase-1c`.
+## Phase 1d (Step 0 abgeschlossen, 2026-05-19)
+- Tag `v0.3.0-phase-1c` lokal annotated auf Commit `6e4fa86` gesetzt (kein Git-Remote).
+- **Step 0 erledigt**: `apps/web/backend/` als neues uv-Workspace-Member `speccify-web-backend` (FastAPI `>=0.115,<1.0` + uvicorn[standard] `>=0.30,<1.0` + `speccify-core`). Skeleton: `app.create_app()` mit `/api/v1/health`, `cli.main` (argparse + lazy uvicorn), `tests/test_health.py` (TestClient-Smoke).
+- Top-Level `pyproject.toml` erweitert (workspace member, source-pin, dev-group `httpx` + `speccify-web-backend`, pytest testpaths). `uv sync --all-packages` grün (nach `--reinstall`), **175 Tests grün** (174 + 1 neu), ruff + format clean.
+- Nächster Schritt: **Step 1 — Backend-MVP** (`/api/v1/specs` + `/api/v1/render` mit `ReplayCacheClient`, Fehler-Mapping `cache_miss`/`spec_invalid`/`unknown_target`, Pytest-Suite inkl. Cross-Consistency-Vorbereitung).
 
 ## Beschreibung
 Spec-First-Plattform für sprach-/framework-unabhängige Komponenten-Spezifikationen.

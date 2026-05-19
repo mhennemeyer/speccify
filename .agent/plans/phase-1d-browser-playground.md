@@ -164,9 +164,11 @@ apps/web/frontend/
 # Implementation Plan
 
 ### Step 0 — Setup & Stack-Entscheidungen
-- [ ] Paket-Manager-Wahl (`pnpm` vs. `npm`) finalisieren; Node-Version pinnen (`.nvmrc` + `package.json` `engines`).
-- [ ] FastAPI-Variante final bestätigen (vs. Node-Subprocess); `apps/web/backend/pyproject.toml` mit gepinnten Versionen (`fastapi`, `uvicorn`) erstellen, als uv-Workspace-Member registrieren.
-- [ ] `uv sync --all-packages` grün; bestehende 174 Tests bleiben grün.
+- [x] FastAPI in-process bestätigt (gegen Node-Subprocess). `apps/web/backend/pyproject.toml` mit `fastapi>=0.115,<1.0` + `uvicorn[standard]>=0.30,<1.0` + `speccify-core` (Workspace) erstellt; Console-Script `speccify-web-backend = "speccify_web_backend.cli:main"`.
+- [x] Top-Level `pyproject.toml`: neues Workspace-Member `apps/web/backend`, neuer `[tool.uv.sources]`-Eintrag `speccify-web-backend = { workspace = true }`, Dev-Group um `httpx` (TestClient-Dep) und `speccify-web-backend` ergänzt, `[tool.pytest.ini_options].testpaths` um `apps/web/backend` erweitert.
+- [x] Skeleton-Module: `app.py` (`create_app()` + `/api/v1/health`), `cli.py` (argparse, lazy uvicorn-Import), `__init__.py`. Smoke-Test `test_health.py` (TestClient gegen `/api/v1/health`).
+- [x] `uv sync --all-packages` grün (nach `--reinstall` — bekanntes editable-Install-Side-Quest aus Phase 1c Step 0, kein Repo-Change nötig); `uv run pytest` **175 grün** (174 + 1 neu); ruff + format clean.
+- [ ] Paket-Manager-Wahl (`pnpm` vs. `npm`) finalisieren; Node-Version pinnen (`.nvmrc` + `package.json` `engines`). → verschoben in Step 2 (Frontend-Skeleton), da Step 1 reines Backend ist.
 
 ### Step 1 — Backend-MVP
 - [ ] `apps/web/backend/src/speccify_web_backend/` mit `app.py`, `routes/specs.py`, `routes/render.py`, `services/render.py`, `settings.py`.
