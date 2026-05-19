@@ -972,3 +972,35 @@
 - `routes/render.render_spec`: Pydantic-Body `{spec_id, version, spec_yaml, target}`; Fehler-Mapping `cache_miss` 422 (mit Maintainer-Hinweis auf `scripts/record_llm_cache.py`), `spec_invalid` 400 (YAML-Parse + `SpecLoaderError`/`CodegenError`), `unknown_target` 400, `bad_request` 400.
 - Tests: `test_specs_route.py` (2) + `test_render_route.py` (5) → **182 Tests grün** (175 → 182); ruff check + ruff format --check clean (nach 1× `--fix` + format-Lauf für die zwei neuen Module).
 - Step 1 abgehakt im Plan; Cross-Consistency-Test bewusst in Step 4 verschoben. Nächster Schritt: Step 2 (Frontend-Skeleton) nach User-Commit.
+
+## 2026-05-19 — Phase 1d Steps 2+3 (Frontend-Skeleton + Render-Flow)
+
+- Frontend-Stack: Next.js 15.5.18, React 19.2.6, TypeScript 5.9.3 strict, Monaco
+  via `@monaco-editor/react@4.7.0`, zod 3.25.76. Paket-Manager pnpm@10.33.3,
+  Node ≥22 LTS (`.nvmrc`, `engines.node`).
+- Files unter `apps/web/frontend/`:
+  - `package.json`, `tsconfig.json` (`@/*`-Alias), `next.config.ts`
+    (rewrites `/api/v1/*` → `http://localhost:8000`, override via
+    `SPECCIFY_BACKEND_URL`), `next-env.d.ts`, `.nvmrc`, `.gitignore`.
+  - `app/layout.tsx`, `app/page.tsx` (Landing), `app/playground/page.tsx`
+    (Client-Component, kein State-Mgmt-Lib, `useEffect`/`useState`/
+    `useCallback`/`useMemo`).
+  - `components/{SpecPicker,SpecEditor,RenderOutput,ErrorPanel}.tsx`.
+    Monaco lazy via `next/dynamic({ ssr:false })`.
+  - `lib/api.ts` mit `listSpecs`/`renderSpec` + zod-Schemas + `ApiError`-
+    Klasse, die `detail.{error_code,message,hint,details}` aus
+    FastAPI-HTTPException extrahiert.
+- `apps/web/README.md` ersetzt (altes Placeholder gelöscht): Stack, Quickstart
+  (Backend `uv run speccify-web-backend` + Frontend `pnpm dev`), Endpoint-Liste,
+  Fehler-Codes, Limitierungen, Master-Plan-Link.
+- Verifikation: `pnpm install` (307 Packages, 8.7 s), `pnpm typecheck`
+  (tsc --noEmit, 0 Fehler), `pnpm build` (5 statische Routen,
+  `/playground` 16.7 kB / 118 kB First-Load). Backend: `uv run pytest`
+  **182 grün** nach `uv sync --reinstall` (bekanntes editable-Side-Quest);
+  `ruff check` + `ruff format --check` clean.
+- Plan-Sync: `phase-1d-browser-playground.md` Steps 2+3 abgehakt; Playwright-
+  Smoke explizit auf Step 5 (CI-Job) verschoben mit Begründung. `status.md`
+  und Top-Level-README bleiben für Step 4 (Cross-Consistency) offen.
+- Kein eigener Commit gemäß `rules.md`; User entscheidet über Commit-Zeitpunkt.
+- Nächster Schritt: Step 4 — Cross-Consistency-Test CLI ↔ MCP ↔ Web byte-
+  identisch + Top-Level-README-Abschnitt „Browser-Playground".

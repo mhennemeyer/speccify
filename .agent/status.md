@@ -6,14 +6,12 @@
 - **Priorität:** Mittel
 - **Zuletzt aktualisiert:** 2026-05-19
 
-## Phase 1d (Step 1 abgeschlossen, 2026-05-19)
-- **Step 1 erledigt** — Backend-MVP läuft offline gegen Replay-Cache:
-  - `GET /api/v1/specs` listet aus `<repo>/registry-fixtures/` (Default, override via `SPECCIFY_REGISTRY_PATH`) `{id, version, title, yaml}` pro neuester Version. Plan-Abweichung dokumentiert: Registry statt `<repo>/specs/*.yaml`, weil nur Registry-Bytes Cache-Hits haben und React-LLM-Adapter `@scope/name`-IDs verlangt.
-  - `POST /api/v1/render` (Pydantic-Body `{spec_id, version, spec_yaml, target}`): Service-Layer `services/render.py::render_spec_from_yaml` baut `Spec` direkt aus Bytes, ruft `render_for_target` mit `ReplayCacheClient(offline=True)`. Framework-agnostisch → bereit für Cross-Consistency-Test (Step 4).
-  - Fehler-Mapping: `cache_miss` 422 (mit Maintainer-Hinweis auf `scripts/record_llm_cache.py`), `spec_invalid` 400, `unknown_target` 400, `bad_request` 400.
-- **182 Tests grün** (175 + 7 neu: 2 specs-Route + 5 render-Route); ruff + format clean. CORS für `http://localhost:3000` aktiv.
-- **Plan-Update**: Cross-Consistency-Test in Step 4 verschoben (eigener Phasen-Step im Plan); restliche Step-1-Checkboxen alle abgehakt.
-- Nächster Schritt: **Step 2 — Frontend-Skeleton + Spec-Picker** (Next.js 15 / React 19 / TS unter `apps/web/frontend/`, Stack-Entscheidung pnpm vs. npm + Node-Version-Pin, Monaco-YAML-Editor mit `/api/v1/specs`-Bestückung). Davor: User-Commit für Step 1 abwarten.
+## Phase 1d (Steps 1–3 abgeschlossen, 2026-05-19)
+- **Step 1 erledigt** — Backend-MVP läuft offline gegen Replay-Cache: `/api/v1/specs`, `/api/v1/render` mit Fehler-Mapping (`cache_miss` 422, `spec_invalid`/`unknown_target`/`bad_request` 400). 7 Backend-Tests.
+- **Step 2 erledigt** — Frontend-Skeleton unter `apps/web/frontend/` als Next.js 15 / React 19 / TS (pnpm@10.33.3, Node ≥22 LTS, strict TS, `@/*`-Alias). `next.config.ts` rewriteet `/api/v1/*` → `http://localhost:8000`. `lib/api.ts` mit typed fetch + zod-Schemas + `ApiError`-Klasse. Komponenten: `SpecPicker`, `SpecEditor` (Monaco dynamic ssr:false), `RenderOutput` (Tabs + Copy + `generator_pin`-Disclosure), `ErrorPanel` (cache_miss-Hint). `apps/web/README.md` ersetzt.
+- **Step 3 erledigt** — Render-Flow + Output-Panel: „Render React"-Button, „Spec edited — cache miss expected"-Indikator, RenderOutput zeigt TSX (Monaco readonly) + Copy + Pin-Detail, ErrorPanel branchet auf `cache_miss`. Playwright-Smoke explizit auf Step 5 (CI-Job) verschoben — pytest-Setup hat keinen Platz für gleichzeitiges Backend+Frontend.
+- **Verifikation**: `pnpm install` (307 Packages), `pnpm typecheck` (tsc --noEmit, 0 Fehler), `pnpm build` (5 statische Routen, `/playground` 16.7 kB). Backend: **182 Pytest grün**, `ruff check` + `ruff format --check` clean.
+- Nächster Schritt: **Step 4 — Cross-Consistency-Test + Doku-Sync** (Pytest, der `cli.commands.pull.run_pull` ↔ `speccify_mcp.tools.run_pull` ↔ `services.render.render_spec_from_yaml` byte-identisch vergleicht; danach Top-Level-README-Abschnitt). Davor: User-Commit für Steps 2+3 abwarten.
 
 ## Beschreibung
 Spec-First-Plattform für sprach-/framework-unabhängige Komponenten-Spezifikationen.

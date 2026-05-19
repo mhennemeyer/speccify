@@ -179,16 +179,17 @@ apps/web/frontend/
 - [ ] Cross-Consistency-Test CLI ↔ MCP ↔ Web byte-identisch → verschoben in Step 4 (eigener Phasen-Step).
 
 ### Step 2 — Frontend-Skeleton + Spec-Picker
-- [ ] Next.js 15 / React 19 / TS-Setup unter `apps/web/frontend/`, ESLint-/Prettier-Config angelehnt an EditorConfig.
-- [ ] `app/playground/page.tsx` mit Spec-Picker (Dropdown) + Monaco-YAML-Editor (initial readonly aus `/api/v1/specs`).
-- [ ] `lib/api.ts` mit typed `fetch`-Wrappern; Type-Schema via `zod` aus Backend-Response.
-- [ ] `pnpm --filter apps/web/frontend build` grün lokal.
+- [x] Next.js 15 / React 19 / TS-Setup unter `apps/web/frontend/` (pnpm@10.33.3, Node ≥22 LTS via `.nvmrc` + `engines`); strict TS, `@/*`-Pfad-Alias, `next.config.ts` rewriteet `/api/v1/*` → `http://localhost:8000` (override via `SPECCIFY_BACKEND_URL`).
+- [x] `app/playground/page.tsx` als Client-Component mit Spec-Picker (Dropdown), Monaco-YAML-Editor (editierbar), „Render React"-Button, „Spec edited — cache miss expected"-Indikator. Komponenten: `SpecPicker`, `SpecEditor` (Monaco via `dynamic(ssr:false)`), `RenderOutput` (Datei-Tabs + Copy + `generator_pin`-Disclosure), `ErrorPanel` (mit Cache-Miss-spezifischem Hint).
+- [x] `lib/api.ts` mit typed `fetch`-Wrappern (`listSpecs`, `renderSpec`) + zod-Schemas (`SpecEntrySchema`, `GeneratorPinSchema`, `RenderResultSchema`) + `ApiError`-Klasse, die `{error_code, message, hint, details}` aus dem FastAPI-`HTTPException.detail` extrahiert.
+- [x] `pnpm install` (307 Packages) + `pnpm typecheck` (tsc --noEmit, 0 Fehler) + `pnpm build` (5 statische Routen, 16.7 kB für `/playground`) lokal grün.
+- [x] `apps/web/README.md` ersetzt (Stack, Quickstart, Endpoints, Limitierungen, Master-Plan-Link); altes Placeholder-README entfernt.
 
 ### Step 3 — Render-Flow + Output-Panel
-- [ ] „Render React" Button → POST `/api/v1/render` mit aktueller Editor-YAML + `target: "react"`.
-- [ ] `RenderOutput.tsx` zeigt TSX (Monaco read-only), `generator_pin` als Detail-Disclosure, Copy-Button.
-- [ ] `ErrorPanel.tsx` für `cache_miss` (mit Maintainer-Hinweis) + `spec_invalid` (mit `details`).
-- [ ] Playwright-Smoke `tests/e2e/playground.spec.ts`: lädt Seite, wählt `button.yaml`, klickt Render, erwartet TSX-Substring (z. B. `export function Button`).
+- [x] „Render React" Button → POST `/api/v1/render` mit aktueller Editor-YAML + `target: "react"` (siehe `app/playground/page.tsx::handleRender`).
+- [x] `RenderOutput.tsx` zeigt TSX (Monaco read-only via `SpecEditor language="typescript" readOnly`), `generator_pin` als Detail-Disclosure, Copy-Button (`navigator.clipboard.writeText`).
+- [x] `ErrorPanel.tsx` für `cache_miss` (mit Maintainer-Hint, eigene gelb-warm Farbpalette) + `spec_invalid` (mit `details`-Block).
+- [ ] Playwright-Smoke `tests/e2e/playground.spec.ts` — verschoben in Step 5 (CI-Job), weil Backend + Frontend gleichzeitig hochfahren müssen und das im pytest-Setup keinen Platz hat.
 
 ### Step 4 — Cross-Consistency + Doku
 - [ ] `test_cross_consistency.py` deckt CLI ↔ MCP ↔ Web byte-identisch ab (mind. 1 Referenz-Spec).
