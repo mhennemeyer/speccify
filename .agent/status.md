@@ -6,13 +6,14 @@
 - **Priorität:** Mittel
 - **Zuletzt aktualisiert:** 2026-05-19
 
-## Phase 1d (Steps 1–4 abgeschlossen, 2026-05-19)
+## Phase 1d (Steps 1–5 abgeschlossen, 2026-05-19)
 - **Step 1 erledigt** — Backend-MVP läuft offline gegen Replay-Cache: `/api/v1/specs`, `/api/v1/render` mit Fehler-Mapping (`cache_miss` 422, `spec_invalid`/`unknown_target`/`bad_request` 400). 7 Backend-Tests.
 - **Step 2 erledigt** — Frontend-Skeleton unter `apps/web/frontend/` als Next.js 15 / React 19 / TS (pnpm@10.33.3, Node ≥22 LTS, strict TS, `@/*`-Alias). `next.config.ts` rewriteet `/api/v1/*` → `http://localhost:8000`. `lib/api.ts` mit typed fetch + zod-Schemas + `ApiError`-Klasse. Komponenten: `SpecPicker`, `SpecEditor` (Monaco dynamic ssr:false), `RenderOutput` (Tabs + Copy + `generator_pin`-Disclosure), `ErrorPanel` (cache_miss-Hint).
 - **Step 3 erledigt** — Render-Flow + Output-Panel: „Render React"-Button, „Spec edited — cache miss expected"-Indikator, RenderOutput zeigt TSX (Monaco readonly) + Copy + Pin-Detail, ErrorPanel branchet auf `cache_miss`. Playwright-Smoke explizit auf Step 5 (CI-Job) verschoben.
 - **Step 4 erledigt** — Cross-Consistency-Test `apps/web/backend/tests/test_cross_consistency.py` rendert `@org/button@0.1.0` über `speccify_cli.commands.pull.run_pull`, `speccify_mcp.tools.run_pull` und `speccify_web_backend.services.render.render_spec_from_yaml` und vergleicht `org/Button.tsx`-Bytes byte-identisch. `pyproject.toml` Dev-Group um `speccify-mcp` erweitert (war vorher nur transitiv für mcp-Tests verfügbar); `uv sync --reinstall` nötig (bekanntes editable-Side-Quest). `apps/web/README.md` um Cross-Consistency-Abschnitt erweitert; Top-Level-`README.md` um „Browser-Playground (`apps/web/`)"-Abschnitt + Plan-Verweise (1a/1b/1c archiviert, 1d aktiv).
 - **Verifikation**: **183 Pytest grün** (182 + 1 Cross-Consistency-Test), `ruff check` + `ruff format --check` clean. Frontend `pnpm build` weiterhin grün.
-- Nächster Schritt: **Step 5 — CI-Jobs** (`apps/web backend (offline)` Pytest + `apps/web frontend build` pnpm/--frozen-lockfile); optional Playwright-Smoke. Danach Step 6 (Wrap-up, Tag-Vorschlag `v0.4.0-phase-1d`).
+- **Step 5 erledigt** — `.github/workflows/ci.yml` um zwei Jobs erweitert: `apps/web backend (offline)` (`uv sync --all-packages` + `uv run pytest apps/web/backend/tests -v`, deckt auch Cross-Consistency-Test ab) und `apps/web frontend build` (Node via `apps/web/frontend/.nvmrc=22`, pnpm@10.33.3 via `pnpm/action-setup@v4`, `pnpm install --frozen-lockfile` + `pnpm typecheck` + `pnpm build`). Lokal verifiziert (grün). Optionalen Playwright-Smoke bewusst ausgelassen — Mehrwert gegenüber Cross-Consistency-Test gering, Aufwand (Backend+Frontend parallel im CI) hoch.
+- Nächster Schritt: **Step 6 — Wrap-up**: `speccify-plan.md` Phase 1d als abgeschlossen markieren + Tool-Vertrag `/api/v1/...` inline dokumentieren; `AGENTS.md` auf „Phase 1d abgeschlossen / nächste Phase 2“ umstellen; Tag-Vorschlag `v0.4.0-phase-1d` an User dokumentieren (selbst nicht setzen).
 
 ## Beschreibung
 Spec-First-Plattform für sprach-/framework-unabhängige Komponenten-Spezifikationen.

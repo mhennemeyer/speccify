@@ -75,3 +75,58 @@ jobs:
 
       - name: speccify-mcp smoke (stdio, offline)
         run: uv run python scripts/mcp_smoke.py
+
+  web-backend:
+    name: apps/web backend (offline)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      - name: Set up Python (from .python-version)
+        run: uv python install
+
+      - name: Sync workspace
+        run: uv sync --all-packages
+
+      - name: Pytest (apps/web backend, inkl. Cross-Consistency CLI ↔ MCP ↔ Web)
+        run: uv run pytest apps/web/backend/tests -v
+
+  web-frontend:
+    name: apps/web frontend build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: apps/web/frontend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: apps/web/frontend/.nvmrc
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.3
+          run_install: false
+
+      - name: Install dependencies (frozen lockfile)
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Build
+        run: pnpm build

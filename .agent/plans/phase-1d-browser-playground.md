@@ -198,8 +198,8 @@ apps/web/frontend/
 - [x] **Plan-Abweichung dokumentiert**: `pyproject.toml` Dev-Group um `speccify-mcp` erweitert (war bislang nur transitiv über `mcp/tests/` da, der neue Cross-Test im `apps/web/backend/`-Pfad braucht es explizit). `uv sync --reinstall` nötig (bekanntes editable-Side-Quest, siehe Phase 1c Step 0).
 
 ### Step 5 — CI
-- [ ] Neue CI-Jobs: `apps/web backend (offline)` (Pytest) + `apps/web frontend build` (pnpm build, offline mit `--frozen-lockfile`).
-- [ ] Optional Job: `apps/web e2e smoke` (Playwright), nur falls Step 3 stabil verdrahtet ist.
+- [x] Zwei neue Jobs in `.github/workflows/ci.yml`: `apps/web backend (offline)` (`uv sync --all-packages` + `uv run pytest apps/web/backend/tests -v` — deckt auch den Cross-Consistency-Test ab) und `apps/web frontend build` (Node via `apps/web/frontend/.nvmrc=22`, pnpm@10.33.3 via `pnpm/action-setup@v4`, `pnpm install --frozen-lockfile`, `pnpm typecheck`, `pnpm build`). Lokal verifiziert: `pnpm install --frozen-lockfile` + `pnpm typecheck` + `pnpm build` grün (`/playground` 16.7 kB).
+- [ ] Optional Job: `apps/web e2e smoke` (Playwright) bewusst nicht eingebaut — Backend+Frontend müssten parallel laufen, das macht den CI-Job spürbar komplexer (Service-Container oder `concurrently`-Skript) und ist als Mehrwert gegenüber dem byte-identischen Cross-Consistency-Test gering. Bleibt für Phase 2 offen.
 
 ### Step 6 — Wrap-up
 - [ ] `speccify-plan.md` Phase 1d als abgeschlossen markieren + Tool-Vertrag `/api/v1/...` inline dokumentieren (Endpoints, Fehler-Codes, Replay-Cache-Limitierung).
