@@ -202,10 +202,10 @@ apps/web/frontend/
 - [ ] Optional Job: `apps/web e2e smoke` (Playwright) bewusst nicht eingebaut — Backend+Frontend müssten parallel laufen, das macht den CI-Job spürbar komplexer (Service-Container oder `concurrently`-Skript) und ist als Mehrwert gegenüber dem byte-identischen Cross-Consistency-Test gering. Bleibt für Phase 2 offen.
 
 ### Step 6 — Wrap-up
-- [ ] `speccify-plan.md` Phase 1d als abgeschlossen markieren + Tool-Vertrag `/api/v1/...` inline dokumentieren (Endpoints, Fehler-Codes, Replay-Cache-Limitierung).
-- [ ] `AGENTS.md` „Aktuelle Phase" auf „Phase 1d abgeschlossen, nächste Phase 2 (Registry-MVP)" umstellen.
-- [ ] `.agent/status.md`/`.agent/log.md` Sync (Step 6 abgehakt, nächster Schritt = Phase-2-Plan-Entwurf nach User-Tag).
-- [ ] Tag-Vorschlag `v0.4.0-phase-1d` an User dokumentiert (selbst nicht gesetzt, vgl. `rules.md`).
+- [x] `speccify-plan.md` Phase 1d als abgeschlossen markiert + Tool-Vertrag `/api/v1/...` inline dokumentiert (Endpoints `GET /api/v1/specs`, `POST /api/v1/render`, Fehler-Codes `cache_miss`/`spec_invalid`/`unknown_target`/`bad_request`, Replay-Cache-/Offline-Limitierung, Cross-Consistency-Vertrag, CI-Jobs, bewusst ausgelassene Playwright-E2E).
+- [x] `AGENTS.md` „Aktuelle Phase" auf „Phase 1d abgeschlossen, nächste Phase 2 (Registry-MVP)" umgestellt.
+- [x] `.agent/status.md` Sync (Step 6 abgehakt, nächster Schritt = Phase-2-Plan-Entwurf nach User-Tag).
+- [x] Tag-Vorschlag `v0.4.0-phase-1d` an User dokumentiert (selbst nicht gesetzt, vgl. `rules.md`).
 
 ### Open Questions (vor Step 1 zu klären)
 1. **FastAPI in-process vs. Node-Subprocess-Aufruf des CLI?** — Empfehlung: FastAPI in-process (kein Marshalling, schneller, leichter zu testen). Bestätigung in Step 0.

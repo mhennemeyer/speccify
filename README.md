@@ -104,7 +104,7 @@ Details: [`apps/web/README.md`](./apps/web/README.md).
 
 - [`AGENTS.md`](./AGENTS.md) — Onboarding für Coding-Agents (Vision, Repo-Layout, Konventionen).
 - [`.agent/plans/speccify-plan.md`](./.agent/plans/speccify-plan.md) — Master-Plan (langfristige Vision & Roadmap).
-- [`.agent/plans/phase-1d-browser-playground.md`](./.agent/plans/phase-1d-browser-playground.md) — Aktiver Plan: Browser-Playground (`apps/web/`).
+- [`.agent/plans/phase-1d-browser-playground.md`](./.agent/plans/phase-1d-browser-playground.md) — Abgeschlossen (alle Steps): Browser-Playground (`apps/web/`); Archivierung nach User-Tag `v0.4.0-phase-1d`.
 - [`.agent/plans/archive/phase-1c-mcp-server.md`](./.agent/plans/archive/phase-1c-mcp-server.md) — Abgeschlossen: MCP-Server `speccify-mcp` (stdio).
 - [`.agent/plans/archive/phase-1b-react-codegen.md`](./.agent/plans/archive/phase-1b-react-codegen.md) — Abgeschlossen: React-LLM-Codegen + Replay-Cache + `init`.
 - [`.agent/plans/archive/phase-1a-resolver-lockfile.md`](./.agent/plans/archive/phase-1a-resolver-lockfile.md) — Abgeschlossen: Resolver + Lockfile + `add`/`pull`/`verify`.
@@ -114,12 +114,13 @@ Details: [`apps/web/README.md`](./apps/web/README.md).
 
 ## Status
 
-Phase 1d läuft (Browser-Playground unter `apps/web/`: FastAPI-Backend + Next.js-Frontend, byte-identisch zu CLI/MCP via Cross-Consistency-Test; Steps 0–4 abgeschlossen, Step 5/6 = CI + Wrap-up).
+Phase 1d **abgeschlossen** (Browser-Playground unter `apps/web/`: FastAPI-Backend + Next.js-Frontend, byte-identisch zu CLI/MCP via Cross-Consistency-Test; alle Steps 0–6 abgehakt, Tag-Vorschlag `v0.4.0-phase-1d`). Nächster Schritt: Phase-2-Plan-Entwurf (Registry-MVP).
 Abgeschlossen: Phase 0 (Schema v0 + `speccify lint`, Tag `v0.0.0-phase0`),
 Phase 1a-0 (Rebrand auf `speccify`, Tag `v0.0.1-speccify-rebrand`),
 Phase 1a (Resolver + Lockfile + Stub-Codegen + `add`/`lock`/`pull`/`verify`, Tag `v0.1.0-phase-1a`),
 Phase 1b (React-LLM-Codegen + Replay-Cache + `init`, Tag `v0.2.0-phase-1b`),
-Phase 1c (MCP-Server `speccify-mcp` über stdio, Tag-Vorschlag `v0.3.0-phase-1c`).
+Phase 1c (MCP-Server `speccify-mcp` über stdio, Tag-Vorschlag `v0.3.0-phase-1c`),
+Phase 1d (Browser-Playground `apps/web/`, Tag-Vorschlag `v0.4.0-phase-1d`).
 
 ## Lizenz
 
