@@ -1,16 +1,22 @@
 """FastAPI app factory.
 
-Step 0 ships a minimal app with only a healthcheck so the workspace integration
-can be verified. Routes for `/api/v1/specs` and `/api/v1/render` arrive in
-Step 1.
+Phase 1d Step 1: wires the `/api/v1/specs` and `/api/v1/render` routers and
+attaches a resolved `Settings` instance to `app.state` so routes can read
+paths without touching globals. CORS is opened for the Next.js dev server
+on `http://localhost:3000` (Step 2 will lock this down further).
 """
 
 from __future__ import annotations
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from speccify_web_backend.routes import render as render_route
+from speccify_web_backend.routes import specs as specs_route
+from speccify_web_backend.settings import Settings
 
 
-def create_app() -> FastAPI:
+def create_app(settings: Settings | None = None) -> FastAPI:
     app = FastAPI(
         title="speccify-web-backend",
         version="0.0.0",
@@ -19,9 +25,20 @@ def create_app() -> FastAPI:
             "Offline-only in Phase 1d."
         ),
     )
+    app.state.settings = settings if settings is not None else Settings.from_env()
+
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["http://localhost:3000"],
+        allow_methods=["GET", "POST", "OPTIONS"],
+        allow_headers=["*"],
+    )
 
     @app.get("/api/v1/health")
     def health() -> dict[str, str]:
         return {"status": "ok"}
+
+    app.include_router(specs_route.router)
+    app.include_router(render_route.router)
 
     return app

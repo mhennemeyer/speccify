@@ -6,11 +6,14 @@
 - **Priorität:** Mittel
 - **Zuletzt aktualisiert:** 2026-05-19
 
-## Phase 1d (Step 0 abgeschlossen, 2026-05-19)
-- Tag `v0.3.0-phase-1c` lokal annotated auf Commit `6e4fa86` gesetzt (kein Git-Remote).
-- **Step 0 erledigt**: `apps/web/backend/` als neues uv-Workspace-Member `speccify-web-backend` (FastAPI `>=0.115,<1.0` + uvicorn[standard] `>=0.30,<1.0` + `speccify-core`). Skeleton: `app.create_app()` mit `/api/v1/health`, `cli.main` (argparse + lazy uvicorn), `tests/test_health.py` (TestClient-Smoke).
-- Top-Level `pyproject.toml` erweitert (workspace member, source-pin, dev-group `httpx` + `speccify-web-backend`, pytest testpaths). `uv sync --all-packages` grün (nach `--reinstall`), **175 Tests grün** (174 + 1 neu), ruff + format clean.
-- Nächster Schritt: **Step 1 — Backend-MVP** (`/api/v1/specs` + `/api/v1/render` mit `ReplayCacheClient`, Fehler-Mapping `cache_miss`/`spec_invalid`/`unknown_target`, Pytest-Suite inkl. Cross-Consistency-Vorbereitung).
+## Phase 1d (Step 1 abgeschlossen, 2026-05-19)
+- **Step 1 erledigt** — Backend-MVP läuft offline gegen Replay-Cache:
+  - `GET /api/v1/specs` listet aus `<repo>/registry-fixtures/` (Default, override via `SPECCIFY_REGISTRY_PATH`) `{id, version, title, yaml}` pro neuester Version. Plan-Abweichung dokumentiert: Registry statt `<repo>/specs/*.yaml`, weil nur Registry-Bytes Cache-Hits haben und React-LLM-Adapter `@scope/name`-IDs verlangt.
+  - `POST /api/v1/render` (Pydantic-Body `{spec_id, version, spec_yaml, target}`): Service-Layer `services/render.py::render_spec_from_yaml` baut `Spec` direkt aus Bytes, ruft `render_for_target` mit `ReplayCacheClient(offline=True)`. Framework-agnostisch → bereit für Cross-Consistency-Test (Step 4).
+  - Fehler-Mapping: `cache_miss` 422 (mit Maintainer-Hinweis auf `scripts/record_llm_cache.py`), `spec_invalid` 400, `unknown_target` 400, `bad_request` 400.
+- **182 Tests grün** (175 + 7 neu: 2 specs-Route + 5 render-Route); ruff + format clean. CORS für `http://localhost:3000` aktiv.
+- **Plan-Update**: Cross-Consistency-Test in Step 4 verschoben (eigener Phasen-Step im Plan); restliche Step-1-Checkboxen alle abgehakt.
+- Nächster Schritt: **Step 2 — Frontend-Skeleton + Spec-Picker** (Next.js 15 / React 19 / TS unter `apps/web/frontend/`, Stack-Entscheidung pnpm vs. npm + Node-Version-Pin, Monaco-YAML-Editor mit `/api/v1/specs`-Bestückung). Davor: User-Commit für Step 1 abwarten.
 
 ## Beschreibung
 Spec-First-Plattform für sprach-/framework-unabhängige Komponenten-Spezifikationen.

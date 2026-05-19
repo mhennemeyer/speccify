@@ -171,11 +171,12 @@ apps/web/frontend/
 - [ ] Paket-Manager-Wahl (`pnpm` vs. `npm`) finalisieren; Node-Version pinnen (`.nvmrc` + `package.json` `engines`). → verschoben in Step 2 (Frontend-Skeleton), da Step 1 reines Backend ist.
 
 ### Step 1 — Backend-MVP
-- [ ] `apps/web/backend/src/speccify_web_backend/` mit `app.py`, `routes/specs.py`, `routes/render.py`, `services/render.py`, `settings.py`.
-- [ ] `/api/v1/specs` liefert Liste der `specs/*.yaml` aus `SPECCIFY_PROJECT_ROOT` (Default: Repo-Root) mit `{id, title, version, yaml}`.
-- [ ] `/api/v1/render` ruft `speccify_core.render_for_target` mit `ReplayCacheClient(cache_dir=tests/fixtures/llm-cache)`, offline-only.
-- [ ] Fehler-Mapping (`cache_miss` 422, `spec_invalid` 400, `unknown_target` 400) inkl. Hinweistext.
-- [ ] Pytest-Suite (`test_render_route.py`, `test_specs_route.py`, `test_cross_consistency.py`) grün; `uv run pytest` weiter komplett grün.
+- [x] `apps/web/backend/src/speccify_web_backend/` mit `app.py` (Router-Wiring + CORS für `http://localhost:3000` + Settings auf `app.state`), `routes/specs.py`, `routes/render.py`, `services/render.py`, `settings.py`.
+- [x] `/api/v1/specs` liefert Liste aus der lokalen Pseudo-Registry (Default `<repo>/registry-fixtures/`, override via `SPECCIFY_REGISTRY_PATH`) mit `{id, version, title, yaml}` (neueste Version pro `(scope, name)`). **Plan-Abweichung dokumentiert**: nicht `<repo>/specs/*.yaml` (deren `spec://name`-IDs werden vom React-LLM-Adapter nicht akzeptiert und haben keine Cache-Einträge); die Registry-Fixtures sind die einzige Quelle, die out-of-the-box Cache-Hits produziert.
+- [x] `/api/v1/render` (Pydantic-Body `{spec_id, version, spec_yaml, target}`): Service-Layer `services/render.py::render_spec_from_yaml` baut einen `Spec` direkt aus YAML-Bytes (kein Registry-Roundtrip → editierte YAML funktioniert syntaktisch, endet erwartbar im `cache_miss`-Pfad), ruft `render_for_target` mit `ReplayCacheClient(offline=True)`. Service ist framework-agnostisch (vorbereitet für Cross-Consistency-Test in Step 4).
+- [x] Fehler-Mapping inkl. Hinweistext: `cache_miss` 422 (mit Maintainer-`hint` auf `scripts/record_llm_cache.py`), `spec_invalid` 400 (YAML-Parse + `SpecLoaderError`/`CodegenError`), `unknown_target` 400, `bad_request` 400 (z. B. `Version.parse` fehlgeschlagen).
+- [x] Pytest-Suite (`test_specs_route.py`, `test_render_route.py`): 7 neue Tests (specs happy + missing-registry; render happy + unknown_target + invalid_yaml + cache_miss + bad_version). **182 Tests grün** insgesamt (175 + 7), `ruff check` + `ruff format --check` clean.
+- [ ] Cross-Consistency-Test CLI ↔ MCP ↔ Web byte-identisch → verschoben in Step 4 (eigener Phasen-Step).
 
 ### Step 2 — Frontend-Skeleton + Spec-Picker
 - [ ] Next.js 15 / React 19 / TS-Setup unter `apps/web/frontend/`, ESLint-/Prettier-Config angelehnt an EditorConfig.

@@ -963,3 +963,12 @@
 - Top-Level `pyproject.toml` erweitert: workspace member, source-pin `speccify-web-backend`, dev-group + `httpx`, pytest testpaths.
 - `uv sync --all-packages` (nach `--reinstall` wegen bekanntem editable-`.pth`-Side-Quest aus Phase 1c Step 0), **175 Tests grün** (174 + 1 neu), ruff/format clean.
 - Nächster Schritt: Step 1 — Backend-MVP (`/api/v1/specs`, `/api/v1/render` offline mit `ReplayCacheClient`, Fehler-Mapping, Pytest-Suite).
+
+## 2026-05-19 — Phase 1d Step 1: Backend-MVP `/api/v1/specs` + `/api/v1/render`
+- `apps/web/backend/src/speccify_web_backend/`: neue Module `settings.py`, `services/render.py`, `routes/specs.py`, `routes/render.py`; `app.py` erweitert (Router-Wiring + CORS für localhost:3000 + Settings auf `app.state`).
+- `settings.Settings.from_env()` resolved `SPECCIFY_PROJECT_ROOT` / `SPECCIFY_REGISTRY_PATH` / `SPECCIFY_CACHE_DIR` mit Repo-Defaults (Registry → `<repo>/registry-fixtures/`, Cache → `<repo>/tests/fixtures/llm-cache/`).
+- `services/render.render_spec_from_yaml`: framework-agnostischer Wrapper über `speccify_core.render_for_target`; baut `Spec` direkt aus YAML-Bytes (kein Registry-Roundtrip → editierte YAML funktioniert syntaktisch, endet im Cache-Miss-Pfad). Offline-only via `ReplayCacheClient(offline=True)`.
+- `routes/specs.list_specs`: listet Pseudo-Registry-Einträge (`@scope/name@latest` + raw YAML). Plan-Abweichung: nicht `<repo>/specs/*.yaml` (`spec://name`-IDs, keine Cache-Hits) — Begründung im Plan dokumentiert.
+- `routes/render.render_spec`: Pydantic-Body `{spec_id, version, spec_yaml, target}`; Fehler-Mapping `cache_miss` 422 (mit Maintainer-Hinweis auf `scripts/record_llm_cache.py`), `spec_invalid` 400 (YAML-Parse + `SpecLoaderError`/`CodegenError`), `unknown_target` 400, `bad_request` 400.
+- Tests: `test_specs_route.py` (2) + `test_render_route.py` (5) → **182 Tests grün** (175 → 182); ruff check + ruff format --check clean (nach 1× `--fix` + format-Lauf für die zwei neuen Module).
+- Step 1 abgehakt im Plan; Cross-Consistency-Test bewusst in Step 4 verschoben. Nächster Schritt: Step 2 (Frontend-Skeleton) nach User-Commit.
