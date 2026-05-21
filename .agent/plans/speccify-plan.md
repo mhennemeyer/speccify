@@ -3,7 +3,7 @@
 > **Status**: 📋 Entwurf – Vorstellung im internen Team-Bereich
 > **Erstellt**: 2026-04-29
 > **Update 2026-04-29**: Entscheid für Desktop-Stack getroffen → **Tauri** (Rust + System-WebView). Gleichzeitig willkommene Gelegenheit, Rust im Team aufzubauen.
-> **Update 2026-05-04 (Refinement)**: Fokus geschärft auf **CLI + MCP + Registry zuerst** („npm-artiger Workflow"). Desktop-App **geparkt** (Re-Aktivierungs-Kriterien siehe Phase 4). Browser-Playground läuft **parallel** zum CLI als minimale Demo-Oberfläche. Visuelles Tooling zerlegt: Asset-Refs in der Spec sofort, Galerie/Live-Preview/Figma nachgelagert. Package-Manager-Designentscheidungen siehe [flowcation/package-manager-comparison.md](archive/package-manager-comparison.md).
+> **Update 2026-05-04 (Refinement)**: Fokus geschärft auf **CLI + MCP + Registry zuerst** („npm-artiger Workflow"). Desktop-App **geparkt** (Re-Aktivierungs-Kriterien siehe Phase 4). Browser-Playground läuft **parallel** zum CLI als minimale Demo-Oberfläche. Visuelles Tooling zerlegt: Asset-Refs in der Spec sofort, Galerie/Live-Preview/Figma nachgelagert. Package-Manager-Designentscheidungen siehe [Package-Manager-Vergleich](archive/package-manager-comparison.md).
 > **Ziel**: Eine Plattform, auf der Komponenten nicht als Code in einem konkreten Framework, sondern als **präzise, sprach- und ökosystem-unabhängige Spezifikationen** entwickelt, refined, gesucht und geteilt werden. Ein AI-Agent kann anhand einer Spezifikation und einem stabilen Identifier (`<comp-id>`) die Komponente in beliebigen Ziel-Stacks (SwiftUI, Angular, React, Flutter, Jetpack Compose, Backend-Services, CLI-Tools …) deterministisch umsetzen. Distribution zuerst über CLI + MCP-Server + Website/Playground; Desktop-App optional und nachgelagert.
 > **Arbeitsname**: `speccify` (Flow + Specification)
 
@@ -29,7 +29,7 @@ Mit AI-Agenten verschiebt sich der Engpass: **Code zu generieren ist billig gewo
 
 ## Die Idee – ausgeschmückt
 
-Eine Komponente in flowcation ist eine **abgeschlossene Spezifikation**, die alles enthält, was ein AI-Agent braucht, um sie in einem beliebigen Stack korrekt umzusetzen:
+Eine Komponente in Speccify ist eine **abgeschlossene Spezifikation**, die alles enthält, was ein AI-Agent braucht, um sie in einem beliebigen Stack korrekt umzusetzen:
 
 - Eindeutige Identität (`spec://login-with-otp@1.4.0` oder `@org/login-with-otp`)
 - Maschinenlesbares Manifest (YAML/JSON-Schema)
@@ -128,7 +128,7 @@ title: Login mit Einmal-Passwort
 summary: >
   Login-Flow per E-Mail/Telefon und 6-stelligem OTP, inkl. Resend, Lockout
   nach 5 Fehlversuchen, Accessibility AA.
-authors: [marc@flowcation.com]
+authors: [marc@speccify.io]
 license: MIT
 
 inputs:
@@ -177,7 +177,7 @@ conformance:
 
 ## npm-artiger Workflow konkret
 
-> Vollständige Begründung der Designentscheidungen: [flowcation/package-manager-comparison.md](archive/package-manager-comparison.md). Hier die Zusammenfassung als Vertrag für CLI, Registry und MCP.
+> Vollständige Begründung der Designentscheidungen: [Package-Manager-Vergleich](archive/package-manager-comparison.md). Hier die Zusammenfassung als Vertrag für CLI, Registry und MCP.
 
 ### Was wir aus existierenden PMs übernehmen
 
@@ -187,7 +187,7 @@ conformance:
 | Namensschutz | reservierte/verifizierte Scopes, **registry-gebundene** Scopes (gegen Dependency Confusion) | npm + PyPI-Lehre |
 | Versionierung | SemVer pflicht, **kein** Caret-Default | (negativ) npm |
 | Resolver | **MVS – Minimum Version Selection**, deterministisch, kein Backtracking | Go |
-| Lockfile | Hashes pflicht **+ Generator-Pin** (`model`, `prompt_version`, `seed`) **+ Output-Hashes** | Go + flowcation-eigen |
+| Lockfile | Hashes pflicht **+ Generator-Pin** (`model`, `prompt_version`, `seed`) **+ Output-Hashes** | Go + Speccify-eigen |
 | Immutability | unveränderlich, nur `yank` mit Begründung | Maven + Cargo |
 | Trust | sigstore-artige Signaturen, Transparency Log, 2FA pflicht | npm/PyPI 2024+ + Go |
 | Distribution | Federation, registry-gebundene Scopes | Maven + PyPI-Lehre |
@@ -197,7 +197,7 @@ conformance:
 
 Caret-Default (`^1.2.3`), `unpublish` < 72h, flat Namespace ohne Scope, Backtracking-Resolver mit Solver-Magie, Cargo-Regel „eine Version pro Build", Maven-Range-Syntax, Lockfile ohne Hashes.
 
-### flowcation-spezifisch (kein anderer PM hat das)
+### Speccify-spezifisch (kein anderer PM hat das)
 
 1. **`--target`** als first-class-Bürger jeder Operation (`pull`, `verify`, `lock`).
 2. **Generator-Pin** im Lockfile → reproduzierbarer *Output*, nicht nur reproduzierbare Auflösung.
@@ -306,7 +306,7 @@ Phase 1 ist im Refinement 2026-05-06 in vier Sub-Spikes zerlegt worden, damit je
 - **Phase 1a** (Resolver/Lockfile/Stub-Codegen, abgeschlossen 2026-05-06): MVS-Resolver, `speccify.yaml`/`speccify.lock`, deterministisches Stub-Codegen (Template-Pin), CLI `lock`/`add`/`pull`/`verify`, lokales Pseudo-Registry. Plan: [`.agent/plans/phase-1a-resolver-lockfile.md`](phase-1a-resolver-lockfile.md).
 - **Phase 1b** (React-LLM-Codegen + `speccify init`, abgeschlossen 2026-05-13): LLM-basierter React-Codegen (TSX mit Props/Types pro Spec) statt Stub-Markdown. Modell-Pin `bedrock/eu.anthropic.claude-opus-4-7` via AWS Bedrock `converse`; Reproduzierbarkeit über Replay-Cache (`tests/fixtures/llm-cache/`, Cache-Key über `spec_sha256 + target + model + prompt_version + seed`). Lockfile-Generator-Pin um `kind: llm` erweitert (`provider`, `model`, `prompt_version`, `seed`, `cache_key`). `pull`/`verify` mit `--offline/--cache-dir` Flags; CI läuft komplett offline gegen den eingecheckten Cache (E2E-Smoke: `example-project` + frischer `init`+`add`+`lock`+`pull`+`verify`-Pfad). Live-Aufnahme via `scripts/record_llm_cache.py` (Maintainer-Tool). Erstes Ziel-Framework ist React (statt SwiftUI), weil der Phase-1d-Browser-Playground mit React-Output direkt live geht; SwiftUI bleibt zweites Target in Phase 3. Plan: [`.agent/plans/phase-1b-react-codegen.md`](phase-1b-react-codegen.md). Tag-Vorschlag: `v0.2.0-phase-1b`.
 - **Phase 1c** (MCP-Server `speccify-mcp`, abgeschlossen 2026-05-16): Dünner Adapter über `speccify-core`, der `speccify-cli`-Workflows ans Model-Context-Protocol bindet. Transport ausschließlich `stdio` (HTTP/SSE erst in Phase 2). **Tools** (spiegeln CLI 1:1, byte-identische Outputs via Cross-Consistency-Test): `lint(spec_path)`, `resolve(manifest_path?)`, `render(spec_id, target, offline?, cache_dir?)`, `lock(manifest_path?)`, `pull(manifest_path?, out_dir, offline?, cache_dir?)`, `verify(manifest_path?, out_dir, offline?, cache_dir?)`. `verify` liefert strukturiert `{ok, problems}` (Drift ist Antwort, kein MCP-Error). **Resources**: `speccify://manifest`, `speccify://lockfile` (Hint-Kommentar wenn Datei fehlt), Template `spec://{scope}/{name}@{version}` (YAML-Bytes via `LocalRegistry.fetch`). **Prompts**: `add-spec(spec_ref, out_dir=./src/components)` rendert `resolve` → `lock` → `pull` → `verify`-Anleitung. **Defaults**: `--offline` aktiv, Cache-Pfad via `SPECCIFY_CACHE_DIR` (Default eingecheckter Repo-Cache); Project-Root via `--project`/`SPECCIFY_PROJECT_ROOT` als Startup-Argument, Server stateless zwischen Calls. **Smoke** (`scripts/mcp_smoke.py`, CI-Step `speccify-mcp smoke (stdio, offline)`): MCP-Handshake + `tools/list` + `tools/call render` + `resources/read manifest`, alle Bedrock-Creds gestrippt. Plan: [`phase-1c-mcp-server.md`](phase-1c-mcp-server.md). Tag-Vorschlag: `v0.3.0-phase-1c`.
-- **Phase 1d** (Browser-Playground `apps/web/`, abgeschlossen 2026-05-19): FastAPI-Backend `speccify-web-backend` (in-process über `speccify-core`, offline gegen den eingecheckten Replay-Cache) + Next.js 15 / React 19 / TypeScript-Frontend (pnpm@10.33.3, Node ≥22 LTS) mit Spec-Picker, Monaco-YAML-Editor, Render-Output (TSX + `generator_pin`-Detail) und Error-Panel (`cache_miss`-Hint). **Tool-Vertrag `/api/v1/...`**: `GET /api/v1/specs` → Liste `{id, version, title, yaml}` aus der lokalen Pseudo-Registry (Default `<repo>/registry-fixtures/`, override via `SPECCIFY_REGISTRY_PATH`); `POST /api/v1/render` mit Body `{spec_id, version, spec_yaml, target}` → `{files, generator_pin}` aus `speccify_core.render_for_target` mit `ReplayCacheClient(offline=True)`. **Fehler-Codes** (identisch zu CLI/MCP): `cache_miss` (422, mit Maintainer-Hint auf `scripts/record_llm_cache.py`), `spec_invalid` (400, YAML-/Schema-Fehler), `unknown_target` (400), `bad_request` (400). **Cross-Consistency** als Vertrag: `apps/web/backend/tests/test_cross_consistency.py` rendert `@org/button@0.1.0` über `speccify_cli.commands.pull.run_pull`, `speccify_mcp.tools.run_pull` und `speccify_web_backend.services.render.render_spec_from_yaml` und vergleicht `org/Button.tsx`-Bytes byte-identisch — damit ist das Dreieck CLI ↔ MCP ↔ Web geschlossen. **Limitierungen**: nur Target `react`, ausschließlich offline gegen den eingecheckten Replay-Cache (kein Live-LLM), keine Persistenz, keine Auth, kein Upload (Editor zeigt Cache-Miss-Pfad bewusst als Demo). **CI**: zwei neue Jobs `apps/web backend (offline)` (`uv run pytest apps/web/backend/tests`) und `apps/web frontend build` (`pnpm install --frozen-lockfile` + `pnpm typecheck` + `pnpm build`); Playwright-E2E bewusst nicht eingebaut (Aufwand vs. Mehrwert gegenüber Cross-Consistency-Test, bleibt für Phase 2 offen). Plan: [`phase-1d-browser-playground.md`](phase-1d-browser-playground.md). Tag-Vorschlag: `v0.4.0-phase-1d`.
+- **Phase 1d** (Browser-Playground `apps/web/`, abgeschlossen 2026-05-19): FastAPI-Backend `speccify-web-backend` (in-process über `speccify-core`, offline gegen den eingecheckten Replay-Cache) + Next.js 15 / React 19 / TypeScript-Frontend (pnpm@10.33.3, Node ≥22 LTS) mit Spec-Picker, Monaco-YAML-Editor, Render-Output (TSX + `generator_pin`-Detail) und Error-Panel (`cache_miss`-Hint). **Tool-Vertrag `/api/v1/...`**: `GET /api/v1/specs` → Liste `{id, version, title, yaml}` aus der lokalen Pseudo-Registry (Default `<repo>/registry-fixtures/`, override via `SPECCIFY_REGISTRY_PATH`); `POST /api/v1/render` mit Body `{spec_id, version, spec_yaml, target}` → `{files, generator_pin}` aus `speccify_core.render_for_target` mit `ReplayCacheClient(offline=True)`. **Fehler-Codes** (identisch zu CLI/MCP): `cache_miss` (422, mit Maintainer-Hint auf `scripts/record_llm_cache.py`), `spec_invalid` (400, YAML-/Schema-Fehler), `unknown_target` (400), `bad_request` (400). **Cross-Consistency** als Vertrag: `apps/web/backend/tests/test_cross_consistency.py` rendert `@org/button@0.1.0` über `speccify_cli.commands.pull.run_pull`, `speccify_mcp.tools.run_pull` und `speccify_web_backend.services.render.render_spec_from_yaml` und vergleicht `org/Button.tsx`-Bytes byte-identisch — damit ist das Dreieck CLI ↔ MCP ↔ Web geschlossen. **Limitierungen**: nur Target `react`, ausschließlich offline gegen den eingecheckten Replay-Cache (kein Live-LLM), keine Persistenz, keine Auth, kein Upload (Editor zeigt Cache-Miss-Pfad bewusst als Demo). **CI**: zwei neue Jobs `apps/web backend (offline)` (`uv run pytest apps/web/backend/tests`) und `apps/web frontend build` (`pnpm install --frozen-lockfile` + `pnpm typecheck` + `pnpm build`); Playwright-E2E bewusst nicht eingebaut (Aufwand vs. Mehrwert gegenüber Cross-Consistency-Test, bleibt für Phase 2 offen). Plan: [`phase-1d-browser-playground.md`](archive/phase-1d-browser-playground.md). Tag-Vorschlag: `v0.4.0-phase-1d`.
 
 - **CLI-MVP**: `init`, `add`, `pull --target`, `lock`, `verify`, `publish`, `yank`, `search`, `lint`.
 - **MCP-Server** (gleiche Resolver-/Codegen-Logik wie CLI): `resolve`, `search`, `render`, `validate`, `lock`, `verify`.
@@ -361,7 +361,7 @@ Phase 1 ist im Refinement 2026-05-06 in vier Sub-Spikes zerlegt worden, damit je
 
 ## Differenzierung
 
-| | flowcation | npm/Maven | Storybook | Figma | OpenAPI |
+| | Speccify | npm/Maven | Storybook | Figma | OpenAPI |
 |---|---|---|---|---|---|
 | Sprach-/Framework-unabhängig | ✅ | ❌ | ❌ | ✅ (nur UI) | ✅ (nur APIs) |
 | Inkl. UX, Logik, Workflow | ✅ | – | UX | UX | Logik |
@@ -419,7 +419,7 @@ Wenn dieser Spike die Hypothese stützt („Spec + Agent = reproduzierbarer Code
 - **Spec-Linting durch LLM-Jury**: 3 verschiedene Modelle bewerten Spec-Qualität, Score 0–100.
 - **Visuelle Diff-Ansicht** zwischen Spec-Versionen (gerenderte Vorschauen nebeneinander).
 - **„Trust Score" pro Spec** basierend auf: Conformance-Tests grün in N Targets, Anzahl produktiver Nutzungen, Reviews.
-- **Federation**: jedes Team hostet eigenes Registry, flowcation.com indexiert (à la PyPI + private Indexe).
+- **Federation**: jedes Team hostet eigenes Registry, speccify.io indexiert (à la PyPI + private Indexe).
 - **Spec-Templates pro Domäne**: E-Commerce, Finanzen, IoT … vorgefertigte Kompositionen.
 - **„Generative UI"-Pfad**: Spec liefert nicht nur Code, sondern zur Laufzeit gerenderte UI über einen Runtime-Interpreter (für Prototyping).
 - **Time-Machine**: ältere Spec-Version mit aktuellem Modell neu generieren → wird sie besser?
@@ -430,8 +430,8 @@ Wenn dieser Spike die Hypothese stützt („Spec + Agent = reproduzierbarer Code
 
 ## Vorarbeiten / Klären, bevor wir loslegen
 
-- [x] Domain `flowcation.com` gesichert (Markenrecherche steht aus)
-- [x] Package-Manager-Designentscheidungen geklärt → [flowcation/package-manager-comparison.md](archive/package-manager-comparison.md)
+- [x] Domain `speccify.io` gesichert (Markenrecherche steht aus)
+- [x] Package-Manager-Designentscheidungen geklärt → [Package-Manager-Vergleich](archive/package-manager-comparison.md)
 - [ ] Repo anlegen (eigenständig, getrennt vom Agent-Fundamentals-Projekt)
 - [ ] Spec-Schema v0 als JSON-Schema veröffentlichen (Phase 0)
 - [ ] CLI-/MCP-Spike (siehe Spike-Vorschlag) – Go/No-Go für Phase 2 ff.
