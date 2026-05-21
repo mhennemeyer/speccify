@@ -9,7 +9,7 @@ isActive: false
 
 Phasen 1a/1b/1c sind abgeschlossen: `speccify-core` exponiert einen stabilen Render-Vertrag (`render_for_target(spec, target, generator_pin)` mit Replay-Cache), `speccify-cli` und `speccify-mcp` sind dünne, byte-identische Adapter darüber. Damit ist die Codegen-Pipeline so weit gefestigt, dass eine zweite Nutzungs-Oberfläche jenseits von Terminal/Agent möglich ist.
 
-**Ziel von Phase 1d:** Ein **Browser-Playground** unter `apps/web/`, der dieselbe Codegen-Pipeline anfasst wie CLI und MCP und das Versprechen aus dem Master-Plan einlöst, dass die Website *die* Demo- und Onboarding-Oberfläche von Speccify ist (siehe [`speccify-plan.md`](./speccify-plan.md) Z. 6, 97–103, 280, 302–308 sowie Phase-1d-Zeile „Browser-Playground auf der Website, der dieselbe Codegen-Pipeline nutzt").
+**Ziel von Phase 1d:** Ein **Browser-Playground** unter `apps/web/`, der dieselbe Codegen-Pipeline anfasst wie CLI und MCP und das Versprechen aus dem Master-Plan einlöst, dass die Website *die* Demo- und Onboarding-Oberfläche von Speccify ist (siehe [`speccify-plan.md`](../speccify-plan.md) Z. 6, 97–103, 280, 302–308 sowie Phase-1d-Zeile „Browser-Playground auf der Website, der dieselbe Codegen-Pipeline nutzt").
 
 Konkret soll ein User im Browser:
 1. Eine der eingecheckten Referenz-Specs (`specs/*.yaml`) oder eine selbst eingegebene YAML-Spec sehen,

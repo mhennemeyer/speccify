@@ -61,4 +61,4 @@ und vergleicht die TSX-Bytes byte-identisch.
   erklärt es).
 - Kein Deployment, kein Auth, keine Persistenz.
 
-Master-Plan: [`.agent/plans/phase-1d-browser-playground.md`](../../.agent/plans/phase-1d-browser-playground.md).
+Master-Plan: [`.agent/plans/phase-1d-browser-playground.md`](../../.agent/plans/archive/phase-1d-browser-playground.md).

@@ -1004,3 +1004,13 @@
 - Kein eigener Commit gemäß `rules.md`; User entscheidet über Commit-Zeitpunkt.
 - Nächster Schritt: Step 4 — Cross-Consistency-Test CLI ↔ MCP ↔ Web byte-
   identisch + Top-Level-README-Abschnitt „Browser-Playground".
+
+## 2026-05-21 — Phase 1d Phasen-Plan archiviert
+- `phase-1d-browser-playground.md` liegt unter `.agent/plans/archive/`
+  (`isActive: false`); Datei-History via `git mv` erhalten.
+- `AGENTS.md` „Aktuelle Phase" referenziert nur noch den Archiv-Pfad;
+  1d in Archiv-Liste aufgenommen (analog 1a/1b/1c). Tag-Vorschlag
+  `v0.4.0-phase-1d` bleibt offen an User (vgl. `rules.md`).
+- `.agent/status.md` Meta-Block + „Nächste Schritte" auf Archiv-Zustand
+  umgestellt; nächster offener Punkt: Phase-2-Plan-Entwurf nach User-Tag.
+- Keine Code-/Test-Änderungen; `uv run pytest` als Sanity erwartet 183 grün.
