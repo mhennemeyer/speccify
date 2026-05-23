@@ -1,0 +1,48 @@
+# Local development stack for the Speccify registry backend.
+# Boots Postgres 16 + the Django dev server. Tests do NOT need this —
+# they run against in-memory SQLite via the `SPECCIFY_REGISTRY_TEST=1`
+# env var (see `registry/conftest.py`).
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: speccify_registry
+      POSTGRES_USER: speccify
+      POSTGRES_PASSWORD: speccify
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U speccify -d speccify_registry"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+    volumes:
+      - registry-pgdata:/var/lib/postgresql/data
+
+  registry:
+    build:
+      context: ..
+      dockerfile: registry/Dockerfile.dev
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DJANGO_SETTINGS_MODULE: speccify_registry.settings
+      SPECCIFY_REGISTRY_DEBUG: "1"
+      DATABASE_URL: "postgres://speccify:speccify@postgres:5432/speccify_registry"
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: speccify_registry
+      POSTGRES_USER: speccify
+      POSTGRES_PASSWORD: speccify
+    ports:
+      - "8001:8001"
+    command: >
+      sh -c "uv run --package speccify-registry python -m django migrate &&
+             uv run --package speccify-registry python -m django runserver 0.0.0.0:8001"
+    volumes:
+      - ..:/workspace
+    working_dir: /workspace
+
+volumes:
+  registry-pgdata:

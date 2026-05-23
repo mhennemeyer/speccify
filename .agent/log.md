@@ -1014,3 +1014,29 @@
 - `.agent/status.md` Meta-Block + „Nächste Schritte" auf Archiv-Zustand
   umgestellt; nächster offener Punkt: Phase-2-Plan-Entwurf nach User-Tag.
 - Keine Code-/Test-Änderungen; `uv run pytest` als Sanity erwartet 183 grün.
+
+## 2026-05-22 — Phase-2-Plan-Skelett (Registry-MVP)
+
+- Neuer Phasen-Plan `.agent/plans/phase-2-registry-mvp.md` (`isActive: true`) als
+  Skelett analog zu früheren Phasen-Kickoffs angelegt. Scope: Django-Backend
+  unter `registry/` (User, Scope, Spec, SpecVersion, Token+TOTP-2FA),
+  REST-API `/api/v1/registry/...` (publish/fetch/versions/search/yank/whoami/
+  tokens), CLI-Commands `login`/`logout`/`publish`/`search`/`yank`/`whoami`,
+  MCP-Tools `search`/`publish`/`yank` (Auth via `SPECCIFY_TOKEN`), Web-UI
+  (Tendenz Django-Templates), Lockfile-Bump auf `schema_version: 2` mit
+  optionalem `signature`-Feld (sigstore vorbereitet) und `yank_status`,
+  zweistufige Registry-Resolution (lokal → Remote) mit registry-gebundenen
+  Scopes gegen Dependency Confusion, Workspaces nativ (optional / vertagbar
+  nach Phase 3).
+- Explizit Out of Scope in Phase 2: volle sigstore-Verifikation, aktive
+  Federation, OAuth/WebAuthn, Discovery-Features, Live-LLM-Cloud-Rendering,
+  Live-Domain-Deploy.
+- 10 Open Questions als Round-1-Klärungspunkte für User (Backend-Framework
+  final, Web-UI-Stack, Storage-Backend, 2FA-Methode, Token-Format, Login-UX,
+  Scope-Vergabe, Workspaces in 2 vs. 3, Web-UI in `apps/web/` vs. `registry/`,
+  Domain-Status `speccify.io`). Stages 0–9 als Skelett; Delivery-Steps folgen
+  in Round 2 nach Klärung der Open Questions.
+- `.agent/status.md` „Nächste Schritte" um Phase-2-Plan-Kickoff-Eintrag
+  ergänzt; Tag-Vorschlag `v0.4.0-phase-1d` bleibt weiterhin offen an User
+  (nicht selbst gesetzt, vgl. `rules.md`).
+- Keine Code-/Test-Änderungen.

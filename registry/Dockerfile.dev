@@ -1,0 +1,22 @@
+# Dev image for the Speccify registry backend.
+# Mirrors the host toolchain: Python 3.12 + uv. The full repo is mounted
+# read-write via docker-compose so editable workspace installs work.
+
+FROM python:3.12-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    UV_LINK_MODE=copy
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends curl ca-certificates build-essential \
+ && rm -rf /var/lib/apt/lists/* \
+ && curl -LsSf https://astral.sh/uv/install.sh | sh \
+ && mv /root/.local/bin/uv /usr/local/bin/uv
+
+WORKDIR /workspace
+
+# Pre-sync against an empty workspace mount-point — the actual sources
+# are mounted at runtime by docker-compose. The runtime command re-syncs
+# if needed.
+CMD ["uv", "run", "--package", "speccify-registry", "python", "-m", "django", "runserver", "0.0.0.0:8001"]

@@ -14,7 +14,7 @@ authors = [{ name = "Marc Hennemeyer" }]
 bedrock = ["speccify-core[bedrock]"]
 
 [tool.uv.workspace]
-members = ["core", "cli", "mcp", "apps/web/backend"]
+members = ["core", "cli", "mcp", "apps/web/backend", "registry"]
 
 [dependency-groups]
 dev = [
@@ -27,6 +27,8 @@ dev = [
     "speccify-cli",
     "speccify-mcp",
     "speccify-web-backend",
+    "speccify-registry",
+    "pytest-django>=4.9",
 ]
 
 [tool.uv.sources]
@@ -34,6 +36,7 @@ speccify-core = { workspace = true }
 speccify-cli = { workspace = true }
 speccify-mcp = { workspace = true }
 speccify-web-backend = { workspace = true }
+speccify-registry = { workspace = true }
 
 [tool.ruff]
 line-length = 100
@@ -48,5 +51,5 @@ strict = false
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
-testpaths = ["core", "cli", "mcp", "apps/web/backend"]
+testpaths = ["core", "cli", "mcp", "apps/web/backend", "registry"]
 addopts = "-q"
