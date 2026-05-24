@@ -16,7 +16,15 @@ from typing import Any
 
 from mcp.server.fastmcp import FastMCP
 
-from .tools import run_lint, run_lock, run_pull, run_render, run_resolve, run_verify
+from .tools import (
+    run_lint,
+    run_lock,
+    run_publish,
+    run_pull,
+    run_render,
+    run_resolve,
+    run_verify,
+)
 
 SERVER_NAME = "speccify-mcp"
 
@@ -192,5 +200,30 @@ def _register_write_tools(server: FastMCP, config: ServerConfig) -> None:
             registry_path=Path(registry_path) if registry_path else None,
             offline=offline,
             cache_dir=Path(cache_dir) if cache_dir else None,
+        )
+        return result.to_dict()
+
+    @server.tool(
+        name="publish",
+        description=(
+            "Publish a single spec YAML to a Speccify registry. Reads "
+            "the file's bytes verbatim and POSTs to "
+            "`/api/v1/registry/specs/publish`. Auth token is loaded "
+            "from the shared CLI credentials file unless `token` is "
+            "passed explicitly. Returns a structured result with "
+            "`ok`, `status`, `code` (e.g. `version_conflict`, "
+            "`scope_forbidden`, `stale_2fa`, `missing_credentials`) "
+            "and `id`/`version`/`sha256` on success."
+        ),
+    )
+    def publish(
+        spec_path: str,
+        registry: str,
+        token: str | None = None,
+    ) -> dict[str, Any]:
+        result = run_publish(
+            spec_path=Path(spec_path),
+            registry=registry,
+            token=token,
         )
         return result.to_dict()

@@ -4,8 +4,8 @@ Startet den `speccify-mcp`-Server per `stdio` als Subprocess, fährt
 einen MCP-Handshake mit dem offiziellen Python-Client und prüft die
 in Phase 1c versprochenen Grund-Roundtrips:
 
-1. `tools/list` enthält exakt die 6 Tools `lint/lock/pull/render/
-   resolve/verify`.
+1. `tools/list` enthält exakt die 7 Tools `lint/lock/publish/pull/
+   render/resolve/verify`.
 2. `tools/call render` für `@org/button@0.1.0` (offline) liefert
    TSX-Bytes (mind. ein `export`-Statement) und `generator_pin.kind
    == "llm"`.
@@ -41,7 +41,7 @@ EXAMPLE_PROJECT = REPO_ROOT / "example-project"
 REGISTRY_FIXTURES = REPO_ROOT / "registry-fixtures"
 LLM_CACHE = REPO_ROOT / "tests" / "fixtures" / "llm-cache"
 
-EXPECTED_TOOLS = {"lint", "lock", "pull", "render", "resolve", "verify"}
+EXPECTED_TOOLS = {"lint", "lock", "publish", "pull", "render", "resolve", "verify"}
 
 
 def _prepare_workspace(tmp: Path) -> Path:
