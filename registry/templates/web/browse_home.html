@@ -1,0 +1,35 @@
+{% extends "web/base.html" %}
+{% block title %}Browse — Speccify Registry{% endblock %}
+{% block content %}
+  <h1>Browse specs</h1>
+  <form method="get" action="{% url 'web-home' %}">
+    <input type="text" name="q" value="{{ q }}" placeholder="Search name, description, tags…" style="width: 60%">
+    <button type="submit">Search</button>
+  </form>
+  <p>{{ total }} spec{{ total|pluralize }} published{% if q %} matching "{{ q }}"{% endif %}.</p>
+  {% if rows %}
+    <table>
+      <thead>
+        <tr><th>Spec</th><th>Latest</th><th>Description</th><th>Tags</th><th>Published</th></tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+          <tr>
+            <td><a href="{% url 'web-spec-detail' scope=row.scope name=row.name %}">{{ row.id }}</a></td>
+            <td>{{ row.latest_version }}</td>
+            <td>{{ row.description }}</td>
+            <td>{{ row.tags|join:", " }}</td>
+            <td>{{ row.latest_published_at|date:"Y-m-d H:i" }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <p>
+      {% if has_prev %}<a href="?q={{ q }}&page={{ page|add:'-1' }}">← Prev</a>{% endif %}
+      Page {{ page }}
+      {% if has_next %}<a href="?q={{ q }}&page={{ page|add:'1' }}">Next →</a>{% endif %}
+    </p>
+  {% else %}
+    <p><em>No specs found.</em></p>
+  {% endif %}
+{% endblock %}

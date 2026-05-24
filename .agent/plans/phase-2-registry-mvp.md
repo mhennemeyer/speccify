@@ -163,7 +163,7 @@ POST   /api/v1/registry/tokens                      # create token (requires fre
 | 1 | Django-Skeleton + Modelle + Migrations + lokales Docker-Compose; `registry`-Workspace; erste Smoke gegen leeres Registry. | **Done** (2026-05-23) |
 | 2 | Auth + 2FA + Tokens + `speccify login`/`whoami`. | **Done** (2026-05-23) |
 | 3 | `publish` + `fetch` + `versions` API + CLI/MCP-Adapter; idempotenter Re-Publish. | **Done** (2026-05-24) — Backend + CLI + MCP-Tool `publish` |
-| 4 | `search` API + Web-UI (Suche + Detail + Profil). | **Backend done** (2026-05-24) — Web-UI offen |
+| 4 | `search` API + Web-UI (Suche + Detail + Profil). | **Done** (2026-05-24) — Backend + Web-UI |
 | 5 | `yank` + Lockfile-Bump auf `schema_version: 2` (`yank_status`, `signature`-Slot); `verify`-Warnung. | Open |
 | 6 | RemoteRegistry-Integration im Resolver (zweistufig, Konflikt-Detection); Lockfile-`resolved_via` für Remote-Pfade. | Open |
 | 7 | CI: Registry-Job mit Postgres-Service-Container; Cross-Consistency-Erweiterung; Performance-Smoke (`search` p95 < 200 ms). | Open |

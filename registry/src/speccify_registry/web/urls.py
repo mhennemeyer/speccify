@@ -4,9 +4,12 @@ from __future__ import annotations
 
 from django.urls import path
 
-from . import views
+from . import browse, views
 
 urlpatterns = [
+    path("", browse.home_view, name="web-home"),
+    path("specs/<str:scope>/<str:name>", browse.spec_detail_view, name="web-spec-detail"),
+    path("u/<str:username>", browse.user_profile_view, name="web-user-profile"),
     path("auth/signup", views.signup_view, name="web-signup"),
     path("auth/login", views.login_view, name="web-login"),
     path("auth/logout", views.logout_view, name="web-logout"),

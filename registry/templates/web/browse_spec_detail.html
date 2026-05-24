@@ -1,0 +1,30 @@
+{% extends "web/base.html" %}
+{% block title %}{{ spec_id }} — Speccify Registry{% endblock %}
+{% block content %}
+  <p><a href="{% url 'web-home' %}">← Browse</a></p>
+  <h1>{{ spec_id }}</h1>
+  {% if spec.description %}<p>{{ spec.description }}</p>{% endif %}
+  {% if spec.tags %}<p><strong>Tags:</strong> {{ spec.tags|join:", " }}</p>{% endif %}
+  <p><strong>Owner:</strong>
+    <a href="{% url 'web-user-profile' username=spec.scope.owner.username %}">{{ spec.scope.owner.username }}</a>
+  </p>
+
+  <h2>Versions</h2>
+  <table>
+    <thead><tr><th>Version</th><th>Published</th><th>Uploader</th><th>SHA256</th><th>Status</th></tr></thead>
+    <tbody>
+      {% for v in versions %}
+        <tr>
+          <td>{{ v.version }}{% if forloop.first %} <em>(latest)</em>{% endif %}</td>
+          <td>{{ v.published_at|date:"Y-m-d H:i" }}</td>
+          <td>{{ v.uploader.username }}</td>
+          <td><code>{{ v.sha256|slice:":12" }}…</code></td>
+          <td>{{ v.yank_status }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <h2>Latest YAML ({{ latest.version }})</h2>
+  <pre style="background:#f5f5f5; padding:1rem; overflow:auto;">{{ yaml_text }}</pre>
+{% endblock %}
