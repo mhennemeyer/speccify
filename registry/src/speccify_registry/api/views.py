@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from django.conf import settings
 from django.core.cache import cache
+from django.db.models import Max, Q
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -13,6 +14,12 @@ from . import device_codes, two_factor
 from . import publish as publish_module
 from .models import DeviceCodeStatus, Spec, SpecVersion, YankStatus
 from .publish import PublishError
+
+# Search pagination bounds — small enough to keep responses snappy in
+# the upcoming Web-UI (Stage 4 frontend) without forcing the CLI to
+# paginate aggressively.
+_SEARCH_LIMIT_DEFAULT = 20
+_SEARCH_LIMIT_MAX = 100
 
 
 class WhoamiView(APIView):
@@ -31,9 +38,117 @@ class WhoamiView(APIView):
 
 
 class SpecsSearchView(APIView):
+    """``GET /api/v1/registry/specs`` — list/search published specs.
+
+    Query parameters:
+
+    - ``q`` (optional): case-insensitive substring match against
+      ``scope/name``, ``description`` and ``tags`` entries.
+    - ``scope`` (optional): exact-match filter on the scope name
+      (e.g. ``scope=org``).
+    - ``limit`` (optional, default 20, max 100): page size.
+    - ``offset`` (optional, default 0): page offset.
+
+    Results are ordered by the most-recent ``SpecVersion.published_at``
+    descending (specs without any published version are excluded), then
+    by ``@scope/name`` for deterministic tie-breaks. The response
+    always reports the total match count so the Web-UI (Stage 4
+    frontend) can render pagination.
+
+    Auth: anonymous — the registry is read-public; private mirrors
+    will gate this at the reverse-proxy layer in later phases.
+    """
+
+    authentication_classes: list = []
+
     def get(self, request: Request) -> Response:
-        # Stage 1 placeholder — real full-text search lands in Stage 4.
-        return Response({"results": [], "total": 0, "page": 1, "per_page": 20})
+        params = request.query_params
+        q = (params.get("q") or "").strip()
+        scope_filter = (params.get("scope") or "").strip()
+
+        try:
+            limit = int(params.get("limit", _SEARCH_LIMIT_DEFAULT))
+            offset = int(params.get("offset", 0))
+        except (TypeError, ValueError):
+            return Response(
+                {"code": "invalid_pagination", "detail": "limit/offset must be integers."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if limit < 1 or offset < 0:
+            return Response(
+                {
+                    "code": "invalid_pagination",
+                    "detail": "limit must be >= 1 and offset must be >= 0.",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        limit = min(limit, _SEARCH_LIMIT_MAX)
+
+        # ``latest_published_at`` is computed once via an aggregate so we
+        # can order by it and ship it in the response without N+1 queries.
+        # ``Max(... published_at)`` is NULL for specs without versions —
+        # those are filtered out below since the catalogue should only
+        # surface things that are actually publishable today.
+        qs = (
+            Spec.objects.select_related("scope")
+            .annotate(latest_published_at=Max("versions__published_at"))
+            .filter(latest_published_at__isnull=False)
+        )
+
+        if scope_filter:
+            qs = qs.filter(scope__name=scope_filter)
+
+        if q:
+            # ``tags`` is a JSONField list; ``__icontains`` matches the
+            # serialised JSON which is good enough for substring search
+            # in MVP (we explicitly avoid Postgres-specific JSON
+            # operators here so SQLite-backed tests stay portable).
+            qs = qs.filter(
+                Q(scope__name__icontains=q)
+                | Q(name__icontains=q)
+                | Q(description__icontains=q)
+                | Q(tags__icontains=q)
+            )
+
+        qs = qs.order_by("-latest_published_at", "scope__name", "name")
+        total = qs.count()
+        page = list(qs[offset : offset + limit])
+
+        # Resolve the version string of the latest version for each spec
+        # in a single query, keyed by spec_id, to avoid an N+1 loop.
+        latest_versions: dict[int, SpecVersion] = {}
+        if page:
+            spec_ids = [s.id for s in page]
+            for sv in SpecVersion.objects.filter(spec_id__in=spec_ids).order_by(
+                "spec_id", "-published_at"
+            ):
+                latest_versions.setdefault(sv.spec_id, sv)
+
+        results = []
+        for spec in page:
+            latest = latest_versions.get(spec.id)
+            results.append(
+                {
+                    "id": f"@{spec.scope.name}/{spec.name}",
+                    "scope": spec.scope.name,
+                    "name": spec.name,
+                    "description": spec.description,
+                    "tags": list(spec.tags or []),
+                    "latest_version": latest.version if latest else None,
+                    "latest_published_at": (
+                        spec.latest_published_at.isoformat() if spec.latest_published_at else None
+                    ),
+                }
+            )
+
+        return Response(
+            {
+                "results": results,
+                "total": total,
+                "limit": limit,
+                "offset": offset,
+            }
+        )
 
 
 def _verification_url(request: Request) -> str:

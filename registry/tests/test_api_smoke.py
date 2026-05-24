@@ -20,8 +20,8 @@ def test_specs_search_empty_registry() -> None:
     body = response.json()
     assert body["results"] == []
     assert body["total"] == 0
-    assert body["page"] == 1
-    assert body["per_page"] == 20
+    assert body["limit"] == 20
+    assert body["offset"] == 0
 
 
 def test_unknown_route_returns_404() -> None:
