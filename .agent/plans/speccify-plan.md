@@ -191,7 +191,7 @@ conformance:
 | Immutability | unveränderlich, nur `yank` mit Begründung | Maven + Cargo |
 | Trust | sigstore-artige Signaturen, Transparency Log, 2FA pflicht | npm/PyPI 2024+ + Go |
 | Distribution | Federation, registry-gebundene Scopes | Maven + PyPI-Lehre |
-| Workspaces | nativ ab Phase 2 | Cargo + pnpm |
+| Workspaces | nativ ab Phase 3 (in Phase 2 bewusst vertagt) | Cargo + pnpm |
 
 ### Was wir bewusst NICHT übernehmen
 
@@ -313,12 +313,29 @@ Phase 1 ist im Refinement 2026-05-06 in vier Sub-Spikes zerlegt worden, damit je
 - **`speccify.lock`** mit Hashes + Generator-Pin (Phase 1a: `kind: template`; ab 1b zusätzlich `kind: llm` mit Modell/Prompt-Version/Seed) + Output-Hashes.
 - Demo: Junie/Claude Code zieht `@org/...` via MCP und baut eine React-Komponente.
 
-### Phase 2: Registry-MVP
-- Django-Backend: Komponenten anlegen, versionieren, suchen, `yank`.
-- Web-UI: Detailseite, Suche, Profile, Versionen.
-- Workspaces (Cargo-/pnpm-artig) nativ.
-- Vorbereitung sigstore-Signaturen + Transparency Log; 2FA pflicht für Publish.
-- Federation vorgesehen, registry-gebundene Scopes.
+### Phase 2: Registry-MVP (abgeschlossen 2026-05-24)
+
+Phase 2 schließt die Schreib-Seite der Plattform: Specs werden nicht nur lokal aus `registry-fixtures/` resolved, sondern können über ein hostetes Django-Backend **publiziert, versioniert, gesucht und geyanked** werden. Aus dem Phase-0/1-Codegen-Spike wird damit ein echtes Paket-Manager-Ökosystem („npm für Specs").
+
+- **Django-Backend `registry/`** (uv-Workspace-Member, Django 5.2 + DRF + django-otp + argon2): Modelle `User` (AbstractUser), `Scope` (`@org`-Eigenname, Owner-FK, `is_reserved`), `Spec` (`(scope, name)`-unique, `description`, `tags` JSON), `SpecVersion` (`(spec, version)`-unique, `yaml_bytes` BinaryField, `sha256`, `yank_status`, `yank_reason`, `uploader`, `published_at`), `ApiToken` (argon2-Hash + `token_prefix`-Lookup, `requires_2fa`, `last_2fa_verified_at`), `ScopeReservation` (Sperrliste gängiger Brands/Wörter), `DeviceCode` (TTL 10 min + Polling). Postgres-`BYTEA` als Storage (S3-Switch ab Phase 3+). Lokales Docker-Compose (Postgres 16 + Dev-Server, Port 8001), CI mit Postgres-Service-Container (`DATABASE_URL` schaltet `settings._database_from_env` um, SQLite-Fallback bleibt für lokale Tests).
+- **Auth-Stack**: Self-Service-Signup + Session-Login (Web), Bearer-Token-Auth (CLI/MCP). **2FA TOTP-only** via `django-otp` + `qrcode`; **pflicht für Publish/Yank/Token-Mint** (frische `last_2fa_verified_at` ≤ `SPECCIFY_2FA_TTL_SECONDS=300`). **Device-Code-Flow** `gh auth login`-Stil als CLI-Login (CLI öffnet `verification_url` via `webbrowser.open`, pollt im Intervall). Tokens sind **opaque Random-Strings** (npm-Stil, Klartext einmalig bei Erstellung; Hash + 8-Zeichen-Prefix in DB).
+- **Tool-Vertrag `/api/v1/registry/...`**:
+  - `GET /api/v1/registry/specs?q=<term>&scope=<s>&limit=<n>&offset=<n>` → Suche (`q` matched über `scope/name/description/tags`; sortiert nach `latest_published_at` desc; max `limit=100`; Spec-Versionsfreie ausgeschlossen).
+  - `GET /api/v1/registry/specs/<scope>/<name>` → Versions-Liste + Meta.
+  - `GET /api/v1/registry/specs/<scope>/<name>/<version>` → `{yaml, sha256, yank_status, yank_reason, published_at}`.
+  - `POST /api/v1/registry/specs/publish` (Bearer + frisches 2FA; JSON oder multipart `yaml`) → 200/201 mit `{scope, name, version, sha256}`; Schema-Validation via `speccify_core.SchemaValidator`; Auto-Claim-Scope (falls frei und nicht in `ScopeReservation`); idempotenter Re-Publish bei Byte-Identität; **409 `version_conflict`** bei Byte-Drift; **403 `scope_forbidden`/`scope_reserved`/`stale_2fa`**; **401 `unauthorized`**; **400 `invalid_yaml`/`schema_violation`**.
+  - `POST /api/v1/registry/specs/<scope>/<name>/<version>/yank` (Body `{reason}`, Bearer + frisches 2FA) → setzt `yank_status=yanked`; idempotent (Re-Yank lässt Reason unverändert).
+  - `POST /api/v1/registry/auth/device-code` + `POST .../device-code/poll` → CLI-Login-Flow.
+  - `GET /api/v1/registry/whoami` (Bearer) → `{username, scopes}`; `POST /api/v1/registry/tokens` (Session-Auth + frisches 2FA) → Klartext-Token **einmalig**.
+- **Web-UI** in Django-Templates (eine Deployment-Einheit unter `registry/`): Auth-Flow (Signup/Login/2FA-Setup mit QR/Tokens-CRUD/Device-Approve) plus Browse-Ansichten (Home/Suche, Spec-Detail mit Versionen + Yank-Hinweis, Scope-Profil). Re-Use von `apps/web/`-Komponenten bleibt Phase 5+.
+- **CLI-Erweiterungen**: `speccify login` (Device-Code, schreibt `~/.config/speccify/credentials.toml`, `chmod 0600`), `speccify whoami`, `speccify publish` (multipart-Upload, Exit-Codes 0/1/2 je nach Klasse `ok|auth|conflict`), `speccify yank @scope/name@version --registry --reason`. Config via `~/.config/speccify/config.toml` (Pflicht-Feld `default_registry` — **kein hardcoded Hostname**).
+- **MCP-Erweiterungen**: zwei neue Tools `publish` und `yank` (Adapter über HTTP, teilen sich die Credentials-Datei mit der CLI; optionaler `token`-Override für CI). Tool-Count: 6 → 8.
+- **Lockfile-Schema v2** (`schema/lockfile.schema.json`): pro `LockEntry` optional `yank_status: "none"|"yanked"` + `yank_reason`; top-level optional `signature: oneOf [{kind: "none"}, {kind: "sigstore", certificate, rekor_log_index}]` (Default `none`; volle sigstore-Integration bleibt Phase 3+). v1-Schema als `lockfile.v1.schema.json` mitgeführt; Loader migriert v1→v2 in-memory.
+- **`speccify verify`** durch `run_verify_with_warnings` ergänzt: warnt (Exit 0) bei `yank_status=yanked`-Einträgen, behält Bytes-/Output-Drift als Hard-Fail. Bestehende v1-Lockfiles bleiben kompatibel.
+- **Resolver-Multi-Registry** (`speccify_core`): neues `Registry`-Protocol; `LocalRegistry.via` (Default `"registry-fixtures"`) + neue `RemoteRegistry(base_url, token, cache_dir)` mit httpx-Client und File-Cache (`<cache_dir>/<host>/<scope>/<name>/<version>/spec.speccify.yaml`); Server-vs-lokal-Hash-Verify bei Fetch. Resolver akzeptiert `Registry | list[Registry]`; pro `@scope` registry-gebunden, Cross-Registry-Treffer lehnt `ScopeRegistryConflictError` hart ab (Dependency-Confusion-Schutz). `Resolution.via` (und damit Lockfile-`resolved_via`) ist die Registry-URL bei Remote-Pfaden.
+- **Cross-Consistency erweitert**: `registry/tests/test_cross_consistency_registry.py` rendert `@org/button@0.1.0` einmal aus `LocalRegistry` und einmal nach Publish + Fetch über `RemoteRegistry` gegen `live_server` und vergleicht die TSX-Bytes — der Phase-1d-Vertrag CLI ↔ MCP ↔ Web bleibt damit auch über den Netzwerk-Pfad byte-identisch. Performance-Sanity-Smoke `registry/tests/test_search_perf.py` (100 Specs × 50 Queries) hütet `search` vor N+1-Regressionen; das harte `< 200 ms p95`-Budget gilt für Postgres-Cache-Hits.
+- **CI**: neuer Job `registry backend (django + postgres)` mit Postgres-16-Service-Container, `DATABASE_URL`-Env, `uv run pytest -c registry/pytest.ini registry/`. Bestehende Jobs (`smoke`, `apps/web backend`, `apps/web frontend build`) unverändert.
+- **Out of Scope (vertagt)**: **Workspaces** (`workspaces: [...]` im Manifest) — auf **Phase 3** verschoben, um Phase 2 nicht weiter aufzublähen (Master-Plan-Tabelle Zeile „Workspaces" entsprechend zu lesen). **OAuth-Login**, **WebAuthn**, **volle sigstore-Verifikation**, **aktive Federation**, **echte Domain/Live-Deploy** bleiben in späteren Phasen. **Tag-Vorschlag: `v0.5.0-phase-2`**. Plan: [`archive/phase-2-registry-mvp.md`](archive/phase-2-registry-mvp.md).
 
 ### Phase 3: Zweites + drittes Codegen-Target, Conformance-Runner
 - SwiftUI und Angular als Targets (oder Jetpack Compose, je nach Pilot-Use-Case). React ist bereits in Phase 1b geliefert.

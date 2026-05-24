@@ -100,9 +100,36 @@ jobs:
         run: uv run pytest apps/web/backend/tests -v
 
   registry-backend:
-    name: registry backend (django)
+    name: registry backend (django + postgres)
     runs-on: ubuntu-latest
     timeout-minutes: 10
+
+    services:
+      # Phase 2 Stage 7: CI läuft gegen einen echten Postgres-Service-Container,
+      # damit der Postgres-Pfad (DATABASE_URL) abgedeckt ist. Lokale Dev-Runs
+      # fallen weiterhin auf in-memory SQLite zurück, wenn `DATABASE_URL`
+      # nicht gesetzt ist (siehe `speccify_registry.settings._database_from_env`).
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: speccify_registry
+          POSTGRES_USER: speccify
+          POSTGRES_PASSWORD: speccify
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U speccify -d speccify_registry"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    env:
+      DATABASE_URL: postgres://speccify:speccify@localhost:5432/speccify_registry
+      POSTGRES_DB: speccify_registry
+      POSTGRES_USER: speccify
+      POSTGRES_PASSWORD: speccify
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: "5432"
 
     steps:
       - name: Checkout
@@ -119,10 +146,12 @@ jobs:
       - name: Sync workspace
         run: uv sync --all-packages
 
-      - name: Pytest (registry, Django + pytest-django, in-memory SQLite)
+      - name: Pytest (registry, Django + pytest-django, Postgres service)
         # `-c registry/pytest.ini` is required so pytest picks up the
         # registry-local config (DJANGO_SETTINGS_MODULE, pythonpath=src)
         # instead of the workspace-wide pyproject pytest options.
+        # `DATABASE_URL` schaltet `settings._database_from_env` auf den
+        # Postgres-Service-Container um (sonst SQLite-Fallback wie lokal).
         run: uv run pytest -c registry/pytest.ini registry/ -v
 
   web-frontend:
