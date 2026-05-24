@@ -15,7 +15,7 @@ from collections import deque
 from dataclasses import dataclass, field
 
 from speccify_core.manifest import ProjectManifest
-from speccify_core.registry import LocalRegistry, RegistryError, Spec, Version
+from speccify_core.registry import LocalRegistry, Registry, RegistryError, Spec, Version
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +35,17 @@ class VersionNotFoundError(ResolverError):
 
 class RangeConflictError(ResolverError):
     """Die geforderten Ranges sind untereinander inkompatibel."""
+
+
+class ScopeRegistryConflictError(ResolverError):
+    """Derselbe ``@scope`` taucht in mehr als einer Registry auf.
+
+    Phase 2 verlangt registry-gebundene Scopes als Schutz gegen Dependency-Confusion
+    (siehe Master-Plan; Begründung in :file:`docs/package-manager-comparison.md`):
+    ein Scope darf zu **genau einer** Registry gehören. Liefert eine zweite Registry
+    eine Spec für einen bereits bei einer anderen Registry gesehenen Scope, lehnt
+    der Resolver hart ab statt zu „mergen".
+    """
 
 
 @dataclass(frozen=True)
@@ -111,6 +122,20 @@ def _sha256_hex(data: bytes) -> str:
     return "sha256:" + hashlib.sha256(data).hexdigest()
 
 
+_SCOPE_PREFIX_PATTERN = re.compile(r"^@([a-z0-9][a-z0-9-]*)/")
+
+
+def _scope_of(spec_id: str) -> str:
+    """Extrahiert ``scope`` aus ``@scope/name`` (ohne führendes ``@``).
+
+    Phase 2 Stage 6 nutzt das für Cross-Registry-Scope-Konflikt-Detection.
+    """
+    match = _SCOPE_PREFIX_PATTERN.match(spec_id)
+    if not match:
+        raise ResolverError(f"Spec-Id '{spec_id}' hat keinen erkennbaren @scope-Präfix.")
+    return match.group(1)
+
+
 def _parse_uses_entry(entry: str) -> tuple[str, str]:
     match = _USES_PATTERN.match(entry)
     if not match:
@@ -121,12 +146,33 @@ def _parse_uses_entry(entry: str) -> tuple[str, str]:
 
 
 class Resolver:
-    """MVS-Resolver gegen ein `LocalRegistry`."""
+    """MVS-Resolver gegen eine oder mehrere Registries.
 
-    def __init__(self, registry: LocalRegistry) -> None:
-        self._registry = registry
+    Phase 1a-Aufrufer übergeben weiterhin ein einzelnes ``LocalRegistry`` —
+    Phase-2 Stage 6 erlaubt zusätzlich eine **Liste** heterogener Registries
+    (lokal + remote). Bei mehreren Registries wird pro Spec-Id die erste Registry
+    benutzt, die mindestens eine Version anbietet. Pro ``@scope`` wird gespeichert,
+    welche Registry ihn bediente; ein zweiter Treffer aus einer anderen Registry
+    löst :class:`ScopeRegistryConflictError` aus.
+    """
+
+    def __init__(self, registry: LocalRegistry | Registry | list[Registry]) -> None:
+        if isinstance(registry, list):
+            if not registry:
+                raise ResolverError("Resolver braucht mindestens eine Registry.")
+            self._registries: list[Registry] = list(registry)
+        else:
+            self._registries = [registry]  # type: ignore[list-item]
+        # Scope → ``Registry.via``-Marker, der den Scope zuerst bedient hat.
+        # Wird pro ``resolve``-Aufruf zurückgesetzt.
+        self._scope_owner: dict[str, str] = {}
+
+    @property
+    def registries(self) -> list[Registry]:
+        return list(self._registries)
 
     def resolve(self, manifest: ProjectManifest) -> ResolvedGraph:
+        self._scope_owner = {}
         constraints: dict[str, list[_Constraint]] = {}
         for spec_id, raw_range in manifest.dependencies.items():
             constraints.setdefault(spec_id, []).append(
@@ -136,15 +182,20 @@ class Resolver:
         resolved: dict[str, tuple[Version, Spec]] = {}
         queue: deque[str] = deque(constraints.keys())
 
+        # Pro Spec-Id wird die Registry gemerkt, die sie liefert — damit `fetch`
+        # und `Resolution.via` konsistent zur Version-Auswahl bleiben.
+        registry_for: dict[str, Registry] = {}
+
         while queue:
             spec_id = queue.popleft()
             if spec_id not in constraints:
                 continue
-            chosen = self._select_version(spec_id, constraints[spec_id])
+            registry, chosen = self._select_version_and_registry(spec_id, constraints[spec_id])
             previous = resolved.get(spec_id)
             if previous is not None and previous[0] == chosen:
                 continue
-            spec = self._registry.fetch(spec_id, chosen)
+            spec = registry.fetch(spec_id, chosen)
+            registry_for[spec_id] = registry
             resolved[spec_id] = (chosen, spec)
 
             # Neue transitive Constraints aus uses: aufnehmen.
@@ -178,6 +229,7 @@ class Resolver:
                 spec_id=spec_id,
                 version=ver,
                 spec_sha256=_sha256_hex(spec.raw_bytes),
+                via=registry_for[spec_id].via,
             )
             for spec_id, (ver, spec) in sorted(resolved.items())
         ]
@@ -185,19 +237,83 @@ class Resolver:
 
     # --- intern ---------------------------------------------------------
 
-    def _select_version(self, spec_id: str, constraints: list[_Constraint]) -> Version:
-        try:
-            available = self._registry.list_versions(spec_id)
-        except RegistryError as exc:
-            raise ResolverError(str(exc)) from exc
-        # Pre-Releases sind in Phase 1a per Version.parse bereits ausgeschlossen.
-        if not available:
+    def _select_version_and_registry(
+        self, spec_id: str, constraints: list[_Constraint]
+    ) -> tuple[Registry, Version]:
+        """Wählt die erste Registry mit verfügbaren Versionen und liefert das MVS-Maximum.
+
+        Prüft Scope-Registry-Eindeutigkeit: ein Scope, der bereits von Registry A
+        bedient wurde, darf in derselben ``resolve``-Runde nicht plötzlich von
+        Registry B kommen — andernfalls :class:`ScopeRegistryConflictError`.
+        """
+        scope = _scope_of(spec_id)
+        owner_via = self._scope_owner.get(scope)
+
+        selected_registry: Registry | None = None
+        available: list[Version] = []
+        for registry in self._registries:
+            if owner_via is not None and registry.via != owner_via:
+                # Bereits an eine andere Registry gebunden — diese hier überspringen.
+                continue
+            try:
+                versions = registry.list_versions(spec_id)
+            except RegistryError as exc:
+                raise ResolverError(str(exc)) from exc
+            if versions:
+                selected_registry = registry
+                available = versions
+                break
+
+        if selected_registry is None:
+            # Wenn der Scope gebunden ist und dort nichts gefunden wurde, aber eine andere
+            # Registry liefern *würde*, ist das ein Cross-Registry-Konflikt.
+            if owner_via is not None:
+                for registry in self._registries:
+                    if registry.via == owner_via:
+                        continue
+                    try:
+                        other_versions = registry.list_versions(spec_id)
+                    except RegistryError:
+                        continue
+                    if other_versions:
+                        raise ScopeRegistryConflictError(
+                            f"Scope '@{scope}' ist bereits an Registry '{owner_via}' "
+                            f"gebunden, aber '{registry.via}' liefert ebenfalls eine Spec "
+                            f"für '{spec_id}'. Dependency-Confusion-Schutz: ein Scope darf "
+                            f"zu genau einer Registry gehören."
+                        )
             sources = ", ".join(f"{c.source} ({c.range.raw})" for c in constraints)
             raise VersionNotFoundError(
-                f"Keine Versionen für '{spec_id}' im Registry gefunden. "
+                f"Keine Versionen für '{spec_id}' im Registry-Set gefunden. "
                 f"Geforderte Ranges: {sources}."
             )
 
+        # Cross-Registry-Konflikt: weitere Registries dürfen denselben Scope nicht bedienen.
+        for registry in self._registries:
+            if registry is selected_registry:
+                continue
+            if registry.via == selected_registry.via:
+                continue
+            try:
+                other_versions = registry.list_versions(spec_id)
+            except RegistryError:
+                continue
+            if other_versions:
+                raise ScopeRegistryConflictError(
+                    f"Scope '@{scope}' wird von zwei Registries angeboten: "
+                    f"'{selected_registry.via}' und '{registry.via}'. "
+                    f"Dependency-Confusion-Schutz: ein Scope darf zu genau einer Registry gehören."
+                )
+
+        self._scope_owner[scope] = selected_registry.via
+        version = self._pick_version(spec_id, available, constraints)
+        return selected_registry, version
+
+    def _pick_version(
+        self, spec_id: str, available: list[Version], constraints: list[_Constraint]
+    ) -> Version:
+        # Pre-Releases sind in Phase 1a per Version.parse bereits ausgeschlossen.
+        # ``available`` ist non-empty (Aufrufer hat das geprüft).
         # Maximum aller Mindestversionen.
         min_required = max(c.range.min_version for c in constraints)
 

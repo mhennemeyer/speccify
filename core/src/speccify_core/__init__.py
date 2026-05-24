@@ -39,7 +39,9 @@ from speccify_core.manifest import (
 )
 from speccify_core.registry import (
     LocalRegistry,
+    Registry,
     RegistryError,
+    RemoteRegistry,
     Spec,
     Version,
 )
@@ -50,6 +52,7 @@ from speccify_core.resolver import (
     ResolvedGraph,
     Resolver,
     ResolverError,
+    ScopeRegistryConflictError,
     VersionNotFoundError,
 )
 from speccify_core.validator import (
@@ -81,6 +84,9 @@ __all__ = [
     "LlmClient",
     "LlmGeneratorPin",
     "LocalRegistry",
+    "Registry",
+    "RemoteRegistry",
+    "ScopeRegistryConflictError",
     "LockEntry",
     "Lockfile",
     "LockfileError",
