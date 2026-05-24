@@ -21,6 +21,11 @@ urlpatterns = [
         name="spec-version-detail",
     ),
     path(
+        "specs/<str:scope>/<str:name>/<str:version>/yank",
+        views.SpecVersionYankView.as_view(),
+        name="spec-version-yank",
+    ),
+    path(
         "auth/device-code",
         views.DeviceCodeStartView.as_view(),
         name="api-device-code-start",

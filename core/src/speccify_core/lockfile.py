@@ -27,10 +27,18 @@ from speccify_core.codegen.stub import TEMPLATE_SET, TEMPLATE_VERSION
 DEFAULT_TEMPLATE_SET: str = TEMPLATE_SET
 DEFAULT_TEMPLATE_VERSION: str = TEMPLATE_VERSION
 
-# core/src/speccify_core/lockfile.py → ../../../schema/lockfile.schema.json
+# core/src/speccify_core/lockfile.py → ../../../schema/lockfile.schema.json (v2)
 DEFAULT_LOCKFILE_SCHEMA_PATH: Path = (
     Path(__file__).resolve().parents[3] / "schema" / "lockfile.schema.json"
 )
+# Backward-compat-Validation: v1-Lockfiles werden gegen das alte Schema geprüft und
+# Loader-seitig nach v2 migriert (siehe `Lockfile.load`).
+LEGACY_V1_LOCKFILE_SCHEMA_PATH: Path = (
+    Path(__file__).resolve().parents[3] / "schema" / "lockfile.v1.schema.json"
+)
+
+# Aktuelle Schema-Version, die `Lockfile.write` immer schreibt.
+CURRENT_LOCKFILE_SCHEMA_VERSION: int = 2
 
 
 class LockfileError(Exception):
@@ -89,13 +97,36 @@ class LockEntry:
     target: str
     generator: AnyGeneratorPin = field(default_factory=GeneratorPin)
     generated_files_sha256: tuple[GeneratedFile, ...] = ()
+    # v2-Felder (Phase 2). Default `none` heißt: kein Yank, kein Grund.
+    yank_status: str = "none"
+    yank_reason: str | None = None
+
+
+@dataclass(frozen=True)
+class NoneSignature:
+    """Default-Signatur-Slot in Phase 2 (`kind: none`)."""
+
+    kind: str = "none"
+
+
+@dataclass(frozen=True)
+class SigstoreSignature:
+    """Reservierter sigstore-Signatur-Slot ab Phase 3+."""
+
+    certificate: str
+    rekor_log_index: int
+    kind: str = "sigstore"
+
+
+AnySignature = NoneSignature | SigstoreSignature
 
 
 @dataclass(frozen=True)
 class Lockfile:
     target: str
     entries: tuple[LockEntry, ...] = ()
-    schema_version: int = 1
+    schema_version: int = CURRENT_LOCKFILE_SCHEMA_VERSION
+    signature: AnySignature = field(default_factory=NoneSignature)
 
     @classmethod
     def load(
@@ -119,13 +150,23 @@ class Lockfile:
                 f"Lockfile muss ein YAML-Mapping sein, ist aber {type(data).__name__}: {lock_path}"
             )
 
-        _validate_against_schema(data, schema_path or DEFAULT_LOCKFILE_SCHEMA_PATH, lock_path)
+        # Backward-compat: v1-Lockfiles werden gegen das v1-Schema geprüft und in-memory
+        # nach v2 migriert; neu geschriebene Lockfiles sind immer v2.
+        raw_version = data.get("schema_version")
+        if schema_path is None and raw_version == 1:
+            _validate_against_schema(data, LEGACY_V1_LOCKFILE_SCHEMA_PATH, lock_path)
+        else:
+            _validate_against_schema(
+                data, schema_path or DEFAULT_LOCKFILE_SCHEMA_PATH, lock_path
+            )
 
         entries = tuple(_entry_from_dict(item) for item in data["specs"])
+        signature = _signature_from_dict(data.get("signature"))
         return cls(
-            schema_version=data["schema_version"],
+            schema_version=CURRENT_LOCKFILE_SCHEMA_VERSION,
             target=data["target"],
             entries=entries,
+            signature=signature,
         )
 
     def write(
@@ -149,6 +190,7 @@ class Lockfile:
         return {
             "schema_version": self.schema_version,
             "target": self.target,
+            "signature": _signature_to_dict(self.signature),
             "specs": [_entry_to_dict(e) for e in sorted_entries],
         }
 
@@ -168,6 +210,33 @@ class Lockfile:
                 target=e.target,
                 generator=e.generator,
                 generated_files_sha256=tuple(files),
+                yank_status=e.yank_status,
+                yank_reason=e.yank_reason,
+            ),
+        )
+
+    def with_yank(
+        self,
+        spec_id: str,
+        *,
+        status: str,
+        reason: str | None = None,
+    ) -> Lockfile:
+        """Erzeugt eine neue Lockfile-Instanz mit aktualisiertem `yank_status` (+ optional `yank_reason`) für `spec_id`."""
+        if status not in ("none", "yanked"):
+            raise LockfileError(f"Ungültiger yank_status: {status!r}")
+        return self._replace_entry(
+            spec_id,
+            lambda e: LockEntry(
+                id=e.id,
+                version=e.version,
+                sha256=e.sha256,
+                resolved_via=e.resolved_via,
+                target=e.target,
+                generator=e.generator,
+                generated_files_sha256=e.generated_files_sha256,
+                yank_status=status,
+                yank_reason=reason if status == "yanked" else None,
             ),
         )
 
@@ -187,6 +256,8 @@ class Lockfile:
                 target=e.target,
                 generator=generator,
                 generated_files_sha256=e.generated_files_sha256,
+                yank_status=e.yank_status,
+                yank_reason=e.yank_reason,
             ),
         )
 
@@ -209,6 +280,7 @@ class Lockfile:
             schema_version=self.schema_version,
             target=self.target,
             entries=tuple(new_entries),
+            signature=self.signature,
         )
 
 
@@ -247,15 +319,19 @@ def build_lockfile(
 
 def _entry_to_dict(entry: LockEntry) -> dict[str, Any]:
     sorted_files = sorted(entry.generated_files_sha256, key=lambda f: f.path)
-    return {
+    out: dict[str, Any] = {
         "id": entry.id,
         "version": entry.version,
         "sha256": entry.sha256,
         "resolved_via": entry.resolved_via,
         "target": entry.target,
+        "yank_status": entry.yank_status,
         "generator": _generator_to_dict(entry.generator),
         "generated_files_sha256": [{"path": f.path, "sha256": f.sha256} for f in sorted_files],
     }
+    if entry.yank_status == "yanked" and entry.yank_reason:
+        out["yank_reason"] = entry.yank_reason
+    return out
 
 
 def _generator_to_dict(generator: AnyGeneratorPin) -> dict[str, Any]:
@@ -284,6 +360,8 @@ def _entry_from_dict(item: dict[str, Any]) -> LockEntry:
         GeneratedFile(path=f["path"], sha256=f["sha256"])
         for f in item.get("generated_files_sha256", [])
     )
+    yank_status = item.get("yank_status", "none")
+    yank_reason = item.get("yank_reason")
     return LockEntry(
         id=item["id"],
         version=item["version"],
@@ -292,7 +370,31 @@ def _entry_from_dict(item: dict[str, Any]) -> LockEntry:
         target=item["target"],
         generator=_generator_from_dict(gen),
         generated_files_sha256=files,
+        yank_status=yank_status,
+        yank_reason=yank_reason,
     )
+
+
+def _signature_to_dict(signature: AnySignature) -> dict[str, Any]:
+    if isinstance(signature, SigstoreSignature):
+        return {
+            "kind": "sigstore",
+            "certificate": signature.certificate,
+            "rekor_log_index": signature.rekor_log_index,
+        }
+    return {"kind": "none"}
+
+
+def _signature_from_dict(data: Any) -> AnySignature:
+    if not data or not isinstance(data, dict):
+        return NoneSignature()
+    kind = data.get("kind")
+    if kind == "sigstore":
+        return SigstoreSignature(
+            certificate=data["certificate"],
+            rekor_log_index=data["rekor_log_index"],
+        )
+    return NoneSignature()
 
 
 def _generator_from_dict(gen: dict[str, Any]) -> AnyGeneratorPin:

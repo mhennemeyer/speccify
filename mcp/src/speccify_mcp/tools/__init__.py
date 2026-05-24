@@ -17,6 +17,7 @@ from .pull import PullResult, run_pull
 from .render import RenderResult, run_render
 from .resolve import ResolveResult, run_resolve
 from .verify import VerifyResult, run_verify
+from .yank import YankResult, run_yank
 
 __all__ = [
     "LintResult",
@@ -26,6 +27,7 @@ __all__ = [
     "RenderResult",
     "ResolveResult",
     "VerifyResult",
+    "YankResult",
     "run_lint",
     "run_lock",
     "run_publish",
@@ -33,4 +35,5 @@ __all__ = [
     "run_render",
     "run_resolve",
     "run_verify",
+    "run_yank",
 ]

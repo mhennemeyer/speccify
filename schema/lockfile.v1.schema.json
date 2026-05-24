@@ -1,43 +1,20 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://speccify.io/schema/lockfile/v2.json",
-  "title": "Speccify Lockfile v2",
-  "description": "Schema v2 für speccify.lock — deterministisches Auflösungs- und Output-Hash-Manifest. Bump gegenüber v1: optionales Top-Level-`signature` (Phase-2-Slot für sigstore, Default `kind: none`) und pro `LockEntry` optionales `yank_status` (`none|yanked`) + `yank_reason`. Phase-1-Lockfiles (`schema_version: 1`) bleiben lesbar (Loader-seitige Migration), neu geschriebene Lockfiles sind immer v2. Der `generator`-Pin ist eine Union: `kind: template` (template_set + template_version, Phase 1a) oder `kind: llm` (provider, model, prompt_version, optional seed, cache_key; ab Phase 1b für React-Codegen).",
+  "$id": "https://speccify.io/schema/lockfile/v1.json",
+  "title": "Speccify Lockfile v1",
+  "description": "Schema v1 für speccify.lock — deterministisches Auflösungs- und Output-Hash-Manifest. Der `generator`-Pin ist eine Union: `kind: template` (template_set + template_version, Phase 1a) oder `kind: llm` (provider, model, prompt_version, optional seed, cache_key; ab Phase 1b für React-Codegen).",
   "type": "object",
   "required": ["schema_version", "target", "specs"],
   "additionalProperties": false,
   "properties": {
     "schema_version": {
       "type": "integer",
-      "const": 2
+      "const": 1
     },
     "target": {
       "type": "string",
       "minLength": 1,
       "description": "Codegen-Ziel, gespiegelt aus dem Manifest zum Zeitpunkt des `lock`-Aufrufs."
-    },
-    "signature": {
-      "description": "Reservierter Slot für Spec-Bundle-Signaturen (sigstore ab Phase 3+). Default in Phase 2: `{kind: \"none\"}`.",
-      "oneOf": [
-        {
-          "type": "object",
-          "required": ["kind"],
-          "additionalProperties": false,
-          "properties": {
-            "kind": { "type": "string", "const": "none" }
-          }
-        },
-        {
-          "type": "object",
-          "required": ["kind", "certificate", "rekor_log_index"],
-          "additionalProperties": false,
-          "properties": {
-            "kind": { "type": "string", "const": "sigstore" },
-            "certificate": { "type": "string", "minLength": 1 },
-            "rekor_log_index": { "type": "integer", "minimum": 0 }
-          }
-        }
-      ]
     },
     "specs": {
       "type": "array",
@@ -74,16 +51,6 @@
           "target": {
             "type": "string",
             "minLength": 1
-          },
-          "yank_status": {
-            "type": "string",
-            "enum": ["none", "yanked"],
-            "description": "Yank-Status zum Zeitpunkt des letzten `lock`-Aufrufs. Default `none`; bei `yanked` warnt `speccify verify`."
-          },
-          "yank_reason": {
-            "type": "string",
-            "minLength": 1,
-            "description": "Optionaler Yank-Grund, gespiegelt vom Registry."
           },
           "generator": {
             "oneOf": [

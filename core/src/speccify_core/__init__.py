@@ -13,16 +13,21 @@ from speccify_core.codegen import (
 )
 from speccify_core.loader import SpecLoader, SpecLoaderError
 from speccify_core.lockfile import (
+    CURRENT_LOCKFILE_SCHEMA_VERSION,
     DEFAULT_LOCKFILE_SCHEMA_PATH,
     DEFAULT_TEMPLATE_SET,
     DEFAULT_TEMPLATE_VERSION,
+    LEGACY_V1_LOCKFILE_SCHEMA_PATH,
     AnyGeneratorPin,
+    AnySignature,
     GeneratedFile,
     GeneratorPin,
     LlmGeneratorPin,
     LockEntry,
     Lockfile,
     LockfileError,
+    NoneSignature,
+    SigstoreSignature,
     TemplateGeneratorPin,
     build_lockfile,
 )
@@ -56,13 +61,18 @@ from speccify_core.validator import (
 __version__ = "0.0.0"
 
 __all__ = [
+    "CURRENT_LOCKFILE_SCHEMA_VERSION",
     "DEFAULT_LOCKFILE_SCHEMA_PATH",
     "DEFAULT_MANIFEST_SCHEMA_PATH",
     "DEFAULT_REGISTRY_PATH",
     "DEFAULT_SCHEMA_PATH",
     "DEFAULT_TEMPLATE_SET",
     "DEFAULT_TEMPLATE_VERSION",
+    "LEGACY_V1_LOCKFILE_SCHEMA_PATH",
     "AnyGeneratorPin",
+    "AnySignature",
+    "NoneSignature",
+    "SigstoreSignature",
     "CacheKey",
     "CacheMissError",
     "CodegenError",

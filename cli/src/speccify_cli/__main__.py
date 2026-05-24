@@ -16,6 +16,7 @@ from speccify_cli.commands.publish import publish_command
 from speccify_cli.commands.pull import pull_command
 from speccify_cli.commands.verify import verify_command
 from speccify_cli.commands.whoami import whoami_command
+from speccify_cli.commands.yank import yank_command
 
 app = typer.Typer(
     name="speccify",
@@ -32,6 +33,7 @@ app.command("verify")(verify_command)
 app.command("login")(login_command)
 app.command("whoami")(whoami_command)
 app.command("publish")(publish_command)
+app.command("yank")(yank_command)
 
 
 @app.callback()

@@ -345,6 +345,85 @@ class SpecPublishView(APIView):
         )
 
 
+class SpecVersionYankView(APIView):
+    """``POST /api/v1/registry/specs/<scope>/<name>/<version>/yank`` — yank a published version.
+
+    Auth: Bearer token with fresh 2FA. Caller must own the scope.
+    Idempotent: re-yanking an already-yanked version returns 200 and
+    keeps the original reason unless a non-empty new reason is given.
+    """
+
+    def post(self, request: Request, scope: str, name: str, version: str) -> Response:
+        if not request.user.is_authenticated:
+            return Response(
+                {"detail": "Authentication required."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        api_token = request.auth
+        if api_token is not None and not two_factor.has_fresh_2fa(api_token):
+            return Response(
+                {
+                    "code": "stale_2fa",
+                    "detail": (
+                        "This token's 2FA verification is too old; re-mint the token to yank."
+                    ),
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        row = (
+            SpecVersion.objects.filter(
+                spec__scope__name=scope, spec__name=name, version=version
+            )
+            .select_related("spec", "spec__scope")
+            .first()
+        )
+        if row is None:
+            return Response(
+                {
+                    "code": "version_not_found",
+                    "detail": f"Unknown version @{scope}/{name}@{version}.",
+                },
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        if row.spec.scope.owner_id != request.user.id:
+            return Response(
+                {
+                    "code": "scope_forbidden",
+                    "detail": (
+                        f"You do not own scope @{scope}; only the owner can yank versions."
+                    ),
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        reason_raw = request.data.get("reason") if hasattr(request, "data") else None
+        reason = (reason_raw or "").strip() if isinstance(reason_raw, str) else ""
+
+        already_yanked = row.yank_status == YankStatus.YANKED
+        row.yank_status = YankStatus.YANKED
+        # Keep the original reason on a no-op re-yank unless the caller supplies a new one;
+        # this matches npm's `npm unpublish` semantics and avoids overwriting forensic notes.
+        if reason:
+            row.yank_reason = reason
+        elif not already_yanked:
+            row.yank_reason = ""
+        row.save(update_fields=["yank_status", "yank_reason"])
+
+        return Response(
+            {
+                "id": f"@{scope}/{name}",
+                "version": version,
+                "yank_status": row.yank_status,
+                "yank_reason": row.yank_reason or None,
+                "already_yanked": already_yanked,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
 def _extract_yaml_bytes(request: Request) -> bytes | None:
     """Read YAML bytes from either multipart upload or JSON body."""
 
@@ -360,5 +439,3 @@ def _extract_yaml_bytes(request: Request) -> bytes | None:
     return None
 
 
-# Mark unused symbols as referenced for static checkers.
-_ = YankStatus
