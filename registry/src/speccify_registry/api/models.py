@@ -53,9 +53,7 @@ class Spec(models.Model):
     class Meta:
         ordering = ["scope__name", "name"]
         constraints = [
-            models.UniqueConstraint(
-                fields=["scope", "name"], name="uniq_spec_per_scope"
-            ),
+            models.UniqueConstraint(fields=["scope", "name"], name="uniq_spec_per_scope"),
         ]
 
     def __str__(self) -> str:  # pragma: no cover - trivial
@@ -91,9 +89,7 @@ class SpecVersion(models.Model):
     class Meta:
         ordering = ["spec__scope__name", "spec__name", "version"]
         constraints = [
-            models.UniqueConstraint(
-                fields=["spec", "version"], name="uniq_version_per_spec"
-            ),
+            models.UniqueConstraint(fields=["spec", "version"], name="uniq_version_per_spec"),
         ]
 
     def __str__(self) -> str:  # pragma: no cover - trivial

@@ -5,7 +5,6 @@ from __future__ import annotations
 import pytest
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError
-
 from speccify_registry.api.models import (
     ApiToken,
     Scope,

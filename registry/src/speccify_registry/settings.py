@@ -85,7 +85,9 @@ def _database_from_env() -> dict[str, object]:
     return {
         "default": {
             "ENGINE": "django.db.backends.sqlite3",
-            "NAME": ":memory:" if os.environ.get("SPECCIFY_REGISTRY_TEST") else BASE_DIR / "db.sqlite3",
+            "NAME": ":memory:"
+            if os.environ.get("SPECCIFY_REGISTRY_TEST")
+            else BASE_DIR / "db.sqlite3",
         }
     }
 
@@ -122,9 +124,7 @@ REST_FRAMEWORK = {
 SPECCIFY_2FA_TTL_SECONDS = int(os.environ.get("SPECCIFY_2FA_TTL_SECONDS", "300"))
 
 # Device-code flow timing.
-SPECCIFY_DEVICE_CODE_TTL_SECONDS = int(
-    os.environ.get("SPECCIFY_DEVICE_CODE_TTL_SECONDS", "600")
-)
+SPECCIFY_DEVICE_CODE_TTL_SECONDS = int(os.environ.get("SPECCIFY_DEVICE_CODE_TTL_SECONDS", "600"))
 SPECCIFY_DEVICE_CODE_POLL_INTERVAL_SECONDS = int(
     os.environ.get("SPECCIFY_DEVICE_CODE_POLL_INTERVAL_SECONDS", "5")
 )

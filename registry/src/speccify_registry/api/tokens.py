@@ -76,9 +76,7 @@ def verify_cleartext(cleartext: str) -> ApiToken | None:
 
     if not cleartext.startswith(_TOKEN_PREFIX_LITERAL):
         return None
-    candidates = ApiToken.objects.filter(
-        token_prefix=_prefix(cleartext), revoked_at__isnull=True
-    )
+    candidates = ApiToken.objects.filter(token_prefix=_prefix(cleartext), revoked_at__isnull=True)
     for candidate in candidates:
         try:
             _hasher.verify(candidate.token_hash, cleartext)

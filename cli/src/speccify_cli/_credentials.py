@@ -109,6 +109,4 @@ def check_permissions(path: Path | None = None) -> None:
         return
     mode = stat.S_IMODE(target.stat().st_mode)
     if mode & 0o077:
-        raise PermissionError(
-            f"{target} is too permissive ({oct(mode)}); expected 0600."
-        )
+        raise PermissionError(f"{target} is too permissive ({oct(mode)}); expected 0600.")

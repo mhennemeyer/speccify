@@ -124,9 +124,7 @@ def tokens_view(request: HttpRequest) -> HttpResponse:
         if form.is_valid():
             has_2fa = two_factor.get_confirmed_device(request.user) is not None
             ok = (
-                True
-                if not has_2fa
-                else _verify_fresh_totp(request.user, form.cleaned_data["totp"])
+                True if not has_2fa else _verify_fresh_totp(request.user, form.cleaned_data["totp"])
             )
             if not ok:
                 form.add_error("totp", "Invalid 2FA code.")
@@ -141,9 +139,9 @@ def tokens_view(request: HttpRequest) -> HttpResponse:
                 form = TokenCreateForm()  # reset
     else:
         form = TokenCreateForm()
-    active_tokens = ApiToken.objects.filter(
-        user=request.user, revoked_at__isnull=True
-    ).order_by("-created_at")
+    active_tokens = ApiToken.objects.filter(user=request.user, revoked_at__isnull=True).order_by(
+        "-created_at"
+    )
     return render(
         request,
         "web/tokens.html",
@@ -158,9 +156,7 @@ def tokens_view(request: HttpRequest) -> HttpResponse:
 @login_required(login_url="/auth/login")
 @require_http_methods(["POST"])
 def token_revoke_view(request: HttpRequest, token_id: int) -> HttpResponse:
-    token = ApiToken.objects.filter(
-        id=token_id, user=request.user, revoked_at__isnull=True
-    ).first()
+    token = ApiToken.objects.filter(id=token_id, user=request.user, revoked_at__isnull=True).first()
     if token is not None:
         token.revoked_at = timezone.now()
         token.save(update_fields=["revoked_at"])
@@ -199,25 +195,19 @@ def device_approve_view(request: HttpRequest) -> HttpResponse:
                         user=request.user,
                         label=f"cli@{form.cleaned_data['user_code']}",
                         requires_2fa=has_2fa,
-                        last_2fa_verified_at=(
-                            timezone.now() if has_2fa else None
-                        ),
+                        last_2fa_verified_at=(timezone.now() if has_2fa else None),
                     )
                     cache.set(
                         device_code_cache_key(dc.device_code),
                         minted.cleartext,
                         timeout=600,
                     )
-                    device_codes.approve(
-                        dc, user=request.user, api_token=minted.token
-                    )
+                    device_codes.approve(dc, user=request.user, api_token=minted.token)
                     messages.success(
                         request,
                         "CLI approved — return to your terminal.",
                     )
                     return redirect("web-tokens")
     else:
-        form = DeviceCodeApproveForm(
-            initial={"user_code": request.GET.get("user_code", "")}
-        )
+        form = DeviceCodeApproveForm(initial={"user_code": request.GET.get("user_code", "")})
     return render(request, "web/device_approve.html", {"form": form})

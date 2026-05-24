@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import pytest
 from django.contrib.auth import get_user_model
-
 from speccify_registry.api.tokens import mint_token, verify_cleartext
 
 pytestmark = pytest.mark.django_db

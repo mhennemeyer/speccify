@@ -6,9 +6,8 @@ import pytest
 from django.contrib.auth import get_user_model
 from django.test import Client
 from django.utils import timezone
-from django_otp.plugins.otp_totp.models import TOTPDevice
 from django_otp.oath import totp as totp_oath
-
+from django_otp.plugins.otp_totp.models import TOTPDevice
 from speccify_registry.api.models import ApiToken
 from speccify_registry.api.tokens import mint_token
 
@@ -17,6 +16,17 @@ pytestmark = pytest.mark.django_db
 
 def _make_user(username: str = "marc"):
     return get_user_model().objects.create_user(username=username, password="pw-12345678")
+
+
+def _current_totp(device) -> str:
+    value = totp_oath(
+        device.bin_key,
+        t0=device.t0,
+        step=device.step,
+        digits=device.digits,
+        drift=0,
+    )
+    return f"{value:0{device.digits}d}"
 
 
 def test_signup_creates_user_and_logs_in() -> None:
@@ -34,9 +44,7 @@ def test_signup_creates_user_and_logs_in() -> None:
 
 def test_login_with_bad_credentials_re_renders_form() -> None:
     _make_user()
-    response = Client().post(
-        "/auth/login", data={"username": "marc", "password": "wrong"}
-    )
+    response = Client().post("/auth/login", data={"username": "marc", "password": "wrong"})
     assert response.status_code == 200
     assert b"Invalid credentials" in response.content
 
@@ -52,7 +60,7 @@ def test_totp_setup_then_confirm() -> None:
     assert device.confirmed is False
 
     # Compute the current code from the device secret like an authenticator would.
-    code = f"{totp_oath(device.bin_key, t0=device.t0, step=device.step, digits=device.digits, drift=0):0{device.digits}d}"
+    code = _current_totp(device)
     response = client.post("/auth/2fa-setup", data={"token": code})
     assert response.status_code == 302
     device.refresh_from_db()
@@ -138,7 +146,7 @@ def test_create_token_with_2fa_accepts_correct_code() -> None:
     client = Client()
     client.force_login(user)
 
-    code = f"{totp_oath(device.bin_key, t0=device.t0, step=device.step, digits=device.digits, drift=0):0{device.digits}d}"
+    code = _current_totp(device)
     response = client.post("/auth/tokens", data={"label": "x", "totp": code})
     assert response.status_code == 200
     tok = ApiToken.objects.get(user=user)

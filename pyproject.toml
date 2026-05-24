@@ -51,5 +51,9 @@ strict = false
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
-testpaths = ["core", "cli", "mcp", "apps/web/backend", "registry"]
-addopts = "-q"
+# `registry/` is excluded from the default workspace-wide run because it
+# requires `pytest-django` + a Django bootstrap that would otherwise
+# interfere with the other suites. Use `uv run pytest registry/` to run
+# the registry tests (its own `pytest.ini` opts the django plugin in).
+testpaths = ["core", "cli", "mcp", "apps/web/backend"]
+addopts = "-q -p no:django"

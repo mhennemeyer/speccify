@@ -35,10 +35,7 @@ def issue() -> DeviceCode:
 def _refresh_expiry(dc: DeviceCode) -> DeviceCode:
     """If pending past expiry, flip to ``expired`` and persist."""
 
-    if (
-        dc.status == DeviceCodeStatus.PENDING
-        and dc.expires_at <= timezone.now()
-    ):
+    if dc.status == DeviceCodeStatus.PENDING and dc.expires_at <= timezone.now():
         dc.status = DeviceCodeStatus.EXPIRED
         dc.save(update_fields=["status"])
     return dc

@@ -23,9 +23,7 @@ class WhoamiView(APIView):
         return Response(
             {
                 "username": request.user.get_username(),
-                "scopes": list(
-                    request.user.owned_scopes.values_list("name", flat=True)
-                ),
+                "scopes": list(request.user.owned_scopes.values_list("name", flat=True)),
             }
         )
 
@@ -33,9 +31,7 @@ class WhoamiView(APIView):
 class SpecsSearchView(APIView):
     def get(self, request: Request) -> Response:
         # Stage 1 placeholder — real full-text search lands in Stage 4.
-        return Response(
-            {"results": [], "total": 0, "page": 1, "per_page": 20}
-        )
+        return Response({"results": [], "total": 0, "page": 1, "per_page": 20})
 
 
 def _verification_url(request: Request) -> str:

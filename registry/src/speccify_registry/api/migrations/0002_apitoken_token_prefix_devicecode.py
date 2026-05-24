@@ -6,32 +6,67 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('registry_api', '0001_initial'),
+        ("registry_api", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='apitoken',
-            name='token_prefix',
-            field=models.CharField(db_index=True, default='', max_length=16),
+            model_name="apitoken",
+            name="token_prefix",
+            field=models.CharField(db_index=True, default="", max_length=16),
         ),
         migrations.CreateModel(
-            name='DeviceCode',
+            name="DeviceCode",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('device_code', models.CharField(max_length=64, unique=True)),
-                ('user_code', models.CharField(max_length=16, unique=True)),
-                ('status', models.CharField(choices=[('pending', 'pending'), ('approved', 'approved'), ('denied', 'denied'), ('expired', 'expired'), ('consumed', 'consumed')], default='pending', max_length=16)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('expires_at', models.DateTimeField()),
-                ('api_token', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='device_codes', to='registry_api.apitoken')),
-                ('user', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='device_codes', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                ("device_code", models.CharField(max_length=64, unique=True)),
+                ("user_code", models.CharField(max_length=16, unique=True)),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("pending", "pending"),
+                            ("approved", "approved"),
+                            ("denied", "denied"),
+                            ("expired", "expired"),
+                            ("consumed", "consumed"),
+                        ],
+                        default="pending",
+                        max_length=16,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("expires_at", models.DateTimeField()),
+                (
+                    "api_token",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="device_codes",
+                        to="registry_api.apitoken",
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="device_codes",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-created_at'],
+                "ordering": ["-created_at"],
             },
         ),
     ]

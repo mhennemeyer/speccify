@@ -8,7 +8,6 @@ import pytest
 from django.contrib.auth import get_user_model
 from django.test import Client
 from django.utils import timezone
-
 from speccify_registry.api import device_codes
 from speccify_registry.api.models import DeviceCode, DeviceCodeStatus
 
