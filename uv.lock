@@ -1322,12 +1322,14 @@ name = "speccify-cli"
 version = "0.0.0"
 source = { editable = "cli" }
 dependencies = [
+    { name = "httpx" },
     { name = "speccify-core" },
     { name = "typer" },
 ]
 
 [package.metadata]
 requires-dist = [
+    { name = "httpx", specifier = ">=0.27" },
     { name = "speccify-core", editable = "core" },
     { name = "typer", specifier = ">=0.12" },
 ]

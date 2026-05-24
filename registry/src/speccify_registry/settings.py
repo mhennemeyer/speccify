@@ -112,6 +112,22 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.AllowAny"],
     "DEFAULT_AUTHENTICATION_CLASSES": [
+        "speccify_registry.api.authentication.BearerTokenAuthentication",
         "rest_framework.authentication.SessionAuthentication",
     ],
 }
+
+# How fresh a 2FA confirmation has to be for token-minting / publish / yank.
+# Decision (Phase-2 Round-1, Q4): TOTP only via django-otp; default TTL 5 min.
+SPECCIFY_2FA_TTL_SECONDS = int(os.environ.get("SPECCIFY_2FA_TTL_SECONDS", "300"))
+
+# Device-code flow timing.
+SPECCIFY_DEVICE_CODE_TTL_SECONDS = int(
+    os.environ.get("SPECCIFY_DEVICE_CODE_TTL_SECONDS", "600")
+)
+SPECCIFY_DEVICE_CODE_POLL_INTERVAL_SECONDS = int(
+    os.environ.get("SPECCIFY_DEVICE_CODE_POLL_INTERVAL_SECONDS", "5")
+)
+
+LOGIN_URL = "/auth/login"
+LOGIN_REDIRECT_URL = "/auth/tokens"

@@ -11,8 +11,10 @@ from speccify_core import SchemaValidator, SpecLoader, SpecLoaderError
 from speccify_cli.commands.add import add_command
 from speccify_cli.commands.init import init_command
 from speccify_cli.commands.lock import lock_command
+from speccify_cli.commands.login import login_command
 from speccify_cli.commands.pull import pull_command
 from speccify_cli.commands.verify import verify_command
+from speccify_cli.commands.whoami import whoami_command
 
 app = typer.Typer(
     name="speccify",
@@ -26,6 +28,8 @@ app.command("lock")(lock_command)
 app.command("add")(add_command)
 app.command("pull")(pull_command)
 app.command("verify")(verify_command)
+app.command("login")(login_command)
+app.command("whoami")(whoami_command)
 
 
 @app.callback()

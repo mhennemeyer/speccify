@@ -1,0 +1,12 @@
+{% extends "web/base.html" %}
+{% block title %}Set up 2FA — Speccify Registry{% endblock %}
+{% block content %}
+<h1>Set up two-factor authentication</h1>
+<p>Scan this QR code with an authenticator app (1Password, Authy, Google Authenticator, …) and enter the 6-digit code to confirm.</p>
+<img alt="TOTP QR" src="data:image/png;base64,{{ qr_png_b64 }}">
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit">Confirm</button>
+</form>
+{% endblock %}

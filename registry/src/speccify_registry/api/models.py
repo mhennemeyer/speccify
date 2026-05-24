@@ -117,6 +117,10 @@ class ApiToken(models.Model):
         related_name="api_tokens",
     )
     label = models.CharField(max_length=128)
+    # Short non-secret prefix of the cleartext token (first 12 chars) — used as
+    # an indexed lookup key so verification doesn't have to brute-force-hash
+    # against every row. Not enough entropy on its own to authenticate.
+    token_prefix = models.CharField(max_length=16, db_index=True, default="")
     token_hash = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
     last_used_at = models.DateTimeField(null=True, blank=True)
@@ -129,6 +133,55 @@ class ApiToken(models.Model):
 
     def __str__(self) -> str:  # pragma: no cover - trivial
         return f"ApiToken(user={self.user_id}, label={self.label!r})"
+
+
+class DeviceCodeStatus(models.TextChoices):
+    PENDING = "pending", "pending"
+    APPROVED = "approved", "approved"
+    DENIED = "denied", "denied"
+    EXPIRED = "expired", "expired"
+    CONSUMED = "consumed", "consumed"
+
+
+class DeviceCode(models.Model):
+    """OAuth-style device-authorization grant for `speccify login`.
+
+    The CLI starts the flow with ``POST /auth/device-code``, opens the
+    browser at ``verification_url`` (where the user logs in and enters
+    ``user_code``), then polls ``POST /auth/device-code/poll`` until the
+    record is ``approved`` and a freshly-minted :class:`ApiToken` is
+    handed back exactly once (status flips to ``consumed``).
+    """
+
+    device_code = models.CharField(max_length=64, unique=True)
+    user_code = models.CharField(max_length=16, unique=True)
+    status = models.CharField(
+        max_length=16,
+        choices=DeviceCodeStatus.choices,
+        default=DeviceCodeStatus.PENDING,
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="device_codes",
+        null=True,
+        blank=True,
+    )
+    api_token = models.ForeignKey(
+        "ApiToken",
+        on_delete=models.SET_NULL,
+        related_name="device_codes",
+        null=True,
+        blank=True,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self) -> str:  # pragma: no cover - trivial
+        return f"DeviceCode(user_code={self.user_code}, status={self.status})"
 
 
 class ScopeReservation(models.Model):

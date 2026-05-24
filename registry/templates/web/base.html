@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{% block title %}Speccify Registry{% endblock %}</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 720px; margin: 2rem auto; padding: 0 1rem; }
+    nav a { margin-right: 1rem; }
+    .msg { padding: 0.5rem; border-left: 3px solid #888; background: #f5f5f5; margin: 0.5rem 0; }
+    .errors { color: #b00; }
+    .token { font-family: monospace; background: #eee; padding: 0.5rem; word-break: break-all; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border-bottom: 1px solid #ddd; padding: 0.4rem 0.6rem; text-align: left; }
+  </style>
+</head>
+<body>
+  <nav>
+    {% if user.is_authenticated %}
+      <a href="{% url 'web-tokens' %}">Tokens</a>
+      <a href="{% url 'web-device-approve' %}">Approve CLI</a>
+      <form method="post" action="{% url 'web-logout' %}" style="display:inline">
+        {% csrf_token %}<button type="submit">Logout ({{ user.username }})</button>
+      </form>
+    {% else %}
+      <a href="{% url 'web-login' %}">Log in</a>
+      <a href="{% url 'web-signup' %}">Sign up</a>
+    {% endif %}
+  </nav>
+  <hr>
+  {% if messages %}
+    {% for message in messages %}<div class="msg">{{ message }}</div>{% endfor %}
+  {% endif %}
+  {% block content %}{% endblock %}
+</body>
+</html>
