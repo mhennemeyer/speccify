@@ -126,6 +126,27 @@ def test_verify_detects_model_drift(tmp_path: Path) -> None:
     assert "Modell-Drift" in result.output or "Cache-Key-Drift" in result.output
 
 
+def test_verify_warns_on_yanked_lockfile_entry(tmp_path: Path) -> None:
+    """Phase 2 Stage 5: yanked Versionen erzeugen Warnung, kein Fehlschlag."""
+    project, out = _setup_project(tmp_path)
+    lock_path = project / "speccify.lock"
+    raw = yaml.safe_load(lock_path.read_text(encoding="utf-8"))
+    for spec in raw["specs"]:
+        if spec["id"] == "@org/button":
+            spec["yank_status"] = "yanked"
+            spec["yank_reason"] = "security issue"
+    lock_path.write_text(yaml.safe_dump(raw, sort_keys=False), encoding="utf-8")
+
+    result = runner.invoke(
+        app,
+        ["verify", "--project", str(project), "--out", str(out), "--cache-dir", str(CACHE_DIR)],
+    )
+    assert result.exit_code == 0, result.output
+    assert "geyanked" in result.output
+    assert "security issue" in result.output
+    assert "konsistent" in result.output
+
+
 def test_verify_offline_cache_miss_fails(tmp_path: Path) -> None:
     """`verify --cache-dir <leer>` muss bei Cache-Miss klar fehlschlagen."""
     project, out = _setup_project(tmp_path)

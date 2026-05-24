@@ -89,9 +89,7 @@ def test_yank_scope_forbidden_exits_2(live_server) -> None:
     _seed_published_version(alice)
     _seed_user_and_credential(live_server.url, username="marc")
 
-    result = CliRunner().invoke(
-        app, ["yank", "@org/button@0.1.0", "--registry", live_server.url]
-    )
+    result = CliRunner().invoke(app, ["yank", "@org/button@0.1.0", "--registry", live_server.url])
     assert result.exit_code == 2, result.output
     assert "Scope error" in result.output
 
@@ -99,9 +97,7 @@ def test_yank_scope_forbidden_exits_2(live_server) -> None:
 def test_yank_version_not_found_exits_2(live_server) -> None:
     _seed_user_and_credential(live_server.url)
 
-    result = CliRunner().invoke(
-        app, ["yank", "@org/missing@9.9.9", "--registry", live_server.url]
-    )
+    result = CliRunner().invoke(app, ["yank", "@org/missing@9.9.9", "--registry", live_server.url])
     assert result.exit_code == 2
     assert "Version not found" in result.output
 
@@ -110,25 +106,19 @@ def test_yank_stale_2fa_exits_1(live_server) -> None:
     owner = _seed_user_and_credential(live_server.url, fresh_2fa=False)
     _seed_published_version(owner)
 
-    result = CliRunner().invoke(
-        app, ["yank", "@org/button@0.1.0", "--registry", live_server.url]
-    )
+    result = CliRunner().invoke(app, ["yank", "@org/button@0.1.0", "--registry", live_server.url])
     assert result.exit_code == 1
     assert "2FA" in result.output
 
 
 def test_yank_without_credentials_exits_1(live_server) -> None:
-    result = CliRunner().invoke(
-        app, ["yank", "@org/button@0.1.0", "--registry", live_server.url]
-    )
+    result = CliRunner().invoke(app, ["yank", "@org/button@0.1.0", "--registry", live_server.url])
     assert result.exit_code == 1
     assert "Not logged in" in result.output
 
 
 def test_yank_invalid_ref_exits_2(live_server) -> None:
     _seed_user_and_credential(live_server.url)
-    result = CliRunner().invoke(
-        app, ["yank", "not-a-ref", "--registry", live_server.url]
-    )
+    result = CliRunner().invoke(app, ["yank", "not-a-ref", "--registry", live_server.url])
     assert result.exit_code == 2
     assert "Invalid spec reference" in result.output

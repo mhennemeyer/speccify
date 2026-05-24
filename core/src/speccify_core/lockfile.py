@@ -156,9 +156,7 @@ class Lockfile:
         if schema_path is None and raw_version == 1:
             _validate_against_schema(data, LEGACY_V1_LOCKFILE_SCHEMA_PATH, lock_path)
         else:
-            _validate_against_schema(
-                data, schema_path or DEFAULT_LOCKFILE_SCHEMA_PATH, lock_path
-            )
+            _validate_against_schema(data, schema_path or DEFAULT_LOCKFILE_SCHEMA_PATH, lock_path)
 
         entries = tuple(_entry_from_dict(item) for item in data["specs"])
         signature = _signature_from_dict(data.get("signature"))
@@ -222,7 +220,11 @@ class Lockfile:
         status: str,
         reason: str | None = None,
     ) -> Lockfile:
-        """Erzeugt eine neue Lockfile-Instanz mit aktualisiertem `yank_status` (+ optional `yank_reason`) für `spec_id`."""
+        """Erzeugt eine neue Lockfile-Instanz mit aktualisiertem `yank_status` für `spec_id`.
+
+        Optional kann ``reason`` gesetzt werden; bei ``status="none"`` wird die Reason
+        automatisch entfernt, damit yank_reason nicht ohne yank-Status weiterlebt.
+        """
         if status not in ("none", "yanked"):
             raise LockfileError(f"Ungültiger yank_status: {status!r}")
         return self._replace_entry(

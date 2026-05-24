@@ -373,9 +373,7 @@ class SpecVersionYankView(APIView):
             )
 
         row = (
-            SpecVersion.objects.filter(
-                spec__scope__name=scope, spec__name=name, version=version
-            )
+            SpecVersion.objects.filter(spec__scope__name=scope, spec__name=name, version=version)
             .select_related("spec", "spec__scope")
             .first()
         )
@@ -392,9 +390,7 @@ class SpecVersionYankView(APIView):
             return Response(
                 {
                     "code": "scope_forbidden",
-                    "detail": (
-                        f"You do not own scope @{scope}; only the owner can yank versions."
-                    ),
+                    "detail": (f"You do not own scope @{scope}; only the owner can yank versions."),
                 },
                 status=status.HTTP_403_FORBIDDEN,
             )
@@ -437,5 +433,3 @@ def _extract_yaml_bytes(request: Request) -> bytes | None:
         if isinstance(payload, (bytes, bytearray)):
             return bytes(payload)
     return None
-
-

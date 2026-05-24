@@ -41,14 +41,56 @@ def run_verify(
     offline: bool = True,
     cache_dir: Path | None = None,
 ) -> list[str]:
-    """Gibt eine Liste von Problemen zurück. Leere Liste = grün."""
+    """Gibt eine Liste von Problemen zurück. Leere Liste = grün.
+
+    Für nicht-fatale Hinweise (z.B. yanked Versionen) verwende stattdessen
+    :func:`run_verify_with_warnings`, das ein ``(problems, warnings)``-Tuple liefert.
+    """
+    problems, _warnings = run_verify_with_warnings(
+        project_dir,
+        out_dir=out_dir,
+        registry_override=registry_override,
+        offline=offline,
+        cache_dir=cache_dir,
+    )
+    return problems
+
+
+def run_verify_with_warnings(
+    project_dir: Path,
+    out_dir: Path,
+    registry_override: Path | None = None,
+    *,
+    offline: bool = True,
+    cache_dir: Path | None = None,
+) -> tuple[list[str], list[str]]:
+    """Wie :func:`run_verify`, gibt aber zusätzlich nicht-fatale Warnungen zurück.
+
+    Warnungen brechen den Verify-Run nicht (Exit 0), werden aber an stderr
+    gemeldet. In Phase 2 nutzen wir das für ``yank_status == 'yanked'``-
+    Einträge im Lockfile: das Lockfile bleibt valide, der User wird aber
+    informiert, dass die genutzte Version vom Registry zurückgezogen wurde.
+    """
     problems: list[str] = []
+    warnings: list[str] = []
 
     ctx = WorkspaceContext.load(project_dir, registry_override=registry_override)
     if not ctx.lockfile_path.is_file():
-        return [f"Kein Lockfile in {project_dir} (bitte `speccify lock` ausführen)."]
+        return (
+            [f"Kein Lockfile in {project_dir} (bitte `speccify lock` ausführen)."],
+            warnings,
+        )
 
     lockfile = Lockfile.load(ctx.lockfile_path)
+
+    # Yank-Warnungen aus dem Lockfile aufsammeln (Phase 2 Stage 5).
+    for entry in lockfile.entries:
+        if entry.yank_status == "yanked":
+            reason = f" (reason: {entry.yank_reason})" if entry.yank_reason else ""
+            warnings.append(
+                f"Spec {entry.id}@{entry.version} wurde im Registry geyanked{reason}. "
+                f"Bitte auf eine neuere Version aktualisieren."
+            )
 
     # 1) Re-resolve und vergleiche mit Lockfile-Einträgen.
     graph = Resolver(ctx.registry).resolve(ctx.manifest)
@@ -156,7 +198,7 @@ def run_verify(
                     f"Disk-Drift für {on_disk}: Lockfile={expected[path]}, Datei={disk_digest}."
                 )
 
-    return problems
+    return problems, warnings
 
 
 def verify_command(
@@ -203,7 +245,7 @@ def verify_command(
     """Prüft, dass Manifest, Lockfile und gerenderte Dateien zueinander passen."""
     project = project_dir or Path.cwd()
     try:
-        problems = run_verify(
+        problems, warnings = run_verify_with_warnings(
             project,
             out_dir=out,
             registry_override=registry,
@@ -213,6 +255,9 @@ def verify_command(
     except (ManifestError, RegistryError, LockfileError, ResolverError, FileNotFoundError) as exc:
         typer.echo(f"✗ speccify verify fehlgeschlagen: {exc}", err=True)
         raise typer.Exit(code=1) from exc
+
+    for w in warnings:
+        typer.echo(f"⚠ {w}", err=True)
 
     if problems:
         typer.echo("✗ speccify verify: Drift erkannt:", err=True)
