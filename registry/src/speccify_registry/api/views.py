@@ -9,8 +9,10 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from . import device_codes
-from .models import DeviceCodeStatus
+from . import device_codes, two_factor
+from . import publish as publish_module
+from .models import DeviceCodeStatus, Spec, SpecVersion, YankStatus
+from .publish import PublishError
 
 
 class WhoamiView(APIView):
@@ -105,3 +107,143 @@ class DeviceCodePollView(APIView):
 
 def device_code_cache_key(device_code: str) -> str:
     return f"speccify:devicecode:{device_code}"
+
+
+def _serialise_version(version: SpecVersion) -> dict:
+    return {
+        "version": version.version,
+        "sha256": version.sha256,
+        "yank_status": version.yank_status,
+        "yank_reason": version.yank_reason,
+        "published_at": version.published_at.isoformat(),
+        "uploader": version.uploader.get_username(),
+    }
+
+
+class SpecVersionListView(APIView):
+    """``GET /api/v1/registry/specs/<scope>/<name>`` — list all versions."""
+
+    authentication_classes: list = []
+
+    def get(self, request: Request, scope: str, name: str) -> Response:
+        spec = Spec.objects.filter(scope__name=scope, name=name).select_related("scope").first()
+        if spec is None:
+            return Response(
+                {"detail": f"Unknown spec @{scope}/{name}."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        versions = list(spec.versions.all().select_related("uploader"))
+        return Response(
+            {
+                "id": f"@{scope}/{name}",
+                "description": spec.description,
+                "tags": list(spec.tags or []),
+                "versions": [_serialise_version(v) for v in versions],
+            }
+        )
+
+
+class SpecVersionDetailView(APIView):
+    """``GET /api/v1/registry/specs/<scope>/<name>/<version>`` — fetch YAML + meta."""
+
+    authentication_classes: list = []
+
+    def get(self, request: Request, scope: str, name: str, version: str) -> Response:
+        row = (
+            SpecVersion.objects.filter(spec__scope__name=scope, spec__name=name, version=version)
+            .select_related("spec", "spec__scope", "uploader")
+            .first()
+        )
+        if row is None:
+            return Response(
+                {"detail": f"Unknown version @{scope}/{name}@{version}."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        return Response(
+            {
+                **_serialise_version(row),
+                "id": f"@{scope}/{name}",
+                "yaml": bytes(row.yaml_bytes).decode("utf-8"),
+            }
+        )
+
+
+class SpecPublishView(APIView):
+    """``POST /api/v1/registry/specs`` — publish (or re-publish) a spec version.
+
+    Accepts either ``multipart/form-data`` with a ``yaml`` file part, or
+    ``application/json`` with a ``yaml`` string field. Auth via Bearer
+    token; the token must have a fresh 2FA verification (TTL configured
+    in ``settings.SPECCIFY_2FA_TTL_SECONDS``).
+    """
+
+    def post(self, request: Request) -> Response:
+        if not request.user.is_authenticated:
+            return Response(
+                {"detail": "Authentication required."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        api_token = request.auth
+        if api_token is not None and not two_factor.has_fresh_2fa(api_token):
+            return Response(
+                {
+                    "code": "stale_2fa",
+                    "detail": (
+                        "This token's 2FA verification is too old; re-mint the token to publish."
+                    ),
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        yaml_bytes = _extract_yaml_bytes(request)
+        if yaml_bytes is None:
+            return Response(
+                {
+                    "code": "missing_yaml",
+                    "detail": (
+                        "Provide the spec YAML as a multipart 'yaml' file "
+                        "or a JSON 'yaml' string field."
+                    ),
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            version, created = publish_module.publish(user=request.user, yaml_bytes=yaml_bytes)
+        except PublishError as exc:
+            return Response(
+                {"code": exc.code, "detail": exc.detail},
+                status=exc.http_status,
+            )
+
+        body = {
+            "id": f"@{version.spec.scope.name}/{version.spec.name}",
+            "version": version.version,
+            "sha256": version.sha256,
+            "created": created,
+            "yank_status": version.yank_status,
+        }
+        return Response(
+            body,
+            status=(status.HTTP_201_CREATED if created else status.HTTP_200_OK),
+        )
+
+
+def _extract_yaml_bytes(request: Request) -> bytes | None:
+    """Read YAML bytes from either multipart upload or JSON body."""
+
+    upload = request.FILES.get("yaml") if hasattr(request, "FILES") else None
+    if upload is not None:
+        return upload.read()
+    if hasattr(request, "data"):
+        payload = request.data.get("yaml")
+        if isinstance(payload, str):
+            return payload.encode("utf-8")
+        if isinstance(payload, (bytes, bytearray)):
+            return bytes(payload)
+    return None
+
+
+# Mark unused symbols as referenced for static checkers.
+_ = YankStatus

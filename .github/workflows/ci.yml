@@ -120,7 +120,10 @@ jobs:
         run: uv sync --all-packages
 
       - name: Pytest (registry, Django + pytest-django, in-memory SQLite)
-        run: uv run pytest registry/ -v
+        # `-c registry/pytest.ini` is required so pytest picks up the
+        # registry-local config (DJANGO_SETTINGS_MODULE, pythonpath=src)
+        # instead of the workspace-wide pyproject pytest options.
+        run: uv run pytest -c registry/pytest.ini registry/ -v
 
   web-frontend:
     name: apps/web frontend build
