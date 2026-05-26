@@ -15,6 +15,7 @@ byte-identisch — keine Verhaltens­änderung für Phase-1b/2-Aufrufer.
 from dataclasses import dataclass
 from typing import Protocol
 
+from speccify_core.codegen import angular_llm as _angular_llm
 from speccify_core.codegen import react_llm as _react_llm
 from speccify_core.codegen import swiftui_llm as _swiftui_llm
 from speccify_core.codegen.react_llm import CodegenError
@@ -79,12 +80,23 @@ def _render_swiftui(spec: Spec, *, llm_client: LlmClient | None = None) -> Targe
     return TargetRender(files=files, cache_key=cache_key)
 
 
-# Registry aller bekannten Targets. Neue Targets (Phase 3 Stage 3 Angular)
-# tragen sich hier ein; Dispatcher und `SUPPORTED_TARGETS` lesen ausschließlich
-# aus dieser Map.
+def _render_angular(spec: Spec, *, llm_client: LlmClient | None = None) -> TargetRender:
+    """Renderer-Adapter für Angular (`kind: llm` mit Replay-Cache)."""
+    if llm_client is None:
+        raise CodegenError(
+            "Codegen-Target 'angular' benötigt einen llm_client (z.B. ReplayCacheClient)."
+        )
+    files, cache_key = _angular_llm.render_to_files(spec, llm_client)
+    return TargetRender(files=files, cache_key=cache_key)
+
+
+# Registry aller bekannten Targets. Phase 3 Stage 3 schliesst Angular an;
+# weitere Targets (Jetpack Compose etc.) tragen sich hier ein. Dispatcher und
+# `SUPPORTED_TARGETS` lesen ausschließlich aus dieser Map.
 TARGETS: dict[str, Renderer] = {
     "react": _render_react,
     "swiftui": _render_swiftui,
+    "angular": _render_angular,
 }
 
 

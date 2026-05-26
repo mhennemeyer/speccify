@@ -131,17 +131,18 @@ Outcome: SwiftUI-Renderer als 1:1-Phase-1b-Spiegel implementiert; `render_for_ta
 - **Bewusst out-of-scope für Stage 2** (User-Decision 2026-05-26): keine eingecheckten Golden Renders + Replay-Fixtures — Phase 1b hat dieses Pattern in der Praxis ebenfalls nicht (kein `tests/fixtures/golden/react/` im Repo). Echte Golden Renders über tatsächliche LLM-Calls werden in Stage 4 (Conformance-Runner) gefüllt, sobald ein Maintainer einmal `scripts/record_llm_cache.py` gegen Bedrock laufen lässt.
 - **Verifikation**: 246 Root-Pytest grün (+20 SwiftUI-Tests gegenüber Stage 1b) + 116 Registry-Pytest grün = **362 Tests gesamt**; ruff/format clean.
 
-## Stage 3: Angular-Renderer (`kind: llm` + Replay-Cache) + Golden Renders
+## Stage 3: Angular-Renderer (`kind: llm` + Replay-Cache) — **Done (2026-05-26)**
 
-Outcome: `speccify pull --target angular` erzeugt deterministisch Angular-Komponenten (`.component.ts` + `.component.html` + `.component.css`) für die 5 Phase-0-Specs; Replay-Cache-Fixtures analog SwiftUI.
+Outcome: Angular-Renderer als 1:1-Phase-1b-Spiegel implementiert; `render_for_target(spec, "angular", llm_client=...)` erzeugt deterministisch eine `.component.ts`-Datei pro Spec über Replay-Cache; alle Tests grün.
 
-- `core/src/speccify_core/codegen/angular_llm.py` analog zu `react_llm.py`/`swiftui_llm.py`: Prompt-Builder, `render_to_files(spec, llm_client) -> (files, cache_key)`; Output-Pfad `<scope>/<name>/<name>.component.{ts,html,css}` (Datei-Triple).
-- Generator-Pin: `kind: llm`, `provider/model/prompt_version=0.1.0`, `cache_key` deterministisch.
-- `render_for_target` Dispatcher um `target == "angular"` erweitern.
-- Inputs → `@Input()`, Outputs → `@Output() EventEmitter`, Events → Click-Handler im Template (Prompt-Vorgabe an LLM).
-- Replay-Fixtures unter `tests/fixtures/replay/angular/<cache_key>.json`.
-- Golden Renders für alle 5 Specs in `tests/fixtures/golden/angular/org/<name>/...`.
-- Tests: `core/tests/test_codegen_angular.py` (Determinismus via Replay, Golden-Match, Input/Output/Event-Binding).
+- `core/src/speccify_core/codegen/angular_llm.py` analog zu `react_llm.py`/`swiftui_llm.py`: `build_prompt` (Jinja-Template `angular_llm.prompt.j2`; Inputs → `@Input()`, Events → `@Output() EventEmitter<void|Payload>`, Selector `app-<kebab>`), `normalize_ts` (CRLF→LF, Markdown-Fences strippen), `validate_ts` (Klammer-Balancing inkl. `"`/`'`/Backtick-Template-Literals + `//`/`/* */`-Kommentare; kein JSX-Tag-Balancing), `make_cache_key`, `render`, `render_to_files`.
+- **Single-File-Strategie**: Inline-Template + Inline-Styles direkt im `@Component`-Decorator → eine `.component.ts`-Datei pro Spec (statt Triple `ts+html+css`). Damit bleibt der Renderer spiegelgleich zu SwiftUI (single-file pro Spec) und der Validator muss kein Multi-File-Splitting machen. Output-Pfad `<scope>/<kebab-name>.component.ts` (z. B. `org/button.component.ts`).
+- Generator-Pin: `kind: llm`, `PROVIDER=bedrock`, `MODEL=bedrock/eu.anthropic.claude-opus-4-7`, `PROMPT_VERSION=0.1.0`, `TARGET=angular` — Cache-Key enthält `target` → Angular-, SwiftUI- und React-Keys derselben Spec kollidieren nie.
+- `CodegenError` wird aus `react_llm` re-exportiert (gemeinsame Exception-Klasse für alle LLM-Adapter).
+- `render_for_target` Dispatcher um `"angular"` erweitert (`_render_angular` in `codegen/__init__.py`); `TARGETS`-Registry enthält jetzt `{"react", "swiftui", "angular"}`; `SUPPORTED_TARGETS` reflektiert das.
+- Tests: `core/tests/test_angular_llm.py` (21 Tests, analog `test_swiftui_llm.py`): `normalize_ts`, `validate_ts` (balanced, unbalanced, Strings/Kommentare/Template-Literals, unterminated string, unterminated template literal), `build_prompt`-Inhalt, Cache-Key-Determinismus, Cross-Target-Key-Trennung (`angular ≠ react`, `angular ≠ swiftui`), Render-via-Replay-Cache (Cache-Hit, Cache-Miss raises, Markdown-Fence-Stripping), `render_to_files`-Pfad (`org/button.component.ts`), Dispatcher-Pfad mit byte-identischen Mehrfach-Renders.
+- **Bewusst out-of-scope für Stage 3** (User-Decision 2026-05-26, analog Stage 2): keine eingecheckten Golden Renders + Replay-Fixtures — Phase 1b hat dieses Pattern in der Praxis ebenfalls nicht. Echte Golden Renders über tatsächliche LLM-Calls werden in Stage 4 (Conformance-Runner) gefüllt, sobald ein Maintainer einmal `scripts/record_llm_cache.py` gegen Bedrock laufen lässt.
+- **Verifikation**: 267 Root-Pytest grün (+21 Angular-Tests gegenüber Stage 2) + 116 Registry-Pytest grün = **383 Tests gesamt**; ruff/format clean.
 
 ## Stage 4: Conformance-Runner (Build-Smoke + Visual-Regression)
 
@@ -202,7 +203,7 @@ Outcome: Phase 3 dokumentarisch abgeschlossen; Master-Plan reflektiert SwiftUI+A
 | 1a | Renderer-Protocol + TARGETS-Registry, React portiert. | **Done (2026-05-25)** |
 | 1b | Lockfile-Schema-Bump v3 + Manifest-Schema v2 + Adapter. | **Done (2026-05-26)** |
 | 2 | SwiftUI-Renderer + Golden Renders. | **Done (2026-05-26)** |
-| 3 | Angular-Renderer + Golden Renders. | Open |
+| 3 | Angular-Renderer (single-file `.component.ts` mit Inline-Template). | **Done (2026-05-26)** |
 | 4 | Conformance-Runner (Build-Smoke + Visual-Regression) + CI-Jobs. | Open |
 | 5 | Workspaces (Cargo-Stil Root-Lockfile + globale MVS). | Open |
 | 6 | Cross-Consistency CLI ↔ MCP ↔ Web auf alle 3 Targets. | Open |
