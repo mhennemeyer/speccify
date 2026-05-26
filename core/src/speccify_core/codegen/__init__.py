@@ -55,9 +55,7 @@ class Renderer(Protocol):
     werfen, wenn er fehlt.
     """
 
-    def __call__(
-        self, spec: Spec, *, llm_client: LlmClient | None = None
-    ) -> TargetRender: ...
+    def __call__(self, spec: Spec, *, llm_client: LlmClient | None = None) -> TargetRender: ...
 
 
 def _render_react(spec: Spec, *, llm_client: LlmClient | None = None) -> TargetRender:
