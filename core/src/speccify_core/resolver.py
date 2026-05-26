@@ -172,12 +172,39 @@ class Resolver:
         return list(self._registries)
 
     def resolve(self, manifest: ProjectManifest) -> ResolvedGraph:
+        initial: dict[str, list[tuple[str, str]]] = {
+            spec_id: [(raw_range, "<root>")] for spec_id, raw_range in manifest.dependencies.items()
+        }
+        targets = manifest.targets if manifest.targets else ()
+        target = targets[0] if len(targets) == 1 else ""
+        return self._resolve_from_constraints(initial, target=target)
+
+    def resolve_workspace(
+        self,
+        aggregated_dependencies: dict[str, list[tuple[str, str]]],
+    ) -> ResolvedGraph:
+        """Phase 3 Stage 5: globale MVS-Auflösung über Workspace-Member.
+
+        ``aggregated_dependencies`` ist die Map aus
+        :meth:`speccify_core.workspace.Workspace.aggregated_dependencies` —
+        d. h. pro Spec-Id eine Liste ``(range, source)``-Tupel, wobei
+        ``source`` der Member-Pfad ist.
+        """
+        return self._resolve_from_constraints(aggregated_dependencies, target="")
+
+    def _resolve_from_constraints(
+        self,
+        initial: dict[str, list[tuple[str, str]]],
+        *,
+        target: str,
+    ) -> ResolvedGraph:
         self._scope_owner = {}
         constraints: dict[str, list[_Constraint]] = {}
-        for spec_id, raw_range in manifest.dependencies.items():
-            constraints.setdefault(spec_id, []).append(
-                _Constraint(spec_id=spec_id, range=Range.parse(raw_range), source="<root>")
-            )
+        for spec_id, items in initial.items():
+            for raw_range, source in items:
+                constraints.setdefault(spec_id, []).append(
+                    _Constraint(spec_id=spec_id, range=Range.parse(raw_range), source=source)
+                )
 
         resolved: dict[str, tuple[Version, Spec]] = {}
         queue: deque[str] = deque(constraints.keys())
@@ -233,7 +260,7 @@ class Resolver:
             )
             for spec_id, (ver, spec) in sorted(resolved.items())
         ]
-        return ResolvedGraph(target=manifest.target, resolutions=resolutions)
+        return ResolvedGraph(target=target, resolutions=resolutions)
 
     # --- intern ---------------------------------------------------------
 

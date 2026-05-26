@@ -71,6 +71,11 @@ from speccify_core.validator import (
     SchemaValidator,
     ValidationIssue,
 )
+from speccify_core.workspace import (
+    Workspace,
+    WorkspaceError,
+    WorkspaceMember,
+)
 
 __version__ = "0.0.0"
 
@@ -129,6 +134,9 @@ __all__ = [
     "ValidationIssue",
     "Version",
     "VersionNotFoundError",
+    "Workspace",
+    "WorkspaceError",
+    "WorkspaceMember",
     "__version__",
     "build_lockfile",
     "register_target",

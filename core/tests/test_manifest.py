@@ -57,11 +57,13 @@ def test_default_registry_path_when_omitted(tmp_path: Path) -> None:
     assert manifest.registry_path == DEFAULT_REGISTRY_PATH
 
 
-def test_missing_required_field_raises(tmp_path: Path) -> None:
+def test_missing_schema_version_raises(tmp_path: Path) -> None:
+    # Phase-3-Stage-5: `targets` und `dependencies` sind nur noch *strukturell* optional
+    # (Workspace-Root darf reines `workspaces:` haben). `schema_version` bleibt Pflicht.
     manifest_path = tmp_path / "speccify.yaml"
-    manifest_path.write_text("schema_version: 1\ntarget: react\n", encoding="utf-8")
+    manifest_path.write_text("target: react\ndependencies: {}\n", encoding="utf-8")
 
-    with pytest.raises(ManifestError, match="dependencies"):
+    with pytest.raises(ManifestError, match="schema_version"):
         ProjectManifest.load(manifest_path)
 
 

@@ -1,0 +1,8 @@
+schema_version: 2
+targets:
+  - react
+registry:
+  path: ../../../registry-fixtures
+dependencies:
+  "@org/contact-form": "^0.1"
+  "@org/button": "^0.1"

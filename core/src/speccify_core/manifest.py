@@ -35,10 +35,16 @@ class ProjectManifest:
     """
 
     schema_version: int
-    targets: tuple[str, ...]
+    targets: tuple[str, ...] = ()
     dependencies: dict[str, str] = field(default_factory=dict)
     registry_path: str = DEFAULT_REGISTRY_PATH
     source_path: Path | None = None
+    workspaces: tuple[str, ...] = ()
+
+    @property
+    def is_workspace_root(self) -> bool:
+        """True, wenn dieses Manifest mindestens ein `workspaces:`-Glob enthält."""
+        return bool(self.workspaces)
 
     @property
     def target(self) -> str:
@@ -80,24 +86,27 @@ class ProjectManifest:
 
         registry_block = data.get("registry") or {}
         registry_path = registry_block.get("path", DEFAULT_REGISTRY_PATH)
-        targets_raw = data["targets"]
+        targets_raw = data.get("targets", []) or []
+        workspaces_raw = data.get("workspaces", []) or []
         return cls(
             schema_version=data["schema_version"],
             targets=tuple(targets_raw),
             dependencies=dict(data.get("dependencies", {})),
             registry_path=registry_path,
             source_path=manifest_path,
+            workspaces=tuple(workspaces_raw),
         )
 
     def write(self, path: str | Path) -> None:
         """Schreibt das Manifest deterministisch (sortierte Keys, stable Layout)."""
         out_path = Path(path)
-        payload: dict[str, Any] = {
-            "schema_version": self.schema_version,
-            "targets": list(self.targets),
-            "registry": {"path": self.registry_path},
-            "dependencies": dict(sorted(self.dependencies.items())),
-        }
+        payload: dict[str, Any] = {"schema_version": self.schema_version}
+        if self.targets:
+            payload["targets"] = list(self.targets)
+        if self.workspaces:
+            payload["workspaces"] = list(self.workspaces)
+        payload["registry"] = {"path": self.registry_path}
+        payload["dependencies"] = dict(sorted(self.dependencies.items()))
         text = yaml.safe_dump(
             payload,
             sort_keys=False,

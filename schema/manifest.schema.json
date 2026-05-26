@@ -4,7 +4,7 @@
   "title": "Speccify Project Manifest v2",
   "description": "Schema v2 für speccify.yaml — Phase-3-Multi-Target. Bump gegenüber v1: `target: str` → `targets: list[str]`. Phase-1-Manifeste (`schema_version: 1`) bleiben lesbar (Loader-seitige Migration zu single-element-list); neu geschriebene Manifeste sind immer v2. Aktiv geladenes Manifest-Schema seit Phase-3-Stage-1b-β.",
   "type": "object",
-  "required": ["schema_version", "targets", "dependencies"],
+  "required": ["schema_version"],
   "additionalProperties": false,
   "properties": {
     "schema_version": {
@@ -13,7 +13,17 @@
     },
     "targets": {
       "type": "array",
-      "description": "Codegen-Ziele (z.B. react, swiftui, angular). Mindestens ein Eintrag; deduplizierte Liste.",
+      "description": "Codegen-Ziele (z.B. react, swiftui, angular). Mindestens ein Eintrag; deduplizierte Liste. Optional bei reinem Workspace-Root (nur `workspaces:` gesetzt).",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "workspaces": {
+      "type": "array",
+      "description": "Phase-3-Stage-5: Glob-Muster für Workspace-Member-Verzeichnisse (Cargo-Stil). Relativ zum Root-Manifest. Beispiel: [\"packages/*\"].",
       "minItems": 1,
       "items": {
         "type": "string",
