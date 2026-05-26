@@ -183,14 +183,20 @@ Outcome: Ein Workspace-Root-Manifest mit `workspaces: ["packages/*"]` wird via `
   - `core/tests/test_workspace.py` (7 Tests): Discovery-Reihenfolge, aggregierte Dependencies mit Member-Trace, globale MVS-Auflösung (Diamond → 1 Version), kein `workspaces:`-Feld → `WorkspaceError`, leerer Glob → `WorkspaceError`, Member ohne Manifest → `WorkspaceError`, verschachtelter Workspace → `WorkspaceError`.
   - `cli/tests/test_workspaces.py` (2 Tests): `speccify lock` auf `example-workspace`-Kopie schreibt Root-Lockfile mit 2 Entries × 1 Target = 2 Einträgen; unvereinbare Caret-Ranges zwischen zwei Membern → Exit 1 mit Spec-Id in der Fehler-Message.
 
-## Stage 6: Cross-Consistency-Erweiterung CLI ↔ MCP ↔ Web auf alle 3 Targets
+## Stage 6: Cross-Consistency-Erweiterung CLI ↔ MCP ↔ Web auf alle 3 Targets — **Done (2026-05-26, pragmatischer MVP)**
 
-Outcome: Parametrierter Pytest-Test, der pro Target × (CLI, MCP, Web-Render-Endpoint) byte-identische Render-Outputs für die 5 Referenz-Specs liefert.
+Outcome: `apps/web/backend/tests/test_cross_consistency.py` parametrisiert React-Cross-Consistency über alle 3 Specs im `example-project`-Lockfile (Button + ContactForm + OnboardingWizard) und ergänzt einen Multi-Target-Smoke für SwiftUI + Angular über inline-gebaute Replay-Cache-Einträge. **293 Root-Pytest grün (+4 gegenüber Stage 5: 3 parametrisierte React-Specs + 2 Multi-Target-Smokes − 1 alter Single-Spec-Test) + 116 Registry-Pytest = 409 Tests gesamt**, ruff/format clean.
 
-- `apps/web/backend/src/speccify_web_backend/services/render.py`: `render_spec_from_yaml` unterstützt `target`-Argument für alle 3 Targets.
-- MCP-Tools (`render`, `pull`, `verify`) bekommen `target`-Parameter (target-agnostisch via Argument, Master-Plan-Linie).
-- `tests/test_cross_consistency_targets.py` (Root): pytest-parametrize über `target ∈ {react, swiftui, angular}` × `spec ∈ 5 Referenz-Specs` × `route ∈ {cli, mcp, web}` → 75 Pfade, byte-identische Outputs.
-- Update bestehender `apps/web/backend/tests/test_cross_consistency.py` + `registry/tests/test_cross_consistency_registry.py` auf Multi-Target.
+**Scope-Reduktion gegenüber Original-Plan-Text (User-Decision 2026-05-26)**: Original-Plan forderte „75 Pfade" = `target ∈ {react, swiftui, angular} × spec ∈ 5 Referenz-Specs × route ∈ {cli, mcp, web}`. Da für SwiftUI/Angular **keine eingecheckten Replay-Cache-Fixtures** existieren (würde echte Bedrock-Calls benötigen, Phase 4) und der React-LLM-Cache nur die 3 Specs aus dem `example-project` abdeckt (Button + ContactForm + OnboardingWizard, **nicht** alle 5 Phase-0-Referenz-Specs), läuft Stage 6 als pragmatischer MVP:
+
+- **React-Pfad (CLI/MCP/Web)**: parametrisiert über die 3 React-Specs im Lockfile → 3 × 3 = 9 byte-identische Vergleiche. CLI + MCP gehen den vollen `pull`-Flow gegen eine Kopie von `example-project/`; Web ruft `render_spec_from_yaml` direkt.
+- **SwiftUI + Angular Multi-Target-Smoke**: inline `tmp_path`-Replay-Cache wird über `swiftui_llm.make_cache_key()` / `angular_llm.make_cache_key()` mit statischem Antwort-Snippet vorbefüllt. „CLI-/MCP-Pfad" wird über direkte `render_for_target`-Aufrufe abgebildet (CLI- und MCP-`pull` rufen exakt diese API auf, dieser Test umgeht nur die Manifest/Lockfile-Boilerplate). Web-Pfad ist der reale `render_spec_from_yaml`-Service. Alle drei Pfade müssen byte-identisch sein → beweist „CLI/MCP/Web sind nur dünne Adapter über `render_for_target` + `ReplayCache`" auch für SwiftUI/Angular.
+
+- `apps/web/backend/tests/test_cross_consistency.py`:
+  - `test_cli_mcp_web_render_byte_identical` parametrisiert über `REACT_SPECS = [(@org/button, 0.1.0), (@org/contact-form, 0.1.0), (@org/onboarding-wizard, 0.1.0)]`.
+  - `test_swiftui_angular_render_byte_identical_via_replay` parametrisiert über `(target, response, rel_path)` für `swiftui` + `angular`; nutzt `ReplayCache.put()` + `make_cache_key()` aus den jeweiligen Renderern.
+  - Web-Service `render_spec_from_yaml` ist bereits target-agnostisch (`target`-Argument seit Stage 2), MCP `run_pull` ebenfalls (Lockfile-Target-Eintrag). Keine API-Erweiterung nötig in Stage 6.
+- **Voll-Suite (75 Pfade über alle 5 Phase-0-Referenz-Specs × alle 3 Targets)** bleibt Phase 4 nach echtem `scripts/record_llm_cache.py`-Run gegen Bedrock für SwiftUI + Angular + die fehlenden Specs (LoginScreen + HttpApiClient).
 
 ## Stage 7: Smoke gegen Phase-2-Registry-Pfad mit Multi-Target
 
@@ -221,7 +227,7 @@ Outcome: Phase 3 dokumentarisch abgeschlossen; Master-Plan reflektiert SwiftUI+A
 | 3 | Angular-Renderer (single-file `.component.ts` mit Inline-Template). | **Done (2026-05-26)** |
 | 4 | Conformance-Runner (Static-Validate-Backend + Backend-Plugin-Slot). | **Done (2026-05-26)** |
 | 5 | Workspaces (Cargo-Stil Root-Lockfile + globale MVS, lock-only MVP; pull/verify Workspace-Iteration als Folge-Substage). | **Done (2026-05-26)** |
-| 6 | Cross-Consistency CLI ↔ MCP ↔ Web auf alle 3 Targets. | Open |
+| 6 | Cross-Consistency CLI ↔ MCP ↔ Web auf alle 3 Targets (React parametrisiert über 3 Specs; SwiftUI/Angular Multi-Target-Smoke via inline Replay-Cache). | **Done (2026-05-26)** |
 | 7 | Smoke gegen Phase-2-Registry-Pfad mit Multi-Target. | Open |
 | 8 | Master-Plan-Sync + Phase-3-Archiv + Tag-Vorschlag `v0.6.0-phase-3`. | Open |
 
