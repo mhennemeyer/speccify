@@ -87,15 +87,28 @@ Konsequenzen für die Delivery-Stages:
 - Decisions dokumentiert (oben).
 - Round-2-Delivery-Steps (Stages 1–8) konkretisiert.
 
-## Stage 1: Codegen-Abstraktion härten + Lockfile-Schema-Bump v3
+## Stage 1a: Renderer-Protocol + TARGETS-Registry — **Done (2026-05-25)**
 
-Outcome: `speccify_core` hat ein generisches `Renderer`-Interface + `Target`-Registry; Lockfile v3 unterstützt `targets: [...]`-Cross-Product mit v2→v3-Migration; React-Codegen aus Phase 1b auf das neue Interface portiert; alle bestehenden Tests grün.
+Outcome: `speccify_core` hat ein generisches `Renderer`-Protocol + `TARGETS`-Registry; React-Codegen aus Phase 1b transparent darüber portiert; alle 225 Root-Tests grün.
 
-- `core/src/speccify_core/codegen/__init__.py`: `Renderer`-Protocol (`render(spec, target) -> dict[str, bytes]`, `generator_pin() -> GeneratorPin`); `TARGETS: dict[str, Renderer]` Registry; React-Renderer aus Phase 1b registriert.
-- `schema/lockfile.v2.schema.json` als Snapshot (analog v1-Archivierung).
-- `schema/lockfile.schema.json` auf v3: `LockEntry` bekommt `target`-Feld + `generated_files_sha256` pro Target; `Lockfile.targets: list[str]` top-level; In-Memory v2→v3-Migration im Loader.
-- `core/src/speccify_core/manifest.py`: `target: str` → `targets: list[str]` (mit v0-Manifest-Compat: single `target` wird zu `[target]`).
-- Tests: `core/tests/test_lockfile_v3.py` (Migration, Round-Trip, Multi-Target-Entries), `core/tests/test_renderer_protocol.py` (TARGETS-Registry, React-Renderer via Protocol).
+- `core/src/speccify_core/codegen/__init__.py`: `Renderer`-Protocol, `TargetRender`-Dataclass, `TARGETS: dict[str, Renderer]`, `register_target()`, `supported_targets()`, `render_for_target()` delegiert an Registry.
+- React-Renderer aus Phase 1b unter `"react"` registriert; `SUPPORTED_TARGETS`-Backward-Compat-Konstante bleibt.
+- Tests: `core/tests/test_renderer_protocol.py` (5 Tests: Registry-Lookup, Dispatcher, Unknown-Target-Error, Doppelregistrierung, supported_targets-Sortierung).
+- Commits: `be848a4` (Tests) + `43462ee` (Refactor `__call__` Lesbarkeit).
+- Verifiziert: `225 passed` Root-Pytest (`mcp/tests/test_stdio_smoke.py` einzeln grün); `ruff check core/` clean; `ruff format` clean.
+
+## Stage 1b: Lockfile-Schema-Bump v3 + Manifest-Schema v2 — Open
+
+Outcome: Lockfile v3 unterstützt `targets: [...]`-Cross-Product mit v1/v2→v3-Migration im Loader; Manifest v2 mit `targets: list[str]` (v1 single `target` transparent lesbar); CLI/MCP/Web/Registry-Adapter auf `targets`-Iteration umgestellt; alle Tests grün.
+
+- `schema/lockfile.v2.schema.json` als Snapshot (analog v1-Archivierung, v1-Snapshot existiert bereits).
+- `schema/lockfile.schema.json` auf v3: `LockEntry` bekommt `target`-Feld + `generated_files_sha256` pro Target; `Lockfile.targets: list[str]` top-level; In-Memory v1→v2→v3-Migration im Loader (Bytes im Repo unangetastet, vgl. User-Decision).
+- `schema/manifest.v1.schema.json` als Snapshot.
+- `schema/manifest.schema.json` auf v2: `targets: list[str]` statt `target: str`; Loader liest v1 transparent als single-element-list (vgl. User-Decision: existierende Manifest-Bytes in `example-project/`, Test-Strings bleiben unangetastet).
+- `core/src/speccify_core/manifest.py`: `ProjectManifest.target: str` → `targets: list[str]` (mit v1-Compat).
+- `core/src/speccify_core/lockfile.py`: `build_lockfile()`-Signatur (heute `target: str`) → `targets: list[str]`, Loader-Migration v1→v2→v3.
+- ~8 Aufrufer in `cli/` (`init`, `add`, `lock`, `pull`, `verify`), `mcp/`, `apps/web/backend/`, `registry/` anpassen.
+- Tests: `core/tests/test_lockfile_v3.py` (Migration, Round-Trip, Multi-Target-Entries), `core/tests/test_manifest_v2.py` (v1-Compat-Read, v2-Round-Trip).
 - CLI/MCP-Adapter (`pull`, `verify`) lesen `targets`-Liste, iterieren — kein Verhaltenschange bei Single-Target.
 
 ## Stage 2: SwiftUI-Renderer (`kind: llm` + Replay-Cache) + Golden Renders
@@ -178,7 +191,8 @@ Outcome: Phase 3 dokumentarisch abgeschlossen; Master-Plan reflektiert SwiftUI+A
 | Stage | Outcome | Status |
 |---|---|---|
 | 0 | Open Questions geklärt, Decisions dokumentiert, Round-2-Delivery-Steps geschrieben. | **Done (2026-05-24)** |
-| 1 | Codegen-Abstraktion + Lockfile-Schema-Bump v3. | Open |
+| 1a | Renderer-Protocol + TARGETS-Registry, React portiert. | **Done (2026-05-25)** |
+| 1b | Lockfile-Schema-Bump v3 + Manifest-Schema v2 + Adapter. | Open |
 | 2 | SwiftUI-Renderer + Golden Renders. | Open |
 | 3 | Angular-Renderer + Golden Renders. | Open |
 | 4 | Conformance-Runner (Build-Smoke + Visual-Regression) + CI-Jobs. | Open |
