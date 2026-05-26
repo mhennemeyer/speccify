@@ -57,40 +57,132 @@ Bevor wir Delivery-Stages konkretisieren, müssen folgende Punkte mit dem User g
 9. **Workspaces-Resolver-Semantik** — bei zwei Membern, die dieselbe Spec mit unterschiedlichen Versionen ziehen: globale MVS-Auflösung (eine Version für alle Member, Cargo-Stil) oder pro Member separat (pnpm-Stil mit potenziell mehreren Versionen koexistierend)?
 10. **MCP-Tools für neue Targets** — bestehende Tools (`render`, `pull`, `verify`) target-agnostisch erweitern, **oder** pro neuem Target ein zusätzliches Convenience-Tool (`render_swiftui` etc.)? Master-Plan-Tendenz: bestehende Tools target-agnostisch belassen, Target via Argument.
 
-## Decisions (werden in Stage 0 mit User-Antworten aufgefüllt)
+## Decisions (Stage 0, 2026-05-24)
 
-> Stand: **offen** — Stage 0 = Klärung der 10 Open Questions. Round-2-Delivery-Steps (Stages 1ff.) folgen erst, wenn diese Entscheidungen dokumentiert sind.
+User-Antworten auf die 10 Open Questions Round 1:
+
+1. **Zweites + drittes Target**: **SwiftUI + Angular** — Mobile/Native + Enterprise-Web, größte Reichweite der Spec-Sprache. Beide in Phase 3 (siehe 10).
+2. **Drittes Target Timing**: beide neuen Targets vollständig in Phase 3 (Master-Plan-Ziel voll erfüllt; größerer Scope wird über Stage-Granularität gesteuert).
+3. **Conformance-Runner-Stack**: **MVP = Build-Smoke + Snapshot-Diff** pro Target. Voll-interaktive Tests (Playwright/Simulator-Klicks) bleiben Phase 4. Plus Visual-Regression gegen Spec-`screenshots[]` (siehe 7).
+4. **Workspaces-Lockfile-Layout**: **Cargo-Stil — ein zentrales `speccify.lock` im Workspace-Root**; globale MVS über alle Member (siehe 8).
+5. **Multi-Target-Manifest**: **`targets: [react, swiftui, angular]` Liste** im Manifest; Lockfile bekommt Cross-Product. **Lockfile-Schema-Bump v2 → v3** nötig (Backward-Compat-Migration analog v1→v2 aus Phase 2).
+6. **Codegen-Modus**: **`kind: template` (Jinja) für alle neuen Targets** — konsistent mit React aus Phase 1b, deterministisch ohne LLM-Replay-Cache-Disziplin.
+7. **Golden Renders**: **`tests/fixtures/golden/<target>/<scope>/<name>.<ext>`** — Phase-1b-Pattern fortführen; Snapshot-Quelle separat vom Conformance-Runner.
+8. **Screenshots in Specs**: **Pflicht-Eingabe — Visual-Regression** im Conformance-Runner. Spec-`screenshots[]` werden gegen Render-Output verglichen (z. B. Playwright visual snapshot, SwiftUI snapshot-Test).
+9. **Workspaces-Resolver-Semantik**: **Globale MVS (Cargo-Stil)** — eine Version pro Spec für den gesamten Workspace; ConflictError bei unvereinbaren Ranges (Quell-Trace pro Member).
+10. **MCP-Tools**: **target-agnostisch via Argument** — `render`/`pull`/`verify` erhalten `target`-Parameter; Tool-Anzahl bleibt 8 (kein `render_swiftui` etc.).
+
+Konsequenzen für die Delivery-Stages:
+- Lockfile-Schema-Bump (v3) und Codegen-Abstraktion (Target-Registry) müssen **vor** den Target-Renderern stehen.
+- Conformance-Runner = Snapshot + Visual-Regression (kein Docker-Playwright-Interaktions-Setup in Phase 3 — Phase 4).
+- Workspaces sind eigene Stage (Cargo-Stil + globale MVS), nicht in jede Target-Stage verteilt.
+- SwiftUI-Renderer + Snapshot-Tests laufen in CI **ohne** Xcode-Simulator (reiner Source-Codegen + textuelle Snapshot-Diffs; macOS-Runner für Build-Smoke optional, dann nur job-level skip-on-non-macOS).
 
 
 # Delivery Stages
 
-## Stage 0: Open Questions klären + Decisions festschreiben
+## Stage 0: Open Questions klären + Decisions festschreiben — **Done (2026-05-24)**
 
-- 10 Open Questions strukturiert mit User durchgehen.
-- Antworten als `Decisions`-Block in „Architecture & Decisions" schreiben (kein Code).
-- Round-2-Delivery-Steps (Stages 1ff.) konkretisieren — Reihenfolge, Test-Strategie pro Target, CI-Job-Skizze, Lockfile-Schema-Bump (falls nötig), Workspaces-CLI-Vertrag.
-- Outcome: Plan-Datei mit klaren Delivery-Stages für die Code-Arbeit.
+- 10 Open Questions strukturiert mit User durchgegangen.
+- Decisions dokumentiert (oben).
+- Round-2-Delivery-Steps (Stages 1–8) konkretisiert.
 
-## Stage 1+: tbd nach Stage 0
+## Stage 1: Codegen-Abstraktion härten + Lockfile-Schema-Bump v3
 
-> Skelett-Marker — wird in Stage 0 anhand der User-Decisions konkretisiert. Grobe erwartete Reihenfolge (kann sich nach Stage 0 ändern):
->
-> 1. Codegen-Abstraktion härten (Renderer-Interface, Target-Registry in `speccify_core`).
-> 2. Zweites Target (Stack aus Stage 0) — Renderer + Tests + Golden Renders.
-> 3. Conformance-Runner-Skelett (gemeinsamer Harness oder erstes target-spezifisches Harness).
-> 4. Drittes Target — Renderer + Tests + Golden Renders.
-> 5. Conformance-Runner pro Target voll ausbauen + CI-Jobs.
-> 6. Workspaces (`workspaces: [...]`-Feld, CLI-Iteration, Lockfile-Layout).
-> 7. Cross-Consistency-Erweiterung CLI ↔ MCP ↔ Web auf alle drei Targets.
-> 8. Master-Plan-Sync + AGENTS.md + Phase-3-Archiv + Tag-Vorschlag `v0.6.0-phase-3`.
+Outcome: `speccify_core` hat ein generisches `Renderer`-Interface + `Target`-Registry; Lockfile v3 unterstützt `targets: [...]`-Cross-Product mit v2→v3-Migration; React-Codegen aus Phase 1b auf das neue Interface portiert; alle bestehenden Tests grün.
+
+- `core/src/speccify_core/codegen/__init__.py`: `Renderer`-Protocol (`render(spec, target) -> dict[str, bytes]`, `generator_pin() -> GeneratorPin`); `TARGETS: dict[str, Renderer]` Registry; React-Renderer aus Phase 1b registriert.
+- `schema/lockfile.v2.schema.json` als Snapshot (analog v1-Archivierung).
+- `schema/lockfile.schema.json` auf v3: `LockEntry` bekommt `target`-Feld + `generated_files_sha256` pro Target; `Lockfile.targets: list[str]` top-level; In-Memory v2→v3-Migration im Loader.
+- `core/src/speccify_core/manifest.py`: `target: str` → `targets: list[str]` (mit v0-Manifest-Compat: single `target` wird zu `[target]`).
+- Tests: `core/tests/test_lockfile_v3.py` (Migration, Round-Trip, Multi-Target-Entries), `core/tests/test_renderer_protocol.py` (TARGETS-Registry, React-Renderer via Protocol).
+- CLI/MCP-Adapter (`pull`, `verify`) lesen `targets`-Liste, iterieren — kein Verhaltenschange bei Single-Target.
+
+## Stage 2: SwiftUI-Renderer (`kind: template`) + Golden Renders
+
+Outcome: `speccify pull --target swiftui` erzeugt deterministisch SwiftUI-`.swift`-Dateien für die 5 Phase-0-Specs; Golden Renders unter `tests/fixtures/golden/swiftui/...`.
+
+- `codegen/swiftui/` Paket mit Jinja-Templates (`view.swift.j2`, ggf. `model.swift.j2`); `SwiftUIRenderer` als `Renderer`-Implementierung; Output-Pfad `<scope>/<name>.swift`.
+- `TEMPLATE_SET = "phase-3-swiftui"`, `TEMPLATE_VERSION = "0.1.0"` (Generator-Pin).
+- Inputs/Outputs/Events der Spec → SwiftUI-State-Bindings (`@State`/`@Binding`) + Action-Closures.
+- Golden Renders für alle 5 Referenz-Specs (`button`, `text-field`, `card`, `login-screen`, `onboarding-wizard`) in `tests/fixtures/golden/swiftui/org/<name>.swift`.
+- Tests: `core/tests/test_codegen_swiftui.py` (Determinismus, Golden-Match, Inputs/Events korrekt gebunden, Pflicht-Akzeptanzen im Output als Kommentar-Hinweis).
+- CLI: `speccify pull --target swiftui --out ./out` (kein neues Command, nur Renderer-Registry).
+
+## Stage 3: Angular-Renderer (`kind: template`) + Golden Renders
+
+Outcome: `speccify pull --target angular` erzeugt deterministisch Angular-Komponenten (`.component.ts` + `.component.html` + `.component.css`) für die 5 Phase-0-Specs.
+
+- `codegen/angular/` Paket mit Jinja-Templates pro Datei-Triple; `AngularRenderer` als `Renderer`-Implementierung; Output-Pfad `<scope>/<name>/<name>.component.{ts,html,css}`.
+- `TEMPLATE_SET = "phase-3-angular"`, `TEMPLATE_VERSION = "0.1.0"`.
+- Inputs → `@Input()`, Outputs → `@Output() EventEmitter`, Events → Click-Handler im Template.
+- Golden Renders für alle 5 Specs in `tests/fixtures/golden/angular/org/<name>/...`.
+- Tests: `core/tests/test_codegen_angular.py` (Determinismus, Golden-Match, Input/Output/Event-Binding).
+
+## Stage 4: Conformance-Runner (Build-Smoke + Visual-Regression)
+
+Outcome: `speccify conformance --target {react,swiftui,angular}` Command + CI-Job(s); pro Target wird das Render-Output gebaut (oder Source-only-Smoke), und falls die Spec `screenshots[]` hat, gegen Render-Output verglichen.
+
+- `cli/src/speccify_cli/commands/conformance.py`: lädt Lockfile, ruft Renderer, führt pro Target Build-Smoke aus.
+  - **React**: `npm run build` im Snapshot-Repo (Vite); Exit-Code = Conformance-Status.
+  - **Angular**: `ng build` im Snapshot-Repo; ng-Workspace pre-generiert in `conformance/angular/`.
+  - **SwiftUI**: nur Compile-Smoke via `swiftc -parse` (kein Xcode-Sim) — voll-interaktive Tests bleiben Phase 4.
+- Visual-Regression: Spec-`screenshots[]` werden gelesen; pro Target wird ein Renderer-Output-Screenshot via headless-Tool erzeugt (React/Angular: Playwright; SwiftUI: snapshot-test-Lib) und gegen Spec-Screenshot pixel-vergleichen (Toleranz konfigurierbar).
+- Conformance-Failures → Exit 1 mit strukturiertem Report (welches Target, welche Spec, welches Kriterium).
+- CI: `.github/workflows/ci.yml` bekommt drei zusätzliche Jobs `conformance-react`, `conformance-angular`, `conformance-swiftui` (matrixed).
+- Tests: `cli/tests/test_conformance.py` (Happy-Path pro Target, Drift-Detection, Visual-Regression-Toleranz).
+
+## Stage 5: Workspaces — `workspaces: [...]` + globale MVS + Cargo-Style Root-Lockfile
+
+Outcome: Ein Workspace-Root-Manifest mit `workspaces: ["packages/*"]` lockt/pullt/verifyt alle Member; **ein** zentrales `speccify.lock` im Root mit globaler MVS-Auflösung; ConflictError bei unvereinbaren Ranges zwischen Membern.
+
+- `core/src/speccify_core/workspace.py`: `Workspace.load(root)` entdeckt Member-Manifeste (Glob), aggregiert Dependencies, ruft Resolver einmal mit allen Ranges; `ConflictError` enthält Source-Trace pro Member.
+- `manifest.schema.json`: optionales `workspaces: [path/glob]` top-level.
+- `cli/src/speccify_cli/commands/{lock,pull,verify}.py`: erkennen Workspace, iterieren über Member, schreiben **ein** Root-Lockfile.
+- `speccify add` im Workspace-Root: hängt Dep an angegebenes Member-Manifest, locked global.
+- Tests: `cli/tests/test_workspaces.py` (2-Member-Setup, Diamond über Member korrekt aufgelöst, Conflict-Error mit Source-Trace, `verify` schlägt fehl bei Drift in genau einem Member).
+- `example-workspace/` Fixture mit zwei Members für E2E-Smoke.
+
+## Stage 6: Cross-Consistency-Erweiterung CLI ↔ MCP ↔ Web auf alle 3 Targets
+
+Outcome: Parametrierter Pytest-Test, der pro Target × (CLI, MCP, Web-Render-Endpoint) byte-identische Render-Outputs für die 5 Referenz-Specs liefert.
+
+- `apps/web/backend/src/speccify_web_backend/services/render.py`: `render_spec_from_yaml` unterstützt `target`-Argument für alle 3 Targets.
+- MCP-Tools (`render`, `pull`, `verify`) bekommen `target`-Parameter (target-agnostisch via Argument, Master-Plan-Linie).
+- `tests/test_cross_consistency_targets.py` (Root): pytest-parametrize über `target ∈ {react, swiftui, angular}` × `spec ∈ 5 Referenz-Specs` × `route ∈ {cli, mcp, web}` → 75 Pfade, byte-identische Outputs.
+- Update bestehender `apps/web/backend/tests/test_cross_consistency.py` + `registry/tests/test_cross_consistency_registry.py` auf Multi-Target.
+
+## Stage 7: Smoke gegen Phase-2-Registry-Pfad mit Multi-Target
+
+Outcome: `RemoteRegistry` + Resolver liefern für `targets: [react, swiftui]`-Manifest byte-identische Outputs wie Lokal-Setup; Lockfile v3 Round-Trip durchgehend.
+
+- `registry/tests/test_remote_multi_target.py`: Publish einer Spec auf Live-Server, dann zwei-Target-`pull` via `RemoteRegistry`, Vergleich mit `LocalRegistry`-Path; beide Targets byte-identisch.
+- Falls nötig: kleine Erweiterungen in `RemoteRegistry`/`Resolver` für Multi-Target-Lockfile-Eintrag.
+
+## Stage 8: Master-Plan-Sync + AGENTS-Update + Phase-3-Archiv + Tag-Vorschlag `v0.6.0-phase-3`
+
+Outcome: Phase 3 dokumentarisch abgeschlossen; Master-Plan reflektiert SwiftUI+Angular als zweites/drittes Target + Conformance-Runner-MVP + Workspaces; Phase-4-Skelett-Hinweis im Master-Plan.
+
+- `.agent/plans/speccify-plan.md`: Phase-3-Abschluss-Block analog zu Phase-2-Block; Workspaces-Tabelle aus Phase 3 in Phase 4 weiterführen falls nötig.
+- `AGENTS.md` „Aktuelle Phase" auf Phase 3 done + Phase-4-Plan-Skelett verweisen.
+- `.agent/status.md` aktualisieren.
+- Phase-3-Plan archivieren nach `.agent/plans/archive/phase-3-codegen-targets.md`.
+- Tag-Vorschlag an User: **`v0.6.0-phase-3`** (selbst nicht setzen, vgl. `.agent/rules.md`).
 
 
 # Status Tracker
 
 | Stage | Outcome | Status |
 |---|---|---|
-| 0 | Open Questions geklärt, Decisions dokumentiert, Round-2-Delivery-Steps geschrieben. | Open |
-| 1+ | tbd nach Stage 0. | tbd |
+| 0 | Open Questions geklärt, Decisions dokumentiert, Round-2-Delivery-Steps geschrieben. | **Done (2026-05-24)** |
+| 1 | Codegen-Abstraktion + Lockfile-Schema-Bump v3. | Open |
+| 2 | SwiftUI-Renderer + Golden Renders. | Open |
+| 3 | Angular-Renderer + Golden Renders. | Open |
+| 4 | Conformance-Runner (Build-Smoke + Visual-Regression) + CI-Jobs. | Open |
+| 5 | Workspaces (Cargo-Stil Root-Lockfile + globale MVS). | Open |
+| 6 | Cross-Consistency CLI ↔ MCP ↔ Web auf alle 3 Targets. | Open |
+| 7 | Smoke gegen Phase-2-Registry-Pfad mit Multi-Target. | Open |
+| 8 | Master-Plan-Sync + Phase-3-Archiv + Tag-Vorschlag `v0.6.0-phase-3`. | Open |
 
 
 # Risks & Mitigations
