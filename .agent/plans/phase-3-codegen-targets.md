@@ -66,7 +66,7 @@ User-Antworten auf die 10 Open Questions Round 1:
 3. **Conformance-Runner-Stack**: **MVP = Build-Smoke + Snapshot-Diff** pro Target. Voll-interaktive Tests (Playwright/Simulator-Klicks) bleiben Phase 4. Plus Visual-Regression gegen Spec-`screenshots[]` (siehe 7).
 4. **Workspaces-Lockfile-Layout**: **Cargo-Stil — ein zentrales `speccify.lock` im Workspace-Root**; globale MVS über alle Member (siehe 8).
 5. **Multi-Target-Manifest**: **`targets: [react, swiftui, angular]` Liste** im Manifest; Lockfile bekommt Cross-Product. **Lockfile-Schema-Bump v2 → v3** nötig (Backward-Compat-Migration analog v1→v2 aus Phase 2).
-6. **Codegen-Modus**: **`kind: template` (Jinja) für alle neuen Targets** — konsistent mit React aus Phase 1b, deterministisch ohne LLM-Replay-Cache-Disziplin.
+6. **Codegen-Modus**: **`kind: llm` mit Replay-Cache für alle neuen Targets** — konsistent mit dem real ausgelieferten React-Renderer aus Phase 1b (`react_llm.py` + `ReplayCacheClient`). Determinismus über Replay-Fixtures (sha256-gehasht via `CacheKey`), nicht über Jinja-Templates. Korrigiert die ursprüngliche Stage-0-Notiz, die fälschlich `kind: template` als Phase-1b-Status angenommen hatte.
 7. **Golden Renders**: **`tests/fixtures/golden/<target>/<scope>/<name>.<ext>`** — Phase-1b-Pattern fortführen; Snapshot-Quelle separat vom Conformance-Runner.
 8. **Screenshots in Specs**: **Pflicht-Eingabe — Visual-Regression** im Conformance-Runner. Spec-`screenshots[]` werden gegen Render-Output verglichen (z. B. Playwright visual snapshot, SwiftUI snapshot-Test).
 9. **Workspaces-Resolver-Semantik**: **Globale MVS (Cargo-Stil)** — eine Version pro Spec für den gesamten Workspace; ConflictError bei unvereinbaren Ranges (Quell-Trace pro Member).
@@ -98,26 +98,29 @@ Outcome: `speccify_core` hat ein generisches `Renderer`-Interface + `Target`-Reg
 - Tests: `core/tests/test_lockfile_v3.py` (Migration, Round-Trip, Multi-Target-Entries), `core/tests/test_renderer_protocol.py` (TARGETS-Registry, React-Renderer via Protocol).
 - CLI/MCP-Adapter (`pull`, `verify`) lesen `targets`-Liste, iterieren — kein Verhaltenschange bei Single-Target.
 
-## Stage 2: SwiftUI-Renderer (`kind: template`) + Golden Renders
+## Stage 2: SwiftUI-Renderer (`kind: llm` + Replay-Cache) + Golden Renders
 
-Outcome: `speccify pull --target swiftui` erzeugt deterministisch SwiftUI-`.swift`-Dateien für die 5 Phase-0-Specs; Golden Renders unter `tests/fixtures/golden/swiftui/...`.
+Outcome: `speccify pull --target swiftui` erzeugt deterministisch SwiftUI-`.swift`-Dateien für die 5 Phase-0-Specs; Golden Renders unter `tests/fixtures/golden/swiftui/...`; Replay-Cache-Fixtures unter dem etablierten Phase-1b-Pfad.
 
-- `codegen/swiftui/` Paket mit Jinja-Templates (`view.swift.j2`, ggf. `model.swift.j2`); `SwiftUIRenderer` als `Renderer`-Implementierung; Output-Pfad `<scope>/<name>.swift`.
-- `TEMPLATE_SET = "phase-3-swiftui"`, `TEMPLATE_VERSION = "0.1.0"` (Generator-Pin).
-- Inputs/Outputs/Events der Spec → SwiftUI-State-Bindings (`@State`/`@Binding`) + Action-Closures.
+- `core/src/speccify_core/codegen/swiftui_llm.py` analog zu `react_llm.py`: Prompt-Builder (Inputs/Outputs/Events/Acceptance → SwiftUI-Bindings), `render_to_files(spec, llm_client) -> (files, cache_key)`; Output-Pfad `<scope>/<name>.swift`.
+- Generator-Pin: `kind: llm`, `provider/model/prompt_version=0.1.0`, deterministischer `cache_key` aus Spec-Bytes + Prompt-Version.
+- `render_for_target` Dispatcher um `target == "swiftui"` erweitern; `SUPPORTED_TARGETS` ergänzen.
+- Replay-Fixtures unter `tests/fixtures/replay/swiftui/<cache_key>.json` (einmalig erzeugt, dann CI-Offline-Mode).
 - Golden Renders für alle 5 Referenz-Specs (`button`, `text-field`, `card`, `login-screen`, `onboarding-wizard`) in `tests/fixtures/golden/swiftui/org/<name>.swift`.
-- Tests: `core/tests/test_codegen_swiftui.py` (Determinismus, Golden-Match, Inputs/Events korrekt gebunden, Pflicht-Akzeptanzen im Output als Kommentar-Hinweis).
-- CLI: `speccify pull --target swiftui --out ./out` (kein neues Command, nur Renderer-Registry).
+- Tests: `core/tests/test_codegen_swiftui.py` (Determinismus via Replay, Golden-Match, Inputs/Events korrekt gebunden, Pflicht-Akzeptanzen im Output als Kommentar-Hinweis), `CacheMissError` ohne Fixture.
+- CLI: `speccify pull --target swiftui --out ./out` (kein neues Command, nur Dispatcher-Erweiterung).
 
-## Stage 3: Angular-Renderer (`kind: template`) + Golden Renders
+## Stage 3: Angular-Renderer (`kind: llm` + Replay-Cache) + Golden Renders
 
-Outcome: `speccify pull --target angular` erzeugt deterministisch Angular-Komponenten (`.component.ts` + `.component.html` + `.component.css`) für die 5 Phase-0-Specs.
+Outcome: `speccify pull --target angular` erzeugt deterministisch Angular-Komponenten (`.component.ts` + `.component.html` + `.component.css`) für die 5 Phase-0-Specs; Replay-Cache-Fixtures analog SwiftUI.
 
-- `codegen/angular/` Paket mit Jinja-Templates pro Datei-Triple; `AngularRenderer` als `Renderer`-Implementierung; Output-Pfad `<scope>/<name>/<name>.component.{ts,html,css}`.
-- `TEMPLATE_SET = "phase-3-angular"`, `TEMPLATE_VERSION = "0.1.0"`.
-- Inputs → `@Input()`, Outputs → `@Output() EventEmitter`, Events → Click-Handler im Template.
+- `core/src/speccify_core/codegen/angular_llm.py` analog zu `react_llm.py`/`swiftui_llm.py`: Prompt-Builder, `render_to_files(spec, llm_client) -> (files, cache_key)`; Output-Pfad `<scope>/<name>/<name>.component.{ts,html,css}` (Datei-Triple).
+- Generator-Pin: `kind: llm`, `provider/model/prompt_version=0.1.0`, `cache_key` deterministisch.
+- `render_for_target` Dispatcher um `target == "angular"` erweitern.
+- Inputs → `@Input()`, Outputs → `@Output() EventEmitter`, Events → Click-Handler im Template (Prompt-Vorgabe an LLM).
+- Replay-Fixtures unter `tests/fixtures/replay/angular/<cache_key>.json`.
 - Golden Renders für alle 5 Specs in `tests/fixtures/golden/angular/org/<name>/...`.
-- Tests: `core/tests/test_codegen_angular.py` (Determinismus, Golden-Match, Input/Output/Event-Binding).
+- Tests: `core/tests/test_codegen_angular.py` (Determinismus via Replay, Golden-Match, Input/Output/Event-Binding).
 
 ## Stage 4: Conformance-Runner (Build-Smoke + Visual-Regression)
 
@@ -193,5 +196,5 @@ Outcome: Phase 3 dokumentarisch abgeschlossen; Master-Plan reflektiert SwiftUI+A
 | **Multi-Target-Manifest bricht Phase-1b-Pull-Semantik** | mittel | Lockfile-Schema-Bump (v2 → v3) mit Backward-Compat-Migration (analog Phase-2-v1→v2-Migration). Stage 0 entscheidet das Layout vor Code. |
 | **Workspaces-Resolver-Diamonds über Member** | mittel | Stage 0 fixiert Semantik (global MVS vs. per-member); ConflictError mit Source-Trace bleibt aus Phase 1a. |
 | **Cross-Consistency mit 3 Targets × CLI/MCP/Web wächst quadratisch** | mittel | Parametrierte Pytest-Tests statt N×M handgeschriebene Pfade. |
-| **Determinismus von LLM-Targets** (falls `kind: llm` für ein Target gewählt wird) | hoch | Replay-Cache-Pattern aus Phase 1d wiederverwenden; Offline-Mode-CI-Job ist Pflicht. |
+| **Determinismus von LLM-Targets** (alle 3 Targets sind `kind: llm`) | hoch | Replay-Cache-Pattern aus Phase 1b (`ReplayCacheClient` + `CacheKey`) wiederverwenden; Offline-Mode-CI-Job ist Pflicht; Replay-Fixtures pro Target in `tests/fixtures/replay/<target>/`. |
 | **Phase-3-Scope explodiert** | hoch | Stage 0 entscheidet 2 vs. 3 Targets in Phase 3 (Frage 2); Workspaces kann notfalls in eine Phase 3a/3b geteilt werden. |

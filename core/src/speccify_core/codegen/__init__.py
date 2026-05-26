@@ -5,13 +5,15 @@ als Platzhalter. Phase 1b Step 3: Replay-Cache + `LlmClient`-Protokoll
 (`speccify_core.codegen.replay`). Phase 1b Step 4: React-LLM-Adapter
 (`speccify_core.codegen.react_llm`) + Dispatcher `render_for_target`.
 
-`render_for_target` ist die zentrale Eintrittsstelle für Codegen über alle Targets
-hinweg; bestehende `render`/`render_to_files`-Re-Exports zeigen weiterhin auf den
-Stub-Adapter (Phase-1a-Aufrufer). Die Umstellung von `pull`/`verify` auf den
-Dispatcher folgt in Step 5.
+Phase 3 Stage 1: `Renderer`-Protocol + `TARGETS`-Registry — target-agnostische
+Abstraktion über alle Codegen-Adapter. `render_for_target` delegiert ab jetzt an
+die Registry; neue Targets (SwiftUI/Angular in Phase 3 Stage 2/3) registrieren
+sich, ohne den Dispatcher zu verändern. Bestehende React-Semantik bleibt
+byte-identisch — keine Verhaltens­änderung für Phase-1b/2-Aufrufer.
 """
 
 from dataclasses import dataclass
+from typing import Protocol
 
 from speccify_core.codegen import react_llm as _react_llm
 from speccify_core.codegen.react_llm import CodegenError
@@ -30,10 +32,6 @@ from speccify_core.codegen.stub import (
 )
 from speccify_core.registry import Spec
 
-# Bekannte Targets, die `render_for_target` bedient. Erweiterung in Phase 3+
-# (SwiftUI/Angular) erfolgt durch Hinzufügen weiterer Adapter-Module.
-SUPPORTED_TARGETS: tuple[str, ...] = ("react",)
-
 
 @dataclass(frozen=True)
 class TargetRender:
@@ -48,28 +46,70 @@ class TargetRender:
     cache_key: CacheKey | None
 
 
+class Renderer(Protocol):
+    """Target-agnostische Codegen-Schnittstelle.
+
+    Adapter (React/SwiftUI/Angular/...) implementieren diese Funktion und werden
+    in `TARGETS` registriert. `llm_client` ist optional: Template-Adapter
+    ignorieren ihn, LLM-Adapter erwarten ihn und sollen einen `CodegenError`
+    werfen, wenn er fehlt.
+    """
+
+    def __call__(
+        self, spec: Spec, *, llm_client: LlmClient | None = None
+    ) -> TargetRender: ...
+
+
+def _render_react(spec: Spec, *, llm_client: LlmClient | None = None) -> TargetRender:
+    """Renderer-Adapter für React (`kind: llm` mit Replay-Cache)."""
+    if llm_client is None:
+        raise CodegenError(
+            "Codegen-Target 'react' benötigt einen llm_client (z.B. ReplayCacheClient)."
+        )
+    files, cache_key = _react_llm.render_to_files(spec, llm_client)
+    return TargetRender(files=files, cache_key=cache_key)
+
+
+# Registry aller bekannten Targets. Neue Targets (Phase 3 Stage 2/3 SwiftUI +
+# Angular) tragen sich hier ein; Dispatcher und `SUPPORTED_TARGETS` lesen
+# ausschließlich aus dieser Map.
+TARGETS: dict[str, Renderer] = {
+    "react": _render_react,
+}
+
+
+def register_target(name: str, renderer: Renderer) -> None:
+    """Registriert einen Renderer unter `name`. Doppelregistrierung → `ValueError`."""
+    if name in TARGETS:
+        raise ValueError(f"Codegen-Target '{name}' ist bereits registriert.")
+    TARGETS[name] = renderer
+
+
+def supported_targets() -> tuple[str, ...]:
+    """Stabile Sicht (sortiert) auf die aktuell registrierten Targets."""
+    return tuple(sorted(TARGETS))
+
+
+# Backward-Compat: bestehende Aufrufer importieren `SUPPORTED_TARGETS` als
+# Konstante. Sie spiegelt den Inhalt der Registry zum Import-Zeitpunkt; neue
+# Targets sollten `supported_targets()` aufrufen.
+SUPPORTED_TARGETS: tuple[str, ...] = supported_targets()
+
+
 def render_for_target(
     spec: Spec,
     target: str,
     *,
     llm_client: LlmClient | None = None,
 ) -> TargetRender:
-    """Dispatcher: rendert eine Spec für `target` mit dem passenden Adapter.
-
-    - `target == "react"` → `react_llm.render_to_files` (braucht `llm_client`).
-    - andere Targets → `NotImplementedError` (1b deckt nur React ab).
-    """
-    if target == "react":
-        if llm_client is None:
-            raise CodegenError(
-                "Codegen-Target 'react' benötigt einen llm_client (z.B. ReplayCacheClient)."
-            )
-        files, cache_key = _react_llm.render_to_files(spec, llm_client)
-        return TargetRender(files=files, cache_key=cache_key)
-    raise NotImplementedError(
-        f"Codegen-Target '{target}' wird in Phase 1b nicht unterstützt. "
-        f"Erwartet eines von: {', '.join(SUPPORTED_TARGETS)}."
-    )
+    """Dispatcher: rendert eine Spec für `target` über die `TARGETS`-Registry."""
+    renderer = TARGETS.get(target)
+    if renderer is None:
+        known = ", ".join(supported_targets())
+        raise NotImplementedError(
+            f"Codegen-Target '{target}' wird nicht unterstützt. Erwartet eines von: {known}."
+        )
+    return renderer(spec, llm_client=llm_client)
 
 
 __all__ = [
@@ -77,13 +117,17 @@ __all__ = [
     "CacheMissError",
     "CodegenError",
     "LlmClient",
+    "Renderer",
     "ReplayCache",
     "ReplayCacheClient",
     "SUPPORTED_TARGETS",
+    "TARGETS",
     "TEMPLATE_SET",
     "TEMPLATE_VERSION",
     "TargetRender",
+    "register_target",
     "render",
     "render_for_target",
     "render_to_files",
+    "supported_targets",
 ]

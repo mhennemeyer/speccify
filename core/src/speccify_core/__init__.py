@@ -2,14 +2,18 @@
 
 from speccify_core.codegen import (
     SUPPORTED_TARGETS,
+    TARGETS,
     CacheKey,
     CacheMissError,
     CodegenError,
     LlmClient,
+    Renderer,
     ReplayCache,
     ReplayCacheClient,
     TargetRender,
+    register_target,
     render_for_target,
+    supported_targets,
 )
 from speccify_core.loader import SpecLoader, SpecLoaderError
 from speccify_core.lockfile import (
@@ -95,10 +99,12 @@ __all__ = [
     "Range",
     "RangeConflictError",
     "RegistryError",
+    "Renderer",
     "ReplayCache",
     "ReplayCacheClient",
     "Resolution",
     "SUPPORTED_TARGETS",
+    "TARGETS",
     "TargetRender",
     "ResolvedGraph",
     "Resolver",
@@ -113,5 +119,7 @@ __all__ = [
     "VersionNotFoundError",
     "__version__",
     "build_lockfile",
+    "register_target",
     "render_for_target",
+    "supported_targets",
 ]
