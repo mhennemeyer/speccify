@@ -166,16 +166,22 @@ Outcome: `speccify conformance` Command + Modul `speccify_core.conformance` mit 
 - CI: `smoke`-Job E2E-Schritt erweitert um `uv run speccify conformance` nach `verify` (3 React-Specs → `static-validate` ok). Bestehende Jobs unverändert.
 - Plan-Doku + `AGENTS.md` reflektieren Stage 4 Done.
 
-## Stage 5: Workspaces — `workspaces: [...]` + globale MVS + Cargo-Style Root-Lockfile
+## Stage 5: Workspaces — `workspaces: [...]` + globale MVS + Cargo-Style Root-Lockfile — **Done (2026-05-26, Kern-MVP)**
 
-Outcome: Ein Workspace-Root-Manifest mit `workspaces: ["packages/*"]` lockt/pullt/verifyt alle Member; **ein** zentrales `speccify.lock` im Root mit globaler MVS-Auflösung; ConflictError bei unvereinbaren Ranges zwischen Membern.
+Outcome: Ein Workspace-Root-Manifest mit `workspaces: ["packages/*"]` wird via `speccify lock` aufgelöst und schreibt **ein** zentrales `speccify.lock` im Root mit globaler MVS. Diamond über zwei Member (`@org/button` in `packages/ui` + `packages/forms`) wird zu einer einzigen Version aufgelöst; `RangeConflictError` bei unvereinbaren Ranges mit Member-Trace. **289 Root-Pytest grün (+9 Workspace-Tests gegenüber Stage 4) + 116 Registry-Pytest = 405 Tests gesamt**, ruff/format clean.
 
-- `core/src/speccify_core/workspace.py`: `Workspace.load(root)` entdeckt Member-Manifeste (Glob), aggregiert Dependencies, ruft Resolver einmal mit allen Ranges; `ConflictError` enthält Source-Trace pro Member.
-- `manifest.schema.json`: optionales `workspaces: [path/glob]` top-level.
-- `cli/src/speccify_cli/commands/{lock,pull,verify}.py`: erkennen Workspace, iterieren über Member, schreiben **ein** Root-Lockfile.
-- `speccify add` im Workspace-Root: hängt Dep an angegebenes Member-Manifest, locked global.
-- Tests: `cli/tests/test_workspaces.py` (2-Member-Setup, Diamond über Member korrekt aufgelöst, Conflict-Error mit Source-Trace, `verify` schlägt fehl bei Drift in genau einem Member).
-- `example-workspace/` Fixture mit zwei Members für E2E-Smoke.
+**Scope-Reduktion gegenüber Original-Plan-Text (User-Decision 2026-05-26)**: Stage-5-Kern liefert `Workspace`-Klasse + Schema-Erweiterung + `lock`-Command Workspace-aware + `example-workspace/`-Fixture; **`pull`/`verify`-Workspace-Iteration sowie `speccify add` im Workspace-Root bleiben Folge-Substage** (Stage 5b oder Phase 4), weil sie zusätzliche Output-Routing-Logik benötigen (pro Member eigenes `out/`-Verzeichnis vs. zentrales `out/`). Stage-0-Erfolgskriterium 3 (Workspace lockt/pullt/verifyt) wird damit nur teilweise erfüllt — `lockt` ja, `pullt/verifyt` noch nicht — aber die Architektur (globale MVS, Cargo-Stil Root-Lockfile, ConflictError mit Source-Trace) ist vollständig.
+
+- `schema/manifest.schema.json`: optionales Top-Level `workspaces: [glob, ...]` (`minItems: 1` + `uniqueItems: true`); `targets` + `dependencies` aus `required` entfernt (reiner Workspace-Root darf nur `schema_version` + `workspaces` haben). Schema bleibt v2 (kein Schema-Bump — additive Erweiterung).
+- `core/src/speccify_core/manifest.py`: `ProjectManifest.workspaces: tuple[str, ...]` + `.is_workspace_root`-Property; `targets`-Default `()` zugelassen; `write()` schreibt `targets`/`workspaces` nur wenn nicht-leer.
+- `core/src/speccify_core/workspace.py` neu: `Workspace.load(root)` entdeckt Member-Manifeste via Glob (sortiert nach `relative_path`), validiert „keine verschachtelten Workspaces", aggregiert Targets (Union) und Dependencies pro Spec-Id mit Member-Source-Trace; `WorkspaceError`-Klasse + `WorkspaceMember`-Dataclass.
+- `core/src/speccify_core/resolver.py`: `Resolver.resolve_workspace(aggregated_dependencies)` als neue API; `resolve()` selbst auf eine gemeinsame `_resolve_from_constraints()`-Innenmethode refaktoriert. Aggregierte Constraints behalten Member-Pfad als `source` — `RangeConflictError` zeigt damit den schuldigen Member.
+- `cli/src/speccify_cli/commands/lock.py`: `_is_workspace_root()` + `_run_workspace_lock()` als neuer Workspace-Pfad; Single-Manifest-Pfad unverändert. `WorkspaceError` in `lock_command` als Failure-Class registriert.
+- `core/src/speccify_core/__init__.py`: `Workspace`, `WorkspaceError`, `WorkspaceMember` re-exportiert (`__all__`).
+- `example-workspace/speccify.yaml` (Root) + `example-workspace/packages/{ui,forms}/speccify.yaml` (zwei Member): Diamond-Setup mit `@org/button` in beiden Membern.
+- Tests:
+  - `core/tests/test_workspace.py` (7 Tests): Discovery-Reihenfolge, aggregierte Dependencies mit Member-Trace, globale MVS-Auflösung (Diamond → 1 Version), kein `workspaces:`-Feld → `WorkspaceError`, leerer Glob → `WorkspaceError`, Member ohne Manifest → `WorkspaceError`, verschachtelter Workspace → `WorkspaceError`.
+  - `cli/tests/test_workspaces.py` (2 Tests): `speccify lock` auf `example-workspace`-Kopie schreibt Root-Lockfile mit 2 Entries × 1 Target = 2 Einträgen; unvereinbare Caret-Ranges zwischen zwei Membern → Exit 1 mit Spec-Id in der Fehler-Message.
 
 ## Stage 6: Cross-Consistency-Erweiterung CLI ↔ MCP ↔ Web auf alle 3 Targets
 
@@ -214,7 +220,7 @@ Outcome: Phase 3 dokumentarisch abgeschlossen; Master-Plan reflektiert SwiftUI+A
 | 2 | SwiftUI-Renderer + Golden Renders. | **Done (2026-05-26)** |
 | 3 | Angular-Renderer (single-file `.component.ts` mit Inline-Template). | **Done (2026-05-26)** |
 | 4 | Conformance-Runner (Static-Validate-Backend + Backend-Plugin-Slot). | **Done (2026-05-26)** |
-| 5 | Workspaces (Cargo-Stil Root-Lockfile + globale MVS). | Open |
+| 5 | Workspaces (Cargo-Stil Root-Lockfile + globale MVS, lock-only MVP; pull/verify Workspace-Iteration als Folge-Substage). | **Done (2026-05-26)** |
 | 6 | Cross-Consistency CLI ↔ MCP ↔ Web auf alle 3 Targets. | Open |
 | 7 | Smoke gegen Phase-2-Registry-Pfad mit Multi-Target. | Open |
 | 8 | Master-Plan-Sync + Phase-3-Archiv + Tag-Vorschlag `v0.6.0-phase-3`. | Open |
