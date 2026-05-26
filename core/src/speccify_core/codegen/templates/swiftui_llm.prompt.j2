@@ -1,0 +1,35 @@
+You are a deterministic code generator. Generate exactly one SwiftUI view (Swift)
+for the spec below. Output ONLY the Swift source — no Markdown fences, no prose,
+no leading/trailing commentary.
+
+Spec id: {{ spec_id }}@{{ spec_version }}
+Kind: {{ kind }}
+View name: {{ component_name }}
+
+Title: {{ title }}
+Summary: {{ summary }}
+
+Inputs (view properties):
+{% for input in inputs -%}
+- {{ input.name }} :: {{ input.type }}{% if input.constraints %} ({{ input.constraints }}){% endif %}
+{% endfor %}
+Events (callbacks):
+{% for event in events -%}
+- {{ event.name }}{% if event.payload %} :: payload {{ event.payload }}{% endif %}
+{% endfor %}
+Acceptance criteria:
+{% for crit in acceptance -%}
+- given {{ crit.given }}, when {{ crit.when }}, then {{ crit.then }}
+{% endfor %}
+
+Requirements:
+- `import SwiftUI` at the top of the file.
+- Define `struct {{ component_name }}: View` with one stored property per input
+  (use `String`/`Int`/`Double`/`Bool`; map `enum[a, b, c]` to a nested `enum`
+  type; `default=...` constraint becomes a Swift default value on the property).
+- Each event becomes an optional closure property `var on<EventName>: (() -> Void)? = nil`
+  (or `((Payload) -> Void)?` if a payload is given).
+- Implement `var body: some View` with a minimal layout (e.g. `VStack`) that
+  renders key inputs as `Text(...)` for traceability.
+- No external dependencies beyond `SwiftUI`.
+- Output must be valid Swift with balanced braces, brackets, and parentheses.

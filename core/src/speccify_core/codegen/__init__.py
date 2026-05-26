@@ -16,6 +16,7 @@ from dataclasses import dataclass
 from typing import Protocol
 
 from speccify_core.codegen import react_llm as _react_llm
+from speccify_core.codegen import swiftui_llm as _swiftui_llm
 from speccify_core.codegen.react_llm import CodegenError
 from speccify_core.codegen.replay import (
     CacheKey,
@@ -68,11 +69,22 @@ def _render_react(spec: Spec, *, llm_client: LlmClient | None = None) -> TargetR
     return TargetRender(files=files, cache_key=cache_key)
 
 
-# Registry aller bekannten Targets. Neue Targets (Phase 3 Stage 2/3 SwiftUI +
-# Angular) tragen sich hier ein; Dispatcher und `SUPPORTED_TARGETS` lesen
-# ausschließlich aus dieser Map.
+def _render_swiftui(spec: Spec, *, llm_client: LlmClient | None = None) -> TargetRender:
+    """Renderer-Adapter für SwiftUI (`kind: llm` mit Replay-Cache)."""
+    if llm_client is None:
+        raise CodegenError(
+            "Codegen-Target 'swiftui' benötigt einen llm_client (z.B. ReplayCacheClient)."
+        )
+    files, cache_key = _swiftui_llm.render_to_files(spec, llm_client)
+    return TargetRender(files=files, cache_key=cache_key)
+
+
+# Registry aller bekannten Targets. Neue Targets (Phase 3 Stage 3 Angular)
+# tragen sich hier ein; Dispatcher und `SUPPORTED_TARGETS` lesen ausschließlich
+# aus dieser Map.
 TARGETS: dict[str, Renderer] = {
     "react": _render_react,
+    "swiftui": _render_swiftui,
 }
 
 

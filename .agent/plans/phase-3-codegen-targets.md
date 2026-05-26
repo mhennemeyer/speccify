@@ -118,17 +118,18 @@ Outcome: Aktive Schemas auf v3/v2 angehoben; `ProjectManifest` + `Lockfile` in `
 - Tests aktualisiert: `core/tests/test_manifest.py` (v2-Assertions), `core/tests/test_lockfile_v2.py` (v3-Defaults, `targets`-Tuple-Konstruktor, v1→v3-Migrations-Test), `core/tests/test_resolver.py` (`_manifest()` benutzt `targets=`), `cli/tests/test_init.py`, `cli/tests/test_add.py`, `mcp/tests/test_resources_prompts.py`. Existierende Tests, die v1/v2-Lockfile-Bytes via String-Literal prüfen (z.B. `test_resolver.py`), bleiben unangetastet — sie validieren genau die Loader-Migration.
 - Bewusst noch offen für spätere Stages: Multi-Target-Specs (`targets: [react, swiftui]`) sind im Schema erlaubt, werden aber von keinem aktuellen Adapter erzeugt; Stage 2/3/6 werden das füllen, sobald SwiftUI- und Angular-Renderer existieren.
 
-## Stage 2: SwiftUI-Renderer (`kind: llm` + Replay-Cache) + Golden Renders
+## Stage 2: SwiftUI-Renderer (`kind: llm` + Replay-Cache) — **Done (2026-05-26)**
 
-Outcome: `speccify pull --target swiftui` erzeugt deterministisch SwiftUI-`.swift`-Dateien für die 5 Phase-0-Specs; Golden Renders unter `tests/fixtures/golden/swiftui/...`; Replay-Cache-Fixtures unter dem etablierten Phase-1b-Pfad.
+Outcome: SwiftUI-Renderer als 1:1-Phase-1b-Spiegel implementiert; `render_for_target(spec, "swiftui", llm_client=...)` erzeugt deterministisch eine `.swift`-Datei pro Spec über Replay-Cache; alle Tests grün.
 
-- `core/src/speccify_core/codegen/swiftui_llm.py` analog zu `react_llm.py`: Prompt-Builder (Inputs/Outputs/Events/Acceptance → SwiftUI-Bindings), `render_to_files(spec, llm_client) -> (files, cache_key)`; Output-Pfad `<scope>/<name>.swift`.
-- Generator-Pin: `kind: llm`, `provider/model/prompt_version=0.1.0`, deterministischer `cache_key` aus Spec-Bytes + Prompt-Version.
-- `render_for_target` Dispatcher um `target == "swiftui"` erweitern; `SUPPORTED_TARGETS` ergänzen.
-- Replay-Fixtures unter `tests/fixtures/replay/swiftui/<cache_key>.json` (einmalig erzeugt, dann CI-Offline-Mode).
-- Golden Renders für alle 5 Referenz-Specs (`button`, `text-field`, `card`, `login-screen`, `onboarding-wizard`) in `tests/fixtures/golden/swiftui/org/<name>.swift`.
-- Tests: `core/tests/test_codegen_swiftui.py` (Determinismus via Replay, Golden-Match, Inputs/Events korrekt gebunden, Pflicht-Akzeptanzen im Output als Kommentar-Hinweis), `CacheMissError` ohne Fixture.
-- CLI: `speccify pull --target swiftui --out ./out` (kein neues Command, nur Dispatcher-Erweiterung).
+- `core/src/speccify_core/codegen/swiftui_llm.py` analog zu `react_llm.py`: `build_prompt` (Jinja-Template `swiftui_llm.prompt.j2`, SwiftUI-Bindings: Inputs→Properties mit Defaults, Events→optionale Closures), `normalize_swift` (CRLF→LF, Markdown-Fences strippen), `validate_swift` (Klammer-Balancing inkl. Swift-Strings/`//`/`/* */`; kein JSX-Tag-Balancing), `make_cache_key`, `render`, `render_to_files`; Output-Pfad `<scope>/<Name>.swift`.
+- Generator-Pin: `kind: llm`, `PROVIDER=bedrock`, `MODEL=bedrock/eu.anthropic.claude-opus-4-7`, `PROMPT_VERSION=0.1.0`, `TARGET=swiftui` — Cache-Key enthält `target` → SwiftUI- und React-Keys derselben Spec kollidieren nie.
+- `CodegenError` wird aus `react_llm` re-exportiert, sodass alle LLM-Adapter eine gemeinsame Exception-Klasse teilen (wichtig für `pytest.raises(CodegenError)` aus `speccify_core` Top-Level-Export).
+- `render_for_target` Dispatcher um `"swiftui"` erweitert (`_render_swiftui` in `codegen/__init__.py`); `TARGETS`-Registry enthält jetzt `{"react", "swiftui"}`; `SUPPORTED_TARGETS` reflektiert das.
+- Tests: `core/tests/test_swiftui_llm.py` (20 Tests, analog `test_react_llm.py`): `normalize_swift`, `validate_swift` (balanced, unbalanced, Strings/Kommentare, unterminated), `build_prompt`-Inhalt, Cache-Key-Determinismus, Cross-Target-Key-Trennung (`swiftui ≠ react`), Render-via-Replay-Cache (Cache-Hit, Cache-Miss raises, Markdown-Fence-Stripping), `render_to_files`-Pfad (`org/Button.swift`), Dispatcher-Pfad mit byte-identischen Mehrfach-Renders.
+- Backward-Compat-Anpassungen: `core/tests/test_react_llm.py::test_dispatcher_unknown_target_raises` benutzt jetzt `"definitely-unknown-target"` statt `"swiftui"`; `apps/web/backend/tests/test_render_route.py::test_render_unknown_target_returns_400` ebenfalls auf `"definitely-unknown-target"` umgestellt (sonst landet die Anfrage im echten Render-Pfad und liefert `cache_miss` 422 statt `unknown_target` 400).
+- **Bewusst out-of-scope für Stage 2** (User-Decision 2026-05-26): keine eingecheckten Golden Renders + Replay-Fixtures — Phase 1b hat dieses Pattern in der Praxis ebenfalls nicht (kein `tests/fixtures/golden/react/` im Repo). Echte Golden Renders über tatsächliche LLM-Calls werden in Stage 4 (Conformance-Runner) gefüllt, sobald ein Maintainer einmal `scripts/record_llm_cache.py` gegen Bedrock laufen lässt.
+- **Verifikation**: 246 Root-Pytest grün (+20 SwiftUI-Tests gegenüber Stage 1b) + 116 Registry-Pytest grün = **362 Tests gesamt**; ruff/format clean.
 
 ## Stage 3: Angular-Renderer (`kind: llm` + Replay-Cache) + Golden Renders
 
@@ -200,7 +201,7 @@ Outcome: Phase 3 dokumentarisch abgeschlossen; Master-Plan reflektiert SwiftUI+A
 | 0 | Open Questions geklärt, Decisions dokumentiert, Round-2-Delivery-Steps geschrieben. | **Done (2026-05-24)** |
 | 1a | Renderer-Protocol + TARGETS-Registry, React portiert. | **Done (2026-05-25)** |
 | 1b | Lockfile-Schema-Bump v3 + Manifest-Schema v2 + Adapter. | **Done (2026-05-26)** |
-| 2 | SwiftUI-Renderer + Golden Renders. | Open |
+| 2 | SwiftUI-Renderer + Golden Renders. | **Done (2026-05-26)** |
 | 3 | Angular-Renderer + Golden Renders. | Open |
 | 4 | Conformance-Runner (Build-Smoke + Visual-Regression) + CI-Jobs. | Open |
 | 5 | Workspaces (Cargo-Stil Root-Lockfile + globale MVS). | Open |

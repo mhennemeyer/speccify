@@ -68,7 +68,9 @@ def test_render_unknown_target_returns_400(client: TestClient, button_yaml: str)
             "spec_id": "@org/button",
             "version": "0.1.1",
             "spec_yaml": button_yaml,
-            "target": "swiftui",
+            # `swiftui` ist seit Phase 3 Stage 2 ein gültiges Target — wir brauchen
+            # hier einen Namen, der garantiert nicht in `SUPPORTED_TARGETS` steht.
+            "target": "definitely-unknown-target",
         },
     )
     assert response.status_code == 400

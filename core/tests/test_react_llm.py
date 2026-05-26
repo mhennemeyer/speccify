@@ -204,7 +204,7 @@ def test_dispatcher_react_requires_llm_client() -> None:
 def test_dispatcher_unknown_target_raises() -> None:
     spec = _load_button()
     with pytest.raises(NotImplementedError):
-        render_for_target(spec, "swiftui")  # type: ignore[arg-type]
+        render_for_target(spec, "definitely-unknown-target")  # type: ignore[arg-type]
 
 
 def test_dispatcher_supported_targets_includes_react() -> None:
