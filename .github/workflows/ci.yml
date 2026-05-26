@@ -45,12 +45,13 @@ jobs:
       - name: speccify lint reference specs
         run: uv run speccify lint specs/*.speccify.yaml
 
-      - name: speccify end-to-end smoke (lock + pull + verify, offline)
+      - name: speccify end-to-end smoke (lock + pull + verify + conformance, offline)
         working-directory: example-project
         run: |
           uv run speccify lock
           uv run speccify pull --offline --out ./out
           uv run speccify verify --offline --out ./out
+          uv run speccify conformance
 
       - name: speccify init + add + pull + verify smoke (offline)
         env:

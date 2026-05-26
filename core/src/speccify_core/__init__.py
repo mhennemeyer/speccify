@@ -15,6 +15,13 @@ from speccify_core.codegen import (
     render_for_target,
     supported_targets,
 )
+from speccify_core.conformance import (
+    ConformanceBackend,
+    ConformanceReport,
+    ConformanceResult,
+    StaticValidateBackend,
+    run_conformance,
+)
 from speccify_core.loader import SpecLoader, SpecLoaderError
 from speccify_core.lockfile import (
     CURRENT_LOCKFILE_SCHEMA_VERSION,
@@ -83,6 +90,11 @@ __all__ = [
     "CacheKey",
     "CacheMissError",
     "CodegenError",
+    "ConformanceBackend",
+    "ConformanceReport",
+    "ConformanceResult",
+    "StaticValidateBackend",
+    "run_conformance",
     "GeneratedFile",
     "GeneratorPin",
     "LlmClient",

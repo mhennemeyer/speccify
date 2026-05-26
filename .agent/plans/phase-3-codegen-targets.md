@@ -144,18 +144,27 @@ Outcome: Angular-Renderer als 1:1-Phase-1b-Spiegel implementiert; `render_for_ta
 - **Bewusst out-of-scope für Stage 3** (User-Decision 2026-05-26, analog Stage 2): keine eingecheckten Golden Renders + Replay-Fixtures — Phase 1b hat dieses Pattern in der Praxis ebenfalls nicht. Echte Golden Renders über tatsächliche LLM-Calls werden in Stage 4 (Conformance-Runner) gefüllt, sobald ein Maintainer einmal `scripts/record_llm_cache.py` gegen Bedrock laufen lässt.
 - **Verifikation**: 267 Root-Pytest grün (+21 Angular-Tests gegenüber Stage 2) + 116 Registry-Pytest grün = **383 Tests gesamt**; ruff/format clean.
 
-## Stage 4: Conformance-Runner (Build-Smoke + Visual-Regression)
+## Stage 4: Conformance-Runner (Static-Validate-Backend + Backend-Plugin-Slot) — **Done (2026-05-26)**
 
-Outcome: `speccify conformance --target {react,swiftui,angular}` Command + CI-Job(s); pro Target wird das Render-Output gebaut (oder Source-only-Smoke), und falls die Spec `screenshots[]` hat, gegen Render-Output verglichen.
+Outcome: `speccify conformance` Command + Modul `speccify_core.conformance` mit pluggable Backends; Default-Backend `static-validate` führt Re-Render + Lockfile-Hash-Drift-Check + expliziter Validator-Pass (`validate_tsx`/`validate_swift`/`validate_ts`) pro `(spec, target)`-Paar im Lockfile durch. Build-Smoke + Visual-Regression bleiben Phase-4-Backends hinter dem `ConformanceBackend`-Protocol — kein Docker, kein npm/ng/swiftc in Phase 3. **Verifikation: 280 Root-Pytest grün (+13 Conformance-Tests gegenüber Stage 3) + 116 Registry-Pytest grün = 396 Tests gesamt**, ruff/format clean.
 
-- `cli/src/speccify_cli/commands/conformance.py`: lädt Lockfile, ruft Renderer, führt pro Target Build-Smoke aus.
-  - **React**: `npm run build` im Snapshot-Repo (Vite); Exit-Code = Conformance-Status.
-  - **Angular**: `ng build` im Snapshot-Repo; ng-Workspace pre-generiert in `conformance/angular/`.
-  - **SwiftUI**: nur Compile-Smoke via `swiftc -parse` (kein Xcode-Sim) — voll-interaktive Tests bleiben Phase 4.
-- Visual-Regression: Spec-`screenshots[]` werden gelesen; pro Target wird ein Renderer-Output-Screenshot via headless-Tool erzeugt (React/Angular: Playwright; SwiftUI: snapshot-test-Lib) und gegen Spec-Screenshot pixel-vergleichen (Toleranz konfigurierbar).
-- Conformance-Failures → Exit 1 mit strukturiertem Report (welches Target, welche Spec, welches Kriterium).
-- CI: `.github/workflows/ci.yml` bekommt drei zusätzliche Jobs `conformance-react`, `conformance-angular`, `conformance-swiftui` (matrixed).
-- Tests: `cli/tests/test_conformance.py` (Happy-Path pro Target, Drift-Detection, Visual-Regression-Toleranz).
+**User-Decision 2026-05-26 (Scope-Reduktion gegenüber Original-Plan-Text)**: Da Sandbox/CI ohne Node/Angular-CLI/Swift-Toolchain läuft und der Original-Plan-Text mehrere Tool-Stacks fordert, wurde Stage 4 auf den reduzierten MVP-Scope verkleinert (`static-validate`-Backend). Build-Smoke (`npm run build` / `ng build` / `swiftc -parse`) und Visual-Regression bleiben als Phase-4-Plug-in-Backends im selben Protocol, ohne Stage 4 zu blockieren.
+
+- `core/src/speccify_core/conformance.py` neu:
+  - `ConformanceResult(spec_id, version, target, status, messages)` + `ConformanceReport(results, backend)` als strukturierte, maschinen-lesbare Reports.
+  - Status-Codes: `ok` / `render_failed` / `hash_drift` / `validator_failed` / `no_outputs` (klein gehalten für CI-Filter pro Status).
+  - `ConformanceBackend`-Protocol (Plugin-Slot) + Default `StaticValidateBackend` (kein externer Build).
+  - `VALIDATORS: dict[str, _Validator]` mit `react`→`validate_tsx`, `swiftui`→`validate_swift`, `angular`→`validate_ts`; neue Targets registrieren sich hier.
+  - `run_conformance(*, lockfile, registry, llm_client, targets=None, backend=None)` als Komfort-Wrapper; `targets` filtert auf eine Teilmenge der Lockfile-Targets.
+  - `_run_one()` fängt `CacheMissError | CodegenError | NotImplementedError` als `render_failed`, prüft danach Drift gegen `generated_files_sha256`, ruft am Ende den Validator nochmal explizit auf — sodass Drift vs. Validator-Fehler eindeutig getrennt sind.
+- `cli/src/speccify_cli/commands/conformance.py` neu: `speccify conformance [--project ...] [-t TARGET ...] [--registry ...] [--offline/--no-offline] [--cache-dir ...]`. Wiederverwendet `WorkspaceContext` + `build_replay_client` aus den verify/pull-Pfaden. Exit-Code: 0 wenn `report.ok`, sonst 1; Output via `format_report()` analog zu `verify`.
+- `cli/src/speccify_cli/__main__.py`: Command registriert nach `verify`.
+- `core/src/speccify_core/__init__.py`: Re-Exports `ConformanceBackend`, `ConformanceReport`, `ConformanceResult`, `StaticValidateBackend`, `run_conformance`.
+- Tests:
+  - `core/tests/test_conformance.py` (9 Tests): Happy-Path, Hash-Drift, no_outputs, Target-Filter (überspringt nicht-matchende Entries), Cache-Miss → `render_failed`, Backend-Name, `by_target()`-Gruppierung, Unknown-Target → `render_failed`, Replay-Cache-Existenz-Smoke. Lockfile-Instanzen werden in-memory gebaut (kein CLI/IO-Stack nötig).
+  - `cli/tests/test_conformance_cli.py` (4 Tests, umbenannt von `test_conformance.py` wegen pytest-Modul-Namens-Kollision mit `core/tests/test_conformance.py`): CLI-Happy-Path, Target-Filter, Hash-Drift via gepatchtem Lockfile, fehlendes Lockfile → Exit 1.
+- CI: `smoke`-Job E2E-Schritt erweitert um `uv run speccify conformance` nach `verify` (3 React-Specs → `static-validate` ok). Bestehende Jobs unverändert.
+- Plan-Doku + `AGENTS.md` reflektieren Stage 4 Done.
 
 ## Stage 5: Workspaces — `workspaces: [...]` + globale MVS + Cargo-Style Root-Lockfile
 
@@ -204,7 +213,7 @@ Outcome: Phase 3 dokumentarisch abgeschlossen; Master-Plan reflektiert SwiftUI+A
 | 1b | Lockfile-Schema-Bump v3 + Manifest-Schema v2 + Adapter. | **Done (2026-05-26)** |
 | 2 | SwiftUI-Renderer + Golden Renders. | **Done (2026-05-26)** |
 | 3 | Angular-Renderer (single-file `.component.ts` mit Inline-Template). | **Done (2026-05-26)** |
-| 4 | Conformance-Runner (Build-Smoke + Visual-Regression) + CI-Jobs. | Open |
+| 4 | Conformance-Runner (Static-Validate-Backend + Backend-Plugin-Slot). | **Done (2026-05-26)** |
 | 5 | Workspaces (Cargo-Stil Root-Lockfile + globale MVS). | Open |
 | 6 | Cross-Consistency CLI ↔ MCP ↔ Web auf alle 3 Targets. | Open |
 | 7 | Smoke gegen Phase-2-Registry-Pfad mit Multi-Target. | Open |
