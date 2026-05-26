@@ -97,7 +97,7 @@ Outcome: `speccify_core` hat ein generisches `Renderer`-Protocol + `TARGETS`-Reg
 - Commits: `be848a4` (Tests) + `43462ee` (Refactor `__call__` Lesbarkeit).
 - Verifiziert: `225 passed` Root-Pytest (`mcp/tests/test_stdio_smoke.py` einzeln grün); `ruff check core/` clean; `ruff format` clean.
 
-## Stage 1b: Lockfile-Schema-Bump v3 + Manifest-Schema v2 — **Substage 1b-α Done (2026-05-26), Substage 1b-β Open**
+## Stage 1b: Lockfile-Schema-Bump v3 + Manifest-Schema v2 — **Done (2026-05-26)**
 
 **Substage 1b-α — Schema-Vorgriff (Done 2026-05-26)**:
 - `schema/manifest.v2.schema.json` als Vorgriff angelegt (Multi-Target, `targets: list[str]`, `schema_version: const 2`, `minItems: 1` + `uniqueItems: true`) — noch nicht aktiv geladen.
@@ -106,19 +106,17 @@ Outcome: `speccify_core` hat ein generisches `Renderer`-Protocol + `TARGETS`-Reg
 - `schema/manifest.schema.json` bleibt v1 aktiv; `schema/lockfile.schema.json` bleibt v2 aktiv → keine Code-/Test-Brüche; 226 Root-Pytest grün, ruff/format clean.
 - Entscheidung User: nur Schemas + Snapshots in dieser Session, Code-Migration als eigene Substage 1b-β nächste Session.
 
-**Substage 1b-β — Code-Migration (Open)**:
+**Substage 1b-β — Code-Migration (Done 2026-05-26)**:
 
-Outcome: Lockfile v3 unterstützt `targets: [...]`-Cross-Product mit v1/v2→v3-Migration im Loader; Manifest v2 mit `targets: list[str]` (v1 single `target` transparent lesbar); CLI/MCP/Web/Registry-Adapter auf `targets`-Iteration umgestellt; alle Tests grün.
+Outcome: Aktive Schemas auf v3/v2 angehoben; `ProjectManifest` + `Lockfile` in `speccify_core` mit `targets: tuple[str, ...]` als SoT + `.target` als Backward-Compat-Property; Loader-Migration v1→2→3 (Lockfile) und v1→2 (Manifest) transparent; `build_lockfile()` akzeptiert sowohl `str` als auch Liste; Repo-Bytes (`example-project/speccify.yaml`, `example-project/speccify.lock`) auf v2/v3 migriert. **226 Root-Pytest + 116 Registry-Pytest = 342 Tests gesamt grün**, ruff/format clean.
 
-- `schema/lockfile.v2.schema.json` als Snapshot bereits vorhanden (Substage 1b-α).
-- `schema/lockfile.schema.json` auf v3 anheben: Top-Level `targets: list[str]` ersetzt `target: str`; `LockEntry.target` bleibt; v3-JSON liegt bereits als `lockfile.v3.schema.json` bereit → Kopier-Schritt + In-Memory v1→v2→v3-Migration im Loader (Repo-Bytes werden gemäß User-Decision auf v3 migriert).
-- `schema/manifest.v1.schema.json` als Snapshot bereits vorhanden (Substage 1b-α).
-- `schema/manifest.schema.json` auf v2 anheben: `targets: list[str]` statt `target: str`; v2-JSON liegt bereits als `manifest.v2.schema.json` bereit → Kopier-Schritt + Loader liest v1 transparent als single-element-list. Repo-Bytes (`example-project/speccify.yaml`, Test-Strings) werden gemäß User-Decision (2026-05-26) auf v2 migriert; Backward-Compat wird nur über Tests bewiesen.
-- `core/src/speccify_core/manifest.py`: `ProjectManifest.target: str` → `targets: list[str]` (mit v1-Compat).
-- `core/src/speccify_core/lockfile.py`: `build_lockfile()`-Signatur (heute `target: str`) → `targets: list[str]`, Loader-Migration v1→v2→v3.
-- ~8 Aufrufer in `cli/` (`init`, `add`, `lock`, `pull`, `verify`), `mcp/`, `apps/web/backend/`, `registry/` anpassen.
-- Tests: `core/tests/test_lockfile_v3.py` (Migration, Round-Trip, Multi-Target-Entries), `core/tests/test_manifest_v2.py` (v1-Compat-Read, v2-Round-Trip).
-- CLI/MCP-Adapter (`pull`, `verify`) lesen `targets`-Liste, iterieren — kein Verhaltenschange bei Single-Target.
+- `schema/manifest.schema.json` ist jetzt v2 (Inhalt aus `manifest.v2.schema.json`), `schema/lockfile.schema.json` ist jetzt v3 (Inhalt aus `lockfile.v3.schema.json`); Vorgriff-Files wurden zu aktiven Schemas promoted, Snapshots `manifest.v1.schema.json`, `lockfile.v1.schema.json`, `lockfile.v2.schema.json` bleiben als Backward-Compat-Prüfung im Loader.
+- `core/src/speccify_core/manifest.py`: `ProjectManifest.targets: tuple[str, ...]` ist Single-Source-of-Truth; `.target`-Property liefert das erste Element für Single-Target-Manifeste (raises bei N≠1); v1→v2 Migration via `_migrate_manifest_to_v2()` (`schema_version: 1, target: str` → `schema_version: 2, targets: [target]`); `CURRENT_MANIFEST_SCHEMA_VERSION = 2`.
+- `core/src/speccify_core/lockfile.py`: `Lockfile.targets: tuple[str, ...]` ist SoT; `.target`-Property liefert das erste Element für Single-Target-Lockfiles; Loader-Migration v1/v2→v3 via Schema-Switch (`LEGACY_V1_LOCKFILE_SCHEMA_PATH`, neue `LEGACY_V2_LOCKFILE_SCHEMA_PATH`) + Top-Level-Feld-Mapping (`target` → `targets`); `to_dict()` schreibt `targets: list[str]` Top-Level + sortiert Entries nach `(id, target)`; `build_lockfile()` akzeptiert `str | tuple[str, ...] | list[str]` (single-string-API erhält Rückwärtskompatibilität — entries werden Cross-Product targets × resolutions); `CURRENT_LOCKFILE_SCHEMA_VERSION = 3`.
+- Repo-Bytes migriert: `example-project/speccify.yaml` auf `schema_version: 2 + targets: [react]`; `example-project/speccify.lock` neu erzeugt als `schema_version: 3 + targets: [react]` (mit den gleichen sha256/cache_keys wie bisher).
+- Aufrufer angepasst: `cli/src/speccify_cli/commands/init.py` schreibt v2-Manifest; `cli/src/speccify_cli/commands/add.py` benutzt `ctx.manifest.targets` beim Re-Build; `scripts/mcp_smoke.py` prüft `schema_version: 2` + `- react` (YAML-Listen-Eintrag). Andere Aufrufer (`lock`, `pull`, `verify`, `mcp/tools/render`, `apps/web/backend/...`) profitieren transparent von der `.target`-Backward-Compat-Property für Single-Target-Manifeste.
+- Tests aktualisiert: `core/tests/test_manifest.py` (v2-Assertions), `core/tests/test_lockfile_v2.py` (v3-Defaults, `targets`-Tuple-Konstruktor, v1→v3-Migrations-Test), `core/tests/test_resolver.py` (`_manifest()` benutzt `targets=`), `cli/tests/test_init.py`, `cli/tests/test_add.py`, `mcp/tests/test_resources_prompts.py`. Existierende Tests, die v1/v2-Lockfile-Bytes via String-Literal prüfen (z.B. `test_resolver.py`), bleiben unangetastet — sie validieren genau die Loader-Migration.
+- Bewusst noch offen für spätere Stages: Multi-Target-Specs (`targets: [react, swiftui]`) sind im Schema erlaubt, werden aber von keinem aktuellen Adapter erzeugt; Stage 2/3/6 werden das füllen, sobald SwiftUI- und Angular-Renderer existieren.
 
 ## Stage 2: SwiftUI-Renderer (`kind: llm` + Replay-Cache) + Golden Renders
 
@@ -201,7 +199,7 @@ Outcome: Phase 3 dokumentarisch abgeschlossen; Master-Plan reflektiert SwiftUI+A
 |---|---|---|
 | 0 | Open Questions geklärt, Decisions dokumentiert, Round-2-Delivery-Steps geschrieben. | **Done (2026-05-24)** |
 | 1a | Renderer-Protocol + TARGETS-Registry, React portiert. | **Done (2026-05-25)** |
-| 1b | Lockfile-Schema-Bump v3 + Manifest-Schema v2 + Adapter. | Open |
+| 1b | Lockfile-Schema-Bump v3 + Manifest-Schema v2 + Adapter. | **Done (2026-05-26)** |
 | 2 | SwiftUI-Renderer + Golden Renders. | Open |
 | 3 | Angular-Renderer + Golden Renders. | Open |
 | 4 | Conformance-Runner (Build-Smoke + Visual-Regression) + CI-Jobs. | Open |
