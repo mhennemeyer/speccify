@@ -97,14 +97,23 @@ Outcome: `speccify_core` hat ein generisches `Renderer`-Protocol + `TARGETS`-Reg
 - Commits: `be848a4` (Tests) + `43462ee` (Refactor `__call__` Lesbarkeit).
 - Verifiziert: `225 passed` Root-Pytest (`mcp/tests/test_stdio_smoke.py` einzeln grün); `ruff check core/` clean; `ruff format` clean.
 
-## Stage 1b: Lockfile-Schema-Bump v3 + Manifest-Schema v2 — Open
+## Stage 1b: Lockfile-Schema-Bump v3 + Manifest-Schema v2 — **Substage 1b-α Done (2026-05-26), Substage 1b-β Open**
+
+**Substage 1b-α — Schema-Vorgriff (Done 2026-05-26)**:
+- `schema/manifest.v2.schema.json` als Vorgriff angelegt (Multi-Target, `targets: list[str]`, `schema_version: const 2`, `minItems: 1` + `uniqueItems: true`) — noch nicht aktiv geladen.
+- `schema/lockfile.v3.schema.json` als Vorgriff angelegt (Top-Level `targets: list[str]` ersetzt `target: str`; jeder LockEntry behält eigenes `target`-Feld; `signature`-Slot + `yank_status` aus v2 unverändert übernommen; `schema_version: const 3`) — noch nicht aktiv geladen.
+- `schema/README.md`: Schema-Inventur dokumentiert (`spec`, `manifest{,.v1,.v2}`, `lockfile{,.v1,.v2,.v3}`); aktive Phase auf Phase 3 gesetzt.
+- `schema/manifest.schema.json` bleibt v1 aktiv; `schema/lockfile.schema.json` bleibt v2 aktiv → keine Code-/Test-Brüche; 226 Root-Pytest grün, ruff/format clean.
+- Entscheidung User: nur Schemas + Snapshots in dieser Session, Code-Migration als eigene Substage 1b-β nächste Session.
+
+**Substage 1b-β — Code-Migration (Open)**:
 
 Outcome: Lockfile v3 unterstützt `targets: [...]`-Cross-Product mit v1/v2→v3-Migration im Loader; Manifest v2 mit `targets: list[str]` (v1 single `target` transparent lesbar); CLI/MCP/Web/Registry-Adapter auf `targets`-Iteration umgestellt; alle Tests grün.
 
-- `schema/lockfile.v2.schema.json` als Snapshot (analog v1-Archivierung, v1-Snapshot existiert bereits).
-- `schema/lockfile.schema.json` auf v3: `LockEntry` bekommt `target`-Feld + `generated_files_sha256` pro Target; `Lockfile.targets: list[str]` top-level; In-Memory v1→v2→v3-Migration im Loader (Bytes im Repo unangetastet, vgl. User-Decision).
-- `schema/manifest.v1.schema.json` als Snapshot.
-- `schema/manifest.schema.json` auf v2: `targets: list[str]` statt `target: str`; Loader liest v1 transparent als single-element-list (vgl. User-Decision: existierende Manifest-Bytes in `example-project/`, Test-Strings bleiben unangetastet).
+- `schema/lockfile.v2.schema.json` als Snapshot bereits vorhanden (Substage 1b-α).
+- `schema/lockfile.schema.json` auf v3 anheben: Top-Level `targets: list[str]` ersetzt `target: str`; `LockEntry.target` bleibt; v3-JSON liegt bereits als `lockfile.v3.schema.json` bereit → Kopier-Schritt + In-Memory v1→v2→v3-Migration im Loader (Repo-Bytes werden gemäß User-Decision auf v3 migriert).
+- `schema/manifest.v1.schema.json` als Snapshot bereits vorhanden (Substage 1b-α).
+- `schema/manifest.schema.json` auf v2 anheben: `targets: list[str]` statt `target: str`; v2-JSON liegt bereits als `manifest.v2.schema.json` bereit → Kopier-Schritt + Loader liest v1 transparent als single-element-list. Repo-Bytes (`example-project/speccify.yaml`, Test-Strings) werden gemäß User-Decision (2026-05-26) auf v2 migriert; Backward-Compat wird nur über Tests bewiesen.
 - `core/src/speccify_core/manifest.py`: `ProjectManifest.target: str` → `targets: list[str]` (mit v1-Compat).
 - `core/src/speccify_core/lockfile.py`: `build_lockfile()`-Signatur (heute `target: str`) → `targets: list[str]`, Loader-Migration v1→v2→v3.
 - ~8 Aufrufer in `cli/` (`init`, `add`, `lock`, `pull`, `verify`), `mcp/`, `apps/web/backend/`, `registry/` anpassen.
