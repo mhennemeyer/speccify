@@ -1,20 +1,25 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://speccify.io/schema/manifest/v1.json",
-  "title": "Speccify Project Manifest v1",
-  "description": "Schema v1 für speccify.yaml — das Projekt-Manifest eines Spec-Konsumenten. Anders als spec.schema.json (das einzelne Specs beschreibt) listet das Manifest Target, Dependencies und optionale Registry-Konfiguration.",
+  "$id": "https://speccify.io/schema/manifest/v2.json",
+  "title": "Speccify Project Manifest v2",
+  "description": "Schema v2 für speccify.yaml — Phase-3-Multi-Target. Bump gegenüber v1: `target: str` → `targets: list[str]`. Phase-1-Manifeste (`schema_version: 1`) bleiben lesbar (Loader-seitige Migration zu single-element-list); neu geschriebene Manifeste sind immer v2. Aktiv geladenes Manifest-Schema seit Phase-3-Stage-1b-β.",
   "type": "object",
-  "required": ["schema_version", "target", "dependencies"],
+  "required": ["schema_version", "targets", "dependencies"],
   "additionalProperties": false,
   "properties": {
     "schema_version": {
       "type": "integer",
-      "const": 1
+      "const": 2
     },
-    "target": {
-      "type": "string",
-      "minLength": 1,
-      "description": "Codegen-Ziel (z.B. react, swiftui, angular)."
+    "targets": {
+      "type": "array",
+      "description": "Codegen-Ziele (z.B. react, swiftui, angular). Mindestens ein Eintrag; deduplizierte Liste.",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
     },
     "registry": {
       "type": "object",

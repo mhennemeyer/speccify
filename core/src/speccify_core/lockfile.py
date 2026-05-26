@@ -27,18 +27,21 @@ from speccify_core.codegen.stub import TEMPLATE_SET, TEMPLATE_VERSION
 DEFAULT_TEMPLATE_SET: str = TEMPLATE_SET
 DEFAULT_TEMPLATE_VERSION: str = TEMPLATE_VERSION
 
-# core/src/speccify_core/lockfile.py → ../../../schema/lockfile.schema.json (v2)
+# core/src/speccify_core/lockfile.py → ../../../schema/lockfile.schema.json (v3)
 DEFAULT_LOCKFILE_SCHEMA_PATH: Path = (
     Path(__file__).resolve().parents[3] / "schema" / "lockfile.schema.json"
 )
-# Backward-compat-Validation: v1-Lockfiles werden gegen das alte Schema geprüft und
-# Loader-seitig nach v2 migriert (siehe `Lockfile.load`).
+# Backward-compat-Validation: v1- und v2-Lockfiles werden gegen das jeweilige Alt-Schema
+# geprüft und Loader-seitig nach v3 migriert (siehe `Lockfile.load`).
 LEGACY_V1_LOCKFILE_SCHEMA_PATH: Path = (
     Path(__file__).resolve().parents[3] / "schema" / "lockfile.v1.schema.json"
 )
+LEGACY_V2_LOCKFILE_SCHEMA_PATH: Path = (
+    Path(__file__).resolve().parents[3] / "schema" / "lockfile.v2.schema.json"
+)
 
 # Aktuelle Schema-Version, die `Lockfile.write` immer schreibt.
-CURRENT_LOCKFILE_SCHEMA_VERSION: int = 2
+CURRENT_LOCKFILE_SCHEMA_VERSION: int = 3
 
 
 class LockfileError(Exception):
@@ -123,10 +126,20 @@ AnySignature = NoneSignature | SigstoreSignature
 
 @dataclass(frozen=True)
 class Lockfile:
-    target: str
+    targets: tuple[str, ...]
     entries: tuple[LockEntry, ...] = ()
     schema_version: int = CURRENT_LOCKFILE_SCHEMA_VERSION
     signature: AnySignature = field(default_factory=NoneSignature)
+
+    @property
+    def target(self) -> str:
+        """Backward-Compat-Property: erstes Target. Nur für single-target-Lockfiles definiert."""
+        if len(self.targets) != 1:
+            raise LockfileError(
+                f"Lockfile hat {len(self.targets)} Targets, `.target` ist nur für "
+                f"single-target-Lockfiles definiert. Nutze `.targets`."
+            )
+        return self.targets[0]
 
     @classmethod
     def load(
@@ -150,19 +163,31 @@ class Lockfile:
                 f"Lockfile muss ein YAML-Mapping sein, ist aber {type(data).__name__}: {lock_path}"
             )
 
-        # Backward-compat: v1-Lockfiles werden gegen das v1-Schema geprüft und in-memory
-        # nach v2 migriert; neu geschriebene Lockfiles sind immer v2.
+        # Backward-compat: v1- und v2-Lockfiles werden gegen das jeweilige Alt-Schema geprüft
+        # und in-memory nach v3 migriert; neu geschriebene Lockfiles sind immer v3.
         raw_version = data.get("schema_version")
         if schema_path is None and raw_version == 1:
             _validate_against_schema(data, LEGACY_V1_LOCKFILE_SCHEMA_PATH, lock_path)
+        elif schema_path is None and raw_version == 2:
+            _validate_against_schema(data, LEGACY_V2_LOCKFILE_SCHEMA_PATH, lock_path)
         else:
             _validate_against_schema(data, schema_path or DEFAULT_LOCKFILE_SCHEMA_PATH, lock_path)
+
+        # In-Memory-Migration v1/v2 → v3: Top-Level `target: str` → `targets: [target]`.
+        if "targets" in data:
+            targets = tuple(data["targets"])
+        elif "target" in data:
+            targets = (data["target"],)
+        else:
+            raise LockfileError(
+                f"Lockfile hat weder `targets` noch `target` Top-Level-Feld: {lock_path}"
+            )
 
         entries = tuple(_entry_from_dict(item) for item in data["specs"])
         signature = _signature_from_dict(data.get("signature"))
         return cls(
             schema_version=CURRENT_LOCKFILE_SCHEMA_VERSION,
-            target=data["target"],
+            targets=targets,
             entries=entries,
             signature=signature,
         )
@@ -184,10 +209,10 @@ class Lockfile:
         out_path.write_text(text, encoding="utf-8")
 
     def to_dict(self) -> dict[str, Any]:
-        sorted_entries = sorted(self.entries, key=lambda e: e.id)
+        sorted_entries = sorted(self.entries, key=lambda e: (e.id, e.target))
         return {
             "schema_version": self.schema_version,
-            "target": self.target,
+            "targets": list(self.targets),
             "signature": _signature_to_dict(self.signature),
             "specs": [_entry_to_dict(e) for e in sorted_entries],
         }
@@ -280,14 +305,14 @@ class Lockfile:
             raise LockfileError(f"Lockfile enthält keinen Eintrag für '{spec_id}'.")
         return Lockfile(
             schema_version=self.schema_version,
-            target=self.target,
+            targets=self.targets,
             entries=tuple(new_entries),
             signature=self.signature,
         )
 
 
 def build_lockfile(
-    target: str,
+    target: str | tuple[str, ...] | list[str],
     resolutions: list[Any],
     *,
     template_set: str = DEFAULT_TEMPLATE_SET,
@@ -295,28 +320,42 @@ def build_lockfile(
 ) -> Lockfile:
     """Baut ein Lockfile aus einer Liste von `Resolution`-Objekten.
 
+    `target` akzeptiert sowohl einen einzelnen String (Phase-1/2-API, ergibt ein
+    single-target-Lockfile mit Cross-Product zu den Resolutions) als auch eine
+    Liste/Tuple von Targets (Phase-3-Multi-Target, ergibt das Cross-Product aller
+    Resolutions × alle Targets).
+
     `generated_files_sha256` bleibt leer (wird von `speccify pull` befüllt). Der Parameter
-    ist `Any`-typisiert, um eine zirkuläre Abhängigkeit zwischen `lockfile` und `resolver`
-    zu vermeiden; erwartet werden Objekte mit `spec_id`, `version`, `spec_sha256`, `via`.
+    `resolutions` ist `Any`-typisiert, um eine zirkuläre Abhängigkeit zwischen `lockfile`
+    und `resolver` zu vermeiden; erwartet werden Objekte mit `spec_id`, `version`,
+    `spec_sha256`, `via`.
     """
+    if isinstance(target, str):
+        targets: tuple[str, ...] = (target,)
+    else:
+        targets = tuple(target)
+    if not targets:
+        raise LockfileError("build_lockfile: targets darf nicht leer sein.")
     generator = GeneratorPin(
         kind="template",
         template_set=template_set,
         template_version=template_version,
     )
+    sorted_resolutions = sorted(resolutions, key=lambda r: r.spec_id)
     entries = tuple(
         LockEntry(
             id=r.spec_id,
             version=str(r.version),
             sha256=r.spec_sha256,
             resolved_via=r.via,
-            target=target,
+            target=tgt,
             generator=generator,
             generated_files_sha256=(),
         )
-        for r in sorted(resolutions, key=lambda r: r.spec_id)
+        for r in sorted_resolutions
+        for tgt in targets
     )
-    return Lockfile(target=target, entries=entries)
+    return Lockfile(targets=targets, entries=entries)
 
 
 def _entry_to_dict(entry: LockEntry) -> dict[str, Any]:

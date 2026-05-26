@@ -18,8 +18,10 @@ EXAMPLE_PROJECT = REPO_ROOT / "example-project"
 def test_load_example_project_manifest() -> None:
     manifest = ProjectManifest.load(EXAMPLE_PROJECT / "speccify.yaml")
 
-    assert manifest.schema_version == 1
-    assert manifest.target == "react"
+    # example-project/ wurde in Phase-3-Stage-1b-β auf Manifest-Schema v2 migriert.
+    assert manifest.schema_version == 2
+    assert manifest.targets == ("react",)
+    assert manifest.target == "react"  # Backward-Compat-Property
     assert manifest.dependencies == {
         "@org/button": "^0.1",
         "@org/onboarding-wizard": "^0.1",
@@ -30,8 +32,8 @@ def test_load_example_project_manifest() -> None:
 
 def test_round_trip_preserves_fields(tmp_path: Path) -> None:
     src = ProjectManifest(
-        schema_version=1,
-        target="react",
+        schema_version=2,
+        targets=("react",),
         dependencies={"@org/button": "^0.1", "@org/contact-form": "^0.1"},
         registry_path="./registry-fixtures",
     )
@@ -40,7 +42,7 @@ def test_round_trip_preserves_fields(tmp_path: Path) -> None:
 
     reloaded = ProjectManifest.load(out)
     assert reloaded.schema_version == src.schema_version
-    assert reloaded.target == src.target
+    assert reloaded.targets == src.targets
     assert reloaded.dependencies == src.dependencies
     assert reloaded.registry_path == src.registry_path
 

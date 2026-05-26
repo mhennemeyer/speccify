@@ -22,8 +22,8 @@ FIXTURES = REPO_ROOT / "registry-fixtures"
 
 def _manifest(deps: dict[str, str], target: str = "react") -> ProjectManifest:
     return ProjectManifest(
-        schema_version=1,
-        target=target,
+        schema_version=2,
+        targets=(target,),
         dependencies=deps,
         registry_path=str(FIXTURES),
         source_path=None,

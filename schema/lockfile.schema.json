@@ -1,23 +1,28 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://speccify.io/schema/lockfile/v2.json",
-  "title": "Speccify Lockfile v2",
-  "description": "Schema v2 für speccify.lock — deterministisches Auflösungs- und Output-Hash-Manifest. Bump gegenüber v1: optionales Top-Level-`signature` (Phase-2-Slot für sigstore, Default `kind: none`) und pro `LockEntry` optionales `yank_status` (`none|yanked`) + `yank_reason`. Phase-1-Lockfiles (`schema_version: 1`) bleiben lesbar (Loader-seitige Migration), neu geschriebene Lockfiles sind immer v2. Der `generator`-Pin ist eine Union: `kind: template` (template_set + template_version, Phase 1a) oder `kind: llm` (provider, model, prompt_version, optional seed, cache_key; ab Phase 1b für React-Codegen).",
+  "$id": "https://speccify.io/schema/lockfile/v3.json",
+  "title": "Speccify Lockfile v3",
+  "description": "Schema v3 für speccify.lock — Phase-3-Multi-Target. Bump gegenüber v2: Top-Level `target: str` → `targets: list[str]` (Cross-Product über alle gelockten Targets); jeder LockEntry hat weiterhin ein eigenes `target`-Feld (welches der Targets aus der Top-Level-Liste). v1- und v2-Lockfiles bleiben lesbar (Loader-seitige Migration: single-target → single-element targets-list). Aktiv geladenes Lockfile-Schema seit Phase-3-Stage-1b-β.",
   "type": "object",
-  "required": ["schema_version", "target", "specs"],
+  "required": ["schema_version", "targets", "specs"],
   "additionalProperties": false,
   "properties": {
     "schema_version": {
       "type": "integer",
-      "const": 2
+      "const": 3
     },
-    "target": {
-      "type": "string",
-      "minLength": 1,
-      "description": "Codegen-Ziel, gespiegelt aus dem Manifest zum Zeitpunkt des `lock`-Aufrufs."
+    "targets": {
+      "type": "array",
+      "description": "Codegen-Ziele dieses Lockfiles. Mindestens ein Eintrag; alphabetisch sortiert, deduplizierte Liste.",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
     },
     "signature": {
-      "description": "Reservierter Slot für Spec-Bundle-Signaturen (sigstore ab Phase 3+). Default in Phase 2: `{kind: \"none\"}`.",
+      "description": "Reservierter Slot für Spec-Bundle-Signaturen (sigstore ab Phase 4+). Default: `{kind: \"none\"}`.",
       "oneOf": [
         {
           "type": "object",
@@ -41,7 +46,7 @@
     },
     "specs": {
       "type": "array",
-      "description": "Aufgelöste Specs, alphabetisch nach `id` sortiert.",
+      "description": "Aufgelöste Specs, alphabetisch sortiert nach (id, target).",
       "items": {
         "type": "object",
         "required": [
@@ -73,7 +78,8 @@
           },
           "target": {
             "type": "string",
-            "minLength": 1
+            "minLength": 1,
+            "description": "Welches Target dieser Entry adressiert (eines der Top-Level-`targets`)."
           },
           "yank_status": {
             "type": "string",

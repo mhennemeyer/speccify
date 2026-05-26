@@ -104,7 +104,7 @@ def test_lockfile_with_generated_files_replaces_only_target(tmp_path: Path) -> N
 
 
 def test_lockfile_with_generated_files_unknown_id() -> None:
-    lock = Lockfile(target="react", entries=(_entry("@org/button", _HASH_A),))
+    lock = Lockfile(targets=("react",), entries=(_entry("@org/button", _HASH_A),))
     with pytest.raises(LockfileError):
         lock.with_generated_files("@org/missing", [])
 
@@ -112,7 +112,7 @@ def test_lockfile_with_generated_files_unknown_id() -> None:
 def test_build_lockfile_from_resolver_graph(tmp_path: Path) -> None:
     manifest = ProjectManifest(
         schema_version=1,
-        target="react",
+        targets=("react",),
         dependencies={"@org/contact-form": "^0.1"},
         registry_path=str(FIXTURES),
         source_path=None,
