@@ -31,29 +31,29 @@ def test_init_creates_minimal_manifest(tmp_path: Path) -> None:
     assert manifest_path.is_file()
 
     data = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
-    assert data == {"schema_version": 1, "target": "react", "dependencies": {}}
+    assert data == {"schema_version": 2, "targets": ["react"], "dependencies": {}}
 
 
 def test_init_default_target_is_react(tmp_path: Path) -> None:
     result = _invoke_init(tmp_path, "app1")
     assert result.exit_code == 0, result.output
     data = yaml.safe_load((tmp_path / "app1" / "speccify.yaml").read_text(encoding="utf-8"))
-    assert data["target"] == "react"
+    assert data["targets"] == ["react"]
 
 
 def test_init_custom_target(tmp_path: Path) -> None:
     result = _invoke_init(tmp_path, "app2", "--target", "swiftui")
     assert result.exit_code == 0, result.output
     data = yaml.safe_load((tmp_path / "app2" / "speccify.yaml").read_text(encoding="utf-8"))
-    assert data["target"] == "swiftui"
+    assert data["targets"] == ["swiftui"]
 
 
 def test_init_manifest_is_loadable_by_project_manifest(tmp_path: Path) -> None:
     result = _invoke_init(tmp_path, "loadable")
     assert result.exit_code == 0, result.output
     manifest = ProjectManifest.load(tmp_path / "loadable" / "speccify.yaml")
-    assert manifest.schema_version == 1
-    assert manifest.target == "react"
+    assert manifest.schema_version == 2
+    assert manifest.targets == ("react",)
     assert manifest.dependencies == {}
 
 

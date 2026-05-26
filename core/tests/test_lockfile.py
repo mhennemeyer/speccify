@@ -41,7 +41,7 @@ def _entry(spec_id: str, sha: str, files: tuple[GeneratedFile, ...] = ()) -> Loc
 
 def test_lockfile_round_trip(tmp_path: Path) -> None:
     lock = Lockfile(
-        target="react",
+        targets=("react",),
         entries=(
             _entry("@org/button", _HASH_A),
             _entry("@org/contact-form", _HASH_B),
@@ -55,7 +55,7 @@ def test_lockfile_round_trip(tmp_path: Path) -> None:
 
 def test_lockfile_writes_alphabetically(tmp_path: Path) -> None:
     lock = Lockfile(
-        target="react",
+        targets=("react",),
         entries=(
             _entry("@org/contact-form", _HASH_B),
             _entry("@org/button", _HASH_A),
@@ -88,7 +88,7 @@ def test_lockfile_schema_violation_rejected(tmp_path: Path) -> None:
 
 def test_lockfile_with_generated_files_replaces_only_target(tmp_path: Path) -> None:
     lock = Lockfile(
-        target="react",
+        targets=("react",),
         entries=(
             _entry("@org/button", _HASH_A),
             _entry("@org/contact-form", _HASH_B),
@@ -159,7 +159,7 @@ def _llm_entry(spec_id: str, sha: str, *, seed: int | None = 42) -> LockEntry:
 
 def test_lockfile_round_trip_llm_generator_with_seed(tmp_path: Path) -> None:
     lock = Lockfile(
-        target="react",
+        targets=("react",),
         entries=(_llm_entry("@org/button", _HASH_A, seed=42),),
     )
     out = tmp_path / "speccify.lock"
@@ -174,7 +174,7 @@ def test_lockfile_round_trip_llm_generator_with_seed(tmp_path: Path) -> None:
 
 def test_lockfile_round_trip_llm_generator_without_seed(tmp_path: Path) -> None:
     lock = Lockfile(
-        target="react",
+        targets=("react",),
         entries=(_llm_entry("@org/button", _HASH_A, seed=None),),
     )
     out = tmp_path / "speccify.lock"
@@ -189,7 +189,7 @@ def test_lockfile_mixed_template_and_llm_entries(tmp_path: Path) -> None:
     # Reihenfolge entspricht der alphabetischen Sortierung beim Schreiben,
     # damit Round-Trip-Equality direkt funktioniert.
     lock = Lockfile(
-        target="react",
+        targets=("react",),
         entries=(
             _llm_entry("@org/button", _HASH_A),
             _entry("@org/contact-form", _HASH_B),

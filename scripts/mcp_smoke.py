@@ -114,10 +114,10 @@ async def _run(project_root: Path) -> None:
             res = await session.read_resource("speccify://manifest")
             assert res.contents, "resources/read returned no contents"
             text = getattr(res.contents[0], "text", "") or ""
-            assert "schema_version: 1" in text, (
+            assert "schema_version: 2" in text, (
                 f"manifest resource missing schema_version: {text[:120]}..."
             )
-            assert "target: react" in text, f"manifest resource missing target: {text[:120]}..."
+            assert "- react" in text, f"manifest resource missing targets entry: {text[:120]}..."
             print("[ok] resources/read speccify://manifest", file=sys.stderr)
 
 

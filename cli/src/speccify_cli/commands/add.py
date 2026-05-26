@@ -58,7 +58,7 @@ def run_add(
     deps[spec_id] = new_range
     new_manifest = ProjectManifest(
         schema_version=ctx.manifest.schema_version,
-        target=ctx.manifest.target,
+        targets=ctx.manifest.targets,
         dependencies=deps,
         registry_path=ctx.manifest.registry_path,
         source_path=ctx.manifest.source_path,

@@ -40,8 +40,8 @@ def run_init(name: str, target: str = DEFAULT_INIT_TARGET, parent_dir: Path | No
 
     manifest_path = target_dir / "speccify.yaml"
     payload: dict[str, object] = {
-        "schema_version": 1,
-        "target": target,
+        "schema_version": 2,
+        "targets": [target],
         "dependencies": {},
     }
     text = yaml.safe_dump(

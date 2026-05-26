@@ -45,8 +45,8 @@ def test_manifest_resource_returns_yaml(tmp_path: Path) -> None:
     project = _copy_example_project(tmp_path)
     server = build_server(ServerConfig(project_root=project))
     text = _read_text(server, "speccify://manifest")
-    assert "schema_version: 1" in text
-    assert "target: react" in text
+    assert "schema_version: 2" in text
+    assert "- react" in text  # targets: [react] als YAML-Liste
 
 
 def test_manifest_resource_missing_raises(tmp_path: Path) -> None:
@@ -64,7 +64,7 @@ def test_lockfile_resource_returns_yaml(tmp_path: Path) -> None:
     project = _copy_example_project(tmp_path)
     server = build_server(ServerConfig(project_root=project))
     text = _read_text(server, "speccify://lockfile")
-    assert "schema_version: 1" in text
+    assert "schema_version: 3" in text
     assert "@org/button" in text
 
 

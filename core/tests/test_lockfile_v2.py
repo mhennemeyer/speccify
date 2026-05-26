@@ -129,7 +129,7 @@ def test_lockfile_sigstore_signature_round_trip(tmp_path: Path) -> None:
 
 
 def test_lockfile_v1_loads_and_migrates_to_v3(tmp_path: Path) -> None:
-    """Phase-1-Lockfiles (schema_version: 1, ohne signature/yank_status, ohne targets-list) bleiben lesbar."""
+    """Phase-1-Lockfiles (v1, ohne signature/yank_status/targets-list) bleiben lesbar."""
 
     v1 = tmp_path / "speccify.lock"
     v1.write_text(
