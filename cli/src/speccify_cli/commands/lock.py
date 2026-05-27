@@ -48,14 +48,7 @@ def _run_workspace_lock(project_dir: Path, registry_override: Path | None) -> Lo
     else:
         registry_path = workspace.root_manifest.resolved_registry_path()
     registry = LocalRegistry(registry_path)
-    graph = Resolver(registry).resolve_workspace(workspace.aggregated_dependencies())
-    targets = workspace.aggregated_targets()
-    if not targets:
-        raise ResolverError(
-            "Workspace hat keine Targets — mindestens ein Member oder das Root-Manifest "
-            "muss `targets:` setzen."
-        )
-    lockfile = build_lockfile(target=list(targets), resolutions=list(graph.resolutions))
+    lockfile = workspace.lock(registry)
     lockfile.write(project_dir / LOCKFILE_FILENAME)
     return lockfile
 

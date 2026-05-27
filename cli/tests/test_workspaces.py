@@ -41,6 +41,78 @@ def test_lock_example_workspace_writes_root_lockfile(tmp_path: Path) -> None:
     assert len(lockfile.entries) == 2
 
 
+def test_pull_example_workspace_materializes_per_member(tmp_path: Path) -> None:
+    """Phase 4 Stage 3: `speccify pull` im Workspace-Root materialisiert pro Member."""
+    import shutil
+
+    project = tmp_path / "ws"
+    shutil.copytree(EXAMPLE_WORKSPACE, project)
+    # Erst Lock, dann Pull (beides workspace-aware).
+    lock_result = runner.invoke(
+        app,
+        [
+            "lock",
+            "--project",
+            str(project),
+            "--registry",
+            str(REPO_ROOT / "registry-fixtures"),
+        ],
+    )
+    assert lock_result.exit_code == 0, lock_result.output
+
+    pull_result = runner.invoke(
+        app,
+        [
+            "pull",
+            "--project",
+            str(project),
+            "--registry",
+            str(REPO_ROOT / "registry-fixtures"),
+        ],
+    )
+    assert pull_result.exit_code == 0, pull_result.output
+
+    # `ui` hat nur @org/button → Button.tsx, kein ContactForm.tsx.
+    ui_out = project / "packages" / "ui" / "speccify_generated" / "react"
+    assert (ui_out / "org" / "Button.tsx").is_file()
+    assert not (ui_out / "org" / "ContactForm.tsx").exists()
+
+    # `forms` hat @org/button + @org/contact-form → beide Dateien.
+    forms_out = project / "packages" / "forms" / "speccify_generated" / "react"
+    assert (forms_out / "org" / "Button.tsx").is_file()
+    assert (forms_out / "org" / "ContactForm.tsx").is_file()
+
+    # Lockfile-Entries wurden mit generated_files_sha256 + LlmGeneratorPin angereichert.
+    lockfile = Lockfile.load(project / "speccify.lock")
+    assert all(e.generated_files_sha256 for e in lockfile.entries)
+
+
+def test_pull_workspace_rejects_target_override(tmp_path: Path) -> None:
+    """Im Workspace-Modus ist `--target` nicht zulässig (Members deklarieren Targets selbst)."""
+    import shutil
+
+    project = tmp_path / "ws"
+    shutil.copytree(EXAMPLE_WORKSPACE, project)
+    runner.invoke(
+        app,
+        ["lock", "--project", str(project), "--registry", str(REPO_ROOT / "registry-fixtures")],
+    )
+    result = runner.invoke(
+        app,
+        [
+            "pull",
+            "--project",
+            str(project),
+            "--target",
+            "react",
+            "--registry",
+            str(REPO_ROOT / "registry-fixtures"),
+        ],
+    )
+    assert result.exit_code == 1, result.output
+    assert "Workspace" in result.output or "workspace" in result.output
+
+
 def test_lock_workspace_conflicting_ranges_fails(tmp_path: Path) -> None:
     # Zwei Member fordern unvereinbare Caret-Ranges für dieselbe Spec → ResolverError.
     project = tmp_path / "ws"

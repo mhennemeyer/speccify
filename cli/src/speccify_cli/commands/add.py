@@ -11,15 +11,22 @@ from pathlib import Path
 
 import typer
 from speccify_core import (
+    LocalRegistry,
     ProjectManifest,
     Resolver,
     ResolverError,
+    Workspace,
+    WorkspaceError,
     build_lockfile,
 )
 from speccify_core.manifest import ManifestError
 from speccify_core.registry import RegistryError
 
-from speccify_cli.commands._workspace import WorkspaceContext
+from speccify_cli.commands._workspace import (
+    LOCKFILE_FILENAME,
+    MANIFEST_FILENAME,
+    WorkspaceContext,
+)
 
 _SPEC_REF_PATTERN = re.compile(
     r"^(?P<id>@[a-z0-9][a-z0-9-]*/[a-z0-9][a-z0-9-]*)(?:@(?P<range>.+))?$"
@@ -35,12 +42,76 @@ def _parse_spec_ref(raw: str) -> tuple[str, str | None]:
     return match.group("id"), match.group("range")
 
 
+def _resolve_workspace_target_dir(
+    project_dir: Path,
+    member: str | None,
+    cwd: Path,
+) -> tuple[Path, Path]:
+    """Bestimmt für einen Workspace-Root das Ziel-Member-Verzeichnis + Root-Verzeichnis.
+
+    Stage-0-Decision (Phase 4): explizites `--member` schlägt CWD-Detection; ohne
+    Flag wird das Member aus `cwd` abgeleitet (muss innerhalb eines Member-Dirs
+    liegen). Im Root selbst ohne `--member` → Fehler.
+    """
+    workspace = Workspace.load(project_dir)
+    members_by_name = {
+        Path(m.relative_path).parent.name: (project_dir / m.relative_path).parent
+        for m in workspace.members
+    }
+    if member is not None:
+        if member not in members_by_name:
+            available = ", ".join(sorted(members_by_name)) or "(keine)"
+            raise WorkspaceError(
+                f"Workspace-Member '{member}' nicht gefunden. Verfügbar: {available}."
+            )
+        return members_by_name[member], project_dir
+
+    # CWD-Detection: ist `cwd` (oder ein Vorfahr) ein Member-Dir?
+    cwd_resolved = cwd.resolve()
+    for member_dir in members_by_name.values():
+        member_resolved = member_dir.resolve()
+        if cwd_resolved == member_resolved or member_resolved in cwd_resolved.parents:
+            return member_dir, project_dir
+    raise WorkspaceError(
+        "Im Workspace-Root ohne `--member` und ohne CWD-Member-Kontext: "
+        f"`speccify add` braucht `--member <name>` (verfügbar: "
+        f"{', '.join(sorted(members_by_name)) or '(keine)'})."
+    )
+
+
 def run_add(
     spec_ref: str,
     project_dir: Path,
     registry_override: Path | None = None,
+    *,
+    member: str | None = None,
+    cwd: Path | None = None,
 ) -> ProjectManifest:
     spec_id, explicit_range = _parse_spec_ref(spec_ref)
+
+    # Workspace-Modus: in Member-Manifest schreiben, dann Root-Lock neu bauen.
+    manifest_path = project_dir / MANIFEST_FILENAME
+    if manifest_path.is_file():
+        try:
+            root_manifest = ProjectManifest.load(manifest_path)
+        except ManifestError:
+            root_manifest = None
+    else:
+        root_manifest = None
+
+    if root_manifest is not None and root_manifest.is_workspace_root:
+        member_dir, root_dir = _resolve_workspace_target_dir(
+            project_dir, member, cwd or Path.cwd()
+        )
+        return _run_workspace_add(
+            spec_id,
+            explicit_range,
+            member_dir=member_dir,
+            workspace_root=root_dir,
+            registry_override=registry_override,
+        )
+
+    # Single-Project-Pfad (unverändert).
     ctx = WorkspaceContext.load(project_dir, registry_override=registry_override)
 
     if explicit_range is not None:
@@ -71,6 +142,50 @@ def run_add(
     lockfile = build_lockfile(target=graph.target, resolutions=list(graph.resolutions))
     lockfile.write(refreshed.lockfile_path)
     return refreshed.manifest
+
+
+def _run_workspace_add(
+    spec_id: str,
+    explicit_range: str | None,
+    *,
+    member_dir: Path,
+    workspace_root: Path,
+    registry_override: Path | None,
+) -> ProjectManifest:
+    """Schreibt Spec in Member-Manifest, dann Workspace-Root-Lock neu (Stage-0-Decision)."""
+    member_ctx = WorkspaceContext.load(member_dir, registry_override=registry_override)
+
+    if explicit_range is not None:
+        new_range = explicit_range
+    else:
+        available = member_ctx.registry.list_versions(spec_id)
+        if not available:
+            raise RegistryError(
+                f"Spec '{spec_id}' ist im Registry {member_ctx.registry.root} nicht verfügbar."
+            )
+        latest = available[-1]
+        new_range = f"^{latest.major}.{latest.minor}"
+
+    deps = dict(member_ctx.manifest.dependencies)
+    deps[spec_id] = new_range
+    new_manifest = ProjectManifest(
+        schema_version=member_ctx.manifest.schema_version,
+        targets=member_ctx.manifest.targets,
+        dependencies=deps,
+        registry_path=member_ctx.manifest.registry_path,
+        source_path=member_ctx.manifest.source_path,
+    )
+    new_manifest.write(member_ctx.manifest_path)
+
+    # Root-Lock neu aufbauen (aggregiert über alle Member inkl. dem soeben aktualisierten).
+    workspace = Workspace.load(workspace_root)
+    if registry_override is not None:
+        registry_path = registry_override.resolve()
+    else:
+        registry_path = workspace.root_manifest.resolved_registry_path()
+    lockfile = workspace.lock(LocalRegistry(registry_path))
+    lockfile.write(workspace_root / LOCKFILE_FILENAME)
+    return new_manifest
 
 
 def add_command(

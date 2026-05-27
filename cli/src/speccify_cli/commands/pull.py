@@ -25,16 +25,25 @@ from speccify_core import (
     CodegenError,
     GeneratedFile,
     LlmGeneratorPin,
+    LocalRegistry,
     Lockfile,
     LockfileError,
+    Workspace,
+    WorkspaceError,
     render_for_target,
 )
 from speccify_core.codegen import react_llm
-from speccify_core.manifest import ManifestError
+from speccify_core.manifest import ManifestError, ProjectManifest
 from speccify_core.registry import RegistryError, Version
 
 from speccify_cli.commands._llm_client import build_replay_client
-from speccify_cli.commands._workspace import WorkspaceContext
+from speccify_cli.commands._workspace import (
+    LOCKFILE_FILENAME,
+    MANIFEST_FILENAME,
+    WorkspaceContext,
+)
+
+WORKSPACE_OUTPUT_DIRNAME = "speccify_generated"
 
 
 def _atomic_write(path: Path, data: bytes) -> None:
@@ -50,6 +59,111 @@ def _atomic_write(path: Path, data: bytes) -> None:
         raise
 
 
+def _is_workspace_root(project_dir: Path) -> bool:
+    """Detection: Manifest mit `workspaces:`-Key ⇒ Workspace-Root."""
+    manifest_path = project_dir / MANIFEST_FILENAME
+    if not manifest_path.is_file():
+        return False
+    try:
+        manifest = ProjectManifest.load(manifest_path)
+    except ManifestError:
+        return False
+    return manifest.is_workspace_root
+
+
+def _render_lock_entry_into(
+    lockfile: Lockfile,
+    entry_id: str,
+    target: str,
+    out_dir: Path,
+    registry: Registry,
+    llm_client: object,
+) -> Lockfile:
+    """Rendert genau einen Lock-Entry (`spec_id`, `target`) in `out_dir` und aktualisiert das Lockfile.
+
+    `out_dir` ist die Wurzel für das Render-Layout (Renderer schreibt seine eigene
+    Unterstruktur — z. B. `org/Button.tsx` — relativ dazu).
+    """
+    matching = [e for e in lockfile.entries if e.id == entry_id and e.target == target]
+    if not matching:
+        raise LockfileError(
+            f"Lockfile enthält keinen Eintrag für {entry_id!r} mit target={target!r}."
+        )
+    entry = matching[0]
+    spec = registry.fetch(entry.id, Version.parse(entry.version))
+    rendered = render_for_target(spec, target, llm_client=llm_client)
+    generated: list[GeneratedFile] = []
+    for rel_path, data in sorted(rendered.files.items()):
+        abs_path = out_dir / rel_path
+        _atomic_write(abs_path, data)
+        digest = hashlib.sha256(data).hexdigest()
+        generated.append(GeneratedFile(path=rel_path, sha256=f"sha256:{digest}"))
+    updated = lockfile.with_generated_files(entry.id, generated)
+    if rendered.cache_key is not None:
+        pin = LlmGeneratorPin(
+            provider=react_llm.PROVIDER,
+            model=rendered.cache_key.model,
+            prompt_version=rendered.cache_key.prompt_version,
+            cache_key=f"sha256:{rendered.cache_key.digest()}",
+            seed=rendered.cache_key.seed,
+        )
+        updated = updated.with_generator(entry.id, pin)
+    return updated
+
+
+def _run_workspace_pull(
+    project_dir: Path,
+    registry_override: Path | None,
+    *,
+    offline: bool,
+    cache_dir: Path | None,
+) -> Lockfile:
+    """Phase 4 Stage 3: Workspace-Pull — iteriert über Members, materialisiert je Member."""
+    workspace = Workspace.load(project_dir)
+    lockfile_path = project_dir / LOCKFILE_FILENAME
+    if not lockfile_path.is_file():
+        raise LockfileError(
+            f"Kein Lockfile in {project_dir} gefunden. Bitte zuerst `speccify lock` ausführen."
+        )
+    lockfile = Lockfile.load(lockfile_path)
+
+    if registry_override is not None:
+        registry_path = registry_override.resolve()
+    else:
+        registry_path = workspace.root_manifest.resolved_registry_path()
+    registry = LocalRegistry(registry_path)
+    llm_client = build_replay_client(offline=offline, cache_dir=cache_dir)
+
+    updated = lockfile
+    for member in workspace.members:
+        # Per-Member-Output unter `<root>/<member-dir>/speccify_generated/<target>/`
+        # (Stage-0-Decision: sichtbar, committable).
+        member_dir = (project_dir / member.relative_path).parent
+        member_targets = member.manifest.targets
+        member_deps = set(member.manifest.dependencies.keys())
+        for target in member_targets:
+            target_out = member_dir / WORKSPACE_OUTPUT_DIRNAME / target
+            target_out.mkdir(parents=True, exist_ok=True)
+            # Nur Entries rendern, deren spec_id in den Member-Deps liegt UND deren
+            # target matched. Transitive Deps werden nicht pro Member materialisiert
+            # (Stage-0-Decision: Members entkoppelt; Aggregation nur in der Resolution).
+            relevant = [
+                e for e in updated.entries if e.id in member_deps and e.target == target
+            ]
+            for entry in relevant:
+                updated = _render_lock_entry_into(
+                    updated,
+                    entry.id,
+                    target,
+                    target_out,
+                    registry,
+                    llm_client,
+                )
+
+    updated.write(lockfile_path)
+    return updated
+
+
 def run_pull(
     project_dir: Path,
     out_dir: Path,
@@ -59,6 +173,19 @@ def run_pull(
     offline: bool = True,
     cache_dir: Path | None = None,
 ) -> Lockfile:
+    if _is_workspace_root(project_dir):
+        if target_override is not None:
+            raise LockfileError(
+                "--target ist im Workspace-Modus nicht unterstützt — jeder Member liefert "
+                "seine eigenen Targets via `targets:` im Member-Manifest."
+            )
+        return _run_workspace_pull(
+            project_dir,
+            registry_override,
+            offline=offline,
+            cache_dir=cache_dir,
+        )
+
     ctx = WorkspaceContext.load(project_dir, registry_override=registry_override)
     if not ctx.lockfile_path.is_file():
         raise LockfileError(
@@ -78,24 +205,14 @@ def run_pull(
     out_dir.mkdir(parents=True, exist_ok=True)
     updated = lockfile
     for entry in lockfile.entries:
-        spec = ctx.registry.fetch(entry.id, Version.parse(entry.version))
-        rendered = render_for_target(spec, target, llm_client=llm_client)
-        generated: list[GeneratedFile] = []
-        for rel_path, data in sorted(rendered.files.items()):
-            abs_path = out_dir / rel_path
-            _atomic_write(abs_path, data)
-            digest = hashlib.sha256(data).hexdigest()
-            generated.append(GeneratedFile(path=rel_path, sha256=f"sha256:{digest}"))
-        updated = updated.with_generated_files(entry.id, generated)
-        if rendered.cache_key is not None:
-            pin = LlmGeneratorPin(
-                provider=react_llm.PROVIDER,
-                model=rendered.cache_key.model,
-                prompt_version=rendered.cache_key.prompt_version,
-                cache_key=f"sha256:{rendered.cache_key.digest()}",
-                seed=rendered.cache_key.seed,
-            )
-            updated = updated.with_generator(entry.id, pin)
+        updated = _render_lock_entry_into(
+            updated,
+            entry.id,
+            target,
+            out_dir,
+            ctx.registry,
+            llm_client,
+        )
 
     updated.write(ctx.lockfile_path)
     return updated
@@ -166,6 +283,7 @@ def pull_command(
         FileNotFoundError,
         CacheMissError,
         CodegenError,
+        WorkspaceError,
     ) as exc:
         typer.echo(f"✗ speccify pull fehlgeschlagen: {exc}", err=True)
         raise typer.Exit(code=1) from exc

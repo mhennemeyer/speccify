@@ -24,7 +24,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
+from speccify_core.lockfile import Lockfile, build_lockfile
 from speccify_core.manifest import ManifestError, ProjectManifest
+from speccify_core.registry import Registry
+from speccify_core.resolver import Resolver, ResolverError
 
 MANIFEST_FILENAME = "speccify.yaml"
 
@@ -127,6 +130,26 @@ class Workspace:
         for member in self.members:
             union.update(member.manifest.targets)
         return tuple(sorted(union))
+
+    def lock(self, registry: Registry | list[Registry]) -> Lockfile:
+        """Phase 4 Stage 1: kanonischer Workspace-Lock-Einstiegspunkt.
+
+        Aggregiert Targets + Dependencies aller Member, ruft den globalen
+        MVS-Resolver (:meth:`speccify_core.Resolver.resolve_workspace`) und baut
+        genau **ein** Root-Lockfile (Cargo-Stil).
+
+        Wirft :class:`ResolverError`, wenn der Workspace keine Targets hat oder
+        die Aggregation einen Range-Konflikt zwischen Member-Constraints aufdeckt
+        (Stage-0-Decision: strikt fehlschlagen).
+        """
+        targets = self.aggregated_targets()
+        if not targets:
+            raise ResolverError(
+                "Workspace hat keine Targets — mindestens ein Member oder das Root-Manifest "
+                "muss `targets:` setzen."
+            )
+        graph = Resolver(registry).resolve_workspace(self.aggregated_dependencies())
+        return build_lockfile(target=list(targets), resolutions=list(graph.resolutions))
 
     def aggregated_dependencies(self) -> dict[str, list[tuple[str, str]]]:
         """Aggregierte Dependency-Constraints aller Member.
