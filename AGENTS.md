@@ -74,3 +74,4 @@ uv run ruff format .       # Format
 3. **Determinismus zuerst**: Spec-First, Code-Second. Wenn eine Aufgabe in Code beschreibbar ist, gehört sie wahrscheinlich in eine Spec.
 4. **Resolver/Codegen wohnt in `core/`** — `cli/` und `mcp/` sind dünne Adapter darüber.
 5. **Bei Unklarheiten** zur Roadmap: Master-Plan + Phasen-Plan checken; nicht raten.
+6. **macOS-Tooling-Reibung**: `uv sync` triggert die Filesystem-Quarantäne und versteckt `.pth`-Dateien im venv. Ein Pytest-Session-Hook in `conftest.py` (Root + `registry/`) entversteckt sie automatisch via `scripts/_venv_hygiene.py`; manuell: `./scripts/fix-venv-hidden.sh` (mit `--deep` für versteckte Subdirs). Fehlende `.py`-Dateien (z. B. `django.contrib.admin.templatetags.admin_urls`) brauchen `uv sync --reinstall-package <name>`.

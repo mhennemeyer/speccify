@@ -39,23 +39,17 @@ Konkrete Schritte:
 8. **Verifikation**: `uv run pytest` Root (Ziel: 225+ neue grün) + Registry-Pytest grün; `ruff check` + `ruff format --check` clean.
 9. **Commit**: `feat(core): lockfile schema v3 + manifest schema v2 with migration`.
 
-## Tooling-Risiko (eskalations­würdig, separat)
+## Tooling-Reibung — gelöst (2026-05-27)
 
-macOS setzt das `UF_HIDDEN`-Flag + `com.apple.provenance`-xattr auf von `uv` geschriebene `.pth`-Dateien in `.venv/lib/python3.12/site-packages/`. Folge: Python's `site.py` ignoriert die `.pth`-Dateien, alle Sub-Pakete (`speccify_cli`, `speccify_mcp`, `speccify_web_backend`, `speccify_registry`) sind nicht importierbar → Test-Collection-Errors.
+macOS `UF_HIDDEN`-Workaround läuft jetzt automatisch:
 
-**Workaround vor jedem Pytest-Lauf:**
+- `scripts/_venv_hygiene.py` mit `unhide_venv_pth_files` (flach, schnell) + `unhide_venv_deep` (rekursiv, opt-in).
+- `conftest.py` (Root + `registry/`) hooked den flachen Sweep auf Pytest-Session-Start.
+- CLI-Skript `scripts/fix-venv-hidden.sh` (mit optionalem `--deep`-Flag).
+- 6 Unit-Tests in `core/tests/test_venv_hygiene.py` (4 plattformneutral + 2 macOS-gated).
+- Doku in README + AGENTS.md.
 
-```bash
-chflags nohidden .venv/lib/python3.12/site-packages/*.pth
-```
-
-`uv sync` setzt das Flag jedes Mal neu. Vorschlag für eigenes Issue/Plan (nicht Phase-3-Scope):
-
-- Kleinen Wrapper `scripts/fix-venv-hidden.sh` anlegen, **oder**
-- `conftest.py`-Hook auf Session-Start, der das Flag idempotent zurücknimmt, **oder**
-- Filesystem-Quarantäne auf `.venv` deaktivieren.
-
-Registry-Pytest hat in der letzten Session zusätzlich Django-Migration-Konflikte gezeigt (`multiple leaf nodes`) — vermutlich Folge desselben Quarantäne-/Shadow-Kopie-Problems, nicht Code.
+Fehlende `.py`-Dateien (z. B. `django.contrib.admin.templatetags.admin_urls`) sind ein anderes Quarantäne-Symptom (gelöschte statt nur versteckte Dateien) und brauchen `uv sync --reinstall-package <name>` — dokumentiert im README-Troubleshooting-Abschnitt.
 
 ## Befehle (Spickzettel)
 

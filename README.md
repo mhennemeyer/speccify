@@ -100,6 +100,32 @@ cd apps/web/frontend && pnpm install && pnpm dev
 
 Details: [`apps/web/README.md`](./apps/web/README.md).
 
+## Troubleshooting: macOS-`UF_HIDDEN`-Workaround
+
+macOS markiert von `uv` geschriebene `.pth`-Dateien in
+`.venv/lib/python*/site-packages/` mit dem BSD-Flag `UF_HIDDEN`
+(Filesystem-Quarantäne). Python's `site.py` ignoriert versteckte
+`.pth`-Dateien, wodurch alle Workspace-Member (`speccify_cli`,
+`speccify_mcp`, `speccify_web_backend`, `speccify_registry`) nach jedem
+`uv sync` plötzlich `ModuleNotFoundError` werfen.
+
+Der Workaround läuft automatisch als Pytest-Session-Hook (Root- und
+`registry/`-`conftest.py`). Für manuelle Ausführung außerhalb von Tests:
+
+```bash
+./scripts/fix-venv-hidden.sh         # schnell, nur .pth-Top-Level
+./scripts/fix-venv-hidden.sh --deep  # zusätzlich versteckte Subdirs/.py-Files (teurer rekursiver Sweep)
+```
+
+Tritt zusätzlich `ModuleNotFoundError: No module named
+'django.contrib.admin.templatetags.admin_urls'` o. ä. auf, fehlen
+tatsächlich `.py`-Dateien im venv (Quarantäne hat sie nicht nur
+versteckt, sondern entfernt) — Abhilfe ist ein gezielter Reinstall:
+
+```bash
+uv sync --reinstall-package django
+```
+
 ## Wo es weitergeht
 
 - [`AGENTS.md`](./AGENTS.md) — Onboarding für Coding-Agents (Vision, Repo-Layout, Konventionen).
