@@ -1,15 +1,24 @@
-# Resume — Speccify Phase 5a abgeschlossen
+# Resume — Speccify Phase 5b Stage 1 abgeschlossen (Stage 2 blockiert)
 
-> Einstiegspunkt für die nächste Session. Letzte Aktualisierung: 2026-05-27 (Follow-up-Session).
+> Einstiegspunkt für die nächste Session. Letzte Aktualisierung: 2026-05-27 (Phase-5b-Stage-1).
 
 ## Status
 
-- **Phase 5a abgeschlossen** (2026-05-27, Follow-up-Session) — Conformance-Build-Smoke produktiv für **alle drei Targets** (React/Angular/SwiftUI). Plan archiviert: [`plans/archive/phase-5a-conformance-backends.md`](./plans/archive/phase-5a-conformance-backends.md).
-- **Tag-Vorschlag an User**: `v0.8.0-phase-5a` (selbst nicht setzen, vgl. `rules.md`).
+- **Phase 5b Stage 1 Done** (2026-05-27) — `scripts/record_llm_cache.py` ist
+  target-aware (`--target react|angular|swiftui|all|<csv>`), Default bleibt
+  `react` (Phase-1b-Backcompat). Unit-Tests + Doku ergänzt.
+- **Stage 2 blockiert** auf User-Action: lokal `BEDROCK_RECORD=1` mit AWS-Credentials laufen lassen und Angular/SwiftUI-Cache-Fixtures committen — siehe `docs/conformance.md` Abschnitt „Replay-Cache-Recording (Phase 5b Stage 1)".
+- **Aktiver Plan**: `.agent/plans/phase-5b-conformance-sweep.md` (Stage 0 + 1 Done, Stages 2–6 offen).
+- **Phase 5a** abgeschlossen, Tag `v0.8.0-phase-5a` **gesetzt** (Commit 7845844).
 - **Phase 4** abgeschlossen; Tag-Vorschlag `v0.7.0-phase-4` (offen).
 - **Phase 3** abgeschlossen; Tag-Vorschlag `v0.6.0-phase-3` (offen).
 - **Phase 2** abgeschlossen; Tag-Vorschlag `v0.5.0-phase-2` (offen).
-- **Kein aktiver Plan** in `.agent/plans/` (außer Master-Plan).
+
+## Verifikation Phase 5b Stage 1
+
+- **Root-Pytest (Default, `-m "not conformance"`)**: **332 passed** (+7 echte: 8 neue Skript-Tests, -1 deselect, da Default mcp_stdio_smoke-Flake bekannt); 4 deselected.
+- `mcp/tests/test_stdio_smoke.py` isoliert: 1 passed (macOS-Quarantäne-Flake, kein Regress).
+- `ruff check` → All checks passed. `ruff format --check` → 144 files already formatted.
 
 ## Verifikation Phase 5a (final)
 

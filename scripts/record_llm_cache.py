@@ -5,6 +5,13 @@ eingecheckten Replay-Cache unter `tests/fixtures/llm-cache/`. Wenn sich eine
 Spec, der Prompt oder der Modell-Pin ändert, müssen die Cache-Einträge neu
 aufgenommen werden — genau dafür ist dieses Skript da.
 
+Phase 5b Stage 1: das Skript ist jetzt **target-aware**. Per `--target` lässt
+sich die Aufnahme für `react` (Default, unverändertes Phase-1b-Verhalten),
+`angular`, `swiftui`, `all` oder eine Komma-Liste (`angular,swiftui`)
+auslösen. Pro Target werden das passende `*_llm`-Modul (Prompt, MODEL,
+make_cache_key, normalize/validate) verwendet — der gemeinsame
+Replay-Cache-Pfad bleibt `tests/fixtures/llm-cache/` (OQ3 = A).
+
 Voraussetzung:
 - AWS-Credentials in der Umgebung (`AWS_REGION`, `AWS_ACCESS_KEY_ID`,
   `AWS_SECRET_ACCESS_KEY` — oder ein `AWS_PROFILE`); eine `.env`-Datei am
@@ -12,16 +19,19 @@ Voraussetzung:
 - `boto3` SDK installiert (`uv sync --extra bedrock`).
 
 Verhalten:
-- Lädt alle Specs aus `registry-fixtures/` (alle Versionen).
-- Für jede Spec: baut Cache-Key via `react_llm.make_cache_key`, prüft ob ein
-  Eintrag im Ziel-Cache existiert. Wenn ja → skip (idempotent), außer
-  `--force`.
-- Bei Cache-Miss: ruft Live-`BedrockClient`, normalisiert TSX, validiert
-  Klammer-Heuristik und legt das Ergebnis im Cache ab.
+- Lädt alle Specs aus `registry-fixtures/` (alle Versionen) **einmal**.
+- Für jedes gewählte Target und jede Spec: baut Cache-Key via
+  `<target>_llm.make_cache_key`, prüft ob ein Eintrag im Ziel-Cache existiert.
+  Wenn ja → skip (idempotent), außer `--force`.
+- Bei Cache-Miss: ruft Live-`BedrockClient`, normalisiert + validiert das
+  Ergebnis target-spezifisch und legt den **rohen** Response im Cache ab.
 - Druckt eine Zusammenfassung (recorded / cached / failed).
 
 Bewusst kein Pytest-Eintrag: Skript greift aufs Netz zu und muss manuell
-laufen.
+laufen. Typischer Phase-5b-Workflow:
+
+    BEDROCK_RECORD=1 .venv/bin/python scripts/record_llm_cache.py \\
+        --target angular,swiftui
 """
 
 from __future__ import annotations
@@ -77,6 +87,39 @@ def _iter_specs(fixtures_root: Path):  # type: ignore[no-untyped-def]
                 yield registry.fetch(spec_id, version)
 
 
+_SUPPORTED_TARGETS = ("react", "angular", "swiftui")
+
+
+def _resolve_targets(raw: str) -> list[str]:
+    """Parst `--target`-Argument: `all` oder Komma-Liste."""
+    if raw == "all":
+        return list(_SUPPORTED_TARGETS)
+    parts = [p.strip() for p in raw.split(",") if p.strip()]
+    invalid = [p for p in parts if p not in _SUPPORTED_TARGETS]
+    if invalid:
+        raise SystemExit(
+            f"Unbekannte Target(s): {invalid}. Erlaubt: {list(_SUPPORTED_TARGETS)} oder 'all'."
+        )
+    return parts
+
+
+def _load_target_module(target: str):  # type: ignore[no-untyped-def]
+    """Liefert (module, normalize_fn, validate_fn) für ein Target."""
+    if target == "react":
+        from speccify_core.codegen import react_llm as mod
+
+        return mod, mod.normalize_tsx, mod.validate_tsx
+    if target == "angular":
+        from speccify_core.codegen import angular_llm as mod
+
+        return mod, mod.normalize_ts, mod.validate_ts
+    if target == "swiftui":
+        from speccify_core.codegen import swiftui_llm as mod
+
+        return mod, mod.normalize_swift, mod.validate_swift
+    raise ValueError(f"Unbekanntes Target: {target}")
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -92,11 +135,22 @@ def main(argv: list[str] | None = None) -> int:
         help="Zielverzeichnis für Cache-Einträge (Default: ./tests/fixtures/llm-cache).",
     )
     parser.add_argument(
+        "--target",
+        type=str,
+        default="react",
+        help=(
+            "Codegen-Target(s) für die Aufnahme: 'react' (Default, Phase-1b-Verhalten), "
+            "'angular', 'swiftui', 'all' oder Komma-Liste (z. B. 'angular,swiftui')."
+        ),
+    )
+    parser.add_argument(
         "--force",
         action="store_true",
         help="Auch bei Cache-Hit neu aufnehmen (überschreibt Eintrag).",
     )
     args = parser.parse_args(argv)
+
+    targets = _resolve_targets(args.target)
 
     _load_dotenv(REPO_ROOT / ".env")
     region = os.environ.get("AWS_REGION") or os.environ.get("AWS_DEFAULT_REGION")
@@ -111,13 +165,6 @@ def main(argv: list[str] | None = None) -> int:
     # Imports erst hier, damit `--help` ohne installierte Deps funktioniert.
     from speccify_core.codegen import ReplayCache
     from speccify_core.codegen.bedrock_client import BedrockClient, BedrockClientError
-    from speccify_core.codegen.react_llm import (
-        MODEL,
-        build_prompt,
-        make_cache_key,
-        normalize_tsx,
-        validate_tsx,
-    )
 
     cache = ReplayCache(args.cache_dir)
     client = BedrockClient(region=region)
@@ -126,36 +173,40 @@ def main(argv: list[str] | None = None) -> int:
     cached = 0
     failed: list[tuple[str, str]] = []
 
-    for spec in _iter_specs(args.fixtures):
-        label = f"{spec.spec_id}@{spec.version}"
-        key = make_cache_key(spec)
-        if cache.has(key) and not args.force:
-            print(f"  [cached] {label} (digest={key.digest()[:12]}…)")
-            cached += 1
-            continue
+    specs = list(_iter_specs(args.fixtures))
+    for target in targets:
+        mod, normalize_fn, validate_fn = _load_target_module(target)
+        print(f"=== target={target} (model={mod.MODEL}) ===")
+        for spec in specs:
+            label = f"{target}:{spec.spec_id}@{spec.version}"
+            key = mod.make_cache_key(spec)
+            if cache.has(key) and not args.force:
+                print(f"  [cached] {label} (digest={key.digest()[:12]}…)")
+                cached += 1
+                continue
 
-        prompt = build_prompt(spec)
-        print(f"  [record] {label} (model={MODEL})")
-        try:
-            raw = client.complete(prompt=prompt, model=MODEL, seed=key.seed)
-        except BedrockClientError as exc:
-            print(f"    ✗ Bedrock-Fehler: {exc}", file=sys.stderr)
-            failed.append((label, str(exc)))
-            continue
+            prompt = mod.build_prompt(spec)
+            print(f"  [record] {label}")
+            try:
+                raw = client.complete(prompt=prompt, model=mod.MODEL, seed=key.seed)
+            except BedrockClientError as exc:
+                print(f"    ✗ Bedrock-Fehler: {exc}", file=sys.stderr)
+                failed.append((label, str(exc)))
+                continue
 
-        try:
-            text = normalize_tsx(raw)
-            validate_tsx(text)
-        except Exception as exc:  # noqa: BLE001 — wir zeigen den Fehler an
-            print(f"    ✗ TSX-Validierung fehlgeschlagen: {exc}", file=sys.stderr)
-            failed.append((label, f"validation: {exc}"))
-            continue
+            try:
+                text = normalize_fn(raw)
+                validate_fn(text)
+            except Exception as exc:  # noqa: BLE001 — wir zeigen den Fehler an
+                print(f"    ✗ Validierung fehlgeschlagen: {exc}", file=sys.stderr)
+                failed.append((label, f"validation: {exc}"))
+                continue
 
-        # Wir cachen den **rohen** Response (vor Normalisierung), damit ein
-        # Re-Run mit geänderter Normalisierung den Cache nicht invalidiert,
-        # solange der Modell-Output stabil bleibt.
-        cache.put(key, raw)
-        recorded += 1
+            # Wir cachen den **rohen** Response (vor Normalisierung), damit ein
+            # Re-Run mit geänderter Normalisierung den Cache nicht invalidiert,
+            # solange der Modell-Output stabil bleibt.
+            cache.put(key, raw)
+            recorded += 1
 
     print()
     print(f"Recorded: {recorded}, cached (skipped): {cached}, failed: {len(failed)}")

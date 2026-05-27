@@ -1,8 +1,14 @@
 # Phase 5b — Conformance Sweep, Replay-Cache-Recording & echte Spec×Target-Coverage
 
-> Status: **Stage 0 — Open Questions** (Entwurf, 2026-05-27).
+> Status: **Stage 1 Done, Stage 2 blockiert auf User-Recording-Lauf** (2026-05-27).
 > Vorgänger: Phase 5a abgeschlossen (Build-Smoke-Driver für React/Angular/SwiftUI, synthetische Snippets). Tag `v0.8.0-phase-5a` gesetzt.
 > Disziplin: Erst nach Beantwortung der Open Questions wird ein Stage-1+-Implementierungsplan geschrieben (analog Phase 3/4/5a).
+>
+> **User-Antwort auf Stage 0 (2026-05-27)**: „folge deinen Empfehlungen" →
+> alle OQs auf A. Scope = Substages 1 + 2 + 3 (Cache-Recording → echte
+> Build-Smoke → 75-Pfad-Sweep), kein Visual-Regression, kein `ng build`.
+> Web-Pfad bleibt im Sweep (OQ5=A); falls Angular/SwiftUI dort blockieren,
+> fallback auf OQ5=B (xfail mit Phase-5c-Verweis).
 
 ---
 
@@ -107,9 +113,17 @@ Falls für Visual-Regression neue Spec-Felder gebraucht werden (z. B. `screensho
 
 Unter Annahme **OQ1=A** (Substages 1+2+3):
 
-- **Stage 0**: dieses Dokument + User-Antworten.
-- **Stage 1**: Recording-Helper + Doku-Walkthrough für `BEDROCK_RECORD=1` (User-Action am Ende).
-- **Stage 2**: Replay-Cache-Fixtures für `5 × {angular, swiftui}` committen (nach User-Recording).
+- **Stage 0** ✅ Done: dieses Dokument + User-Antwort „folge deinen Empfehlungen".
+- **Stage 1** ✅ Done (2026-05-27): `scripts/record_llm_cache.py` ist
+  target-aware (`--target react|angular|swiftui|all|<csv>`, Default `react` =
+  Phase-1b-Backcompat); Unit-Tests `core/tests/test_record_llm_cache_script.py`
+  (8 Tests, kein Netz); Walkthrough in `docs/conformance.md` (Abschnitt
+  „Replay-Cache-Recording (Phase 5b Stage 1)") + README-Verweis bleibt
+  unverändert (zeigt auf das Skript). User-Action: lokal
+  `uv run python scripts/record_llm_cache.py --target angular,swiftui` mit
+  AWS-Credentials, generierte JSONs unter `tests/fixtures/llm-cache/` committen.
+- **Stage 2** ⏳ Blockiert auf User: Replay-Cache-Fixtures für
+  `5 × {angular, swiftui}` committen (nach User-Recording).
 - **Stage 3**: Echte Build-Smoke-Erweiterung — synthetische Snippets durch alle 5 Spec×Target-Outputs ersetzen.
 - **Stage 4**: 75-Pfad-Cross-Consistency-Sweep parametrisiert.
 - **Stage 5**: CI-Update (`conformance.yml` erweitern), Docs (`docs/conformance.md` + `docs/sweep.md` neu?).

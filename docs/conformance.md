@@ -95,6 +95,42 @@ Jedes `ConformanceResult` hat einen Status:
 - `toolchain_missing` — Driver nicht registriert oder Toolchain auf der
   aktuellen Plattform nicht verfügbar. Tests interpretieren das als „skip".
 
+## Replay-Cache-Recording (Phase 5b Stage 1)
+
+Die Phase-5a-Conformance-Tests für Angular/SwiftUI laufen über **synthetische
+Mini-Snippets**, weil der eingecheckte Bedrock-Replay-Cache unter
+`tests/fixtures/llm-cache/` nur React-Outputs enthält. Phase 5b Stage 1 macht
+das Maintainer-Skript `scripts/record_llm_cache.py` **target-aware** —
+Voraussetzung, um in Stage 2 echte Angular/SwiftUI-Fixtures aller
+Phase-0-Specs zu committen.
+
+```bash
+# Voraussetzungen einmalig: Bedrock-Extra + AWS-Credentials (z. B. .env)
+uv sync --extra bedrock
+
+# Default-Verhalten ist unverändert (Phase 1b): nur React
+uv run python scripts/record_llm_cache.py
+
+# Phase 5b: alle Targets aufnehmen (5 Specs × 3 Targets = 15 Cache-Einträge,
+# vorhandene werden idempotent geskippt):
+uv run python scripts/record_llm_cache.py --target all
+
+# Nur die fehlenden Phase-5b-Targets:
+uv run python scripts/record_llm_cache.py --target angular,swiftui
+
+# Cache-Eintrag erzwingen (z. B. nach Prompt-/Modell-Pin-Änderung):
+uv run python scripts/record_llm_cache.py --target angular --force
+```
+
+Nach erfolgreichem Lauf landen neue JSON-Einträge unter
+`tests/fixtures/llm-cache/<hash>.json` und müssen committed werden — der
+Cache-Pfad ist target-unabhängig (Cache-Key bindet das Target implizit über
+das Prompt mit ein).
+
+> **Disziplin**: Recording-Läufe laufen **nicht** in CI — sie greifen aufs
+> Netz zu und brauchen AWS-Credentials. Die Maintainer-Aktion ist Teil des
+> Phase-5b-Stage-2-Übergangs.
+
 ## Phase-5a-Scope vs. Phase 5b
 
 | Bereich                                   | Phase 5a | Phase 5b |
