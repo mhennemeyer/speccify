@@ -22,6 +22,15 @@ from speccify_core.conformance import (
     StaticValidateBackend,
     run_conformance,
 )
+from speccify_core.conformance_build_smoke import (
+    BUILD_SMOKE_TOOLCHAIN_MISSING,
+    AngularToolchainDriver,
+    BuildSmokeBackend,
+    ReactToolchainDriver,
+    SwiftUIToolchainDriver,
+    ToolchainDriver,
+    build_smoke_driver_for,
+)
 from speccify_core.loader import SpecLoader, SpecLoaderError
 from speccify_core.lockfile import (
     CURRENT_LOCKFILE_SCHEMA_VERSION,
@@ -95,10 +104,17 @@ __all__ = [
     "CacheKey",
     "CacheMissError",
     "CodegenError",
+    "BUILD_SMOKE_TOOLCHAIN_MISSING",
+    "BuildSmokeBackend",
     "ConformanceBackend",
     "ConformanceReport",
     "ConformanceResult",
+    "AngularToolchainDriver",
+    "ReactToolchainDriver",
     "StaticValidateBackend",
+    "SwiftUIToolchainDriver",
+    "ToolchainDriver",
+    "build_smoke_driver_for",
     "run_conformance",
     "GeneratedFile",
     "GeneratorPin",
