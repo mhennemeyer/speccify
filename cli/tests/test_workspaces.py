@@ -113,6 +113,155 @@ def test_pull_workspace_rejects_target_override(tmp_path: Path) -> None:
     assert "Workspace" in result.output or "workspace" in result.output
 
 
+def test_add_workspace_writes_into_member_and_rebuilds_root_lock(tmp_path: Path) -> None:
+    """Phase 4 Stage 4: `speccify add --member ui` schreibt in ui/speccify.yaml + rebuildet Root-Lock."""
+    import shutil
+
+    project = tmp_path / "ws"
+    shutil.copytree(EXAMPLE_WORKSPACE, project)
+    # `ui` hat initial nur `@org/button`. Wir fügen `@org/contact-form` hinzu.
+    ui_manifest_before = (project / "packages" / "ui" / "speccify.yaml").read_text(
+        encoding="utf-8"
+    )
+    assert "@org/contact-form" not in ui_manifest_before
+
+    result = runner.invoke(
+        app,
+        [
+            "add",
+            "@org/contact-form",
+            "--project",
+            str(project),
+            "--member",
+            "ui",
+            "--registry",
+            str(REPO_ROOT / "registry-fixtures"),
+        ],
+    )
+    assert result.exit_code == 0, result.output
+
+    ui_manifest_after = (project / "packages" / "ui" / "speccify.yaml").read_text(
+        encoding="utf-8"
+    )
+    assert "@org/contact-form" in ui_manifest_after
+    # Forms-Manifest darf nicht angefasst werden.
+    forms_manifest = (project / "packages" / "forms" / "speccify.yaml").read_text(
+        encoding="utf-8"
+    )
+    assert "@org/contact-form" in forms_manifest  # war vorher schon drin
+
+    # Root-Lockfile existiert + enthält weiterhin beide Specs.
+    lockfile = Lockfile.load(project / "speccify.lock")
+    spec_ids = {e.id for e in lockfile.entries}
+    assert spec_ids == {"@org/button", "@org/contact-form"}
+
+
+def test_add_workspace_unknown_member_fails(tmp_path: Path) -> None:
+    import shutil
+
+    project = tmp_path / "ws"
+    shutil.copytree(EXAMPLE_WORKSPACE, project)
+    result = runner.invoke(
+        app,
+        [
+            "add",
+            "@org/button",
+            "--project",
+            str(project),
+            "--member",
+            "does-not-exist",
+            "--registry",
+            str(REPO_ROOT / "registry-fixtures"),
+        ],
+    )
+    assert result.exit_code == 1, result.output
+    assert "does-not-exist" in result.output
+
+
+def test_add_workspace_without_member_in_root_fails(tmp_path: Path) -> None:
+    """Im Root-Dir ohne `--member` und ohne CWD-Match → Fehler mit Hinweis."""
+    import shutil
+
+    project = tmp_path / "ws"
+    shutil.copytree(EXAMPLE_WORKSPACE, project)
+    # Bewusst KEIN `--member`; runner verwendet als CWD den Test-Prozess-CWD,
+    # der nicht innerhalb von `project/packages/*` liegt → Heuristik schlägt fehl.
+    result = runner.invoke(
+        app,
+        [
+            "add",
+            "@org/button",
+            "--project",
+            str(project),
+            "--registry",
+            str(REPO_ROOT / "registry-fixtures"),
+        ],
+    )
+    assert result.exit_code == 1, result.output
+    assert "--member" in result.output
+
+
+def _setup_locked_and_pulled_workspace(tmp_path: Path) -> Path:
+    """Hilfsfunktion: kopiert example-workspace, ruft lock + pull, gibt project-Pfad zurück."""
+    import shutil
+
+    project = tmp_path / "ws"
+    shutil.copytree(EXAMPLE_WORKSPACE, project)
+    reg = ["--registry", str(REPO_ROOT / "registry-fixtures")]
+    assert runner.invoke(app, ["lock", "--project", str(project), *reg]).exit_code == 0
+    assert runner.invoke(app, ["pull", "--project", str(project), *reg]).exit_code == 0
+    return project
+
+
+def test_verify_workspace_happy_path(tmp_path: Path) -> None:
+    """Phase 4 Stage 5: nach lock+pull ist `speccify verify` im Workspace grün."""
+    project = _setup_locked_and_pulled_workspace(tmp_path)
+    result = runner.invoke(
+        app,
+        ["verify", "--project", str(project), "--registry", str(REPO_ROOT / "registry-fixtures")],
+    )
+    assert result.exit_code == 0, result.output
+    assert "konsistent" in result.output
+
+
+def test_verify_workspace_detects_disk_drift(tmp_path: Path) -> None:
+    """Manipulierter Output unter `<member>/speccify_generated/...` → Drift-Fehler."""
+    project = _setup_locked_and_pulled_workspace(tmp_path)
+    drift_file = (
+        project
+        / "packages"
+        / "ui"
+        / "speccify_generated"
+        / "react"
+        / "org"
+        / "Button.tsx"
+    )
+    assert drift_file.is_file()
+    drift_file.write_text(drift_file.read_text(encoding="utf-8") + "\n// tampered\n", encoding="utf-8")
+
+    result = runner.invoke(
+        app,
+        ["verify", "--project", str(project), "--registry", str(REPO_ROOT / "registry-fixtures")],
+    )
+    assert result.exit_code == 1, result.output
+    assert "Disk-Drift" in result.output
+    assert "ui" in result.output
+
+
+def test_verify_workspace_detects_missing_pull(tmp_path: Path) -> None:
+    """Lock ohne Pull → Verify meldet fehlende generated_files_sha256."""
+    import shutil
+
+    project = tmp_path / "ws"
+    shutil.copytree(EXAMPLE_WORKSPACE, project)
+    reg = ["--registry", str(REPO_ROOT / "registry-fixtures")]
+    assert runner.invoke(app, ["lock", "--project", str(project), *reg]).exit_code == 0
+    # KEIN pull.
+    result = runner.invoke(app, ["verify", "--project", str(project), *reg])
+    assert result.exit_code == 1, result.output
+    assert "generated_files_sha256" in result.output or "speccify pull" in result.output
+
+
 def test_lock_workspace_conflicting_ranges_fails(tmp_path: Path) -> None:
     # Zwei Member fordern unvereinbare Caret-Ranges für dieselbe Spec → ResolverError.
     project = tmp_path / "ws"
@@ -136,4 +285,10 @@ def test_lock_workspace_conflicting_ranges_fails(tmp_path: Path) -> None:
         )
     result = runner.invoke(app, ["lock", "--project", str(project)])
     assert result.exit_code == 1, result.output
+    # Phase 4 Stage 6 — diagnostische UX: Spec-Id + beide Member-Pfade + beide Ranges
+    # + verfügbare Versionen aus der Registry müssen in der Fehlermeldung stehen.
     assert "@org/button" in result.output
+    assert "packages/a/speccify.yaml" in result.output
+    assert "packages/b/speccify.yaml" in result.output
+    assert "^0.1" in result.output and "^0.2" in result.output
+    assert "Verfügbar" in result.output

@@ -146,10 +146,15 @@ def _register_write_tools(server: FastMCP, config: ServerConfig) -> None:
             "`speccify.lock` to the project root. Mirrors `speccify lock`."
         ),
     )
-    def lock(registry_path: str | None = None) -> dict[str, Any]:
+    def lock(
+        registry_path: str | None = None,
+        workspace_root: str | None = None,
+    ) -> dict[str, Any]:
+        """Phase 4: optionales `workspace_root` aktiviert den Workspace-Aggregat-Pfad."""
         result = run_lock(
             project_root=config.project_root,
             registry_path=Path(registry_path) if registry_path else None,
+            workspace_root=Path(workspace_root) if workspace_root else None,
         )
         return result.to_dict()
 
@@ -169,7 +174,13 @@ def _register_write_tools(server: FastMCP, config: ServerConfig) -> None:
         registry_path: str | None = None,
         offline: bool = True,
         cache_dir: str | None = None,
+        workspace_root: str | None = None,
     ) -> dict[str, Any]:
+        """Phase 4: optionales `workspace_root` aktiviert Workspace-Materialisierung.
+
+        Im Workspace-Modus wird `out_dir` ignoriert; Outputs landen pro Member
+        unter `<member>/speccify_generated/<target>/`.
+        """
         result = run_pull(
             project_root=config.project_root,
             out_dir=Path(out_dir),
@@ -177,6 +188,7 @@ def _register_write_tools(server: FastMCP, config: ServerConfig) -> None:
             registry_path=Path(registry_path) if registry_path else None,
             offline=offline,
             cache_dir=Path(cache_dir) if cache_dir else None,
+            workspace_root=Path(workspace_root) if workspace_root else None,
         )
         return result.to_dict()
 
@@ -194,13 +206,16 @@ def _register_write_tools(server: FastMCP, config: ServerConfig) -> None:
         registry_path: str | None = None,
         offline: bool = True,
         cache_dir: str | None = None,
+        workspace_root: str | None = None,
     ) -> dict[str, Any]:
+        """Phase 4: optionales `workspace_root` aktiviert Hash-only Workspace-Verify."""
         result = run_verify(
             project_root=config.project_root,
             out_dir=Path(out_dir),
             registry_path=Path(registry_path) if registry_path else None,
             offline=offline,
             cache_dir=Path(cache_dir) if cache_dir else None,
+            workspace_root=Path(workspace_root) if workspace_root else None,
         )
         return result.to_dict()
 

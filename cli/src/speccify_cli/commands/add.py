@@ -212,12 +212,31 @@ def add_command(
         readable=True,
         help="Optionale Registry-Pfad-Überschreibung.",
     ),
+    member: str | None = typer.Option(  # noqa: B008
+        None,
+        "--member",
+        "-m",
+        help="Workspace-Member (Verzeichnisname unter dem Glob), in dessen speccify.yaml geschrieben wird. "
+        "Default: CWD-Detection (Member, in dem du gerade stehst).",
+    ),
 ) -> None:
     """Fügt eine Spec-Dependency in speccify.yaml ein und aktualisiert speccify.lock."""
     project = project_dir or Path.cwd()
     try:
-        manifest = run_add(spec_ref, project, registry_override=registry)
-    except (ManifestError, RegistryError, ResolverError, FileNotFoundError) as exc:
+        manifest = run_add(
+            spec_ref,
+            project,
+            registry_override=registry,
+            member=member,
+            cwd=Path.cwd(),
+        )
+    except (
+        ManifestError,
+        RegistryError,
+        ResolverError,
+        FileNotFoundError,
+        WorkspaceError,
+    ) as exc:
         typer.echo(f"✗ speccify add fehlgeschlagen: {exc}", err=True)
         raise typer.Exit(code=1) from exc
 

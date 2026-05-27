@@ -19,6 +19,7 @@ from speccify_mcp.tools import run_lock, run_pull, run_verify
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 EXAMPLE_PROJECT = REPO_ROOT / "example-project"
+EXAMPLE_WORKSPACE = REPO_ROOT / "example-workspace"
 REGISTRY_FIXTURES = REPO_ROOT / "registry-fixtures"
 
 
@@ -181,3 +182,84 @@ def test_cli_and_mcp_pull_produce_identical_output(tmp_path: Path) -> None:
     cli_lock = (cli_project / "speccify.lock").read_bytes()
     mcp_lock = (mcp_project / "speccify.lock").read_bytes()
     assert cli_lock == mcp_lock
+
+
+# -------------------------------------------------- Phase 4: Workspace-Mode
+
+
+def test_mcp_workspace_lock_pull_verify_smoke(tmp_path: Path) -> None:
+    """Phase 4 Stage 6: MCP-Tools mit `workspace_root=...` durchlaufen lock+pull+verify.
+
+    `project_root` zeigt aus historischen Gründen auf einen Dummy-Pfad — der
+    Workspace-Pfad wird allein durch `workspace_root` aktiviert.
+    """
+    project = tmp_path / "ws"
+    shutil.copytree(EXAMPLE_WORKSPACE, project)
+    dummy = tmp_path / "irrelevant"
+    dummy.mkdir()
+
+    # 1) lock
+    lock_result = run_lock(
+        project_root=dummy,
+        registry_path=REGISTRY_FIXTURES,
+        workspace_root=project,
+    )
+    assert lock_result.workspace is True
+    assert lock_result.targets == ("react",)
+    spec_ids = {e["spec_id"] for e in lock_result.entries}
+    assert spec_ids == {"@org/button", "@org/contact-form"}
+
+    # 2) pull
+    pull_result = run_pull(
+        project_root=dummy,
+        out_dir=tmp_path / "unused",
+        registry_path=REGISTRY_FIXTURES,
+        workspace_root=project,
+    )
+    assert pull_result.workspace is True
+    # ui hat nur Button, forms hat beide → ContactForm taucht nur einmal in der Union auf
+    assert "org/Button.tsx" in pull_result.files_written
+    assert "org/ContactForm.tsx" in pull_result.files_written
+
+    # Outputs landen pro Member unter `<member>/speccify_generated/<target>/`.
+    assert (
+        project / "packages" / "ui" / "speccify_generated" / "react" / "org" / "Button.tsx"
+    ).is_file()
+    assert (
+        project
+        / "packages"
+        / "forms"
+        / "speccify_generated"
+        / "react"
+        / "org"
+        / "ContactForm.tsx"
+    ).is_file()
+
+    # 3) verify
+    verify_result = run_verify(
+        project_root=dummy,
+        out_dir=tmp_path / "unused",
+        registry_path=REGISTRY_FIXTURES,
+        workspace_root=project,
+    )
+    assert verify_result.workspace is True
+    assert verify_result.ok is True, verify_result.problems
+    assert verify_result.problems == []
+
+
+def test_mcp_workspace_pull_rejects_target_arg(tmp_path: Path) -> None:
+    """Im Workspace-Modus ist `target` nicht zulässig."""
+    project = tmp_path / "ws"
+    shutil.copytree(EXAMPLE_WORKSPACE, project)
+    dummy = tmp_path / "irrelevant"
+    dummy.mkdir()
+
+    run_lock(project_root=dummy, registry_path=REGISTRY_FIXTURES, workspace_root=project)
+    with pytest.raises(LockfileError, match="Workspace-Modus"):
+        run_pull(
+            project_root=dummy,
+            out_dir=tmp_path / "unused",
+            target="react",
+            registry_path=REGISTRY_FIXTURES,
+            workspace_root=project,
+        )

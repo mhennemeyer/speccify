@@ -22,6 +22,7 @@ from speccify_core import (
     Version,
     render_for_target,
 )
+from speccify_core.manifest import ManifestError, ProjectManifest
 
 from ._workspace import WorkspaceContext, build_replay_client
 
@@ -30,9 +31,24 @@ from ._workspace import WorkspaceContext, build_replay_client
 class VerifyResult:
     ok: bool
     problems: list[str]
+    workspace: bool = False
 
     def to_dict(self) -> dict[str, Any]:
-        return {"ok": self.ok, "problems": list(self.problems)}
+        return {
+            "ok": self.ok,
+            "problems": list(self.problems),
+            "workspace": self.workspace,
+        }
+
+
+def _is_workspace_root(project_root: Path) -> bool:
+    manifest_path = project_root / "speccify.yaml"
+    if not manifest_path.is_file():
+        return False
+    try:
+        return ProjectManifest.load(manifest_path).is_workspace_root
+    except ManifestError:
+        return False
 
 
 def run_verify(
@@ -42,8 +58,25 @@ def run_verify(
     registry_path: Path | None = None,
     offline: bool = True,
     cache_dir: Path | None = None,
+    workspace_root: Path | None = None,
 ) -> VerifyResult:
-    """Prüft Manifest/Lockfile/Disk-Konsistenz. Leere `problems` → grün."""
+    """Prüft Manifest/Lockfile/Disk-Konsistenz. Leere `problems` → grün.
+
+    Phase 4: Optionales `workspace_root` delegiert an `cli.commands.verify`
+    (Hash-only Workspace-Verify gemäß Stage-0-Decision).
+    """
+    if workspace_root is not None:
+        from speccify_cli.commands.verify import run_verify_with_warnings as cli_run_verify
+
+        problems, _warnings = cli_run_verify(
+            workspace_root,
+            out_dir=out_dir,  # wird vom workspace-pfad ignoriert
+            registry_override=registry_path,
+            offline=offline,
+            cache_dir=cache_dir,
+        )
+        return VerifyResult(ok=not problems, problems=problems, workspace=True)
+
     problems: list[str] = []
 
     ctx = WorkspaceContext.load(project_root, registry_override=registry_path)

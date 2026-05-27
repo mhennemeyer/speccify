@@ -129,7 +129,11 @@ uv sync --reinstall-package django
 ## Wo es weitergeht
 
 - [`AGENTS.md`](./AGENTS.md) — Onboarding für Coding-Agents (Vision, Repo-Layout, Konventionen).
+- [`docs/workspaces.md`](./docs/workspaces.md) — Cargo-Style Workspaces (Phase 4): Root-Lockfile, Per-Member-Outputs, MVS-Konflikt-UX.
 - [`.agent/plans/speccify-plan.md`](./.agent/plans/speccify-plan.md) — Master-Plan (langfristige Vision & Roadmap).
+- [`.agent/plans/archive/phase-4-workspaces.md`](./.agent/plans/archive/phase-4-workspaces.md) — Abgeschlossen: Workspaces-Iteration (`lock`/`pull`/`add`/`verify` cross-member + MCP-Bridge).
+- [`.agent/plans/archive/phase-3-codegen-targets.md`](./.agent/plans/archive/phase-3-codegen-targets.md) — Abgeschlossen: zweites + drittes Codegen-Target (SwiftUI + Angular).
+- [`.agent/plans/archive/phase-2-registry-mvp.md`](./.agent/plans/archive/phase-2-registry-mvp.md) — Abgeschlossen: Registry-MVP (Django).
 - [`.agent/plans/phase-1d-browser-playground.md`](.agent/plans/archive/phase-1d-browser-playground.md) — Abgeschlossen (alle Steps): Browser-Playground (`apps/web/`); Archivierung nach User-Tag `v0.4.0-phase-1d`.
 - [`.agent/plans/archive/phase-1c-mcp-server.md`](./.agent/plans/archive/phase-1c-mcp-server.md) — Abgeschlossen: MCP-Server `speccify-mcp` (stdio).
 - [`.agent/plans/archive/phase-1b-react-codegen.md`](./.agent/plans/archive/phase-1b-react-codegen.md) — Abgeschlossen: React-LLM-Codegen + Replay-Cache + `init`.

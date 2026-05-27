@@ -24,13 +24,20 @@ from speccify_core import (
     LockfileError,
     Resolver,
     ResolverError,
+    Workspace,
+    WorkspaceError,
     render_for_target,
 )
-from speccify_core.manifest import ManifestError
+from speccify_core.manifest import ManifestError, ProjectManifest
 from speccify_core.registry import RegistryError, Version
 
 from speccify_cli.commands._llm_client import build_replay_client
-from speccify_cli.commands._workspace import WorkspaceContext
+from speccify_cli.commands._workspace import (
+    LOCKFILE_FILENAME,
+    MANIFEST_FILENAME,
+    WorkspaceContext,
+)
+from speccify_cli.commands.pull import WORKSPACE_OUTPUT_DIRNAME
 
 
 def run_verify(
@@ -56,6 +63,99 @@ def run_verify(
     return problems
 
 
+def _is_workspace_root(project_dir: Path) -> bool:
+    """Detection: Manifest mit `workspaces:`-Key ⇒ Workspace-Root."""
+    manifest_path = project_dir / MANIFEST_FILENAME
+    if not manifest_path.is_file():
+        return False
+    try:
+        manifest = ProjectManifest.load(manifest_path)
+    except ManifestError:
+        return False
+    return manifest.is_workspace_root
+
+
+def _run_workspace_verify(
+    project_dir: Path,
+    registry_override: Path | None,
+) -> tuple[list[str], list[str]]:
+    """Phase 4 Stage 5: Hash-only Workspace-Verify (Stage-0-Decision).
+
+    Prüft strikt ohne Re-Render:
+      1) Lockfile vorhanden, ladbar.
+      2) Pro Member: alle Member-Deps sind im Root-Lockfile vertreten.
+      3) Pro Member-Target: alle `generated_files_sha256`-Hashes der relevanten Entries
+         matchen die Dateien unter `<member>/speccify_generated/<target>/`.
+      4) Yank-Warnings werden weiterhin gesammelt.
+    """
+    problems: list[str] = []
+    warnings: list[str] = []
+
+    workspace = Workspace.load(project_dir)
+    lockfile_path = project_dir / LOCKFILE_FILENAME
+    if not lockfile_path.is_file():
+        return (
+            [f"Kein Lockfile in {project_dir} (bitte `speccify lock` ausführen)."],
+            warnings,
+        )
+    lockfile = Lockfile.load(lockfile_path)
+
+    for entry in lockfile.entries:
+        if entry.yank_status == "yanked":
+            reason = f" (reason: {entry.yank_reason})" if entry.yank_reason else ""
+            warnings.append(
+                f"Spec {entry.id}@{entry.version} wurde im Registry geyanked{reason}."
+            )
+
+    locked_by_id = {e.id for e in lockfile.entries}
+    entries_by_key = {(e.id, e.target): e for e in lockfile.entries}
+
+    for member in workspace.members:
+        member_dir = (project_dir / member.relative_path).parent
+        member_name = member_dir.name
+        member_deps = set(member.manifest.dependencies.keys())
+
+        # (2) Member-Deps ⊆ Root-Lockfile-Spec-Ids.
+        for dep in sorted(member_deps - locked_by_id):
+            problems.append(
+                f"Member '{member_name}': Dependency '{dep}' fehlt im Root-Lockfile "
+                f"(bitte `speccify lock` ausführen)."
+            )
+
+        # (3) Hash-Vergleich pro Target × Member-Dep.
+        for target in member.manifest.targets:
+            target_dir = member_dir / WORKSPACE_OUTPUT_DIRNAME / target
+            for dep_id in sorted(member_deps & locked_by_id):
+                entry = entries_by_key.get((dep_id, target))
+                if entry is None:
+                    problems.append(
+                        f"Member '{member_name}': kein Lockfile-Entry für "
+                        f"{dep_id} × target={target!r}."
+                    )
+                    continue
+                if not entry.generated_files_sha256:
+                    problems.append(
+                        f"Member '{member_name}': Spec {dep_id}@{entry.version} hat keine "
+                        f"`generated_files_sha256` (bitte `speccify pull` ausführen)."
+                    )
+                    continue
+                for f in entry.generated_files_sha256:
+                    on_disk = target_dir / f.path
+                    if not on_disk.is_file():
+                        problems.append(
+                            f"Member '{member_name}': Output-Datei fehlt: {on_disk}."
+                        )
+                        continue
+                    disk_digest = f"sha256:{hashlib.sha256(on_disk.read_bytes()).hexdigest()}"
+                    if disk_digest != f.sha256:
+                        problems.append(
+                            f"Member '{member_name}': Disk-Drift für {on_disk}: "
+                            f"Lockfile={f.sha256}, Datei={disk_digest}."
+                        )
+
+    return problems, warnings
+
+
 def run_verify_with_warnings(
     project_dir: Path,
     out_dir: Path,
@@ -71,6 +171,9 @@ def run_verify_with_warnings(
     Einträge im Lockfile: das Lockfile bleibt valide, der User wird aber
     informiert, dass die genutzte Version vom Registry zurückgezogen wurde.
     """
+    if _is_workspace_root(project_dir):
+        return _run_workspace_verify(project_dir, registry_override)
+
     problems: list[str] = []
     warnings: list[str] = []
 
@@ -252,7 +355,14 @@ def verify_command(
             offline=offline,
             cache_dir=cache_dir,
         )
-    except (ManifestError, RegistryError, LockfileError, ResolverError, FileNotFoundError) as exc:
+    except (
+        ManifestError,
+        RegistryError,
+        LockfileError,
+        ResolverError,
+        FileNotFoundError,
+        WorkspaceError,
+    ) as exc:
         typer.echo(f"✗ speccify verify fehlgeschlagen: {exc}", err=True)
         raise typer.Exit(code=1) from exc
 

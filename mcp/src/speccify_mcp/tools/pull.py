@@ -23,6 +23,7 @@ from speccify_core import (
     render_for_target,
 )
 from speccify_core.codegen import react_llm
+from speccify_core.manifest import ManifestError, ProjectManifest
 
 from ._workspace import WorkspaceContext, build_replay_client
 
@@ -46,6 +47,7 @@ class PullResult:
     out_dir: str
     lockfile_path: str
     files_written: list[str]
+    workspace: bool = False
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -53,7 +55,18 @@ class PullResult:
             "out_dir": self.out_dir,
             "lockfile_path": self.lockfile_path,
             "files_written": list(self.files_written),
+            "workspace": self.workspace,
         }
+
+
+def _is_workspace_root(project_root: Path) -> bool:
+    manifest_path = project_root / "speccify.yaml"
+    if not manifest_path.is_file():
+        return False
+    try:
+        return ProjectManifest.load(manifest_path).is_workspace_root
+    except ManifestError:
+        return False
 
 
 def run_pull(
@@ -64,8 +77,42 @@ def run_pull(
     registry_path: Path | None = None,
     offline: bool = True,
     cache_dir: Path | None = None,
+    workspace_root: Path | None = None,
 ) -> PullResult:
-    """Rendert alle Lockfile-Einträge nach `out_dir` und aktualisiert das Lockfile."""
+    """Rendert alle Lockfile-Einträge nach `out_dir` und aktualisiert das Lockfile.
+
+    Phase 4: Optionales `workspace_root` delegiert an `speccify pull` im Workspace-
+    Modus (siehe `cli.commands.pull.run_pull`); Outputs landen pro Member unter
+    `<member>/speccify_generated/<target>/`, `out_dir` wird ignoriert.
+    """
+    if workspace_root is not None:
+        # Late-Import wegen Phase-4-Workspace-Bridge: MCP delegiert an die CLI-
+        # Implementierung, die Workspace-aware ist (Single-Source-of-Truth).
+        from speccify_cli.commands.pull import run_pull as cli_run_pull
+
+        if target is not None:
+            raise LockfileError(
+                "`target` ist im Workspace-Modus nicht unterstützt — jedes Member "
+                "deklariert seine eigenen Targets."
+            )
+        ws_lockfile = cli_run_pull(
+            workspace_root,
+            out_dir=out_dir,  # wird vom workspace-pfad ignoriert
+            registry_override=registry_path,
+            offline=offline,
+            cache_dir=cache_dir,
+        )
+        files_written = sorted(
+            {f.path for e in ws_lockfile.entries for f in e.generated_files_sha256}
+        )
+        return PullResult(
+            target=",".join(ws_lockfile.targets),
+            out_dir=str(workspace_root.resolve()),
+            lockfile_path=str(workspace_root / "speccify.lock"),
+            files_written=files_written,
+            workspace=True,
+        )
+
     ctx = WorkspaceContext.load(project_root, registry_override=registry_path)
     if not ctx.lockfile_path.is_file():
         raise LockfileError(f"Kein Lockfile in {project_root}. Bitte zuerst `lock` aufrufen.")
