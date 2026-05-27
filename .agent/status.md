@@ -2,9 +2,14 @@
 
 ## Meta
 - **Typ:** Code
-- **Phase:** **Phase 3 aktiv — Stage 0 Done, Round-2-Plan geschrieben** (2026-05-24). Plan: [`.agent/plans/phase-3-codegen-targets.md`](./plans/phase-3-codegen-targets.md) (`isActive: true`). Stage-0-Decisions: **SwiftUI + Angular** als zweites/drittes Target (beide in Phase 3); Conformance-Runner = **Build-Smoke + Snapshot + Visual-Regression gegen Spec-`screenshots[]`** (kein voll-interaktiver Stack — Phase 4); Workspaces = **Cargo-Stil Root-Lockfile + globale MVS**; Multi-Target = **`targets: []`-Liste mit Lockfile-Schema-Bump v2→v3**; alle Targets **`kind: template` (Jinja)**; Golden Renders unter `tests/fixtures/golden/<target>/...`; MCP-Tools **target-agnostisch via Argument** (Tool-Count bleibt 8). Round-2-Delivery-Steps: Stage 1 (Codegen-Abstraktion + Lockfile v3), Stage 2 (SwiftUI-Renderer), Stage 3 (Angular-Renderer), Stage 4 (Conformance-Runner + CI), Stage 5 (Workspaces), Stage 6 (Cross-Consistency × 3 Targets), Stage 7 (Registry-Path Multi-Target-Smoke), Stage 8 (Master-Plan-Sync + Archiv + Tag-Vorschlag `v0.6.0-phase-3`). Phase 2 abgeschlossen + archiviert (2026-05-24); Tag-Vorschlag **`v0.5.0-phase-2`** weiterhin offen an User (vgl. `rules.md`).
+- **Phase:** **Phase 3 abgeschlossen — Stages 0–8 Done** (2026-05-27). Archivierter Plan: [`.agent/plans/archive/phase-3-codegen-targets.md`](./plans/archive/phase-3-codegen-targets.md) (`isActive: false`). Lieferumfang: Renderer-Protocol + `TARGETS`-Registry (Stage 1a), Manifest-v2 + Lockfile-v3 mit Multi-Target-Liste (Stage 1b), SwiftUI- (Stage 2) und Angular-Renderer (Stage 3) als 1:1-Spiegel zu React (`kind: llm` + Replay-Cache, Cache-Key enthält Target), `speccify conformance` Command mit pluggable Backends + Default-`static-validate` (Stage 4), Workspaces mit Cargo-Stil-Root-Lockfile + globale MVS (Stage 5, lock-only MVP), Cross-Consistency CLI ↔ MCP ↔ Web über 3 Targets parametrisiert (Stage 6), `RemoteRegistry`-Multi-Target-Smoke gegen Live-Django-Server (Stage 7). **Verifikation: 293 Root-Pytest + 119 Registry-Pytest = 412 Tests gesamt grün**, ruff/format clean. **Tag-Vorschlag an User: `v0.6.0-phase-3`** (selbst nicht gesetzt, vgl. `rules.md`). Tag-Vorschlag `v0.5.0-phase-2` weiterhin offen.
 - **Priorität:** Mittel
-- **Zuletzt aktualisiert:** 2026-05-24
+- **Zuletzt aktualisiert:** 2026-05-27
+
+## Nächste Schritte (für Phase 4)
+- Workspace-`pull`/`verify`/`add`-Iteration (Folge-Substage zu Stage 5; Output-Routing pro Member).
+- Conformance-Backends `BuildSmoke` (npm/ng/swiftc) + `VisualRegression` (Spec-`screenshots[]`) hinter dem `ConformanceBackend`-Protocol.
+- Voller 75-Pfad-Cross-Consistency-Sweep mit echtem Bedrock-Replay-Cache für SwiftUI/Angular + die fehlenden Phase-0-Specs (LoginScreen + HttpApiClient) via `scripts/record_llm_cache.py`.
 
 ## Phase 1d (Steps 1–6 abgeschlossen, 2026-05-19)
 - **Step 1 erledigt** — Backend-MVP läuft offline gegen Replay-Cache: `/api/v1/specs`, `/api/v1/render` mit Fehler-Mapping (`cache_miss` 422, `spec_invalid`/`unknown_target`/`bad_request` 400). 7 Backend-Tests.

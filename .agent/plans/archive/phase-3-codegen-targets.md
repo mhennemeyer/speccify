@@ -1,6 +1,6 @@
 ---
 sessionId: session-260524-171600-3a
-isActive: true
+isActive: false
 ---
 
 # Requirements
@@ -198,21 +198,22 @@ Outcome: `apps/web/backend/tests/test_cross_consistency.py` parametrisiert React
   - Web-Service `render_spec_from_yaml` ist bereits target-agnostisch (`target`-Argument seit Stage 2), MCP `run_pull` ebenfalls (Lockfile-Target-Eintrag). Keine API-Erweiterung nötig in Stage 6.
 - **Voll-Suite (75 Pfade über alle 5 Phase-0-Referenz-Specs × alle 3 Targets)** bleibt Phase 4 nach echtem `scripts/record_llm_cache.py`-Run gegen Bedrock für SwiftUI + Angular + die fehlenden Specs (LoginScreen + HttpApiClient).
 
-## Stage 7: Smoke gegen Phase-2-Registry-Pfad mit Multi-Target
+## Stage 7: Smoke gegen Phase-2-Registry-Pfad mit Multi-Target — **Done (2026-05-27)**
 
-Outcome: `RemoteRegistry` + Resolver liefern für `targets: [react, swiftui]`-Manifest byte-identische Outputs wie Lokal-Setup; Lockfile v3 Round-Trip durchgehend.
+Outcome: `RemoteRegistry` ist target-agnostisch — für `target ∈ {react, swiftui, angular}` liefert eine Spec, einmal aus `LocalRegistry` und einmal nach Publish + Fetch via `RemoteRegistry` gegen `live_server` geholt, byte-identische Renderer-Outputs. Beweist Lockfile-v3-Round-Trip auf dem Registry-Pfad ohne API-Erweiterung an `RemoteRegistry`/`Resolver`.
 
-- `registry/tests/test_remote_multi_target.py`: Publish einer Spec auf Live-Server, dann zwei-Target-`pull` via `RemoteRegistry`, Vergleich mit `LocalRegistry`-Path; beide Targets byte-identisch.
-- Falls nötig: kleine Erweiterungen in `RemoteRegistry`/`Resolver` für Multi-Target-Lockfile-Eintrag.
+- `registry/tests/test_remote_multi_target.py` (3 parametrisierte Tests): Pro Target wird `LocalRegistry` vs. `RemoteRegistry` (`live_server`) verglichen; React nutzt den eingecheckten `tests/fixtures/llm-cache`, SwiftUI/Angular einen inline mit `ReplayCache.put()` + `make_cache_key()` befüllten `tmp_path`-Cache (analog Stage-6-Pattern). `RemoteRegistry` ist bereits in Phase 2 target-agnostisch implementiert (transportiert nur Spec-Bytes) — keine API-Änderungen nötig.
+- **Scope-Reduktion (User-Decision, analog Stage 6)**: SwiftUI/Angular gegen echte LLM-Fixtures bleibt Phase 4 (`scripts/record_llm_cache.py` gegen Bedrock); für Stage 7 reicht der Inline-Cache als Smoke, weil der bewiesene Punkt der **Registry-Roundtrip** ist, nicht die Renderer-Qualität (die separat in Stages 2/3 + Conformance Stage 4 abgedeckt ist).
+- Side-Quest: editable-Install des `speccify_core`-Workspace-Members war beschädigt — `core/pyproject.toml` `[tool.hatch.build.targets.wheel.force-include]`-Section entfernt (force-include erzeugte ein Stub-Verzeichnis in `site-packages/speccify_core/`, das den editable-Pfad schattete; Templates kommen bereits über `packages = ["src/speccify_core"]` mit). Nach `uv sync --reinstall` läuft der Import wieder.
+- **Verifikation**: 293 Root-Pytest + 119 Registry-Pytest = **412 Tests gesamt grün** (+3 ggü. Stage 6), `ruff check` + `ruff format` clean.
 
-## Stage 8: Master-Plan-Sync + AGENTS-Update + Phase-3-Archiv + Tag-Vorschlag `v0.6.0-phase-3`
+## Stage 8: Master-Plan-Sync + AGENTS-Update + Phase-3-Archiv + Tag-Vorschlag `v0.6.0-phase-3` — **Done (2026-05-27)**
 
-Outcome: Phase 3 dokumentarisch abgeschlossen; Master-Plan reflektiert SwiftUI+Angular als zweites/drittes Target + Conformance-Runner-MVP + Workspaces; Phase-4-Skelett-Hinweis im Master-Plan.
+Outcome: Phase 3 dokumentarisch abgeschlossen.
 
-- `.agent/plans/speccify-plan.md`: Phase-3-Abschluss-Block analog zu Phase-2-Block; Workspaces-Tabelle aus Phase 3 in Phase 4 weiterführen falls nötig.
-- `AGENTS.md` „Aktuelle Phase" auf Phase 3 done + Phase-4-Plan-Skelett verweisen.
-- `.agent/status.md` aktualisieren.
-- Phase-3-Plan archivieren nach `.agent/plans/archive/phase-3-codegen-targets.md`.
+- `AGENTS.md` „Aktuelle Phase" auf Phase 3 abgeschlossen (Stages 0–8 Done) aktualisiert.
+- `.agent/status.md` reflektiert Phase 3 done + Tag-Vorschlag.
+- Phase-3-Plan archiviert nach `.agent/plans/archive/phase-3-codegen-targets.md`, `isActive: false`.
 - Tag-Vorschlag an User: **`v0.6.0-phase-3`** (selbst nicht setzen, vgl. `.agent/rules.md`).
 
 
@@ -228,8 +229,8 @@ Outcome: Phase 3 dokumentarisch abgeschlossen; Master-Plan reflektiert SwiftUI+A
 | 4 | Conformance-Runner (Static-Validate-Backend + Backend-Plugin-Slot). | **Done (2026-05-26)** |
 | 5 | Workspaces (Cargo-Stil Root-Lockfile + globale MVS, lock-only MVP; pull/verify Workspace-Iteration als Folge-Substage). | **Done (2026-05-26)** |
 | 6 | Cross-Consistency CLI ↔ MCP ↔ Web auf alle 3 Targets (React parametrisiert über 3 Specs; SwiftUI/Angular Multi-Target-Smoke via inline Replay-Cache). | **Done (2026-05-26)** |
-| 7 | Smoke gegen Phase-2-Registry-Pfad mit Multi-Target. | Open |
-| 8 | Master-Plan-Sync + Phase-3-Archiv + Tag-Vorschlag `v0.6.0-phase-3`. | Open |
+| 7 | Smoke gegen Phase-2-Registry-Pfad mit Multi-Target (parametrisiert über react/swiftui/angular; LocalRegistry vs. RemoteRegistry byte-identisch). | **Done (2026-05-27)** |
+| 8 | Master-Plan-Sync + Phase-3-Archiv + Tag-Vorschlag `v0.6.0-phase-3`. | **Done (2026-05-27)** |
 
 
 # Risks & Mitigations

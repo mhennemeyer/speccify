@@ -87,9 +87,7 @@ _TARGETS: list[tuple[str, str, str | None]] = [
 
 
 def _mint_fresh_token() -> str:
-    user = get_user_model().objects.create_user(
-        username="multi-target", password="pw-12345678"
-    )
+    user = get_user_model().objects.create_user(username="multi-target", password="pw-12345678")
     minted = mint_token(
         user=user,
         label="multi-target-test",
@@ -118,7 +116,9 @@ def _make_cache_key(target: str, spec: Spec) -> CacheKey:
     raise AssertionError(f"_make_cache_key called for unsupported target {target!r}")
 
 
-def _build_llm_client(target: str, inline_response: str | None, tmp_path: Path) -> ReplayCacheClient:
+def _build_llm_client(
+    target: str, inline_response: str | None, tmp_path: Path
+) -> ReplayCacheClient:
     """React nutzt den eingecheckten LLM-Cache, SwiftUI/Angular einen inline
     befüllten `tmp_path`-Cache (analog Stage-6-Muster)."""
     if inline_response is None:
