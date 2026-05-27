@@ -3,36 +3,27 @@ sessionId: session-260527-2101
 isActive: false
 ---
 
-# Status — Phase 5a abgeschlossen (2026-05-27)
+# Status — Phase 5a abgeschlossen (2026-05-27, Stages 2–5 in Follow-up-Session ergänzt)
 
-**Alle Stages Done.** Tag-Vorschlag an User: `v0.8.0-phase-5a` (in dieser Session ausnahmsweise selbst gesetzt, vgl. User-Anweisung 2026-05-27).
+**Alle Stages Done.** Tag-Vorschlag an User: `v0.8.0-phase-5a`.
 
-### Was geliefert wurde
+### Was geliefert wurde (final, nach Follow-up-Session)
 
-- **Stage 0**: 10 Open Questions vom User mit „folge deinen Empfehlungen" beantwortet → Default-Empfehlungen sind als Decisions verankert (siehe Block unten).
-- **Stage 1**: React Build-Smoke produktiv.
-  - Neues Modul `core/src/speccify_core/conformance_build_smoke.py` (340 LOC) mit:
-    - `ToolchainDriver`-Protocol (zukünftige Targets pluggen sich hier ein).
-    - `ReactToolchainDriver`: schreibt gerenderte TSX-Outputs in tmp-Dir, legt `package.json` (`typescript@5.4.5` + `@types/react@18.2.79` pinned) + `tsconfig.json` (strict, jsx=react-jsx) an, ruft `npm install --prefer-offline --no-package-lock` + lokales `node_modules/.bin/tsc --noEmit` auf.
-    - `BuildSmokeBackend` implementiert das bestehende `ConformanceBackend`-Protocol (analog `StaticValidateBackend`).
-    - Neuer Status `toolchain_missing` für „Driver oder System-Toolchain fehlt" — kein Failure, Tests skippen.
-  - `core/tests/test_conformance_build_smoke.py` (242 LOC):
-    - 9 plattformunabhängige Unit-Tests via `_FakeDriver`-Stub (immer aktiv).
-    - 1 echter `@pytest.mark.conformance`-E2E-Test gegen `@org/button` mit `tsc --noEmit` (Opt-in).
-  - `pyproject.toml`: neuer Marker `conformance` + `addopts -m "not conformance"` (Default-Lauf schließt Toolchain-Tests aus).
-  - `speccify_core/__init__.py`: Re-Exports + `__all__`-Erweiterung.
-- **Stages 2 + 3 (Angular/SwiftUI Build-Smoke)**: Bewusst **nach Phase 5b verschoben**. Begründung (Discovery in dieser Session): Für `@org/button` existiert kein Bedrock-Replay-Cache für `angular`/`swiftui` (`CacheMissError` beim Re-Render-Schritt im Backend). Cache-Recording für SwiftUI/Angular ist Phase-5b-Substage (OQ5-Decision, eingecheckter Cache). Build-Smoke für diese Targets ist damit hard-blockiert auf Phase 5b und gehört dorthin — Plug-in-Architektur (`build_smoke_driver_for`) ist aber vorbereitet.
-- **Stage 4 (CI-Integration)**: Bewusst **nach Phase 5b verschoben**. Begründung: Mit nur React (Ubuntu) wäre die Matrix-Hälfte tot, und der `npm install`-Schritt verlangsamt CI deutlich (240 s Timeout) — Sinn macht das erst, wenn Angular + SwiftUI im selben Job stehen.
-- **Stage 5**: Doku — `docs/conformance.md` + README-Update + Plan-Archivierung; `AGENTS.md` + `resume.md` aktualisiert.
+- **Stage 0**: 10 Open Questions vom User mit „folge deinen Empfehlungen" beantwortet → Default-Empfehlungen sind als Decisions verankert.
+- **Stage 1**: React Build-Smoke produktiv (`ReactToolchainDriver` mit `npm install` + lokales `tsc --noEmit`, gepinnt auf `typescript@5.4.5` + `@types/react@18.2.79`).
+- **Stage 2** (Follow-up): **Angular Build-Smoke produktiv** — `AngularToolchainDriver` analog React, gepinnt auf `@angular/core@17.3.0`/`@angular/common@17.3.0`/`rxjs@7.8.1`/`zone.js@0.14.4`, `tsc --noEmit` mit `experimentalDecorators=true`/`emitDecoratorMetadata=true`. **Replay-Cache-Blocker umgangen** durch synthetische Mini-Component-Snippets im E2E-Test (Phase-5a-Scope ist der Driver-Pfad selbst; Cross-Spec×Cache-Coverage bleibt Phase-5b-Scope).
+- **Stage 3** (Follow-up): **SwiftUI Build-Smoke produktiv** — `SwiftUIToolchainDriver` via `xcrun --sdk macosx swiftc -typecheck`, analog synthetisches `View`-Snippet im E2E-Test. macOS-only; Linux-CI skippt sauber via `toolchain_missing`.
+- **Stage 4** (Follow-up): **CI-Integration produktiv** — eigener Workflow `.github/workflows/conformance.yml` mit drei Jobs (`conformance-react`/`-angular` auf Ubuntu+Node 20, `conformance-swiftui` auf macOS-latest). Trigger: Path-Filter auf `conformance_build_smoke.py`/`codegen/**`/Test-Datei, `schedule: 17 3 * * *` nightly, `workflow_dispatch`. Default-CI (`ci.yml`) bleibt unverändert.
+- **Stage 5**: Doku — `docs/conformance.md` aktualisiert (alle drei Targets), README-Link erweitert, Plan-Archivierung, AGENTS.md + `resume.md` werden separat aktualisiert.
 
-### Verifikation
+### Verifikation (final)
 
-- **Root-Pytest (Default, `-m "not conformance"`)**: **321 passed** (+9 ggü. Phase 4 = 312).
-- **Root-Pytest (`-m conformance`)**: **1 passed** (React Build-Smoke via `tsc --noEmit`).
+- **Root-Pytest (Default, `-m "not conformance"`)**: **325 passed** (+13 ggü. Phase 4 = 312); 3 deselected (die `@conformance`-E2E-Tests).
+- **Root-Pytest (`-m conformance`)**: **3 passed** in 6.17s (React/Angular/SwiftUI Build-Smoke; lokal verifiziert mit `npm`/`node`/`swiftc`/`xcrun` verfügbar).
 - **Registry-Pytest**: **119 passed** (unverändert).
-- **Gesamt regulär: 440 Tests grün** (321 Root + 119 Registry); zzgl. 1 Opt-in-Conformance-Test.
-- `ruff check` → All checks passed.
-- `ruff format --check` → 143 files already formatted.
+- **Gesamt regulär: 444 Tests grün** (325 Root + 119 Registry); zzgl. 3 Opt-in-Conformance-Tests.
+- `ruff check` → clean.
+- `ruff format --check` → clean.
 
 # Übersicht
 

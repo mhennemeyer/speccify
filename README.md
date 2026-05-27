@@ -130,9 +130,9 @@ uv sync --reinstall-package django
 
 - [`AGENTS.md`](./AGENTS.md) — Onboarding für Coding-Agents (Vision, Repo-Layout, Konventionen).
 - [`docs/workspaces.md`](./docs/workspaces.md) — Cargo-Style Workspaces (Phase 4): Root-Lockfile, Per-Member-Outputs, MVS-Konflikt-UX.
-- [`docs/conformance.md`](./docs/conformance.md) — Build-Smoke gegen echte Toolchains (Phase 5a, React via `tsc --noEmit`).
+- [`docs/conformance.md`](./docs/conformance.md) — Build-Smoke gegen echte Toolchains (Phase 5a: React/Angular via `tsc --noEmit`, SwiftUI via `swiftc -typecheck`).
 - [`.agent/plans/speccify-plan.md`](./.agent/plans/speccify-plan.md) — Master-Plan (langfristige Vision & Roadmap).
-- [`.agent/plans/archive/phase-5a-conformance-backends.md`](./.agent/plans/archive/phase-5a-conformance-backends.md) — Abgeschlossen: Conformance-Build-Smoke-Architektur + React-Driver (`tsc --noEmit`).
+- [`.agent/plans/archive/phase-5a-conformance-backends.md`](./.agent/plans/archive/phase-5a-conformance-backends.md) — Abgeschlossen: Conformance-Build-Smoke gegen React/Angular (`tsc --noEmit`) und SwiftUI (`swiftc -typecheck`) inkl. Conformance-CI-Workflow.
 - [`.agent/plans/archive/phase-4-workspaces.md`](./.agent/plans/archive/phase-4-workspaces.md) — Abgeschlossen: Workspaces-Iteration (`lock`/`pull`/`add`/`verify` cross-member + MCP-Bridge).
 - [`.agent/plans/archive/phase-3-codegen-targets.md`](./.agent/plans/archive/phase-3-codegen-targets.md) — Abgeschlossen: zweites + drittes Codegen-Target (SwiftUI + Angular).
 - [`.agent/plans/archive/phase-2-registry-mvp.md`](./.agent/plans/archive/phase-2-registry-mvp.md) — Abgeschlossen: Registry-MVP (Django).

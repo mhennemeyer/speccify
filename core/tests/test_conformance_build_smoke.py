@@ -263,3 +263,74 @@ def test_react_build_smoke_button_via_tsc() -> None:
     assert report.ok, [r.messages for r in report.failures()]
     assert report.results[0].status == "ok"
     assert report.results[0].target == "react"
+
+
+# Synthetische Mini-Sources für die Angular/SwiftUI-End-to-End-Tests. Phase 5a
+# verifiziert den Toolchain-Pfad selbst; vollständige Spec×Target-Cache-
+# Befüllung ist Phase-5b-Scope (vgl. Plan-OQ5). Die Snippets sind bewusst
+# minimal, decken aber die kritischen Konstrukte ab, die der Codegen produziert
+# (Angular `@Component`-Decorator + signal-API; SwiftUI `View`-Conformance).
+
+_SYNTHETIC_ANGULAR_COMPONENT = b"""\
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'org-button',
+  standalone: true,
+  template: `<button (click)="onClick()">{{ label }}</button>`,
+})
+export class ButtonComponent {
+  label: string = 'Click me';
+
+  onClick(): void {
+    // Build-Smoke: nur Typcheck, keine Runtime.
+  }
+}
+"""
+
+_SYNTHETIC_SWIFTUI_VIEW = b"""\
+import SwiftUI
+
+struct Button: View {
+    let label: String
+
+    var body: some View {
+        SwiftUI.Button(action: {}) {
+            Text(label)
+        }
+    }
+}
+"""
+
+
+@pytest.mark.conformance
+def test_angular_build_smoke_synthetic_via_tsc(tmp_path: Path) -> None:
+    """End-to-end Build-Smoke für Angular: synthetischer `@Component`-Snippet
+    muss durch `tsc --noEmit` mit den gepinnten Angular-Typings gehen.
+
+    Phase-5a-Scope: prüft den Driver-Pfad selbst (npm install + lokales tsc).
+    Cross-Spec×Cache-Coverage kommt in Phase 5b.
+    """
+    driver = AngularToolchainDriver()
+    if not driver.is_available():
+        pytest.skip("npm/node not available — toolchain missing.")
+
+    files = {"org/button.component.ts": _SYNTHETIC_ANGULAR_COMPONENT}
+    returncode, output = driver.build(files=files, work_dir=tmp_path)
+    assert returncode == 0, f"Angular-Build-Smoke fehlgeschlagen:\n{output}"
+
+
+@pytest.mark.conformance
+def test_swiftui_build_smoke_synthetic_via_swiftc(tmp_path: Path) -> None:
+    """End-to-end Build-Smoke für SwiftUI: synthetischer `View`-Snippet muss
+    durch `swiftc -typecheck` gegen das macOS-SDK gehen.
+
+    Skipped auf Linux-CI (kein `xcrun`/SwiftUI-Framework verfügbar).
+    """
+    driver = SwiftUIToolchainDriver()
+    if not driver.is_available():
+        pytest.skip("swiftc/xcrun not available — toolchain missing.")
+
+    files = {"org/Button.swift": _SYNTHETIC_SWIFTUI_VIEW}
+    returncode, output = driver.build(files=files, work_dir=tmp_path)
+    assert returncode == 0, f"SwiftUI-Build-Smoke fehlgeschlagen:\n{output}"

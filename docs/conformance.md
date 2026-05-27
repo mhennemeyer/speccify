@@ -1,134 +1,121 @@
-# Conformance — Build-Smoke
+# Conformance — Build-Smoke (Phase 5a)
 
-> Phase-5a-Feature: Beweist, dass generierter Code nicht nur byte-identisch
-> reproduzierbar ist (das prüft der `static-validate`-Backend aus Phase 3),
-> sondern dass er auch durch die echte Toolchain des Ziel-Frameworks
-> kompiliert.
+Die Conformance-Suite prüft, dass der von Speccify generierte Code gegen die
+echten Ziel-Toolchains **kompiliert**. Phase-5a-Scope ist *Build-Smoke* (kein
+Linking, kein Bundle, keine Visual-Regression — letztere folgt in Phase 5b).
 
-## Konzept
+> **Konzept-Trennung**
+>
+> - **Unit-Codegen-Tests** (Default-Pytest): prüfen byte-identische Reproduzier-
+>   barkeit der Renderer-Outputs gegen einen eingecheckten LLM-Replay-Cache.
+> - **Build-Smoke** (Opt-in via `-m conformance`): füttert die gerenderten
+>   Outputs in `tsc --noEmit` bzw. `swiftc -typecheck` und prüft, dass das
+>   Resultat *typcheckt*. Catches LLM-Drift, Codegen-Bugs und Template-Regressionen.
+> - **Visual-Regression** (Phase 5b): Screenshot-Vergleich gegen
+>   Spec-`screenshots[]` — Out-of-Scope hier.
 
-Der `BuildSmokeBackend` (`core/src/speccify_core/conformance_build_smoke.py`)
-implementiert das in Phase 3 etablierte
-[`ConformanceBackend`](../core/src/speccify_core/conformance.py)-Protocol:
+## Targets
 
-1. Pro Lockfile-Eintrag wird die Spec aus der Registry geladen,
-2. mit dem passenden Codegen-Adapter (`react_llm`, `angular_llm`,
-   `swiftui_llm`) re-gerendert,
-3. die generierten Files werden in ein temporäres Arbeitsverzeichnis
-   geschrieben,
-4. die target-spezifische **Toolchain** (`tsc --noEmit` / `swiftc -typecheck` /
-   …) wird darüber laufen gelassen,
-5. ein `ConformanceResult` mit `status ∈ {ok, build_failed, render_failed,
-   toolchain_missing}` zurückgegeben.
+| Target  | Driver                    | Toolchain                      | Plattform     |
+|---------|---------------------------|--------------------------------|---------------|
+| react   | `ReactToolchainDriver`    | `npm install` + lokales `tsc --noEmit` | Linux/macOS |
+| angular | `AngularToolchainDriver`  | `npm install` + lokales `tsc --noEmit` mit `@angular/core`/`@angular/common` | Linux/macOS |
+| swiftui | `SwiftUIToolchainDriver`  | `xcrun --sdk macosx swiftc -typecheck` | macOS only  |
 
-`toolchain_missing` ist explizit *kein* Failure — der Status existiert, damit
-Tests/CI auf Plattformen ohne lokale Toolchain (z. B. minimaler Linux-Container
-ohne `swiftc`) sauber skippen, statt fälschlich zu failen.
-
-## Pluggable Driver pro Target
-
-Jedes Target hat einen eigenen Driver, der das `ToolchainDriver`-Protocol
-erfüllt:
-
-```python
-class ToolchainDriver(Protocol):
-    target: str
-
-    def is_available(self) -> bool:
-        """True, wenn die Toolchain auf dem System verfügbar ist."""
-
-    def build(self, *, files: dict[str, bytes], work_dir: Path) -> tuple[int, str]:
-        """Schreibt `files` in `work_dir`, ruft den Build auf,
-        liefert `(returncode, combined_stdout_stderr)`."""
-```
-
-`BuildSmokeBackend` führt eine Driver-Registry (`drivers: dict[str,
-ToolchainDriver]`); fehlt ein Driver für ein bestimmtes Target, wird
-`toolchain_missing` zurückgegeben.
-
-## React (Phase 5a)
-
-Der `ReactToolchainDriver` legt im Arbeitsverzeichnis ein minimales
-TypeScript-Projekt an:
-
-| Datei | Inhalt |
-|---|---|
-| `package.json` | `devDependencies: typescript@5.4.5, @types/react@18.2.79` |
-| `tsconfig.json` | `strict=true`, `jsx=react-jsx`, `noEmit=true`, `moduleResolution=Bundler` |
-| `<rel_path>` | Bytes aus `TargetRender.files` (z. B. `org/Button.tsx`) |
-
-Dann wird:
-
-```bash
-npm install --no-audit --no-fund --silent --prefer-offline --no-package-lock
-./node_modules/.bin/tsc --noEmit --project tsconfig.json
-```
-
-ausgeführt. Bewusste Designentscheidung: `npm install` statt
-`npx --package=typescript`, weil letzteres die Pakete nur in den globalen
-`npx`-Cache zieht — `tsc` findet `@types/react` dann nicht über die normale
-Modulauflösung und schlägt mit `TS7026` fehl.
-
-**Versionen sind hart gepinnt** in `conformance_build_smoke.py`
-(`REACT_TYPESCRIPT_VERSION`, `REACT_TYPES_VERSION`). Updates erfolgen
-explizit per Code-Change, nicht automatisch.
-
-## Angular & SwiftUI (Phase 5b)
-
-Out-of-Scope für Phase 5a, weil für die Referenz-Specs noch kein
-Bedrock-Replay-Cache für `angular`/`swiftui` existiert (`@org/button` ist
-nur als React-Output gecached). Phase 5b zieht zuerst den Cache nach und
-implementiert dann die Driver analog zum React-Pattern.
-
-Voraussichtliche Strategie:
-
-- **Angular**: `npm install` mit `@angular/core` + `@angular/common` als
-  Typings, `tsc --noEmit` über die generierten `.ts`-Files. Echtes `ng
-  build` als Stretch (langsam, braucht eine `angular.json`).
-- **SwiftUI**: `swiftc -typecheck <files>`, kein Package-Manifest nötig
-  (Swift kompiliert direkt auf File-Ebene). macOS-only — Linux-Runner
-  liefern `toolchain_missing`.
+Alle Toolchain-Versionen sind in `core/src/speccify_core/conformance_build_smoke.py`
+explizit gepinnt (`REACT_TYPESCRIPT_VERSION`, `ANGULAR_CORE_VERSION`, etc.) —
+deterministische Re-Runs sind das Ziel.
 
 ## Lokal ausführen
 
-Conformance-Tests sind via Pytest-Marker `conformance` opt-in. Der
-Default-Lauf schließt sie über `addopts = '-m "not conformance"'` aus,
-damit die Unit-Suite unter 5 s bleibt und kein `npm install` triggert.
-
 ```bash
-# Default — Unit-Suite, kein npm install
-uv run pytest
+# Default-Pytest läuft Conformance NICHT (Marker via `addopts = -m "not conformance"`).
+uv run pytest                                           # 325 grün, 3 deselected
 
-# Opt-in — alle Conformance-Tests (lädt typescript@5.4.5 via npm)
+# Opt-in für Build-Smoke (lokal, alle drei Targets):
 uv run pytest -m conformance
 
-# Nur die React-Build-Smoke
-uv run pytest core/tests/test_conformance_build_smoke.py -m conformance
+# Nur ein Target:
+uv run pytest -m conformance \
+  core/tests/test_conformance_build_smoke.py::test_react_build_smoke_button_via_tsc
 ```
 
-Voraussetzungen für den React-Conformance-Test:
+### Tool-Voraussetzungen (lokal)
 
-- `node` + `npm` auf dem `PATH` (jede LTS-Version ab v18).
-- Internet-Zugang oder bereits-gefüllter `~/.npm`-Cache für
-  `typescript@5.4.5` + `@types/react@18.2.79`.
+- **React/Angular**: `npm` + `node` (z. B. via `brew install node` oder
+  `nodenv install 20`). `npm install` legt die gepinnten devDeps in einem
+  temporären `node_modules/` an — keine globalen Installs nötig.
+- **SwiftUI**: `swiftc` + `xcrun` (mitgeliefert mit Xcode oder
+  Command-Line-Tools). `xcrun --sdk macosx swiftc -typecheck` löst das
+  SwiftUI-Framework automatisch über das macOS-SDK auf.
 
-Fehlt etwas davon, **skipped** der Test sauber (kein Failure).
+Fehlt eine Toolchain, **skippt** der zugehörige Test (kein Failure). Der
+Backend-Status ist dann `toolchain_missing`.
 
-## CI (Phase 5b)
+## CI
 
-Phase 5a verzichtet bewusst auf einen CI-Job — sinnvoll wird das erst,
-sobald Angular + SwiftUI im selben Workflow-Block stehen. Phase 5b sieht
-vor:
+Die Conformance-Jobs liegen in einem separaten Workflow
+`.github/workflows/conformance.yml`, damit das Standard-CI nicht durch
+Toolchain-Setup + Build-Smoke verlangsamt wird:
 
-- Matrix-Job `conformance` mit Pfad-Filter `paths: [codegen/**,
-  core/src/speccify_core/conformance*.py]`.
-- Ubuntu-Runner für React + Angular, macOS-Runner für SwiftUI.
-- `schedule: [cron nightly]` + `workflow_dispatch` für Bedarfsläufe.
+- **Trigger**: Path-Filter auf `core/src/speccify_core/conformance_build_smoke.py`,
+  `core/src/speccify_core/codegen/**`, `core/tests/test_conformance_build_smoke.py`
+  + Nightly-Cron (03:17 UTC) + `workflow_dispatch`.
+- **Jobs**:
+  - `conformance-react` (Ubuntu, Node 20)
+  - `conformance-angular` (Ubuntu, Node 20)
+  - `conformance-swiftui` (macOS, vorhandenes Xcode)
 
-## Architektur-Verweise
+Default-CI (`ci.yml`) bleibt unverändert — Lint, Mypy, Pytest (ohne
+Conformance), Web-Backend, Registry-Backend.
 
-- Protocol-Definition: [`conformance.py`](../core/src/speccify_core/conformance.py)
-  (`ConformanceBackend`, `ConformanceReport`, `ConformanceResult`).
-- Build-Smoke-Implementierung: [`conformance_build_smoke.py`](../core/src/speccify_core/conformance_build_smoke.py).
-- Tests: [`test_conformance_build_smoke.py`](../core/tests/test_conformance_build_smoke.py).
-- Phase-Plan: [`phase-5a-conformance-backends.md`](../.agent/plans/archive/phase-5a-conformance-backends.md).
+## Backend-API
+
+Der Build-Smoke ist als `ConformanceBackend` implementiert und kann
+programmatisch aufgerufen werden:
+
+```python
+from speccify_core import BuildSmokeBackend, Lockfile, LocalRegistry, ReplayCacheClient
+
+backend = BuildSmokeBackend()  # nutzt React/Angular/SwiftUI-Default-Drivers
+report = backend.run(
+    lockfile=Lockfile(...),
+    registry=LocalRegistry("registry-fixtures"),
+    llm_client=ReplayCacheClient(cache=..., offline=True),
+)
+assert report.ok
+```
+
+Jedes `ConformanceResult` hat einen Status:
+
+- `ok` — Build-Smoke war erfolgreich.
+- `build_failed` — Toolchain hat das Re-Rendering nicht akzeptiert.
+  `messages` enthält den getrimmten Stdout/Stderr.
+- `render_failed` — Re-Render hat geworfen (Spec nicht ladbar, Cache miss, etc.).
+- `toolchain_missing` — Driver nicht registriert oder Toolchain auf der
+  aktuellen Plattform nicht verfügbar. Tests interpretieren das als „skip".
+
+## Phase-5a-Scope vs. Phase 5b
+
+| Bereich                                   | Phase 5a | Phase 5b |
+|-------------------------------------------|----------|----------|
+| `tsc --noEmit` React (Button-Spec)        | ✓        |          |
+| `tsc --noEmit` Angular (synthetic snippet)| ✓        |          |
+| `swiftc -typecheck` SwiftUI (synthetic)   | ✓        |          |
+| Cross-Spec × Target (5×3 = 15 Pfade)      |          | ✓        |
+| Bedrock-Replay-Cache für SwiftUI/Angular  |          | ✓        |
+| 75-Pfad-Cross-Consistency-Sweep           |          | ✓        |
+| Visual-Regression (Spec-Screenshots)      |          | ✓        |
+| Echtes `ng build` (statt nur `tsc`)       |          | ✓        |
+
+## Design-Entscheidungen (Stage 0)
+
+1. **Toolchain-Pinning lokal, Docker-Matrix als Folge-Substage** —
+   Versionen sind im Driver als Konstanten gepinnt, kein Container nötig.
+2. **Speicherort `core/`** statt `codegen/<target>/conformance/` — die
+   Codegen-Adapter liegen ohnehin in `core/src/speccify_core/codegen/`,
+   Lokalitätsprinzip wird damit erfüllt.
+3. **Marker-Default**: Conformance-Tests sind via `pyproject.toml` per
+   `addopts = -m "not conformance"` aus dem Default-Lauf ausgeschlossen.
+4. **`toolchain_missing` ≠ Failure**: Linux-CI ohne `swiftc` skippt,
+   ohne den Default-Lauf zu brechen.

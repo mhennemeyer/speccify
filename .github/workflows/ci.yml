@@ -9,6 +9,11 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+# Phase 5a: Conformance-Jobs (Build-Smoke gegen echte Toolchains) sind teuer
+# und laufen nur bei Touch der relevanten Codegen-/Conformance-Sources, per
+# nightly Cron und manuell über `workflow_dispatch`. Das spart Minutes auf
+# unrelated PRs (z. B. nur docs/registry).
+
 jobs:
   smoke:
     name: lint + tests + spec-smoke

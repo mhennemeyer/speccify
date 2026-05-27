@@ -1,0 +1,122 @@
+name: Conformance (Build-Smoke)
+
+# Phase 5a — Build-Smoke gegen echte Toolchains (`tsc --noEmit` für React/
+# Angular, `swiftc -typecheck` für SwiftUI). Teuer und plattformspezifisch
+# (SwiftUI braucht macOS-Runner mit Xcode), daher in einem eigenen Workflow:
+#
+# - `paths:`         Nur wenn relevante Sources angefasst werden.
+# - `schedule:`      Nightly als Sicherheitsnetz (regression catch).
+# - `workflow_dispatch`: Manueller Trigger für Ad-hoc-Runs.
+#
+# Default-CI (`ci.yml`) führt diese Tests *nicht* aus, weil die Marker
+# `conformance` in `pyproject.toml` über `addopts = -m "not conformance"`
+# deselected sind. Hier wird explizit `-m conformance` gesetzt.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "core/src/speccify_core/conformance_build_smoke.py"
+      - "core/src/speccify_core/codegen/**"
+      - "core/tests/test_conformance_build_smoke.py"
+      - ".github/workflows/conformance.yml"
+  pull_request:
+    paths:
+      - "core/src/speccify_core/conformance_build_smoke.py"
+      - "core/src/speccify_core/codegen/**"
+      - "core/tests/test_conformance_build_smoke.py"
+      - ".github/workflows/conformance.yml"
+  schedule:
+    # 03:17 UTC nightly — versetzter Slot, um Cron-Spikes zu vermeiden.
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: conformance-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  conformance-react:
+    name: conformance · react (tsc --noEmit, ubuntu)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      - name: Set up Python (from .python-version)
+        run: uv python install
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Sync workspace
+        run: uv sync --all-packages
+
+      - name: Pytest (React conformance only)
+        run: uv run pytest -m conformance core/tests/test_conformance_build_smoke.py::test_react_build_smoke_button_via_tsc -v
+
+  conformance-angular:
+    name: conformance · angular (tsc --noEmit, ubuntu)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      - name: Set up Python (from .python-version)
+        run: uv python install
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Sync workspace
+        run: uv sync --all-packages
+
+      - name: Pytest (Angular conformance only)
+        run: uv run pytest -m conformance core/tests/test_conformance_build_smoke.py::test_angular_build_smoke_synthetic_via_tsc -v
+
+  conformance-swiftui:
+    name: conformance · swiftui (swiftc -typecheck, macos)
+    runs-on: macos-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      - name: Set up Python (from .python-version)
+        run: uv python install
+
+      - name: Verify Xcode / swiftc available
+        run: |
+          which swiftc
+          which xcrun
+          swiftc --version
+
+      - name: Sync workspace
+        run: uv sync --all-packages
+
+      - name: Pytest (SwiftUI conformance only)
+        run: uv run pytest -m conformance core/tests/test_conformance_build_smoke.py::test_swiftui_build_smoke_synthetic_via_swiftc -v

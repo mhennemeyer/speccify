@@ -1,45 +1,46 @@
-# Resume — Speccify Phase 4 abgeschlossen
+# Resume — Speccify Phase 5a abgeschlossen
 
-> Einstiegspunkt für die nächste Session. Letzte Aktualisierung: 2026-05-27.
+> Einstiegspunkt für die nächste Session. Letzte Aktualisierung: 2026-05-27 (Follow-up-Session).
 
 ## Status
 
-- **Phase 4 abgeschlossen** (2026-05-27). Plan archiviert: [`plans/archive/phase-4-workspaces.md`](./plans/archive/phase-4-workspaces.md).
-- **Tag-Vorschlag an User**: `v0.7.0-phase-4` (selbst nicht setzen, vgl. `rules.md`).
-- **Phase 3** abgeschlossen (Stages 0–8); Tag-Vorschlag `v0.6.0-phase-3` (offen).
+- **Phase 5a abgeschlossen** (2026-05-27, Follow-up-Session) — Conformance-Build-Smoke produktiv für **alle drei Targets** (React/Angular/SwiftUI). Plan archiviert: [`plans/archive/phase-5a-conformance-backends.md`](./plans/archive/phase-5a-conformance-backends.md).
+- **Tag-Vorschlag an User**: `v0.8.0-phase-5a` (selbst nicht setzen, vgl. `rules.md`).
+- **Phase 4** abgeschlossen; Tag-Vorschlag `v0.7.0-phase-4` (offen).
+- **Phase 3** abgeschlossen; Tag-Vorschlag `v0.6.0-phase-3` (offen).
 - **Phase 2** abgeschlossen; Tag-Vorschlag `v0.5.0-phase-2` (offen).
 - **Kein aktiver Plan** in `.agent/plans/` (außer Master-Plan).
 
-## Verifikation Phase 4
+## Verifikation Phase 5a (final)
 
-- **Root-Pytest**: 312 passed (+19 ggü. Phase 3 = 293).
-- **Registry-Pytest**: 119 passed (unverändert).
-- **Gesamt: 431 Tests grün.**
+- **Root-Pytest (Default, `-m "not conformance"`)**: **325 passed** (+13 ggü. Phase 4 = 312); 3 deselected.
+- **Root-Pytest (`-m conformance`)**: **3 passed** in 6.17 s lokal (React/Angular/SwiftUI Build-Smoke).
+- **Registry-Pytest**: **119 passed** (unverändert).
+- **Gesamt regulär: 444 Tests grün.**
 - `ruff check` → All checks passed.
-- `ruff format --check` → 141 files already formatted.
+- `ruff format --check` → 143 files already formatted.
 
-## Was Phase 4 geliefert hat
+## Was Phase 5a geliefert hat
 
-- **Stage 0**: 10 Open Questions vom User geklärt — Root-only Lockfile (Cargo-Style), sichtbares `<member>/speccify_generated/`, CWD-Detection für `add`, strikte MVS-Konflikt-Strategie, keine Path-Deps, Hash-only Verify, MCP-Bridge via `workspace_root`-Arg, Web out-of-scope, kein Schema-Bump, `workspaces:`-Key-Heuristik.
-- **Stage 1**: `Workspace.lock(registry) -> Lockfile` in `core/src/speccify_core/workspace.py` + 3 Tests (Happy, leere Targets, Range-Konflikt).
-- **Stage 2**: `cli/.../lock.py` delegiert im Workspace-Modus an `workspace.lock()`.
-- **Stage 3**: `cli/.../pull.py` workspace-aware, materialisiert nach `<member>/speccify_generated/<target>/`; Helper `_render_lock_entry_into()` extrahiert. `--target` im Workspace verboten.
-- **Stage 4**: `cli/.../add.py` mit `--member/-m`-Flag + CWD-Detection (`_resolve_workspace_target_dir`); automatischer Root-Re-Lock.
-- **Stage 5**: `cli/.../verify.py` mit `_run_workspace_verify()` — Hash-only (Member-Deps ⊆ Root-Lockfile + Disk-Hash), kein Re-Render, kein LLM-Pin-Check.
-- **Stage 6**: Diagnostische `ResolverError`-Message per Snapshot-Test gepinnt; MCP-Bridge: `lock`/`pull`/`verify` mit optionalem `workspace_root`-Parameter, delegieren an CLI-`run_*`-Funktionen (Single-Source-of-Truth).
-- **Stage 7**: `docs/workspaces.md` (193 LOC) — Konzept, CLI-Walkthrough, Konflikt-Beispiel, MCP-Integration, Design-Entscheidungen; README um Workspaces-Link + Phase-3/4-Archivlinks erweitert.
-- **Stage 8**: Plan-Archivierung + AGENTS.md/resume.md aktualisiert.
+- **Stage 0**: 10 Open Questions vom User mit „folge deinen Empfehlungen" beantwortet (Toolchain-Pinning lokal, Conformance-Marker mit Default-Exclude, Speicherort in `core/`, `toolchain_missing` ≠ Failure).
+- **Stage 1**: `BuildSmokeBackend` + `ToolchainDriver`-Protocol in `core/src/speccify_core/conformance_build_smoke.py`; `ReactToolchainDriver` via `npm install` + lokales `tsc --noEmit` (`typescript@5.4.5` + `@types/react@18.2.79`).
+- **Stage 2** (Follow-up): `AngularToolchainDriver` analog — `@angular/core@17.3.0` + `@angular/common@17.3.0` + `rxjs@7.8.1` + `zone.js@0.14.4`; `tsc --noEmit` mit `experimentalDecorators=true`/`emitDecoratorMetadata=true`. E2E-Test mit synthetischem `@Component`-Snippet (Replay-Cache-Blocker umgangen — Phase-5a-Scope ist der Driver-Pfad, Cross-Spec-Coverage bleibt Phase 5b).
+- **Stage 3** (Follow-up): `SwiftUIToolchainDriver` via `xcrun --sdk macosx swiftc -typecheck`. macOS-only; Linux-CI skippt sauber via `toolchain_missing`. E2E-Test mit synthetischem `View`-Snippet.
+- **Stage 4** (Follow-up): Separater Workflow `.github/workflows/conformance.yml` mit 3 Jobs (`conformance-react`/`-angular` auf Ubuntu+Node 20, `conformance-swiftui` auf macOS-latest). Trigger: Path-Filter auf `conformance_build_smoke.py`/`codegen/**`/Test-Datei + `schedule: 17 3 * * *` nightly + `workflow_dispatch`. Default-CI (`ci.yml`) unverändert.
+- **Stage 5**: `docs/conformance.md` (122 LOC) — Konzept, Targets-Tabelle, Lokal-Walkthrough, CI-Verhalten, Backend-API, Scope-Tabelle 5a vs. 5b; README-Link aktualisiert; Plan-Status-Block aktualisiert; AGENTS.md + resume.md aktualisiert.
 
-## Nächster Schritt — Phase-5-Plan-Entwurf nach User-Tag
+## Nächster Schritt — Phase-5b-Plan-Entwurf nach User-Tag
 
-Kandidaten (aus Phase-3-Folge-Substages, die bei Phase 4 explizit out-of-scope waren):
+Kandidaten (aus Phase-5a-Stage-0-Decisions + Plan-OQ5):
 
-1. **Conformance-Backends**: Build-Smoke (echte `tsc`/`swiftc`/`ng build`) + Visual-Regression gegen Spec-`screenshots[]` (Phase 3 Stage 0 hatte MVP-Decision dafür).
-2. **75-Pfad-Cross-Consistency-Sweep**: voller Sweep über `5 Specs × 3 Targets × 5 Pfade (Local/Remote/CLI/MCP/Web)` mit echtem Bedrock-Replay-Cache für SwiftUI/Angular.
-3. **Fehlende Phase-0-Specs**: vollständige 5er-Reihe (statt nur Button + ContactForm).
-4. **Web-Backend Workspace-aware** (Phase 4 out-of-scope): Member-Liste + aggregierter Lockfile-View im Playground.
+1. **Replay-Cache-Recording**: User triggert `BEDROCK_RECORD=1`, Cache für `5 Specs × {angular, swiftui}` wird unter `tests/fixtures/llm-cache/` committed.
+2. **75-Pfad-Cross-Consistency-Sweep**: `5 Specs × 3 Targets × 5 Pfade (Local/Remote/CLI/MCP/Web)` parametrisiert.
+3. **Echte Spec×Target-Build-Smoke-Erweiterung**: Angular/SwiftUI nicht mehr nur synthetisch, sondern alle 5 Referenz-Specs durch den Driver.
+4. **Visual-Regression-Skeleton** (Stretch): Screenshot-Vergleich gegen Spec-`screenshots[]`.
+5. **Echtes `ng build`** (Stretch über `tsc --noEmit` hinaus).
+6. **Web-Backend Workspace-aware** (Phase 5c, separat).
 
-Vor Implementierung: Stage 0 = Open Questions an User (analog Phase 3/4-Disziplin).
+Vor Implementierung: Stage 0 = Open Questions an User (analog Phase 3/4/5a-Disziplin).
 
 ## Befehle (Spickzettel)
 
@@ -47,8 +48,11 @@ Vor Implementierung: Stage 0 = Open Questions an User (analog Phase 3/4-Diszipli
 # Hidden-Flag entfernen (jedes Mal nach uv sync nötig) — läuft auch automatisch via conftest.py
 chflags nohidden .venv/lib/python3.12/site-packages/*.pth
 
-# Root-Tests
+# Default-Tests (ohne Conformance)
 .venv/bin/python -m pytest -q
+
+# Conformance-Tests (Opt-in, lokal mit npm + xcrun verifiziert)
+.venv/bin/python -m pytest -m conformance core/tests/test_conformance_build_smoke.py -v
 
 # Registry-Tests
 cd registry && ../.venv/bin/python -m pytest -q
@@ -62,5 +66,6 @@ cd registry && ../.venv/bin/python -m pytest -q
 
 1. `AGENTS.md` (Aktuelle Phase + Konventionen).
 2. `.agent/agent.md` + `.agent/rules.md` (Sprache: Deutsch, Du; FP-Stil; Tests pflicht; Tags nur User).
-3. `docs/workspaces.md` (Phase-4-Doku, Decisions + CLI-Walkthrough).
-4. `.agent/plans/archive/phase-4-workspaces.md` (Phase-4-Plan mit Status-Block oben).
+3. `docs/conformance.md` (Phase-5a-Doku, Decisions + CLI-Walkthrough).
+4. `docs/workspaces.md` (Phase-4-Doku).
+5. `.agent/plans/archive/phase-5a-conformance-backends.md` (Phase-5a-Plan mit finalem Status-Block oben).
