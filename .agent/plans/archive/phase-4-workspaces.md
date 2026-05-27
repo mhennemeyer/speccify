@@ -1,7 +1,31 @@
 ---
 sessionId: session-260527-084420-cdqd
-isActive: true
+isActive: false
 ---
+
+# Status — Phase 4 abgeschlossen (2026-05-27)
+
+**Alle 9 Steps Done.** Tag-Vorschlag an User: `v0.7.0-phase-4` (selbst nicht gesetzt, vgl. `rules.md`).
+
+### Was geliefert wurde
+
+- **Stage 0**: 10 Open Questions vom User beantwortet, Decisions im Plan verankert (siehe Block unten).
+- **Stage 1**: `Workspace.lock(registry) -> Lockfile` in `core/src/speccify_core/workspace.py` — kanonischer Workspace-Aggregat-Pfad; 3 neue Tests in `core/tests/test_workspace.py` (Happy-Path, leere-Targets-Error, Range-Konflikt).
+- **Stage 2**: `cli/src/speccify_cli/commands/lock.py` delegiert im Workspace-Modus an `workspace.lock()` (Duplikat-Logik entfernt).
+- **Stage 3**: `cli/src/speccify_cli/commands/pull.py` workspace-aware; materialisiert pro Member nach `<member>/speccify_generated/<target>/`. `--target` im Workspace-Modus verboten. Helper `_render_lock_entry_into()` aus Single-Project-Schleife extrahiert.
+- **Stage 4**: `cli/src/speccify_cli/commands/add.py` mit `--member/-m`-Flag + CWD-Detection (`_resolve_workspace_target_dir`); nach Member-Update wird `Workspace.lock()` auf Root neu ausgeführt.
+- **Stage 5**: `cli/src/speccify_cli/commands/verify.py` mit `_run_workspace_verify()` — Hash-only Verify (Member-Deps ⊆ Root-Lockfile + Disk-Hash-Vergleich gegen `<member>/speccify_generated/<target>/`). Kein Re-Render, kein LLM-Pin-Check.
+- **Stage 6**: Bestehende `ResolverError`-Diagnose (Spec-Id + Member-Pfade + Ranges + verfügbare Versionen) ist bereits exzellent; Snapshot-Test pinnt das Message-Format. **MCP-Bridge**: alle drei Write-Tools (`lock`/`pull`/`verify`) bekommen optionalen `workspace_root`-Parameter; im Workspace-Modus delegieren `pull` und `verify` an die CLI-Implementierungen (Single-Source-of-Truth). 2 neue MCP-Tests (`test_mcp_workspace_lock_pull_verify_smoke`, `test_mcp_workspace_pull_rejects_target_arg`).
+- **Stage 7**: `docs/workspaces.md` (193 LOC) mit vollständigem CLI-Walkthrough, Konflikt-Beispiel, MCP-Integration, Design-Entscheidungen + Tests-Verweisen. README um Workspaces-Link + Phase-3/4-Archivlinks ergänzt.
+- **Stage 8**: Plan-Archivierung (diese Datei → `archive/phase-4-workspaces.md`), AGENTS.md + resume.md aktualisiert.
+
+### Verifikation
+
+- **Root-Pytest**: **312 passed** (+19 ggü. Phase 3 = 293).
+- **Registry-Pytest**: **119 passed** (unverändert).
+- **Gesamt: 431 Tests grün.**
+- `ruff check` → All checks passed.
+- `ruff format --check` → 141 files already formatted.
 
 # Übersicht
 

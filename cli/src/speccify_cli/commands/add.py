@@ -100,9 +100,7 @@ def run_add(
         root_manifest = None
 
     if root_manifest is not None and root_manifest.is_workspace_root:
-        member_dir, root_dir = _resolve_workspace_target_dir(
-            project_dir, member, cwd or Path.cwd()
-        )
+        member_dir, root_dir = _resolve_workspace_target_dir(project_dir, member, cwd or Path.cwd())
         return _run_workspace_add(
             spec_id,
             explicit_range,
@@ -216,8 +214,10 @@ def add_command(
         None,
         "--member",
         "-m",
-        help="Workspace-Member (Verzeichnisname unter dem Glob), in dessen speccify.yaml geschrieben wird. "
-        "Default: CWD-Detection (Member, in dem du gerade stehst).",
+        help=(
+            "Workspace-Member (Verzeichnisname unter dem Glob), in dessen "
+            "speccify.yaml geschrieben wird. Default: CWD-Detection."
+        ),
     ),
 ) -> None:
     """Fügt eine Spec-Dependency in speccify.yaml ein und aktualisiert speccify.lock."""

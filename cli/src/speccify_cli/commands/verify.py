@@ -103,9 +103,7 @@ def _run_workspace_verify(
     for entry in lockfile.entries:
         if entry.yank_status == "yanked":
             reason = f" (reason: {entry.yank_reason})" if entry.yank_reason else ""
-            warnings.append(
-                f"Spec {entry.id}@{entry.version} wurde im Registry geyanked{reason}."
-            )
+            warnings.append(f"Spec {entry.id}@{entry.version} wurde im Registry geyanked{reason}.")
 
     locked_by_id = {e.id for e in lockfile.entries}
     entries_by_key = {(e.id, e.target): e for e in lockfile.entries}
@@ -142,9 +140,7 @@ def _run_workspace_verify(
                 for f in entry.generated_files_sha256:
                     on_disk = target_dir / f.path
                     if not on_disk.is_file():
-                        problems.append(
-                            f"Member '{member_name}': Output-Datei fehlt: {on_disk}."
-                        )
+                        problems.append(f"Member '{member_name}': Output-Datei fehlt: {on_disk}.")
                         continue
                     disk_digest = f"sha256:{hashlib.sha256(on_disk.read_bytes()).hexdigest()}"
                     if disk_digest != f.sha256:

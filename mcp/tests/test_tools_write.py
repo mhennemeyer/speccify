@@ -226,13 +226,7 @@ def test_mcp_workspace_lock_pull_verify_smoke(tmp_path: Path) -> None:
         project / "packages" / "ui" / "speccify_generated" / "react" / "org" / "Button.tsx"
     ).is_file()
     assert (
-        project
-        / "packages"
-        / "forms"
-        / "speccify_generated"
-        / "react"
-        / "org"
-        / "ContactForm.tsx"
+        project / "packages" / "forms" / "speccify_generated" / "react" / "org" / "ContactForm.tsx"
     ).is_file()
 
     # 3) verify

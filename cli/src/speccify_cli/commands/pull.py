@@ -34,7 +34,7 @@ from speccify_core import (
 )
 from speccify_core.codegen import react_llm
 from speccify_core.manifest import ManifestError, ProjectManifest
-from speccify_core.registry import RegistryError, Version
+from speccify_core.registry import Registry, RegistryError, Version
 
 from speccify_cli.commands._llm_client import build_replay_client
 from speccify_cli.commands._workspace import (
@@ -79,8 +79,9 @@ def _render_lock_entry_into(
     registry: Registry,
     llm_client: object,
 ) -> Lockfile:
-    """Rendert genau einen Lock-Entry (`spec_id`, `target`) in `out_dir` und aktualisiert das Lockfile.
+    """Rendert einen Lock-Entry (`spec_id`, `target`) in `out_dir`.
 
+    Aktualisiert anschließend das Lockfile mit Output-Hashes + ggf. LLM-Pin.
     `out_dir` ist die Wurzel für das Render-Layout (Renderer schreibt seine eigene
     Unterstruktur — z. B. `org/Button.tsx` — relativ dazu).
     """
@@ -147,9 +148,7 @@ def _run_workspace_pull(
             # Nur Entries rendern, deren spec_id in den Member-Deps liegt UND deren
             # target matched. Transitive Deps werden nicht pro Member materialisiert
             # (Stage-0-Decision: Members entkoppelt; Aggregation nur in der Resolution).
-            relevant = [
-                e for e in updated.entries if e.id in member_deps and e.target == target
-            ]
+            relevant = [e for e in updated.entries if e.id in member_deps and e.target == target]
             for entry in relevant:
                 updated = _render_lock_entry_into(
                     updated,
