@@ -1,6 +1,6 @@
 # Phase 5b — Conformance Sweep, Replay-Cache-Recording & echte Spec×Target-Coverage
 
-> Status: **Stages 1–4 Done** (Stage 2 durch User-Recording am 2026-05-29 abgeschlossen; Stage 3 am 2026-05-29; Stage 4 am 2026-05-29). Stages 5–6 offen.
+> Status: **Alle Stages 0–6 Done** (2026-05-29). Plan archiviert; Tag-Vorschlag an User: `v0.9.0-phase-5b`.
 > Vorgänger: Phase 5a abgeschlossen (Build-Smoke-Driver für React/Angular/SwiftUI, synthetische Snippets). Tag `v0.8.0-phase-5a` gesetzt.
 > Disziplin: Erst nach Beantwortung der Open Questions wird ein Stage-1+-Implementierungsplan geschrieben (analog Phase 3/4/5a).
 >
@@ -146,8 +146,17 @@ Unter Annahme **OQ1=A** (Substages 1+2+3):
   bestätigt — kein `xfail` nötig). **Verifikation: 15 Sweep-Tests passed in
   2.77 s lokal**; Registry-Pytest insgesamt 134 passed (+15 ggü. Stage 3);
   Root-Default unverändert 332 passed.
-- **Stage 5**: CI-Update (`conformance.yml` erweitern), Docs (`docs/conformance.md` + `docs/sweep.md` neu?).
-- **Stage 6**: Plan-Archivierung, AGENTS.md / `resume.md` Update, Tag-Vorschlag.
+- **Stage 5** ✅ Done (2026-05-29): CI-Review ergab kein YAML-Change nötig —
+  der neue Sweep-Test liegt in `registry/tests/` und wird vom bestehenden
+  `registry-backend` Job (`uv run pytest -c registry/pytest.ini registry/`)
+  in `.github/workflows/ci.yml` automatisch mitgenommen. `conformance.yml`
+  bleibt unverändert (Sweep ist kein Conformance-Toolchain-Test). Docs-Polish:
+  `docs/conformance.md` Sweep-Sektion + Scope-Tabelle (in Stage 4 schon
+  erledigt), README-Block erweitert um Sweep-Erwähnung und Phase-5b-Archiv-Link.
+- **Stage 6** ✅ Done (2026-05-29): Plan archiviert nach
+  `.agent/plans/archive/phase-5b-conformance-sweep.md`; AGENTS.md +
+  `.agent/resume.md` final aktualisiert; Tag-Vorschlag an User:
+  `v0.9.0-phase-5b` (selbst nicht gesetzt, vgl. `rules.md`).
 
 ---
 

@@ -1,6 +1,6 @@
-# Resume — Speccify Phase 5b Stages 1–4 abgeschlossen (Stages 5–6 offen)
+# Resume — Speccify Phase 5b abgeschlossen (alle Stages 0–6 Done)
 
-> Einstiegspunkt für die nächste Session. Letzte Aktualisierung: 2026-05-29 (Phase-5b-Stage-4).
+> Einstiegspunkt für die nächste Session. Letzte Aktualisierung: 2026-05-29 (Phase-5b-Final).
 
 ## Status
 
@@ -16,7 +16,13 @@
   `tests/fixtures/llm-cache/`).
 - **Phase 5b Stage 1 Done** (2026-05-27) — `scripts/record_llm_cache.py` ist
   target-aware.
-- **Aktiver Plan**: `.agent/plans/phase-5b-conformance-sweep.md` (Stages 0–4 Done, Stages 5–6 offen).
+- **Phase 5b Stages 5+6 Done** (2026-05-29) — Stage 5: CI-Review ergab
+  keinen YAML-Change (Sweep läuft automatisch im bestehenden
+  `registry-backend`-Job); README + `docs/conformance.md` aktualisiert.
+  Stage 6: Plan archiviert nach
+  `.agent/plans/archive/phase-5b-conformance-sweep.md`.
+- **Kein aktiver Plan** in `.agent/plans/` (außer Master-Plan).
+  **Tag-Vorschlag an User: `v0.9.0-phase-5b`** (selbst nicht gesetzt, vgl. `rules.md`).
 - **Phase 5a** abgeschlossen, Tag `v0.8.0-phase-5a` **gesetzt** (Commit 7845844).
 - **Phase 4** abgeschlossen; Tag-Vorschlag `v0.7.0-phase-4` (offen).
 - **Phase 3** abgeschlossen; Tag-Vorschlag `v0.6.0-phase-3` (offen).
@@ -49,14 +55,18 @@
 - **Stage 4** (Follow-up): Separater Workflow `.github/workflows/conformance.yml` mit 3 Jobs (`conformance-react`/`-angular` auf Ubuntu+Node 20, `conformance-swiftui` auf macOS-latest). Trigger: Path-Filter auf `conformance_build_smoke.py`/`codegen/**`/Test-Datei + `schedule: 17 3 * * *` nightly + `workflow_dispatch`. Default-CI (`ci.yml`) unverändert.
 - **Stage 5**: `docs/conformance.md` (122 LOC) — Konzept, Targets-Tabelle, Lokal-Walkthrough, CI-Verhalten, Backend-API, Scope-Tabelle 5a vs. 5b; README-Link aktualisiert; Plan-Status-Block aktualisiert; AGENTS.md + resume.md aktualisiert.
 
-## Nächster Schritt — Stage 5 (CI-Update + Docs) / Stage 6 (Plan-Archivierung + Tag-Vorschlag)
+## Nächster Schritt — Phase-5c-Plan-Entwurf nach User-Tag
 
-Stages 1–4 sind durch — der zentrale Cross-Consistency-Beweis (Local = Remote
-= CLI = MCP = Web) läuft byte-stabil über alle 5 Phase-0-Specs × 3 Targets.
-Stage 5: prüfen, ob `conformance.yml` den neuen Sweep-Test triggern muss (er
-läuft heute schon im Default-Registry-Pytest, also vermutlich nichts zu tun)
-+ ggf. README-Hinweis auf den Sweep. Stage 6: Plan archivieren, AGENTS.md /
-resume.md final, Tag-Vorschlag `v0.9.0-phase-5b` an User.
+Phase 5b ist komplett durch. Nach dem User-Tag `v0.9.0-phase-5b` ist der
+nächste Schritt ein Phase-5c-Plan-Entwurf. Kandidaten (aus dem alten
+Phase-5b-Backlog, in Phase 5b bewusst out-of-scope gelassen):
+
+1. **Visual-Regression-Skeleton** — Screenshot-Vergleich gegen Spec-`screenshots[]` (Tooling-OQ: pixelmatch+Playwright vs. PIL.ImageChops).
+2. **Echtes `ng build`** statt nur `tsc --noEmit` für Angular (volle AOT-Pipeline).
+3. **Web-Backend Workspace-aware** — bisher explizit out-of-scope in Phase 4.
+4. **Spec-Schema-Bump** für Visual-Regression-Felder (falls (1) gewählt wird).
+
+Vor Implementierung: Stage 0 = Open Questions an User (analog Phase 3/4/5a/5b-Disziplin).
 
 ## Phase-5a-Recap (Plan-Entwurf nach User-Tag)
 
