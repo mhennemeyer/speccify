@@ -1,22 +1,30 @@
-# Resume — Speccify Phase 5b Stage 1 abgeschlossen (Stage 2 blockiert)
+# Resume — Speccify Phase 5b Stages 1–3 abgeschlossen (Stages 4–6 offen)
 
-> Einstiegspunkt für die nächste Session. Letzte Aktualisierung: 2026-05-27 (Phase-5b-Stage-1).
+> Einstiegspunkt für die nächste Session. Letzte Aktualisierung: 2026-05-29 (Phase-5b-Stage-3).
 
 ## Status
 
+- **Phase 5b Stage 3 Done** (2026-05-29) — Echte Build-Smokes für alle 5
+  Referenz-Specs × {Angular, SwiftUI} via `pytest.mark.parametrize`.
+  Synthetische Mini-Snippets in `core/tests/test_conformance_build_smoke.py`
+  ersetzt; `_render_spec`/`_lock_entry_for` als target-agnostische Helfer.
+- **Phase 5b Stage 2 Done** (2026-05-29 durch User) — Replay-Cache-Fixtures
+  für `5 Specs × {angular, swiftui}` committed (12 neue JSONs unter
+  `tests/fixtures/llm-cache/`).
 - **Phase 5b Stage 1 Done** (2026-05-27) — `scripts/record_llm_cache.py` ist
-  target-aware (`--target react|angular|swiftui|all|<csv>`), Default bleibt
-  `react` (Phase-1b-Backcompat). Unit-Tests + Doku ergänzt.
-- **Stage 2 blockiert** auf User-Action: lokal `BEDROCK_RECORD=1` mit AWS-Credentials laufen lassen und Angular/SwiftUI-Cache-Fixtures committen — siehe `docs/conformance.md` Abschnitt „Replay-Cache-Recording (Phase 5b Stage 1)".
-- **Aktiver Plan**: `.agent/plans/phase-5b-conformance-sweep.md` (Stage 0 + 1 Done, Stages 2–6 offen).
+  target-aware.
+- **Aktiver Plan**: `.agent/plans/phase-5b-conformance-sweep.md` (Stages 0–3 Done, Stages 4–6 offen).
 - **Phase 5a** abgeschlossen, Tag `v0.8.0-phase-5a` **gesetzt** (Commit 7845844).
 - **Phase 4** abgeschlossen; Tag-Vorschlag `v0.7.0-phase-4` (offen).
 - **Phase 3** abgeschlossen; Tag-Vorschlag `v0.6.0-phase-3` (offen).
 - **Phase 2** abgeschlossen; Tag-Vorschlag `v0.5.0-phase-2` (offen).
 
-## Verifikation Phase 5b Stage 1
+## Verifikation Phase 5b Stage 3
 
-- **Root-Pytest (Default, `-m "not conformance"`)**: **332 passed** (+7 echte: 8 neue Skript-Tests, -1 deselect, da Default mcp_stdio_smoke-Flake bekannt); 4 deselected.
+- **Root-Pytest (Default, `-m "not conformance"`)**: **332 passed**, 12
+  deselected (unveränderter Count — neue Tests sind `@conformance`-markiert).
+- **Root-Pytest (`-m conformance`)**: **11 passed in 8.66 s lokal** (1 React +
+  5 Angular + 5 SwiftUI parametrisiert).
 - `mcp/tests/test_stdio_smoke.py` isoliert: 1 passed (macOS-Quarantäne-Flake, kein Regress).
 - `ruff check` → All checks passed. `ruff format --check` → 144 files already formatted.
 
@@ -38,7 +46,15 @@
 - **Stage 4** (Follow-up): Separater Workflow `.github/workflows/conformance.yml` mit 3 Jobs (`conformance-react`/`-angular` auf Ubuntu+Node 20, `conformance-swiftui` auf macOS-latest). Trigger: Path-Filter auf `conformance_build_smoke.py`/`codegen/**`/Test-Datei + `schedule: 17 3 * * *` nightly + `workflow_dispatch`. Default-CI (`ci.yml`) unverändert.
 - **Stage 5**: `docs/conformance.md` (122 LOC) — Konzept, Targets-Tabelle, Lokal-Walkthrough, CI-Verhalten, Backend-API, Scope-Tabelle 5a vs. 5b; README-Link aktualisiert; Plan-Status-Block aktualisiert; AGENTS.md + resume.md aktualisiert.
 
-## Nächster Schritt — Phase-5b-Plan-Entwurf nach User-Tag
+## Nächster Schritt — Stage 4 (75-Pfad-Cross-Consistency-Sweep)
+
+Mit Stages 1–3 done sind Cache + echte Build-Smokes etabliert. Stage 4 = volle
+`5 Specs × 3 Targets × 5 Pfade`-Parametrisierung (Local/Remote/CLI/MCP/Web)
+in einer Test-Datei, analog Phase-3-Stage-7-Pattern. Vor Implementierung: kurz
+verifizieren, ob alle 5 Pfade für Angular/SwiftUI today funktionieren
+(insbesondere Web-Backend = OQ5 aus Stage 0).
+
+## Phase-5a-Recap (Plan-Entwurf nach User-Tag)
 
 Kandidaten (aus Phase-5a-Stage-0-Decisions + Plan-OQ5):
 

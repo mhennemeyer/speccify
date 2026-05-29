@@ -33,8 +33,27 @@ from speccify_core import (
     build_smoke_driver_for,
     render_for_target,
 )
-from speccify_core.codegen import react_llm
+from speccify_core.codegen import angular_llm, react_llm, swiftui_llm
 from speccify_core.registry import LocalRegistry, Version
+
+# Phase 5b Stage 3: Die fünf Referenz-Specs aus `registry-fixtures/` bilden
+# zusammen mit Angular/SwiftUI die echten Spec×Target-Build-Smoke-Zellen. Die
+# Replay-Cache-Fixtures unter `tests/fixtures/llm-cache/` wurden via
+# `scripts/record_llm_cache.py --target angular,swiftui` durch den User gegen
+# Bedrock aufgezeichnet (vgl. `docs/conformance.md`).
+_REFERENCE_SPECS: tuple[tuple[str, str], ...] = (
+    ("@org/button", "0.1.0"),
+    ("@org/contact-form", "0.1.0"),
+    ("@org/http-api-client", "0.1.0"),
+    ("@org/login-screen", "0.1.0"),
+    ("@org/onboarding-wizard", "0.1.0"),
+)
+
+_LLM_MODULE_FOR_TARGET = {
+    "react": react_llm,
+    "angular": angular_llm,
+    "swiftui": swiftui_llm,
+}
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 REGISTRY_FIXTURES = REPO_ROOT / "registry-fixtures"
@@ -48,33 +67,48 @@ def _client() -> ReplayCacheClient:
     return ReplayCacheClient(cache=ReplayCache(CACHE_DIR), offline=True)
 
 
-def _render_button() -> tuple[dict[str, bytes], object]:
+def _render_spec(spec_id: str, version: str, target: str) -> tuple[dict[str, bytes], object]:
     registry = LocalRegistry(REGISTRY_FIXTURES)
-    spec = registry.fetch("@org/button", Version.parse("0.1.0"))
-    rendered = render_for_target(spec, "react", llm_client=_client())
+    spec = registry.fetch(spec_id, Version.parse(version))
+    rendered = render_for_target(spec, target, llm_client=_client())
     return rendered.files, rendered.cache_key
 
 
-def _button_entry(files: dict[str, bytes], cache_key: object) -> LockEntry:
+def _render_button() -> tuple[dict[str, bytes], object]:
+    return _render_spec("@org/button", "0.1.0", "react")
+
+
+def _lock_entry_for(
+    spec_id: str,
+    version: str,
+    target: str,
+    files: dict[str, bytes],
+    cache_key: object,
+) -> LockEntry:
     gen_files = tuple(
         GeneratedFile(path=p, sha256=f"sha256:{hashlib.sha256(b).hexdigest()}")
         for p, b in files.items()
     )
+    llm_mod = _LLM_MODULE_FOR_TARGET[target]
     return LockEntry(
-        id="@org/button",
-        version="0.1.0",
+        id=spec_id,
+        version=version,
         sha256="sha256:" + "0" * 64,
         resolved_via="registry-fixtures",
-        target="react",
+        target=target,
         generator=LlmGeneratorPin(
-            provider=react_llm.PROVIDER,
-            model=react_llm.MODEL,
-            prompt_version=react_llm.PROMPT_VERSION,
+            provider=llm_mod.PROVIDER,
+            model=llm_mod.MODEL,
+            prompt_version=llm_mod.PROMPT_VERSION,
             cache_key=f"sha256:{cache_key.digest()}",  # type: ignore[attr-defined]
-            seed=react_llm.DEFAULT_SEED,
+            seed=llm_mod.DEFAULT_SEED,
         ),
         generated_files_sha256=gen_files,
     )
+
+
+def _button_entry(files: dict[str, bytes], cache_key: object) -> LockEntry:
+    return _lock_entry_for("@org/button", "0.1.0", "react", files, cache_key)
 
 
 @dataclass
@@ -265,65 +299,41 @@ def test_react_build_smoke_button_via_tsc() -> None:
     assert report.results[0].target == "react"
 
 
-# Synthetische Mini-Sources für die Angular/SwiftUI-End-to-End-Tests. Phase 5a
-# verifiziert den Toolchain-Pfad selbst; vollständige Spec×Target-Cache-
-# Befüllung ist Phase-5b-Scope (vgl. Plan-OQ5). Die Snippets sind bewusst
-# minimal, decken aber die kritischen Konstrukte ab, die der Codegen produziert
-# (Angular `@Component`-Decorator + signal-API; SwiftUI `View`-Conformance).
-
-_SYNTHETIC_ANGULAR_COMPONENT = b"""\
-import { Component } from '@angular/core';
-
-@Component({
-  selector: 'org-button',
-  standalone: true,
-  template: `<button (click)="onClick()">{{ label }}</button>`,
-})
-export class ButtonComponent {
-  label: string = 'Click me';
-
-  onClick(): void {
-    // Build-Smoke: nur Typcheck, keine Runtime.
-  }
-}
-"""
-
-_SYNTHETIC_SWIFTUI_VIEW = b"""\
-import SwiftUI
-
-struct Button: View {
-    let label: String
-
-    var body: some View {
-        SwiftUI.Button(action: {}) {
-            Text(label)
-        }
-    }
-}
-"""
+# Phase 5b Stage 3: echte Build-Smokes für alle Referenz-Specs × {Angular,
+# SwiftUI}. Die synthetischen Mini-Snippets aus Phase 5a wurden ersetzt; die
+# gerenderten Outputs stammen aus dem Replay-Cache (`offline=True`) und fließen
+# direkt durch den jeweiligen Toolchain-Driver. Failures pro Zelle sind über
+# den `pytest.param`-id identifizierbar.
 
 
 @pytest.mark.conformance
-def test_angular_build_smoke_synthetic_via_tsc(tmp_path: Path) -> None:
-    """End-to-end Build-Smoke für Angular: synthetischer `@Component`-Snippet
+@pytest.mark.parametrize(
+    ("spec_id", "version"),
+    _REFERENCE_SPECS,
+    ids=[f"{sid.split('/')[-1]}@{ver}" for sid, ver in _REFERENCE_SPECS],
+)
+def test_angular_build_smoke_spec_via_tsc(spec_id: str, version: str, tmp_path: Path) -> None:
+    """End-to-end Build-Smoke für Angular: jeder gerenderte Referenz-Spec-Output
     muss durch `tsc --noEmit` mit den gepinnten Angular-Typings gehen.
-
-    Phase-5a-Scope: prüft den Driver-Pfad selbst (npm install + lokales tsc).
-    Cross-Spec×Cache-Coverage kommt in Phase 5b.
     """
     driver = AngularToolchainDriver()
     if not driver.is_available():
         pytest.skip("npm/node not available — toolchain missing.")
 
-    files = {"org/button.component.ts": _SYNTHETIC_ANGULAR_COMPONENT}
+    files, _key = _render_spec(spec_id, version, "angular")
     returncode, output = driver.build(files=files, work_dir=tmp_path)
-    assert returncode == 0, f"Angular-Build-Smoke fehlgeschlagen:\n{output}"
+    assert returncode == 0, f"Angular-Build-Smoke fehlgeschlagen für {spec_id}@{version}:\n{output}"
 
 
 @pytest.mark.conformance
-def test_swiftui_build_smoke_synthetic_via_swiftc(tmp_path: Path) -> None:
-    """End-to-end Build-Smoke für SwiftUI: synthetischer `View`-Snippet muss
-    durch `swiftc -typecheck` gegen das macOS-SDK gehen.
+@pytest.mark.parametrize(
+    ("spec_id", "version"),
+    _REFERENCE_SPECS,
+    ids=[f"{sid.split('/')[-1]}@{ver}" for sid, ver in _REFERENCE_SPECS],
+)
+def test_swiftui_build_smoke_spec_via_swiftc(spec_id: str, version: str, tmp_path: Path) -> None:
+    """End-to-end Build-Smoke für SwiftUI: jeder gerenderte Referenz-Spec-Output
+    muss durch `swiftc -typecheck` gegen das macOS-SDK gehen.
 
     Skipped auf Linux-CI (kein `xcrun`/SwiftUI-Framework verfügbar).
     """
@@ -331,6 +341,6 @@ def test_swiftui_build_smoke_synthetic_via_swiftc(tmp_path: Path) -> None:
     if not driver.is_available():
         pytest.skip("swiftc/xcrun not available — toolchain missing.")
 
-    files = {"org/Button.swift": _SYNTHETIC_SWIFTUI_VIEW}
+    files, _key = _render_spec(spec_id, version, "swiftui")
     returncode, output = driver.build(files=files, work_dir=tmp_path)
-    assert returncode == 0, f"SwiftUI-Build-Smoke fehlgeschlagen:\n{output}"
+    assert returncode == 0, f"SwiftUI-Build-Smoke fehlgeschlagen für {spec_id}@{version}:\n{output}"

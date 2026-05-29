@@ -131,18 +131,42 @@ das Prompt mit ein).
 > Netz zu und brauchen AWS-Credentials. Die Maintainer-Aktion ist Teil des
 > Phase-5b-Stage-2-Übergangs.
 
+## Echte Spec×Target-Build-Smokes (Phase 5b Stage 3)
+
+Mit den in Stage 2 eingecheckten Angular/SwiftUI-Cache-Fixtures laufen die
+Conformance-Tests jetzt über **alle fünf Phase-0-Referenz-Specs** statt über
+synthetische Mini-Snippets. Pro Target eine `pytest.mark.parametrize`-Achse:
+
+- `test_angular_build_smoke_spec_via_tsc[<spec>@<ver>]` — 5 Tests
+- `test_swiftui_build_smoke_spec_via_swiftc[<spec>@<ver>]` — 5 Tests (macOS only)
+
+`_render_spec(spec_id, version, target)` und `_lock_entry_for(...)` sind
+target-agnostische Helfer in `core/tests/test_conformance_build_smoke.py`. Der
+React-Test (`test_react_build_smoke_button_via_tsc`) bleibt unverändert; der
+volle 75-Pfad-Cross-Consistency-Sweep ist Stage-4-Scope.
+
+```bash
+# Nur Angular (5 parametrisierte Zellen):
+uv run pytest -m conformance \
+  core/tests/test_conformance_build_smoke.py::test_angular_build_smoke_spec_via_tsc -v
+
+# Eine einzelne Zelle:
+uv run pytest -m conformance \
+  "core/tests/test_conformance_build_smoke.py::test_swiftui_build_smoke_spec_via_swiftc[login-screen@0.1.0]"
+```
+
 ## Phase-5a-Scope vs. Phase 5b
 
 | Bereich                                   | Phase 5a | Phase 5b |
 |-------------------------------------------|----------|----------|
 | `tsc --noEmit` React (Button-Spec)        | ✓        |          |
-| `tsc --noEmit` Angular (synthetic snippet)| ✓        |          |
-| `swiftc -typecheck` SwiftUI (synthetic)   | ✓        |          |
-| Cross-Spec × Target (5×3 = 15 Pfade)      |          | ✓        |
-| Bedrock-Replay-Cache für SwiftUI/Angular  |          | ✓        |
-| 75-Pfad-Cross-Consistency-Sweep           |          | ✓        |
-| Visual-Regression (Spec-Screenshots)      |          | ✓        |
-| Echtes `ng build` (statt nur `tsc`)       |          | ✓        |
+| `tsc --noEmit` Angular (synthetic snippet)| ✓        | ersetzt  |
+| `swiftc -typecheck` SwiftUI (synthetic)   | ✓        | ersetzt  |
+| Bedrock-Replay-Cache für SwiftUI/Angular  |          | ✓ (Stage 2) |
+| Echte Spec×Target Build-Smokes (5 Specs × {Angular, SwiftUI}) |          | ✓ (Stage 3) |
+| 75-Pfad-Cross-Consistency-Sweep           |          | offen (Stage 4) |
+| Visual-Regression (Spec-Screenshots)      |          | out-of-scope |
+| Echtes `ng build` (statt nur `tsc`)       |          | out-of-scope |
 
 ## Design-Entscheidungen (Stage 0)
 

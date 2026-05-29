@@ -1,6 +1,6 @@
 # Phase 5b — Conformance Sweep, Replay-Cache-Recording & echte Spec×Target-Coverage
 
-> Status: **Stage 1 Done, Stage 2 blockiert auf User-Recording-Lauf** (2026-05-27).
+> Status: **Stages 1–3 Done** (Stage 2 durch User-Recording am 2026-05-29 abgeschlossen; Stage 3 am 2026-05-29 geliefert). Stages 4–6 offen.
 > Vorgänger: Phase 5a abgeschlossen (Build-Smoke-Driver für React/Angular/SwiftUI, synthetische Snippets). Tag `v0.8.0-phase-5a` gesetzt.
 > Disziplin: Erst nach Beantwortung der Open Questions wird ein Stage-1+-Implementierungsplan geschrieben (analog Phase 3/4/5a).
 >
@@ -122,9 +122,19 @@ Unter Annahme **OQ1=A** (Substages 1+2+3):
   unverändert (zeigt auf das Skript). User-Action: lokal
   `uv run python scripts/record_llm_cache.py --target angular,swiftui` mit
   AWS-Credentials, generierte JSONs unter `tests/fixtures/llm-cache/` committen.
-- **Stage 2** ⏳ Blockiert auf User: Replay-Cache-Fixtures für
-  `5 × {angular, swiftui}` committen (nach User-Recording).
-- **Stage 3**: Echte Build-Smoke-Erweiterung — synthetische Snippets durch alle 5 Spec×Target-Outputs ersetzen.
+- **Stage 2** ✅ Done (2026-05-29 durch User): Replay-Cache-Fixtures für
+  `5 Specs × {angular, swiftui}` unter `tests/fixtures/llm-cache/` committed
+  (12 neue Einträge: 6 angular + 6 swiftui inkl. button@0.1.1).
+- **Stage 3** ✅ Done (2026-05-29): Synthetische Mini-Snippets in
+  `core/tests/test_conformance_build_smoke.py` durch echte parametrisierte
+  Tests über alle 5 Referenz-Specs ersetzt. `_render_spec(spec_id, version,
+  target)`/`_lock_entry_for(...)` als target-agnostische Helfer; React-Test
+  unverändert (`test_react_build_smoke_button_via_tsc`). Neue Tests:
+  `test_angular_build_smoke_spec_via_tsc[*]` und
+  `test_swiftui_build_smoke_spec_via_swiftc[*]` mit je 5
+  Parametern (button/contact-form/http-api-client/login-screen/onboarding-wizard).
+  **Verifikation: 11 Conformance-Tests passed in 8.66 s lokal**
+  (1 React + 5 Angular + 5 SwiftUI); Default-Pytest weiter 332 grün.
 - **Stage 4**: 75-Pfad-Cross-Consistency-Sweep parametrisiert.
 - **Stage 5**: CI-Update (`conformance.yml` erweitern), Docs (`docs/conformance.md` + `docs/sweep.md` neu?).
 - **Stage 6**: Plan-Archivierung, AGENTS.md / `resume.md` Update, Tag-Vorschlag.
