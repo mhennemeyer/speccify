@@ -2,17 +2,29 @@
 
 Die Conformance-Suite prüft, dass der von Speccify generierte Code gegen die
 echten Ziel-Toolchains **kompiliert**. Phase-5a-Scope ist *Build-Smoke* (kein
-Linking, kein Bundle, keine Visual-Regression — letztere folgt in Phase 5b).
+Linking, kein Bundle); der Visual-Regression-Skeleton folgt in Phase 5c
+(siehe [`docs/visual-regression.md`](./visual-regression.md)).
 
 > **Konzept-Trennung**
 >
 > - **Unit-Codegen-Tests** (Default-Pytest): prüfen byte-identische Reproduzier-
 >   barkeit der Renderer-Outputs gegen einen eingecheckten LLM-Replay-Cache.
-> - **Build-Smoke** (Opt-in via `-m conformance`): füttert die gerenderten
->   Outputs in `tsc --noEmit` bzw. `swiftc -typecheck` und prüft, dass das
->   Resultat *typcheckt*. Catches LLM-Drift, Codegen-Bugs und Template-Regressionen.
-> - **Visual-Regression** (Phase 5b): Screenshot-Vergleich gegen
->   Spec-`screenshots[]` — Out-of-Scope hier.
+> - **Build-Smoke** (Opt-in via `-m conformance`, Phase 5a): füttert die
+>   gerenderten Outputs in `tsc --noEmit` bzw. `swiftc -typecheck` und prüft,
+>   dass das Resultat *typcheckt*. Catches LLM-Drift, Codegen-Bugs und
+>   Template-Regressionen.
+> - **Visual-Regression** (Opt-in via `-m visual_regression`, Phase 5c
+>   Skeleton): Pixel-Diff gegen committed Referenz-PNGs unter
+>   `specs/screenshots/` via Playwright + pixelmatch. Siehe
+>   [`docs/visual-regression.md`](./visual-regression.md).
+
+## Scope-Tabelle pro Phase
+
+| Phase | Marker              | Scope                                  | Status |
+| ----- | ------------------- | -------------------------------------- | ------ |
+| 5a    | `conformance`       | Build-Smoke (tsc / swiftc)             | ✅     |
+| 5b    | `conformance`       | 75-Pfad-Cross-Consistency-Sweep        | ✅     |
+| 5c    | `visual_regression` | Visual-Regression-Skeleton (Playwright + pixelmatch, 1 Spec × React) | ✅ |
 
 ## Targets
 

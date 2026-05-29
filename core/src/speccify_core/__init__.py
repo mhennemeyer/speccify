@@ -31,6 +31,15 @@ from speccify_core.conformance_build_smoke import (
     ToolchainDriver,
     build_smoke_driver_for,
 )
+from speccify_core.conformance_visual import (
+    DEFAULT_VISUAL_TOLERANCE,
+    VISUAL_TOOLCHAIN_MISSING,
+    PlaywrightPixelmatchDriver,
+    VisualDiffDriver,
+    VisualDiffResult,
+    VisualRegressionBackend,
+    visual_driver_for,
+)
 from speccify_core.loader import SpecLoader, SpecLoaderError
 from speccify_core.lockfile import (
     CURRENT_LOCKFILE_SCHEMA_VERSION,
@@ -105,7 +114,14 @@ __all__ = [
     "CacheMissError",
     "CodegenError",
     "BUILD_SMOKE_TOOLCHAIN_MISSING",
+    "DEFAULT_VISUAL_TOLERANCE",
+    "VISUAL_TOOLCHAIN_MISSING",
     "BuildSmokeBackend",
+    "PlaywrightPixelmatchDriver",
+    "VisualDiffDriver",
+    "VisualDiffResult",
+    "VisualRegressionBackend",
+    "visual_driver_for",
     "ConformanceBackend",
     "ConformanceReport",
     "ConformanceResult",

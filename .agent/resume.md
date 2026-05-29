@@ -1,110 +1,128 @@
-# Resume — Speccify Phase 5b abgeschlossen (alle Stages 0–6 Done)
+# Resume — Speccify Phase 5c abgeschlossen (Visual-Regression-Skeleton)
 
-> Einstiegspunkt für die nächste Session. Letzte Aktualisierung: 2026-05-29 (Phase-5b-Final).
+> Einstiegspunkt für die nächste Session. Letzte Aktualisierung: 2026-05-29 (Phase-5c-Final).
 
 ## Status
 
-- **Phase 5b Stage 4 Done** (2026-05-29) — 75-Pfad-Cross-Consistency-Sweep
-  in `registry/tests/test_cross_consistency_sweep.py` produktiv:
-  `5 Specs × 3 Targets × 5 Pfade (Local/Remote/CLI/MCP/Web)`.
-- **Phase 5b Stage 3 Done** (2026-05-29) — Echte Build-Smokes für alle 5
-  Referenz-Specs × {Angular, SwiftUI} via `pytest.mark.parametrize`.
-  Synthetische Mini-Snippets in `core/tests/test_conformance_build_smoke.py`
-  ersetzt; `_render_spec`/`_lock_entry_for` als target-agnostische Helfer.
-- **Phase 5b Stage 2 Done** (2026-05-29 durch User) — Replay-Cache-Fixtures
-  für `5 Specs × {angular, swiftui}` committed (12 neue JSONs unter
-  `tests/fixtures/llm-cache/`).
-- **Phase 5b Stage 1 Done** (2026-05-27) — `scripts/record_llm_cache.py` ist
-  target-aware.
-- **Phase 5b Stages 5+6 Done** (2026-05-29) — Stage 5: CI-Review ergab
-  keinen YAML-Change (Sweep läuft automatisch im bestehenden
-  `registry-backend`-Job); README + `docs/conformance.md` aktualisiert.
-  Stage 6: Plan archiviert nach
-  `.agent/plans/archive/phase-5b-conformance-sweep.md`.
+- **Phase 5c Stages 0–4 Done** (2026-05-29) — Visual-Regression-Skeleton
+  produktiv:
+  - `VisualRegressionBackend` + `VisualDiffDriver`-Protocol +
+    `VisualDiffResult`-Dataclass in
+    `core/src/speccify_core/conformance_visual.py`.
+  - `PlaywrightPixelmatchDriver` für React + Angular via headless Chromium +
+    `pixelmatch`+`pngjs` (gepinnt: `playwright@1.44.0`, `pixelmatch@5.3.0`,
+    `pngjs@7.0.0`).
+  - Pytest-Marker `visual_regression` in `pyproject.toml` mit Default-Exclude
+    (`addopts = -m "not conformance and not visual_regression"`).
+  - 13 Unit-Tests via Fake-Driver + 1 E2E-Test `test_visual_regression_button_react`
+    in `core/tests/test_conformance_visual.py`.
+  - CI-Workflow `.github/workflows/visual-regression.yml` (Ubuntu, Node 20,
+    Playwright-Browser-Cache, Path-Filter, Nightly-Cron `17 4 * * *`).
+  - `docs/visual-regression.md` (146 LOC) + Cross-Link + Scope-Tabelle in
+    `docs/conformance.md` + README-Update.
+  - Plan archiviert nach
+    `.agent/plans/archive/phase-5c-visual-regression-skeleton.md`.
 - **Kein aktiver Plan** in `.agent/plans/` (außer Master-Plan).
-  **Tag-Vorschlag an User: `v0.9.0-phase-5b`** (selbst nicht gesetzt, vgl. `rules.md`).
-- **Phase 5a** abgeschlossen, Tag `v0.8.0-phase-5a` **gesetzt** (Commit 7845844).
+  **Tag-Vorschlag an User: `v0.10.0-phase-5c`** (selbst nicht gesetzt, vgl. `rules.md`).
+- **Phase 5b** abgeschlossen; Tag-Vorschlag `v0.9.0-phase-5b` (offen).
+- **Phase 5a** abgeschlossen; Tag `v0.8.0-phase-5a` **gesetzt** (Commit 7845844).
 - **Phase 4** abgeschlossen; Tag-Vorschlag `v0.7.0-phase-4` (offen).
-- **Phase 3** abgeschlossen; Tag-Vorschlag `v0.6.0-phase-3` (offen).
-- **Phase 2** abgeschlossen; Tag-Vorschlag `v0.5.0-phase-2` (offen).
 
-## Verifikation Phase 5b Stage 4
+## Verifikation Phase 5c
 
-- **Root-Pytest (Default, `-m "not conformance"`)**: **332 passed**, 12
-  deselected (unverändert — neue Tests sind im Registry-Paket).
-- **Registry-Pytest**: **134 passed** in ~5 s (+15 ggü. Stage 3: 119 → 134).
-- **Sweep-Subset isoliert**: 15 Sweep-Parametrisierungen passed in 2.77 s.
-- **Root-Pytest (`-m conformance`)**: 11 passed (unverändert ggü. Stage 3).
-- `ruff check` → All checks passed. `ruff format --check` → 145 files already formatted.
+- **Root-Pytest (Default)**: **346 passed** (+14 ggü. Phase 5b = 332),
+  12 deselected (davon 1 neuer `visual_regression`-E2E-Test korrekt
+  deselected via Default-Marker-Exclude).
+- **Registry-Pytest**: **134 passed** (unverändert ggü. Phase 5b).
+- **Gesamt regulär: 480 Tests grün.**
+- `ruff check` → All checks passed. `ruff format --check` → 147 files already formatted.
 
-## Verifikation Phase 5a (final)
+## Stage-0-Entscheidungen (User-Antworten)
 
-- **Root-Pytest (Default, `-m "not conformance"`)**: **325 passed** (+13 ggü. Phase 4 = 312); 3 deselected.
-- **Root-Pytest (`-m conformance`)**: **3 passed** in 6.17 s lokal (React/Angular/SwiftUI Build-Smoke).
-- **Registry-Pytest**: **119 passed** (unverändert).
-- **Gesamt regulär: 444 Tests grün.**
-- `ruff check` → All checks passed.
-- `ruff format --check` → 143 files already formatted.
+| OQ  | Frage                      | Entscheidung                                     |
+| --- | -------------------------- | ------------------------------------------------ |
+| 1   | Tooling                    | Playwright + pixelmatch                          |
+| 2   | Targets Skeleton           | React + Angular                                  |
+| 3   | Anzahl Ref-PNGs            | 1 (button-primary)                               |
+| 4   | Default-Tolerance          | 10 % (`DEFAULT_VISUAL_TOLERANCE = 0.1`)          |
+| 5   | CI-Strategie               | Eigener Workflow `visual-regression.yml`         |
+| 6   | `--update-snapshots`-Flag  | Vertagt auf Folge-Phase                          |
+| 7   | Schema-Bump `tolerance`    | Vertagt — kein Schema-Bump im Skeleton           |
+| 8   | Tag-Vorschlag              | `v0.10.0-phase-5c`                               |
 
-## Was Phase 5a geliefert hat
+Hinweis: OQ6/OQ7 wurden initial mit „Jetzt" beantwortet, im Follow-up
+mit den Konsequenzen aber explizit vertagt (Skeleton-Disziplin).
 
-- **Stage 0**: 10 Open Questions vom User mit „folge deinen Empfehlungen" beantwortet (Toolchain-Pinning lokal, Conformance-Marker mit Default-Exclude, Speicherort in `core/`, `toolchain_missing` ≠ Failure).
-- **Stage 1**: `BuildSmokeBackend` + `ToolchainDriver`-Protocol in `core/src/speccify_core/conformance_build_smoke.py`; `ReactToolchainDriver` via `npm install` + lokales `tsc --noEmit` (`typescript@5.4.5` + `@types/react@18.2.79`).
-- **Stage 2** (Follow-up): `AngularToolchainDriver` analog — `@angular/core@17.3.0` + `@angular/common@17.3.0` + `rxjs@7.8.1` + `zone.js@0.14.4`; `tsc --noEmit` mit `experimentalDecorators=true`/`emitDecoratorMetadata=true`. E2E-Test mit synthetischem `@Component`-Snippet (Replay-Cache-Blocker umgangen — Phase-5a-Scope ist der Driver-Pfad, Cross-Spec-Coverage bleibt Phase 5b).
-- **Stage 3** (Follow-up): `SwiftUIToolchainDriver` via `xcrun --sdk macosx swiftc -typecheck`. macOS-only; Linux-CI skippt sauber via `toolchain_missing`. E2E-Test mit synthetischem `View`-Snippet.
-- **Stage 4** (Follow-up): Separater Workflow `.github/workflows/conformance.yml` mit 3 Jobs (`conformance-react`/`-angular` auf Ubuntu+Node 20, `conformance-swiftui` auf macOS-latest). Trigger: Path-Filter auf `conformance_build_smoke.py`/`codegen/**`/Test-Datei + `schedule: 17 3 * * *` nightly + `workflow_dispatch`. Default-CI (`ci.yml`) unverändert.
-- **Stage 5**: `docs/conformance.md` (122 LOC) — Konzept, Targets-Tabelle, Lokal-Walkthrough, CI-Verhalten, Backend-API, Scope-Tabelle 5a vs. 5b; README-Link aktualisiert; Plan-Status-Block aktualisiert; AGENTS.md + resume.md aktualisiert.
+## Was Phase 5c geliefert hat
 
-## Nächster Schritt — Phase-5c-Plan-Entwurf nach User-Tag
+- **Backend + Protocol**: `VisualRegressionBackend.compare(files, reference, work_dir)`
+  liefert `VisualDiffResult` mit `passed`, `diff_ratio`, `pixel_diff_count`,
+  `diff_image_path`, `reason`. `toolchain_missing`-Sentinel analog
+  Phase 5a → `pytest.skip`.
+- **Konkreter Driver**: `PlaywrightPixelmatchDriver` schreibt eine Mini-HTML-
+  Sandbox (`<pre>`-Render der Files), startet headless Chromium via
+  Playwright, diffed via Node-`pixelmatch`+`pngjs` und liefert JSON-Output
+  `{ "diff": int, "total": int }`. Echter Component-Mount ist Folge-Phase.
+- **Pytest-Marker**: `visual_regression` registriert + im Default-Run
+  excluded (analog `conformance` aus Phase 5a).
+- **E2E-Test**: rendert Mini-React-Snippet, vergleicht gegen
+  `specs/screenshots/button-primary.png`. Skip-Pfade für fehlendes
+  `node`/Chromium/Referenz-PNG sauber implementiert.
+- **CI**: Separater Workflow `.github/workflows/visual-regression.yml`,
+  Default-CI (`ci.yml`) unverändert. Cache für Playwright-Browser unter
+  `~/.cache/ms-playwright`.
+- **Docs**: `docs/visual-regression.md` + Cross-Link aus `docs/conformance.md`
+  + Scope-Tabelle (5a/5b/5c) + README-Block.
 
-Phase 5b ist komplett durch. Nach dem User-Tag `v0.9.0-phase-5b` ist der
-nächste Schritt ein Phase-5c-Plan-Entwurf. Kandidaten (aus dem alten
-Phase-5b-Backlog, in Phase 5b bewusst out-of-scope gelassen):
+## Nächster Schritt — Phase-5d-Plan-Entwurf nach User-Tag
 
-1. **Visual-Regression-Skeleton** — Screenshot-Vergleich gegen Spec-`screenshots[]` (Tooling-OQ: pixelmatch+Playwright vs. PIL.ImageChops).
-2. **Echtes `ng build`** statt nur `tsc --noEmit` für Angular (volle AOT-Pipeline).
-3. **Web-Backend Workspace-aware** — bisher explizit out-of-scope in Phase 4.
-4. **Spec-Schema-Bump** für Visual-Regression-Felder (falls (1) gewählt wird).
+Phase 5c ist Skeleton-Scope. Nach dem User-Tag `v0.10.0-phase-5c` ist der
+nächste Schritt ein Phase-5d-Plan-Entwurf. Kandidaten (aus Phase-5c-
+Out-of-Scope-Liste + Phase-5b-Folge-Backlog):
 
-Vor Implementierung: Stage 0 = Open Questions an User (analog Phase 3/4/5a/5b-Disziplin).
+1. **Volle Visual-Regression-Coverage** — `5 Specs × {react, angular}` mit
+   Referenz-PNG-Snapshots; voller Sweep parametrisiert.
+2. **Echter Component-Mount-Renderer** — statt `<pre>`-Sandbox eine
+   React/Angular-Runtime, die den generierten Code wirklich mountet.
+3. **`--update-snapshots`-Pytest-Flag** — Komfort für Maintainer-Workflow.
+4. **Schema-Bump `screenshots[].tolerance`** — Per-Screenshot-Tolerance
+   (eigene Schema-Migration-Phase v2→v3).
+5. **SwiftUI-Visual-Regression** — Xcode-UI-Test-Harness, macOS-CI.
+6. **Echtes `ng build`** statt `tsc --noEmit` (aus Phase 5b verschoben).
+7. **Web-Backend Workspace-aware** (aus Phase 4 verschoben).
 
-## Phase-5a-Recap (Plan-Entwurf nach User-Tag)
-
-Kandidaten (aus Phase-5a-Stage-0-Decisions + Plan-OQ5):
-
-1. **Replay-Cache-Recording**: User triggert `BEDROCK_RECORD=1`, Cache für `5 Specs × {angular, swiftui}` wird unter `tests/fixtures/llm-cache/` committed.
-2. **75-Pfad-Cross-Consistency-Sweep**: `5 Specs × 3 Targets × 5 Pfade (Local/Remote/CLI/MCP/Web)` parametrisiert.
-3. **Echte Spec×Target-Build-Smoke-Erweiterung**: Angular/SwiftUI nicht mehr nur synthetisch, sondern alle 5 Referenz-Specs durch den Driver.
-4. **Visual-Regression-Skeleton** (Stretch): Screenshot-Vergleich gegen Spec-`screenshots[]`.
-5. **Echtes `ng build`** (Stretch über `tsc --noEmit` hinaus).
-6. **Web-Backend Workspace-aware** (Phase 5c, separat).
-
-Vor Implementierung: Stage 0 = Open Questions an User (analog Phase 3/4/5a-Disziplin).
+Vor Implementierung: Stage 0 = Open Questions an User (analog
+Phase 3/4/5a/5b/5c-Disziplin).
 
 ## Befehle (Spickzettel)
 
 ```bash
 # Hidden-Flag entfernen (jedes Mal nach uv sync nötig) — läuft auch automatisch via conftest.py
-chflags nohidden .venv/lib/python3.12/site-packages/*.pth
+./scripts/fix-venv-hidden.sh
 
-# Default-Tests (ohne Conformance)
-.venv/bin/python -m pytest -q
+# Default-Tests (ohne Conformance + Visual-Regression)
+uv run pytest
 
 # Conformance-Tests (Opt-in, lokal mit npm + xcrun verifiziert)
-.venv/bin/python -m pytest -m conformance core/tests/test_conformance_build_smoke.py -v
+uv run pytest -m conformance core/tests/test_conformance_build_smoke.py -v
+
+# Visual-Regression-Tests (Opt-in, lokal mit npm + Playwright-Chromium)
+npx --yes playwright@1.44.0 install --with-deps chromium   # einmalig
+uv run pytest -m visual_regression core/tests/test_conformance_visual.py -v
 
 # Registry-Tests
-cd registry && ../.venv/bin/python -m pytest -q
+uv run pytest registry/
 
 # Lint + Format
-.venv/bin/python -m ruff check .
-.venv/bin/python -m ruff format --check .
+uv run ruff check .
+uv run ruff format --check .
 ```
 
 ## Pflichtlektüre vor Code
 
 1. `AGENTS.md` (Aktuelle Phase + Konventionen).
 2. `.agent/agent.md` + `.agent/rules.md` (Sprache: Deutsch, Du; FP-Stil; Tests pflicht; Tags nur User).
-3. `docs/conformance.md` (Phase-5a-Doku, Decisions + CLI-Walkthrough).
-4. `docs/workspaces.md` (Phase-4-Doku).
-5. `.agent/plans/archive/phase-5a-conformance-backends.md` (Phase-5a-Plan mit finalem Status-Block oben).
+3. `docs/conformance.md` (Phase-5a/5b-Doku, Scope-Tabelle).
+4. `docs/visual-regression.md` (Phase-5c-Doku, Backend-API + Workflow).
+5. `docs/workspaces.md` (Phase-4-Doku).
+6. `.agent/plans/archive/phase-5c-visual-regression-skeleton.md` (Phase-5c-Plan).

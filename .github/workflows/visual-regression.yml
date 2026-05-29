@@ -1,0 +1,74 @@
+name: Visual Regression (Skeleton)
+
+# Phase 5c — Visual-Regression-Skeleton via Playwright + pixelmatch. Headless
+# Chromium rendert die generierten Files in einer Mini-HTML-Sandbox; pixelmatch
+# diffed gegen die committed Referenz-PNGs unter `specs/screenshots/`.
+#
+# Eigener Workflow (Stage-0-OQ5), weil die Toolchain (Chromium ~200 MB) sich
+# stark von `conformance.yml` (tsc/swiftc) unterscheidet.
+#
+# Default-CI (`ci.yml`) führt diese Tests *nicht* aus — der Marker
+# `visual_regression` ist in `pyproject.toml` via
+# `addopts = -m "not conformance and not visual_regression"` deselected. Hier
+# wird explizit `-m visual_regression` gesetzt.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "core/src/speccify_core/conformance_visual.py"
+      - "core/tests/test_conformance_visual.py"
+      - "specs/screenshots/**"
+      - ".github/workflows/visual-regression.yml"
+  pull_request:
+    paths:
+      - "core/src/speccify_core/conformance_visual.py"
+      - "core/tests/test_conformance_visual.py"
+      - "specs/screenshots/**"
+      - ".github/workflows/visual-regression.yml"
+  schedule:
+    # 04:17 UTC nightly — versetzt zum Conformance-Workflow (03:17).
+    - cron: "17 4 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: visual-regression-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  visual-regression-react:
+    name: visual-regression · react (playwright + pixelmatch, ubuntu)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      - name: Set up Python (from .python-version)
+        run: uv python install
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Sync workspace
+        run: uv sync --all-packages
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-1.44.0-${{ runner.os }}
+
+      - name: Install Playwright Chromium (with system deps)
+        run: npx --yes playwright@1.44.0 install --with-deps chromium
+
+      - name: Pytest (visual_regression marker)
+        run: uv run pytest -m visual_regression core/tests/test_conformance_visual.py -v
