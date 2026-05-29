@@ -46,6 +46,64 @@ DEFAULT_FIXTURES = REPO_ROOT / "registry-fixtures"
 DEFAULT_CACHE_DIR = REPO_ROOT / "tests" / "fixtures" / "llm-cache"
 
 
+def _ensure_venv_pth_visible() -> None:
+    """macOS-Workaround: `.pth`-Dateien (und ggf. versteckte Subdirs/`.py`-
+    Dateien) im **aktiven** venv entversteckten, bevor wir `speccify_core`
+    importieren. Pytest tut das automatisch via `conftest.py`; Standalone-
+    Skripte wie dieses müssen den Hook selbst triggern, sonst bricht der
+    Import mit `ModuleNotFoundError` (siehe AGENTS.md, Hinweis 6).
+
+    Robustheit gegen `uv run`: `uv run` setzt `sys.prefix` auf das von ihm
+    verwaltete venv — das ist **nicht** zwangsläufig `<repo>/.venv`. Wir
+    entversteckten daher primär `sys.prefix` und zusätzlich (defensiv)
+    `<repo>/.venv`. Falls nach dem flachen Sweep der Import immer noch
+    fehlschlägt, ziehen wir transparent den `--deep`-Sweep nach (versteckte
+    Subdirs + `.py`-Dateien). No-Op außerhalb macOS.
+    """
+    if sys.platform != "darwin":
+        return
+    sys.path.insert(0, str(REPO_ROOT / "scripts"))
+    try:
+        from _venv_hygiene import unhide_venv_deep, unhide_venv_pth_files
+    except ImportError:
+        return
+
+    candidates: list[Path] = []
+    active = Path(sys.prefix)
+    if active.is_dir() and (active / "lib").is_dir():
+        candidates.append(active)
+    repo_venv = REPO_ROOT / ".venv"
+    if repo_venv.is_dir() and repo_venv.resolve() != active.resolve():
+        candidates.append(repo_venv)
+
+    for venv in candidates:
+        unhide_venv_pth_files(venv)
+
+    # `site.py` hat die (damals versteckten) `.pth`-Dateien beim Interpreter-
+    # Start ignoriert — jetzt, wo sie sichtbar sind, müssen wir `site.main()`
+    # erneut laufen lassen, damit die editable-Workspace-Pfade in `sys.path`
+    # landen. Sonst nützt das Entversteckten nichts für den aktuellen Prozess.
+    import importlib
+    import site
+
+    importlib.reload(site)
+    site.main()
+
+    # Sanity-Check: lässt sich `speccify_core` jetzt finden? Falls nicht,
+    # ziehen wir den teuren `--deep`-Sweep nach (versteckte Subdirs +
+    # `.py`-Dateien) und re-loaden `site` nochmal.
+    import importlib.util
+
+    if importlib.util.find_spec("speccify_core") is None:
+        for venv in candidates:
+            unhide_venv_deep(venv)
+        importlib.reload(site)
+        site.main()
+
+
+_ensure_venv_pth_visible()
+
+
 def _load_dotenv(path: Path) -> None:
     """Minimaler `.env`-Loader: setzt `KEY=VALUE` in `os.environ`, ohne `python-dotenv`.
 
