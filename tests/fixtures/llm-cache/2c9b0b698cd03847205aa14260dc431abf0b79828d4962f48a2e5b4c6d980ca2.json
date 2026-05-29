@@ -1,0 +1,10 @@
+{
+  "key": {
+    "model": "bedrock/eu.anthropic.claude-opus-4-7",
+    "prompt_version": "0.1.0",
+    "seed": 1,
+    "spec_sha256": "36034506959357104e7b3b1ed9fed9831bf156a1e4983dd191125e898cc51266",
+    "target": "swiftui"
+  },
+  "response": "import SwiftUI\n\nstruct HttpApiClient: View {\n    enum Method: String {\n        case GET\n        case POST\n    }\n\n    enum FailureReason: String {\n        case timeout\n        case network\n        case http_4xx\n        case http_5xx\n    }\n\n    struct RequestStartedPayload {\n        let method: Method\n        let path: String\n    }\n\n    struct RequestSucceededPayload {\n        let status: Int\n        let duration_ms: Int\n    }\n\n    struct RequestFailedPayload {\n        let reason: FailureReason\n        let status: Int\n    }\n\n    var base_url: String\n    var timeout_ms: Int = 10000\n    var max_retries: Int = 3\n    var auth_token: String? = nil\n\n    var onRequestStarted: ((RequestStartedPayload) -> Void)? = nil\n    var onRequestSucceeded: ((RequestSucceededPayload) -> Void)? = nil\n    var onRequestFailed: ((RequestFailedPayload) -> Void)? = nil\n\n    var body: some View {\n        VStack(alignment: .leading, spacing: 8) {\n            Text(\"HTTP-API-Client\")\n                .font(.headline)\n            Text(\"base_url: \\(base_url)\")\n            Text(\"timeout_ms: \\(timeout_ms)\")\n            Text(\"max_retries: \\(max_retries)\")\n            Text(\"auth_token: \\(auth_token ?? \"—\")\")\n        }\n        .padding()\n    }\n}"
+}
