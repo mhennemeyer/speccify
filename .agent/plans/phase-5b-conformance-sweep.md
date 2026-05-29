@@ -1,6 +1,6 @@
 # Phase 5b — Conformance Sweep, Replay-Cache-Recording & echte Spec×Target-Coverage
 
-> Status: **Stages 1–3 Done** (Stage 2 durch User-Recording am 2026-05-29 abgeschlossen; Stage 3 am 2026-05-29 geliefert). Stages 4–6 offen.
+> Status: **Stages 1–4 Done** (Stage 2 durch User-Recording am 2026-05-29 abgeschlossen; Stage 3 am 2026-05-29; Stage 4 am 2026-05-29). Stages 5–6 offen.
 > Vorgänger: Phase 5a abgeschlossen (Build-Smoke-Driver für React/Angular/SwiftUI, synthetische Snippets). Tag `v0.8.0-phase-5a` gesetzt.
 > Disziplin: Erst nach Beantwortung der Open Questions wird ein Stage-1+-Implementierungsplan geschrieben (analog Phase 3/4/5a).
 >
@@ -135,7 +135,17 @@ Unter Annahme **OQ1=A** (Substages 1+2+3):
   Parametern (button/contact-form/http-api-client/login-screen/onboarding-wizard).
   **Verifikation: 11 Conformance-Tests passed in 8.66 s lokal**
   (1 React + 5 Angular + 5 SwiftUI); Default-Pytest weiter 332 grün.
-- **Stage 4**: 75-Pfad-Cross-Consistency-Sweep parametrisiert.
+- **Stage 4** ✅ Done (2026-05-29): 75-Pfad-Cross-Consistency-Sweep in
+  `registry/tests/test_cross_consistency_sweep.py` (15 parametrisierte Zellen
+  = `5 Specs × 3 Targets`, je 5 Pfade Local/Remote/CLI/MCP/Web → 75 byte-
+  Vergleichsoperationen). Pfad-Design (OQ4=A): eine zentrale Test-Datei mit
+  voller `@pytest.mark.parametrize`-Matrix; CLI/MCP per Function-Call-Level
+  (`cli_run_lock` + `cli_run_pull`/`mcp_run_pull` gegen dynamisch erzeugtes
+  Mini-Manifest), Remote über `live_server`+`RemoteRegistry`, Web über
+  `render_spec_from_yaml`. Web-Pfad ist heute target-agnostisch (OQ5=A
+  bestätigt — kein `xfail` nötig). **Verifikation: 15 Sweep-Tests passed in
+  2.77 s lokal**; Registry-Pytest insgesamt 134 passed (+15 ggü. Stage 3);
+  Root-Default unverändert 332 passed.
 - **Stage 5**: CI-Update (`conformance.yml` erweitern), Docs (`docs/conformance.md` + `docs/sweep.md` neu?).
 - **Stage 6**: Plan-Archivierung, AGENTS.md / `resume.md` Update, Tag-Vorschlag.
 

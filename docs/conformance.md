@@ -155,6 +155,35 @@ uv run pytest -m conformance \
   "core/tests/test_conformance_build_smoke.py::test_swiftui_build_smoke_spec_via_swiftc[login-screen@0.1.0]"
 ```
 
+## 75-Pfad-Cross-Consistency-Sweep (Phase 5b Stage 4)
+
+Mit Stages 1–3 etabliert (Cache + echte Build-Smokes) liefert Stage 4 den
+vollen Cross-Consistency-Sweep über alle fünf Bezugsweg-Pfade:
+
+| # | Pfad   | API                                                                           |
+|---|--------|-------------------------------------------------------------------------------|
+| 1 | Local  | `LocalRegistry.fetch` + `render_for_target` (Referenz)                        |
+| 2 | Remote | Publish über `live_server` + `RemoteRegistry.fetch` + `render_for_target`     |
+| 3 | CLI    | `speccify_cli.commands.lock.run_lock` + `speccify_cli.commands.pull.run_pull` |
+| 4 | MCP    | `speccify_mcp.tools.pull.run_pull` (Function-Call-Level)                      |
+| 5 | Web    | `speccify_web_backend.services.render.render_spec_from_yaml`                  |
+
+Matrix: `5 Specs × 3 Targets = 15 Zellen`, pro Zelle alle 5 Pfade gegen den
+Local-Pfad byte-verglichen → **75 byte-Vergleichsoperationen** pro Sweep-Lauf.
+
+```bash
+# Voller Sweep (Default-Lauf des Registry-Test-Pakets, keine Conformance-Marker):
+cd registry && ../.venv/bin/python -m pytest tests/test_cross_consistency_sweep.py -v
+
+# Einzelne Zelle:
+cd registry && ../.venv/bin/python -m pytest \
+  "tests/test_cross_consistency_sweep.py::test_cross_consistency_sweep_local_remote_cli_mcp_web[button@0.1.0-react]"
+```
+
+Die Tests laufen im **Default-Registry-Pytest** (keine `@conformance`-Marker
+nötig, da keine externe Toolchain involviert ist — alle Renderings nutzen den
+Replay-Cache offline).
+
 ## Phase-5a-Scope vs. Phase 5b
 
 | Bereich                                   | Phase 5a | Phase 5b |
@@ -164,7 +193,7 @@ uv run pytest -m conformance \
 | `swiftc -typecheck` SwiftUI (synthetic)   | ✓        | ersetzt  |
 | Bedrock-Replay-Cache für SwiftUI/Angular  |          | ✓ (Stage 2) |
 | Echte Spec×Target Build-Smokes (5 Specs × {Angular, SwiftUI}) |          | ✓ (Stage 3) |
-| 75-Pfad-Cross-Consistency-Sweep           |          | offen (Stage 4) |
+| 75-Pfad-Cross-Consistency-Sweep           |          | ✓ (Stage 4) |
 | Visual-Regression (Spec-Screenshots)      |          | out-of-scope |
 | Echtes `ng build` (statt nur `tsc`)       |          | out-of-scope |
 
