@@ -31,6 +31,18 @@
       "id" : "4C1214D5-1E23-455E-9074-A2BFB1FC8F5A",
       "role" : "assistant",
       "timestamp" : 1780301799.929837
+    },
+    {
+      "content" : "Bitte für den Plan ein Board anlegen und den Plan in Tickets schneiden",
+      "id" : "B6DDF9F1-0199-4756-9CF2-AB03C0D2C9D4",
+      "role" : "user",
+      "timestamp" : 1780301955.757368
+    },
+    {
+      "content" : "Um den Plan für **phase-5d-visual-regression-coverage** in ein Board aufzusplitten, können wir die einzelnen Stufen und Schritte als Tickets definieren. Dies ermöglicht es dem Team, den Fortschritt besser zu verwalten und spezifische Aufgaben klarer zuzuordnen.\n\n### Board-Struktur für den Plan\n\n#### Ticket 1: Stage 1 - Driver-Render-API + Recorder-Script\n- **Beschreibung:** Implementierung des `PlaywrightPixelmatchDriver` mit einer eigenständigen `render()`-Methode und Erstellung des `scripts\/record_visual_snapshots.py`.\n- **Akzeptanzkriterien:**\n  - `PlaywrightPixelmatchDriver` hat eine definierte Render-Methode.\n  - `scripts\/record_visual_snapshots.py` kann PNGs generieren und ist idempotent.\n\n#### Ticket 2: Stage 2 - Initiale 8 PNGs generieren & committen\n- **Beschreibung:** Generierung der Referenz-PNGs für alle 8 UI-Specs und Commit in das Repository.\n- **Akzeptanzkriterien:**\n  - Alle 8 PNGs sind korrekt generiert und folgen der Benennungs-Konvention.\n  - Commits wurden von den Maintainer überprüft und akzeptiert.\n\n#### Ticket 3: Stage 3 - Parametrisierter Sweep-Test\n- **Beschreibung:** Entwicklung des parametrisierten Sweep-Tests in `core\/tests\/test_visual_regression_sweep.py`.\n- **Akzeptanzkriterien:**\n  - Sweep-Test deckt alle 8 Pfade ab und gibt Rückmeldungen für das Testing.\n  - Dedizierte Skip-Reasons sind implementiert.\n\n#### Ticket 4: Stage 5 - CI-Workflow an Sweep anpassen\n- **Beschreibung:** Anpassung des CI-Workflows (`visual-regression.yml`) zur Einbindung des parametrisierten Sweep-Tests in einen einzigen Job.\n- **Akzeptanzkriterien:**\n  - CI-Workflow läuft erfolgreich als ein Job und bleibt stabil.\n  - Bei Fehlern werden Artefakte (actual-PNGs und Diff-PNGs) hochgeladen.\n\n#### Ticket 5: Stage 6 - Dokumentation und Archivierung\n- **Beschreibung:** Erweiterung der Dokumentation in `docs\/visual-regression.md`, Aktualisierung von README und Archivierung des Plans.\n- **Akzeptanzkriterien:**\n  - Die Dokumentation umfasst alle neuen Workflows und Troubleshooting-Strategien.\n  - Plan ist archiviert und AGENTS.md wird aktualisiert.\n\n### Nächste Schritte\n- Erstelle ein Board in deinem bevorzugten Projektmanagement-Tool (z. B. Jira, Trello, Asana) und füge die oben genannten Tickets hinzu.\n- Weise die Tickets den entsprechenden Teammitgliedern zu und setze Fristen, falls erforderlich.\n\nFalls du weitere Informationen oder spezifische Details für die Tickets benötigst, lass es mich wissen!",
+      "id" : "C3988DBB-C8FE-4F26-8D4C-D80C1ED1FB37",
+      "role" : "assistant",
+      "timestamp" : 1780301970.6878061
     }
   ],
   "model" : "gpt-4o",
@@ -40,5 +52,5 @@
     "projectPath" : "\/Users\/mhennemeyer\/Desktop\/Work\/Flowcation"
   },
   "title" : "Neuer Chat",
-  "updatedAt" : 1780301799.929837
+  "updatedAt" : 1780301970.6878061
 }

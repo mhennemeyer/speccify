@@ -151,6 +151,16 @@ class PlaywrightPixelmatchDriver:
         # *ohne* dass wir eine echte JS-Runtime/Framework-Bootstrap-Pipeline
         # brauchen. Phase-5c-Skeleton-Scope: Diff-Pfad funktioniert. Ein
         # echter Component-Mount ist Folge-Phase.
+        #
+        # Phase-5d-Determinismus-Härte (mittel, OQ4 = b): zusätzlich zum
+        # Viewport-Pin (siehe `_screenshot_script`):
+        #   * `color-scheme: light` + harte Farb-Pins (`#fff`/`#000`) — kein
+        #     OS-Dark-Mode-Drift.
+        #   * Fixer Font-Stack mit `monospace`-Fallback (kein
+        #     System-Default-Font-Drift zwischen macOS/Linux/CI).
+        #   * `prefers-reduced-motion` wird via Playwright `colorScheme`/
+        #     `reducedMotion`-Context-Option gesetzt (siehe
+        #     `_screenshot_script`) — hier nur dokumentiert.
         snippets: list[str] = []
         for rel_path in sorted(files):
             try:
@@ -165,10 +175,19 @@ class PlaywrightPixelmatchDriver:
         return (
             "<!doctype html>\n"
             "<html><head><meta charset='utf-8'>"
+            "<meta name='color-scheme' content='light'>"
             "<style>"
-            "body{font-family:monospace;margin:0;padding:8px;background:#fff;color:#000;}"
+            ":root{color-scheme:light;}"
+            "*,*::before,*::after{"
+            "animation-duration:0s !important;animation-delay:0s !important;"
+            "transition-duration:0s !important;transition-delay:0s !important;"
+            "}"
+            "html,body{background:#fff;color:#000;}"
+            "body{font-family:'Courier New',Courier,monospace;margin:0;padding:8px;"
+            "-webkit-font-smoothing:none;font-smooth:never;}"
             "h2{font-size:12px;margin:4px 0;}"
-            "pre{font-size:10px;line-height:1.2;margin:0 0 8px 0;white-space:pre-wrap;}"
+            "pre{font-family:'Courier New',Courier,monospace;font-size:10px;"
+            "line-height:1.2;margin:0 0 8px 0;white-space:pre-wrap;}"
             "</style></head><body>"
             f"{body}"
             "</body></html>\n"
@@ -178,12 +197,18 @@ class PlaywrightPixelmatchDriver:
         # Minimal Playwright-Skript als ESM. `chromium.launch()` setzt voraus,
         # dass `npx playwright install chromium` einmal lokal gelaufen ist
         # (in CI per Workflow-Step). `goto('file://...')` braucht kein Netz.
+        # Phase-5d-Determinismus-Härte (OQ4=b): `colorScheme: 'light'` +
+        # `reducedMotion: 'reduce'` werden hier am Browser-Context gesetzt,
+        # passend zu den CSS-Pins in `_index_html` (color-scheme: light +
+        # animation-duration:0s). `forcedColors: 'none'` schützt vor
+        # OS-Accessibility-High-Contrast-Themes.
         return (
             "import { chromium } from 'playwright';\n"
             "const browser = await chromium.launch();\n"
             "const context = await browser.newContext({ viewport: "
             f"{{ width: {self.viewport_width}, height: {self.viewport_height} }}"
-            " });\n"
+            ", colorScheme: 'light', reducedMotion: 'reduce',"
+            " forcedColors: 'none' });\n"
             "const page = await context.newPage();\n"
             f"await page.goto('file://{html_path.as_posix()}');\n"
             f"await page.screenshot({{ path: '{out_path.as_posix()}', fullPage: false }});\n"

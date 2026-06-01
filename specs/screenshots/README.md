@@ -1,29 +1,62 @@
 # Referenz-Screenshots
 
-Verzeichnis-Konvention für Visual-Regression (Phase 5c).
+Verzeichnis-Konvention für Visual-Regression (Phase 5c Skeleton → Phase 5d
+Sweep). Siehe [`docs/visual-regression.md`](../../docs/visual-regression.md)
+für die volle Doku.
 
-Spec-Manifeste referenzieren Screenshots relativ via `screenshots:`-Feld
-(siehe `specs/button.speccify.yaml`), z. B. `./screenshots/button-primary.png`.
-Dieses Verzeichnis hält die committed Referenz-PNGs, gegen die
-`VisualRegressionBackend` diffed.
+## Namens-Konvention
 
-## Status (Skeleton)
+Phase 5d nutzt eine **flache Namens-Konvention** (OQ1 = a):
 
-Phase 5c Skeleton-Scope: **1 Referenz-PNG** als End-to-End-Proof reicht.
-Voller Sweep über alle 5 Phase-0-Specs × {React, Angular} ist Folge-Phase.
+```
+specs/screenshots/<spec-name>-<target>.png
+```
 
-## Workflow: Neue Referenz hinzufügen
+Beispiele:
 
-1. Spec-Codegen lokal laufen lassen (mit Bedrock-Replay-Cache).
-2. `PlaywrightPixelmatchDriver.render()` auf den Output anwenden, das
-   resultierende `actual.png` als Referenz nach `specs/screenshots/<name>.png`
-   committen.
-3. Test in `core/tests/test_conformance_visual.py` ergänzen (analog
-   `test_visual_regression_button_react`).
+- `button-react.png`, `button-angular.png`
+- `contact-form-react.png`, `contact-form-angular.png`
+- `login-screen-react.png`, `login-screen-angular.png`
+- `onboarding-wizard-react.png`, `onboarding-wizard-angular.png`
 
-Siehe `docs/visual-regression.md` für Details.
+`http-api-client` ist headless und **nicht** im Sweep (ZQ1).
+
+Phase-5c-Skeleton-PNG `button-primary.png` (variant-basiert, target-agnostisch)
+existiert ggf. zusätzlich — Phase-5d-Sweep ignoriert sie.
+
+## Coverage
+
+| Spec                | Targets              | PNGs |
+| ------------------- | -------------------- | ---- |
+| `button`            | react + angular      | 2    |
+| `contact-form`      | react + angular      | 2    |
+| `login-screen`      | react + angular      | 2    |
+| `onboarding-wizard` | react + angular      | 2    |
+| **Summe**           |                      | **8** |
+
+## Workflow: PNGs (re-)generieren
+
+```bash
+# Alle 8 PNGs neu aufnehmen (idempotent, deterministisch):
+uv run python scripts/record_visual_snapshots.py --all
+
+# Nur eine Kombination:
+uv run python scripts/record_visual_snapshots.py --spec button --target react
+```
+
+Voraussetzungen:
+
+- `node` + `npm` (Node 20+).
+- Einmaliger Playwright-Chromium-Install:
+  `npx --yes playwright@1.44.0 install --with-deps chromium`
+- Eingecheckte Replay-Cache-Fixtures unter `tests/fixtures/llm-cache/`
+  (kein Netz nötig, Phase 5b).
+
+Das Skript ruft denselben `PlaywrightPixelmatchDriver`, den der Sweep-Test
+in CI nutzt (Single-Source-of-Truth, OQ3 = a).
 
 ## Fehlende PNGs
 
-Wenn eine Referenz-PNG fehlt, skippt der Test sauber via
-`pytest.skip("reference_missing: …")` — kein Failure.
+Wenn eine Referenz-PNG fehlt, skippt der Sweep-Test sauber mit
+`pytest.skip("reference_missing: …")` — kein Failure. Die Maintainer-Hoheit
+über die PNGs bleibt damit explizit (analog Phase-5b-Replay-Cache-Fixtures).

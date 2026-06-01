@@ -1,11 +1,9 @@
-name: Visual Regression (Skeleton)
+name: Visual Regression (Sweep)
 
-# Phase 5c — Visual-Regression-Skeleton via Playwright + pixelmatch. Headless
-# Chromium rendert die generierten Files in einer Mini-HTML-Sandbox; pixelmatch
-# diffed gegen die committed Referenz-PNGs unter `specs/screenshots/`.
-#
-# Eigener Workflow (Stage-0-OQ5), weil die Toolchain (Chromium ~200 MB) sich
-# stark von `conformance.yml` (tsc/swiftc) unterscheidet.
+# Phase 5c — Skeleton (1 Pfad). Phase 5d — Voller Sweep über 8 Pfade
+# (4 UI-Specs × {react, angular}; `http-api-client` ist headless, ZQ1). Ein
+# einziger Job (OQ5 = a), damit npm install + Chromium-Install nur einmal
+# laufen.
 #
 # Default-CI (`ci.yml`) führt diese Tests *nicht* aus — der Marker
 # `visual_regression` ist in `pyproject.toml` via
@@ -17,14 +15,24 @@ on:
     branches: [main]
     paths:
       - "core/src/speccify_core/conformance_visual.py"
+      - "core/src/speccify_core/codegen/**"
       - "core/tests/test_conformance_visual.py"
-      - "specs/screenshots/**"
+      - "core/tests/test_visual_regression_sweep.py"
+      - "specs/**"
+      - "registry-fixtures/**"
+      - "tests/fixtures/llm-cache/**"
+      - "scripts/record_visual_snapshots.py"
       - ".github/workflows/visual-regression.yml"
   pull_request:
     paths:
       - "core/src/speccify_core/conformance_visual.py"
+      - "core/src/speccify_core/codegen/**"
       - "core/tests/test_conformance_visual.py"
-      - "specs/screenshots/**"
+      - "core/tests/test_visual_regression_sweep.py"
+      - "specs/**"
+      - "registry-fixtures/**"
+      - "tests/fixtures/llm-cache/**"
+      - "scripts/record_visual_snapshots.py"
       - ".github/workflows/visual-regression.yml"
   schedule:
     # 04:17 UTC nightly — versetzt zum Conformance-Workflow (03:17).
@@ -36,10 +44,10 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  visual-regression-react:
-    name: visual-regression · react (playwright + pixelmatch, ubuntu)
+  visual-regression-sweep:
+    name: visual-regression · sweep (react + angular, 8 paths, ubuntu)
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
 
     steps:
       - name: Checkout
@@ -70,5 +78,19 @@ jobs:
       - name: Install Playwright Chromium (with system deps)
         run: npx --yes playwright@1.44.0 install --with-deps chromium
 
-      - name: Pytest (visual_regression marker)
-        run: uv run pytest -m visual_regression core/tests/test_conformance_visual.py -v
+      - name: Pytest (visual_regression marker, full sweep)
+        # Phase 5d: führt sowohl den Phase-5c-Skeleton-E2E-Test als auch den
+        # neuen 8-Pfad-Sweep aus. Beide nutzen denselben `npm install` +
+        # Chromium-Install (Stage-0-OQ5 = a, ein Job).
+        run: uv run pytest -m visual_regression core/tests/ -v
+
+      - name: Upload visual-regression artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-regression-diffs-${{ github.run_id }}
+          path: |
+            /tmp/pytest-of-runner/**/actual.png
+            /tmp/pytest-of-runner/**/diff.png
+          if-no-files-found: ignore
+          retention-days: 14
