@@ -51,7 +51,7 @@ def _ensure_venv_pth_visible() -> None:
     Dateien) im **aktiven** venv entversteckten, bevor wir `speccify_core`
     importieren. Pytest tut das automatisch via `conftest.py`; Standalone-
     Skripte wie dieses müssen den Hook selbst triggern, sonst bricht der
-    Import mit `ModuleNotFoundError` (siehe AGENTS.md, Hinweis 6).
+    Import mit `ModuleNotFoundError` (siehe .agent/agent.md, Hinweis 6).
 
     Robustheit gegen `uv run`: `uv run` setzt `sys.prefix` auf das von ihm
     verwaltete venv — das ist **nicht** zwangsläufig `<repo>/.venv`. Wir

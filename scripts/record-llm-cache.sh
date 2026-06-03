@@ -8,7 +8,7 @@
 #      AWS_SECRET_ACCESS_KEY — ohne die Werte zu loggen.
 #   3. `uv sync --extra bedrock` (boto3 + Co. installieren).
 #   4. macOS-Quarantäne-Fix: `chflags nohidden` auf alle relevanten
-#      `.pth`-Dateien + die editable Workspace-Pakete (vgl. AGENTS.md #6).
+#      `.pth`-Dateien + die editable Workspace-Pakete (vgl. .agent/agent.md #6).
 #   5. Sanity-Check: editable Imports funktionieren.
 #   6. Führt `scripts/record_llm_cache.py` direkt mit dem venv-Python aus
 #      (NICHT via `uv run`, das würde die `.pth`-Dateien u. U. wieder

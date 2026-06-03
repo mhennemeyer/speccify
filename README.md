@@ -128,7 +128,7 @@ uv sync --reinstall-package django
 
 ## Wo es weitergeht
 
-- [`AGENTS.md`](./AGENTS.md) — Onboarding für Coding-Agents (Vision, Repo-Layout, Konventionen).
+- [`.agent/agent.md`](./.agent/agent.md) — Onboarding für Coding-Agents (Vision, Repo-Layout, Konventionen).
 - [`docs/workspaces.md`](./docs/workspaces.md) — Cargo-Style Workspaces (Phase 4): Root-Lockfile, Per-Member-Outputs, MVS-Konflikt-UX.
 - [`docs/conformance.md`](./docs/conformance.md) — Build-Smoke gegen echte Toolchains (Phase 5a: React/Angular via `tsc --noEmit`, SwiftUI via `swiftc -typecheck`) **+ 75-Pfad-Cross-Consistency-Sweep (Phase 5b Stage 4)**: `5 Specs × 3 Targets × 5 Pfade (Local/Remote/CLI/MCP/Web)` byte-identisch via `registry/tests/test_cross_consistency_sweep.py`.
 - [`docs/visual-regression.md`](./docs/visual-regression.md) — **Phase 5d Voller Sweep**: Visual-Regression über `4 UI-Specs × {react, angular} = 8 Pfade` mit committed Referenz-PNGs (flache Konvention `<spec>-<target>.png`), Recorder-Script `scripts/record_visual_snapshots.py`, ein-Job-CI (`visual-regression.yml`), 10 % Default-Tolerance, Determinismus-Härte mittel (reduce-motion + color-scheme:light + monospace-Font-Stack).

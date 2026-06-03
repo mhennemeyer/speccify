@@ -45,7 +45,7 @@ SCOPE: str = "org"
 
 
 def _ensure_venv_pth_visible() -> None:
-    """macOS-Workaround analog `record_llm_cache.py` (siehe AGENTS.md, Hinweis 6)."""
+    """macOS-Workaround analog `record_llm_cache.py` (siehe .agent/agent.md, Hinweis 6)."""
     if sys.platform != "darwin":
         return
     sys.path.insert(0, str(REPO_ROOT / "scripts"))
