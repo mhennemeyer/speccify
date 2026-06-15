@@ -55,7 +55,7 @@ ignore_missing_imports = true
 # requires `pytest-django` + a Django bootstrap that would otherwise
 # interfere with the other suites. Use `uv run pytest registry/` to run
 # the registry tests (its own `pytest.ini` opts the django plugin in).
-testpaths = ["core", "cli", "mcp", "apps/web/backend"]
+testpaths = ["core", "cli", "mcp", "apps/web/backend", "tests"]
 # `-m "not conformance"` excludes the Phase-5a build-smoke tests by default
 # because they spawn external toolchains (`npx tsc`, `swiftc`) and are
 # noticeably slower than the unit suite. Opt-in via `pytest -m conformance`.

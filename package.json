@@ -1,0 +1,11 @@
+{
+  "name": "speccify-monorepo",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Speccify pnpm workspace root (currently hosts apps/marketing).",
+  "scripts": {
+    "marketing:dev": "pnpm --filter speccify-marketing dev",
+    "marketing:build": "pnpm --filter speccify-marketing build",
+    "marketing:preview": "pnpm --filter speccify-marketing preview"
+  }
+}

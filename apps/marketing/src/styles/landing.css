@@ -1,0 +1,3 @@
+/* Tailwind v4 entry. Utility classes are used by the landing routes
+   (src/pages/index.astro). Starlight docs routes keep their default theme. */
+@import "tailwindcss";

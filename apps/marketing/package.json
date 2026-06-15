@@ -1,0 +1,21 @@
+{
+  "name": "speccify-marketing",
+  "type": "module",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Speccify landing page + documentation site (Astro Starlight).",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@astrojs/starlight": "^0.40.0",
+    "@tailwindcss/vite": "^4.3.0",
+    "astro": "^6.4.6",
+    "sharp": "^0.35.1",
+    "tailwindcss": "^4.3.0"
+  }
+}

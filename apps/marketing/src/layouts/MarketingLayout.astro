@@ -1,0 +1,73 @@
+---
+// Shared shell for the non-Starlight marketing routes (landing + try-it +
+// legal placeholders). Starlight docs routes keep their own default theme;
+// this layout only governs the Tailwind-styled marketing pages.
+import "../styles/landing.css";
+
+interface Props {
+  title: string;
+  description: string;
+}
+
+const { title, description } = Astro.props;
+const year = new Date().getFullYear();
+
+const plausibleDomain = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
+const plausibleEnabled = import.meta.env.PROD && Boolean(plausibleDomain);
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="icon" type="image/svg+xml" href="/logo.svg" />
+    {
+      plausibleEnabled && (
+        <script
+          defer
+          data-domain={plausibleDomain}
+          src="https://plausible.io/js/script.js"
+        />
+      )
+    }
+  </head>
+  <body class="min-h-screen bg-slate-950 text-slate-100 antialiased">
+    <header
+      class="mx-auto flex max-w-5xl items-center justify-between px-6 py-5"
+    >
+      <a href="/" class="text-lg font-bold tracking-tight">Speccify</a>
+      <nav class="flex items-center gap-5 text-sm text-slate-300">
+        <a class="transition hover:text-white" href="/getting-started/installation/"
+          >Docs</a
+        >
+        <a class="transition hover:text-white" href="/try-it/">Try it</a>
+        <a
+          class="transition hover:text-white"
+          href="https://github.com/speccify/speccify">GitHub</a
+        >
+      </nav>
+    </header>
+
+    <slot />
+
+    <footer class="mx-auto max-w-5xl px-6 py-12 text-sm text-slate-500">
+      <div class="flex flex-wrap items-center justify-between gap-4 border-t border-slate-800 pt-8">
+        <p>© {year} Speccify · MIT License</p>
+        <nav class="flex flex-wrap items-center gap-5">
+          <a class="transition hover:text-slate-300" href="https://github.com/speccify/speccify"
+            >GitHub</a
+          >
+          <a class="transition hover:text-slate-300" href="/try-it/">Playground</a>
+          <a class="transition hover:text-slate-300" href="/getting-started/installation/"
+            >Docs</a
+          >
+          <a class="transition hover:text-slate-300" href="/legal/imprint/">Imprint</a>
+          <a class="transition hover:text-slate-300" href="/legal/privacy/">Privacy</a>
+        </nav>
+      </div>
+    </footer>
+  </body>
+</html>

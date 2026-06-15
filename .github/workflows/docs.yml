@@ -1,0 +1,98 @@
+name: Docs & Marketing Site
+
+# Phase 6 — Landingpage + Doku-Site (`apps/marketing/`, Astro Starlight).
+#
+# Verifiziert bei jedem relevanten Push/PR:
+#   1. Sync-Drift: Repo-`docs/` ↔ Site-MDX (`sync_docs_to_site.py --check`).
+#   2. CLI-Reference-Drift: `gen_cli_docs.py --check` gegen die aktuelle Binary.
+#   3. Astro-Build der Marketing-Site (`pnpm --filter speccify-marketing build`).
+#   4. Link-Check über den Build-Output (`lychee`).
+#   5. Markdown-Lint über die Repo-`docs/`-Quellen.
+#
+# Default-CI (`ci.yml`) bleibt unberührt.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/marketing/**"
+      - "docs/**"
+      - "cli/src/**"
+      - "scripts/gen_cli_docs.py"
+      - "scripts/sync_docs_to_site.py"
+      - "tests/test_gen_cli_docs.py"
+      - "tests/test_sync_docs.py"
+      - ".github/workflows/docs.yml"
+  pull_request:
+    paths:
+      - "apps/marketing/**"
+      - "docs/**"
+      - "cli/src/**"
+      - "scripts/gen_cli_docs.py"
+      - "scripts/sync_docs_to_site.py"
+      - "tests/test_gen_cli_docs.py"
+      - "tests/test_sync_docs.py"
+      - ".github/workflows/docs.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: docs-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  docs:
+    name: docs · build + drift + links
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      - name: Set up Python (from .python-version)
+        run: uv python install
+
+      - name: Sync workspace
+        run: uv sync --all-packages
+
+      - name: Drift check — docs/ ↔ site MDX
+        run: uv run python scripts/sync_docs_to_site.py --check
+
+      - name: Drift check — CLI reference
+        run: uv run python scripts/gen_cli_docs.py --check
+
+      - name: Pytest (docs sync + CLI gen)
+        run: uv run pytest tests/ -q
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: pnpm
+
+      - name: Install site dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build marketing site
+        run: pnpm --filter speccify-marketing build
+
+      - name: Link check (lychee)
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: --no-progress --offline apps/marketing/dist
+          fail: true
+
+      - name: Markdown lint (repo docs)
+        uses: DavidAnson/markdownlint-cli2-action@v17
+        with:
+          globs: "docs/**/*.md"

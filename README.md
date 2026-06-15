@@ -100,6 +100,30 @@ cd apps/web/frontend && pnpm install && pnpm dev
 
 Details: [`apps/web/README.md`](./apps/web/README.md).
 
+## Landingpage + Doku-Site (`apps/marketing/`)
+
+Die öffentliche Landingpage und die durchsuchbare Doku-Site (Ziel-Domain
+`speccify.io`) leben unter `apps/marketing/` (Phase 6). Stack ist
+[Astro](https://astro.build) + [Starlight](https://starlight.astro.build),
+Tailwind nur für die Landing-Routen. Geliefert: volle Tailwind-Landingpage
+(Hero/Problem-Lösung/Demo/Targets/How-it-works/CTA), Playground-Iframe unter
+`/try-it` (mit Fallback), aus Repo-`docs/` gespiegelte Doku und autogenerierte
+CLI-Reference, Pagefind-Suche.
+
+```bash
+# Vom Repo-Root (pnpm-Workspace):
+pnpm install
+pnpm run marketing:dev      # http://localhost:4321
+pnpm run marketing:build
+
+# Doku-/CLI-Content (re-)generieren — CI bricht bei Drift via --check:
+uv run python scripts/sync_docs_to_site.py   # docs/ → Site-MDX
+uv run python scripts/gen_cli_docs.py        # speccify --help → CLI-Reference
+```
+
+Details: [`apps/marketing/README.md`](./apps/marketing/README.md) und
+[`docs/deploy.md`](./docs/deploy.md) (Vercel-Setup + Env-Variablen).
+
 ## Troubleshooting: macOS-`UF_HIDDEN`-Workaround
 
 macOS markiert von `uv` geschriebene `.pth`-Dateien in

@@ -1,0 +1,149 @@
+---
+// Full Tailwind landing page (Stage 4): hero, problem/solution, demo snippet,
+// targets, "how it works", CTA. Footer + header live in MarketingLayout.
+import MarketingLayout from "../layouts/MarketingLayout.astro";
+
+const title = "Speccify — npm für Spezifikationen statt für Code";
+const description =
+  "Komponenten beschreiben, nicht implementieren. Der AI-Agent ist der Compiler in das Ziel-Framework.";
+
+const problems = [
+  "Dieselbe Komponente wird pro Framework von Hand neu gebaut — React, SwiftUI, Angular driften auseinander.",
+  "Verhalten und Akzeptanzkriterien leben verstreut in Tickets, Code und Köpfen.",
+  "Updates müssen in jedem Ziel-Repo einzeln nachgezogen werden.",
+];
+
+const solutions = [
+  "Eine versionierte speccify.yaml ist die Single Source of Truth pro Komponente.",
+  "Der AI-Agent rendert daraus deterministisch Code — reproduzierbar via Lockfile.",
+  "Conformance- und Visual-Regression-Checks sichern jedes Ziel ab.",
+];
+
+const targets = [
+  { name: "React", note: "TypeScript + tsc-Build-Smoke" },
+  { name: "SwiftUI", note: "swiftc -typecheck" },
+  { name: "Angular", note: "Standalone Components" },
+];
+
+const steps = [
+  {
+    title: "1 · Spec",
+    body: "Beschreibe Inputs/Outputs, Verhalten und Akzeptanzkriterien in speccify.yaml.",
+  },
+  {
+    title: "2 · Resolver",
+    body: "MVS löst Dependencies auf und pinnt sie reproduzierbar in speccify.lock.",
+  },
+  {
+    title: "3 · Codegen",
+    body: "Der Agent generiert framework-spezifischen Code für dein Ziel-Target.",
+  },
+];
+
+const demo = `$ speccify pull spec://button@1.0.0 --target react
+✓ resolved button@1.0.0
+✓ rendered  speccify_generated/react/Button.tsx
+✓ verified  output hash matches speccify.lock`;
+---
+
+<MarketingLayout title={title} description={description}>
+  <main class="mx-auto max-w-5xl px-6">
+    <!-- Hero -->
+    <section class="flex flex-col items-center gap-6 py-20 text-center">
+      <p class="text-sm font-semibold uppercase tracking-widest text-sky-400">
+        Spec-First Component Platform
+      </p>
+      <h1 class="max-w-3xl text-4xl font-bold tracking-tight sm:text-6xl">
+        npm für Spezifikationen statt für Code
+      </h1>
+      <p class="max-w-2xl text-lg text-slate-300">
+        Eine <code class="rounded bg-slate-800 px-1.5 py-0.5">speccify.yaml</code>
+        beschreibt eine Komponente einmal — Speccify kompiliert sie deterministisch
+        nach React, SwiftUI und Angular.
+      </p>
+      <div class="flex flex-wrap items-center justify-center gap-4">
+        <a
+          href="/getting-started/installation/"
+          class="rounded-md bg-sky-500 px-5 py-2.5 font-medium text-white transition hover:bg-sky-400"
+        >
+          Quickstart
+        </a>
+        <a
+          href="https://github.com/speccify/speccify"
+          class="rounded-md border border-slate-700 px-5 py-2.5 font-medium text-slate-200 transition hover:border-slate-500"
+        >
+          GitHub
+        </a>
+      </div>
+    </section>
+
+    <!-- Problem / Lösung -->
+    <section class="grid gap-8 py-12 md:grid-cols-2">
+      <div class="rounded-xl border border-slate-800 bg-slate-900/50 p-6">
+        <h2 class="mb-4 text-lg font-semibold text-rose-300">Das Problem</h2>
+        <ul class="space-y-3 text-slate-300">
+          {problems.map((item) => <li>· {item}</li>)}
+        </ul>
+      </div>
+      <div class="rounded-xl border border-slate-800 bg-slate-900/50 p-6">
+        <h2 class="mb-4 text-lg font-semibold text-emerald-300">Die Lösung</h2>
+        <ul class="space-y-3 text-slate-300">
+          {solutions.map((item) => <li>· {item}</li>)}
+        </ul>
+      </div>
+    </section>
+
+    <!-- Demo snippet -->
+    <section class="py-12">
+      <h2 class="mb-4 text-center text-2xl font-bold">Ein Befehl, ein Target</h2>
+      <pre class="overflow-x-auto rounded-xl border border-slate-800 bg-black/60 p-6 text-sm text-emerald-200"><code>{demo}</code></pre>
+    </section>
+
+    <!-- Targets -->
+    <section class="py-12">
+      <h2 class="mb-6 text-center text-2xl font-bold">Targets</h2>
+      <div class="grid gap-4 sm:grid-cols-3">
+        {
+          targets.map((target) => (
+            <div class="rounded-xl border border-slate-800 bg-slate-900/50 p-6 text-center">
+              <p class="text-lg font-semibold text-sky-300">{target.name}</p>
+              <p class="mt-2 text-sm text-slate-400">{target.note}</p>
+            </div>
+          ))
+        }
+      </div>
+    </section>
+
+    <!-- How it works -->
+    <section class="py-12">
+      <h2 class="mb-6 text-center text-2xl font-bold">How it works</h2>
+      <div class="grid gap-4 md:grid-cols-3">
+        {
+          steps.map((step) => (
+            <div class="rounded-xl border border-slate-800 bg-slate-900/50 p-6">
+              <p class="text-sm font-semibold uppercase tracking-widest text-sky-400">
+                {step.title}
+              </p>
+              <p class="mt-3 text-slate-300">{step.body}</p>
+            </div>
+          ))
+        }
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="flex flex-col items-center gap-5 py-16 text-center">
+      <h2 class="text-2xl font-bold">Probier es im Browser</h2>
+      <p class="max-w-xl text-slate-300">
+        Der Live-Playground rendert die Referenz-Specs offline gegen React,
+        SwiftUI und Angular — ohne Setup.
+      </p>
+      <a
+        href="/try-it/"
+        class="rounded-md bg-sky-500 px-6 py-3 font-medium text-white transition hover:bg-sky-400"
+      >
+        Zum Playground
+      </a>
+    </section>
+  </main>
+</MarketingLayout>

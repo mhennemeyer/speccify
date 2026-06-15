@@ -1,0 +1,23 @@
+---
+title: "CLI Reference"
+description: "Übersicht aller speccify-Subcommands."
+---
+
+{/* AUTOGENERIERT via scripts/gen_cli_docs.py aus `speccify --help` — nicht von Hand editieren. */}
+
+Das `speccify`-CLI bündelt alle Spec-First-Workflows. Jeder Subcommand
+hat eine eigene Referenzseite:
+
+| Command | Beschreibung |
+| --- | --- |
+| [`speccify add`](/cli/add/) | Fügt eine Spec-Dependency in speccify.yaml ein und aktualisiert speccify.lock. |
+| [`speccify conformance`](/cli/conformance/) | Prüft pro (Spec, Target), dass Renderer + Validator + Lockfile-Hash stimmen. |
+| [`speccify init`](/cli/init/) | Legt ein neues Speccify-Projekt mit minimalem `speccify.yaml` an. |
+| [`speccify lint`](/cli/lint/) | Validiert eine oder mehrere YAML-Specs gegen das Spec-Schema v0. |
+| [`speccify lock`](/cli/lock/) | Löst Dependencies via MVS auf und schreibt speccify.lock (ohne Codegen-Aufruf). |
+| [`speccify login`](/cli/login/) | Authenticate the CLI against a Speccify registry via device-code flow. |
+| [`speccify publish`](/cli/publish/) | Publish a spec YAML to the configured Speccify registry. |
+| [`speccify pull`](/cli/pull/) | Rendert resolved Specs aus dem Lockfile und aktualisiert Output-Hashes. |
+| [`speccify verify`](/cli/verify/) | Prüft, dass Manifest, Lockfile und gerenderte Dateien zueinander passen. |
+| [`speccify whoami`](/cli/whoami/) |  |
+| [`speccify yank`](/cli/yank/) | Yank a published version of a spec. |
