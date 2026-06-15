@@ -8,6 +8,7 @@ version + published_at) to keep semantic drift to a minimum.
 
 from __future__ import annotations
 
+import yaml
 from django.contrib.auth import get_user_model
 from django.db.models import Max, Q
 from django.http import Http404, HttpRequest, HttpResponse
@@ -19,6 +20,24 @@ from ..api.models import Scope, Spec, SpecVersion
 User = get_user_model()
 
 _PAGE_SIZE = 20
+
+
+def _license_from_yaml(yaml_bytes: bytes) -> str:
+    """Lese das Top-Level-`license`-Feld aus den Spec-Bytes (best effort).
+
+    Die Registry speichert nur `yaml_bytes` (keine denormalisierte Lizenz-
+    Spalte). Fürs Browsen reicht ein robustes Parsen: bei kaputtem YAML oder
+    fehlendem Feld gibt es einen leeren String zurück — die Templates zeigen
+    dann einfach kein Badge.
+    """
+    try:
+        data = yaml.safe_load(bytes(yaml_bytes).decode("utf-8"))
+    except (UnicodeDecodeError, yaml.YAMLError):
+        return ""
+    if not isinstance(data, dict):
+        return ""
+    value = data.get("license")
+    return str(value) if value else ""
 
 
 def _published_specs_qs():
@@ -49,6 +68,7 @@ def _attach_latest(specs: list[Spec]) -> list[dict]:
                 "description": spec.description,
                 "tags": list(spec.tags or []),
                 "latest_version": sv.version if sv else None,
+                "license": _license_from_yaml(sv.yaml_bytes) if sv else "",
                 "latest_published_at": (
                     spec.latest_published_at if spec.latest_published_at else None
                 ),
@@ -117,6 +137,7 @@ def spec_detail_view(request: HttpRequest, scope: str, name: str) -> HttpRespons
             "spec_id": f"@{spec.scope.name}/{spec.name}",
             "versions": versions,
             "latest": latest,
+            "license": _license_from_yaml(latest.yaml_bytes),
             "yaml_text": yaml_text,
         },
     )

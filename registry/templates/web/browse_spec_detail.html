@@ -3,6 +3,15 @@
 {% block content %}
   <p><a href="{% url 'web-home' %}">← Browse</a></p>
   <h1>{{ spec_id }}</h1>
+  {% if license %}
+    <p><strong>License:</strong>
+      {% if license == "MIT" %}
+        <span title="Open-Source-Lizenz" style="background:#e6f4ea;color:#137333;padding:.1rem .4rem;border-radius:.5rem;font-size:.9em;">{{ license }}</span>
+      {% else %}
+        <span title="Proprietäre/kommerzielle Lizenz" style="background:#fce8e6;color:#a50e0e;padding:.1rem .4rem;border-radius:.5rem;font-size:.9em;">{{ license }}</span>
+      {% endif %}
+    </p>
+  {% endif %}
   {% if spec.description %}<p>{{ spec.description }}</p>{% endif %}
   {% if spec.tags %}<p><strong>Tags:</strong> {{ spec.tags|join:", " }}</p>{% endif %}
   <p><strong>Owner:</strong>

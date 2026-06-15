@@ -10,13 +10,24 @@
   {% if rows %}
     <table>
       <thead>
-        <tr><th>Spec</th><th>Latest</th><th>Description</th><th>Tags</th><th>Published</th></tr>
+        <tr><th>Spec</th><th>Latest</th><th>License</th><th>Description</th><th>Tags</th><th>Published</th></tr>
       </thead>
       <tbody>
         {% for row in rows %}
           <tr>
             <td><a href="{% url 'web-spec-detail' scope=row.scope name=row.name %}">{{ row.id }}</a></td>
             <td>{{ row.latest_version }}</td>
+            <td>
+              {% if row.license %}
+                {% if row.license == "MIT" %}
+                  <span title="Open-Source-Lizenz" style="background:#e6f4ea;color:#137333;padding:.1rem .4rem;border-radius:.5rem;font-size:.85em;">{{ row.license }}</span>
+                {% else %}
+                  <span title="Proprietäre/kommerzielle Lizenz" style="background:#fce8e6;color:#a50e0e;padding:.1rem .4rem;border-radius:.5rem;font-size:.85em;">{{ row.license }}</span>
+                {% endif %}
+              {% else %}
+                <span style="color:#999;">—</span>
+              {% endif %}
+            </td>
             <td>{{ row.description }}</td>
             <td>{{ row.tags|join:", " }}</td>
             <td>{{ row.latest_published_at|date:"Y-m-d H:i" }}</td>

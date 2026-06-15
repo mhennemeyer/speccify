@@ -252,8 +252,9 @@ def pull_command(
     offline: bool = typer.Option(  # noqa: B008
         True,
         "--offline/--no-offline",
-        help="Nur Replay-Cache benutzen (Default). Mit --no-offline würde ein "
-        "Live-LLM-Call bei Cache-Miss erlaubt; in 5b nicht verdrahtet.",
+        help="Nur Replay-Cache benutzen (Default). Mit --no-offline wird bei "
+        "Cache-Miss ein Live-Bedrock-Call gemacht (AWS-Credentials aus Umgebung/.env) "
+        "und das Ergebnis in den Cache geschrieben.",
     ),
     cache_dir: Path | None = typer.Option(  # noqa: B008
         None,

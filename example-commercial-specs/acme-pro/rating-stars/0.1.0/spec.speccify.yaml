@@ -1,0 +1,47 @@
+id: "@acme-pro/rating-stars"
+version: 0.1.0
+kind: ui-component
+title: Rating Stars
+summary: >
+  Kommerzielle Star-Rating-Komponente mit halben Sternen, Hover-Preview,
+  Read-only-Modus und konfigurierbarer Sternanzahl. Beispiel für eine
+  proprietär lizenzierte Spec im lokalen Market.
+authors: [sales@acme-pro.example]
+license: Commercial
+
+inputs:
+  - name: value
+    type: number
+    constraints: ["min=0", "default=0"]
+  - name: max
+    type: number
+    constraints: ["min=1", "default=5"]
+  - name: allow_half
+    type: boolean
+    constraints: ["default=true"]
+  - name: readonly
+    type: boolean
+    constraints: ["default=false"]
+
+events:
+  - name: rated
+  - name: hovered
+
+acceptance:
+  - given: readonly=false, value=3
+    when: Nutzer klickt den vierten Stern
+    then: rated-Event mit value=4 wird genau einmal emittiert
+  - given: readonly=true
+    when: Nutzer klickt einen Stern
+    then: kein rated-Event; die Anzeige bleibt unverändert
+  - given: allow_half=true
+    when: Nutzer hovert über die linke Hälfte eines Sterns
+    then: hovered-Event mit halbem Wert wird emittiert und als Preview gerendert
+
+ux:
+  a11y: WCAG-2.2-AA
+  i18n: required
+
+non_functional:
+  performance: "Render < 16ms auf Mid-Tier-Geräten"
+  security: ["kein HTML-Injection über aria-labels"]
