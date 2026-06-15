@@ -20,7 +20,9 @@ from speccify_registry.api.models import Scope, Spec, SpecVersion
 pytestmark = pytest.mark.django_db
 
 
-def _publish_spec(*, owner: str, scope: str, name: str, license_: str, version: str = "0.1.0") -> None:
+def _publish_spec(
+    *, owner: str, scope: str, name: str, license_: str, version: str = "0.1.0"
+) -> None:
     User = get_user_model()
     user, _ = User.objects.get_or_create(username=owner)
     scope_obj, _ = Scope.objects.get_or_create(name=scope, defaults={"owner": user})

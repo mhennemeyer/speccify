@@ -107,7 +107,9 @@ class Command(BaseCommand):
                 skipped += 1
                 self.stdout.write(f"  · skipped (exists) {version}")
 
-        summary = f"Seed fertig: {published} publiziert, {skipped} übersprungen, {failed} fehlgeschlagen."
+        summary = (
+            f"Seed fertig: {published} publiziert, {skipped} übersprungen, {failed} fehlgeschlagen."
+        )
         style = self.style.SUCCESS if failed == 0 else self.style.WARNING
         self.stdout.write(style(summary))
         if failed:

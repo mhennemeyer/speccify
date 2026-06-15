@@ -16,6 +16,29 @@ uv run pytest
 uv run ruff check .
 ```
 
+### Lokaler Gesamt-Workflow (alle Services + Live-Codegen)
+
+Ein Befehl fährt **das komplette System lokal** hoch — Registry/Market,
+Playground-Backend + -Frontend und die Marketing/Doku-Site — und seedet den
+Market mit MIT- und `Commercial`-lizenzierten Specs:
+
+```bash
+./scripts/dev-up.sh                 # alles starten (Ctrl-C beendet alle)
+./scripts/dev-up.sh --no-frontends  # nur Registry + Playground-Backend
+```
+
+| Service | URL |
+|---|---|
+| Registry (Market/Browse) | <http://127.0.0.1:8001> |
+| Playground-Backend (API) | <http://127.0.0.1:8000> |
+| Playground-Frontend | <http://localhost:3000> |
+| Marketing/Doku | <http://localhost:4321> |
+
+Echte Code-Generierung aus einer Spec (auch für neue, selbst geschriebene
+Specs) läuft jetzt über `speccify pull --no-offline` (Live-Bedrock bei
+Cache-Miss, Ergebnis wird in den Replay-Cache geschrieben; Credentials aus
+Umgebung/`.env`). Voller Walkthrough: [`docs/local-dev-e2e.md`](./docs/local-dev-e2e.md).
+
 ### End-to-End Smoke (offline, ohne API-Key)
 
 Setzt voraus, dass der eingecheckte Replay-Cache unter

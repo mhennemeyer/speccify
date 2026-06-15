@@ -21,5 +21,5 @@ speccify pull [OPTIONS]
 | `--out` | Ausgabeverzeichnis für gerenderte Dateien. |
 | `--target` | Codegen-Target (Default: Target aus Lockfile). |
 | `--registry` | Optionale Registry-Pfad-Überschreibung. |
-| `--offline`, `--no-offline` | Nur Replay-Cache benutzen (Default). Mit --no-offline würde ein Live-LLM-Call bei Cache-Miss erlaubt; in 5b nicht verdrahtet. |
+| `--offline`, `--no-offline` | Nur Replay-Cache benutzen (Default). Mit --no-offline wird bei Cache-Miss ein Live-Bedrock-Call gemacht (AWS-Credentials aus Umgebung/.env) und das Ergebnis in den Cache geschrieben. |
 | `--cache-dir` | Replay-Cache-Pfad (Default: tests/fixtures/llm-cache im Repo bzw. $SPECCIFY_CACHE_DIR). |

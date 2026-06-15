@@ -48,8 +48,12 @@ FRONTEND_PORT=3000
 MARKETING_PORT=4321
 
 PIDS=()
+_CLEANED=0
 
 cleanup() {
+  # Nur einmal aufräumen, auch wenn EXIT+INT/TERM zusammenfallen.
+  [[ "$_CLEANED" -eq 1 ]] && return
+  _CLEANED=1
   echo ""
   echo "→ Stoppe alle Dev-Services …"
   # Ganze Prozessgruppe beenden (Kindprozesse von pnpm/uv inklusive).
@@ -67,8 +71,14 @@ prefix() {
 
 echo "→ macOS-Venv-Hygiene (entversteckt .pth-Dateien) …"
 if [[ -x ./scripts/fix-venv-hidden.sh ]]; then
-  ./scripts/fix-venv-hidden.sh >/dev/null 2>&1 || true
+  ./scripts/fix-venv-hidden.sh --deep >/dev/null 2>&1 || true
 fi
+
+# Wichtig: `uv run` würde sonst bei jedem Aufruf neu syncen und dabei (macOS-
+# Quarantäne) die editable-`.pth`-Dateien erneut verstecken — dann findet der
+# zweite Aufruf `speccify_registry` nicht mehr. Nach der einmaligen Hygiene
+# oben deaktivieren wir das Re-Sync für alle folgenden `uv run`-Aufrufe.
+export UV_NO_SYNC=1
 
 echo "→ Registry migrieren …"
 uv run python -m speccify_registry.manage migrate --no-input 2>&1 | prefix registry
@@ -81,11 +91,11 @@ fi
 echo "→ Starte Services (Ctrl-C beendet alle) …"
 
 # Registry-Web-UI + REST-API.
-( uv run python -m speccify_registry.manage runserver "127.0.0.1:${REGISTRY_PORT}" 2>&1 | prefix registry ) &
+( trap - EXIT INT TERM; uv run python -m speccify_registry.manage runserver "127.0.0.1:${REGISTRY_PORT}" 2>&1 | prefix registry ) &
 PIDS+=($!)
 
 # Playground-Backend (FastAPI, in-process speccify-core).
-( uv run speccify-web-backend --host 127.0.0.1 --port "${BACKEND_PORT}" 2>&1 | prefix backend ) &
+( trap - EXIT INT TERM; uv run speccify-web-backend --host 127.0.0.1 --port "${BACKEND_PORT}" 2>&1 | prefix backend ) &
 PIDS+=($!)
 
 if [[ "$RUN_FRONTENDS" -eq 1 ]]; then
@@ -93,11 +103,11 @@ if [[ "$RUN_FRONTENDS" -eq 1 ]]; then
   pnpm install 2>&1 | prefix pnpm
 
   # Playground-Frontend (Next.js).
-  ( cd apps/web/frontend && pnpm dev 2>&1 | prefix frontend ) &
+  ( trap - EXIT INT TERM; cd apps/web/frontend && pnpm dev 2>&1 | prefix frontend ) &
   PIDS+=($!)
 
   # Marketing/Doku (Astro) — Iframe zeigt auf das lokale Playground-Frontend.
-  ( PUBLIC_PLAYGROUND_URL="http://localhost:${FRONTEND_PORT}" pnpm run marketing:dev 2>&1 | prefix marketing ) &
+  ( trap - EXIT INT TERM; PUBLIC_PLAYGROUND_URL="http://localhost:${FRONTEND_PORT}" pnpm run marketing:dev 2>&1 | prefix marketing ) &
   PIDS+=($!)
 fi
 

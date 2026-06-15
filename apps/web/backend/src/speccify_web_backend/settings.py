@@ -20,8 +20,9 @@ from dataclasses import dataclass
 from pathlib import Path
 
 # This file lives at apps/web/backend/src/speccify_web_backend/settings.py
-# parents[4] resolves to the repository root.
-_REPO_ROOT = Path(__file__).resolve().parents[4]
+# parents[5] resolves to the repository root (one level deeper than the test
+# files under apps/web/backend/tests/, which correctly use parents[4]).
+_REPO_ROOT = Path(__file__).resolve().parents[5]
 
 DEFAULT_PROJECT_ROOT: Path = _REPO_ROOT
 DEFAULT_REGISTRY_PATH: Path = _REPO_ROOT / "registry-fixtures"

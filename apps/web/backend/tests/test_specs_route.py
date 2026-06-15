@@ -50,3 +50,23 @@ def test_list_specs_empty_when_registry_missing(tmp_path: Path) -> None:
     response = client.get("/api/v1/specs")
     assert response.status_code == 200
     assert response.json() == {"specs": []}
+
+
+def test_default_settings_resolve_to_existing_repo_dirs(monkeypatch) -> None:
+    """Regression: the default registry/cache paths must point at the real repo
+    checkout, not at `<repo>/apps/...`. A wrong `_REPO_ROOT` made the playground
+    list zero specs out-of-the-box.
+    """
+    monkeypatch.delenv("SPECCIFY_REGISTRY_PATH", raising=False)
+    monkeypatch.delenv("SPECCIFY_PROJECT_ROOT", raising=False)
+    monkeypatch.delenv("SPECCIFY_CACHE_DIR", raising=False)
+
+    settings = Settings.from_env()
+    assert settings.registry_path == REGISTRY_FIXTURES
+    assert settings.registry_path.is_dir()
+    assert settings.project_root == REPO_ROOT
+
+    # And the default-config app actually lists specs from that directory.
+    response = TestClient(create_app(settings=settings)).get("/api/v1/specs")
+    assert response.status_code == 200
+    assert response.json()["specs"], "default registry path must yield specs"

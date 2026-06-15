@@ -45,3 +45,6 @@ build/
 # Speccify smoke artifacts (regeneriert in CI; example-project hat keine permanente Output-Spur)
 example-project/out/
 example-project/speccify.lock
+
+# Lokale Dev-DB (erzeugt von scripts/dev-up.sh; siehe docs/local-dev-e2e.md)
+registry/db.sqlite3

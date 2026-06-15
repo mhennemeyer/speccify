@@ -5,18 +5,25 @@ import MarketingLayout from "../layouts/MarketingLayout.astro";
 
 const title = "Speccify — npm für Spezifikationen statt für Code";
 const description =
-  "Komponenten beschreiben, nicht implementieren. Der AI-Agent ist der Compiler in das Ziel-Framework.";
+  "Beschreibe, was Software tun soll — nicht wie. Der AI-Agent ist der Compiler in dein Ziel-Framework, deine Sprache, dein Stack.";
 
 const problems = [
-  "Dieselbe Komponente wird pro Framework von Hand neu gebaut — React, SwiftUI, Angular driften auseinander.",
+  "Dasselbe Verhalten wird pro Sprache und Framework von Hand neu gebaut — Implementierungen driften auseinander.",
   "Verhalten und Akzeptanzkriterien leben verstreut in Tickets, Code und Köpfen.",
   "Updates müssen in jedem Ziel-Repo einzeln nachgezogen werden.",
 ];
 
 const solutions = [
-  "Eine versionierte speccify.yaml ist die Single Source of Truth pro Komponente.",
+  "Eine versionierte speccify.yaml ist die Single Source of Truth — für UI-Komponenten, reine Funktionen, Domain-Logik, Workflows bis hin zu ganzen Anwendungen.",
   "Der AI-Agent rendert daraus deterministisch Code — reproduzierbar via Lockfile.",
   "Conformance- und Visual-Regression-Checks sichern jedes Ziel ab.",
+];
+
+const useCases = [
+  { name: "UI-Komponenten", note: "Buttons, Formulare, ganze Screens" },
+  { name: "Reine Funktionen", note: "Validierung, Parsing, Transformationen" },
+  { name: "Domain-Logik", note: "Geschäftsregeln, Berechnungen, Policies" },
+  { name: "Workflows & Apps", note: "Mehrschrittige Prozesse bis zur ganzen Anwendung" },
 ];
 
 const targets = [
@@ -36,7 +43,7 @@ const steps = [
   },
   {
     title: "3 · Codegen",
-    body: "Der Agent generiert framework-spezifischen Code für dein Ziel-Target.",
+    body: "Der Agent generiert Code für dein Ziel — ob UI, Funktion, Domain-Logik oder Workflow.",
   },
 ];
 
@@ -51,15 +58,17 @@ const demo = `$ speccify pull spec://button@1.0.0 --target react
     <!-- Hero -->
     <section class="flex flex-col items-center gap-6 py-20 text-center">
       <p class="text-sm font-semibold uppercase tracking-widest text-sky-400">
-        Spec-First Component Platform
+        Spec-First Platform für jede Software
       </p>
       <h1 class="max-w-3xl text-4xl font-bold tracking-tight sm:text-6xl">
         npm für Spezifikationen statt für Code
       </h1>
       <p class="max-w-2xl text-lg text-slate-300">
         Eine <code class="rounded bg-slate-800 px-1.5 py-0.5">speccify.yaml</code>
-        beschreibt eine Komponente einmal — Speccify kompiliert sie deterministisch
-        nach React, SwiftUI und Angular.
+        beschreibt einmal, <em>was</em> etwas tun soll — von einer UI-Komponente über
+        reine Funktionen und Domain-Logik bis hin zu Workflows und ganzen
+        Anwendungen. Speccify kompiliert sie deterministisch in dein Ziel — heute
+        React, SwiftUI und Angular, morgen weitere Sprachen und Frameworks.
       </p>
       <div class="flex flex-wrap items-center justify-center gap-4">
         <a
@@ -99,9 +108,32 @@ const demo = `$ speccify pull spec://button@1.0.0 --target react
       <pre class="overflow-x-auto rounded-xl border border-slate-800 bg-black/60 p-6 text-sm text-emerald-200"><code>{demo}</code></pre>
     </section>
 
+    <!-- Was du spezifizieren kannst -->
+    <section class="py-12">
+      <h2 class="mb-2 text-center text-2xl font-bold">Was du spezifizieren kannst</h2>
+      <p class="mx-auto mb-6 max-w-2xl text-center text-slate-400">
+        Speccify ist sprach- und framework-unabhängig. Eine Spec beschreibt
+        Verhalten — nicht nur Optik.
+      </p>
+      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {
+          useCases.map((useCase) => (
+            <div class="rounded-xl border border-slate-800 bg-slate-900/50 p-6 text-center">
+              <p class="text-lg font-semibold text-emerald-300">{useCase.name}</p>
+              <p class="mt-2 text-sm text-slate-400">{useCase.note}</p>
+            </div>
+          ))
+        }
+      </div>
+    </section>
+
     <!-- Targets -->
     <section class="py-12">
-      <h2 class="mb-6 text-center text-2xl font-bold">Targets</h2>
+      <h2 class="mb-2 text-center text-2xl font-bold">Aktuelle Targets</h2>
+      <p class="mx-auto mb-6 max-w-2xl text-center text-slate-400">
+        Diese Ziele werden heute deterministisch generiert — die Architektur ist
+        bewusst offen für weitere Sprachen und Frameworks.
+      </p>
       <div class="grid gap-4 sm:grid-cols-3">
         {
           targets.map((target) => (

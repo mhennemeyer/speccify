@@ -8,9 +8,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from speccify_core.codegen.bedrock_client import BedrockClient
-
 from speccify_cli.commands._llm_client import build_live_bedrock_client, build_replay_client
+from speccify_core.codegen.bedrock_client import BedrockClient
 
 
 def test_offline_client_has_no_inner(tmp_path: Path) -> None:
