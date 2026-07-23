@@ -1062,3 +1062,24 @@
   strenger als CI).
 - `RemoteRegistry` in `core/` bewusst behalten (MockTransport-Tests
   self-contained); wird in P5 durch `GitRegistry` ersetzt/ergänzt.
+
+## 2026-07-23 (P2-Plan — API-Vertrag, Komposition & Mock-Generator)
+- **Aktiver Phasen-Plan** [`plans/phase-p2-api-composition-mocks.md`](./plans/phase-p2-api-composition-mocks.md)
+  erstellt. Stage 0 entfällt als Frage-Runde: Entscheidungen D1–D6 per
+  User-Delegation („folge deinen Empfehlungen") direkt dokumentiert —
+  Logic-Mocks fixture-basiert (D1), keine State-Machine / `behavior:`
+  reserviert (D2), explizites Mapping statt Auto-Forwarding in
+  Composites (D3), Phase-7-S4 (`screenshots[].tolerance`) reitet im
+  Schema-Bump mit (D4), Spec-Schema v1 mit `schema_version`-Feld +
+  v0-Loader-Migration (D5), Mocks lockfile-frei (D6).
+- Stages 1–6 definiert: Schema v1 → `composition:` + Typprüfung (+ neue
+  Specs `@org/text-input`, `@org/search-bar`) → Mock-Codegen React
+  (`speccify mock`) → API-Conformance-Backend (TS-Harness, Mock ↔ LLM) →
+  MCP-Tool `mock` + `POST /api/v1/mock` + Cross-Consistency → Doku/Wrap-up.
+  Ziel-Tag-Vorschlag `v0.12.0-p2-api-mocks`.
+- Größtes benanntes Risiko: Spec-Schema-Bump invalidiert den
+  `spec_sha256`-gebundenen LLM-Replay-Cache — Mitigation (kanonisierter
+  Cache-Key vs. Maintainer-Re-Recording) ist erste Entscheidung in Stage 1.
+- Phase-7-Plan nach `archive/` verschoben (D4-Vermerk im Header); Pivot-Plan
+  aktualisiert (Fragen 4/5/9/10 → entschieden, „Schema v3" → Spec-Schema v1).
+- Nur Plan-/Doku-Änderungen, kein Code.

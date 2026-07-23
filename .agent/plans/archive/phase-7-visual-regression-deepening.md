@@ -1,5 +1,7 @@
 # Phase 7 (OPTIONAL) — Visual-Regression-Vertiefung + offene 5d-Punkte
 
+> **Archiviert 2026-07-23 (OSS-Pivot, Entscheidung D4 im [P2-Plan](../phase-p2-api-composition-mocks.md)):** **S4** (`screenshots[].tolerance`) landet im P2-Schema-Bump (Spec-Schema v1, Stage 1). S1–S3 und S5–S7 bleiben optionales Backlog und können nach dem Composer (P3) einzeln gezogen werden — sie blockieren keine Pivot-Meilensteine.
+>
 > **Status:** Entwurf (2026-06-02), **optional**. Sammelbecken für die in Phase 5c offen gebliebenen 5d-Kandidaten.
 > **Reihenfolge:** Nach Phase 6 (Landingpage + Doku). Kann ganz übersprungen oder in mehrere Mini-Phasen zerlegt werden — je nach Außenwirkung von Phase 6.
 > **Ziel-Tag (falls gemacht):** `v0.12.0-phase-7` (Vorschlag).

@@ -7,9 +7,9 @@
 - **Zuletzt aktualisiert:** 2026-07-23
 
 ## Nächste Schritte
-- **P2 — API-Vertrag, Komposition & Mock-Generator** (Composer-Fundament): Phasen-Plan-Entwurf mit Stage 0 Open Questions (u. a. Mock-Semantik für Logic-Kinds, State-Machine im API-Vertrag, Prop-Forwarding in Composites — siehe Pivot-Plan, „Offene Fragen").
+- **P2 umsetzen** — aktiver Plan [`plans/phase-p2-api-composition-mocks.md`](./plans/phase-p2-api-composition-mocks.md): Stage 1 (Spec-Schema v1: `api:`-Block, `schema_version`, `screenshots[].tolerance`; erste Entscheidung dort: Replay-Cache-Mitigation kanonisierter Cache-Key vs. Re-Recording) → Stage 2 (`composition:` + Typprüfung + `@org/text-input`/`@org/search-bar`) → Stage 3 (`speccify mock`, React) → Stage 4 (API-Conformance) → Stage 5 (MCP/Web/Cross-Consistency) → Stage 6 (Doku/Wrap-up, Tag-Vorschlag `v0.12.0-p2-api-mocks`).
+- Entscheidungen D1–D6 per User-Delegation („folge deinen Empfehlungen", 2026-07-23) im Plan dokumentiert; Phase-7-Plan archiviert (S4 in P2-Stage-1, Rest Backlog).
 - Danach **P3 — Visueller Composer (MVP)**: baut Apps **und** Composite-Komponenten, rendert ausschließlich Mocks, Output ist die Spec (Round-Trip).
-- Offen aus Alt-Roadmap: Phase-7-Plan (Visual-Regression-Vertiefung) — Schicksal in P2-Stage-0 klären (Pivot-Plan Frage 10).
 
 ## Phase 1d (Steps 1–6 abgeschlossen, 2026-05-19)
 - **Step 1 erledigt** — Backend-MVP läuft offline gegen Replay-Cache: `/api/v1/specs`, `/api/v1/render` mit Fehler-Mapping (`cache_miss` 422, `spec_invalid`/`unknown_target`/`bad_request` 400). 7 Backend-Tests.

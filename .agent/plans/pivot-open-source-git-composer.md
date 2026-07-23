@@ -70,7 +70,7 @@ Vorbild: **Go-Module + SwiftPM**, nicht npm.
 
 ### 2. Formaler API-Vertrag + Mocks
 
-- **Schema v3**: `inputs`/`outputs`/`events` werden zu einem formalen `api:`-Block geschärft (Typen, Defaults, Slots/Children, Event-Payloads, Zustandsmodell optional als State-Machine). Der API-Block ist separat hashbar → **API-Version ≠ Spec-Version** (API-Breaking-Change erzwingt Major).
+- **Spec-Schema v1** (erster expliziter Bump seit v0): `inputs`/`outputs`/`events` werden zu einem formalen `api:`-Block geschärft (Typen, Defaults, Slots/Children, Event-Payloads; State-Machine per D2 nicht in P2, Key `behavior:` reserviert). Der API-Block ist separat hashbar → **API-Version ≠ Spec-Version** (API-Breaking-Change erzwingt Major).
 - **Mock-Generator** (deterministisch, templatebasiert, **kein LLM**): aus dem `api:`-Block wird pro Target eine Mock-Implementierung generiert — gleiche Props/Events/Slots, generische aber ansehnliche Darstellung (Label, Variant-Badge, Event-Logging). `speccify mock <id> --target react`.
 - **Vertragsgleichheit**: Mock und echte (LLM-generierte) Implementierung erfüllen dieselbe API → austauschbar per Import-Swap. Conformance-Suite bekommt eine Stufe „API-Conformance" (Props/Events stimmen), die für Mock UND echte Implementierung läuft.
 - Nutzen sofort: Projekte sind baubar/testbar, bevor alle Komponenten „echt" generiert sind; der Composer rendert ausschließlich Mocks.
@@ -105,11 +105,14 @@ Vorbild: **Go-Module + SwiftPM**, nicht npm.
 - OSS-Hygiene: `CONTRIBUTING.md`, Code of Conduct, Issue-Templates.
 
 ### Phase P2 — API-Vertrag, Komposition & Mock-Generator (Composer-Fundament)
-- Schema v3 mit formalem `api:`-Block (Typen, Defaults, **Slots/Children**, Event-Payloads); Migrations-Lint für bestehende Specs.
+
+> **Aktiver Phasen-Plan (2026-07-23):** [`phase-p2-api-composition-mocks.md`](./phase-p2-api-composition-mocks.md) — Entscheidungen D1–D6 dort dokumentiert (per User-Delegation).
+
+- Spec-Schema v1 (erster Bump seit dem unversionierten v0) mit formalem `api:`-Block (Typen, Defaults, **Slots/Children**, Event-Payloads); Migrations-Lint für bestehende Specs.
 - **`composition:`-Block als gemeinsames Konzept**: eine Komponente kann aus Unterkomponenten komponiert sein (Baum + Slot-Belegung + Event→Input-Verdrahtung, typgeprüft gegen die API-Verträge der Kinder). Derselbe Block trägt später `kind: app` — Apps sind Top-Level-Kompositionen plus Routen/Env.
 - Deterministischer Mock-Codegen für React (kein LLM); `speccify mock <id> --target react`. Composite-Komponenten rendern als Mock-Baum ihrer Kinder.
 - API-Conformance-Testsuite (läuft gegen Mock und echte Implementierung).
-- 5 Referenz-Specs auf Schema v3 heben; mindestens 1 neue Composite-Referenz-Spec (z. B. `login-screen` aus `button` + Inputs komponiert).
+- 5 Referenz-Specs auf Spec-Schema v1 heben; neue Referenz-Specs `@org/text-input` (Leaf) + `@org/search-bar` (Composite aus text-input + button).
 
 ### Phase P3 — Visueller Composer (MVP)
 - Web-App (Ausbau `apps/web/`): Canvas + Komponenten-Palette (aus Workspace/Fixtures) + Property-Panel + Verdrahtungs-Editor.
@@ -141,19 +144,16 @@ Vorbild: **Go-Module + SwiftPM**, nicht npm.
 - **Registry-Schicksal**: Archiv-Branch `archive/pre-oss-pivot-registry` + Löschung aus dem Arbeitszweig. Discovery später über statisches Index-Repo (P5).
 - **Reihenfolge**: Composer-Fast-Track — API/Mocks (P2) und Composer (P3) vor Projekt-Builds (P4) und Git-Quellen (P5). Begründung: durch Rumprobieren im Composer schlauer werden, bevor Verdrahtungs-/Build-Semantik final geschnitten wird.
 - **Composer-Scope**: baut Apps **und** Composite-Komponenten (Komponenten aus Unterkomponenten); `composition:` wird gemeinsames Schema-Konzept.
+- **P2-Entscheidungen (2026-07-23, per User-Delegation — Details im [P2-Plan](./phase-p2-api-composition-mocks.md))**: Logic-Mocks fixture-basiert (D1); keine State-Machine im API-Vertrag, `behavior:` reserviert (D2); kein automatisches Prop-Forwarding/Event-Bubbling in Composites, nur explizites Mapping (D3); Phase-7-S4 (`screenshots[].tolerance`) reitet auf dem Schema-Bump mit, Rest des Phase-7-Plans archiviert als Backlog (D4); Spec-Schema-Bump auf explizites `schema_version: 1` mit v0-Loader-Migration (D5); Mocks lockfile-frei, Reproduzierbarkeit über Spec-Hash + Template-Version (D6).
 
 ## Offene Fragen fürs Refinement
 
 1. **Identitäts-Schema (P5)**: `spec://github.com/org/repo@1.2.0` (Go-Stil, host-qualifiziert) vs. Kurzform mit Default-Host? Wie werden bestehende `@org/name`-IDs migriert — Alias-Tabelle im Index-Repo?
 2. **Multi-Spec-Repos (P5)**: Monorepo mit vielen Specs (Tag-Konvention `name/vX.Y.Z`?) vs. ein Repo pro Spec? Beides unterstützen?
 3. **Trust-Modell (P5)**: reichen Commit-SHAs + optional signierte Git-Tags, oder sigstore-Slot aus Lockfile v2/v3 weiterführen (z. B. gitsign)?
-4. **Mock-Semantik für Logic-Components (P2)**: UI-Mocks sind klar; wie mocken wir `logic`-Kinds (API-Client → Fixture-Responses aus der Spec? State-Machine → deterministischer Interpreter)?
-5. **State/Verhalten im API-Vertrag (P2)**: nur Props/Events, oder optionale State-Machine (XState-artig) als Teil des Vertrags? Letzteres macht Mocks verhaltenstreuer, erhöht aber Schema-Komplexität deutlich.
-6. **Erstes Build-Target (P4)**: React/Vite (Playground-Synergie, Composer rendert Web) — bestätigen? SwiftUI-App-Builds wären P4-Folge.
-7. **Composer-Scope im MVP (P3)**: nur Layout + Props + Event-Verdrahtung? Oder auch Daten-Bindings/Routen visuell? (Vorschlag: MVP ohne visuelles Routing, Routen bleiben YAML.)
-8. **Web-Playground vs. Composer (P3)**: Playground weiterentwickeln zum Composer oder als getrennte App daneben?
-9. **Verdrahtungs-Semantik in Composites (P2)**: Wie tief darf eine Composite-Komponente die APIs ihrer Kinder nach außen re-exportieren (Prop-Forwarding, Event-Bubbling)? Vorschlag: explizites Mapping im `api:`-Block der Composite, kein automatisches Durchreichen.
-10. **Was passiert mit Phase 7 (Visual-Regression-Vertiefung)**: einschieben, in P2 (Mock-Conformance) aufgehen lassen, oder verwerfen?
+4. **Erstes Build-Target (P4)**: React/Vite (Playground-Synergie, Composer rendert Web) — bestätigen? SwiftUI-App-Builds wären P4-Folge.
+5. **Composer-Scope im MVP (P3)**: nur Layout + Props + Event-Verdrahtung? Oder auch Daten-Bindings/Routen visuell? (Vorschlag: MVP ohne visuelles Routing, Routen bleiben YAML.)
+6. **Web-Playground vs. Composer (P3)**: Playground weiterentwickeln zum Composer oder als getrennte App daneben?
 
 ---
 
@@ -162,5 +162,5 @@ Vorbild: **Go-Module + SwiftPM**, nicht npm.
 - **Git-Fetch-Performance/Offline**: Shallow-/Sparse-Fetch + Content-Cache müssen so gut sein wie der heutige File-Cache; CI muss ohne Netz laufen können (Fixture-Repos als `file://`-Remotes in Tests).
 - **Verdrahtungs-Semantik ist das schwerste Stück** (P4): Event→Input-Bindung klingt simpel, wird aber schnell zur Sprache. Bewusst minimal starten (direkte Bindung + einfache Transformationen), keine allgemeine Expression-Language im MVP.
 - **Mock-Fidelity**: Mocks, die zu hässlich/generisch sind, machen den Composer wertlos; Mocks, die zu viel können, werden heimlich zur zweiten Implementierung. Der `ux.references`-Block (Screenshots) kann Mocks stylen helfen — Grenze klar ziehen.
-- **Schema-v3-Migration**: dritter Schema-Bump; Migrations-Tooling und v2-Kompatibilität im Loader einplanen (bewährtes Muster aus Lockfile v1→v2).
+- **Spec-Schema-v1-Migration**: erster Spec-Schema-Bump; Migrations-Tooling und v0-Kompatibilität im Loader einplanen (bewährtes Muster aus Lockfile v1→v2). Größter operativer Haken: der Bump invalidiert den `spec_sha256`-gebundenen LLM-Replay-Cache (Mitigation siehe P2-Plan, Stage 1).
 - **Scope-Explosion**: vier Säulen gleichzeitig ist viel. Die Phasen sind deshalb strikt sequenziell und einzeln shippable geschnitten; nach jeder Phase Go/No-Go wie bisher.
