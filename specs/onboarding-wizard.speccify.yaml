@@ -1,3 +1,4 @@
+schema_version: 1
 id: spec://onboarding-wizard
 version: 0.1.0
 kind: workflow
@@ -12,29 +13,28 @@ uses:
   - spec://button@^0.1
   - spec://contact-form@^0.1
 
-inputs:
-  - name: resume_token
-    type: string
-    constraints: ["optional"]
-  - name: total_steps
-    type: integer
-    constraints: ["default=3", "min=2", "max=10"]
-
-outputs:
-  - name: onboarding_result
-    type: "object{profile: object, completed_at: string}"
-
-events:
-  - name: step_changed
-    payload:
-      from: integer
-      to: integer
-  - name: completed
-    payload:
-      profile: object
-  - name: abandoned
-    payload:
-      last_step: integer
+api:
+  props:
+    - name: resume_token
+      type: string
+    - name: total_steps
+      type: integer
+      default: 3
+      constraints: ["min=2", "max=10"]
+  outputs:
+    - name: onboarding_result
+      type: "object{profile: object, completed_at: string}"
+  events:
+    - name: step_changed
+      payload:
+        from: integer
+        to: integer
+    - name: completed
+      payload:
+        profile: object
+    - name: abandoned
+      payload:
+        last_step: integer
 
 acceptance:
   - given: Wizard startet ohne resume_token
@@ -58,5 +58,4 @@ ux:
 non_functional:
   performance: "Schritt-Übergang < 200ms"
   security:
-    - "Zwischenstand verschlüsselt persistieren"
-    - "resume_token ist single-use"
+    - "Zwischenstände verschlüsselt persistieren"

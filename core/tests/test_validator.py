@@ -5,6 +5,7 @@ from speccify_core import SchemaValidator
 
 def _minimal() -> dict:
     return {
+        "schema_version": 1,
         "id": "spec://x",
         "version": "1.0.0",
         "kind": "ui-component",

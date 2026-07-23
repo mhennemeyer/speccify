@@ -7,7 +7,9 @@ from typer.testing import CliRunner
 
 runner = CliRunner()
 
-VALID = "id: spec://x\nversion: 1.0.0\nkind: ui-component\ntitle: X\nsummary: y\n"
+VALID = (
+    "schema_version: 1\nid: spec://x\nversion: 1.0.0\nkind: ui-component\ntitle: X\nsummary: y\n"
+)
 
 INVALID = "id: NOT_VALID\nversion: 1.0\nkind: ui-component\ntitle: X\nsummary: y\n"
 

@@ -30,6 +30,7 @@ from typing import Any
 
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
 
+from speccify_core.api import events_as_prompt_items, props_as_prompt_items
 from speccify_core.codegen.react_llm import CodegenError
 from speccify_core.codegen.replay import CacheKey, LlmClient, ReplayCacheClient
 from speccify_core.registry import Spec
@@ -54,7 +55,8 @@ __all__ = [
 
 PROVIDER: str = "bedrock"
 MODEL: str = "bedrock/eu.anthropic.claude-opus-4-7"
-PROMPT_VERSION: str = "0.1.0"
+# 0.2.0: Prompt-Kontext liest den formalen `api:`-Block (Spec-Schema v1, P2).
+PROMPT_VERSION: str = "0.2.0"
 DEFAULT_SEED: int = 1
 TARGET: str = "angular"
 
@@ -130,8 +132,8 @@ def _build_prompt_context(spec: Spec) -> dict[str, Any]:
         "title": str(parsed.get("title", spec.spec_id)),
         "summary": str(parsed.get("summary", "")).strip(),
         "kind": str(parsed.get("kind", "")),
-        "inputs": _normalise_items(parsed.get("inputs"), ("name", "type", "constraints")),
-        "events": _normalise_items(parsed.get("events"), ("name", "payload")),
+        "inputs": props_as_prompt_items(parsed),
+        "events": events_as_prompt_items(parsed),
         "acceptance": _normalise_items(parsed.get("acceptance"), ("given", "when", "then")),
     }
 

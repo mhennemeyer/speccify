@@ -1,12 +1,16 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://speccify.io/schema/spec/v0.json",
-  "title": "Speccify Spec v0",
-  "description": "Schema v0 für speccify.yaml-Specs. Phase 0 — bewusst liberal; einzelne Felder werden in späteren Phasen verschärft (siehe Open Questions im Phase-0-Plan).",
+  "$id": "https://speccify.io/schema/spec/v1.json",
+  "title": "Speccify Spec v1",
+  "description": "Schema v1 für speccify.yaml-Specs (OSS-Pivot P2). Ersetzt das unversionierte v0 ohne Migrationspfad (Entscheidung: Start bei Null, 2026-07-23). Kern-Neuerungen: formaler `api:`-Block (Props/Events/Slots/Fixtures — separat hashbar, Grundlage für deterministische Mocks) und `composition:` (Komponenten aus Unterkomponenten mit typgeprüfter Verdrahtung). Der Key `behavior:` ist für eine spätere optionale State-Machine reserviert (Entscheidung D2) und wird in v1 nicht validiert.",
   "type": "object",
-  "required": ["id", "version", "kind", "title", "summary"],
+  "required": ["schema_version", "id", "version", "kind", "title", "summary"],
   "additionalProperties": true,
   "properties": {
+    "schema_version": {
+      "const": 1,
+      "description": "Spec-Schema-Version. v1 ist die erste explizit versionierte Fassung."
+    },
     "id": {
       "type": "string",
       "description": "Spec-Identität. Form: spec://<name> oder @scope/<name>, optional mit @<semver>-Suffix.",
@@ -19,48 +23,76 @@
     },
     "kind": {
       "type": "string",
-      "description": "Komponentenklasse. v0 offener String; ab Phase 1 voraussichtlich enum (ui-component, ui-workflow, logic, workflow, screen).",
-      "minLength": 1
+      "description": "Komponentenklasse. `app` ist für Projekt-Specs (Phase P4) reserviert.",
+      "enum": ["ui-component", "screen", "logic", "workflow", "app"]
     },
-    "title": {
-      "type": "string",
-      "minLength": 1
-    },
-    "summary": {
-      "type": "string",
-      "minLength": 1
-    },
+    "title": { "type": "string", "minLength": 1 },
+    "summary": { "type": "string", "minLength": 1 },
     "authors": {
       "type": "array",
       "items": { "type": "string", "minLength": 1 }
     },
-    "license": {
-      "type": "string",
-      "minLength": 1
+    "license": { "type": "string", "minLength": 1 },
+    "api": {
+      "type": "object",
+      "description": "Formaler API-Vertrag der Komponente. Grundlage für deterministische Mocks und die API-Conformance-Prüfung. Separat hashbar — API-Breaking-Changes erzwingen einen Major-Bump.",
+      "additionalProperties": false,
+      "properties": {
+        "props": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/prop" }
+        },
+        "outputs": {
+          "type": "array",
+          "description": "Benannte Rückgabewerte (v. a. logic/screen-Kinds).",
+          "items": { "$ref": "#/$defs/output" }
+        },
+        "events": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/event" }
+        },
+        "slots": {
+          "type": "array",
+          "description": "Benannte Einhängepunkte für Kind-Inhalte (UI-Kinds).",
+          "items": { "$ref": "#/$defs/slot" }
+        },
+        "fixtures": {
+          "type": "array",
+          "description": "Deklarierte Beispiel-/Mock-Daten (Entscheidung D1: logic-Kinds werden fixture-basiert gemockt).",
+          "items": { "$ref": "#/$defs/fixture" }
+        }
+      }
     },
-    "inputs": {
-      "type": "array",
-      "items": { "$ref": "#/$defs/ioField" }
-    },
-    "outputs": {
-      "type": "array",
-      "items": { "$ref": "#/$defs/ioField" }
-    },
-    "events": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "required": ["name"],
-        "additionalProperties": true,
-        "properties": {
-          "name": { "type": "string", "minLength": 1 },
-          "payload": {}
+    "composition": {
+      "type": "object",
+      "description": "Komposition aus Unterkomponenten. Verdrahtung wird gegen die `api:`-Blöcke der Kinder typgeprüft (CompositionValidator in core).",
+      "required": ["uses", "tree"],
+      "additionalProperties": false,
+      "properties": {
+        "uses": {
+          "type": "object",
+          "description": "Alias → Spec-Referenz (mit optionalem Versions-Range-Suffix). Aliase sind die Knoten-Namen in `tree`/`wiring`.",
+          "minProperties": 1,
+          "propertyNames": { "pattern": "^[a-z][a-z0-9_]*$" },
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^(spec://[a-z0-9][a-z0-9-]*|@[a-z0-9][a-z0-9-]*/[a-z0-9][a-z0-9-]*)(@[\\^~]?[0-9A-Za-z.\\-+*x]+)?$"
+          }
+        },
+        "tree": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/treeNode" }
+        },
+        "wiring": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/wiringRule" }
         }
       }
     },
     "uses": {
       "type": "array",
-      "description": "Liste referenzierter Specs. v0: nur syntaktische Prüfung (Resolver kommt in Phase 1). Erlaubt sind id-Patterns mit optionalen Versions-Range-Suffixen wie @^1.0 oder @~2.",
+      "description": "Lose referenzierte Specs (ohne Kompositions-Semantik). `composition.uses` zählt zusätzlich automatisch als Dependency.",
       "items": {
         "type": "string",
         "pattern": "^(spec://[a-z0-9][a-z0-9-]*|@[a-z0-9][a-z0-9-]*/[a-z0-9][a-z0-9-]*)(@[\\^~]?[0-9A-Za-z.\\-+*x]+)?$"
@@ -71,10 +103,7 @@
       "items": {
         "type": "object",
         "additionalProperties": true,
-        "anyOf": [
-          { "required": ["then"] },
-          { "required": ["when"] }
-        ],
+        "anyOf": [{ "required": ["then"] }, { "required": ["when"] }],
         "properties": {
           "given": { "type": "string" },
           "when": { "type": "string" },
@@ -88,7 +117,7 @@
       "properties": {
         "references": {
           "type": "array",
-          "description": "Asset-Referenzen. v0 bewusst liberal: relative Pfade, asset://, figma://, http(s):// erlaubt.",
+          "description": "Asset-Referenzen: relative Pfade, asset://, figma://, http(s)://.",
           "items": {
             "type": "string",
             "pattern": "^(\\.{1,2}/.+|[a-zA-Z][a-zA-Z0-9+.\\-]*://.+)$"
@@ -96,6 +125,24 @@
         },
         "a11y": { "type": "string" },
         "i18n": { "type": "string" }
+      }
+    },
+    "screenshots": {
+      "type": "array",
+      "description": "Visual-Regression-Referenzen (Phase 5c/5d; `tolerance` aus Phase-7-S4 via Entscheidung D4).",
+      "items": {
+        "type": "object",
+        "required": ["path"],
+        "additionalProperties": false,
+        "properties": {
+          "path": { "type": "string", "minLength": 1 },
+          "tolerance": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "Pixel-Diff-Toleranz 0..1; überschreibt den 10%-Default."
+          }
+        }
       }
     },
     "non_functional": {
@@ -124,19 +171,140 @@
     }
   },
   "$defs": {
-    "ioField": {
+    "typeString": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Typ-Ausdruck. Kanonisch: string | integer | number | boolean | enum[a, b] | object{...} | array[...] | map[k,v]. Unbekannte Ausdrücke sind erlaubt (Mocks behandeln sie als opaque)."
+    },
+    "prop": {
       "type": "object",
       "required": ["name", "type"],
-      "additionalProperties": true,
+      "additionalProperties": false,
       "properties": {
-        "name": { "type": "string", "minLength": 1 },
-        "type": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+        "type": { "$ref": "#/$defs/typeString" },
+        "required": { "type": "boolean", "default": false },
+        "default": {},
+        "description": { "type": "string" },
         "constraints": {
-          "oneOf": [
-            { "type": "string" },
-            { "type": "array", "items": { "type": "string" } }
-          ]
+          "type": "array",
+          "description": "Freie Constraint-Hints (email, url, min=100 …) — nicht mock-relevant, aber prompt-relevant.",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "map_to": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*\\.[a-z][a-z0-9_]*$",
+          "description": "Explizites Prop-Forwarding an ein Kompositions-Kind: '<alias>.<prop>' (Entscheidung D3: kein automatisches Durchreichen)."
         }
+      }
+    },
+    "output": {
+      "type": "object",
+      "required": ["name", "type"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+        "type": { "$ref": "#/$defs/typeString" },
+        "description": { "type": "string" }
+      }
+    },
+    "event": {
+      "type": "object",
+      "required": ["name"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+        "payload": {
+          "type": "object",
+          "description": "Feldname → Typ-Ausdruck. Fehlendes/leeres payload == Event ohne Daten.",
+          "additionalProperties": { "$ref": "#/$defs/typeString" }
+        },
+        "description": { "type": "string" }
+      }
+    },
+    "slot": {
+      "type": "object",
+      "required": ["name"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+        "optional": { "type": "boolean", "default": true },
+        "description": { "type": "string" }
+      }
+    },
+    "fixture": {
+      "type": "object",
+      "required": ["name", "data"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+        "data": {},
+        "description": { "type": "string" }
+      }
+    },
+    "treeNode": {
+      "type": "object",
+      "required": ["node"],
+      "additionalProperties": false,
+      "properties": {
+        "node": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$",
+          "description": "Alias aus `composition.uses`."
+        },
+        "props": {
+          "type": "object",
+          "description": "Statische Prop-Belegung; wird gegen die Kind-API typgeprüft.",
+          "propertyNames": { "pattern": "^[a-z][a-z0-9_]*$" }
+        },
+        "slots": {
+          "type": "object",
+          "description": "Slot-Name → Liste von Kind-Knoten.",
+          "propertyNames": { "pattern": "^[a-z][a-z0-9_]*$" },
+          "additionalProperties": {
+            "type": "array",
+            "items": { "$ref": "#/$defs/treeNode" }
+          }
+        }
+      }
+    },
+    "wiringSource": {
+      "description": "Wert-Quelle einer Verdrahtung: 'payload.<field>' (Payload des auslösenden Events), 'props.<alias>.<prop>' (aktueller Prop-Wert eines Kindes) oder ein Literal.",
+      "oneOf": [
+        { "type": "string" },
+        { "type": "number" },
+        { "type": "boolean" },
+        { "type": "null" }
+      ]
+    },
+    "wiringRule": {
+      "type": "object",
+      "required": ["when"],
+      "additionalProperties": false,
+      "oneOf": [{ "required": ["emit"] }, { "required": ["set", "to"] }],
+      "properties": {
+        "when": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*\\.[a-z][a-z0-9_]*$",
+          "description": "Auslöser: '<alias>.<event>'."
+        },
+        "emit": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$",
+          "description": "Eigenes Event aus `api.events`, das re-emittiert wird."
+        },
+        "with": {
+          "type": "object",
+          "description": "Payload-Mapping für `emit`: Feldname → wiringSource.",
+          "propertyNames": { "pattern": "^[a-z][a-z0-9_]*$" },
+          "additionalProperties": { "$ref": "#/$defs/wiringSource" }
+        },
+        "set": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*\\.[a-z][a-z0-9_]*$",
+          "description": "Ziel-Prop eines Kindes: '<alias>.<prop>'."
+        },
+        "to": { "$ref": "#/$defs/wiringSource" }
       }
     }
   }

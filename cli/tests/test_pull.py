@@ -7,6 +7,7 @@ from pathlib import Path
 
 from speccify_cli.__main__ import app
 from speccify_core import LlmGeneratorPin, Lockfile
+from speccify_core.codegen import react_llm
 from typer.testing import CliRunner
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -64,7 +65,7 @@ def test_pull_renders_tsx_and_updates_lockfile(tmp_path: Path) -> None:
 
     assert isinstance(button_entry.generator, LlmGeneratorPin)
     assert button_entry.generator.model == "bedrock/eu.anthropic.claude-opus-4-7"
-    assert button_entry.generator.prompt_version == "0.1.0"
+    assert button_entry.generator.prompt_version == react_llm.PROMPT_VERSION
     assert button_entry.generator.seed == 1
     assert button_entry.generator.cache_key.startswith("sha256:")
     assert len(button_entry.generator.cache_key) == len("sha256:") + 64

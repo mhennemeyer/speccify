@@ -1,3 +1,4 @@
+schema_version: 1
 id: "@org/contact-form"
 version: 0.1.0
 kind: ui-component
@@ -11,33 +12,30 @@ license: MIT
 uses:
   - "@org/button@^0.1"
 
-inputs:
-  - name: initial_name
-    type: string
-    constraints: ["optional"]
-  - name: initial_email
-    type: string
-    constraints: ["optional", "email"]
-  - name: submitting
-    type: boolean
-    constraints: ["default=false"]
-  - name: server_error
-    type: string
-    constraints: ["optional"]
-
-outputs:
-  - name: payload
-    type: "object{name: string, email: string, message: string}"
-
-events:
-  - name: submit
-    payload:
-      name: string
-      email: string
-      message: string
-  - name: validation_failed
-    payload:
-      fields: "array[string]"
+api:
+  props:
+    - name: initial_name
+      type: string
+    - name: initial_email
+      type: string
+      constraints: ["email"]
+    - name: submitting
+      type: boolean
+      default: false
+    - name: server_error
+      type: string
+  outputs:
+    - name: payload
+      type: "object{name: string, email: string, message: string}"
+  events:
+    - name: submit
+      payload:
+        name: string
+        email: string
+        message: string
+    - name: validation_failed
+      payload:
+        fields: "array[string]"
 
 acceptance:
   - given: name leer, email gültig, message >= 10 Zeichen

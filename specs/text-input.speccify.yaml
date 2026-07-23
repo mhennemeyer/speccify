@@ -1,0 +1,50 @@
+schema_version: 1
+id: spec://text-input
+version: 0.1.0
+kind: ui-component
+title: Text-Input
+summary: >
+  Einzeiliges Texteingabefeld mit kontrolliertem Wert, Placeholder und
+  Disabled-State. Emittiert changed bei jeder Eingabe und submitted bei
+  Enter — Grundbaustein für Composite-Komponenten wie die Search-Bar.
+authors: [marc@speccify.io]
+license: MIT
+
+api:
+  props:
+    - name: value
+      type: string
+      default: ""
+      description: Kontrollierter Eingabewert.
+    - name: placeholder
+      type: string
+      default: ""
+    - name: disabled
+      type: boolean
+      default: false
+  events:
+    - name: changed
+      payload:
+        value: string
+    - name: submitted
+      payload:
+        value: string
+      description: Enter-Taste im Feld.
+
+acceptance:
+  - given: disabled=false
+    when: Nutzer tippt ein Zeichen
+    then: changed-Event mit dem neuen Gesamtwert wird emittiert
+  - given: Feld enthält Text
+    when: Nutzer drückt Enter
+    then: submitted-Event mit dem aktuellen Wert wird emittiert
+  - given: disabled=true
+    when: Nutzer tippt
+    then: kein changed-Event; Feld ist semantisch (aria-disabled) deaktiviert
+
+ux:
+  a11y: WCAG-2.2-AA
+  i18n: required
+
+non_functional:
+  security: ["kein HTML-Injection über value/placeholder"]

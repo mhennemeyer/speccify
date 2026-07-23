@@ -225,9 +225,15 @@ class Resolver:
             registry_for[spec_id] = registry
             resolved[spec_id] = (chosen, spec)
 
-            # Neue transitive Constraints aus uses: aufnehmen.
+            # Neue transitive Constraints aus uses: + composition.uses aufnehmen
+            # (Kompositions-Kinder sind vollwertige Dependencies, Phase P2).
             data = spec.parsed()
-            uses = data.get("uses") or []
+            uses = list(data.get("uses") or [])
+            composition_raw = data.get("composition")
+            if isinstance(composition_raw, dict):
+                composition_uses = composition_raw.get("uses")
+                if isinstance(composition_uses, dict):
+                    uses.extend(str(ref) for ref in composition_uses.values())
             source = f"{spec_id}@{chosen}"
             changed_ids: set[str] = set()
             for entry in uses:

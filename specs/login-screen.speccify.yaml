@@ -1,3 +1,4 @@
+schema_version: 1
 id: spec://login-screen
 version: 0.1.0
 kind: screen
@@ -13,29 +14,27 @@ uses:
   - spec://button@^0.1
   - spec://http-api-client@^0.1
 
-inputs:
-  - name: identifier
-    type: string
-    constraints: ["email | e164-phone"]
-  - name: prefill_identifier
-    type: string
-    constraints: ["optional"]
-
-outputs:
-  - name: session
-    type: "object{token: string, expires_at: string}"
-
-events:
-  - name: otp_sent
-    payload:
-      channel: "enum[email, sms]"
-  - name: otp_resent
-  - name: login_succeeded
-    payload:
-      user_id: string
-  - name: login_failed
-    payload:
-      reason: "enum[invalid_otp, expired, locked, network]"
+api:
+  props:
+    - name: identifier
+      type: string
+      constraints: ["email | e164-phone"]
+    - name: prefill_identifier
+      type: string
+  outputs:
+    - name: session
+      type: "object{token: string, expires_at: string}"
+  events:
+    - name: otp_sent
+      payload:
+        channel: "enum[email, sms]"
+    - name: otp_resent
+    - name: login_succeeded
+      payload:
+        user_id: string
+    - name: login_failed
+      payload:
+        reason: "enum[invalid_otp, expired, locked, network]"
 
 acceptance:
   - given: Nutzer gibt gültige E-Mail ein

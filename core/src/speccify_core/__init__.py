@@ -1,5 +1,17 @@
 """speccify-core — shared spec loader, schema validator, resolver, codegen pipeline."""
 
+from speccify_core.api import (
+    ApiError,
+    ComponentApi,
+    EventDef,
+    Fixture,
+    Output,
+    Prop,
+    Slot,
+    TypeRef,
+    component_api,
+    types_compatible,
+)
 from speccify_core.codegen import (
     SUPPORTED_TARGETS,
     TARGETS,
@@ -14,6 +26,11 @@ from speccify_core.codegen import (
     register_target,
     render_for_target,
     supported_targets,
+)
+from speccify_core.composition import (
+    CompositionIssue,
+    parse_composition,
+    validate_composition,
 )
 from speccify_core.conformance import (
     ConformanceBackend,
@@ -108,6 +125,19 @@ __all__ = [
     "LEGACY_V1_LOCKFILE_SCHEMA_PATH",
     "AnyGeneratorPin",
     "AnySignature",
+    "ApiError",
+    "ComponentApi",
+    "CompositionIssue",
+    "EventDef",
+    "Fixture",
+    "Output",
+    "Prop",
+    "Slot",
+    "TypeRef",
+    "component_api",
+    "parse_composition",
+    "types_compatible",
+    "validate_composition",
     "NoneSignature",
     "SigstoreSignature",
     "CacheKey",

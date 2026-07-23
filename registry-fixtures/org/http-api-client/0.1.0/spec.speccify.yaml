@@ -1,3 +1,4 @@
+schema_version: 1
 id: "@org/http-api-client"
 version: 0.1.0
 kind: logic
@@ -9,37 +10,52 @@ summary: >
 authors: [marc@speccify.io]
 license: MIT
 
-inputs:
-  - name: base_url
-    type: string
-    constraints: ["url", "https-required"]
-  - name: timeout_ms
-    type: integer
-    constraints: ["default=10000", "min=100", "max=60000"]
-  - name: max_retries
-    type: integer
-    constraints: ["default=3", "min=0", "max=10"]
-  - name: auth_token
-    type: string
-    constraints: ["optional", "bearer"]
-
-outputs:
-  - name: response
-    type: "object{status: integer, headers: map[string,string], body: bytes}"
-
-events:
-  - name: request_started
-    payload:
-      method: "enum[GET, POST]"
-      path: string
-  - name: request_succeeded
-    payload:
-      status: integer
-      duration_ms: integer
-  - name: request_failed
-    payload:
-      reason: "enum[timeout, network, http_4xx, http_5xx]"
-      status: integer
+api:
+  props:
+    - name: base_url
+      type: string
+      required: true
+      constraints: ["url", "https-required"]
+    - name: timeout_ms
+      type: integer
+      default: 10000
+      constraints: ["min=100", "max=60000"]
+    - name: max_retries
+      type: integer
+      default: 3
+      constraints: ["min=0", "max=10"]
+    - name: auth_token
+      type: string
+      constraints: ["bearer"]
+  outputs:
+    - name: response
+      type: "object{status: integer, headers: map[string,string], body: bytes}"
+  events:
+    - name: request_started
+      payload:
+        method: "enum[GET, POST]"
+        path: string
+    - name: request_succeeded
+      payload:
+        status: integer
+        duration_ms: integer
+    - name: request_failed
+      payload:
+        reason: "enum[timeout, network, http_4xx, http_5xx]"
+        status: integer
+  fixtures:
+    - name: get_ok
+      description: Erfolgreicher GET mit JSON-Body.
+      data:
+        status: 200
+        headers: { content-type: application/json }
+        body: '{"ok": true}'
+    - name: server_error
+      description: 5xx nach ausgeschöpften Retries.
+      data:
+        status: 503
+        headers: {}
+        body: ""
 
 acceptance:
   - given: Server antwortet mit 200 in < timeout_ms

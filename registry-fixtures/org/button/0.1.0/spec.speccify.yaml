@@ -1,3 +1,4 @@
+schema_version: 1
 id: "@org/button"
 version: 0.1.0
 kind: ui-component
@@ -8,29 +9,31 @@ summary: >
 authors: [marc@speccify.io]
 license: MIT
 
-inputs:
-  - name: label
-    type: string
-    constraints: ["minLength=1"]
-  - name: variant
-    type: enum[primary, secondary, ghost]
-    constraints: ["default=primary"]
-  - name: size
-    type: enum[sm, md, lg]
-    constraints: ["default=md"]
-  - name: disabled
-    type: boolean
-    constraints: ["default=false"]
-  - name: loading
-    type: boolean
-    constraints: ["default=false"]
-  - name: icon_leading
-    type: string
-    constraints: ["optional", "icon-name"]
-
-events:
-  - name: pressed
-  - name: long_pressed
+api:
+  props:
+    - name: label
+      type: string
+      required: true
+      constraints: ["minLength=1"]
+    - name: variant
+      type: enum[primary, secondary, ghost]
+      default: primary
+    - name: size
+      type: enum[sm, md, lg]
+      default: md
+    - name: disabled
+      type: boolean
+      default: false
+    - name: loading
+      type: boolean
+      default: false
+  events:
+    - name: pressed
+    - name: long_pressed
+  slots:
+    - name: icon_leading
+      optional: true
+      description: Optionales führendes Icon vor dem Label.
 
 acceptance:
   - given: variant=primary, disabled=false, loading=false

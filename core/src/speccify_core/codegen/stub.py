@@ -18,10 +18,12 @@ from typing import Any
 
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
 
+from speccify_core.api import component_api, events_as_prompt_items, props_as_prompt_items
 from speccify_core.registry import Spec
 
 TEMPLATE_SET: str = "phase-1a-stub"
-TEMPLATE_VERSION: str = "0.1.0"
+# 0.2.0: Kontext liest den formalen `api:`-Block (Spec-Schema v1, P2).
+TEMPLATE_VERSION: str = "0.2.0"
 
 _TEMPLATE_DIR = Path(__file__).resolve().parent / "templates"
 _TEMPLATE_NAME = "stub.md.j2"
@@ -75,9 +77,9 @@ def _build_context(spec: Spec, target: str) -> dict[str, Any]:
         "title": str(parsed.get("title", spec.spec_id)),
         "summary": str(parsed.get("summary", "")).strip(),
         "kind": str(parsed.get("kind", "")),
-        "inputs": _normalise_items(parsed.get("inputs"), ("name", "type", "constraints")),
-        "outputs": _normalise_items(parsed.get("outputs"), ("name", "type")),
-        "events": _normalise_items(parsed.get("events"), ("name", "payload")),
+        "inputs": props_as_prompt_items(parsed),
+        "outputs": [{"name": o.name, "type": o.type.raw} for o in component_api(parsed).outputs],
+        "events": events_as_prompt_items(parsed),
         "acceptance": _normalise_items(parsed.get("acceptance"), ("given", "when", "then")),
         "uses": _normalise_uses(parsed.get("uses")),
     }

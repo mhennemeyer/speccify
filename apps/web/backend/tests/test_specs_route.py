@@ -40,7 +40,7 @@ def test_list_specs_returns_registry_entries() -> None:
     button = by_id["@org/button"]
     # Two versions exist for @org/button (0.1.0, 0.1.1); we surface the latest.
     assert button["version"] == "0.1.1"
-    assert button["yaml"].startswith("id:")
+    assert button["yaml"].startswith("schema_version: 1")
     # Title is extracted from YAML when present.
     assert isinstance(button["title"], str) and button["title"]
 
