@@ -1,37 +1,32 @@
-"""75-Pfad-Cross-Consistency-Sweep (Phase 5b Stage 4).
+"""60-Pfad-Cross-Consistency-Sweep (portiert aus `registry/tests`, OSS-Pivot P1).
 
-Vollständige `5 Specs × 3 Targets × 5 Pfade`-Matrix, byte-identische Renderer-
-Outputs für jede der 75 Zellen. Pfade:
+Vollständige `5 Specs × 3 Targets × 4 Pfade`-Matrix, byte-identische Renderer-
+Outputs für jede der 60 Zellen. Pfade:
 
 1. **Local** — `LocalRegistry.fetch` + `render_for_target` (Referenz-Rendering,
-   dient gleichzeitig als Vergleichsbasis für die anderen vier Pfade).
-2. **Remote** — `RemoteRegistry` über `live_server` (Phase-2-Registry-Roundtrip)
-   + `render_for_target`.
-3. **CLI** — `speccify_cli.commands.pull.run_pull` gegen ein dynamisch
+   dient gleichzeitig als Vergleichsbasis für die anderen drei Pfade).
+2. **CLI** — `speccify_cli.commands.pull.run_pull` gegen ein dynamisch
    erzeugtes Mini-Projekt (`tmp_path/<spec>-<target>/`) mit eigenem Manifest +
    Lockfile.
-4. **MCP** — `speccify_mcp.tools.pull.run_pull` analog (eigene Projekt-Kopie,
+3. **MCP** — `speccify_mcp.tools.pull.run_pull` analog (eigene Projekt-Kopie,
    damit CLI- und MCP-Pfad sich nicht über das gemeinsame Lockfile beeinflussen).
-5. **Web** — `speccify_web_backend.services.render.render_spec_from_yaml` direkt
+4. **Web** — `speccify_web_backend.services.render.render_spec_from_yaml` direkt
    mit den YAML-Bytes der Spec aus `registry-fixtures/`.
 
 Alle Pfade nutzen denselben eingecheckten Replay-Cache unter
-`tests/fixtures/llm-cache/` (Phase 5b Stage 2). Cache-Misses sind harte Fehler
-(`offline=True`).
+`tests/fixtures/llm-cache/`. Cache-Misses sind harte Fehler (`offline=True`).
 
-> **Disziplin-Note**: dieser Sweep ist Phase-3-Stage-6/7 + Phase-1d-Stage-4 in
-> einem zentralen Test gebündelt — die bestehenden Per-Pfad-Tests bleiben
-> unverändert (sie decken Detail-Semantiken ab, die hier ausgeklammert sind).
+> Historie: Der Sweep stammt aus Phase 5b Stage 4 (damals 75 Pfade inkl.
+> Remote-Registry-Roundtrip). Der Remote-Pfad ist mit dem Registry-Rückbau
+> des OSS-Pivots (P1, 2026-07-23) entfallen; der Git-basierte Nachfolger
+> (`GitRegistry`, Phase P5) erweitert die Matrix wieder.
 """
 
 from __future__ import annotations
 
 from pathlib import Path
 
-import httpx
 import pytest
-from django.contrib.auth import get_user_model
-from django.utils import timezone
 from speccify_cli.commands.lock import run_lock as cli_run_lock
 from speccify_cli.commands.pull import run_pull as cli_run_pull
 from speccify_core import (
@@ -40,15 +35,11 @@ from speccify_core import (
     Version,
     render_for_target,
 )
-from speccify_core.registry import LocalRegistry, RemoteRegistry
+from speccify_core.registry import LocalRegistry
 from speccify_mcp.tools.pull import run_pull as mcp_run_pull
-from speccify_registry.api.tokens import mint_token
 from speccify_web_backend.services.render import render_spec_from_yaml
 
-pytestmark = pytest.mark.django_db(transaction=True)
-
-
-REPO_ROOT = Path(__file__).resolve().parents[2]
+REPO_ROOT = Path(__file__).resolve().parents[4]
 REGISTRY_FIXTURES = REPO_ROOT / "registry-fixtures"
 LLM_CACHE = REPO_ROOT / "tests" / "fixtures" / "llm-cache"
 
@@ -104,8 +95,8 @@ _SPECS: list[tuple[str, str, dict[str, str]]] = [
 
 _TARGETS: tuple[str, ...] = ("react", "swiftui", "angular")
 
-# Volle Matrix: `5 Specs × 3 Targets = 15 Zellen`. Pro Zelle laufen alle 5
-# Pfade (Local/Remote/CLI/MCP/Web) → 75 Vergleichsoperationen.
+# Volle Matrix: `5 Specs × 3 Targets = 15 Zellen`. Pro Zelle laufen alle 4
+# Pfade (Local/CLI/MCP/Web) → 60 Vergleichsoperationen.
 _MATRIX: list[tuple[str, str, str, str]] = [
     (spec_id, version, target, rel_paths[target])
     for spec_id, version, rel_paths in _SPECS
@@ -121,28 +112,6 @@ def _spec_yaml_path(spec_id: str, version: str) -> Path:
     return REGISTRY_FIXTURES / scope_and_name / version / "spec.speccify.yaml"
 
 
-def _mint_fresh_token(username: str) -> str:
-    user = get_user_model().objects.create_user(username=username, password="pw-12345678")
-    minted = mint_token(
-        user=user,
-        label=f"{username}-sweep",
-        requires_2fa=True,
-        last_2fa_verified_at=timezone.now(),
-    )
-    return minted.cleartext
-
-
-def _publish(base_url: str, token: str, yaml_path: Path) -> None:
-    files = {"yaml": (yaml_path.name, yaml_path.read_bytes(), "application/x-yaml")}
-    resp = httpx.post(
-        f"{base_url}/api/v1/registry/specs/publish",
-        files=files,
-        headers={"Authorization": f"Bearer {token}"},
-        timeout=10.0,
-    )
-    assert resp.status_code in (200, 201), resp.text
-
-
 def _build_local_client() -> ReplayCacheClient:
     return ReplayCacheClient(ReplayCache(LLM_CACHE), offline=True)
 
@@ -150,21 +119,6 @@ def _build_local_client() -> ReplayCacheClient:
 def _render_local(spec_id: str, version: str, target: str, rel_path: str) -> bytes:
     registry = LocalRegistry(REGISTRY_FIXTURES)
     spec = registry.fetch(spec_id, Version.parse(version))
-    rendered = render_for_target(spec, target, llm_client=_build_local_client())
-    assert rel_path in rendered.files, sorted(rendered.files)
-    return rendered.files[rel_path]
-
-
-def _render_remote(
-    live_server_url: str,
-    cache_dir: Path,
-    spec_id: str,
-    version: str,
-    target: str,
-    rel_path: str,
-) -> bytes:
-    with RemoteRegistry(live_server_url, cache_dir=cache_dir) as remote:
-        spec = remote.fetch(spec_id, Version.parse(version))
     rendered = render_for_target(spec, target, llm_client=_build_local_client())
     assert rel_path in rendered.files, sorted(rendered.files)
     return rendered.files[rel_path]
@@ -224,51 +178,32 @@ def _render_web(spec_id: str, version: str, target: str, rel_path: str) -> bytes
     _MATRIX,
     ids=[f"{sid.split('/')[-1]}@{ver}-{tgt}" for sid, ver, tgt, _ in _MATRIX],
 )
-def test_cross_consistency_sweep_local_remote_cli_mcp_web(
-    live_server,
+def test_cross_consistency_sweep_local_cli_mcp_web(
     tmp_path: Path,
     spec_id: str,
     version: str,
     target: str,
     rel_path: str,
 ) -> None:
-    """Pro `(spec, target)`-Zelle: alle 5 Pfade liefern byte-identische Outputs.
+    """Pro `(spec, target)`-Zelle: alle 4 Pfade liefern byte-identische Outputs.
 
-    Local ist die Referenz; Remote/CLI/MCP/Web werden dagegen verglichen. Failures
+    Local ist die Referenz; CLI/MCP/Web werden dagegen verglichen. Failures
     pro Zelle sind über den `pytest.param`-id identifizierbar
     (`<spec>@<ver>-<target>`).
     """
     # --- 1) Local (Referenz) ------------------------------------------------
     local_bytes = _render_local(spec_id, version, target, rel_path)
 
-    # --- 2) Remote: publish + RemoteRegistry --------------------------------
-    # Unique Username pro Zelle, damit Publish-Konflikte zwischen Parametrisierungen
-    # ausgeschlossen sind (live_server-DB-Reset durch transaction=True).
-    token = _mint_fresh_token(f"sweep-{spec_id.split('/')[-1]}-{target}")
-    _publish(live_server.url, token, _spec_yaml_path(spec_id, version))
-    remote_bytes = _render_remote(
-        live_server.url,
-        tmp_path / "remote-cache",
-        spec_id,
-        version,
-        target,
-        rel_path,
-    )
-
-    # --- 3) CLI -------------------------------------------------------------
+    # --- 2) CLI -------------------------------------------------------------
     cli_bytes = _render_cli(tmp_path / "cli", spec_id, version, target, rel_path)
 
-    # --- 4) MCP -------------------------------------------------------------
+    # --- 3) MCP -------------------------------------------------------------
     mcp_bytes = _render_mcp(tmp_path / "mcp", spec_id, version, target, rel_path)
 
-    # --- 5) Web -------------------------------------------------------------
+    # --- 4) Web -------------------------------------------------------------
     web_bytes = _render_web(spec_id, version, target, rel_path)
 
     # --- Vergleich (Local als Referenz) -------------------------------------
-    assert remote_bytes == local_bytes, (
-        f"[{spec_id}@{version}/{target}] Remote-Render weicht von Local ab — "
-        "RemoteRegistry-Roundtrip oder Lockfile-v3-Bytes nicht stabil."
-    )
     assert cli_bytes == local_bytes, (
         f"[{spec_id}@{version}/{target}] CLI-Render weicht von Local ab — "
         "`speccify_cli.commands.pull.run_pull` ist nicht mehr ein dünner Adapter "

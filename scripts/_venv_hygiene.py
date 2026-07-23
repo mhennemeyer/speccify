@@ -5,13 +5,13 @@ Hintergrund: macOS markiert von `uv` geschriebene `.pth`-Dateien in
 `com.apple.provenance`-xattr) — eine Folge der Filesystem-Quarantäne.
 Python's `site.py` ignoriert versteckte `.pth`-Dateien, wodurch alle
 editable-installierten Workspace-Member (`speccify_cli`, `speccify_mcp`,
-`speccify_web_backend`, `speccify_registry`) unsichtbar werden und Tests
+`speccify_web_backend`) unsichtbar werden und Tests
 mit `ModuleNotFoundError` brechen.
 
 Die Funktion `unhide_venv_pth_files(venv_root)` setzt das Flag idempotent
 zurück. Auf Nicht-macOS-Systemen ist sie ein No-Op. Aufruf-Stellen:
 
-- `conftest.py` (Root + `registry/`) als Pytest-Session-Hook.
+- `conftest.py` (Root) als Pytest-Session-Hook.
 - `scripts/fix-venv-hidden.sh` als CLI-Entry für manuelle Ausführung.
 
 Bewusst dependency-frei (nur stdlib), damit der Hook vor dem

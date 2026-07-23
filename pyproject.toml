@@ -14,7 +14,7 @@ authors = [{ name = "Marc Hennemeyer" }]
 bedrock = ["speccify-core[bedrock]"]
 
 [tool.uv.workspace]
-members = ["core", "cli", "mcp", "apps/web/backend", "registry"]
+members = ["core", "cli", "mcp", "apps/web/backend"]
 
 [dependency-groups]
 dev = [
@@ -27,8 +27,6 @@ dev = [
     "speccify-cli",
     "speccify-mcp",
     "speccify-web-backend",
-    "speccify-registry",
-    "pytest-django>=4.9",
 ]
 
 [tool.uv.sources]
@@ -36,7 +34,6 @@ speccify-core = { workspace = true }
 speccify-cli = { workspace = true }
 speccify-mcp = { workspace = true }
 speccify-web-backend = { workspace = true }
-speccify-registry = { workspace = true }
 
 [tool.ruff]
 line-length = 100
@@ -51,15 +48,11 @@ strict = false
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
-# `registry/` is excluded from the default workspace-wide run because it
-# requires `pytest-django` + a Django bootstrap that would otherwise
-# interfere with the other suites. Use `uv run pytest registry/` to run
-# the registry tests (its own `pytest.ini` opts the django plugin in).
 testpaths = ["core", "cli", "mcp", "apps/web/backend", "tests"]
 # `-m "not conformance"` excludes the Phase-5a build-smoke tests by default
 # because they spawn external toolchains (`npx tsc`, `swiftc`) and are
 # noticeably slower than the unit suite. Opt-in via `pytest -m conformance`.
-addopts = "-q -p no:django -m \"not conformance and not visual_regression\""
+addopts = "-q -m \"not conformance and not visual_regression\""
 markers = [
     "conformance: Build-Smoke conformance tests against external toolchains (Phase 5a)",
     "visual_regression: Pixel-diff conformance tests via Playwright + pixelmatch (Phase 5c)",

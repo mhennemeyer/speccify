@@ -4,7 +4,7 @@ Hauptzweck: idempotenter macOS-Workaround für das `UF_HIDDEN`-Flag, das
 `uv sync` auf `.pth`-Dateien im `.venv/lib/pythonX.Y/site-packages/`-Verzeichnis
 setzt. Ohne diesen Hook ignoriert Python's `site.py` die `.pth`-Dateien und
 alle editable-installierten Workspace-Member (`speccify_cli`, `speccify_mcp`,
-`speccify_web_backend`, `speccify_registry`) sind nicht importierbar.
+`speccify_web_backend`) sind nicht importierbar.
 
 Auf Nicht-macOS-Systemen ist der Hook ein No-Op. Vor dem Test-Collection
 ausgeführt, damit Import-Errors gar nicht erst auftreten.

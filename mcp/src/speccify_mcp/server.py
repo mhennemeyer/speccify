@@ -19,12 +19,10 @@ from mcp.server.fastmcp import FastMCP
 from .tools import (
     run_lint,
     run_lock,
-    run_publish,
     run_pull,
     run_render,
     run_resolve,
     run_verify,
-    run_yank,
 )
 
 SERVER_NAME = "speccify-mcp"
@@ -216,58 +214,5 @@ def _register_write_tools(server: FastMCP, config: ServerConfig) -> None:
             offline=offline,
             cache_dir=Path(cache_dir) if cache_dir else None,
             workspace_root=Path(workspace_root) if workspace_root else None,
-        )
-        return result.to_dict()
-
-    @server.tool(
-        name="publish",
-        description=(
-            "Publish a single spec YAML to a Speccify registry. Reads "
-            "the file's bytes verbatim and POSTs to "
-            "`/api/v1/registry/specs/publish`. Auth token is loaded "
-            "from the shared CLI credentials file unless `token` is "
-            "passed explicitly. Returns a structured result with "
-            "`ok`, `status`, `code` (e.g. `version_conflict`, "
-            "`scope_forbidden`, `stale_2fa`, `missing_credentials`) "
-            "and `id`/`version`/`sha256` on success."
-        ),
-    )
-    def publish(
-        spec_path: str,
-        registry: str,
-        token: str | None = None,
-    ) -> dict[str, Any]:
-        result = run_publish(
-            spec_path=Path(spec_path),
-            registry=registry,
-            token=token,
-        )
-        return result.to_dict()
-
-    @server.tool(
-        name="yank",
-        description=(
-            "Mark a published spec version (`@scope/name@version`) as "
-            "yanked on a Speccify registry via "
-            "`/api/v1/registry/specs/<scope>/<name>/<version>/yank`. "
-            "Bytes and sha256 are preserved; only `yank_status` flips. "
-            "Auth token is loaded from the shared CLI credentials file "
-            "unless `token` is passed explicitly. Returns a structured "
-            "result with `ok`, `status`, `code` (e.g. `version_not_found`, "
-            "`scope_forbidden`, `stale_2fa`, `missing_credentials`, "
-            "`invalid_ref`) and `already_yanked`/`yank_reason` on success."
-        ),
-    )
-    def yank(
-        spec_ref: str,
-        registry: str,
-        reason: str | None = None,
-        token: str | None = None,
-    ) -> dict[str, Any]:
-        result = run_yank(
-            spec_ref=spec_ref,
-            registry=registry,
-            reason=reason,
-            token=token,
         )
         return result.to_dict()

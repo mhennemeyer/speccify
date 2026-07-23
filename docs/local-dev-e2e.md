@@ -1,13 +1,8 @@
 # Lokaler End-to-End-Workflow (Dogfooding)
 
 Dieser Walkthrough fährt **das gesamte Speccify-System lokal** hoch und führt
-einmal durch den kompletten Workflow: Market browsen (MIT + proprietär),
-über einen Agenten/CLI mit dem System arbeiten und aus einer Spec **echten
-Code generieren** (Live-Bedrock).
-
-> Ziel: alles läuft lokal, du kannst im Market deine Specs sehen — sowohl
-> `MIT` als auch `Commercial` lizenziert — und tatsächlich Code aus einer Spec
-> generieren.
+einmal durch den kompletten Workflow: über einen Agenten/CLI mit dem System
+arbeiten und aus einer Spec **echten Code generieren** (Live-Bedrock).
 
 ## 0. Voraussetzungen
 
@@ -34,14 +29,10 @@ Das Skript
 1. entversteckt die macOS-Venv-`.pth`-Dateien und setzt `UV_NO_SYNC=1`
    (verhindert, dass `uv run` zwischen Aufrufen die editable-Installs erneut
    versteckt),
-2. migriert die Registry-DB,
-3. **seedet den Market** mit den fünf Phase-0-Referenz-Specs (`MIT`) und der
-   Commercial-Beispiel-Spec `@acme-pro/rating-stars` (`Commercial`),
-4. startet alle Services parallel mit Präfix-Logs:
+2. startet alle Services parallel mit Präfix-Logs:
 
    | Service | URL | Zweck |
    |---|---|---|
-   | Registry (Django) | <http://127.0.0.1:8001> | Market/Browse, Login, Tokens |
    | Playground-Backend (FastAPI) | <http://127.0.0.1:8000> | `/api/v1/render`, `/api/v1/specs` |
    | Playground-Frontend (Next.js) | <http://localhost:3000> | Monaco-Editor-Spielwiese |
    | Marketing/Doku (Astro) | <http://localhost:4321> | Landingpage + Doku |
@@ -51,29 +42,16 @@ Das Skript
 Varianten:
 
 ```bash
-./scripts/dev-up.sh --no-frontends   # nur Registry + Playground-Backend (kein pnpm/Node)
-./scripts/dev-up.sh --no-seed        # Market nicht neu seeden
+./scripts/dev-up.sh --no-frontends   # nur Playground-Backend (kein pnpm/Node)
 ```
 
-## 2. Market browsen (MIT + proprietär)
+## 2. Specs teilen
 
-Öffne <http://127.0.0.1:8001>. Du siehst alle geseedeten Specs mit einem
-**License-Badge**:
-
-- grünes Badge `MIT` für die Open-Source-Referenz-Specs,
-- rotes Badge `Commercial` für `@acme-pro/rating-stars`.
-
-Klick auf eine Spec → Detailseite mit Versionen, YAML und Lizenz-Badge.
-
-Der Seed ist idempotent — erneutes `seed_market` überspringt bereits
-vorhandene Versionen. Eigene Specs kannst du jederzeit nachlegen:
-
-```bash
-uv run python -m speccify_registry.manage seed_market --roots registry-fixtures example-commercial-specs meine-specs
-```
-
-(Die Commercial-Beispiel-Spec liegt unter `example-commercial-specs/`; lege
-weitere proprietäre Specs einfach als `license: Commercial` dort ab.)
+Specs liegen als YAML-Dateien im Repo (`specs/`, `registry-fixtures/`) und
+werden über Git geteilt. Die geplante Git-basierte Auflösung (Spec-Repos als
+Quellen, Discovery über ein Index-Repo) ist Phase P5 des
+[Pivot-Plans](../.agent/plans/pivot-open-source-git-composer.md); bis dahin
+resolved die CLI gegen lokale Registry-Fixtures (`--registry`-Pfad).
 
 ## 3. Mit dem System über einen Agenten/MCP arbeiten
 
@@ -92,13 +70,8 @@ Beispiel-Konfiguration für einen MCP-fähigen Agenten (z. B. Junie/Claude):
 }
 ```
 
-Damit kann der Agent `lint`, `lock`, `pull`, `verify`, `publish`, `yank` etc.
-aufrufen. Für den Registry-Zugriff vorher lokal einloggen:
-
-```bash
-uv run speccify login --registry http://127.0.0.1:8001
-uv run speccify whoami --registry http://127.0.0.1:8001
-```
+Damit kann der Agent `lint`, `resolve`, `render`, `lock`, `pull` und `verify`
+aufrufen.
 
 ## 4. Aus einer Spec echten Code generieren
 
@@ -142,12 +115,12 @@ lokale Backend (<http://127.0.0.1:8000>). Die Marketing-Seite
 
 ## 5. Troubleshooting
 
-- **`No module named 'speccify_registry'` / `'speccify_core'`**: macOS hat die
+- **`No module named 'speccify_core'`** (o. ä.): macOS hat die
   editable-`.pth` versteckt. Fix: `./scripts/fix-venv-hidden.sh --deep`. Das
   Dev-Skript macht das automatisch und setzt `UV_NO_SYNC=1`, damit `uv run`
   sie nicht erneut versteckt.
 - **Port belegt**: Vorherige `dev-up.sh`-Instanz noch aktiv — beende sie mit
-  `Ctrl-C` bzw. kill der `runserver`/`uvicorn`-Prozesse.
+  `Ctrl-C` bzw. kill der `uvicorn`-Prozesse.
 - **Live-Codegen schlägt mit Auth-Fehler fehl**: `.env` mit gültigen
   Bedrock-Credentials und passender `AWS_REGION` prüfen.
 

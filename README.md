@@ -3,10 +3,15 @@
 > npm für Spezifikationen statt für Code — Komponenten beschreiben, nicht implementieren.
 > Der AI-Agent ist der Compiler in das Ziel-Framework.
 
-Speccify ist eine Spec-First-Plattform für sprach- und framework-unabhängige Komponenten-Spezifikationen.
-Eine `speccify.yaml`-Spec beschreibt Verhalten, Inputs/Outputs, Akzeptanzkriterien und visuelle Referenzen
-einer Komponente — und ein AI-Agent generiert daraus deterministisch Code für SwiftUI, React, Angular,
-Jetpack Compose oder andere Targets. Verteilung über CLI (`speccify`) und MCP-Server.
+Speccify ist eine **vollständig quelloffene** Spec-First-Plattform für sprach- und framework-unabhängige
+Komponenten-Spezifikationen. Eine `speccify.yaml`-Spec beschreibt Verhalten, Inputs/Outputs,
+Akzeptanzkriterien und visuelle Referenzen einer Komponente — und ein AI-Agent generiert daraus
+deterministisch Code für SwiftUI, React, Angular, Jetpack Compose oder andere Targets. Verteilung über
+CLI (`speccify`) und MCP-Server; Specs werden über Git-Repos geteilt.
+
+Aktuelle Richtung (siehe [Pivot-Plan](./.agent/plans/pivot-open-source-git-composer.md)):
+formale, **mockbare Komponenten-APIs**, Komposition von Komponenten aus Unterkomponenten,
+komplette Projekt-Builds aus Specs und ein **visueller Composer** auf Mock-Basis.
 
 ## Quickstart
 
@@ -18,18 +23,16 @@ uv run ruff check .
 
 ### Lokaler Gesamt-Workflow (alle Services + Live-Codegen)
 
-Ein Befehl fährt **das komplette System lokal** hoch — Registry/Market,
-Playground-Backend + -Frontend und die Marketing/Doku-Site — und seedet den
-Market mit MIT- und `Commercial`-lizenzierten Specs:
+Ein Befehl fährt **das komplette System lokal** hoch — Playground-Backend +
+-Frontend und die Marketing/Doku-Site:
 
 ```bash
 ./scripts/dev-up.sh                 # alles starten (Ctrl-C beendet alle)
-./scripts/dev-up.sh --no-frontends  # nur Registry + Playground-Backend
+./scripts/dev-up.sh --no-frontends  # nur Playground-Backend
 ```
 
 | Service | URL |
 |---|---|
-| Registry (Market/Browse) | <http://127.0.0.1:8001> |
 | Playground-Backend (API) | <http://127.0.0.1:8000> |
 | Playground-Frontend | <http://localhost:3000> |
 | Marketing/Doku | <http://localhost:4321> |
@@ -153,11 +156,11 @@ macOS markiert von `uv` geschriebene `.pth`-Dateien in
 `.venv/lib/python*/site-packages/` mit dem BSD-Flag `UF_HIDDEN`
 (Filesystem-Quarantäne). Python's `site.py` ignoriert versteckte
 `.pth`-Dateien, wodurch alle Workspace-Member (`speccify_cli`,
-`speccify_mcp`, `speccify_web_backend`, `speccify_registry`) nach jedem
+`speccify_mcp`, `speccify_web_backend`) nach jedem
 `uv sync` plötzlich `ModuleNotFoundError` werfen.
 
-Der Workaround läuft automatisch als Pytest-Session-Hook (Root- und
-`registry/`-`conftest.py`). Für manuelle Ausführung außerhalb von Tests:
+Der Workaround läuft automatisch als Pytest-Session-Hook
+(Root-`conftest.py`). Für manuelle Ausführung außerhalb von Tests:
 
 ```bash
 ./scripts/fix-venv-hidden.sh         # schnell, nur .pth-Top-Level
@@ -177,7 +180,7 @@ uv sync --reinstall-package django
 
 - [`.agent/agent.md`](./.agent/agent.md) — Onboarding für Coding-Agents (Vision, Repo-Layout, Konventionen).
 - [`docs/workspaces.md`](./docs/workspaces.md) — Cargo-Style Workspaces (Phase 4): Root-Lockfile, Per-Member-Outputs, MVS-Konflikt-UX.
-- [`docs/conformance.md`](./docs/conformance.md) — Build-Smoke gegen echte Toolchains (Phase 5a: React/Angular via `tsc --noEmit`, SwiftUI via `swiftc -typecheck`) **+ 75-Pfad-Cross-Consistency-Sweep (Phase 5b Stage 4)**: `5 Specs × 3 Targets × 5 Pfade (Local/Remote/CLI/MCP/Web)` byte-identisch via `registry/tests/test_cross_consistency_sweep.py`.
+- [`docs/conformance.md`](./docs/conformance.md) — Build-Smoke gegen echte Toolchains (Phase 5a: React/Angular via `tsc --noEmit`, SwiftUI via `swiftc -typecheck`) **+ Cross-Consistency-Sweep**: `5 Specs × 3 Targets × 4 Pfade (Local/CLI/MCP/Web)` byte-identisch via `apps/web/backend/tests/test_cross_consistency_sweep.py`.
 - [`docs/visual-regression.md`](./docs/visual-regression.md) — **Phase 5d Voller Sweep**: Visual-Regression über `4 UI-Specs × {react, angular} = 8 Pfade` mit committed Referenz-PNGs (flache Konvention `<spec>-<target>.png`), Recorder-Script `scripts/record_visual_snapshots.py`, ein-Job-CI (`visual-regression.yml`), 10 % Default-Tolerance, Determinismus-Härte mittel (reduce-motion + color-scheme:light + monospace-Font-Stack).
 - [`.agent/plans/archive/phase-5d-visual-regression-coverage.md`](./.agent/plans/archive/phase-5d-visual-regression-coverage.md) — Abgeschlossen: Voller Visual-Regression-Sweep über 8 Pfade + Recorder-Script + Determinismus-Härte + Artifact-Upload bei CI-Failure.
 - [`.agent/plans/archive/phase-5c-visual-regression-skeleton.md`](./.agent/plans/archive/phase-5c-visual-regression-skeleton.md) — Abgeschlossen: Visual-Regression-Skeleton (`VisualRegressionBackend` + `PlaywrightPixelmatchDriver` + `visual_regression`-Pytest-Marker + `visual-regression.yml`-CI).
@@ -197,13 +200,18 @@ uv sync --reinstall-package django
 
 ## Status
 
-Phase 1d **abgeschlossen** (Browser-Playground unter `apps/web/`: FastAPI-Backend + Next.js-Frontend, byte-identisch zu CLI/MCP via Cross-Consistency-Test; alle Steps 0–6 abgehakt, Tag-Vorschlag `v0.4.0-phase-1d`). Nächster Schritt: Phase-2-Plan-Entwurf (Registry-MVP).
-Abgeschlossen: Phase 0 (Schema v0 + `speccify lint`, Tag `v0.0.0-phase0`),
-Phase 1a-0 (Rebrand auf `speccify`, Tag `v0.0.1-speccify-rebrand`),
-Phase 1a (Resolver + Lockfile + Stub-Codegen + `add`/`lock`/`pull`/`verify`, Tag `v0.1.0-phase-1a`),
-Phase 1b (React-LLM-Codegen + Replay-Cache + `init`, Tag `v0.2.0-phase-1b`),
-Phase 1c (MCP-Server `speccify-mcp` über stdio, Tag-Vorschlag `v0.3.0-phase-1c`),
-Phase 1d (Browser-Playground `apps/web/`, Tag-Vorschlag `v0.4.0-phase-1d`).
+**OSS-Pivot (2026-07-23)**: Speccify ist jetzt vollständig Open Source — kein
+Pro-Plan/Marketplace, kein zentrales Registry. Das Django-Registry (Phase 2)
+wurde zurückgebaut (Archiv-Branch `archive/pre-oss-pivot-registry`); Specs
+werden künftig über Git-Repos geteilt. Roadmap und Phasen:
+[`.agent/plans/pivot-open-source-git-composer.md`](./.agent/plans/pivot-open-source-git-composer.md).
+Nächster Schritt: **P2 — API-Vertrag, Komposition & Mock-Generator** als
+Fundament für den visuellen Composer (P3).
+
+Davor abgeschlossen: Phasen 0–6 des ursprünglichen Plans (Schema v0, Resolver +
+Lockfile, React/SwiftUI/Angular-Codegen, MCP-Server, Browser-Playground,
+Workspaces, Conformance + Visual Regression, Landingpage + Doku-Site) —
+Details in den archivierten Phasen-Plänen unter `.agent/plans/archive/`.
 
 ## Lizenz
 

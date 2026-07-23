@@ -7,7 +7,7 @@ import gen_cli_docs as gen
 
 def test_collect_commands_contains_core_subcommands() -> None:
     commands = gen._collect_commands()
-    for name in ("lint", "lock", "pull", "verify", "publish", "init"):
+    for name in ("lint", "lock", "pull", "verify", "add", "init"):
         assert name in commands
 
 

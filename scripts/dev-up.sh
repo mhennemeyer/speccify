@@ -5,18 +5,13 @@
 # Hochgefahren werden (jeweils im Vordergrund dieses Skripts als Hintergrund-Job,
 # mit Präfix-Logs und gemeinsamem Shutdown via Ctrl-C):
 #
-#   * Registry  (Django)            http://127.0.0.1:8001   Browse/Login/Tokens + Market
 #   * Playground-Backend (FastAPI)  http://127.0.0.1:8000   speccify-web-backend
 #   * Playground-Frontend (Next.js) http://localhost:3000   Monaco-Editor-Spielwiese
 #   * Marketing/Doku (Astro)        http://localhost:4321   Landingpage + Doku
 #
-# Die Registry wird vor dem Start migriert und mit `seed_market` befüllt, damit
-# der Market direkt MIT- und Commercial-Specs zeigt.
-#
 # Nutzung:
 #   ./scripts/dev-up.sh                 # alles starten
-#   ./scripts/dev-up.sh --no-frontends  # nur Registry + Playground-Backend (kein pnpm/Node)
-#   ./scripts/dev-up.sh --no-seed       # Registry nicht neu seeden
+#   ./scripts/dev-up.sh --no-frontends  # nur Playground-Backend (kein pnpm/Node)
 #
 # Voraussetzungen: `uv sync` einmal gelaufen; für die Frontends `pnpm` installiert.
 
@@ -26,13 +21,11 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_ROOT"
 
 RUN_FRONTENDS=1
-RUN_SEED=1
 for arg in "$@"; do
   case "$arg" in
     --no-frontends) RUN_FRONTENDS=0 ;;
-    --no-seed) RUN_SEED=0 ;;
     -h|--help)
-      sed -n '2,30p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+      sed -n '2,16p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
       exit 0
       ;;
     *)
@@ -42,7 +35,6 @@ for arg in "$@"; do
   esac
 done
 
-REGISTRY_PORT=8001
 BACKEND_PORT=8000
 FRONTEND_PORT=3000
 MARKETING_PORT=4321
@@ -75,24 +67,12 @@ if [[ -x ./scripts/fix-venv-hidden.sh ]]; then
 fi
 
 # Wichtig: `uv run` würde sonst bei jedem Aufruf neu syncen und dabei (macOS-
-# Quarantäne) die editable-`.pth`-Dateien erneut verstecken — dann findet der
-# zweite Aufruf `speccify_registry` nicht mehr. Nach der einmaligen Hygiene
-# oben deaktivieren wir das Re-Sync für alle folgenden `uv run`-Aufrufe.
+# Quarantäne) die editable-`.pth`-Dateien erneut verstecken. Nach der
+# einmaligen Hygiene oben deaktivieren wir das Re-Sync für alle folgenden
+# `uv run`-Aufrufe.
 export UV_NO_SYNC=1
 
-echo "→ Registry migrieren …"
-uv run python -m speccify_registry.manage migrate --no-input 2>&1 | prefix registry
-
-if [[ "$RUN_SEED" -eq 1 ]]; then
-  echo "→ Market seeden (MIT + Commercial) …"
-  uv run python -m speccify_registry.manage seed_market 2>&1 | prefix registry
-fi
-
 echo "→ Starte Services (Ctrl-C beendet alle) …"
-
-# Registry-Web-UI + REST-API.
-( trap - EXIT INT TERM; uv run python -m speccify_registry.manage runserver "127.0.0.1:${REGISTRY_PORT}" 2>&1 | prefix registry ) &
-PIDS+=($!)
 
 # Playground-Backend (FastAPI, in-process speccify-core).
 ( trap - EXIT INT TERM; uv run speccify-web-backend --host 127.0.0.1 --port "${BACKEND_PORT}" 2>&1 | prefix backend ) &
@@ -116,7 +96,6 @@ cat <<EOF
 ────────────────────────────────────────────────────────────
   Speccify läuft lokal:
 
-    Registry  (Market/Browse) : http://127.0.0.1:${REGISTRY_PORT}
     Playground-Backend (API)  : http://127.0.0.1:${BACKEND_PORT}
 EOF
 if [[ "$RUN_FRONTENDS" -eq 1 ]]; then

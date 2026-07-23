@@ -84,7 +84,7 @@ Toolchain-Setup + Build-Smoke verlangsamt wird:
   - `conformance-swiftui` (macOS, vorhandenes Xcode)
 
 Default-CI (`ci.yml`) bleibt unverändert — Lint, Mypy, Pytest (ohne
-Conformance), Web-Backend, Registry-Backend.
+Conformance), Web-Backend.
 
 ## Backend-API
 
@@ -172,32 +172,36 @@ uv run pytest -m conformance \
   "core/tests/test_conformance_build_smoke.py::test_swiftui_build_smoke_spec_via_swiftc[login-screen@0.1.0]"
 ```
 
-## 75-Pfad-Cross-Consistency-Sweep (Phase 5b Stage 4)
+## Cross-Consistency-Sweep (Local/CLI/MCP/Web)
 
-Mit Stages 1–3 etabliert (Cache + echte Build-Smokes) liefert Stage 4 den
-vollen Cross-Consistency-Sweep über alle fünf Bezugsweg-Pfade:
+Mit Stages 1–3 etabliert (Cache + echte Build-Smokes) liefert der Sweep den
+vollen Cross-Consistency-Vergleich über alle Bezugsweg-Pfade:
 
 | # | Pfad   | API                                                                           |
 |---|--------|-------------------------------------------------------------------------------|
 | 1 | Local  | `LocalRegistry.fetch` + `render_for_target` (Referenz)                        |
-| 2 | Remote | Publish über `live_server` + `RemoteRegistry.fetch` + `render_for_target`     |
-| 3 | CLI    | `speccify_cli.commands.lock.run_lock` + `speccify_cli.commands.pull.run_pull` |
-| 4 | MCP    | `speccify_mcp.tools.pull.run_pull` (Function-Call-Level)                      |
-| 5 | Web    | `speccify_web_backend.services.render.render_spec_from_yaml`                  |
+| 2 | CLI    | `speccify_cli.commands.lock.run_lock` + `speccify_cli.commands.pull.run_pull` |
+| 3 | MCP    | `speccify_mcp.tools.pull.run_pull` (Function-Call-Level)                      |
+| 4 | Web    | `speccify_web_backend.services.render.render_spec_from_yaml`                  |
 
-Matrix: `5 Specs × 3 Targets = 15 Zellen`, pro Zelle alle 5 Pfade gegen den
-Local-Pfad byte-verglichen → **75 byte-Vergleichsoperationen** pro Sweep-Lauf.
+Matrix: `5 Specs × 3 Targets = 15 Zellen`, pro Zelle alle 4 Pfade gegen den
+Local-Pfad byte-verglichen → **60 byte-Vergleichsoperationen** pro Sweep-Lauf.
+
+> Historie: Bis zum OSS-Pivot (P1, 2026-07-23) umfasste der Sweep 75 Pfade
+> inkl. Remote-Registry-Roundtrip (Phase 5b Stage 4). Der Remote-Pfad ist mit
+> dem Registry-Rückbau entfallen; der Git-basierte Nachfolger (`GitRegistry`,
+> Phase P5) erweitert die Matrix wieder.
 
 ```bash
-# Voller Sweep (Default-Lauf des Registry-Test-Pakets, keine Conformance-Marker):
-cd registry && ../.venv/bin/python -m pytest tests/test_cross_consistency_sweep.py -v
+# Voller Sweep (läuft im Default-Pytest mit, keine Conformance-Marker):
+uv run pytest apps/web/backend/tests/test_cross_consistency_sweep.py -v
 
 # Einzelne Zelle:
-cd registry && ../.venv/bin/python -m pytest \
-  "tests/test_cross_consistency_sweep.py::test_cross_consistency_sweep_local_remote_cli_mcp_web[button@0.1.0-react]"
+uv run pytest \
+  "apps/web/backend/tests/test_cross_consistency_sweep.py::test_cross_consistency_sweep_local_cli_mcp_web[button@0.1.0-react]"
 ```
 
-Die Tests laufen im **Default-Registry-Pytest** (keine `@conformance`-Marker
+Die Tests laufen im **Default-Pytest** (keine `@conformance`-Marker
 nötig, da keine externe Toolchain involviert ist — alle Renderings nutzen den
 Replay-Cache offline).
 
