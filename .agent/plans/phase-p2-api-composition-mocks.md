@@ -1,6 +1,9 @@
 # Phase P2 — API-Vertrag, Komposition & Mock-Generator (Composer-Fundament)
 
-> **Status:** 📋 Aktiver Phasen-Plan (Entwurf 2026-07-23, Entscheidungen via User-Delegation getroffen)
+> **Status:** ✅ Kern abgeschlossen (2026-07-24) — Stages 1, 2, 3, 5, 6 geliefert; **Stage 4 (API-Conformance-Harness) bewusst hinter P3 vertagt** (siehe Update unten). Nächster Schritt: **P3 — Visueller Composer**.
+> **Update 2026-07-24 (User-Refinement „Start bei Null")**: Es gibt keine Bestandsnutzer — **kein v0-Migrationspfad** (D5 revidiert: v1 ersetzt v0 hart, Loader/Validator kennen nur v1). Replay-Cache-Mitigation entschieden und umgesetzt: **mechanisches Re-Keying** der 18 Cache-Einträge auf die neuen Spec-Hashes + `prompt_version 0.2.0` (Responses byte-identisch, kein Bedrock-Recording nötig). Wiring-Key heißt `when:` statt `on:` (YAML-1.1-Falle: `on` parst als Boolean).
+> **Stage-4-Vertagung**: Der `@conformance`-Test `test_mock_closure_typechecks_via_tsc` deckt die Basisebene (Mock erfüllt tsc). Der vollwertige TS-Harness (API-Assertions gegen Mock **und** LLM-Output) lohnt erst nach den P3-Composer-Erkenntnissen — dann ist klar, welche Vertragsteile wirklich tragen.
+> **Neue Rahmenbedingungen für P3 (User, 2026-07-24)**: (1) Der Composer muss **vom Coding-Agent selbst bedienbar** sein — alle UI-Aktionen auch als HTTP-API/CLI, Zustand = Spec-Dateien auf Disk. (2) Der Composer wird später eine **Tauri-2-App** — nichts bauen, was dem entgegensteht (statisch exportierbares Frontend, Backend hinter sauberer HTTP-Grenze).
 > **Kontext:** [Pivot-Plan](./pivot-open-source-git-composer.md), Phase P2. Ziel ist das komplette technische Fundament für den visuellen Composer (P3): formale, mockbare Komponenten-APIs + Komposition aus Unterkomponenten.
 > **Ziel-Tag (Vorschlag):** `v0.12.0-p2-api-mocks` (setzt der User, vgl. `rules.md`)
 > **Vorgänger:** OSS-Pivot P1 (abgeschlossen 2026-07-23, Branch `feat/oss-pivot`)

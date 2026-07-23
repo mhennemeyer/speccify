@@ -1083,3 +1083,37 @@
 - Phase-7-Plan nach `archive/` verschoben (D4-Vermerk im Header); Pivot-Plan
   aktualisiert (Fragen 4/5/9/10 → entschieden, „Schema v3" → Spec-Schema v1).
 - Nur Plan-/Doku-Änderungen, kein Code.
+
+## 2026-07-24 (P2 Stages 1–3 + 5 — Schema v1, Komposition, Mock-Codegen)
+- **User-Refinement**: „Start bei Null" — kein v0-Migrationspfad; Composer
+  muss vom Agent selbst bedienbar sein; Composer wird später Tauri-2-App
+  (nichts bauen, was dem entgegensteht). In P2-/Pivot-Plan verankert.
+- **Stage 1**: `schema/spec.schema.json` hart auf v1 (`schema_version: 1`
+  Pflicht, `api:`-Block, `kind`-Enum, `screenshots[].tolerance`).
+  Wiring-Key `when:` statt `on:` (YAML-1.1 parst `on` als Boolean!).
+  Alle 7 Referenz-Specs v1 (specs/ + registry-fixtures via Transform;
+  login-screen-Fixture behält `^0.1.1`-Diamond, button 0.1.1 Bump).
+- **Stage 2**: `core/api.py` (ComponentApi, TypeRef, types_compatible,
+  literal_assignable mit Enum-Mitgliedschaft) + `core/composition.py`
+  (parse + validate gegen Kind-APIs, Fehler mit JSON-Pfaden). Resolver
+  zählt `composition.uses` transitiv. 22 neue Tests.
+- **Cache-Re-Key**: LLM-Adapter lesen `api:` (PROMPT_VERSION 0.2.0,
+  Stub TEMPLATE_VERSION 0.2.0); 18 Cache-Einträge mechanisch auf neue
+  Keys umgezogen (Responses byte-identisch — kein Bedrock-Recording).
+  example-project Lockfile + out/ regeneriert.
+- **Stage 3**: `codegen/mock_react.py` (Pin `p2-mock-react v0.1.0`):
+  Leaf-Mocks (typisierte Props, Event-Chips mit Payload-Synthese aus
+  gleichnamigen Props, Slots als ReactNode), Composite-Mocks (Kind-Baum,
+  wired-State für `set`, Callbacks für `emit`, `map_to`-Forwarding),
+  Logic-Mocks aus `api.fixtures` (D1). Closure Button/TextInput/SearchBar
+  typecheckt via gepinntem tsc (ReactToolchainDriver, `@conformance`).
+- **Stage 5**: CLI `speccify mock` (8. Command, Doku regeneriert),
+  MCP-Tool `mock` (7 Tools, Smoke angepasst), Web `POST /api/v1/mock`
+  (Composer-Palette-Vorbau); Cross-Consistency CLI == Web byte-identisch.
+- **Stage 4 vertagt** hinter P3 (tsc-Basisebene läuft; voller Harness
+  nach Composer-Erkenntnissen). Doku: `docs/component-api-and-mocks.md`.
+- **Verifikation**: 411 Pytest grün, Mock-tsc-Conformance grün,
+  MCP-stdio-Smoke OK, ruff check/format clean, `gen_cli_docs --check` grün.
+- **macOS-Venv-Ärger**: Quarantäne versteckt `.pth` re-kurrierend (auch
+  frisch geschriebene Dateien!). Session-Workaround: `PYTHONPATH` auf die
+  vier `src/`-Verzeichnisse setzen — umgeht `.pth` komplett.

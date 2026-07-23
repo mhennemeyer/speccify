@@ -65,6 +65,21 @@ uv run speccify verify --offline --registry ../registry-fixtures \
   --cache-dir ../tests/fixtures/llm-cache --out ./out
 ```
 
+### Mocks generieren (deterministisch, ohne LLM)
+
+Jede Spec hat seit Schema v1 einen formalen `api:`-Block; daraus generiert
+`speccify mock` lauffähige React-Mock-Komponenten — inklusive transitiver
+Kompositions-Kinder (z. B. die Composite `@org/search-bar` aus
+`text-input` + `button`):
+
+```bash
+uv run speccify mock @org/search-bar --registry ./registry-fixtures --out ./speccify_mocks
+```
+
+Mocks erfüllen denselben API-Vertrag wie die LLM-generierte Implementierung
+(Import-Swap-kompatibel) und sind die Render-Grundlage des visuellen
+Composers (P3). Details: [`docs/component-api-and-mocks.md`](./docs/component-api-and-mocks.md).
+
 ### Replay-Cache neu aufnehmen (Maintainer)
 
 `speccify pull`/`verify` laufen in CI ausschließlich offline gegen den
@@ -179,6 +194,7 @@ uv sync --reinstall-package django
 ## Wo es weitergeht
 
 - [`.agent/agent.md`](./.agent/agent.md) — Onboarding für Coding-Agents (Vision, Repo-Layout, Konventionen).
+- [`docs/component-api-and-mocks.md`](./docs/component-api-and-mocks.md) — **Spec-Schema v1** (P2): formaler `api:`-Vertrag, `composition:` mit typgeprüfter Verdrahtung, deterministische Mocks (`speccify mock` / MCP `mock` / `POST /api/v1/mock`).
 - [`docs/workspaces.md`](./docs/workspaces.md) — Cargo-Style Workspaces (Phase 4): Root-Lockfile, Per-Member-Outputs, MVS-Konflikt-UX.
 - [`docs/conformance.md`](./docs/conformance.md) — Build-Smoke gegen echte Toolchains (Phase 5a: React/Angular via `tsc --noEmit`, SwiftUI via `swiftc -typecheck`) **+ Cross-Consistency-Sweep**: `5 Specs × 3 Targets × 4 Pfade (Local/CLI/MCP/Web)` byte-identisch via `apps/web/backend/tests/test_cross_consistency_sweep.py`.
 - [`docs/visual-regression.md`](./docs/visual-regression.md) — **Phase 5d Voller Sweep**: Visual-Regression über `4 UI-Specs × {react, angular} = 8 Pfade` mit committed Referenz-PNGs (flache Konvention `<spec>-<target>.png`), Recorder-Script `scripts/record_visual_snapshots.py`, ein-Job-CI (`visual-regression.yml`), 10 % Default-Tolerance, Determinismus-Härte mittel (reduce-motion + color-scheme:light + monospace-Font-Stack).

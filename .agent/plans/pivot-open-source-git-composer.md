@@ -115,7 +115,12 @@ Vorbild: **Go-Module + SwiftPM**, nicht npm.
 - 5 Referenz-Specs auf Spec-Schema v1 heben; neue Referenz-Specs `@org/text-input` (Leaf) + `@org/search-bar` (Composite aus text-input + button).
 
 ### Phase P3 — Visueller Composer (MVP)
-- Web-App (Ausbau `apps/web/`): Canvas + Komponenten-Palette (aus Workspace/Fixtures) + Property-Panel + Verdrahtungs-Editor.
+
+> **Rahmenbedingungen (User, 2026-07-24):**
+> 1. **Agent-bedienbar**: Der Composer muss von Coding-Agents (Claude) selbst nutzbar sein — jede UI-Aktion existiert auch als HTTP-API (Laden/Speichern/Validieren/Mocken), der Zustand ist die Spec-Datei auf Disk (Round-Trip), keine UI-only-Funktionen. Agents arbeiten wahlweise über die API/CLI/MCP oder per Browser-Automation.
+> 2. **Tauri-2-fähig**: Der Composer wird später eine Tauri-2-Desktop-App. Deshalb: Frontend als **statisch exportierbare Vite-React-SPA** (kein Next.js-Server-Coupling, keine SSR-Abhängigkeit), Backend ausschließlich hinter einer sauberen HTTP-Grenze (später als Tauri-Sidecar oder Rust-Reimplementierung austauschbar), keine Browser-only-APIs ohne Fallback.
+
+- Web-App (Ausbau `apps/web/`): Canvas + Komponenten-Palette (aus Workspace/Fixtures, geladen über `POST /api/v1/mock`) + Property-Panel + Verdrahtungs-Editor.
 - **Zwei Editier-Modi mit demselben Modell**: Composite-Komponente bauen (Output: Komponenten-Spec mit `composition:`) und App bauen (Output: App-Spec). Selbst gebaute Composites erscheinen sofort in der Palette → Komposition ist rekursiv.
 - Rendering ausschließlich über Mock-Bundles (schnell, deterministisch, kein LLM im Loop).
 - Round-Trip: Spec laden → visuell editieren → YAML speichern; ungültige Verdrahtung ist im UI nicht herstellbar.

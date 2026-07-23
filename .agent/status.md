@@ -2,14 +2,15 @@
 
 ## Meta
 - **Typ:** Code
-- **Phase:** **OSS-Pivot P1 abgeschlossen (2026-07-23)** — Speccify ist vollständig Open Source; Django-Registry, Remote-Schreibpfad (CLI `login`/`whoami`/`publish`/`yank`, MCP `publish`/`yank`) und `example-commercial-specs/` entfernt (Archiv-Branch `archive/pre-oss-pivot-registry`); Cross-Consistency-Sweep als 60-Pfad-Version nach `apps/web/backend/tests/` portiert; OSS-Hygiene (`CONTRIBUTING.md`, CoC, Issue-Templates). Roadmap: [`plans/pivot-open-source-git-composer.md`](./plans/pivot-open-source-git-composer.md). Branch: `feat/oss-pivot`. **Verifikation: 372 Root-Pytest grün, ruff clean, Drift-Checks grün, MCP-Smoke + E2E offline grün.** Davor: Phasen 0–6 des alten Plans abgeschlossen (bis v0.11.0-phase-6, siehe Historie unten).
+- **Phase:** **P2 Kern abgeschlossen (2026-07-24)** — Spec-Schema v1 (harter Cut, `api:`-Block + `composition:` mit Typprüfung), 7 Referenz-Specs v1 (neu: `text-input` + `search-bar`-Composite), Replay-Cache mechanisch re-keyed, deterministischer React-Mock-Codegen über CLI (`speccify mock`) / MCP (Tool `mock`, 7 Tools) / Web (`POST /api/v1/mock`) byte-identisch; Mock-Closure typecheckt via gepinntem tsc (`@conformance`). Stage 4 (voller API-Harness) hinter P3 vertagt. Davor: OSS-Pivot P1 (2026-07-23, Registry-Rückbau, Archiv-Branch `archive/pre-oss-pivot-registry`). Roadmap: [`plans/pivot-open-source-git-composer.md`](./plans/pivot-open-source-git-composer.md). Branch: `feat/oss-pivot`. **Verifikation: 411 Pytest grün, Mock-tsc-Conformance grün, MCP-Smoke OK, ruff clean, CLI-Doku-Drift grün.**
 - **Priorität:** Hoch (aktiver Umbau)
-- **Zuletzt aktualisiert:** 2026-07-23
+- **Zuletzt aktualisiert:** 2026-07-24
 
 ## Nächste Schritte
-- **P2 umsetzen** — aktiver Plan [`plans/phase-p2-api-composition-mocks.md`](./plans/phase-p2-api-composition-mocks.md): Stage 1 (Spec-Schema v1: `api:`-Block, `schema_version`, `screenshots[].tolerance`; erste Entscheidung dort: Replay-Cache-Mitigation kanonisierter Cache-Key vs. Re-Recording) → Stage 2 (`composition:` + Typprüfung + `@org/text-input`/`@org/search-bar`) → Stage 3 (`speccify mock`, React) → Stage 4 (API-Conformance) → Stage 5 (MCP/Web/Cross-Consistency) → Stage 6 (Doku/Wrap-up, Tag-Vorschlag `v0.12.0-p2-api-mocks`).
-- Entscheidungen D1–D6 per User-Delegation („folge deinen Empfehlungen", 2026-07-23) im Plan dokumentiert; Phase-7-Plan archiviert (S4 in P2-Stage-1, Rest Backlog).
-- Danach **P3 — Visueller Composer (MVP)**: baut Apps **und** Composite-Komponenten, rendert ausschließlich Mocks, Output ist die Spec (Round-Trip).
+- **P3 — Visueller Composer (MVP)** planen + bauen: Canvas/Palette/Property-Panel/Verdrahtungs-Editor; baut Apps **und** Composite-Komponenten; rendert ausschließlich Mocks (via `POST /api/v1/mock`); Output ist die Spec (Round-Trip).
+- **Harte Rahmenbedingungen (User, 2026-07-24):** (1) agent-bedienbar — jede UI-Aktion auch als HTTP-API, Zustand = Spec-Dateien auf Disk; (2) Tauri-2-fähig — Frontend als statisch exportierbare Vite-React-SPA, Backend nur hinter HTTP-Grenze (kein Next.js-Server-Coupling).
+- Danach: P2-Stage-4 (API-Conformance-Harness) mit P3-Erkenntnissen nachziehen; P4 Projekt-Builds; P5 Git-Quellen.
+- Tag-Vorschlag an User: `v0.12.0-p2-api-mocks` (selbst nicht gesetzt, vgl. `rules.md`).
 
 ## Phase 1d (Steps 1–6 abgeschlossen, 2026-05-19)
 - **Step 1 erledigt** — Backend-MVP läuft offline gegen Replay-Cache: `/api/v1/specs`, `/api/v1/render` mit Fehler-Mapping (`cache_miss` 422, `spec_invalid`/`unknown_target`/`bad_request` 400). 7 Backend-Tests.
