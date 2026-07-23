@@ -28,11 +28,18 @@ from speccify_core.api import (
 __all__ = [
     "Composition",
     "CompositionIssue",
+    "CompositionResolutionError",
     "TreeNode",
     "WiringRule",
+    "parse_child_ref",
     "parse_composition",
+    "resolve_composition_children",
     "validate_composition",
 ]
+
+
+class CompositionResolutionError(RuntimeError):
+    """Kompositions-Kinder konnten nicht gegen die Registry aufgelöst werden."""
 
 
 @dataclass(frozen=True)
@@ -110,6 +117,49 @@ def parse_composition(parsed: dict[str, Any]) -> Composition | None:
             )
         )
     return Composition(uses=uses, tree=tree, wiring=tuple(wiring))
+
+
+# --- Kind-Auflösung gegen eine Registry ---------------------------------------
+
+
+def parse_child_ref(ref: str) -> tuple[str, str]:
+    """`@org/button@^0.1` → (`@org/button`, `^0.1`); Range optional."""
+    if not ref.startswith("@"):
+        raise CompositionResolutionError(
+            f"Kompositions-Referenz '{ref}' ist nicht scoped (@scope/name) — "
+            f"nur Registry-auflösbare IDs sind auflösbar."
+        )
+    body = ref[1:]
+    if "@" in body:
+        id_part, range_raw = body.split("@", 1)
+        return f"@{id_part}", range_raw
+    return ref, ""
+
+
+def resolve_composition_children(composition: Composition, registry) -> dict[str, Any]:
+    """Löst jeden `composition.uses`-Alias auf eine konkrete Spec auf (MVS-Minimum).
+
+    Rückgabe: `{alias: Spec}`. `registry` erfüllt das `Registry`-Protocol aus
+    `speccify_core.registry` (kein direkter Import, um Zyklen zu vermeiden).
+    """
+    from speccify_core.resolver import Range
+
+    children: dict[str, Any] = {}
+    for alias, ref in composition.uses.items():
+        child_id, range_raw = parse_child_ref(ref)
+        parsed_range = Range.parse(range_raw) if range_raw else None
+        versions = registry.list_versions(child_id)
+        chosen = next(
+            (v for v in versions if parsed_range is None or parsed_range.contains(v)),
+            None,
+        )
+        if chosen is None:
+            available = ", ".join(str(v) for v in versions) or "keine"
+            raise CompositionResolutionError(
+                f"Keine Version von {child_id} erfüllt '{range_raw}' (verfügbar: {available})."
+            )
+        children[alias] = registry.fetch(child_id, chosen)
+    return children
 
 
 # --- Validierung --------------------------------------------------------------

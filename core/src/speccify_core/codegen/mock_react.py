@@ -21,8 +21,14 @@ from dataclasses import dataclass
 from typing import Any
 
 from speccify_core.api import ComponentApi, EventDef, Prop, TypeRef, component_api
-from speccify_core.composition import Composition, TreeNode, parse_composition
-from speccify_core.registry import Registry, Spec, Version
+from speccify_core.composition import (
+    Composition,
+    CompositionResolutionError,
+    TreeNode,
+    parse_composition,
+    resolve_composition_children,
+)
+from speccify_core.registry import Registry, Spec
 
 MOCK_TEMPLATE_SET: str = "p2-mock-react"
 MOCK_TEMPLATE_VERSION: str = "0.1.0"
@@ -526,35 +532,6 @@ def render_mock_files(spec: Spec, children: Mapping[str, Spec] | None = None) ->
     return {_output_path(spec.spec_id, kind=kind): source.encode("utf-8")}
 
 
-def _select_version(registry: Registry, spec_id: str, range_raw: str) -> Version:
-    """MVS-Minimum: kleinste verfügbare Version, die die Range erfüllt."""
-    from speccify_core.resolver import Range
-
-    parsed_range = Range.parse(range_raw) if range_raw else None
-    versions = registry.list_versions(spec_id)
-    for version in versions:  # aufsteigend sortiert
-        if parsed_range is None or parsed_range.contains(version):
-            return version
-    raise MockCodegenError(
-        f"Keine Version von {spec_id} erfüllt '{range_raw}' "
-        f"(verfügbar: {', '.join(str(v) for v in versions) or 'keine'})."
-    )
-
-
-def _parse_child_ref(ref: str) -> tuple[str, str]:
-    """`@org/button@^0.1` → (`@org/button`, `^0.1`); Range optional."""
-    if not ref.startswith("@"):
-        raise MockCodegenError(
-            f"Kompositions-Referenz '{ref}' ist nicht scoped (@scope/name) — "
-            f"nur Registry-auflösbare IDs sind mockbar."
-        )
-    body = ref[1:]
-    if "@" in body:
-        id_part, range_raw = body.split("@", 1)
-        return f"@{id_part}", range_raw
-    return ref, ""
-
-
 def render_mock_closure(spec: Spec, registry: Registry) -> MockRender:
     """Rendert eine Spec + alle transitiven Kompositions-Kinder als Mock-Dateien."""
     files: dict[str, bytes] = {}
@@ -568,10 +545,10 @@ def render_mock_closure(spec: Spec, registry: Registry) -> MockRender:
         composition = parse_composition(current.parsed())
         children: dict[str, Spec] = {}
         if composition is not None:
-            for alias, ref in composition.uses.items():
-                child_id, range_raw = _parse_child_ref(ref)
-                version = _select_version(registry, child_id, range_raw)
-                children[alias] = registry.fetch(child_id, version)
+            try:
+                children = resolve_composition_children(composition, registry)
+            except CompositionResolutionError as exc:
+                raise MockCodegenError(str(exc)) from exc
         for child in children.values():
             _render(child)
         files.update(render_mock_files(current, children))

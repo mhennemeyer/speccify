@@ -11,6 +11,7 @@ from __future__ import annotations
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from speccify_web_backend.routes import composer as composer_route
 from speccify_web_backend.routes import mock as mock_route
 from speccify_web_backend.routes import render as render_route
 from speccify_web_backend.routes import specs as specs_route
@@ -30,7 +31,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["http://localhost:3000"],
+        # 3000: Next.js-Playground · 5173: Composer (Vite-Dev-Server) ·
+        # tauri://localhost: spätere Tauri-2-Shell des Composers.
+        allow_origins=[
+            "http://localhost:3000",
+            "http://localhost:5173",
+            "tauri://localhost",
+        ],
         allow_methods=["GET", "POST", "OPTIONS"],
         allow_headers=["*"],
     )
@@ -42,5 +49,6 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(specs_route.router)
     app.include_router(render_route.router)
     app.include_router(mock_route.router)
+    app.include_router(composer_route.router)
 
     return app

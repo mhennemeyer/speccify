@@ -36,7 +36,9 @@ from speccify_core.codegen import (
 )
 from speccify_core.composition import (
     CompositionIssue,
+    CompositionResolutionError,
     parse_composition,
+    resolve_composition_children,
     validate_composition,
 )
 from speccify_core.conformance import (
@@ -135,6 +137,8 @@ __all__ = [
     "ApiError",
     "ComponentApi",
     "CompositionIssue",
+    "CompositionResolutionError",
+    "resolve_composition_children",
     "EventDef",
     "Fixture",
     "Output",
