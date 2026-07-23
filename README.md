@@ -122,6 +122,21 @@ CLI-Subkommandos 1:1 (`resolve`, `lock`, `pull`, `verify`, `render`,
 Details und der Smoke-Aufruf (`uv run python scripts/mcp_smoke.py`)
 stehen in [`mcp/README.md`](./mcp/README.md).
 
+## Visueller Composer (`apps/composer/`)
+
+Der Composer (P3) komponiert Registry-Specs visuell zu Composite-Komponenten
+und Apps: Canvas mit interaktiven Mocks, typgeprüfter Verdrahtungs-Editor,
+Live-Simulation, YAML-Round-Trip und Speichern zurück in die Registry.
+Vite-React-SPA (statisch exportierbar, Tauri-2-fähig); jede UI-Aktion existiert
+auch als HTTP-API (agent-bedienbar).
+
+```bash
+./scripts/dev-up.sh              # Backend :8000 + Composer :5173
+# oder: pnpm run composer:dev
+```
+
+Details: [`docs/composer.md`](./docs/composer.md).
+
 ## Browser-Playground (`apps/web/`)
 
 Neben CLI und MCP-Server gibt es einen Browser-Playground unter

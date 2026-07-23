@@ -2,15 +2,15 @@
 
 ## Meta
 - **Typ:** Code
-- **Phase:** **P2 Kern abgeschlossen (2026-07-24)** — Spec-Schema v1 (harter Cut, `api:`-Block + `composition:` mit Typprüfung), 7 Referenz-Specs v1 (neu: `text-input` + `search-bar`-Composite), Replay-Cache mechanisch re-keyed, deterministischer React-Mock-Codegen über CLI (`speccify mock`) / MCP (Tool `mock`, 7 Tools) / Web (`POST /api/v1/mock`) byte-identisch; Mock-Closure typecheckt via gepinntem tsc (`@conformance`). Stage 4 (voller API-Harness) hinter P3 vertagt. Davor: OSS-Pivot P1 (2026-07-23, Registry-Rückbau, Archiv-Branch `archive/pre-oss-pivot-registry`). Roadmap: [`plans/pivot-open-source-git-composer.md`](./plans/pivot-open-source-git-composer.md). Branch: `feat/oss-pivot`. **Verifikation: 411 Pytest grün, Mock-tsc-Conformance grün, MCP-Smoke OK, ruff clean, CLI-Doku-Drift grün.**
+- **Phase:** **P3 Composer-MVP geliefert (2026-07-24)** — `apps/composer/` (Vite-React-SPA, Tauri-2-fähig) mit Palette/Canvas (interpretierte Mocks + Live-Wiring-Simulation)/Inspector/YAML-Round-Trip/Save; Composer-Backend-API (Detail/Validate/Save) im Web-Backend; Agent-Flow headless per E2E gepinnt; CI-Job `composer build`; `dev-up.sh` inkl. Composer (:5173); Doku `docs/composer.md`. **Verifikation: 420 Pytest grün, Composer-Build grün, ruff clean.** Davor am selben Tag: **P2 Kern abgeschlossen** — Spec-Schema v1 (harter Cut, `api:`-Block + `composition:` mit Typprüfung), 7 Referenz-Specs v1 (neu: `text-input` + `search-bar`-Composite), Replay-Cache mechanisch re-keyed, deterministischer React-Mock-Codegen über CLI (`speccify mock`) / MCP (Tool `mock`, 7 Tools) / Web (`POST /api/v1/mock`) byte-identisch; Mock-Closure typecheckt via gepinntem tsc (`@conformance`). Stage 4 (voller API-Harness) hinter P3 vertagt. Davor: OSS-Pivot P1 (2026-07-23, Registry-Rückbau, Archiv-Branch `archive/pre-oss-pivot-registry`). Roadmap: [`plans/pivot-open-source-git-composer.md`](./plans/pivot-open-source-git-composer.md). Branch: `feat/oss-pivot`. **Verifikation: 411 Pytest grün, Mock-tsc-Conformance grün, MCP-Smoke OK, ruff clean, CLI-Doku-Drift grün.**
 - **Priorität:** Hoch (aktiver Umbau)
 - **Zuletzt aktualisiert:** 2026-07-24
 
 ## Nächste Schritte
-- **P3 — Visueller Composer (MVP)** planen + bauen: Canvas/Palette/Property-Panel/Verdrahtungs-Editor; baut Apps **und** Composite-Komponenten; rendert ausschließlich Mocks (via `POST /api/v1/mock`); Output ist die Spec (Round-Trip).
-- **Harte Rahmenbedingungen (User, 2026-07-24):** (1) agent-bedienbar — jede UI-Aktion auch als HTTP-API, Zustand = Spec-Dateien auf Disk; (2) Tauri-2-fähig — Frontend als statisch exportierbare Vite-React-SPA, Backend nur hinter HTTP-Grenze (kein Next.js-Server-Coupling).
-- Danach: P2-Stage-4 (API-Conformance-Harness) mit P3-Erkenntnissen nachziehen; P4 Projekt-Builds; P5 Git-Quellen.
-- Tag-Vorschlag an User: `v0.12.0-p2-api-mocks` (selbst nicht gesetzt, vgl. `rules.md`).
+- **Rumprobieren im Composer** (User: „dann verfeinern wir"): `./scripts/dev-up.sh` → <http://localhost:5173>. Erkenntnisse fließen in die P3-Verfeinerung.
+- Offene P3-Verfeinerungs-Kandidaten: visuelles Slot-Befüllen, Playwright-UI-Smoke, Undo/Redo, Mock-Bundle-Rendering statt Contract-Interpretation, `kind: app`-Routen (P4).
+- Danach: P2-Stage-4 (API-Conformance-Harness) nachziehen; P4 Projekt-Builds (`speccify build`); P5 Git-Quellen.
+- Tag-Vorschläge an User: `v0.12.0-p2-api-mocks` und `v0.13.0-p3-composer-mvp` (selbst nicht gesetzt, vgl. `rules.md`).
 
 ## Phase 1d (Steps 1–6 abgeschlossen, 2026-05-19)
 - **Step 1 erledigt** — Backend-MVP läuft offline gegen Replay-Cache: `/api/v1/specs`, `/api/v1/render` mit Fehler-Mapping (`cache_miss` 422, `spec_invalid`/`unknown_target`/`bad_request` 400). 7 Backend-Tests.

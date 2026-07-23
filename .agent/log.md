@@ -1117,3 +1117,32 @@
 - **macOS-Venv-Ärger**: Quarantäne versteckt `.pth` re-kurrierend (auch
   frisch geschriebene Dateien!). Session-Workaround: `PYTHONPATH` auf die
   vier `src/`-Verzeichnisse setzen — umgeht `.pth` komplett.
+
+## 2026-07-24 (P3 — Composer-MVP)
+- **Backend (P3-API)**: `services/composer.py` + `routes/composer.py` —
+  `GET /api/v1/specs/{scope}/{name}` (Detail mit API-Contract-JSON inkl.
+  Typ-`kind`/`enumValues` + aufgelöste Kind-Contracts), `POST /api/v1/validate`
+  (Schema + Kompositions-Typprüfung; inhaltliche Fehler als Issues, nie 4xx),
+  `POST /api/v1/specs` (Save in Registry; Pfad aus id/version; Gespeichertes
+  sofort Palette-/Mock-fähig → rekursive Komposition). Core-Refactor:
+  `resolve_composition_children`/`parse_child_ref` von mock_react nach
+  `composition.py`. CORS: :5173 + tauri://localhost.
+- **Frontend**: neuer pnpm-Member `apps/composer/` — Vite-React-SPA
+  (`base: "./"`, statischer Export, kein SSR → Tauri-2-fähig; `VITE_API_BASE`
+  für spätere Sidecar-Shell). Palette („+ als Kind"/„öffnen"), Canvas mit
+  interpretierten Mocks (Contract-JSON statt TSX-Compiler im Browser;
+  Semantik identisch zu mock_react inkl. Payload-Synthese), Wiring-Simulation
+  (`simulate.ts`: set→State, emit→Event-Log, Quellen payload/props/Literal),
+  Inspector (typisierte Prop-Editoren, Verdrahtungs-Formular mit
+  contract-getriebenen Dropdowns, eigene Events/Props inkl. map_to, Spec-Meta),
+  YAML-Panel mit Round-Trip („übernehmen" lädt editiertes YAML zurück).
+- **Agent-Bedienbarkeit bewiesen**: `test_composer_agent_flow.py` baut die
+  Composite `@org/filter-bar` komplett headless über die HTTP-API
+  (Palette → Contracts → validieren → speichern → Detail → Mock-Closure →
+  wieder in der Palette). 9 weitere Composer-Routen-Tests.
+- **Integration**: CI-Job `apps/composer build (vite spa)`; `dev-up.sh`
+  startet Composer auf :5173; `docs/composer.md` + README-Abschnitt;
+  Pivot-Plan P3 als „MVP geliefert" markiert (offene Verfeinerungen notiert).
+- **Verifikation**: 420 Pytest grün, `pnpm --filter speccify-composer build`
+  grün (tsc + Vite, im ersten Anlauf), ruff check/format clean.
+- Tag-Vorschlag an User: `v0.13.0-p3-composer-mvp`.

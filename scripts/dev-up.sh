@@ -5,7 +5,8 @@
 # Hochgefahren werden (jeweils im Vordergrund dieses Skripts als Hintergrund-Job,
 # mit Präfix-Logs und gemeinsamem Shutdown via Ctrl-C):
 #
-#   * Playground-Backend (FastAPI)  http://127.0.0.1:8000   speccify-web-backend
+#   * Playground-Backend (FastAPI)  http://127.0.0.1:8000   speccify-web-backend + Composer-API
+#   * Composer (Vite-SPA)           http://localhost:5173   Visueller Composer
 #   * Playground-Frontend (Next.js) http://localhost:3000   Monaco-Editor-Spielwiese
 #   * Marketing/Doku (Astro)        http://localhost:4321   Landingpage + Doku
 #
@@ -36,6 +37,7 @@ for arg in "$@"; do
 done
 
 BACKEND_PORT=8000
+COMPOSER_PORT=5173
 FRONTEND_PORT=3000
 MARKETING_PORT=4321
 
@@ -82,6 +84,10 @@ if [[ "$RUN_FRONTENDS" -eq 1 ]]; then
   echo "→ pnpm install (Workspace) …"
   pnpm install 2>&1 | prefix pnpm
 
+  # Composer (Vite-SPA, proxied /api → Backend).
+  ( trap - EXIT INT TERM; pnpm run composer:dev 2>&1 | prefix composer ) &
+  PIDS+=($!)
+
   # Playground-Frontend (Next.js).
   ( trap - EXIT INT TERM; cd apps/web/frontend && pnpm dev 2>&1 | prefix frontend ) &
   PIDS+=($!)
@@ -100,6 +106,7 @@ cat <<EOF
 EOF
 if [[ "$RUN_FRONTENDS" -eq 1 ]]; then
 cat <<EOF
+    Composer (visuell)        : http://localhost:${COMPOSER_PORT}
     Playground-Frontend       : http://localhost:${FRONTEND_PORT}
     Marketing/Doku            : http://localhost:${MARKETING_PORT}
 EOF

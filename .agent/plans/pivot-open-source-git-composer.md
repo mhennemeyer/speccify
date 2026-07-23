@@ -116,6 +116,8 @@ Vorbild: **Go-Module + SwiftPM**, nicht npm.
 
 ### Phase P3 — Visueller Composer (MVP)
 
+> **✅ MVP geliefert (2026-07-24):** `apps/composer/` (Vite-React-SPA, statisch exportierbar, `base: "./"`) + Composer-Backend-API (`GET /api/v1/specs/{scope}/{name}`, `POST /api/v1/validate`, `POST /api/v1/specs`, dazu `POST /api/v1/mock` aus P2). Palette/Canvas (interpretierte Mocks mit Live-Wiring-Simulation)/Inspector (typisierte Prop-Editoren, Verdrahtungs-Formular mit API-Dropdowns, eigene Events/Props inkl. `map_to`)/YAML-Round-Trip/Speichern in die Registry. Agent-Bedienbarkeit per Headless-E2E gepinnt (`test_composer_agent_flow.py`: komponieren → validieren → speichern → mocken, rein über HTTP). **Offen für die Verfeinerung nach Rumprobieren:** visuelles Slot-Befüllen, Playwright-UI-Smoke, `kind: app`-Routen (P4), Undo/Redo, Mock-Bundle-Rendering statt Contract-Interpretation.
+>
 > **Rahmenbedingungen (User, 2026-07-24):**
 > 1. **Agent-bedienbar**: Der Composer muss von Coding-Agents (Claude) selbst nutzbar sein — jede UI-Aktion existiert auch als HTTP-API (Laden/Speichern/Validieren/Mocken), der Zustand ist die Spec-Datei auf Disk (Round-Trip), keine UI-only-Funktionen. Agents arbeiten wahlweise über die API/CLI/MCP oder per Browser-Automation.
 > 2. **Tauri-2-fähig**: Der Composer wird später eine Tauri-2-Desktop-App. Deshalb: Frontend als **statisch exportierbare Vite-React-SPA** (kein Next.js-Server-Coupling, keine SSR-Abhängigkeit), Backend ausschließlich hinter einer sauberen HTTP-Grenze (später als Tauri-Sidecar oder Rust-Reimplementierung austauschbar), keine Browser-only-APIs ohne Fallback.
