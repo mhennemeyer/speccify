@@ -14,11 +14,13 @@ Die folgenden Dateien sind Symlinks auf `~/.agent/` und gelten projektübergreif
 
 > *„npm für Spezifikationen statt für Code — Komponenten beschreiben, nicht implementieren. Der AI-Agent ist der Compiler in das Ziel-Framework."*
 
-Speccify ist eine Spec-First-Plattform für sprach- und framework-unabhängige Komponenten-Spezifikationen. Eine `speccify.yaml`-Spec beschreibt Verhalten, Inputs/Outputs, Akzeptanzkriterien und visuelle Referenzen — und ein AI-Agent generiert daraus deterministisch Code für SwiftUI, React, Angular, Jetpack Compose oder andere Targets.
+Speccify ist eine **vollständig quelloffene** Spec-First-Plattform für sprach- und framework-unabhängige Komponenten-Spezifikationen. Eine `speccify.yaml`-Spec beschreibt Verhalten, Inputs/Outputs, Akzeptanzkriterien und visuelle Referenzen — und ein AI-Agent generiert daraus deterministisch Code für SwiftUI, React, Angular, Jetpack Compose oder andere Targets. Specs werden über Git-Repos geteilt (kein zentrales Registry, kein Pro-Plan/Marketplace).
 
-Langfristige Quelle der Wahrheit: [`.agent/plans/speccify-plan.md`](./.agent/plans/speccify-plan.md). Dieses Repo (nicht das ursprüngliche LambdaPy-Repo) ist ab jetzt die Single Source of Truth für Plan-Änderungen.
+**Seit dem OSS-Pivot (2026-07-23)** ist die Roadmap-Quelle der Wahrheit: [`.agent/plans/pivot-open-source-git-composer.md`](./.agent/plans/pivot-open-source-git-composer.md) — vier Säulen: (1) Open Source statt Open Core, (2) Git-Repos als Datenteilung, (3) komplette Projekt-Builds aus Specs, (4) mockbare Komponenten-APIs + Composite-Komponenten als Fundament für den **visuellen Composer**. Der alte Master-Plan [`speccify-plan.md`](./.agent/plans/speccify-plan.md) bleibt als Kontext für Vision/Spec-Format/PM-Designentscheidungen gültig.
 
 ## Aktuelle Phase
+
+**OSS-Pivot P1 abgeschlossen (2026-07-23) — Open-Source-Fundament & Entrümpelung.** Registry-Rückbau: `registry/` (Django-Backend, 134 Tests), CLI `login`/`whoami`/`publish`/`yank` + `_credentials`, MCP-Tools `publish`/`yank` (8→6) entfernt — Stand davor auf Archiv-Branch `archive/pre-oss-pivot-registry`. `example-commercial-specs/` gelöscht. Der 75-Pfad-Cross-Consistency-Sweep ist als **60-Pfad-Sweep (Local/CLI/MCP/Web)** nach `apps/web/backend/tests/test_cross_consistency_sweep.py` portiert (Remote-Pfad kehrt mit `GitRegistry` in P5 zurück). `RemoteRegistry` in `core/` bleibt vorerst (MockTransport-Tests, wird in P5 durch `GitRegistry` ersetzt/ergänzt). CI: `registry-backend`-Job entfernt; `dev-up.sh`/`local-dev-e2e.md` ohne Registry; CLI-Referenz regeneriert (7 Command-Seiten); OSS-Hygiene (`CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, Issue-Templates). **Verifikation: 372 Root-Pytest grün (357 + 15 Sweep-Zellen), ruff check/format clean, beide Drift-Checks grün, MCP-Smoke + example-project-E2E offline grün.** **Nächster Schritt: P2 — API-Vertrag, Komposition & Mock-Generator** (Composer-Fundament; Plan-Entwurf mit Stage 0 Open Questions), danach P3 visueller Composer.
 
 **Phase 6 abgeschlossen (2026-06-15) — Landingpage + Doku-Site (`apps/marketing/`) produktiv.** Stages 1–7 geliefert: pnpm-Member `apps/marketing/` (Astro Starlight + Tailwind nur für Landing, Pagefind, Plausible-Env-Guard); `scripts/sync_docs_to_site.py` spiegelt `docs/{conformance,visual-regression,workspaces}.md` deterministisch als Starlight-MDX (Frontmatter aus H1/erstem Paragraph, relative Links → Site-URLs, `--write`/`--check`); `scripts/gen_cli_docs.py` generiert die CLI-Reference (Index + 11 Command-Seiten) via Click-Introspektion (`typer.main.get_command`, terminal-unabhängig, `--check`); volle Tailwind-Landing (`index.astro` + `MarketingLayout.astro`: Hero/Problem-Lösung/Demo/Targets/How-it-works/CTA + Footer), `try-it.astro` mit Playground-Iframe (`PUBLIC_PLAYGROUND_URL`) + Fallback, Legal-Platzhalter `/legal/{imprint,privacy}`; CI-Workflow `.github/workflows/docs.yml` (Drift-`--check` ×2 → `pytest tests/` → `pnpm build` → `lychee` → `markdownlint`, Pfad-Filter, `ci.yml` unberührt); `docs/deploy.md` (Vercel-Setup + Env-Tabelle) + README-Update; neue Pytest-Suite `tests/` (`testpaths` erweitert). **Verifikation: 357 Root-Pytest Default (+11 ggü. 346) + 134 Registry-Pytest = 491 Tests grün; beide Drift-Checks exit-0; `pnpm --filter speccify-marketing build` grün (26 Seiten).** **Tag-Vorschlag an User: `v0.11.0-phase-6`** (selbst nicht gesetzt, vgl. `rules.md`). **Nächster Schritt: Phase 7 (Visual-Regression-Vertiefung) nach User-Tag.**
 
@@ -50,8 +52,8 @@ Phase 0 abgeschlossen (Tag `v0.0.0-phase0`): Schema v0, `speccify lint`, 5 Refer
 | `schema/` | JSON-Schema-Dateien (kein Python-Paket) | 0 |
 | `specs/` | Referenz-Specs als YAML | 0 |
 | `codegen/` | Target-Adapter (zuerst SwiftUI) | 1 |
-| `registry/` | Django-Backend (Discovery, Publish, sigstore) | 2 |
-| `apps/web/` | Website + Browser-Playground (Stack offen) | 1/2 |
+| `apps/web/` | Browser-Playground (FastAPI + Next.js); wird zum visuellen Composer ausgebaut | 1 / P3 |
+| `apps/marketing/` | Landingpage + Doku-Site (Astro Starlight) | 6 |
 | `docs/` | Architektur-/Format-Doku außerhalb der Plan-Dokumente | laufend |
 
 ## Tooling
@@ -87,7 +89,7 @@ uv run ruff format .       # Format
 ## Hinweise für AI-Agents
 
 1. **Phasen-Disziplin**: Implementiere nichts außerhalb des aktuellen Phasen-Plans. Bei Scope-Änderungen zuerst den Master-Plan re-lesen und ggf. einen neuen Phasen-Plan vorschlagen.
-2. **Geparkte Bestandteile nicht antasten**: Tauri/Desktop (Phase 4) ist on-hold. Ebenso visuelles Tooling (Phase 5+) und Federation/Marketplace.
+2. **Geparkte Bestandteile nicht antasten**: Tauri/Desktop ist on-hold. Federation bleibt nachgelagert; Marketplace ist mit dem OSS-Pivot **gestrichen**. Visuelles Tooling ist seit dem Pivot **nicht mehr geparkt** — der visuelle Composer ist Kern-Roadmap (P3), sein Fundament (API-Vertrag + Mocks) ist P2.
 3. **Determinismus zuerst**: Spec-First, Code-Second. Wenn eine Aufgabe in Code beschreibbar ist, gehört sie wahrscheinlich in eine Spec.
 4. **Resolver/Codegen wohnt in `core/`** — `cli/` und `mcp/` sind dünne Adapter darüber.
 5. **Bei Unklarheiten** zur Roadmap: Master-Plan + Phasen-Plan checken; nicht raten.

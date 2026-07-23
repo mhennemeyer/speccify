@@ -2,14 +2,14 @@
 
 ## Meta
 - **Typ:** Code
-- **Phase:** **Phase 3 abgeschlossen — Stages 0–8 Done** (2026-05-27). Archivierter Plan: [`.agent/plans/archive/phase-3-codegen-targets.md`](./plans/archive/phase-3-codegen-targets.md) (`isActive: false`). Lieferumfang: Renderer-Protocol + `TARGETS`-Registry (Stage 1a), Manifest-v2 + Lockfile-v3 mit Multi-Target-Liste (Stage 1b), SwiftUI- (Stage 2) und Angular-Renderer (Stage 3) als 1:1-Spiegel zu React (`kind: llm` + Replay-Cache, Cache-Key enthält Target), `speccify conformance` Command mit pluggable Backends + Default-`static-validate` (Stage 4), Workspaces mit Cargo-Stil-Root-Lockfile + globale MVS (Stage 5, lock-only MVP), Cross-Consistency CLI ↔ MCP ↔ Web über 3 Targets parametrisiert (Stage 6), `RemoteRegistry`-Multi-Target-Smoke gegen Live-Django-Server (Stage 7). **Verifikation: 293 Root-Pytest + 119 Registry-Pytest = 412 Tests gesamt grün**, ruff/format clean. **Tag-Vorschlag an User: `v0.6.0-phase-3`** (selbst nicht gesetzt, vgl. `rules.md`). Tag-Vorschlag `v0.5.0-phase-2` weiterhin offen.
-- **Priorität:** Mittel
-- **Zuletzt aktualisiert:** 2026-05-27
+- **Phase:** **OSS-Pivot P1 abgeschlossen (2026-07-23)** — Speccify ist vollständig Open Source; Django-Registry, Remote-Schreibpfad (CLI `login`/`whoami`/`publish`/`yank`, MCP `publish`/`yank`) und `example-commercial-specs/` entfernt (Archiv-Branch `archive/pre-oss-pivot-registry`); Cross-Consistency-Sweep als 60-Pfad-Version nach `apps/web/backend/tests/` portiert; OSS-Hygiene (`CONTRIBUTING.md`, CoC, Issue-Templates). Roadmap: [`plans/pivot-open-source-git-composer.md`](./plans/pivot-open-source-git-composer.md). Branch: `feat/oss-pivot`. **Verifikation: 372 Root-Pytest grün, ruff clean, Drift-Checks grün, MCP-Smoke + E2E offline grün.** Davor: Phasen 0–6 des alten Plans abgeschlossen (bis v0.11.0-phase-6, siehe Historie unten).
+- **Priorität:** Hoch (aktiver Umbau)
+- **Zuletzt aktualisiert:** 2026-07-23
 
-## Nächste Schritte (für Phase 4)
-- Workspace-`pull`/`verify`/`add`-Iteration (Folge-Substage zu Stage 5; Output-Routing pro Member).
-- Conformance-Backends `BuildSmoke` (npm/ng/swiftc) + `VisualRegression` (Spec-`screenshots[]`) hinter dem `ConformanceBackend`-Protocol.
-- Voller 75-Pfad-Cross-Consistency-Sweep mit echtem Bedrock-Replay-Cache für SwiftUI/Angular + die fehlenden Phase-0-Specs (LoginScreen + HttpApiClient) via `scripts/record_llm_cache.py`.
+## Nächste Schritte
+- **P2 — API-Vertrag, Komposition & Mock-Generator** (Composer-Fundament): Phasen-Plan-Entwurf mit Stage 0 Open Questions (u. a. Mock-Semantik für Logic-Kinds, State-Machine im API-Vertrag, Prop-Forwarding in Composites — siehe Pivot-Plan, „Offene Fragen").
+- Danach **P3 — Visueller Composer (MVP)**: baut Apps **und** Composite-Komponenten, rendert ausschließlich Mocks, Output ist die Spec (Round-Trip).
+- Offen aus Alt-Roadmap: Phase-7-Plan (Visual-Regression-Vertiefung) — Schicksal in P2-Stage-0 klären (Pivot-Plan Frage 10).
 
 ## Phase 1d (Steps 1–6 abgeschlossen, 2026-05-19)
 - **Step 1 erledigt** — Backend-MVP läuft offline gegen Replay-Cache: `/api/v1/specs`, `/api/v1/render` mit Fehler-Mapping (`cache_miss` 422, `spec_invalid`/`unknown_target`/`bad_request` 400). 7 Backend-Tests.

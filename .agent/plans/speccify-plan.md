@@ -1,7 +1,8 @@
 # Plan: Projekt „speccify.io/de" – Spec-First Komponenten-Plattform für AI-Agenten
 
-> **Status**: 📋 Entwurf – Vorstellung im internen Team-Bereich
+> **Status**: 📋 Historischer Master-Plan — Roadmap seit dem OSS-Pivot: [`pivot-open-source-git-composer.md`](./pivot-open-source-git-composer.md)
 > **Erstellt**: 2026-04-29
+> **Update 2026-07-23 (OSS-Pivot)**: Speccify ist **vollständig Open Source** — Open-Core-Modell, Marketplace, „Hosting als Service" und das zentrale Django-Registry (Phase 2) sind gestrichen bzw. zurückgebaut (Archiv-Branch `archive/pre-oss-pivot-registry`). Datenteilung künftig über **Git-Repos**; neue Kernziele: mockbare Komponenten-APIs, Composite-Komponenten, komplette Projekt-Builds aus Specs, **visueller Composer**. Dieses Dokument bleibt als Kontext für Vision, Spec-Format und PM-Designentscheidungen gültig; Phasen-Roadmap und Prinzip 7 sind durch den Pivot-Plan ersetzt.
 > **Update 2026-04-29**: Entscheid für Desktop-Stack getroffen → **Tauri** (Rust + System-WebView). Gleichzeitig willkommene Gelegenheit, Rust im Team aufzubauen.
 > **Update 2026-05-04 (Refinement)**: Fokus geschärft auf **CLI + MCP + Registry zuerst** („npm-artiger Workflow"). Desktop-App **geparkt** (Re-Aktivierungs-Kriterien siehe Phase 4). Browser-Playground läuft **parallel** zum CLI als minimale Demo-Oberfläche. Visuelles Tooling zerlegt: Asset-Refs in der Spec sofort, Galerie/Live-Preview/Figma nachgelagert. Package-Manager-Designentscheidungen siehe [Package-Manager-Vergleich](archive/package-manager-comparison.md).
 > **Ziel**: Eine Plattform, auf der Komponenten nicht als Code in einem konkreten Framework, sondern als **präzise, sprach- und ökosystem-unabhängige Spezifikationen** entwickelt, refined, gesucht und geteilt werden. Ein AI-Agent kann anhand einer Spezifikation und einem stabilen Identifier (`<comp-id>`) die Komponente in beliebigen Ziel-Stacks (SwiftUI, Angular, React, Flutter, Jetpack Compose, Backend-Services, CLI-Tools …) deterministisch umsetzen. Distribution zuerst über CLI + MCP-Server + Website/Playground; Desktop-App optional und nachgelagert.
@@ -74,7 +75,7 @@ Der Agent
 4. **Composability** – Komponenten referenzieren Komponenten, transitiv auflösbar.
 5. **Verifiability** – jede Spec hat ausführbare Akzeptanzkriterien; Conformance-Tests laufen pro Ziel-Stack.
 6. **Human + AI Co-Authoring** – Specs werden gemeinsam mit AI refined, mit klaren Diff-/Review-Workflows.
-7. **Open Core** – Spec-Format und CLI Open Source; Hosting/Collaboration/Search als Service.
+7. **Vollständig Open Source** *(geändert 2026-07-23, vorher „Open Core")* – alles MIT; Datenteilung über Git-Repos, Discovery über ein statisches Index-Repo, kein Hosted-Service-Geschäftsmodell.
 
 ---
 
@@ -100,7 +101,7 @@ Der Agent
 - Profile, Organisationen, Teams (öffentlich / privat / unlisted).
 - Refinement-Diskussionen pro Spec (issue-zentriert auf Spec-Ebene) — *Phase 5, nach echter Nutzung*.
 - **Browser-Playground (Phase 1, parallel zum CLI)**: Spec eingeben → Live-Generierung in Ziel-Framework. Fast Abfallprodukt der Codegen-Pipeline + Website; beste Demo- und Onboarding-Oberfläche.
-- Marketplace-Komponente (später): bezahlte/lizensierte Specs.
+- ~~Marketplace-Komponente (später): bezahlte/lizensierte Specs.~~ *(gestrichen mit dem OSS-Pivot 2026-07-23)*
 
 ### 🅿️ Desktop-App (geparkt)
 - Stack-Entscheidung **Tauri 2** bleibt dokumentiert, Bau aber **on-hold**.
@@ -291,6 +292,8 @@ Yank-Politik im Detail (Grace-Period, Auto-Yank bei CVE), Pre-Release-Workflow, 
 
 ## Phasen-Roadmap
 
+> **⚠️ Historisch (Stand vor dem OSS-Pivot 2026-07-23)**: Die Phasen 0–6 unten sind abgeschlossen und dokumentieren den Weg bis v0.11.0. Die **aktuelle Roadmap** (P1 Entrümpelung → P2 API/Mocks/Komposition → P3 Visueller Composer → P4 Projekt-Builds → P5 Git-Quellen → P6 Launch) steht im [Pivot-Plan](./pivot-open-source-git-composer.md). Das in Phase 2 gebaute Django-Registry wurde mit dem Pivot zurückgebaut.
+>
 > **Refinement 2026-05-04**: Phasen umsortiert. CLI + MCP + ein Codegen-Target + Browser-Playground bilden zusammen Phase 1. Desktop-App (alte Phase 4) **geparkt**. Visuelles Tooling und Refinement-Diskussionen erst nach echter Nutzung.
 
 ### Phase 0: Spec-Schema v0 + Lint

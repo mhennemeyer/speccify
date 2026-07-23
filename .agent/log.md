@@ -1040,3 +1040,25 @@
   ergänzt; Tag-Vorschlag `v0.4.0-phase-1d` bleibt weiterhin offen an User
   (nicht selbst gesetzt, vgl. `rules.md`).
 - Keine Code-/Test-Änderungen.
+
+## 2026-07-23 (OSS-Pivot P1 — Aufräumen + Pivot-Plan)
+- **Pivot-Plan** [`plans/pivot-open-source-git-composer.md`](./plans/pivot-open-source-git-composer.md)
+  erstellt und nach User-Refinement umgestellt: Composer-Fast-Track
+  (P1 Aufräumen → P2 API/Mocks/Komposition → P3 visueller Composer →
+  P4 Projekt-Builds → P5 Git-Quellen → P6 Launch). Composer baut Apps
+  **und** Composite-Komponenten; `composition:` wird gemeinsames
+  Schema-Konzept.
+- **P1 umgesetzt** auf Branch `feat/oss-pivot` (3 Commits): Registry-
+  Rückbau (`registry/`, CLI-Remote-Schreibpfad, MCP `publish`/`yank`,
+  CI-Job, dev-up.sh, Docs; Archiv-Branch `archive/pre-oss-pivot-registry`),
+  `example-commercial-specs/` gelöscht, 75-Pfad-Sweep als 60-Pfad-Sweep
+  (Local/CLI/MCP/Web) nach `apps/web/backend/tests/` portiert,
+  CLI-Referenz regeneriert (7 Seiten), OSS-Hygiene (CONTRIBUTING, CoC,
+  Issue-Templates), Master-Plan + agent.md + README auf Pivot umgestellt.
+- **Verifikation**: 372 Root-Pytest grün (357 + 15 Sweep-Zellen), ruff
+  check/format clean, `gen_cli_docs --check` + `sync_docs_to_site --check`
+  grün, MCP-stdio-Smoke OK, example-project Offline-E2E OK. Mypy: 11
+  vorbestehende Fehler, unverändert zur Baseline (lokale Mypy-Version
+  strenger als CI).
+- `RemoteRegistry` in `core/` bewusst behalten (MockTransport-Tests
+  self-contained); wird in P5 durch `GitRegistry` ersetzt/ergänzt.
