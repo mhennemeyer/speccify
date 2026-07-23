@@ -28,7 +28,7 @@ def test_tools_list_contains_step2_and_step3_tools(tmp_path: Path) -> None:
     server = build_server(ServerConfig(project_root=tmp_path))
     tools = asyncio.run(server.list_tools())
     names = sorted(t.name for t in tools)
-    assert names == ["lint", "lock", "pull", "render", "resolve", "verify"]
+    assert names == ["lint", "lock", "mock", "pull", "render", "resolve", "verify"]
 
 
 def test_resources_list_contains_step4_resources(tmp_path: Path) -> None:

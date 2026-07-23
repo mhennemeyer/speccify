@@ -19,6 +19,7 @@ from mcp.server.fastmcp import FastMCP
 from .tools import (
     run_lint,
     run_lock,
+    run_mock,
     run_pull,
     run_render,
     run_resolve,
@@ -214,5 +215,33 @@ def _register_write_tools(server: FastMCP, config: ServerConfig) -> None:
             offline=offline,
             cache_dir=Path(cache_dir) if cache_dir else None,
             workspace_root=Path(workspace_root) if workspace_root else None,
+        )
+        return result.to_dict()
+
+    @server.tool(
+        name="mock",
+        description=(
+            "Generate deterministic mock components (no LLM) for a spec "
+            "and all its transitive composition children, written to "
+            "`out_dir`. Mocks fulfil the same api contract as the real "
+            "implementation (import-swap compatible). Returns "
+            "`{ok, files, out_dir, template_set, template_version}`; "
+            "logic specs without fixtures report `code=mock_unavailable` "
+            "in the structured result, not as an MCP error. Mirrors "
+            "`speccify mock`."
+        ),
+    )
+    def mock(
+        spec_ref: str,
+        out_dir: str = "./speccify_mocks",
+        registry_path: str | None = None,
+        target: str = "react",
+    ) -> dict[str, Any]:
+        result = run_mock(
+            project_root=config.project_root,
+            spec_ref=spec_ref,
+            out_dir=Path(out_dir),
+            registry_path=Path(registry_path) if registry_path else None,
+            target=target,
         )
         return result.to_dict()

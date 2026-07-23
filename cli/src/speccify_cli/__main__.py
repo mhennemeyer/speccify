@@ -12,6 +12,7 @@ from speccify_cli.commands.add import add_command
 from speccify_cli.commands.conformance import conformance_command
 from speccify_cli.commands.init import init_command
 from speccify_cli.commands.lock import lock_command
+from speccify_cli.commands.mock import mock_command
 from speccify_cli.commands.pull import pull_command
 from speccify_cli.commands.verify import verify_command
 
@@ -28,6 +29,7 @@ app.command("add")(add_command)
 app.command("pull")(pull_command)
 app.command("verify")(verify_command)
 app.command("conformance")(conformance_command)
+app.command("mock")(mock_command)
 
 
 @app.callback()

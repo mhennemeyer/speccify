@@ -18,6 +18,15 @@ from typing import Protocol
 from speccify_core.codegen import angular_llm as _angular_llm
 from speccify_core.codegen import react_llm as _react_llm
 from speccify_core.codegen import swiftui_llm as _swiftui_llm
+from speccify_core.codegen.mock_react import (
+    MOCK_TEMPLATE_SET,
+    MOCK_TEMPLATE_VERSION,
+    MockCodegenError,
+    MockRender,
+    MockUnavailableError,
+    render_mock_closure,
+    render_mock_files,
+)
 from speccify_core.codegen.react_llm import CodegenError
 from speccify_core.codegen.replay import (
     CacheKey,
@@ -138,6 +147,13 @@ __all__ = [
     "CacheKey",
     "CacheMissError",
     "CodegenError",
+    "MOCK_TEMPLATE_SET",
+    "MOCK_TEMPLATE_VERSION",
+    "MockCodegenError",
+    "MockRender",
+    "MockUnavailableError",
+    "render_mock_closure",
+    "render_mock_files",
     "LlmClient",
     "Renderer",
     "ReplayCache",

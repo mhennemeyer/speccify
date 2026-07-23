@@ -11,6 +11,7 @@ from __future__ import annotations
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from speccify_web_backend.routes import mock as mock_route
 from speccify_web_backend.routes import render as render_route
 from speccify_web_backend.routes import specs as specs_route
 from speccify_web_backend.settings import Settings
@@ -40,5 +41,6 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     app.include_router(specs_route.router)
     app.include_router(render_route.router)
+    app.include_router(mock_route.router)
 
     return app

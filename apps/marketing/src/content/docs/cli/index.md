@@ -15,5 +15,6 @@ hat eine eigene Referenzseite:
 | [`speccify init`](/cli/init/) | Legt ein neues Speccify-Projekt mit minimalem `speccify.yaml` an. |
 | [`speccify lint`](/cli/lint/) | Validiert eine oder mehrere YAML-Specs gegen das Spec-Schema v0. |
 | [`speccify lock`](/cli/lock/) | Löst Dependencies via MVS auf und schreibt speccify.lock (ohne Codegen-Aufruf). |
+| [`speccify mock`](/cli/mock/) | Generiert deterministische Mock-Komponenten (inkl. Kompositions-Kindern). |
 | [`speccify pull`](/cli/pull/) | Rendert resolved Specs aus dem Lockfile und aktualisiert Output-Hashes. |
 | [`speccify verify`](/cli/verify/) | Prüft, dass Manifest, Lockfile und gerenderte Dateien zueinander passen. |
