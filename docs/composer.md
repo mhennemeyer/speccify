@@ -93,6 +93,7 @@ Job (`apps/composer ui smoke`). Die Ports kollidieren bewusst nicht mit
 
 ## Cross-Referenzen
 
+- Hands-on-Einstieg: [`composer-tristate-walkthrough.md`](./composer-tristate-walkthrough.md)
 - API-Vertrag & Mocks: [`component-api-and-mocks.md`](./component-api-and-mocks.md)
 - Lokaler Gesamt-Workflow: [`local-dev-e2e.md`](./local-dev-e2e.md)
 - Roadmap: [`.agent/plans/pivot-open-source-git-composer.md`](../.agent/plans/pivot-open-source-git-composer.md)
