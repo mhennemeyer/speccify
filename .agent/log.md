@@ -1258,3 +1258,18 @@
   tsc+Vite (desktop 212 kB, composer 269 kB) grün, cargo build/clippy
   -p speccify-desktop grün, /ui-Livecheck grün, `tauri build` grün.
 - Offen: manueller BO-Check (`pnpm run desktop:dev` → Composer-Tab).
+
+## 2026-07-24 (Walkthrough-Doku + FilePicker)
+- BO-Feedback nach erstem App-Start („hat geklappt"): (1)
+  `docs/composer-tristate-walkthrough.md` — Tri-State-Button als
+  Segmented Control aus drei Basis-Buttons (Aliasse aus/teils/an wegen
+  YAML-1.1-off/on-Falle; Alias-Rename nur via YAML-Round-Trip; 12
+  Wiring-Regeln; Referenz-YAML headless verifiziert: validate/save/mock
+  grün, Mock trägt onChanged + Variant-Sets). Erkenntnis dokumentiert:
+  echtes Zyklieren (EIN Button, drei Zustände) braucht behavior:/
+  bedingte Wiring — Kandidat für die Verfeinerung. (2)
+  tauri-plugin-dialog + „Auswählen…"-Button (Verzeichnis-Picker) am
+  Repo-Pfad-Feld des Composer-Tabs (Capability dialog:default).
+- PATH-Fix beim BO: brew-rustup hat keine ~/.cargo/bin-Shims →
+  `/opt/homebrew/opt/rustup/bin` in ~/.zshrc exportiert (desktop:dev
+  lief vorher auf „cargo metadata: No such file or directory").
