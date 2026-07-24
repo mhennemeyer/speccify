@@ -162,3 +162,49 @@ jobs:
 
       - name: Typecheck + Build (statischer Export, Tauri-2-fähig)
         run: pnpm --filter speccify-composer build
+
+  composer-e2e:
+    name: apps/composer ui smoke (playwright)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      - name: Set up Python (from .python-version)
+        run: uv python install
+
+      - name: Sync workspace (Backend für den UI-Smoke)
+        run: uv sync --all-packages
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.3
+          run_install: false
+
+      - name: Install dependencies (frozen lockfile, workspace root)
+        run: pnpm install --frozen-lockfile
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-composer-${{ runner.os }}-1.44.0
+
+      - name: Install Playwright Chromium
+        run: pnpm --filter speccify-composer exec playwright install --with-deps chromium
+
+      - name: Composer UI smoke (backend + vite + chromium)
+        run: pnpm --filter speccify-composer e2e

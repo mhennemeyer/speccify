@@ -2,8 +2,10 @@ import { useState } from "react";
 
 import {
   addWiringRule,
+  findTreeNode,
   moveNode,
-  removeChild,
+  moveNodeToSlot,
+  nodePlacement,
   removeOwnEvent,
   removeOwnProp,
   removeWiringRule,
@@ -24,9 +26,7 @@ interface InspectorProps {
   childrenInfo: Record<string, ChildInfo>;
   selection: string | null;
   onDocChange: (doc: SpecDoc) => void;
-  onChildrenChange: (
-    update: (current: Record<string, ChildInfo>) => Record<string, ChildInfo>,
-  ) => void;
+  onRemoveNode: (alias: string) => void;
   onSelectionChange: (alias: string | null) => void;
 }
 
@@ -79,17 +79,23 @@ function NodePanel({
   childrenInfo,
   selection,
   onDocChange,
-  onChildrenChange,
-  onSelectionChange,
+  onRemoveNode,
 }: InspectorProps & { doc: SpecDoc }) {
   if (!selection) {
     return <p className="muted">Knoten im Canvas anklicken.</p>;
   }
   const child = childrenInfo[selection];
-  const node = doc.composition?.tree.find((entry) => entry.node === selection);
+  const node = findTreeNode(doc.composition?.tree ?? [], selection);
   if (!child || !node) {
     return <p className="muted">Knoten „{selection}" nicht gefunden.</p>;
   }
+
+  // Platzierungs-Optionen: Slots aller anderen Knoten (Zyklen verhindert
+  // moveNodeToSlot selbst — Verschieben in den eigenen Teilbaum ist No-Op).
+  const placementOptions = Object.entries(childrenInfo).flatMap(([alias, info]) =>
+    alias === selection ? [] : info.api.slots.map((slot) => `${alias}.${slot.name}`),
+  );
+  const placement = nodePlacement(doc, selection) ?? "";
 
   return (
     <div>
@@ -103,21 +109,34 @@ function NodePanel({
         <button className="small" onClick={() => onDocChange(moveNode(doc, selection, 1))}>
           ↓
         </button>
-        <button
-          className="small danger"
-          onClick={() => {
-            onDocChange(removeChild(doc, selection));
-            onChildrenChange((current) => {
-              const next = { ...current };
-              delete next[selection];
-              return next;
-            });
-            onSelectionChange(null);
-          }}
-        >
+        <button className="small danger" onClick={() => onRemoveNode(selection)}>
           entfernen
         </button>
       </div>
+      {placementOptions.length > 0 ? (
+        <div className="field">
+          <label htmlFor="node-placement">Platzierung</label>
+          <select
+            id="node-placement"
+            value={placement}
+            onChange={(event) => {
+              const raw = event.target.value;
+              const target =
+                raw === ""
+                  ? null
+                  : { parentAlias: raw.split(".")[0], slot: raw.split(".").slice(1).join(".") };
+              onDocChange(moveNodeToSlot(doc, selection, target));
+            }}
+          >
+            <option value="">Top-Level</option>
+            {placementOptions.map((option) => (
+              <option key={option} value={option}>
+                Slot {option}
+              </option>
+            ))}
+          </select>
+        </div>
+      ) : null}
       {child.api.props.map((prop) => (
         <TreePropEditor
           key={prop.name}

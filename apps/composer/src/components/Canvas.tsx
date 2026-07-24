@@ -1,21 +1,37 @@
-import type { ChildInfo, SpecDoc } from "../types";
+import type { SlotTarget } from "../doc";
+import type { ChildInfo, SpecDoc, TreeNodeData } from "../types";
 
 interface CanvasProps {
   doc: SpecDoc | null;
   childrenInfo: Record<string, ChildInfo>;
   selection: string | null;
+  slotTarget: SlotTarget | null;
   mergedPropsFor: (alias: string) => Record<string, unknown>;
   onSelect: (alias: string) => void;
   onFire: (alias: string, eventName: string) => void;
+  onSlotTargetToggle: (parentAlias: string, slot: string) => void;
+}
+
+// Render-Kontext, der unverändert durch die Rekursion gereicht wird.
+interface NodeContext {
+  childrenInfo: Record<string, ChildInfo>;
+  selection: string | null;
+  slotTarget: SlotTarget | null;
+  mergedPropsFor: (alias: string) => Record<string, unknown>;
+  onSelect: (alias: string) => void;
+  onFire: (alias: string, eventName: string) => void;
+  onSlotTargetToggle: (parentAlias: string, slot: string) => void;
 }
 
 export function Canvas({
   doc,
   childrenInfo,
   selection,
+  slotTarget,
   mergedPropsFor,
   onSelect,
   onFire,
+  onSlotTargetToggle,
 }: CanvasProps) {
   if (!doc) {
     return (
@@ -28,6 +44,15 @@ export function Canvas({
   }
 
   const tree = doc.composition?.tree ?? [];
+  const ctx: NodeContext = {
+    childrenInfo,
+    selection,
+    slotTarget,
+    mergedPropsFor,
+    onSelect,
+    onFire,
+    onSlotTargetToggle,
+  };
 
   return (
     <main className="canvas">
@@ -38,38 +63,25 @@ export function Canvas({
           Event-Chips feuern die Verdrahtung.
         </div>
       ) : null}
-      {tree.map((node) => {
-        const child = childrenInfo[node.node];
-        const merged = mergedPropsFor(node.node);
-        return (
-          <MockNode
-            key={node.node}
-            alias={node.node}
-            child={child}
-            merged={merged}
-            selected={selection === node.node}
-            onSelect={() => onSelect(node.node)}
-            onFire={(eventName) => onFire(node.node, eventName)}
-          />
-        );
-      })}
+      {tree.map((node) => (
+        <MockNode key={node.node} node={node} ctx={ctx} />
+      ))}
     </main>
   );
 }
 
-interface MockNodeProps {
-  alias: string;
-  child: ChildInfo | undefined;
-  merged: Record<string, unknown>;
-  selected: boolean;
-  onSelect: () => void;
-  onFire: (eventName: string) => void;
-}
+function MockNode({ node, ctx }: { node: TreeNodeData; ctx: NodeContext }) {
+  const alias = node.node;
+  const child = ctx.childrenInfo[alias];
+  const selected = ctx.selection === alias;
+  const select = (clickEvent: React.MouseEvent) => {
+    clickEvent.stopPropagation();
+    ctx.onSelect(alias);
+  };
 
-function MockNode({ alias, child, merged, selected, onSelect, onFire }: MockNodeProps) {
   if (!child) {
     return (
-      <div className={`mock-node${selected ? " selected" : ""}`} onClick={onSelect}>
+      <div className={`mock-node${selected ? " selected" : ""}`} onClick={select}>
         <div className="head">
           <strong>{alias}</strong>
           <span className="badge">Kind-Contract fehlt</span>
@@ -77,8 +89,11 @@ function MockNode({ alias, child, merged, selected, onSelect, onFire }: MockNode
       </div>
     );
   }
+
+  const merged = ctx.mergedPropsFor(alias);
+
   return (
-    <div className={`mock-node${selected ? " selected" : ""}`} onClick={onSelect}>
+    <div className={`mock-node${selected ? " selected" : ""}`} onClick={select}>
       <div className="head">
         <strong>{alias}</strong>
         <span>{child.title}</span>
@@ -94,9 +109,35 @@ function MockNode({ alias, child, merged, selected, onSelect, onFire }: MockNode
           ))}
         </dl>
       ) : null}
-      {child.api.slots.length > 0 ? (
-        <div className="muted">Slots: {child.api.slots.map((slot) => slot.name).join(", ")}</div>
-      ) : null}
+      {child.api.slots.map((slot) => {
+        const filled = node.slots?.[slot.name] ?? [];
+        const isTarget =
+          ctx.slotTarget?.parentAlias === alias && ctx.slotTarget.slot === slot.name;
+        return (
+          <div
+            key={slot.name}
+            className={`slot-zone${isTarget ? " target" : ""}`}
+            onClick={(clickEvent) => {
+              clickEvent.stopPropagation();
+              ctx.onSlotTargetToggle(alias, slot.name);
+            }}
+          >
+            <div className="slot-label">
+              Slot {slot.name}
+              {slot.optional ? "" : " *"}
+              {isTarget ? <span className="badge accent">Einfüge-Ziel</span> : null}
+            </div>
+            {filled.map((slotNode) => (
+              <MockNode key={slotNode.node} node={slotNode} ctx={ctx} />
+            ))}
+            {filled.length === 0 ? (
+              <span className="muted">
+                leer — anklicken und dann „+ als Kind" aus der Palette
+              </span>
+            ) : null}
+          </div>
+        );
+      })}
       {child.api.events.length > 0 ? (
         <div className="chips">
           {child.api.events.map((event) => (
@@ -105,7 +146,7 @@ function MockNode({ alias, child, merged, selected, onSelect, onFire }: MockNode
               className="chip"
               onClick={(clickEvent) => {
                 clickEvent.stopPropagation();
-                onFire(event.name);
+                ctx.onFire(alias, event.name);
               }}
             >
               ⚡ {event.name}

@@ -9,6 +9,7 @@
     "marketing:preview": "pnpm --filter speccify-marketing preview",
     "composer:dev": "pnpm --filter speccify-composer dev",
     "composer:build": "pnpm --filter speccify-composer build",
-    "composer:typecheck": "pnpm --filter speccify-composer typecheck"
+    "composer:typecheck": "pnpm --filter speccify-composer typecheck",
+    "composer:e2e": "pnpm --filter speccify-composer e2e"
   }
 }

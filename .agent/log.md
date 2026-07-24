@@ -1146,3 +1146,38 @@
 - **Verifikation**: 420 Pytest grün, `pnpm --filter speccify-composer build`
   grün (tsc + Vite, im ersten Anlauf), ruff check/format clean.
 - Tag-Vorschlag an User: `v0.13.0-p3-composer-mvp`.
+
+## 2026-07-24 (P3-Verfeinerung Runde 1 — Slot-Befüllen, Undo/Redo, UI-Smoke)
+- **Slot-Befüllen (Canvas)**: `doc.ts`-Tree jetzt rekursiv — `findTreeNode`,
+  `findSiblingList`, `detachNode` (prunt leere Slot-Listen), `collectAliases`,
+  `nodePlacement`, `moveNodeToSlot` (Zyklen-Guard: eigener Teilbaum = No-Op).
+  `addChild(doc, child, target?)` fügt in `tree[].slots[<slot>]` ein;
+  `removeChild` entfernt Teilbäume inkl. uses/wiring/map_to aller Nachfahren;
+  `moveNode`/`setTreeProp` arbeiten auf der Geschwister-Liste. Canvas rendert
+  Slot-Zonen (Klick = Einfüge-Ziel-Toggle, Highlight, rekursive MockNodes);
+  Inspector-Knoten-Panel bekam „Platzierung"-Select. simulate.ts nutzt
+  findTreeNode (verdrahtete Props funktionieren auch verschachtelt).
+- **Undo/Redo (App.tsx)**: Snapshot = `{doc, children}` (Kind-Contracts gehören
+  zur Editier-Einheit). past/future-Stacks (Limit 100), Inspector-Edits
+  koalesziert (<800 ms Burst = 1 Schritt), Undo/Redo resettet Simulation +
+  Einfüge-Ziel und fixt Selektion. ⌘Z/⇧⌘Z global, außer in
+  INPUT/TEXTAREA/SELECT (natives Text-Undo). Inspector-Entfernen läuft jetzt
+  über `onRemoveNode` in App (vorher 2 setState-Aufrufe = hätte 2
+  History-Einträge ergeben).
+- **Playwright-UI-Smoke**: `apps/composer/e2e/composer-smoke.spec.ts` (3 Tests)
+  + `playwright.config.ts` (2 webServer) + `start-backend.sh` (Wegwerf-Kopie
+  der registry-fixtures via SPECCIFY_REGISTRY_PATH, Port 8788; Vite :5199 via
+  `COMPOSER_PROXY_TARGET` in vite.config.ts — kollisionsfrei zu dev-up.sh).
+  Pin `@playwright/test@1.44.0` (= Visual-Regression-Browser-Build 1117).
+  CI-Job `apps/composer ui smoke (playwright)` in ci.yml (uv sync + pnpm +
+  Browser-Cache + `--with-deps chromium`). Skripte: `pnpm run composer:e2e`.
+- **Side-Quest macOS**: Chromium-1117-Download hing nach vollständigem Zip
+  (141 MB, `unzip -t` OK) — manuell nach `~/Library/Caches/ms-playwright/
+  chromium-1117` entpackt + `INSTALLATION_COMPLETE`-Marker gesetzt. Ein früher
+  abgebrochener Download hatte einen 208K-Stub hinterlassen (Launch-Fehler
+  `spawn -88`) — bei dem Symptom Cache-Dir löschen und neu entpacken.
+- **Doku**: docs/composer.md (Slot-Zonen, Undo/Redo, UI-Smoke-Abschnitt,
+  MVP-Grenzen aktualisiert); Pivot-Plan P3 „Verfeinerung Runde 1" markiert.
+- **Verifikation**: 3/3 Playwright grün (6,2 s, erster Lauf), Composer-
+  Typecheck + Build grün (269 kB), 420 Pytest grün (Python unverändert).
+- Tag-Vorschlag an User: `v0.14.0-p3-composer-verfeinerung-1`.

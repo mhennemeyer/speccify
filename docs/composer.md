@@ -19,14 +19,20 @@ pnpm run composer:dev        # http://localhost:5173
 | Bereich | Funktion |
 |---|---|
 | **Palette** (links) | Alle Registry-Specs. „+ als Kind" fügt eine Komponente in die aktuelle Komposition ein, „öffnen" lädt eine Spec in den Editor. Selbst gespeicherte Composites erscheinen sofort — **Komposition ist rekursiv**. |
-| **Canvas** (Mitte) | Jeder Knoten wird als interpretierter Mock gerendert (Titel, aktuelle Props, Event-Chips). Chips feuern die Wiring-Simulation live. Klick selektiert. |
-| **Inspector** (rechts) | *Knoten*: typisierte Prop-Editoren (Enum-Dropdowns etc.), Reihenfolge, Entfernen. *Verdrahtung*: Regeln ansehen/löschen + Formular mit API-getriebenen Dropdowns. *API*: eigene Events/Props (inkl. `map_to`-Forwarding). *Spec*: Name/Version/Kind/Summary. |
+| **Canvas** (Mitte) | Jeder Knoten wird als interpretierter Mock gerendert (Titel, aktuelle Props, Event-Chips). Chips feuern die Wiring-Simulation live. Klick selektiert. **Slot-Zonen**: Komponenten mit Slots zeigen pro Slot eine Zone — anklicken macht sie zum Einfüge-Ziel („+ als Kind" aus der Palette fügt dann dort ein, erneut klicken hebt das Ziel auf); eingefügte Kinder rendern verschachtelt in der Zone. |
+| **Inspector** (rechts) | *Knoten*: typisierte Prop-Editoren (Enum-Dropdowns etc.), Reihenfolge, **Platzierung** (Knoten samt Teilbaum zwischen Top-Level und Slots umhängen), Entfernen (entfernt den ganzen Teilbaum inkl. Wiring-Cleanup). *Verdrahtung*: Regeln ansehen/löschen + Formular mit API-getriebenen Dropdowns. *API*: eigene Events/Props (inkl. `map_to`-Forwarding). *Spec*: Name/Version/Kind/Summary. |
 | **YAML** (unten links) | Live generierte Spec-YAML; direkt editierbar („übernehmen" lädt sie zurück ins Modell). Validierungs-Issues erscheinen hier. |
 | **Event-Log** (unten rechts) | Trigger, `set`-Effekte und emittierte eigene Events der Simulation. |
 
 **Validieren** prüft Schema v1 + Kompositions-Typprüfung serverseitig;
 **Speichern** schreibt die Spec in die lokale Registry
 (`registry-fixtures/<scope>/<name>/<version>/spec.speccify.yaml`).
+
+**Undo/Redo**: jede Modell-Änderung (Kind hinzufügen/entfernen/umhängen,
+Props, Wiring, YAML-übernehmen, Neu/Öffnen) ist rückrollbar — Buttons in der
+Topbar oder `⌘Z`/`Ctrl+Z` bzw. `⇧⌘Z`/`Shift+Ctrl+Z`. Schnelles Tippen im
+Prop-Editor wird zu einem Schritt zusammengefasst; in Eingabefeldern gewinnt
+das native Text-Undo.
 
 ## Agent-bedienbar (Headless-API)
 
@@ -66,14 +72,24 @@ curl -s -X POST localhost:8000/api/v1/mock \
 - **Zustand = Spec-Datei**: Der Composer hält keinen eigenen Speicher; Laden
   und Speichern gehen gegen die Registry auf Disk. Git ist die Historie.
 
+## UI-Smoke (Playwright)
+
+`pnpm run composer:e2e` fährt Backend (FastAPI gegen eine **Wegwerf-Kopie**
+der `registry-fixtures/`, Port 8788) und Vite (Port 5199) hoch und spielt den
+kompletten Flow durch die echte Oberfläche durch: Composite anlegen → Kind +
+Prop → eigenes Event + Wiring-Regel → Simulation → validieren → speichern →
+YAML-Round-Trip; dazu Undo/Redo und Slot-Befüllen. Läuft in CI als eigener
+Job (`apps/composer ui smoke`). Die Ports kollidieren bewusst nicht mit
+`dev-up.sh`. Browser einmalig installieren:
+`pnpm --filter speccify-composer exec playwright install chromium`.
+
 ## Grenzen des MVP (bewusst)
 
-- Slots werden angezeigt, aber noch nicht visuell befüllt (Verschachtelung per
-  YAML möglich).
+- Slot-Befüllen ist klick-basiert (Zone als Einfüge-Ziel), kein Drag & Drop.
 - Keine Routen-/Navigations-Semantik für `kind: app` (Phase P4).
 - Wiring-Quellen sind `payload.*`, `props.*` und Literale — keine Expressions.
-- Kein Playwright-UI-Smoke (nur der headless Agent-Flow-E2E); Kandidat für die
-  P3-Verfeinerung nach erstem Rumprobieren.
+- Canvas interpretiert Contracts; Mock-Bundle-Rendering (echte `*.mock.tsx`)
+  bleibt Verfeinerungs-Kandidat.
 
 ## Cross-Referenzen
 

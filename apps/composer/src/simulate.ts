@@ -4,6 +4,7 @@
 // wired-State, `emit` re-emittiert ein eigenes Event, Quellen sind
 // `payload.<field>`, `props.<alias>.<prop>` oder Literale.
 
+import { findTreeNode } from "./doc";
 import type { ChildInfo, SpecDoc } from "./types";
 
 export type WiredState = Record<string, Record<string, unknown>>;
@@ -27,8 +28,8 @@ export function mergedNodeProps(
   for (const prop of contract?.api.props ?? []) {
     if (prop.hasDefault) merged[prop.name] = prop.default;
   }
-  // 2) Statische Tree-Props.
-  const node = doc.composition?.tree.find((entry) => entry.node === alias);
+  // 2) Statische Tree-Props (Knoten kann in einem Slot verschachtelt sein).
+  const node = findTreeNode(doc.composition?.tree ?? [], alias);
   Object.assign(merged, node?.props ?? {});
   // 3) map_to-Weiterleitungen aus den eigenen Props (D3: explizit).
   for (const own of doc.api?.props ?? []) {

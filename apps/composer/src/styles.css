@@ -220,6 +220,30 @@ textarea.yaml {
   margin: 0;
 }
 
+.slot-zone {
+  border: 1px dotted #94a3b8;
+  border-radius: 6px;
+  padding: 8px;
+  display: grid;
+  gap: 6px;
+  background: var(--bg);
+  cursor: copy;
+}
+
+.slot-zone.target {
+  border: 2px solid var(--accent);
+  background: var(--accent-soft);
+}
+
+.slot-zone .slot-label {
+  font-size: 11px;
+  color: var(--muted);
+  font-family: ui-monospace, monospace;
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+}
+
 .chips {
   display: flex;
   gap: 6px;
