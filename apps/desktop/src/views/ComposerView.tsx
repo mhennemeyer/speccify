@@ -4,6 +4,7 @@
 
 import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { open } from "@tauri-apps/plugin-dialog";
 import { ActionButton, ErrorBox } from "../components/ui";
 
 const REPO_KEY = "speccify.repoPath";
@@ -42,13 +43,28 @@ export default function ComposerView() {
         >
           Speccify-Repo
         </label>
-        <input
-          id="composer-repo"
-          value={repo}
-          onChange={(e) => setRepo(e.target.value)}
-          className="w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm"
-          spellCheck={false}
-        />
+        <div className="flex gap-2">
+          <input
+            id="composer-repo"
+            value={repo}
+            onChange={(e) => setRepo(e.target.value)}
+            className="w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm"
+            spellCheck={false}
+          />
+          <button
+            onClick={async () => {
+              const picked = await open({
+                directory: true,
+                title: "Speccify-Repo wählen",
+              });
+              if (typeof picked === "string") setRepo(picked);
+            }}
+            className="shrink-0 rounded border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 hover:bg-slate-100"
+            title="Verzeichnis wählen"
+          >
+            Auswählen…
+          </button>
+        </div>
       </div>
       <ActionButton
         onClick={openWindow}
