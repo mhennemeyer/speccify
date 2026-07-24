@@ -1,0 +1,11 @@
+[package]
+name = "speccify-discovery-mcp"
+description = "Discovery-MCP: Aktionen (schema/actions.schema.json) und MCP-Server auffindbar machen (actions_list/actions_propose/mcp_list, Stufe R2)."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "speccify-discovery-mcp"
+path = "src/main.rs"

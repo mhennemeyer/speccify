@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://speccify.io/schema/actions/v1.json",
+  "title": "Speccify Actions v1",
+  "description": "Aktionsliste des Rust-Neustart-Workstreams (Plan rust-neustart-toolkit-mcps.md, R0): eine Aktion ist ein benannter CLI-Befehl mit Metadaten — Daten, kein Code. Wire-kompatibel zur produktiven iKanbanAi-ProjectAction (ProjectActionsStore.swift): Top-Level ist ein JSON-ARRAY von Aktionen, das Detail-Feld heißt auf dem Draht `description`. Ablageorte: pro Projekt `<root>/.agent/actions.json`, global `~/.speccify/actions.json` (gleiches Format; bei Befehls-Kollision gewinnt das Projekt). Identität einer Aktion ist ihr `command` (Dedup-Schlüssel).",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["name", "command"],
+    "additionalProperties": false,
+    "properties": {
+      "name": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Anzeigename, z. B. \"Tests\". run_action schlägt Aktionen über diesen Namen nach."
+      },
+      "command": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Die Befehlszeile, z. B. \"npm test\" — ausgeführt vom Exec-MCP (shlex/argv, kein Shell-Interpreter). Zugleich der Dedup-/Identitäts-Schlüssel der Aktion."
+      },
+      "description": {
+        "type": "string",
+        "description": "Optionale Beschreibung (iKanbanAi nennt das Feld intern `details`, serialisiert es aber als `description`)."
+      },
+      "source": {
+        "type": "string",
+        "enum": ["agent", "bo"],
+        "default": "bo",
+        "description": "Herkunft: `agent` = via actions_propose vorgeschlagen, `bo` = vom Nutzer angelegt."
+      },
+      "confirmed": {
+        "type": "boolean",
+        "default": true,
+        "description": "false = unbestätigter Agent-Vorschlag; run_action lehnt unbestätigte Aktionen ab, die UI zeigt sie zur Bestätigung."
+      },
+      "toolbar": {
+        "type": "boolean",
+        "default": false,
+        "description": "Als Button in der Client-Toolbar zeigen (iKanbanAi T1)."
+      },
+      "shortcut": {
+        "type": ["string", "null"],
+        "pattern": "^(cmd|shift|opt|ctrl)(-(cmd|shift|opt|ctrl))*-.$",
+        "description": "Tastenkürzel im Format `cmd-u` / `cmd-shift-t`: Modifier (cmd/shift/opt/ctrl) durch `-` getrennt, letzter Teil genau ein Zeichen. null/fehlend = keins."
+      }
+    }
+  }
+}

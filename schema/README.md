@@ -13,3 +13,4 @@ JSON-Schema-Definitionen für `speccify.yaml`-Specs. Sprach-unabhängig (kein Py
 - `lockfile.v1.schema.json` — Phase-1a-Snapshot.
 - `lockfile.v2.schema.json` — Snapshot v2 (= aktuell aktiv, Phase-2-Bump mit `signature` + `yank_status`).
 - `lockfile.v3.schema.json` — Phase-3-Stage-1b-Vorgriff (Multi-Target, Top-Level `targets: list[str]`); noch nicht aktiv.
+- `actions.schema.json` — Aktionsliste des Rust-Neustart-Workstreams (R0): benannte CLI-Befehle für Exec-/Discovery-MCP; wire-kompatibel zu iKanbanAi (`.agent/actions.json` pro Projekt, `~/.speccify/actions.json` global).

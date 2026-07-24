@@ -1,0 +1,11 @@
+[package]
+name = "speccify-exec-mcp"
+description = "Exec-MCP: führt Projekt-Befehle/Aktionen aus (Rust-Neustart aus dotagent, Wire-Kontrakt siehe docs/exec-mcp-contract.md)."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "speccify-exec-mcp"
+path = "src/main.rs"

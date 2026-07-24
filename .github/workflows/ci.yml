@@ -208,3 +208,31 @@ jobs:
 
       - name: Composer UI smoke (backend + vite + chromium)
         run: pnpm --filter speccify-composer e2e
+
+  rust:
+    name: rust workspace (exec-mcp + discovery-mcp)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # rustup liest rust-toolchain.toml (gepinnte Version + rustfmt/clippy).
+      - name: Install pinned toolchain
+        run: rustup show
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+
+      - name: Format check
+        run: cargo fmt --all -- --check
+
+      - name: Clippy (deny warnings)
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+      - name: Build
+        run: cargo build --workspace
+
+      - name: Test
+        run: cargo test --workspace

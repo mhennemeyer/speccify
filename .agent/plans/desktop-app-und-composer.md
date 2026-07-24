@@ -1,0 +1,85 @@
+---
+isActive: true
+---
+
+# Plan: Desktop-App-Übernahme (dotagent) & Composer-Integration
+
+**Angelegt 2026-07-24 nach BO-Umpriorisierung** („Erst die dotagent-App
+übernehmen, den Composer mit in diese App, App umbenennen; Migration nach
+Rust als neuer eigener Plan"). Ersetzt die Stufen R3/R4 des ursprünglichen
+Rust-Neustart-Plans — der heißt jetzt [`rust-neustart-toolkit-mcps.md`
+(„Migration nach Rust")](./rust-neustart-toolkit-mcps.md) und folgt NACH
+diesem Plan.
+
+## Ausgangslage
+
+Die dotagent-Dashboard-App (`~/Desktop/Work/Articles/dotagent/app/dashboard`,
+Commit `2949d1d`) ist eine kompakte Tauri-2-App (~1 150 LOC TS + 155 LOC
+Rust): 4 Tabs (Library/Umgebung/Server/Knowledgebases), Rust-Supervisor
+(`spawn_process`/`kill_process` + `proc-log`/`proc-exit`-Events,
+PATH-Anreicherung für GUI-Apps) und genau EINE CLI-Bridge `run_dotagent`
+(führt `dotagent … --json` aus, `DOTAGENT_BIN`-Override).
+
+## Entscheidungen (D, 2026-07-24, per BO-Delegation)
+
+- **D1 — CLI-Bridge bleibt vorerst:** Die App zieht mit funktionierender
+  `dotagent`-CLI-Bridge um (die CLI ist auf dem BO-System installiert).
+  Ersetzt wird sie erst durch die Rust-Migration (Exec-/Discovery-MCP,
+  System-CLI) — nicht in diesem Plan. Kein Feature-Umbau beim Umzug.
+- **D2 — Rebranding:** Produktname **„Speccify"**, Bundle-ID
+  **`io.speccify.desktop`**, pnpm-Paket `speccify-desktop`, Rust-Crate
+  `speccify-desktop` (lib `speccify_desktop_lib`). Tauri-Default-Icons
+  bleiben bis zur Distributions-Phase (eigenes Icon dort).
+- **D3 — Ein Repo, beide Workspaces:** `apps/desktop` wird pnpm-Member;
+  `apps/desktop/src-tauri` wird Member des Root-Cargo-Workspace
+  (gemeinsames `target/`, ein `Cargo.lock`). CI: Der schnelle `rust`-Job
+  schließt das Tauri-Crate aus (Linux bräuchte webkit2gtk-Systemdeps);
+  ein eigener Desktop-Job prüft Frontend-Typecheck + Vite-Build. Der
+  native Tauri-Build wird lokal auf macOS verifiziert (Zielplattform).
+- **D4 — Composer-Integration** wie im Rust-Plan R4 skizziert:
+  Tauri-Fenster mit gebündelter Composer-SPA; die App spawnt pro Fenster
+  ein `speccify-web-backend` (`--port`, nur 127.0.0.1) über den
+  Supervisor; API-Base zur **Laufzeit** (`window.__SPECCIFY_API__`,
+  Fallback `VITE_API_BASE`/Proxy). Fenster zu → Prozess stirbt.
+- **D5 — dotagent-Referenz unangetastet:** Übernahme per Kopie (keine
+  Historie/Subtree); dotagent bleibt Referenz für die Rust-Migration und
+  wird erst nach deren Abschluss archiviert.
+
+## Stufen
+
+### A0 — App-Übernahme & Rebranding ✅ (2026-07-24)
+1. `app/dashboard` → `apps/desktop` kopieren (ohne node_modules/target/
+   dist/gen/package-lock/`.agent`-Laufzeitreste); `.gitignore` ergänzt.
+2. Rebranding (D2): tauri.conf.json, Cargo.toml, package.json, UI-Texte.
+3. pnpm-Workspace + Root-Cargo-Workspace einbinden (D3); npm-Skripte auf
+   pnpm; `tauri dev/build` via `pnpm --filter speccify-desktop tauri …`.
+4. Verifikation: `pnpm typecheck` + Vite-Build grün, `cargo build
+   -p speccify-desktop` grün (macOS), `cargo fmt/clippy` clean; App
+   startet per `tauri dev` (manueller BO-Check).
+5. CI: Desktop-Job (Node/pnpm: typecheck + build); `rust`-Job mit
+   `--exclude speccify-desktop`.
+
+### A1 — Composer-Fenster (D4)
+1. Composer-SPA in die App bündeln (Build-Artefakt aus `apps/composer`,
+   `base: "./"` liegt schon richtig); Laufzeit-API-Base einführen.
+2. Supervisor spawnt `speccify-web-backend --port <frei>` pro
+   Composer-Fenster (uv-Umgebung des Repos; Pfad-Discovery analog
+   `find_dotagent`), Health-Poll, Fenster-Close → Kill.
+3. Neuer Tab/Einstieg „Composer" in der App (Projekt wählen → Fenster).
+4. Capability-Scope des Composer-Fensters minimal (nur eigenes Fenster,
+   kein Supervisor-Zugriff aus dem WebView).
+5. E2E-Anker: bestehender Playwright-Smoke bleibt die Vertragsbasis der
+   SPA; App-seitig manueller Smoke (BO) + `tauri build` grün.
+
+### A2 — Feinschliff nach BO-Rumprobieren
+Kandidaten (erst nach Feedback schneiden): Projekt-Liste im
+Composer-Einstieg aus `~/.speccify/projects.json` vs. Datei-Dialog;
+Server-Tab um speccify-web-backend-Instanzen erweitern; Menü/Shortcuts.
+
+## Verifikations-/Umschalt-Regeln
+
+- Kein Umbau der dotagent-Wire-Kontrakte in diesem Plan; die
+  Kontrakt-Testsuite (`scripts/exec_mcp_contract.py`) gehört zur
+  Rust-Migration.
+- `.agent/`-Laufzeitdateien der App (exec-pending etc.) niemals
+  einchecken.

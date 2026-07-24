@@ -1,0 +1,4 @@
+# Deterministisch gepinnt (Repo-Konvention); Bump bewusst per Commit.
+[toolchain]
+channel = "1.97.1"
+components = ["rustfmt", "clippy"]
