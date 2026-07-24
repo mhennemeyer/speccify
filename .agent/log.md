@@ -1236,3 +1236,25 @@
   target/release/bundle/). Offen: BO-Check `pnpm run desktop:dev`.
 - Nächster Schritt: **A1 Composer-Fenster** (SPA bündeln, Laufzeit-
   API-Base, Supervisor spawnt speccify-web-backend pro Fenster).
+
+## 2026-07-24 (Desktop A1 — Composer-Fenster in der App)
+- **Architektur (D4 präzisiert)**: Backend serviert die gebaute
+  Composer-SPA selbst unter `/ui` (StaticFiles html=True, Settings-Feld
+  `composer_dist` + Env `SPECCIFY_COMPOSER_DIST`; ohne Build kein Mount).
+  Composer-Fenster lädt `http://127.0.0.1:<port>/ui/` → API same-origin,
+  kein CORS, keine Fenster-Capabilities nötig, kein doppeltes Bundling.
+  `window.__SPECCIFY_API__` in api.ts als Laufzeit-Override ergänzt.
+- **Rust (`open_composer`)**: ~-Expansion, Vorprüfungen mit klaren
+  Fehlermeldungen (venv-Binary fehlt → `uv sync`; dist fehlt →
+  `pnpm run composer:build`), freier Port via bind(0), Spawn
+  `.venv/bin/speccify-web-backend` (cwd=Repo, PATH-Anreicherung,
+  PYTHONPATH-Workaround gegen macOS-Quarantäne), Logs in den Supervisor
+  (`composer-backend-<port>`), Port-Wait 20 s (sonst Kill + Fehler),
+  WebviewWindow auf /ui/, `WindowEvent::Destroyed` → Kill + proc-exit.
+- **UI**: neuer Default-Tab „Composer" (Repo-Pfad-Feld mit localStorage,
+  Default `~/Desktop/Work/speccify`, ActionButton + Fehlerbox).
+- **Verifikation**: 422 Pytest grün (inkl. 2 neuer
+  `test_composer_ui_mount.py`), ruff clean, Composer-Playwright 3/3,
+  tsc+Vite (desktop 212 kB, composer 269 kB) grün, cargo build/clippy
+  -p speccify-desktop grün, /ui-Livecheck grün, `tauri build` grün.
+- Offen: manueller BO-Check (`pnpm run desktop:dev` → Composer-Tab).

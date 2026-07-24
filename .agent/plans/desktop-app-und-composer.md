@@ -36,11 +36,16 @@ PATH-Anreicherung für GUI-Apps) und genau EINE CLI-Bridge `run_dotagent`
   schließt das Tauri-Crate aus (Linux bräuchte webkit2gtk-Systemdeps);
   ein eigener Desktop-Job prüft Frontend-Typecheck + Vite-Build. Der
   native Tauri-Build wird lokal auf macOS verifiziert (Zielplattform).
-- **D4 — Composer-Integration** wie im Rust-Plan R4 skizziert:
-  Tauri-Fenster mit gebündelter Composer-SPA; die App spawnt pro Fenster
-  ein `speccify-web-backend` (`--port`, nur 127.0.0.1) über den
-  Supervisor; API-Base zur **Laufzeit** (`window.__SPECCIFY_API__`,
-  Fallback `VITE_API_BASE`/Proxy). Fenster zu → Prozess stirbt.
+- **D4 — Composer-Integration** (präzisiert in A1): Das Backend serviert
+  die **gebaute Composer-SPA selbst unter `/ui`** (StaticFiles-Mount,
+  `SPECCIFY_COMPOSER_DIST`-Override) — das Composer-Fenster lädt
+  `http://127.0.0.1:<port>/ui/` und spricht die API **same-origin**
+  (kein CORS, keine zweite Origin, minimale Fenster-Capabilities, kein
+  doppeltes Bundling in die App). Die App wählt einen freien Port,
+  spawnt `speccify-web-backend` über den Supervisor (PYTHONPATH-
+  Workaround inklusive), wartet auf den Port; Fenster zu → Prozess
+  stirbt. `window.__SPECCIFY_API__` existiert in der SPA zusätzlich als
+  Laufzeit-Override (Zukunft: echtes Bundling/Sidecar).
 - **D5 — dotagent-Referenz unangetastet:** Übernahme per Kopie (keine
   Historie/Subtree); dotagent bleibt Referenz für die Rust-Migration und
   wird erst nach deren Abschluss archiviert.
@@ -65,17 +70,29 @@ PATH-Anreicherung für GUI-Apps) und genau EINE CLI-Bridge `run_dotagent`
 5. [x] CI: Job `apps/desktop frontend (typecheck + build)`; `rust`-Job
    mit `--exclude speccify-desktop` (Linux-webkit2gtk vermeiden).
 
-### A1 — Composer-Fenster (D4)
-1. Composer-SPA in die App bündeln (Build-Artefakt aus `apps/composer`,
-   `base: "./"` liegt schon richtig); Laufzeit-API-Base einführen.
-2. Supervisor spawnt `speccify-web-backend --port <frei>` pro
-   Composer-Fenster (uv-Umgebung des Repos; Pfad-Discovery analog
-   `find_dotagent`), Health-Poll, Fenster-Close → Kill.
-3. Neuer Tab/Einstieg „Composer" in der App (Projekt wählen → Fenster).
-4. Capability-Scope des Composer-Fensters minimal (nur eigenes Fenster,
-   kein Supervisor-Zugriff aus dem WebView).
-5. E2E-Anker: bestehender Playwright-Smoke bleibt die Vertragsbasis der
-   SPA; App-seitig manueller Smoke (BO) + `tauri build` grün.
+### A1 — Composer-Fenster (D4) ✅ (2026-07-24)
+1. [x] Backend serviert die Composer-SPA unter `/ui` (Settings-Feld
+   `composer_dist` + `SPECCIFY_COMPOSER_DIST`, StaticFiles `html=True`,
+   fehlt der Build → kein Mount, API unverändert). 2 neue Tests
+   (`test_composer_ui_mount.py`). SPA: `window.__SPECCIFY_API__`-
+   Laufzeit-Override in `api.ts` (same-origin bleibt der Default).
+2. [x] Rust-Command `open_composer(repo)`: `~`-Expansion, Vorprüfungen
+   (venv-Binary + gebautes dist mit klaren Fehlermeldungen), freier
+   Port, Spawn `.venv/bin/speccify-web-backend` (cwd=Repo, PATH-
+   Anreicherung, PYTHONPATH-Workaround), Logs via Supervisor
+   (`proc-log`, id `composer-backend-<port>`), Port-Wait (20 s, sonst
+   Kill + Fehler), Fenster `composer-<port>` auf `…/ui/`;
+   `WindowEvent::Destroyed` → Kill + `proc-exit`.
+3. [x] „Composer"-Tab (Default-Tab) mit Repo-Pfad-Feld (localStorage,
+   Default `~/Desktop/Work/speccify`) und „Composer-Fenster öffnen".
+4. [x] Capability-Scope: Composer-Fenster lädt Remote-URL — kein
+   IPC-/Supervisor-Zugriff aus dem WebView (Tauri-Default für External).
+5. [x] Verifikation: 422 Pytest grün (inkl. 2 neuer /ui-Mount-Tests),
+   ruff clean, Composer-Playwright 3/3 grün (api.ts-Änderung), tsc+Vite
+   beide Apps grün, `cargo build/clippy -p speccify-desktop` grün,
+   `/ui`-Livecheck (curl 200 + health) grün, `tauri build` grün
+   (Speccify.app + .dmg). **Offen: manueller BO-Check des Fensters
+   (`pnpm run desktop:dev` → Tab Composer).**
 
 ### A2 — Feinschliff nach BO-Rumprobieren
 Kandidaten (erst nach Feedback schneiden): Projekt-Liste im

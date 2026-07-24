@@ -7,7 +7,7 @@ use std::{
 };
 
 use serde::Serialize;
-use tauri::{AppHandle, Emitter, State};
+use tauri::{AppHandle, Emitter, Manager, State};
 
 /// Laufende Kind-Prozesse des Spike-Supervisors. Drop killt alle Kinder,
 /// damit beim App-Quit nichts weiterläuft.
@@ -146,6 +146,134 @@ fn kill_process(app: AppHandle, state: State<Supervisor>, id: String) -> Result<
     }
 }
 
+// --- Composer-Fenster (Plan desktop-app-und-composer.md, A1) ----------------
+
+/// `~`-Expansion für Pfade aus der UI.
+fn expand_home(raw: &str) -> PathBuf {
+    if let Some(rest) = raw.strip_prefix("~/") {
+        if let Ok(home) = std::env::var("HOME") {
+            return PathBuf::from(home).join(rest);
+        }
+    }
+    PathBuf::from(raw)
+}
+
+/// Freien localhost-Port vom OS holen (bind auf Port 0, wieder freigeben).
+fn free_port() -> Result<u16, String> {
+    let listener =
+        std::net::TcpListener::bind(("127.0.0.1", 0)).map_err(|e| format!("Port-Suche: {e}"))?;
+    listener
+        .local_addr()
+        .map(|addr| addr.port())
+        .map_err(|e| format!("Port-Suche: {e}"))
+}
+
+/// Wartet, bis der Backend-Port annimmt (Health-Gate fürs Fenster).
+fn wait_for_port(port: u16, timeout: std::time::Duration) -> bool {
+    let deadline = std::time::Instant::now() + timeout;
+    let addr = std::net::SocketAddr::from(([127, 0, 0, 1], port));
+    while std::time::Instant::now() < deadline {
+        if std::net::TcpStream::connect_timeout(&addr, std::time::Duration::from_millis(300))
+            .is_ok()
+        {
+            return true;
+        }
+        std::thread::sleep(std::time::Duration::from_millis(200));
+    }
+    false
+}
+
+/// Öffnet ein Composer-Fenster für das Speccify-Repo unter `repo`:
+/// spawnt ein eigenes `speccify-web-backend` auf einem freien Port
+/// (Supervisor-verwaltet, Logs als `proc-log`), wartet auf den Port und
+/// lädt `http://127.0.0.1:<port>/ui/` (Backend serviert die gebaute
+/// Composer-SPA same-origin). Fenster zu → Backend-Prozess stirbt.
+#[tauri::command]
+fn open_composer(app: AppHandle, state: State<Supervisor>, repo: String) -> Result<String, String> {
+    let repo = expand_home(repo.trim());
+    let backend_bin = repo.join(".venv/bin/speccify-web-backend");
+    if !backend_bin.is_file() {
+        return Err(format!(
+            "Kein speccify-web-backend unter {} — Repo-Pfad prüfen und einmal `uv sync` ausführen.",
+            backend_bin.display()
+        ));
+    }
+    if !repo.join("apps/composer/dist/index.html").is_file() {
+        return Err(
+            "Composer-SPA ist nicht gebaut — einmal `pnpm run composer:build` im Repo ausführen."
+                .into(),
+        );
+    }
+
+    let port = free_port()?;
+    // macOS-Quarantäne versteckt venv-.pth-Dateien wiederkehrend; PYTHONPATH
+    // auf die src/-Verzeichnisse umgeht das (gleicher Workaround wie CLI/CI).
+    let pythonpath = ["core/src", "cli/src", "mcp/src", "apps/web/backend/src"]
+        .iter()
+        .map(|p| repo.join(p).to_string_lossy().into_owned())
+        .collect::<Vec<_>>()
+        .join(":");
+
+    let mut child = Command::new(&backend_bin)
+        .args(["--host", "127.0.0.1", "--port", &port.to_string()])
+        .current_dir(&repo)
+        .env("PATH", augmented_path())
+        .env("PYTHONPATH", pythonpath)
+        .stdin(Stdio::null())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .map_err(|e| format!("{}: {e}", backend_bin.display()))?;
+
+    let id = format!("composer-backend-{port}");
+    if let Some(stdout) = child.stdout.take() {
+        stream_reader(app.clone(), id.clone(), BufReader::new(stdout));
+    }
+    if let Some(stderr) = child.stderr.take() {
+        stream_reader(app.clone(), id.clone(), BufReader::new(stderr));
+    }
+    state.0.lock().unwrap().insert(id.clone(), child);
+
+    if !wait_for_port(port, std::time::Duration::from_secs(20)) {
+        if let Some(mut child) = state.0.lock().unwrap().remove(&id) {
+            let _ = child.kill();
+            let _ = child.wait();
+        }
+        return Err(format!(
+            "speccify-web-backend auf Port {port} nicht erreichbar (Log im Server-Tab prüfen)."
+        ));
+    }
+
+    let url = format!("http://127.0.0.1:{port}/ui/");
+    let parsed = url
+        .parse()
+        .map_err(|e| format!("Composer-URL ungültig: {e}"))?;
+    let window = tauri::WebviewWindowBuilder::new(
+        &app,
+        format!("composer-{port}"),
+        tauri::WebviewUrl::External(parsed),
+    )
+    .title(format!("Speccify Composer · :{port}"))
+    .inner_size(1320.0, 880.0)
+    .build()
+    .map_err(|e| format!("Fenster: {e}"))?;
+
+    // Fenster zu → Backend-Prozess sofort beenden (kein Weiterlaufen).
+    let app_for_close = app.clone();
+    window.on_window_event(move |event| {
+        if matches!(event, tauri::WindowEvent::Destroyed) {
+            let supervisor: State<Supervisor> = app_for_close.state();
+            if let Some(mut child) = supervisor.0.lock().unwrap().remove(&id) {
+                let _ = child.kill();
+                let _ = child.wait();
+            }
+            let _ = app_for_close.emit("proc-exit", ExitEvent { id: id.clone() });
+        }
+    });
+
+    Ok(url)
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -154,7 +282,8 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             run_dotagent,
             spawn_process,
-            kill_process
+            kill_process,
+            open_composer
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

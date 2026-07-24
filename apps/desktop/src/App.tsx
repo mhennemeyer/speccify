@@ -1,10 +1,12 @@
 import { useState } from "react";
+import ComposerView from "./views/ComposerView";
 import LibraryView from "./views/LibraryView";
 import EnvironmentView from "./views/EnvironmentView";
 import ServersView from "./views/ServersView";
 import KnowledgebasesView from "./views/KnowledgebasesView";
 
 const SECTIONS = [
+  { id: "composer", label: "Composer", view: <ComposerView /> },
   { id: "library", label: "Bibliothek", view: <LibraryView /> },
   { id: "knowledgebases", label: "Knowledgebases", view: <KnowledgebasesView /> },
   { id: "environment", label: "Umgebung", view: <EnvironmentView /> },
@@ -14,7 +16,7 @@ const SECTIONS = [
 type SectionId = (typeof SECTIONS)[number]["id"];
 
 export default function App() {
-  const [active, setActive] = useState<SectionId>("library");
+  const [active, setActive] = useState<SectionId>("composer");
 
   return (
     <div className="flex h-screen bg-slate-50 text-slate-900">

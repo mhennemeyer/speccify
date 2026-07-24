@@ -1,10 +1,20 @@
 // HTTP-Client für das Composer-Backend. Alle Composer-Aktionen laufen über
 // diese Endpoints — dieselbe API ist auch headless (Agent/CLI) nutzbar.
-// `VITE_API_BASE` erlaubt später einer Tauri-Shell, auf den Sidecar zu zeigen.
+// API-Base-Auflösung: `window.__SPECCIFY_API__` (Laufzeit, z. B. von einer
+// Shell injiziert) > `VITE_API_BASE` (Build-Zeit) > "" (same-origin — der
+// Normalfall im Desktop-Composer-Fenster, das die SPA unter /ui vom
+// speccify-web-backend lädt, und im Vite-Dev via Proxy).
 
 import type { SpecDetail, SpecSummary, ValidationIssue } from "./types";
 
-const BASE: string = (import.meta.env.VITE_API_BASE as string | undefined) ?? "";
+declare global {
+  interface Window {
+    __SPECCIFY_API__?: string;
+  }
+}
+
+const BASE: string =
+  window.__SPECCIFY_API__ ?? (import.meta.env.VITE_API_BASE as string | undefined) ?? "";
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${BASE}${path}`, {

@@ -51,4 +51,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(mock_route.router)
     app.include_router(composer_route.router)
 
+    # Composer-SPA (gebautes apps/composer/dist) same-origin unter /ui —
+    # das Composer-Fenster der Desktop-App lädt http://127.0.0.1:<port>/ui/
+    # und spricht die API relativ (kein CORS, keine zweite Origin).
+    # Fehlt der Build, bleibt /ui einfach weg (API unverändert nutzbar).
+    composer_dist = app.state.settings.composer_dist
+    if composer_dist.is_dir():
+        from fastapi.staticfiles import StaticFiles
+
+        app.mount("/ui", StaticFiles(directory=composer_dist, html=True), name="composer-ui")
+
     return app

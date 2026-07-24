@@ -27,10 +27,12 @@ _REPO_ROOT = Path(__file__).resolve().parents[5]
 DEFAULT_PROJECT_ROOT: Path = _REPO_ROOT
 DEFAULT_REGISTRY_PATH: Path = _REPO_ROOT / "registry-fixtures"
 DEFAULT_CACHE_DIR: Path = _REPO_ROOT / "tests" / "fixtures" / "llm-cache"
+DEFAULT_COMPOSER_DIST: Path = _REPO_ROOT / "apps" / "composer" / "dist"
 
 PROJECT_ROOT_ENV = "SPECCIFY_PROJECT_ROOT"
 REGISTRY_PATH_ENV = "SPECCIFY_REGISTRY_PATH"
 CACHE_DIR_ENV = "SPECCIFY_CACHE_DIR"
+COMPOSER_DIST_ENV = "SPECCIFY_COMPOSER_DIST"
 
 
 @dataclass(frozen=True)
@@ -45,6 +47,9 @@ class Settings:
     project_root: Path
     registry_path: Path
     cache_dir: Path
+    # Gebaute Composer-SPA; wird — falls vorhanden — unter `/ui` mitserviert
+    # (Composer-Fenster der Desktop-App, same-origin zur API).
+    composer_dist: Path = DEFAULT_COMPOSER_DIST
 
     @classmethod
     def from_env(cls) -> Settings:
@@ -52,6 +57,7 @@ class Settings:
             project_root=_path_from_env(PROJECT_ROOT_ENV, DEFAULT_PROJECT_ROOT),
             registry_path=_path_from_env(REGISTRY_PATH_ENV, DEFAULT_REGISTRY_PATH),
             cache_dir=_path_from_env(CACHE_DIR_ENV, DEFAULT_CACHE_DIR),
+            composer_dist=_path_from_env(COMPOSER_DIST_ENV, DEFAULT_COMPOSER_DIST),
         )
 
 
