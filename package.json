@@ -10,6 +10,9 @@
     "composer:dev": "pnpm --filter speccify-composer dev",
     "composer:build": "pnpm --filter speccify-composer build",
     "composer:typecheck": "pnpm --filter speccify-composer typecheck",
-    "composer:e2e": "pnpm --filter speccify-composer e2e"
+    "composer:e2e": "pnpm --filter speccify-composer e2e",
+    "desktop:dev": "pnpm --filter speccify-desktop tauri dev",
+    "desktop:build": "pnpm --filter speccify-desktop tauri build",
+    "desktop:typecheck": "pnpm --filter speccify-desktop typecheck"
   }
 }

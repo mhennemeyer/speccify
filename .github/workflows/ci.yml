@@ -228,11 +228,40 @@ jobs:
       - name: Format check
         run: cargo fmt --all -- --check
 
+      # Das Tauri-Crate (apps/desktop/src-tauri) ist ausgeschlossen: es
+      # bräuchte webkit2gtk-Systemdeps auf Linux und wird nativ auf macOS
+      # gebaut (Zielplattform, siehe apps/desktop/README.md).
       - name: Clippy (deny warnings)
-        run: cargo clippy --workspace --all-targets -- -D warnings
+        run: cargo clippy --workspace --exclude speccify-desktop --all-targets -- -D warnings
 
       - name: Build
-        run: cargo build --workspace
+        run: cargo build --workspace --exclude speccify-desktop
 
       - name: Test
-        run: cargo test --workspace
+        run: cargo test --workspace --exclude speccify-desktop
+
+  desktop-frontend:
+    name: apps/desktop frontend (typecheck + build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.3
+          run_install: false
+
+      - name: Install dependencies (frozen lockfile, workspace root)
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck + Build (Vite-Frontend der Tauri-App)
+        run: pnpm --filter speccify-desktop build

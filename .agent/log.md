@@ -1181,3 +1181,58 @@
 - **Verifikation**: 3/3 Playwright grün (6,2 s, erster Lauf), Composer-
   Typecheck + Build grün (269 kB), 420 Pytest grün (Python unverändert).
 - Tag-Vorschlag an User: `v0.14.0-p3-composer-verfeinerung-1`.
+
+## 2026-07-24 (Rust-Neustart — Plan-Kickoff, kein Code)
+- **Neuer Workstream angelegt** (BO-Richtungsentscheidung vom selben Tag):
+  Toolkit + MCPs aus dotagent (`~/Desktop/Work/Articles/dotagent`) werden
+  in diesem Repo **neu in Rust geschrieben** statt als Python-Pakete
+  migriert; dotagent bleibt Referenzimplementierung (Exec-MCP-Referenz:
+  dotagent-Commit `2949d1d`). Kein PyPI, kein App Store/Sandboxing.
+- **`.agent/plans/rust-neustart-toolkit-mcps.md`** (`isActive: true`):
+  vollständige Einweisung für Sessions ohne dotagent-Vorwissen —
+  Hintergrund, Rust/Python-Schnitt (Engine + Composer-Backend bleiben
+  Python), Wire-Kontrakt `POST /stream` (iKanbanAi hängt dran),
+  Actions-Datenmodell (Vorlage iKanbanAi-`ProjectAction`), Stufen R0–R5,
+  Referenz-Tabelle (dotagent-/iKanbanAi-Dateipfade).
+- **`status.md`**: Workstream unter „Nächste Schritte" verlinkt; die
+  Produkt-Roadmap (P3-Verfeinerung etc.) läuft parallel weiter.
+- **Hinweis für später**: `.agent/` ist hier getrackt (inkl. Chats) —
+  vor einer Public-Schaltung des Repos gleiches Untracking prüfen wie in
+  dotagent (`583ae11`); der neue Plan nennt private Pfade/Projekte.
+- Nächster Schritt: **R0** — Cargo-Workspace (`crates/`), Actions-Schema
+  mit iKanbanAi abgleichen, Kontrakt-Testsuite gegen den laufenden
+  Python-Exec-MCP (Port 8765) spezifizieren.
+
+## 2026-07-24 (Rust-Migration R0 + Desktop-App-Übernahme A0)
+- **BO-Umpriorisierung** (nach R0-Lieferung): App-Übernahme + Composer-
+  Integration zuerst (neuer aktiver Plan `desktop-app-und-composer.md`,
+  Entscheidungen D1–D5 dokumentiert), Rust-Portierung danach (Plan
+  `rust-neustart-toolkit-mcps.md` heißt jetzt „Migration nach Rust").
+- **R0 geliefert** (Commit 4c166df): Cargo-Workspace (Pin 1.97.1,
+  `crates/exec-mcp` + `crates/discovery-mcp` als Skelette, CI-Job `rust
+  workspace` mit fmt/clippy -D warnings/build/test);
+  `schema/actions.schema.json` (wire-kompatibel zu iKanbanAi-
+  ProjectAction: Array, `details`→`description`; Ablage
+  `.agent/actions.json` + `~/.speccify/actions.json`, Projekt gewinnt);
+  `docs/exec-mcp-contract.md` (kompletter Wire-Vertrag aus dotagent
+  2949d1d: JSON-RPC bound/multi, exakte Fehlertexte, Allowlist-Token-
+  Präfix + Pending-Dedup, SSE-Framing, 600s/ungekappt/Stop-Semantik,
+  23-Tests-Checkliste); `scripts/exec_mcp_contract.py` (28 Szenarien,
+  Normalisierung duration/ts/serverInfo/Banner/Pfade, Datei-Effekte;
+  **28/28 Parität Referenz-vs-Referenz gegen laufenden dotagent-Server
+  verifiziert**). Rust via brew-rustup installiert (stable 1.97.1 war
+  als Toolchain schon vorhanden; cargo liegt unter
+  ~/.rustup/toolchains/*/bin — PATH entsprechend setzen).
+- **A0 geliefert**: dotagent `app/dashboard` (2949d1d) → `apps/desktop`
+  kopiert (ohne Artefakte), Rebranding Speccify/`io.speccify.desktop`/
+  `speccify-desktop` (+`speccify_desktop_lib`), pnpm- und Cargo-
+  Workspace-Einbindung, Root-Skripte `desktop:*`, README neu. CLI-Bridge
+  `run_dotagent` bewusst unverändert (D1) — stirbt erst mit der
+  Rust-Migration. CI: `desktop-frontend`-Job; `rust`-Job excludet das
+  Tauri-Crate (Linux-webkit2gtk). Ein fmt-Diff in lib.rs behoben.
+- **Verifikation**: tsc + Vite grün (211 kB), `cargo build/clippy
+  -p speccify-desktop` grün, `cargo test --workspace --exclude
+  speccify-desktop` grün, `tauri build` Release-Bundle grün (.app unter
+  target/release/bundle/). Offen: BO-Check `pnpm run desktop:dev`.
+- Nächster Schritt: **A1 Composer-Fenster** (SPA bündeln, Laufzeit-
+  API-Base, Supervisor spawnt speccify-web-backend pro Fenster).

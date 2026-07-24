@@ -48,16 +48,22 @@ PATH-Anreicherung für GUI-Apps) und genau EINE CLI-Bridge `run_dotagent`
 ## Stufen
 
 ### A0 — App-Übernahme & Rebranding ✅ (2026-07-24)
-1. `app/dashboard` → `apps/desktop` kopieren (ohne node_modules/target/
-   dist/gen/package-lock/`.agent`-Laufzeitreste); `.gitignore` ergänzt.
-2. Rebranding (D2): tauri.conf.json, Cargo.toml, package.json, UI-Texte.
-3. pnpm-Workspace + Root-Cargo-Workspace einbinden (D3); npm-Skripte auf
-   pnpm; `tauri dev/build` via `pnpm --filter speccify-desktop tauri …`.
-4. Verifikation: `pnpm typecheck` + Vite-Build grün, `cargo build
-   -p speccify-desktop` grün (macOS), `cargo fmt/clippy` clean; App
-   startet per `tauri dev` (manueller BO-Check).
-5. CI: Desktop-Job (Node/pnpm: typecheck + build); `rust`-Job mit
-   `--exclude speccify-desktop`.
+1. [x] `app/dashboard` → `apps/desktop` kopiert (ohne node_modules/target/
+   dist/gen/package-lock/`.agent`-Laufzeitreste; deren `.gitignore`s
+   decken gen/schemas + `.agent/` ab).
+2. [x] Rebranding (D2): tauri.conf.json (productName „Speccify",
+   `io.speccify.desktop`, Fenster-Titel, beforeDev/Build auf pnpm),
+   Cargo.toml (`speccify-desktop`/`speccify_desktop_lib`), package.json
+   (`speccify-desktop`, +`typecheck`-Skript), App.tsx-Brand, index.html,
+   README neu.
+3. [x] Workspaces: pnpm-Member `apps/desktop`; `apps/desktop/src-tauri`
+   im Root-Cargo-Workspace; Root-Skripte `desktop:dev/build/typecheck`.
+4. [x] Verifikation: tsc + Vite-Build grün (211 kB), `cargo build
+   -p speccify-desktop` grün, `cargo fmt` + `clippy -p speccify-desktop`
+   clean, `tauri build` (Release-Bundle) grün. **Offen: manueller
+   BO-Check `pnpm run desktop:dev`.**
+5. [x] CI: Job `apps/desktop frontend (typecheck + build)`; `rust`-Job
+   mit `--exclude speccify-desktop` (Linux-webkit2gtk vermeiden).
 
 ### A1 — Composer-Fenster (D4)
 1. Composer-SPA in die App bündeln (Build-Artefakt aus `apps/composer`,

@@ -7,6 +7,8 @@
 - **Zuletzt aktualisiert:** 2026-07-24
 
 ## Nächste Schritte
+- **Workstream Desktop/Infrastruktur (BO-Umpriorisierung 2026-07-24):** Reihenfolge neu — (1) **dotagent-App übernommen** (A0 ✅, `apps/desktop`, Rebranding „Speccify"/`io.speccify.desktop`, CLI-Bridge zeigt weiter auf dotagent-CLI), (2) als Nächstes **A1: Composer-Fenster in der App** (gebündelte SPA + je Fenster gespawntes `speccify-web-backend`, Laufzeit-API-Base), Plan: [`plans/desktop-app-und-composer.md`](./plans/desktop-app-und-composer.md) (`isActive: true`); (3) danach **Migration nach Rust** [`plans/rust-neustart-toolkit-mcps.md`](./plans/rust-neustart-toolkit-mcps.md) — **R0 dort ✅** (Cargo-Workspace `crates/{exec-mcp,discovery-mcp}`, `schema/actions.schema.json`, Wire-Vertrag `docs/exec-mcp-contract.md` + Diff-Harness `scripts/exec_mcp_contract.py`, 28/28 Parität gegen dotagent-Referenz); R1 (Rust-Exec-MCP) startet nach A0/A1.
+- BO-Check offen: `pnpm run desktop:dev` — startet die umbenannte App und zeigt die 4 Tabs gegen die installierte dotagent-CLI.
 - **Rumprobieren im Composer** (User: „dann verfeinern wir"): `./scripts/dev-up.sh` → <http://localhost:5173>. Erkenntnisse fließen in die nächste Verfeinerungs-Runde.
 - Verbleibende P3-Verfeinerungs-Kandidaten: Mock-Bundle-Rendering statt Contract-Interpretation, Drag & Drop statt Klick-Einfüge-Ziel, `kind: app`-Routen (P4).
 - Danach: P2-Stage-4 (API-Conformance-Harness) nachziehen; P4 Projekt-Builds (`speccify build`); P5 Git-Quellen.
