@@ -1,8 +1,13 @@
 ---
-isActive: true
+isActive: false
 ---
 
 # Plan: Desktop-App-Übernahme (dotagent) & Composer-Integration
+
+> **Abgeschlossen 2026-07-25:** A0 + A1 geliefert und vom BO abgenommen
+> („sieht soweit ok aus"). Der Feinschliff (ehem. A2) geht im
+> Nachfolge-Plan [`toolkit-discovery-terminal.md`](./toolkit-discovery-terminal.md)
+> auf (Settings, Terminal-Seitenleiste, ask_bo-Chat-Elemente).
 
 **Angelegt 2026-07-24 nach BO-Umpriorisierung** („Erst die dotagent-App
 übernehmen, den Composer mit in diese App, App umbenennen; Migration nach

@@ -1,8 +1,16 @@
 ---
-isActive: true
+isActive: false
 ---
 
 # Plan: Migration nach Rust — Toolkit & MCPs (aus dotagent)
+
+> **2026-07-25:** Die Ausführung von R1/R2 (+ Parallels/Playwright,
+> Toolbox, Terminal) läuft jetzt über den aktiven Plan
+> [`toolkit-discovery-terminal.md`](./toolkit-discovery-terminal.md)
+> (BO-Zielvorgabe, dort Stufen T2–T5). Dieses Dokument bleibt die
+> **Kontrakt-/Referenz-Quelle** (Wire-Vertrag, dotagent-/iKanbanAi-
+> Referenzen, Umschalt-Regeln); R3/R5 (System-CLI, Distribution)
+> werden nach T8 neu bewertet.
 
 **Angelegt 2026-07-24 nach BO-Richtungsentscheidung. Dieses Dokument ist
 die vollständige Einweisung für Sessions, die in diesem Repo starten und

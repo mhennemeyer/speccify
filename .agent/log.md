@@ -1273,3 +1273,22 @@
 - PATH-Fix beim BO: brew-rustup hat keine ~/.cargo/bin-Shims →
   `/opt/homebrew/opt/rustup/bin` in ~/.zshrc exportiert (desktop:dev
   lief vorher auf „cargo metadata: No such file or directory").
+
+## 2026-07-25 (Plan: Toolkit-Vollausbau)
+- BO-Zielvorgabe: vor weiterer Composer-/Spec-Schärfung den Infrastruktur-
+  Teil fertigmachen (iKanbanAi wartet). Neuer aktiver Plan
+  `toolkit-discovery-terminal.md` (Entwurf zum Refinen, 8 Open Questions):
+  Discovery-MCP inkl. client_config, Toolbox = dotagent-TOML 1:1
+  (builtin/global/workingdir), MCPs Exec/Parallels(Port)/Playwright
+  (extern via npx-Manifest), eigene Tools/MCPs via Scaffold ins Working
+  Dir, Settings-Tab (~/.speccify/settings.json, Einweisungs-Dateien per
+  Klick), Terminal-Sidebar (xterm.js + portable-pty, zsh/bash, Working
+  Dir, Windows zurückgestellt), ask_bo-Chat-Elemente als App-gehosteter
+  desktop-ui-MCP (Schema 1:1 iKanbanAi ChatInteraction:
+  buttons/multi_select/form — Referenz gelesen: ask_bo-Tool + Answer als
+  Tool-Result). Empfohlene Reihenfolge T1 Settings → T2 Toolbox → T3
+  Discovery (iKanbanAi-Meilenstein) → T4 Exec-Rust-Port (Harness-Gate)
+  → T5 Parallels/Playwright → T6 Terminal → T7 ask_bo → T8 Wrap-up.
+- Plan-Hygiene: desktop-app-und-composer.md abgeschlossen (A0/A1 vom BO
+  abgenommen, A2 aufgegangen); rust-neustart-toolkit-mcps.md auf
+  Kontrakt-Referenz zurückgestuft (R1/R2-Ausführung = T4/T3).
