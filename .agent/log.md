@@ -1323,3 +1323,22 @@
 - Nächster Schritt: T3 Discovery-MCP (JSON-RPC http+stdio, mcp_list mit
   client_config, tools_list, actions_propose, scaffold) — iKanbanAi-
   Meilenstein.
+
+## 2026-07-25 (T3 Discovery-MCP)
+- `crates/mcp-core` eingezogen (Bedarfsfall aus R0 eingetreten: Discovery/
+  Exec/Parallels/desktop-ui teilen den Unterbau): Dispatch nach
+  docs/exec-mcp-contract.md-Semantik, tiny_http-Transport (Thread pro
+  Request, roher Socket-Writer via into_writer als SSE-Grundlage für T4),
+  stdio (ndjson). PARSE_ERROR/-32601/202-Verhalten im Unit-Test gepinnt.
+- `crates/discovery-mcp`: DiscoveryMcp mit mcp_list/tools_list/
+  actions_propose/scaffold (Details im Plan). client_config macht jeden
+  Eintrag direkt in .mcp.json einhängbar — iKanbanAi bekommt Aktionen
+  UND MCP-Liste (T0.1). Port-Konvention: exec 8765, parallels 8766,
+  discovery 8767 (KNOWN_PORTS + --port-Args-Parsing).
+- Verifikation: cargo test 8 Suiten grün (mcp-core 1, discovery 6,
+  toolbox 5, settings 2 …), clippy --workspace -D warnings clean
+  (2 collapsible_if via let-chains gefixt), Live-Smoke: GET-Banner,
+  initialize, mcp_list-client_configs für alle 5 builtins,
+  actions_propose→Datei mit source=agent/confirmed=false, stdio-initialize.
+- T3-Rest notiert: Server-Tab-Umstellung (mit T4), iKanbanAi-Anbindung
+  drüben. Nächster Schritt: T4 Rust-Exec-MCP gegen den Kontrakt-Harness.

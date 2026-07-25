@@ -1,0 +1,11 @@
+[package]
+name = "speccify-mcp-core"
+description = "Geteilter JSON-RPC-/Transport-Unterbau der Speccify-MCP-Server (Streamable HTTP + stdio) — Semantik nach docs/exec-mcp-contract.md."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+serde_json = "1"
+tiny_http = "0.12"

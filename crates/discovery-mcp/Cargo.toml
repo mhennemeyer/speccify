@@ -1,10 +1,15 @@
 [package]
 name = "speccify-discovery-mcp"
-description = "Discovery-MCP: Aktionen (schema/actions.schema.json) und MCP-Server auffindbar machen (actions_list/actions_propose/mcp_list, Stufe R2)."
+description = "Discovery-MCP: bietet Agents alle MCPs (mit Client-Config) und Tools/Aktionen an — mcp_list, tools_list, actions_propose, scaffold (Streamable HTTP :8767 + stdio)."
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
+
+[dependencies]
+serde_json = "1"
+speccify-mcp-core = { path = "../mcp-core" }
+speccify-toolbox = { path = "../toolbox" }
 
 [[bin]]
 name = "speccify-discovery-mcp"

@@ -5,6 +5,7 @@
 [workspace]
 resolver = "2"
 members = [
+    "crates/mcp-core",
     "crates/exec-mcp",
     "crates/discovery-mcp",
     "crates/toolbox",

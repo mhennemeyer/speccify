@@ -137,11 +137,24 @@ speccify-mcp (uv, stdio). App: `toolbox_list`/`toolbox_scaffold`-Commands
 noch für Doctor), „+ Neues Manifest"-Formular. Verifikation: 7 Rust-Tests
 grün, clippy --workspace -D warnings clean, tsc+Vite grün (218 kB).
 
-### T3 — Discovery-MCP MVP (1–2 Tage)
-`mcp_list` (+`client_config`), `tools_list`, `actions_propose`,
-`scaffold` (D2); Server-Tab zeigt/startet ihn; **iKanbanAi anbinden**
-(Aktionsliste über Discovery statt lokalem Store — Sync-Semantik mit
-iKanbanAi-Seite abstimmen). Meilenstein: iKanbanAi kann weiterarbeiten.
+### T3 — Discovery-MCP MVP ✅ Server-seitig (2026-07-25)
+[x] `crates/mcp-core` (neu, geteilter Unterbau): JSON-RPC-Dispatch nach
+Kontrakt-Semantik (Notification→202, -32700/-32601, text_result-Form),
+Streamable-HTTP (tiny_http, threaded, SSE-Hook für T4 vorbereitet) +
+stdio-Transport (ndjson).
+[x] `crates/discovery-mcp`: `mcp_list` (Toolbox-MCPs + Laufzeitstatus
+via Port-Probe + `client_config`-Fragment: http-URL bzw. command/args;
+Port aus `--port`-Args oder Slug-Default 8765/8766/8767), `tools_list`
+(Toolbox-Tools + Aktionen global `~/.speccify/actions.json` + Projekt/
+Working-Dir `.agent/actions.json`), `actions_propose` (source=agent,
+confirmed=false, Dedup nach command — iKanbanAi-Semantik), `scaffold`.
+Working Dir aus `~/.speccify/settings.json`, `project`-Argument pro
+Aufruf, CLI `--port/--stdio/--working-dir`. 7 Unit-Tests + Live-Smoke
+(HTTP + stdio) grün.
+[ ] **T3-Rest**: Server-Tab der App auf Toolbox/Discovery umstellen
+(Start/Stop via Supervisor statt `dotagent mcp …`) — zusammen mit T4-
+Umschaltung sinnvoll. **iKanbanAi-Anbindung passiert drüben** (Discovery
+läuft und liefert Aktionen + mcp_list; Sync-Semantik dort klären).
 
 ### T4 — Rust-Exec-MCP (1–2 Tage)
 Port nach Kontrakt (`docs/exec-mcp-contract.md`), Diff-Harness 28/28 +
