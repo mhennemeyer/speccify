@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "speccify-discovery": {
+      "type": "http",
+      "url": "http://127.0.0.1:8767"
+    },
+    "speccify-exec": {
+      "type": "http",
+      "url": "http://127.0.0.1:8765"
+    },
+    "playwright": {
+      "command": "npx",
+      "args": ["@playwright/mcp@latest"]
+    }
+  }
+}

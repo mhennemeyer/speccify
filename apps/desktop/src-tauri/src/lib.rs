@@ -9,6 +9,8 @@ use std::{
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager, State};
 
+mod settings;
+
 /// Laufende Kind-Prozesse des Spike-Supervisors. Drop killt alle Kinder,
 /// damit beim App-Quit nichts weiterläuft.
 struct Supervisor(Mutex<HashMap<String, Child>>);
@@ -284,7 +286,11 @@ pub fn run() {
             run_dotagent,
             spawn_process,
             kill_process,
-            open_composer
+            open_composer,
+            settings::get_settings,
+            settings::save_settings,
+            settings::briefing_status,
+            settings::create_briefing_file
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

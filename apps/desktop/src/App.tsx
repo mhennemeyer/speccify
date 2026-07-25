@@ -3,6 +3,7 @@ import ComposerView from "./views/ComposerView";
 import LibraryView from "./views/LibraryView";
 import EnvironmentView from "./views/EnvironmentView";
 import ServersView from "./views/ServersView";
+import SettingsView from "./views/SettingsView";
 import KnowledgebasesView from "./views/KnowledgebasesView";
 
 const SECTIONS = [
@@ -11,6 +12,7 @@ const SECTIONS = [
   { id: "knowledgebases", label: "Knowledgebases", view: <KnowledgebasesView /> },
   { id: "environment", label: "Umgebung", view: <EnvironmentView /> },
   { id: "servers", label: "Server", view: <ServersView /> },
+  { id: "settings", label: "Settings", view: <SettingsView /> },
 ] as const;
 
 type SectionId = (typeof SECTIONS)[number]["id"];

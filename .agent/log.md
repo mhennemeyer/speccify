@@ -1292,3 +1292,19 @@
 - Plan-Hygiene: desktop-app-und-composer.md abgeschlossen (A0/A1 vom BO
   abgenommen, A2 aufgegangen); rust-neustart-toolkit-mcps.md auf
   Kontrakt-Referenz zurückgestuft (R1/R2-Ausführung = T4/T3).
+
+## 2026-07-25 (T0-Entscheidungen + T1 Settings)
+- BO-Antworten Runde 1 in den Toolkit-Plan eingepflegt (alle 8: Reihenfolge
+  bestätigt, iKanbanAi braucht Aktionen UND mcp_list; 8767 + stdio; TOML
+  1:1 inkl. kb; EIN Working Dir; Autostart-Command in Settings; ask_bo
+  mit Timeout-Semantik; Parallels asap direkt nach Exec; Einweisungs-Trio
+  ok, andere Agents später).
+- T1 geliefert: settings.rs (get/save_settings, briefing_status,
+  create_briefing_file — nie überschreiben; Templates via include_str!),
+  SettingsView (Working-Dir-Picker, Autostart-Command, Einweisungs-
+  Status mit Klick-Anlage), 6. Tab „Settings". Templates: CLAUDE.md
+  (Speccify-Kurzkontext + MCP-Wegweiser), .mcp.json (discovery/exec/
+  playwright), .claude/settings.json (enableAllProjectMcpServers).
+- Verifikation: cargo test 2/2 + clippy/fmt clean, tsc+Vite grün.
+- Nächster Schritt: T2 Toolbox nativ (Rust-Manifest-Parser, builtin-
+  Manifeste, Library-Tab nativ, Scaffold).

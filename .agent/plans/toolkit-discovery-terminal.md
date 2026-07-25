@@ -100,12 +100,30 @@ Status: **Entwurf zum Refinen** (Open Questions unten). Dieser Plan
 
 ## Stufen (T)
 
-### T0 — Refinement (dieses Dokument)
-Open Questions unten mit BO klären; Entscheidungen hier einpflegen.
+### T0 — Refinement ✅ (2026-07-25, BO-Antworten Runde 1)
+1. Reihenfolge bestätigt; iKanbanAi erwartet **Aktionen UND `mcp_list`**
+   über Discovery.
+2. Port 8767 ok, **stdio zusätzlich** zu Streamable HTTP.
+3. Toolbox-TOML 1:1 inkl. `kind: kb` bestätigt.
+4. **Genau ein** Working Dir global in den Settings.
+5. Terminal-Agent: **Autostart-Command in den Settings** konfigurierbar
+   (Default `claude`); Start beim Öffnen der Sidebar.
+6. `ask_bo` mit Timeout/„später beantworten" wie iKanbanAi.
+7. Parallels **so schnell wie möglich** — bleibt direkt hinter dem
+   Exec-Port (T5), weil beide denselben JSON-RPC-/Allowlist-Unterbau
+   teilen; keine weiteren Stufen dazwischen schieben.
+8. Einweisungs-Trio bestätigt; **andere Agents später** (Templates
+   dürfen Claude-Code-spezifisch sein).
 
-### T1 — Settings + Working Dir (½ Tag)
-Settings-Tab, `~/.speccify/settings.json`, Working-Dir-Wahl (FilePicker
-existiert), „Agent-Einweisung"-Dateien mit Status + Klick-Anlage (D6).
+### T1 — Settings + Working Dir ✅ (2026-07-25)
+[x] Settings-Tab (6. Tab), Persistenz `~/.speccify/settings.json`
+(`working_dir`, `terminal_autostart_command` Default `claude`),
+Working-Dir-Picker; Einweisungs-Dateien mit Status + Klick-Anlage
+(CLAUDE.md/.mcp.json/.claude/settings.json aus ins Binary eingebetteten
+Templates `src-tauri/templates/`, niemals überschreiben; .mcp.json
+enthält discovery :8767 + exec :8765 + playwright-npx). Rust-Modul
+`settings.rs` mit 4 Commands + 2 Unit-Tests. Verifikation: cargo
+test/clippy/fmt grün, tsc+Vite grün (216 kB).
 
 ### T2 — Toolbox nativ (1 Tag)
 Manifest-Parser in Rust (`crates/toolbox` oder in discovery-mcp),
@@ -130,9 +148,9 @@ Parallels nach Rust (Port 8766, Allowlist-Semantik identisch);
 Playwright als verwaltetes Manifest (D3) inkl. Discovery-Eintrag.
 
 ### T6 — Terminal-Seitenleiste (1–2 Tage)
-Rechte Sidebar (ein-/ausklappbar), PTY (D5) im Working Dir; Button
-„Agent starten" tippt `claude` vor (Working Dir hat via T1 die
-Einweisung). Läuft für macOS; Linux best effort, Windows nein.
+Rechte Sidebar (ein-/ausklappbar), PTY (D5) im Working Dir; beim Öffnen
+wird der **Autostart-Command aus den Settings** (Default `claude`)
+ausgeführt (T0.5). Läuft für macOS; Linux best effort, Windows nein.
 
 ### T7 — `ask_bo`-Chat-Elemente (1–2 Tage)
 desktop-ui-MCP mit `ask_bo` (D4); Rendering der drei Interaktions-Arten
