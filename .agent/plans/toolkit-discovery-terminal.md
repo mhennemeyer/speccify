@@ -156,11 +156,20 @@ Aufruf, CLI `--port/--stdio/--working-dir`. 7 Unit-Tests + Live-Smoke
 Umschaltung sinnvoll. **iKanbanAi-Anbindung passiert drüben** (Discovery
 läuft und liefert Aktionen + mcp_list; Sync-Semantik dort klären).
 
-### T4 — Rust-Exec-MCP (1–2 Tage)
-Port nach Kontrakt (`docs/exec-mcp-contract.md`), Diff-Harness 28/28 +
-die drei Prozess-Lebensdauer-Tests (Timeout-/Disconnect-Kill,
-Ungekapptheit) als Rust-Integrationstests; erst dann Übernahme von
-Port 8765 (nie beide parallel).
+### T4 — Rust-Exec-MCP ✅ (2026-07-25)
+[x] `crates/exec-mcp` (Port nach `docs/exec-mcp-contract.md`):
+`allowlist.rs` (Token-Präfix-Match via shlex, consume/pending, dep-freier
+UTC-Zeitstempel), `exec.rs` (run_command mit 20k-Cap + wait-timeout;
+stream_command mit os_pipe-fd-Merge stderr→stdout, ungekappt, Timeout-Kill,
+Disconnect-Kill), `lib.rs` (ExecMcp: run_command/run_action/list_actions,
+bound/multi, exakte Fehlertexte), stdio + /stream-CLI. **`crates/mcp-core`
+Stream-Transport auf tiny_http-Chunked-Reader umgestellt** (schließt sauber,
+Disconnect propagiert über den Kanal als BrokenPipe). **Gate: Diff-Harness
+28/28 Parität gegen laufende dotagent-Referenz grün**; 10 Rust-Tests inkl.
+der 3 Lebensdauer-Tests (Cap/Timeout/Disconnect). builtin `speccify-exec.toml`
+zeigt jetzt auf `speccify-exec-mcp --port 8765` (statt dotagent-CLI).
+[ ] **Umschaltung Port 8765 in Betrieb + Server-Tab** (Start/Stop via
+Supervisor) zusammen mit T5-Wrap; nie beide Server gleichzeitig auf 8765.
 
 ### T5 — Parallels-Port + Playwright-Manifest (1 Tag)
 Parallels nach Rust (Port 8766, Allowlist-Semantik identisch);

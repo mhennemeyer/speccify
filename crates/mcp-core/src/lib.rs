@@ -123,13 +123,35 @@ fn handle_http_request(
     };
 
     // Streaming-Endpoint (kein JSON-RPC): Pfad endet auf "stream".
+    // tiny_http chunk-encodet einen Reader (data_length None) und terminiert
+    // die Antwort sauber (0-Chunk) — der Client erkennt das Ende ohne
+    // Connection-Close. Der Handler läuft in einem Thread und schiebt SSE-
+    // Bytes durch einen Kanal; bricht der Client ab, schließt tiny_http den
+    // Reader → der Kanal fällt weg → `emit` liefert BrokenPipe (Stop-Semantik).
     if let Some(stream_handler) = stream
         && request.url().trim_end_matches('/').ends_with("stream")
     {
-        let writer = request.into_writer();
-        let mut writer = SseWriter::new(writer);
-        stream_handler(&body, &mut writer);
-        return Ok(());
+        let (tx, rx) = std::sync::mpsc::sync_channel::<Vec<u8>>(64);
+        std::thread::spawn(move || {
+            let mut writer = ChannelWriter { tx };
+            stream_handler(&body, &mut writer);
+        });
+        let headers = vec![
+            tiny_http::Header::from_bytes(&b"Content-Type"[..], &b"text/event-stream"[..]).unwrap(),
+            tiny_http::Header::from_bytes(&b"Cache-Control"[..], &b"no-cache"[..]).unwrap(),
+        ];
+        let response = tiny_http::Response::new(
+            tiny_http::StatusCode(200),
+            headers,
+            ChannelReader {
+                rx,
+                buffer: Vec::new(),
+                position: 0,
+            },
+            None,
+            None,
+        );
+        return request.respond(response);
     }
 
     match handle(server, &body) {
@@ -138,36 +160,48 @@ fn handle_http_request(
     }
 }
 
-/// Schreibt eine rohe HTTP/1.1-SSE-Antwort auf den Socket (Header + Events).
-/// tiny_http gibt uns über `into_writer` die nackte Verbindung — genau
-/// richtig für flush-genaues SSE und Broken-Pipe-Erkennung (Stop-Semantik).
-struct SseWriter {
-    inner: Box<dyn Write + Send>,
-    headers_sent: bool,
+/// Schreibt SSE-Bytes in einen Kanal; `Err(BrokenPipe)`, sobald der Reader
+/// (die HTTP-Antwort) weg ist — das signalisiert dem Handler den Abbruch.
+struct ChannelWriter {
+    tx: std::sync::mpsc::SyncSender<Vec<u8>>,
 }
 
-impl SseWriter {
-    fn new(inner: Box<dyn Write + Send>) -> Self {
-        Self {
-            inner,
-            headers_sent: false,
-        }
-    }
-}
-
-impl Write for SseWriter {
+impl Write for ChannelWriter {
     fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
-        if !self.headers_sent {
-            self.headers_sent = true;
-            self.inner.write_all(
-                b"HTTP/1.1 200 OK\r\nContent-Type: text/event-stream\r\nCache-Control: no-cache\r\nConnection: close\r\n\r\n",
-            )?;
-        }
-        self.inner.write(buf)
+        self.tx
+            .send(buf.to_vec())
+            .map(|_| buf.len())
+            .map_err(|_| std::io::Error::new(std::io::ErrorKind::BrokenPipe, "client gone"))
     }
 
     fn flush(&mut self) -> std::io::Result<()> {
-        self.inner.flush()
+        Ok(())
+    }
+}
+
+/// Blockierender Reader über dem SSE-Kanal; EOF, wenn der Handler fertig ist.
+struct ChannelReader {
+    rx: std::sync::mpsc::Receiver<Vec<u8>>,
+    buffer: Vec<u8>,
+    position: usize,
+}
+
+impl std::io::Read for ChannelReader {
+    fn read(&mut self, out: &mut [u8]) -> std::io::Result<usize> {
+        if self.position >= self.buffer.len() {
+            match self.rx.recv() {
+                Ok(chunk) => {
+                    self.buffer = chunk;
+                    self.position = 0;
+                }
+                Err(_) => return Ok(0), // Handler fertig → EOF.
+            }
+        }
+        let available = &self.buffer[self.position..];
+        let count = available.len().min(out.len());
+        out[..count].copy_from_slice(&available[..count]);
+        self.position += count;
+        Ok(count)
     }
 }
 

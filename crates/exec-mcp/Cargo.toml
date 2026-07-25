@@ -1,10 +1,17 @@
 [package]
 name = "speccify-exec-mcp"
-description = "Exec-MCP: führt Projekt-Befehle/Aktionen aus (Rust-Neustart aus dotagent, Wire-Kontrakt siehe docs/exec-mcp-contract.md)."
+description = "Exec-MCP: führt Allowlist-geprüfte CLI-Befehle/Aktionen projektgebunden aus (Streamable HTTP + stdio + /stream). Rust-Port der dotagent-Referenz, Vertrag: docs/exec-mcp-contract.md."
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
+
+[dependencies]
+serde_json = "1"
+shlex = "1"
+os_pipe = "1"
+wait-timeout = "0.2"
+speccify-mcp-core = { path = "../mcp-core" }
 
 [[bin]]
 name = "speccify-exec-mcp"

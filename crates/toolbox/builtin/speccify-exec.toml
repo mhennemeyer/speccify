@@ -5,13 +5,13 @@ description = "Führt Allowlist-geprüfte CLI-Befehle projektgebunden aus (Strea
 tags        = ["exec", "allowlist", "agents"]
 category    = "Agent-Infrastruktur"
 
-# Übergangsweise die Python-Referenz (dotagent); der Rust-Port
-# (crates/exec-mcp) übernimmt nach Kontrakt-Parität (Plan T4).
+# Rust-Port (crates/exec-mcp), wire-identisch zur dotagent-Referenz —
+# Kontrakt-Diff-Harness 28/28 grün (Plan T4, docs/exec-mcp-contract.md).
 [run]
-command   = "dotagent"
-args      = ["mcp", "serve"]
+command   = "speccify-exec-mcp"
+args      = ["--port", "8765"]
 transport = "http"
 autostart = false
 
 [requires]
-binaries = ["dotagent"]
+binaries = ["speccify-exec-mcp"]

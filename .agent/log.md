@@ -1342,3 +1342,21 @@
   actions_propose→Datei mit source=agent/confirmed=false, stdio-initialize.
 - T3-Rest notiert: Server-Tab-Umstellung (mit T4), iKanbanAi-Anbindung
   drüben. Nächster Schritt: T4 Rust-Exec-MCP gegen den Kontrakt-Harness.
+
+## 2026-07-25 (T4 Rust-Exec-MCP — Kontrakt-Parität)
+- `crates/exec-mcp` als Rust-Port der dotagent-Referenz: allowlist
+  (Token-Präfix via shlex, consume Einmal-Freigaben, pending dedup,
+  dep-freier civil_from_days-UTC), exec (run_command 20k-Cap +
+  wait-timeout; stream via os_pipe fd-Merge stderr→stdout, ungekappt,
+  Timeout-/Disconnect-Kill), server (run_command/run_action/list_actions,
+  bound/multi, Fehlertexte 1:1). CLI http+stdio+/stream.
+- **mcp-core Stream-Transport gefixt**: into_writer ließ die Keep-alive-
+  Verbindung offen → Client-Hang. Umgestellt auf tiny_http-Response mit
+  ChannelReader (chunked, sauberer 0-Chunk-Abschluss); ChannelWriter
+  liefert BrokenPipe wenn der Reader wegfällt → Disconnect-Kill bleibt.
+- **Gate grün: exec_mcp_contract.py 28/28 Parität** Rust-Kandidat vs.
+  laufende dotagent-Referenz. 10 exec-Tests (inkl. Cap/Timeout/Disconnect-
+  Lebensdauer). clippy --workspace -D warnings clean, fmt clean.
+- builtin speccify-exec.toml → `speccify-exec-mcp --port 8765`.
+- Offen (mit T5): 8765-Umschaltung im Betrieb + Server-Tab-Start/Stop.
+  Nächster Schritt: T5 Parallels-Port + Playwright-Manifest.
