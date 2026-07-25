@@ -4,7 +4,12 @@
 
 [workspace]
 resolver = "2"
-members = ["crates/exec-mcp", "crates/discovery-mcp", "apps/desktop/src-tauri"]
+members = [
+    "crates/exec-mcp",
+    "crates/discovery-mcp",
+    "crates/toolbox",
+    "apps/desktop/src-tauri",
+]
 
 [workspace.package]
 version = "0.0.0"

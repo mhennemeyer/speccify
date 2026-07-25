@@ -1308,3 +1308,18 @@
 - Verifikation: cargo test 2/2 + clippy/fmt clean, tsc+Vite grün.
 - Nächster Schritt: T2 Toolbox nativ (Rust-Manifest-Parser, builtin-
   Manifeste, Library-Tab nativ, Scaffold).
+
+## 2026-07-25 (T2 Toolbox nativ)
+- `crates/toolbox`: Parser 1:1 nach dotagent-Semantik (Pflichtfelder,
+  kind/transport-Validierung, Warnungen statt Abbruch beim Verzeichnis-
+  Laden), load_all mit Layer-Vorrang workingdir > global > builtin,
+  Scaffold mit Slug-Check + Nie-Überschreiben. 5 builtin-Manifeste
+  (exec/parallels übergangsweise auf dotagent-CLI — Kommentar im TOML
+  verweist auf T4/T5-Wechsel). App-Commands toolbox_list/toolbox_scaffold;
+  LibraryView nativ (source-Labels builtin/global/workingdir, run-Zeile
+  sichtbar, Scaffold-Formular). settings::resolve_working_dir pub(crate).
+- Verifikation: cargo test 7/7, clippy --workspace -D warnings clean,
+  fmt clean, tsc+Vite grün.
+- Nächster Schritt: T3 Discovery-MCP (JSON-RPC http+stdio, mcp_list mit
+  client_config, tools_list, actions_propose, scaffold) — iKanbanAi-
+  Meilenstein.

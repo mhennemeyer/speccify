@@ -3130,6 +3130,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
+ "speccify-toolbox",
  "tauri",
  "tauri-build",
  "tauri-plugin-dialog",
@@ -3143,6 +3144,14 @@ version = "0.0.0"
 [[package]]
 name = "speccify-exec-mcp"
 version = "0.0.0"
+
+[[package]]
+name = "speccify-toolbox"
+version = "0.0.0"
+dependencies = [
+ "serde",
+ "toml 0.8.2",
+]
 
 [[package]]
 name = "stable_deref_trait"

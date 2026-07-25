@@ -10,6 +10,7 @@ use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager, State};
 
 mod settings;
+mod toolbox_cmd;
 
 /// Laufende Kind-Prozesse des Spike-Supervisors. Drop killt alle Kinder,
 /// damit beim App-Quit nichts weiterläuft.
@@ -290,7 +291,9 @@ pub fn run() {
             settings::get_settings,
             settings::save_settings,
             settings::briefing_status,
-            settings::create_briefing_file
+            settings::create_briefing_file,
+            toolbox_cmd::toolbox_list,
+            toolbox_cmd::toolbox_scaffold
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

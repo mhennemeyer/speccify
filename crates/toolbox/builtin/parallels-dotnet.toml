@@ -1,0 +1,16 @@
+kind        = "mcp"
+name        = "Parallels-MCP (.NET in Windows-VM)"
+slug        = "parallels-dotnet"
+description = ".NET-Workflows in der Parallels-Windows-VM (prlctl exec, eigene Allowlist; Streamable HTTP, 127.0.0.1:8766)."
+tags        = ["parallels", "dotnet", "vm"]
+category    = "Agent-Infrastruktur"
+
+# Übergangsweise die Python-Referenz (dotagent); Rust-Port in Plan T5.
+[run]
+command   = "dotagent"
+args      = ["mcp", "parallels"]
+transport = "http"
+autostart = false
+
+[requires]
+binaries = ["dotagent", "prlctl"]

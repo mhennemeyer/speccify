@@ -1,0 +1,15 @@
+kind        = "mcp"
+name        = "Speccify-MCP (Spec-Engine)"
+slug        = "speccify-mcp"
+description = "Spec-Engine für Coding-Agents: resolve/lint/render/lock/pull/verify/mock über stdio (läuft aus dem Speccify-Repo)."
+tags        = ["specs", "codegen", "agents"]
+category    = "Spec-Engine"
+
+[run]
+command   = "uv"
+args      = ["run", "speccify-mcp"]
+transport = "stdio"
+autostart = false
+
+[requires]
+binaries = ["uv"]

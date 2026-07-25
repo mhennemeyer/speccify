@@ -1,0 +1,11 @@
+[package]
+name = "speccify-toolbox"
+description = "Toolbox-Manifeste (dotagent-kompatibles TOML: tool/mcp/kb) — geteilt von Desktop-App und Discovery-MCP."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+toml = "0.8"

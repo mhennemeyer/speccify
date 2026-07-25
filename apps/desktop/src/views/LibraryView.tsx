@@ -1,38 +1,57 @@
-// Bibliothek: Registry-Manifeste (Tools / KBs / MCPs) mit Tag-Filter
-// und Requirements-Badges (Manifest-[requires] × Doctor-Befund).
+// Bibliothek: Toolbox-Manifeste (Tools / MCPs / KBs) mit Tag-Filter und
+// Requirements-Badges — nativ aus dem Rust-Kern (T2); Doctor-Befunde
+// weiterhin über die dotagent-CLI, bis die Rust-CLI sie ersetzt.
 
 import { useMemo, useState } from "react";
-import { fetchDoctor, fetchRegistry, type Manifest } from "../lib/dotagent";
-import { ActionButton, LoadingBoundary, Spinner, useAsync } from "../components/ui";
+import { fetchDoctor } from "../lib/dotagent";
+import {
+  fetchToolbox,
+  scaffoldManifest,
+  type ToolboxManifest,
+} from "../lib/toolbox";
+import { ActionButton, ErrorBox, LoadingBoundary, Spinner, useAsync } from "../components/ui";
 
-const KIND_LABEL: Record<Manifest["kind"], string> = {
+const KIND_LABEL: Record<ToolboxManifest["kind"], string> = {
   tool: "Tools",
   mcp: "MCP-Server",
   kb: "Knowledgebases",
 };
 
-const KIND_BADGE: Record<Manifest["kind"], string> = {
+const KIND_BADGE: Record<ToolboxManifest["kind"], string> = {
   tool: "bg-sky-100 text-sky-800",
   mcp: "bg-violet-100 text-violet-800",
   kb: "bg-emerald-100 text-emerald-800",
 };
 
+const SOURCE_LABEL: Record<ToolboxManifest["source"], string | null> = {
+  builtin: null,
+  global: "(global)",
+  workingdir: "(working dir)",
+};
+
 interface LibraryData {
-  manifests: Manifest[];
+  manifests: ToolboxManifest[];
   warnings: string[];
   foundBinaries: Record<string, boolean>;
 }
 
 export default function LibraryView() {
   const [activeTag, setActiveTag] = useState<string | null>(null);
+  const [scaffoldOpen, setScaffoldOpen] = useState(false);
+  const [scaffoldSlug, setScaffoldSlug] = useState("");
+  const [scaffoldKind, setScaffoldKind] = useState<"tool" | "mcp" | "kb">("tool");
+  const [scaffoldName, setScaffoldName] = useState("");
+  const [scaffoldError, setScaffoldError] = useState<string | null>(null);
+  const [scaffoldStatus, setScaffoldStatus] = useState("");
+
   const { data, loading, refreshing, error, reload } = useAsync<LibraryData>(async () => {
-    const [registry, doctor] = await Promise.all([
-      fetchRegistry(),
+    const [toolbox, doctor] = await Promise.all([
+      fetchToolbox(),
       fetchDoctor().catch(() => ({ checks: [] })),
     ]);
     return {
-      manifests: registry.manifests,
-      warnings: registry.warnings,
+      manifests: toolbox.manifests,
+      warnings: toolbox.warnings,
       foundBinaries: Object.fromEntries(
         doctor.checks.map((c) => [c.binary, c.found]),
       ),
@@ -47,9 +66,23 @@ export default function LibraryView() {
   const visible = activeTag
     ? manifests.filter((m) => m.tags.includes(activeTag))
     : manifests;
-  const kinds: Manifest["kind"][] = ["tool", "mcp", "kb"];
-  const missingFor = (m: Manifest) =>
+  const kinds: ToolboxManifest["kind"][] = ["tool", "mcp", "kb"];
+  const missingFor = (m: ToolboxManifest) =>
     m.requires_binaries.filter((b) => data?.foundBinaries[b] === false);
+
+  const submitScaffold = async () => {
+    setScaffoldError(null);
+    try {
+      const created = await scaffoldManifest(scaffoldSlug, scaffoldKind, scaffoldName);
+      setScaffoldStatus(`Angelegt: ${created}`);
+      setScaffoldSlug("");
+      setScaffoldName("");
+      setScaffoldOpen(false);
+      await reload();
+    } catch (e) {
+      setScaffoldError(String(e));
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -60,6 +93,12 @@ export default function LibraryView() {
         >
           Aktualisieren
         </ActionButton>
+        <button
+          onClick={() => setScaffoldOpen((open) => !open)}
+          className="rounded bg-slate-100 px-3 py-1 text-sm text-slate-700 hover:bg-slate-200"
+        >
+          + Neues Manifest
+        </button>
         {refreshing && <Spinner />}
         {allTags.map((tag) => (
           <button
@@ -76,7 +115,53 @@ export default function LibraryView() {
         ))}
       </div>
 
-      <LoadingBoundary loading={loading} error={error} label="Registry wird geladen…">
+      {scaffoldOpen ? (
+        <div className="flex flex-wrap items-end gap-2 rounded-lg border border-slate-200 bg-white p-3">
+          <div>
+            <label className="mb-1 block text-xs text-slate-500">Slug</label>
+            <input
+              value={scaffoldSlug}
+              onChange={(e) => setScaffoldSlug(e.target.value)}
+              placeholder="mein-tool"
+              className="rounded border border-slate-300 px-2 py-1 text-sm"
+              spellCheck={false}
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs text-slate-500">Art</label>
+            <select
+              value={scaffoldKind}
+              onChange={(e) => setScaffoldKind(e.target.value as "tool" | "mcp" | "kb")}
+              className="rounded border border-slate-300 px-2 py-1 text-sm"
+            >
+              <option value="tool">tool</option>
+              <option value="mcp">mcp</option>
+              <option value="kb">kb</option>
+            </select>
+          </div>
+          <div>
+            <label className="mb-1 block text-xs text-slate-500">Name (optional)</label>
+            <input
+              value={scaffoldName}
+              onChange={(e) => setScaffoldName(e.target.value)}
+              className="rounded border border-slate-300 px-2 py-1 text-sm"
+            />
+          </div>
+          <ActionButton
+            onClick={submitScaffold}
+            className="bg-slate-800 text-white hover:bg-slate-700"
+          >
+            ins Working Dir anlegen
+          </ActionButton>
+          <span className="text-xs text-slate-400">
+            → &lt;Working Dir&gt;/.speccify/toolbox/&lt;slug&gt;.toml
+          </span>
+        </div>
+      ) : null}
+      {scaffoldError ? <ErrorBox message={scaffoldError} /> : null}
+      {scaffoldStatus ? <p className="text-xs text-slate-500">{scaffoldStatus}</p> : null}
+
+      <LoadingBoundary loading={loading} error={error} label="Toolbox wird geladen…">
         {(data?.warnings ?? []).map((w) => (
           <p key={w} className="text-sm text-amber-600">⚠ {w}</p>
         ))}
@@ -102,8 +187,10 @@ export default function LibraryView() {
                         {m.kind}
                       </span>
                       <h3 className="font-medium text-slate-900">{m.name}</h3>
-                      {m.source === "project" && (
-                        <span className="text-xs text-slate-400">(projektlokal)</span>
+                      {SOURCE_LABEL[m.source] && (
+                        <span className="text-xs text-slate-400">
+                          {SOURCE_LABEL[m.source]}
+                        </span>
                       )}
                       {m.requires_binaries.length > 0 &&
                         (missingFor(m).length === 0 ? (
@@ -117,7 +204,12 @@ export default function LibraryView() {
                         ))}
                     </div>
                     <p className="mt-1 text-sm text-slate-600">{m.description}</p>
-                    <p className="mt-2 text-xs text-slate-400">{m.tags.join(" · ")}</p>
+                    {m.run ? (
+                      <p className="mt-2 font-mono text-xs text-slate-400">
+                        {m.run.command} {m.run.args.join(" ")} · {m.run.transport}
+                      </p>
+                    ) : null}
+                    <p className="mt-1 text-xs text-slate-400">{m.tags.join(" · ")}</p>
                   </article>
                 ))}
               </div>
@@ -126,10 +218,7 @@ export default function LibraryView() {
         })}
 
         {manifests.length === 0 && (
-          <p className="text-slate-500">
-            Registry ist leer — <code>dotagent registry sync</code> holt die
-            Built-in-Manifeste.
-          </p>
+          <p className="text-slate-500">Toolbox ist leer.</p>
         )}
       </LoadingBoundary>
     </div>

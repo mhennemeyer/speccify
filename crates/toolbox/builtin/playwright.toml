@@ -1,0 +1,15 @@
+kind        = "mcp"
+name        = "Playwright-MCP"
+slug        = "playwright"
+description = "Browser-Automation für Agents (offizieller @playwright/mcp, stdio; wird vom Client bei Bedarf gestartet)."
+tags        = ["browser", "testing", "agents"]
+category    = "Agent-Infrastruktur"
+
+[run]
+command   = "npx"
+args      = ["@playwright/mcp@latest"]
+transport = "stdio"
+autostart = false
+
+[requires]
+binaries = ["npx"]

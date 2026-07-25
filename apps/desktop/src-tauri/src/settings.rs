@@ -84,7 +84,7 @@ pub struct BriefingStatus {
     exists: bool,
 }
 
-fn resolve_working_dir(raw: &str) -> Result<PathBuf, String> {
+pub(crate) fn resolve_working_dir(raw: &str) -> Result<PathBuf, String> {
     let trimmed = raw.trim();
     if trimmed.is_empty() {
         return Err("Kein Working Dir gesetzt (Settings).".into());

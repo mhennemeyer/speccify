@@ -1,0 +1,15 @@
+kind        = "mcp"
+name        = "Discovery-MCP"
+slug        = "speccify-discovery"
+description = "Bietet Agents alle MCPs (mit Client-Config) und Tools/Aktionen an: mcp_list, tools_list, actions_propose, scaffold (Streamable HTTP, 127.0.0.1:8767)."
+tags        = ["discovery", "agents"]
+category    = "Agent-Infrastruktur"
+
+[run]
+command   = "speccify-discovery-mcp"
+args      = ["--port", "8767"]
+transport = "http"
+autostart = false
+
+[requires]
+binaries = ["speccify-discovery-mcp"]

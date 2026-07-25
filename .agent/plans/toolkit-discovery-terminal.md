@@ -125,11 +125,17 @@ enthält discovery :8767 + exec :8765 + playwright-npx). Rust-Modul
 `settings.rs` mit 4 Commands + 2 Unit-Tests. Verifikation: cargo
 test/clippy/fmt grün, tsc+Vite grün (216 kB).
 
-### T2 — Toolbox nativ (1 Tag)
-Manifest-Parser in Rust (`crates/toolbox` oder in discovery-mcp),
-builtin-Manifeste (exec, discovery, parallels, playwright, speccify-mcp),
-drei Quellen (D1); Library-Tab der App liest nativ (Tauri-Command statt
-`dotagent registry list`); Scaffold („Neues Tool/MCP") in UI → Working Dir.
+### T2 — Toolbox nativ ✅ (2026-07-25)
+[x] `crates/toolbox` (lib, von App + Discovery geteilt): dotagent-
+kompatibler TOML-Parser (gleiche Pflichtfeld-/kind-/transport-Regeln),
+drei Quellen mit Slug-Vorrang workingdir > global > builtin, Scaffold
+(nie überschreiben, Slug-Validierung), 5 Unit-Tests. Builtin-Manifeste:
+speccify-exec + parallels-dotnet (übergangsweise via dotagent-CLI, Wechsel
+in T4/T5), speccify-discovery (:8767), playwright (npx, stdio),
+speccify-mcp (uv, stdio). App: `toolbox_list`/`toolbox_scaffold`-Commands
+(Working Dir aus Settings), Library-Tab liest nativ (dotagent-CLI nur
+noch für Doctor), „+ Neues Manifest"-Formular. Verifikation: 7 Rust-Tests
+grün, clippy --workspace -D warnings clean, tsc+Vite grün (218 kB).
 
 ### T3 — Discovery-MCP MVP (1–2 Tage)
 `mcp_list` (+`client_config`), `tools_list`, `actions_propose`,

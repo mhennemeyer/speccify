@@ -1,0 +1,17 @@
+kind        = "mcp"
+name        = "Exec-MCP"
+slug        = "speccify-exec"
+description = "Führt Allowlist-geprüfte CLI-Befehle projektgebunden aus (Streamable HTTP, 127.0.0.1:8765). Vertrag: docs/exec-mcp-contract.md."
+tags        = ["exec", "allowlist", "agents"]
+category    = "Agent-Infrastruktur"
+
+# Übergangsweise die Python-Referenz (dotagent); der Rust-Port
+# (crates/exec-mcp) übernimmt nach Kontrakt-Parität (Plan T4).
+[run]
+command   = "dotagent"
+args      = ["mcp", "serve"]
+transport = "http"
+autostart = false
+
+[requires]
+binaries = ["dotagent"]
