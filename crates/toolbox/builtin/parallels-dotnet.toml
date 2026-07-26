@@ -5,12 +5,12 @@ description = ".NET-Workflows in der Parallels-Windows-VM (prlctl exec, eigene A
 tags        = ["parallels", "dotnet", "vm"]
 category    = "Agent-Infrastruktur"
 
-# Übergangsweise die Python-Referenz (dotagent); Rust-Port in Plan T5.
+# Rust-Port (crates/parallels-mcp); braucht --project (Home-Share-Basis).
 [run]
-command   = "dotagent"
-args      = ["mcp", "parallels"]
+command   = "speccify-parallels-mcp"
+args      = ["--port", "8766"]
 transport = "http"
 autostart = false
 
 [requires]
-binaries = ["dotagent", "prlctl"]
+binaries = ["speccify-parallels-mcp", "prlctl"]

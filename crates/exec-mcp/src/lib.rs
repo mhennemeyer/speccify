@@ -3,15 +3,13 @@
 //! `docs/exec-mcp-contract.md`. Bis der Diff-Harness (28/28) grün ist und
 //! die Prozess-Lebensdauer-Tests stehen, bleibt die Python-Referenz auf 8765.
 
-pub mod allowlist;
 pub mod exec;
 
 use std::path::PathBuf;
 
 use serde_json::{Map, Value, json};
+use speccify_mcp_core::allowlist::{Allowlist, agent_dir};
 use speccify_mcp_core::{ToolServer, error_result, text_result};
-
-use allowlist::{Allowlist, agent_dir};
 
 pub const DEFAULT_TIMEOUT_SECONDS: f64 = 600.0;
 pub const DEFAULT_PORT: u16 = 8765;

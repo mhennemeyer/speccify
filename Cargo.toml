@@ -8,6 +8,7 @@ members = [
     "crates/mcp-core",
     "crates/exec-mcp",
     "crates/discovery-mcp",
+    "crates/parallels-mcp",
     "crates/toolbox",
     "apps/desktop/src-tauri",
 ]

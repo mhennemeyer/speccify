@@ -4,6 +4,8 @@
 //! Notifications → 202 ohne Body, Parse-Fehler → 400/-32700, unbekannte
 //! Methode → -32601, Tool-Ergebnisse als `{content:[{type:"text",…}],isError}`.
 
+pub mod allowlist;
+
 use std::io::{BufRead, Write};
 use std::sync::Arc;
 

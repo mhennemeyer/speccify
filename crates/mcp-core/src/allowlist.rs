@@ -1,15 +1,17 @@
-//! Befehls-Allowlist (Sicherheitsmodell des Exec-MCP), 1:1 nach der
-//! dotagent-Referenz (`docs/exec-mcp-contract.md`): nur explizit
-//! freigegebene Befehle laufen, Matching per **Token-Präfix** (shlex),
-//! `permanent: false` = Einmal-Freigabe (nach Lauf konsumiert), abgelehnte
-//! Befehle landen dedupliziert als Pending-Request.
+//! Befehls-Allowlist (Sicherheitsmodell von Exec- und Parallels-MCP),
+//! 1:1 nach der dotagent-Referenz (`docs/exec-mcp-contract.md`): nur
+//! explizit freigegebene Befehle laufen, Matching per **Token-Präfix**
+//! (shlex), `permanent: false` = Einmal-Freigabe (nach Lauf konsumiert),
+//! abgelehnte Befehle landen dedupliziert als Pending-Request. Die
+//! Dateinamen sind konfigurierbar (Exec: `exec-*.json`, Parallels:
+//! `parallels-*.json`).
 
 use std::path::{Path, PathBuf};
 
 use serde_json::{Value, json};
 
-pub const ALLOWLIST_FILE: &str = "exec-allowlist.json";
-pub const PENDING_FILE: &str = "exec-pending.json";
+pub const EXEC_ALLOWLIST_FILE: &str = "exec-allowlist.json";
+pub const EXEC_PENDING_FILE: &str = "exec-pending.json";
 
 #[derive(Clone)]
 pub struct Entry {
@@ -19,19 +21,46 @@ pub struct Entry {
 
 pub struct Allowlist {
     agent_dir: PathBuf,
+    allowlist_file: String,
+    pending_file: String,
 }
 
 impl Allowlist {
+    /// Exec-Defaults (`exec-allowlist.json` / `exec-pending.json`).
     pub fn new(agent_dir: PathBuf) -> Self {
-        Self { agent_dir }
+        Self::with_files(agent_dir, EXEC_ALLOWLIST_FILE, EXEC_PENDING_FILE)
+    }
+
+    pub fn with_files(agent_dir: PathBuf, allowlist_file: &str, pending_file: &str) -> Self {
+        Self {
+            agent_dir,
+            allowlist_file: allowlist_file.to_string(),
+            pending_file: pending_file.to_string(),
+        }
     }
 
     fn allowlist_path(&self) -> PathBuf {
-        self.agent_dir.join(ALLOWLIST_FILE)
+        self.agent_dir.join(&self.allowlist_file)
     }
 
     fn pending_path(&self) -> PathBuf {
-        self.agent_dir.join(PENDING_FILE)
+        self.agent_dir.join(&self.pending_file)
+    }
+
+    /// Schreibt die Default-Patterns, falls die Allowlist-Datei fehlt
+    /// (Parallels seedet so `dotnet build/test/run`).
+    pub fn seed_if_absent(&self, patterns: &[&str]) {
+        if self.allowlist_path().exists() {
+            return;
+        }
+        let entries: Vec<Entry> = patterns
+            .iter()
+            .map(|pattern| Entry {
+                pattern: (*pattern).to_string(),
+                permanent: true,
+            })
+            .collect();
+        let _ = self.save_entries(&entries);
     }
 
     pub fn entries(&self) -> Vec<Entry> {
@@ -177,7 +206,7 @@ mod tests {
     fn token_prefix_matching() {
         let dir = temp_agent("match");
         std::fs::write(
-            dir.join(ALLOWLIST_FILE),
+            dir.join(EXEC_ALLOWLIST_FILE),
             r#"[{"pattern":"npm test","permanent":true}]"#,
         )
         .unwrap();
@@ -193,7 +222,7 @@ mod tests {
     fn consume_removes_only_oneshot() {
         let dir = temp_agent("consume");
         std::fs::write(
-            dir.join(ALLOWLIST_FILE),
+            dir.join(EXEC_ALLOWLIST_FILE),
             r#"[{"pattern":"echo","permanent":true},{"pattern":"printf","permanent":false}]"#,
         )
         .unwrap();
@@ -212,7 +241,7 @@ mod tests {
         let allow = Allowlist::new(dir.clone());
         allow.record_pending("git status");
         allow.record_pending("git status");
-        let text = std::fs::read_to_string(dir.join(PENDING_FILE)).unwrap();
+        let text = std::fs::read_to_string(dir.join(EXEC_PENDING_FILE)).unwrap();
         let items: Value = serde_json::from_str(&text).unwrap();
         assert_eq!(items.as_array().unwrap().len(), 1);
         assert_eq!(items[0]["command"], "git status");

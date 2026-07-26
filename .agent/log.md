@@ -1360,3 +1360,20 @@
 - builtin speccify-exec.toml → `speccify-exec-mcp --port 8765`.
 - Offen (mit T5): 8765-Umschaltung im Betrieb + Server-Tab-Start/Stop.
   Nächster Schritt: T5 Parallels-Port + Playwright-Manifest.
+
+## 2026-07-25 (T5 Parallels-Port + Playwright)
+- Allowlist nach mcp-core gehoben (git mv), konfigurierbare Dateinamen
+  (with_files) + seed_if_absent; Exec nutzt sie unverändert, Harness
+  weiterhin 28/28. mcp-core bekam shlex-Dep.
+- `crates/parallels-mcp`: mac_to_vm_path, build_exec_argv (chcp/pushd/
+  dotnet-Vollpfad/list2cmdline-Quoting), run_prlctl mit injizierbarem
+  Runner (real = spawn+wait-timeout), 5 VM-Tools, eigene Allowlist
+  (parallels-*.json, Default dotnet build/test/run geseedet). CLI
+  http+stdio, --project/--vm/--home. 4 Tests. **Live-Smoke gegen echtes
+  prlctl: vm_list zeigt reale VM „Windows 11".**
+- builtin parallels-dotnet.toml → speccify-parallels-mcp --port 8766.
+  Playwright bleibt npx-stdio-Manifest (T2), Discovery liefert client_config.
+- Verifikation: cargo test 13 Suiten grün, clippy --workspace -D warnings
+  clean, Exec-Harness 28/28, Desktop baut.
+- Nächster Schritt: T6 Terminal-Seitenleiste (xterm.js + portable-pty,
+  Autostart-Command aus Settings). Offen: 8765/8766-Umschaltung + Server-Tab.

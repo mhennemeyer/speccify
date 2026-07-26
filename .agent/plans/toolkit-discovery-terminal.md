@@ -171,9 +171,20 @@ zeigt jetzt auf `speccify-exec-mcp --port 8765` (statt dotagent-CLI).
 [ ] **Umschaltung Port 8765 in Betrieb + Server-Tab** (Start/Stop via
 Supervisor) zusammen mit T5-Wrap; nie beide Server gleichzeitig auf 8765.
 
-### T5 — Parallels-Port + Playwright-Manifest (1 Tag)
-Parallels nach Rust (Port 8766, Allowlist-Semantik identisch);
-Playwright als verwaltetes Manifest (D3) inkl. Discovery-Eintrag.
+### T5 — Parallels-Port + Playwright-Manifest ✅ (2026-07-25)
+[x] `crates/parallels-mcp` (Port 8766): Rust-Port der dotagent-Referenz —
+`mac_to_vm_path` (`~/…`→`\\Mac\Home\…`), `build_exec_argv` (chcp 65001 +
+pushd + `dotnet`→Vollpfad, list2cmdline-Quoting), `run_prlctl` mit
+injizierbarem Runner (real: spawn+wait-timeout; Tests: Fake), Tools
+vm_list/vm_status/vm_start/vm_stop/vm_exec, eigene Allowlist
+(`parallels-allowlist.json`, Default `dotnet build/test/run…` geseedet).
+4 Unit-Tests + **Live-Smoke gegen echtes prlctl grün** (vm_list liefert die
+reale „Windows 11"-VM). Allowlist nach `mcp-core` gehoben (Exec+Parallels
+teilen sie; `with_files`/`seed_if_absent`) — Exec-Harness weiterhin 28/28.
+builtin `parallels-dotnet.toml` → `speccify-parallels-mcp --port 8766`.
+[x] Playwright: verwaltetes npx-Manifest (`playwright.toml`, stdio) steht
+seit T2; Discovery listet es mit `client_config` (command/args). Kein
+eigener Server nötig (D3).
 
 ### T6 — Terminal-Seitenleiste (1–2 Tage)
 Rechte Sidebar (ein-/ausklappbar), PTY (D5) im Working Dir; beim Öffnen
