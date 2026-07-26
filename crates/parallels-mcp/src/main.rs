@@ -41,8 +41,13 @@ fn main() {
         }
     }
 
+    // Ohne --project: Working Dir aus den App-Settings (so kann der
+    // Supervisor das builtin-Manifest ohne Argumente starten).
+    let project = project.or_else(settings_working_dir);
     let Some(project) = project else {
-        eprintln!("--project <root> ist erforderlich.");
+        eprintln!(
+            "--project <root> ist erforderlich (oder Working Dir in ~/.speccify/settings.json setzen)."
+        );
         std::process::exit(2);
     };
     let project_root = std::path::PathBuf::from(project);
@@ -110,10 +115,27 @@ fn real_runner(argv: &[String], timeout: f64) -> Result<RunOutput, RunError> {
     }
 }
 
+/// Working Dir aus `~/.speccify/settings.json` (gleiche Quelle wie
+/// Discovery); `~`-Pfade werden expandiert.
+fn settings_working_dir() -> Option<String> {
+    let home = std::env::var("HOME").ok()?;
+    let text = std::fs::read_to_string(std::path::Path::new(&home).join(".speccify/settings.json"))
+        .ok()?;
+    let value: serde_json::Value = serde_json::from_str(&text).ok()?;
+    let raw = value.get("working_dir")?.as_str()?;
+    let expanded = raw
+        .strip_prefix("~/")
+        .map(|rest| format!("{home}/{rest}"))
+        .unwrap_or_else(|| raw.to_string());
+    std::path::Path::new(&expanded).is_dir().then_some(expanded)
+}
+
+/// Lossy lesen (Windows-Output kann trotz chcp 65001 ungültiges UTF-8
+/// enthalten — Replacement-Chars statt Totalverlust).
 fn read_all<R: std::io::Read>(reader: Option<&mut R>) -> String {
-    let mut buffer = String::new();
+    let mut buffer = Vec::new();
     if let Some(reader) = reader {
-        let _ = reader.read_to_string(&mut buffer);
+        let _ = reader.read_to_end(&mut buffer);
     }
-    buffer
+    String::from_utf8_lossy(&buffer).into_owned()
 }

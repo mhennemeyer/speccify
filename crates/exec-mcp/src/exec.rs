@@ -97,12 +97,14 @@ pub fn run_command_result(command: &str, cwd: &Path, timeout: f64, max_output: u
     }
 }
 
+/// Lossy lesen (wie Python `errors="replace"`): ungültiges UTF-8 darf den
+/// Output nicht verwerfen — sonst verschwände z. B. das Ende eines Builds.
 fn read_to_string<R: Read>(reader: Option<&mut R>) -> String {
-    let mut buffer = String::new();
+    let mut buffer = Vec::new();
     if let Some(reader) = reader {
-        let _ = reader.read_to_string(&mut buffer);
+        let _ = reader.read_to_end(&mut buffer);
     }
-    buffer
+    String::from_utf8_lossy(&buffer).into_owned()
 }
 
 /// Live-Streaming: ruft `emit` je Ausgabezeile (`{"type":"line",…}`) und
