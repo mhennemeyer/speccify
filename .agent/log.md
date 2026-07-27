@@ -1454,3 +1454,14 @@
   komplett. Tag-Vorschlag an BO: v0.16.0-toolkit-discovery-terminal.
 - Verifikation: 13 Rust-Suiten + 6 Desktop-Tests grün, clippy clean,
   tsc+Vite grün, tauri build grün.
+
+## 2026-07-27 (Übergabeplan an iKanbanAi)
+- `~/Desktop/Work/iKanbanAi/.agent/plans/speccify-toolkit-integration.md`
+  angelegt (vollständige Einweisung ohne Speccify-Vorwissen): Server-
+  Tabelle mit Ports, Code-Befund drüben (nur Port-Kopplung, kein
+  Namens-Match — Umschaltung wire-transparent; ExecMCPConfig 8765/8766),
+  Discovery-Tool-Verträge mit Response-Shapes, ask_bo-Schema-Vertrag,
+  Stufen K0 (Verifikation) / K1 (Exec-Umschaltung, nur Texte) / K2
+  (Discovery-Client: globale Aktionen + mcp_list) / K3 (ask_bo-
+  Fixture-Test), 3 Open Questions. Datei drüben bewusst NICHT committet
+  (fremdes Repo — macht die iKanbanAi-Session).
