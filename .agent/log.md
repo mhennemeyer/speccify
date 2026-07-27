@@ -1440,3 +1440,17 @@
   sendet am Ende (leer = Empfehlung). Kurze Tastatur-Hints in den Karten;
   Buttons/Checkboxen tabIndex=-1 (Fokus bleibt auf der Karte).
 - Verifikation: tsc+Vite grün, tauri build grün.
+
+## 2026-07-27 (T8 Wrap-up — Toolkit-Plan abgeschlossen)
+- Server-Tab nativ: mcp_status (Toolbox-MCPs, Port-Probe, binary_found
+  mit PATH-Hinweis, client_config), Start/Stop via Supervisor mit
+  Live-Logs (proc-log), Config-Kopieren übers Clipboard-Plugin; stdio-
+  Server als „startet der Client"; dotagent-CLI + Spike-Panel entfernt.
+  http_port/probe_port/client_config in den toolbox-Crate gehoben,
+  Discovery entdoppelt.
+- docs/toolkit.md (Server-Tabelle, cargo install --path, Toolbox/
+  Aktionen, Cockpit, Agent-Flow) + README-Abschnitt Desktop/Toolkit.
+- Plan toolkit-discovery-terminal.md: T8 ✅, isActive false — T0–T8
+  komplett. Tag-Vorschlag an BO: v0.16.0-toolkit-discovery-terminal.
+- Verifikation: 13 Rust-Suiten + 6 Desktop-Tests grün, clippy clean,
+  tsc+Vite grün, tauri build grün.

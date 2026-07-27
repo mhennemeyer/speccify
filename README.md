@@ -98,6 +98,16 @@ Das Skript läuft niemals in CI — es greift aufs Netz zu. Ergebnis sind
 JSON-Einträge unter `tests/fixtures/llm-cache/`, die mit eingecheckt
 werden.
 
+## Desktop-App & Agent-Toolkit (`apps/desktop`, `crates/`)
+
+Die Tauri-2-Desktop-App „Speccify" bündelt Composer-Fenster, Toolbox,
+MCP-Server-Verwaltung, ein Agent-Terminal (Claude Code im Working Dir)
+und `ask_bo`-Entscheidungsfragen. Die Infrastruktur dahinter sind
+Rust-MCP-Server: Exec (:8765, Wire-Vertrag in
+[`docs/exec-mcp-contract.md`](docs/exec-mcp-contract.md)), Parallels
+(:8766), Discovery (:8767) und desktop-ui (:8768). Überblick und
+Workflows: [`docs/toolkit.md`](docs/toolkit.md).
+
 ## MCP-Server (`speccify-mcp`)
 
 Speccify bringt einen MCP-Server mit, der Coding-Agents (Claude Code,

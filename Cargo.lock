@@ -3461,6 +3461,7 @@ name = "speccify-toolbox"
 version = "0.0.0"
 dependencies = [
  "serde",
+ "serde_json",
  "toml 0.8.2",
 ]
 

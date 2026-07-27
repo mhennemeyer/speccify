@@ -1,10 +1,12 @@
-// Server: MCP-Server aus der Registry starten/stoppen (via CLI) +
-// P0.1-Spike: Rust-Supervisor mit Live-Log-Streaming über Tauri-Events.
+// Server: Toolbox-MCPs mit Laufzeitstatus (Port-Probe), Start/Stop über den
+// Rust-Supervisor und Client-Config zum Kopieren — komplett nativ (T8);
+// die dotagent-CLI ist hier raus.
 
 import { useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
-import { fetchServers, runDotagent } from "../lib/dotagent";
+import { writeText } from "@tauri-apps/plugin-clipboard-manager";
+import type { ToolboxManifest } from "../lib/toolbox";
 import {
   ActionButton,
   ErrorBox,
@@ -13,46 +15,93 @@ import {
   useAsync,
 } from "../components/ui";
 
-const SPIKE_ID = "spike-ticker";
+interface McpServerStatus {
+  manifest: ToolboxManifest;
+  port: number | null;
+  running: boolean | null;
+  binary_found: boolean;
+  client_config: unknown;
+  supervisor_id: string;
+}
+
+const fetchStatus = () => invoke<McpServerStatus[]>("mcp_status");
 
 export default function ServersView() {
-  const { data, loading, refreshing, error, reload } = useAsync(fetchServers, "servers");
+  const { data, loading, refreshing, error, reload } = useAsync(fetchStatus, "servers");
   const [actionError, setActionError] = useState<string | null>(null);
-  const [logs, setLogs] = useState<Record<string, string>>({});
-  const [configs, setConfigs] = useState<Record<string, string>>({});
+  // Von UNS gestartete Server (nur die können wir stoppen; extern
+  // gestartete zeigen „läuft (extern)").
+  const [startedIds, setStartedIds] = useState<Set<string>>(new Set());
+  const [logs, setLogs] = useState<Record<string, string[]>>({});
+  const [showConfig, setShowConfig] = useState<Record<string, boolean>>({});
   const [copied, setCopied] = useState<string | null>(null);
+  const unlistenRef = useRef<UnlistenFn | null>(null);
 
-  const servers = data?.servers ?? [];
+  // Supervisor-Logs der von uns gestarteten Server einsammeln.
+  useEffect(() => {
+    void listen<{ id: string; line: string }>("proc-log", (event) => {
+      if (!event.payload.id.startsWith("mcp-")) return;
+      setLogs((current) => ({
+        ...current,
+        [event.payload.id]: [
+          ...(current[event.payload.id] ?? []).slice(-60),
+          event.payload.line,
+        ],
+      }));
+    }).then((unlisten) => {
+      unlistenRef.current = unlisten;
+    });
+    return () => {
+      unlistenRef.current?.();
+    };
+  }, []);
 
-  const act = async (slug: string, action: "start" | "stop") => {
+  const start = async (server: McpServerStatus) => {
+    setActionError(null);
+    const run = server.manifest.run;
+    if (!run) return;
+    try {
+      setLogs((current) => ({ ...current, [server.supervisor_id]: [] }));
+      await invoke("spawn_process", {
+        id: server.supervisor_id,
+        command: run.command,
+        args: run.args,
+      });
+      setStartedIds((current) => new Set(current).add(server.supervisor_id));
+      // Port-Probe braucht einen Moment.
+      setTimeout(() => void reload(), 800);
+    } catch (e) {
+      setActionError(String(e));
+    }
+  };
+
+  const stop = async (server: McpServerStatus) => {
     setActionError(null);
     try {
-      await runDotagent(["mcp", action, slug]);
-      await reload();
+      await invoke("kill_process", { id: server.supervisor_id });
+      setStartedIds((current) => {
+        const next = new Set(current);
+        next.delete(server.supervisor_id);
+        return next;
+      });
+      setTimeout(() => void reload(), 500);
     } catch (e) {
       setActionError(String(e));
     }
   };
 
-  const showLogs = async (slug: string) => {
-    const output = await runDotagent(["mcp", "logs", slug, "-n", "20"]);
-    setLogs((prev) => ({ ...prev, [slug]: output }));
-  };
-
-  const showConfig = async (slug: string) => {
-    try {
-      const snippet = await runDotagent(["mcp", "client-config", slug]);
-      setConfigs((prev) => ({ ...prev, [slug]: snippet.trim() }));
-    } catch (e) {
-      setActionError(String(e));
-    }
-  };
-
-  const copyConfig = async (slug: string) => {
-    await navigator.clipboard.writeText(configs[slug]);
-    setCopied(slug);
+  const copyConfig = async (server: McpServerStatus) => {
+    const snippet = JSON.stringify(
+      { [server.manifest.slug]: server.client_config },
+      null,
+      2,
+    );
+    await writeText(snippet);
+    setCopied(server.manifest.slug);
     setTimeout(() => setCopied(null), 1500);
   };
+
+  const servers = data ?? [];
 
   return (
     <div className="space-y-6">
@@ -66,146 +115,125 @@ export default function ServersView() {
           Aktualisieren
         </ActionButton>
         {refreshing && <Spinner />}
+        <span className="text-xs text-slate-400">
+          Quelle: Toolbox-Manifeste · Start/Stop über den App-Supervisor
+        </span>
       </div>
 
       <LoadingBoundary loading={loading} error={error} label="Server werden geladen…">
         <section className="space-y-3">
-          {servers.map((s) => (
-            <article
-              key={s.slug}
-              className="rounded-lg border border-slate-200 bg-white p-4"
-            >
-              <div className="flex items-center gap-3">
-                <span
-                  className={`h-2.5 w-2.5 rounded-full ${
-                    s.running ? "bg-green-500" : "bg-slate-300"
-                  }`}
-                />
-                <h3 className="font-medium text-slate-900">{s.name}</h3>
-                <span className="text-xs text-slate-400">
-                  {s.slug}
-                  {s.pid ? ` · PID ${s.pid}` : ""}
-                </span>
-                <div className="ml-auto flex gap-2">
-                  <ActionButton
-                    onClick={() => act(s.slug, s.running ? "stop" : "start")}
-                    className={
-                      s.running
-                        ? "bg-red-600 text-white hover:bg-red-500"
-                        : "bg-green-600 text-white hover:bg-green-500"
+          {servers.map((server) => {
+            const startedByUs = startedIds.has(server.supervisor_id);
+            const isHttp = server.manifest.run?.transport === "http";
+            const serverLogs = logs[server.supervisor_id];
+            return (
+              <article
+                key={server.manifest.slug}
+                className="rounded-lg border border-slate-200 bg-white p-4"
+              >
+                <div className="flex items-center gap-3">
+                  <span
+                    className={`h-2.5 w-2.5 rounded-full ${
+                      server.running ? "bg-green-500" : "bg-slate-300"
+                    }`}
+                    title={
+                      server.running === null
+                        ? "stdio — wird vom Client gestartet"
+                        : server.running
+                          ? "läuft"
+                          : "gestoppt"
                     }
-                  >
-                    {s.running ? "Stop" : "Start"}
-                  </ActionButton>
-                  <ActionButton onClick={() => showLogs(s.slug)}>Logs</ActionButton>
-                  <ActionButton onClick={() => showConfig(s.slug)}>
-                    Client-Config
-                  </ActionButton>
-                </div>
-              </div>
-              {logs[s.slug] !== undefined && (
-                <pre className="mt-3 max-h-40 overflow-auto rounded bg-slate-900 p-3 text-xs text-slate-100">
-                  {logs[s.slug] || "(leer)"}
-                </pre>
-              )}
-              {configs[s.slug] !== undefined && (
-                <div className="mt-3">
-                  <div className="mb-1 flex items-center justify-between">
-                    <span className="text-xs text-slate-500">
-                      Snippet für <code>.mcp.json</code> (Claude Code) u. a. MCP-Clients
-                    </span>
-                    <button
-                      onClick={() => copyConfig(s.slug)}
-                      className="rounded bg-slate-800 px-2 py-0.5 text-xs text-white hover:bg-slate-700"
+                  />
+                  <h3 className="font-medium text-slate-900">{server.manifest.name}</h3>
+                  <span className="text-xs text-slate-400">
+                    {server.manifest.slug}
+                    {server.port ? ` · :${server.port}` : " · stdio"}
+                    {server.running && !startedByUs ? " · läuft (extern)" : ""}
+                  </span>
+                  <div className="ml-auto flex gap-2">
+                    {isHttp ? (
+                      startedByUs ? (
+                        <ActionButton
+                          onClick={() => stop(server)}
+                          className="bg-red-600 text-white hover:bg-red-500"
+                        >
+                          Stop
+                        </ActionButton>
+                      ) : (
+                        <ActionButton
+                          onClick={() => start(server)}
+                          className="bg-green-600 text-white hover:bg-green-500"
+                          title={
+                            server.binary_found
+                              ? undefined
+                              : "Binary nicht im PATH — siehe docs/toolkit.md"
+                          }
+                        >
+                          Start
+                        </ActionButton>
+                      )
+                    ) : (
+                      <span className="self-center text-xs text-slate-400">
+                        stdio — startet der Client
+                      </span>
+                    )}
+                    <ActionButton
+                      onClick={async () =>
+                        setShowConfig((current) => ({
+                          ...current,
+                          [server.manifest.slug]: !current[server.manifest.slug],
+                        }))
+                      }
                     >
-                      {copied === s.slug ? "✓ kopiert" : "Kopieren"}
-                    </button>
+                      Client-Config
+                    </ActionButton>
                   </div>
-                  <pre className="max-h-40 overflow-auto rounded bg-slate-900 p-3 text-xs text-sky-200">
-                    {configs[s.slug]}
-                  </pre>
                 </div>
-              )}
-            </article>
-          ))}
+
+                {!server.binary_found && server.manifest.run ? (
+                  <p className="mt-2 text-xs text-amber-600">
+                    ⚠ <code>{server.manifest.run.command}</code> nicht im PATH — im
+                    Speccify-Repo <code>cargo install --path crates/…</code> ausführen
+                    (siehe docs/toolkit.md).
+                  </p>
+                ) : null}
+
+                {showConfig[server.manifest.slug] && server.client_config ? (
+                  <div className="mt-3">
+                    <div className="mb-1 flex items-center justify-between">
+                      <span className="text-xs text-slate-500">
+                        Snippet für <code>.mcp.json</code> (Claude Code) u. a. MCP-Clients
+                      </span>
+                      <button
+                        onClick={() => void copyConfig(server)}
+                        className="rounded bg-slate-800 px-2 py-0.5 text-xs text-white hover:bg-slate-700"
+                      >
+                        {copied === server.manifest.slug ? "✓ kopiert" : "Kopieren"}
+                      </button>
+                    </div>
+                    <pre className="max-h-40 overflow-auto rounded bg-slate-900 p-3 text-xs text-sky-200">
+                      {JSON.stringify(
+                        { [server.manifest.slug]: server.client_config },
+                        null,
+                        2,
+                      )}
+                    </pre>
+                  </div>
+                ) : null}
+
+                {serverLogs !== undefined && serverLogs.length > 0 ? (
+                  <pre className="mt-3 max-h-40 overflow-auto rounded bg-slate-900 p-3 text-xs text-slate-100">
+                    {serverLogs.join("\n")}
+                  </pre>
+                ) : null}
+              </article>
+            );
+          })}
           {servers.length === 0 && (
-            <p className="text-slate-500">Keine MCP-Server in der Registry.</p>
+            <p className="text-slate-500">Keine MCP-Server in der Toolbox.</p>
           )}
         </section>
       </LoadingBoundary>
-
-      <SpikePanel />
     </div>
-  );
-}
-
-/** P0.1-Akzeptanz: Spawn → Live-Log-Stream → Kill, rein über den Rust-Supervisor. */
-function SpikePanel() {
-  const [lines, setLines] = useState<string[]>([]);
-  const [running, setRunning] = useState(false);
-  const [starting, setStarting] = useState(false);
-  const unlistenRef = useRef<UnlistenFn | null>(null);
-
-  useEffect(() => {
-    return () => {
-      unlistenRef.current?.();
-      invoke("kill_process", { id: SPIKE_ID }).catch(() => {});
-    };
-  }, []);
-
-  const start = async () => {
-    setStarting(true);
-    setLines([]);
-    try {
-      unlistenRef.current = await listen<{ id: string; line: string }>(
-        "proc-log",
-        (event) => {
-          if (event.payload.id !== SPIKE_ID) return;
-          setLines((prev) => [...prev.slice(-100), event.payload.line]);
-        },
-      );
-      await invoke("spawn_process", {
-        id: SPIKE_ID,
-        command: "/bin/sh",
-        args: [
-          "-c",
-          'i=0; while true; do i=$((i+1)); echo "tick $i"; sleep 1; done',
-        ],
-      });
-      setRunning(true);
-    } finally {
-      setStarting(false);
-    }
-  };
-
-  const stop = async () => {
-    await invoke("kill_process", { id: SPIKE_ID });
-    unlistenRef.current?.();
-    unlistenRef.current = null;
-    setRunning(false);
-  };
-
-  return (
-    <section className="rounded-lg border border-dashed border-slate-300 p-4">
-      <div className="flex items-center gap-3">
-        <h3 className="font-medium text-slate-700">
-          P0.1-Spike: Rust-Supervisor (Spawn / Stream / Kill)
-        </h3>
-        <button
-          onClick={running ? stop : start}
-          disabled={starting}
-          className={`ml-auto rounded px-3 py-1 text-sm text-white disabled:opacity-60 ${
-            running ? "bg-red-600 hover:bg-red-500" : "bg-slate-800 hover:bg-slate-700"
-          }`}
-        >
-          {starting ? <Spinner /> : running ? "Ticker stoppen" : "Ticker starten"}
-        </button>
-      </div>
-      {lines.length > 0 && (
-        <pre className="mt-3 max-h-32 overflow-auto rounded bg-slate-900 p-3 text-xs text-green-300">
-          {lines.join("\n")}
-        </pre>
-      )}
-    </section>
   );
 }

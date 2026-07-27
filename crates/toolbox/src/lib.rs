@@ -232,6 +232,57 @@ pub fn load_all(
     (merged, warnings)
 }
 
+// --- MCP-Utilities (geteilt von Discovery-MCP und Desktop-Server-Tab) ---------
+
+/// Bekannte HTTP-Ports der builtin-Server (Fallback, wenn im Manifest kein
+/// `--port`-Argument steht).
+pub const KNOWN_HTTP_PORTS: &[(&str, u16)] = &[
+    ("speccify-exec", 8765),
+    ("parallels-dotnet", 8766),
+    ("speccify-discovery", 8767),
+];
+
+/// HTTP-Port eines MCP-Manifests: `--port <n>` aus den run-Args, sonst
+/// bekannter Default je Slug.
+pub fn http_port(manifest: &Manifest) -> Option<u16> {
+    let run = manifest.run.as_ref()?;
+    if run.transport != "http" {
+        return None;
+    }
+    if let Some(index) = run.args.iter().position(|arg| arg == "--port")
+        && let Some(port) = run.args.get(index + 1).and_then(|raw| raw.parse().ok())
+    {
+        return Some(port);
+    }
+    KNOWN_HTTP_PORTS
+        .iter()
+        .find(|(slug, _)| *slug == manifest.slug)
+        .map(|(_, port)| *port)
+}
+
+/// Nimmt der Port gerade Verbindungen an? (Laufzeitstatus für http-Server.)
+pub fn probe_port(port: u16) -> bool {
+    std::net::TcpStream::connect_timeout(
+        &std::net::SocketAddr::from(([127, 0, 0, 1], port)),
+        std::time::Duration::from_millis(150),
+    )
+    .is_ok()
+}
+
+/// Fertiges `.mcp.json`-Fragment für einen Manifest-Eintrag (http → URL,
+/// sonst command/args für stdio).
+pub fn client_config(manifest: &Manifest) -> Option<serde_json::Value> {
+    let run = manifest.run.as_ref()?;
+    if run.transport == "http" {
+        let port = http_port(manifest)?;
+        return Some(serde_json::json!({
+            "type": "http",
+            "url": format!("http://127.0.0.1:{port}"),
+        }));
+    }
+    Some(serde_json::json!({"command": run.command, "args": run.args}))
+}
+
 // --- Scaffold ------------------------------------------------------------------
 
 const MANIFEST_TEMPLATE: &str = r#"kind        = "{kind}"

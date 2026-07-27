@@ -1,8 +1,13 @@
 ---
-isActive: true
+isActive: false
 ---
 
 # Plan: Toolkit-Vollausbau — Discovery, MCPs, Toolbox & Agent-Terminal
+
+> **Abgeschlossen 2026-07-27** — T0–T8 geliefert (inkl. BO-Findings aus
+> dem Dogfooding). Offene Anschlüsse: iKanbanAi-Anbindung an Discovery
+> (clientseitig, drüben), Rust-Plan-Reststufen R3/R5 (System-CLI,
+> Distribution) nach Dogfooding, Windows-Terminal später.
 
 **Angelegt 2026-07-25 nach BO-Zielvorgabe** („bevor wir Composer/Specs
 weiter schärfen, den anderen Teil zu Ende bringen — iKanbanAi wartet").
@@ -220,10 +225,21 @@ speccify-desktop-ui. Schema-Vertrag: Event-/Antwort-Felder 1:1 wie
 iKanbanAi (`selectedOptions`/`fieldValues`-Semantik); Abgleich drüben
 bei der iKanbanAi-Anbindung.
 
-### T8 — Wrap-up
-Doku (`docs/toolkit.md`: Toolbox-Format, Discovery-Vertrag, Terminal),
-dev-up unverändert; Tag-Vorschlag; Rust-Plan-Reststufen (System-CLI,
-Distribution) neu bewerten.
+### T8 — Wrap-up ✅ (2026-07-27)
+[x] Server-Tab nativ: `mcp_status`-Command (Toolbox-MCPs + Port-Probe +
+`binary_found` + client_config), Start/Stop über den App-Supervisor
+(Logs live via proc-log), Client-Config-Kopieren; stdio-Server als
+„startet der Client" markiert; dotagent-CLI + P0.1-Spike-Panel raus.
+Geteilte Utils (`http_port`/`probe_port`/`client_config`) in den
+toolbox-Crate gehoben (Discovery nutzt sie mit).
+[x] `docs/toolkit.md` (Server-Tabelle mit Ports, Binaries installieren,
+Toolbox-/Aktions-Format, App-Cockpit, typischer Agent-Flow) +
+README-Abschnitt „Desktop-App & Agent-Toolkit".
+[x] Tag-Vorschlag an BO: `v0.16.0-toolkit-discovery-terminal`.
+Reststufen des Rust-Plans (System-CLI R3, Distribution R5) bleiben dort
+notiert und werden nach iKanbanAi-Anbindung + BO-Dogfooding neu bewertet.
+**Damit ist dieser Plan abgeschlossen** (BO-Findings aus dem Dogfooding
+eingearbeitet: Terminal-Copy/Paste, ask_bo-Zustellung robust, Tastatur).
 
 ## Open Questions (Runde 1 — bitte kurz beantworten)
 

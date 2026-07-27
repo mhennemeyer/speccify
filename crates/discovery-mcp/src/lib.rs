@@ -5,23 +5,15 @@
 //! Tools: `mcp_list`, `tools_list`, `actions_propose`, `scaffold`.
 //! Aktionen-Format: `schema/actions.schema.json` (iKanbanAi-kompatibel).
 
-use std::net::TcpStream;
 use std::path::{Path, PathBuf};
-use std::time::Duration;
 
 use serde_json::{Map, Value, json};
 use speccify_mcp_core::{ToolServer, error_result, text_result};
-use speccify_toolbox::{Manifest, load_all, scaffold as scaffold_manifest};
+use speccify_toolbox::{
+    Manifest, client_config, http_port, load_all, probe_port, scaffold as scaffold_manifest,
+};
 
 pub const DEFAULT_PORT: u16 = 8767;
-
-/// Bekannte HTTP-Ports der builtin-Server (Fallback, wenn im Manifest
-/// kein `--port`-Argument steht).
-const KNOWN_PORTS: &[(&str, u16)] = &[
-    ("speccify-exec", 8765),
-    ("parallels-dotnet", 8766),
-    ("speccify-discovery", DEFAULT_PORT),
-];
 
 pub struct DiscoveryMcp {
     /// Working Dir (Settings der Desktop-App bzw. `--working-dir`).
@@ -89,10 +81,7 @@ impl DiscoveryMcp {
             .iter()
             .filter(|manifest| manifest.kind == "mcp")
             .map(|manifest| {
-                let port = manifest
-                    .run
-                    .as_ref()
-                    .and_then(|run| http_port(manifest, run));
+                let port = http_port(manifest);
                 let running = port.map(probe_port);
                 let url = port.map(|port| format!("http://127.0.0.1:{port}"));
                 json!({
@@ -318,41 +307,6 @@ fn write_actions(path: &Path, actions: &[Value]) -> Result<(), String> {
     let json =
         serde_json::to_string_pretty(&Value::Array(actions.to_vec())).map_err(|e| e.to_string())?;
     std::fs::write(path, json + "\n").map_err(|e| format!("{}: {e}", path.display()))
-}
-
-/// HTTP-Port eines MCP-Manifests: `--port <n>` aus den run-Args, sonst
-/// bekannter Default je Slug.
-fn http_port(manifest: &Manifest, run: &speccify_toolbox::RunSpec) -> Option<u16> {
-    if run.transport != "http" {
-        return None;
-    }
-    if let Some(index) = run.args.iter().position(|arg| arg == "--port")
-        && let Some(port) = run.args.get(index + 1).and_then(|raw| raw.parse().ok())
-    {
-        return Some(port);
-    }
-    KNOWN_PORTS
-        .iter()
-        .find(|(slug, _)| *slug == manifest.slug)
-        .map(|(_, port)| *port)
-}
-
-fn probe_port(port: u16) -> bool {
-    TcpStream::connect_timeout(
-        &std::net::SocketAddr::from(([127, 0, 0, 1], port)),
-        Duration::from_millis(150),
-    )
-    .is_ok()
-}
-
-/// Fertiges `.mcp.json`-Fragment für einen Manifest-Eintrag.
-fn client_config(manifest: &Manifest) -> Option<Value> {
-    let run = manifest.run.as_ref()?;
-    if run.transport == "http" {
-        let port = http_port(manifest, run)?;
-        return Some(json!({"type": "http", "url": format!("http://127.0.0.1:{port}")}));
-    }
-    Some(json!({"command": run.command, "args": run.args}))
 }
 
 #[cfg(test)]

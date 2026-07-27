@@ -43,7 +43,7 @@ struct ExitEvent {
 /// PATH um Standard-Install-Orte erweitern. GUI-Apps erben auf macOS nur
 /// den Minimal-PATH (/usr/bin:/bin:…) — ohne Anreicherung sehen die
 /// CLI-Subprozesse weder Homebrew noch pipx.
-fn augmented_path() -> std::ffi::OsString {
+pub(crate) fn augmented_path() -> std::ffi::OsString {
     let home = std::env::var("HOME").unwrap_or_default();
     let extras = [
         "/opt/homebrew/bin".to_string(),
@@ -326,6 +326,7 @@ pub fn run() {
             settings::create_briefing_file,
             toolbox_cmd::toolbox_list,
             toolbox_cmd::toolbox_scaffold,
+            toolbox_cmd::mcp_status,
             terminal::terminal_open,
             terminal::terminal_write,
             terminal::terminal_resize,
