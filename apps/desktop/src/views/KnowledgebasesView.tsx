@@ -3,7 +3,7 @@
 
 import { useState } from "react";
 import { openPath } from "@tauri-apps/plugin-opener";
-import { fetchKnowledgebases, type Knowledgebase } from "../lib/dotagent";
+import { fetchKnowledgebases, type Knowledgebase } from "../lib/system";
 import { ActionButton, LoadingBoundary, Spinner, useAsync } from "../components/ui";
 
 export default function KnowledgebasesView() {

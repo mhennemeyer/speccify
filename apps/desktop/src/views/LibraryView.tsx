@@ -1,9 +1,8 @@
 // Bibliothek: Toolbox-Manifeste (Tools / MCPs / KBs) mit Tag-Filter und
-// Requirements-Badges — nativ aus dem Rust-Kern (T2); Doctor-Befunde
-// weiterhin über die dotagent-CLI, bis die Rust-CLI sie ersetzt.
+// Requirements-Badges — komplett nativ aus dem Rust-Kern (T2 + R3).
 
 import { useMemo, useState } from "react";
-import { fetchDoctor } from "../lib/dotagent";
+import { fetchDoctor } from "../lib/system";
 import {
   fetchToolbox,
   scaffoldManifest,

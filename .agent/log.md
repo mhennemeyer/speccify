@@ -1465,3 +1465,22 @@
   (Discovery-Client: globale Aktionen + mcp_list) / K3 (ask_bo-
   Fixture-Test), 3 Open Questions. Datei drüben bewusst NICHT committet
   (fremdes Repo — macht die iKanbanAi-Session).
+
+## 2026-07-27 (R3 — dotagent komplett abgelöst)
+- Zuschnitt: statt separatem Rust-CLI (Name `speccify` gehört der Python-
+  Spec-Engine) sind die letzten dotagent-Funktionen native Tauri-Commands:
+  system_cmd.rs mit doctor (Check-Liste bereinigt: pipx/dotagent raus,
+  Claude Code rein; PATH+Well-Known, Symlink-Dedup, parallele Probes,
+  Versions-Regex handgerollt), python_list/python_install (uv, Minors
+  3.11–3.14), kb_list (chunks.json + faiss-Größe + books/<kb>/-Pfad-
+  Auflösung; Format 1:1).
+- run_dotagent/find_dotagent/DOTAGENT_BIN aus lib.rs entfernt;
+  lib/dotagent.ts gelöscht → lib/system.ts (invoke); Views umgestellt.
+- **Paritätstest** kb_list_matches_dotagent_reference (#[ignore], manuell)
+  grün gegen die echten 6 KBs (Name/Books/Chunks/Titel identisch);
+  doctor/kb-Shape-Tests laufen in der normalen Suite (9 Desktop-Tests).
+- App-README neu (ohne CLI-Bridge), toolkit.md-Kopf: „Speccify ruft
+  dotagent nirgends mehr auf". Rust-Plan R3 abgehakt — offen bleibt nur
+  R5 (Signing/Notarisierung/Updater), danach dotagent archivieren.
+- Verifikation: cargo test 9+1(ignored) grün, clippy/fmt clean, tsc+Vite
+  grün, tauri build grün.

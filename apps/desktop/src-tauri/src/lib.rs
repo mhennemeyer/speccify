@@ -11,6 +11,7 @@ use tauri::{AppHandle, Emitter, Manager, State};
 
 mod desktop_ui;
 mod settings;
+mod system_cmd;
 mod terminal;
 mod toolbox_cmd;
 
@@ -61,37 +62,6 @@ pub(crate) fn augmented_path() -> std::ffi::OsString {
         }
     }
     std::env::join_paths(dirs).unwrap_or(current)
-}
-
-/// dotagent-CLI auffinden: `DOTAGENT_BIN` > angereicherter PATH.
-/// Windows-Discovery folgt in Step 2+.
-fn find_dotagent() -> Option<PathBuf> {
-    if let Ok(bin) = std::env::var("DOTAGENT_BIN") {
-        let path = PathBuf::from(bin);
-        if path.is_file() {
-            return Some(path);
-        }
-    }
-    std::env::split_paths(&augmented_path())
-        .map(|dir| dir.join("dotagent"))
-        .find(|candidate| candidate.is_file())
-}
-
-/// Einzige CLI-Bridge der App: führt `dotagent <args>` aus und liefert stdout.
-#[tauri::command]
-fn run_dotagent(args: Vec<String>) -> Result<String, String> {
-    let bin = find_dotagent()
-        .ok_or("dotagent-CLI nicht gefunden (PATH, ~/.local/bin oder DOTAGENT_BIN prüfen)")?;
-    let output = Command::new(&bin)
-        .args(&args)
-        .env("PATH", augmented_path())
-        .output()
-        .map_err(|e| format!("{}: {e}", bin.display()))?;
-    if output.status.success() {
-        String::from_utf8(output.stdout).map_err(|e| e.to_string())
-    } else {
-        Err(String::from_utf8_lossy(&output.stderr).into_owned())
-    }
 }
 
 fn stream_reader(app: AppHandle, id: String, reader: impl BufRead + Send + 'static) {
@@ -316,7 +286,6 @@ pub fn run() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
-            run_dotagent,
             spawn_process,
             kill_process,
             open_composer,
@@ -327,6 +296,10 @@ pub fn run() {
             toolbox_cmd::toolbox_list,
             toolbox_cmd::toolbox_scaffold,
             toolbox_cmd::mcp_status,
+            system_cmd::doctor,
+            system_cmd::python_list,
+            system_cmd::python_install,
+            system_cmd::kb_list,
             terminal::terminal_open,
             terminal::terminal_write,
             terminal::terminal_resize,

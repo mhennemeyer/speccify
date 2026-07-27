@@ -181,15 +181,24 @@ P0–P6 der Speccify-Roadmap laufen unabhängig weiter)
 3.  iKanbanAi-Aktionsliste als erster Discovery-Client — Sync-Semantik
     zwischen lokalem Store und Discovery klären.
 
-### R3 — System-CLI & App-Umstellung (1–2 Tage)
-> App-Übernahme + Composer-Fenster sind in den vorgezogenen Plan
-> [`desktop-app-und-composer.md`](./desktop-app-und-composer.md)
-> gewandert (A0/A1). Hier bleibt der Rust-Rest:
-1.  Rust-CLI `speccify` (mcp start/stop/list, env doctor) ersetzt die
-    von der App genutzten dotagent-CLI-Funktionen (`run_dotagent`-Bridge
-    der App wird umgestellt) — damit stirbt der pipx-Snapshot-Workflow
-    von dotagent.
-2.  Server-Tab verwaltet die Rust-MCPs + speccify-mcp (Python).
+### R3 — App-Umstellung ✅ (2026-07-27) — dotagent funktional abgelöst
+> Zuschnitt angepasst: statt eines separaten Rust-CLI-Binarys (der Name
+> `speccify` gehört der Python-Spec-Engine) sind die letzten dotagent-
+> Funktionen **native Tauri-Commands** geworden; Server-Start/Stop und
+> mcp_list waren schon nativ (Toolkit-Plan T8/T3).
+1.  [x] `system_cmd.rs`: `doctor` (Check-Liste bereinigt: pipx/dotagent
+    raus, Claude Code rein; PATH+Well-Known-Suche, Symlink-Dedup,
+    parallele Version-Probes), `python_list`/`python_install` (uv),
+    `kb_list` (liest `~/Knowledgebase/*/data/chunks.json` + faiss-Größe +
+    Buch-Pfad-Auflösung). JSON-Formate 1:1 wie `dotagent … --json`;
+    **Paritätstest gegen die Referenz grün** (`kb_list_matches_dotagent_
+    reference`, #[ignore], 6 echte KBs byte-gleich in Name/Books/Chunks/
+    Titeln). `run_dotagent`/`find_dotagent`/`DOTAGENT_BIN` entfernt,
+    `lib/dotagent.ts` → `lib/system.ts` (invoke-basiert).
+2.  [x] Server-Tab verwaltet die Rust-MCPs (Toolkit-T8); speccify-mcp
+    (Python, stdio) wird vom Client gestartet.
+> **dotagent wird von Speccify nicht mehr aufgerufen.** Das Repo bleibt
+> nur noch als Kontrakt-Referenz (Diff-Harness, Paritätstests) bis R5.
 
 ### R5 — Distribution ohne Store (später)
 Developer-ID-Signing + Notarisierung, Tauri-Updater, Download-Seite auf

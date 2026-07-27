@@ -7,7 +7,7 @@ import {
   installPython,
   type DoctorCheck,
   type PythonsInfo,
-} from "../lib/dotagent";
+} from "../lib/system";
 import {
   ActionButton,
   ErrorBox,

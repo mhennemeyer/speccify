@@ -1,35 +1,32 @@
 # Speccify Desktop (Tauri 2)
 
-Desktop-App über der `dotagent`-CLI — übernommen aus dotagent
-`app/dashboard` (Commit `2949d1d`) per BO-Entscheidung 2026-07-24;
-Plan: [`.agent/plans/desktop-app-und-composer.md`](../../.agent/plans/desktop-app-und-composer.md).
-Die CLI-Bridge zeigt bis zur Rust-Migration
-([`rust-neustart-toolkit-mcps.md`](../../.agent/plans/rust-neustart-toolkit-mcps.md))
-weiter auf die installierte dotagent-CLI.
+Desktop-Cockpit für Speccify: Composer-Fenster, Toolbox, MCP-Server,
+Agent-Terminal, ask_bo. Ursprünglich aus dotagent `app/dashboard`
+übernommen (Commit `2949d1d`) — **seit R3 komplett ohne dotagent**:
+alle Daten kommen aus nativen Rust-Commands bzw. den Speccify-MCPs.
+Pläne: [`desktop-app-und-composer.md`](../../.agent/plans/desktop-app-und-composer.md),
+[`toolkit-discovery-terminal.md`](../../.agent/plans/toolkit-discovery-terminal.md);
+Überblick: [`docs/toolkit.md`](../../docs/toolkit.md).
 
 ## Architektur
 
-*   **CLI-Bridge:** Alle Daten kommen über den Tauri-Command `run_dotagent(args)`,
-    der `dotagent … --json` als Subprocess aufruft (`src-tauri/src/lib.rs`).
-    CLI-Discovery: `DOTAGENT_BIN`-Env-Var → angereicherter `PATH`
-    (Homebrew, `~/.local/bin`, `~/.cargo/bin`).
+*   **Native Commands** (`src-tauri/src/`): `toolbox_cmd` (Manifeste,
+    Scaffold, MCP-Status), `system_cmd` (Doctor, Python via uv,
+    Knowledgebases), `settings` (Working Dir, Einweisungs-Dateien),
+    `terminal` (PTY), `desktop_ui` (ask_bo-MCP :8768).
 *   **Prozess-Supervisor:** `spawn_process`/`kill_process` starten Prozesse
-    Rust-seitig, streamen stdout/stderr zeilenweise als `proc-log`-Events in
-    die UI und killen alle Kinder beim App-Quit (Drop des Supervisor-State).
-    Wird in Stufe A1 auch die `speccify-web-backend`-Instanzen der
-    Composer-Fenster verwalten.
-*   **Views:** Bibliothek (`registry list --json` mit Tag-Filter), Umgebung
-    (`doctor --json` + Python-Verwaltung), Server (`mcp list/start/stop/logs`
-    + Supervisor-Panel), Knowledgebases (`kb kbs --json`).
+    Rust-seitig (MCP-Server im Server-Tab, `speccify-web-backend` je
+    Composer-Fenster), streamen Logs als `proc-log`-Events und killen alle
+    Kinder beim App-Quit.
+*   **Views:** Composer (Fenster öffnen), Bibliothek (Toolbox), Server
+    (MCPs Start/Stop + Client-Config), Umgebung (Doctor + Python),
+    Knowledgebases, Settings; rechte Sidebar: ask_bo-Fragen + Terminal.
 
 ## Entwicklung
 
 ```bash
 pnpm install                      # im Repo-Root (Workspace)
 pnpm run desktop:dev              # tauri dev (Frontend :1420)
-
-# Mit einer bestimmten dotagent-CLI statt der aus dem PATH:
-DOTAGENT_BIN=~/Desktop/Work/Articles/dotagent/.venv/bin/dotagent pnpm run desktop:dev
 ```
 
 Rust-Seite: `apps/desktop/src-tauri` ist Member des Root-Cargo-Workspace

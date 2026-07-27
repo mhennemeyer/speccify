@@ -3,8 +3,9 @@
 Der Infrastruktur-Workstream aus
 [`toolkit-discovery-terminal.md`](../.agent/plans/toolkit-discovery-terminal.md):
 Rust-MCP-Server + Toolbox als Fundament, die Desktop-App als Cockpit.
-Herkunft: Rust-Neustart der dotagent-Referenz (Commit `2949d1d`, bleibt
-Referenz bis zur Archivierung).
+Herkunft: Rust-Neustart der dotagent-Referenz (Commit `2949d1d`). Seit R3
+ruft Speccify dotagent nirgends mehr auf — das Repo dient nur noch als
+Kontrakt-Referenz (Diff-Harness/Paritätstests) bis zur Archivierung nach R5.
 
 ## Die Server auf einen Blick
 
