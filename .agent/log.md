@@ -1413,3 +1413,19 @@
 - Offen: BO-E2E (Terminal-Agent ruft ask_bo → Sidebar), iKanbanAi-
   Schema-Abgleich drüben. Nächster Schritt: T8 Wrap-up (docs/toolkit.md,
   Server-Tab, Tag-Vorschlag).
+
+## 2026-07-27 (BO-Findings: Terminal-Copy + ask_bo-Robustheit)
+- Finding 1 (Kopieren): ⌘C kopiert die xterm-Selektion, ⌘V fügt ein —
+  attachCustomKeyEventHandler + Tauri-Clipboard-Plugin (WKWebView-sicher;
+  navigator.clipboard ist dort unzuverlässig). Ohne Selektion bleibt ⌘C
+  unangetastet, ^C bleibt SIGINT. Capability clipboard-manager read/write.
+- Finding 2 (ask_bo-UI kam nicht): Ursache nicht eindeutig reproduzierbar
+  (Kandidaten: zweite App-Instanz hielt Port 8768, oder verpasstes Event).
+  Strukturell abgesichert statt geflickt: (a) tauri-plugin-single-instance
+  (als erstes Plugin registriert) — Doppel-Instanz-Klasse eliminiert;
+  (b) Registry speichert Event-Payloads, neuer Command ask_bo_pending —
+  die UI holt offene Fragen beim Mount UND alle 5s aktiv ab (Events nur
+  noch Beschleuniger, nicht Träger); Event-Handler dedupliziert per id.
+  Tests erweitert (pending vor/nach Antwort).
+- Verifikation: cargo test 6 grün, clippy/fmt clean, tsc+Vite grün,
+  tauri build grün. BO-Re-Test des ask_bo-Flows offen.

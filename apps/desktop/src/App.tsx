@@ -37,10 +37,34 @@ export default function App() {
   };
 
   useEffect(() => {
+    // Offene Fragen zusätzlich AKTIV abholen (Events sind flüchtig:
+    // Reload/HMR/Race beim Start — BO-Finding: UI zeigte ask_bo nicht).
+    const mergePending = async () => {
+      try {
+        const pending = await invoke<AskBoInteraction[]>("ask_bo_pending");
+        if (pending.length === 0) return;
+        setInteractions((current) => {
+          const known = new Set(current.map((interaction) => interaction.id));
+          const fresh = pending.filter((interaction) => !known.has(interaction.id));
+          if (fresh.length === 0) return current;
+          setSidebarVisible(true);
+          return [...current, ...fresh];
+        });
+      } catch {
+        // Command noch nicht bereit (App-Start) — nächster Tick.
+      }
+    };
+    void mergePending();
+    const pollTimer = setInterval(() => void mergePending(), 5000);
+
     const unlistenPromises = [
       // Neue Agent-Frage: in die Liste + Sidebar automatisch öffnen.
       listen<AskBoInteraction>("ask-bo", (event) => {
-        setInteractions((current) => [...current, { ...event.payload }]);
+        setInteractions((current) =>
+          current.some((interaction) => interaction.id === event.payload.id)
+            ? current
+            : [...current, { ...event.payload }],
+        );
         setSidebarVisible(true);
       }),
       // Beantwortet (egal von wo): Element einfrieren.
@@ -64,6 +88,7 @@ export default function App() {
       ),
     ];
     return () => {
+      clearInterval(pollTimer);
       unlistenPromises.forEach((promise) => void promise.then((unlisten) => unlisten()));
     };
   }, []);

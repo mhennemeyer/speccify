@@ -26,6 +26,9 @@ pub struct Answer {
 }
 
 struct Entry {
+    /// Event-Payload inkl. `id` — damit die UI offene Fragen auch AKTIV
+    /// nachladen kann (Events sind flüchtig: Reload/HMR/verpasster Start).
+    payload: Value,
     answer: Option<Answer>,
 }
 
@@ -55,15 +58,29 @@ impl AskBoRegistry {
     /// Legt eine Interaktion an und schickt sie als `ask-bo`-Event an die UI.
     fn create(&self, payload: &Value) -> String {
         let id = format!("ask-{}", self.0.counter.fetch_add(1, Ordering::SeqCst) + 1);
+        let mut event = payload.clone();
+        event["id"] = Value::String(id.clone());
+        self.0.entries.lock().unwrap().insert(
+            id.clone(),
+            Entry {
+                payload: event.clone(),
+                answer: None,
+            },
+        );
+        self.emit("ask-bo", event);
+        id
+    }
+
+    /// Alle noch unbeantworteten Interaktionen (UI-Sync beim Mount/Poll).
+    pub fn pending(&self) -> Vec<Value> {
         self.0
             .entries
             .lock()
             .unwrap()
-            .insert(id.clone(), Entry { answer: None });
-        let mut event = payload.clone();
-        event["id"] = Value::String(id.clone());
-        self.emit("ask-bo", event);
-        id
+            .values()
+            .filter(|entry| entry.answer.is_none())
+            .map(|entry| entry.payload.clone())
+            .collect()
     }
 
     /// Blockiert bis zur Antwort oder bis zum Timeout.
@@ -297,6 +314,12 @@ pub fn ask_bo_answer(
     registry.answer(&id, selected_options, field_values)
 }
 
+/// Offene Interaktionen abholen (Robustheit: Events sind flüchtig).
+#[tauri::command]
+pub fn ask_bo_pending(registry: State<AskBoRegistry>) -> Vec<Value> {
+    registry.pending()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -354,6 +377,11 @@ mod tests {
             json!({"interaction_id": id}),
         ));
         assert_eq!(pending["answered"], false);
+        // … und über pending() für die UI abholbar.
+        let open = registry.pending();
+        assert_eq!(open.len(), 1);
+        assert_eq!(open[0]["id"].as_str().unwrap(), id);
+        assert_eq!(open[0]["kind"], "multi_select");
         // … später beantwortet → ask_bo_result liefert sie.
         registry
             .answer(&id, vec!["a".into(), "b".into()], vec![])
@@ -365,7 +393,8 @@ mod tests {
         ));
         assert_eq!(answered["answered"], true);
         assert_eq!(answered["selected_options"], json!(["a", "b"]));
-        // Doppelt beantworten ist ein Fehler.
+        assert!(registry.pending().is_empty()); // beantwortet ⇒ nicht mehr offen
+                                                // Doppelt beantworten ist ein Fehler.
         assert!(registry.answer(&id, vec![], vec![]).is_err());
     }
 

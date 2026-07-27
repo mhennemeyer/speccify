@@ -284,6 +284,15 @@ pub fn run() {
     let ask_bo = desktop_ui::AskBoRegistry::default();
     let ask_bo_for_setup = ask_bo.clone();
     tauri::Builder::default()
+        // Single-Instance zuerst (Plugin-Doku): eine zweite App-Instanz
+        // würde sonst still einen eigenen desktop-ui-MCP versuchen und
+        // ask_bo-Fragen in der falschen Instanz landen lassen.
+        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+            if let Some(window) = app.get_webview_window("main") {
+                let _ = window.set_focus();
+            }
+        }))
+        .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .manage(Supervisor(Mutex::new(HashMap::new())))
@@ -321,7 +330,8 @@ pub fn run() {
             terminal::terminal_write,
             terminal::terminal_resize,
             terminal::terminal_kill,
-            desktop_ui::ask_bo_answer
+            desktop_ui::ask_bo_answer,
+            desktop_ui::ask_bo_pending
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

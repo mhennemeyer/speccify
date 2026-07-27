@@ -6,6 +6,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
+import { readText, writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
 import "@xterm/xterm/css/xterm.css";
@@ -50,6 +51,29 @@ export default function TerminalPanel({ visible }: { visible: boolean }) {
     fit.fit();
     terminalRef.current = terminal;
     fitRef.current = fit;
+
+    // Kopieren/Einfügen (BO-Finding): ⌘C kopiert die Selektion (ohne
+    // Selektion normal weiterreichen — ^C bleibt SIGINT), ⌘V fügt ein.
+    // Tauri-Clipboard-Plugin statt navigator.clipboard (WKWebView-sicher).
+    terminal.attachCustomKeyEventHandler((event) => {
+      if (event.type !== "keydown") return true;
+      const modifier = event.metaKey || (event.ctrlKey && event.shiftKey);
+      if (!modifier) return true;
+      const key = event.key.toLowerCase();
+      if (key === "c" && terminal.hasSelection()) {
+        void writeText(terminal.getSelection());
+        return false;
+      }
+      if (key === "v") {
+        void readText()
+          .then((text) => {
+            if (text) terminal.paste(text);
+          })
+          .catch(() => {});
+        return false;
+      }
+      return true;
+    });
 
     const unlisteners: UnlistenFn[] = [];
     let disposed = false;
