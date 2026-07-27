@@ -9,6 +9,7 @@ use std::{
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager, State};
 
+mod desktop_ui;
 mod settings;
 mod terminal;
 mod toolbox_cmd;
@@ -280,11 +281,31 @@ fn open_composer(app: AppHandle, state: State<Supervisor>, repo: String) -> Resu
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    let ask_bo = desktop_ui::AskBoRegistry::default();
+    let ask_bo_for_setup = ask_bo.clone();
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .manage(Supervisor(Mutex::new(HashMap::new())))
         .manage(terminal::Terminals::default())
+        .manage(ask_bo)
+        .setup(move |app| {
+            // desktop-ui-MCP (ask_bo) im App-Prozess: Agents erreichen ihn
+            // über http://127.0.0.1:8768 (.mcp.json im Working Dir).
+            ask_bo_for_setup.set_app(app.handle().clone());
+            let server = desktop_ui::DesktopUiMcp::new(ask_bo_for_setup.clone());
+            std::thread::spawn(move || {
+                if let Err(error) = speccify_mcp_core::serve_http(
+                    std::sync::Arc::new(server),
+                    desktop_ui::DEFAULT_PORT,
+                    "speccify desktop-ui-mcp",
+                    None,
+                ) {
+                    eprintln!("desktop-ui-MCP: {error} (läuft die App doppelt?)");
+                }
+            });
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![
             run_dotagent,
             spawn_process,
@@ -299,7 +320,8 @@ pub fn run() {
             terminal::terminal_open,
             terminal::terminal_write,
             terminal::terminal_resize,
-            terminal::terminal_kill
+            terminal::terminal_kill,
+            desktop_ui::ask_bo_answer
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

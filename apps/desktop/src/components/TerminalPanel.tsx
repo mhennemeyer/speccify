@@ -120,10 +120,10 @@ export default function TerminalPanel({ visible }: { visible: boolean }) {
     }
   }, [visible]);
 
+  // Der Sidebar-Container (Breite, border, Toggle) gehört App.tsx — hier
+  // nur der Terminal-Inhalt, damit AskBoPanel darüber wohnen kann.
   return (
-    <aside
-      className={`${visible ? "flex" : "hidden"} w-[520px] shrink-0 flex-col border-l border-slate-700 bg-slate-900`}
-    >
+    <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex items-center gap-2 border-b border-slate-700 px-3 py-1.5">
         <span className="text-xs font-semibold text-slate-300">Agent-Terminal</span>
         <span className="truncate font-mono text-[10px] text-slate-500" title={cwd}>
@@ -138,6 +138,6 @@ export default function TerminalPanel({ visible }: { visible: boolean }) {
       </div>
       {status ? <p className="px-3 py-1 text-xs text-red-400">{status}</p> : null}
       <div ref={containerRef} className="min-h-0 flex-1 p-1" />
-    </aside>
+    </div>
   );
 }

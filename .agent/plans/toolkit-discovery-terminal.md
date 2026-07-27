@@ -201,11 +201,24 @@ Verifikation: cargo test 3 (inkl. PTY-Smoke) + clippy clean, tsc+Vite grün,
 tauri build grün. **Offen: manueller BO-Check** (Settings → Working Dir +
 Autostart `claude` → ⌨ Terminal).
 
-### T7 — `ask_bo`-Chat-Elemente (1–2 Tage)
-desktop-ui-MCP mit `ask_bo` (D4); Rendering der drei Interaktions-Arten
-in der Sidebar (Antwort friert das Element ein, wie iKanbanAi);
-`.mcp.json`-Template um desktop-ui erweitert. Vertragstest: Schema-
-Fixtures beider Seiten byte-identisch.
+### T7 — `ask_bo`-Chat-Elemente ✅ (2026-07-27)
+[x] `desktop_ui.rs`: App-gehosteter MCP (:8768, mcp-core-Unterbau) mit
+`ask_bo` (kind buttons/multi_select/form nach iKanbanAi-ChatInteraction;
+blockiert via Condvar bis Antwort; Timeout Default 300 s →
+`answered:false` + `interaction_id` + Hinweis) und `ask_bo_result`
+(„später beantworten", T0.6). Registry teilt sich Server-Thread und
+Tauri-Command `ask_bo_answer`; Events `ask-bo`/`ask-bo-answered`.
+Server startet im App-`setup` (eigener Thread; Port belegt → Log).
+3 Unit-Tests (Block-bis-Antwort, Timeout→später-Antwort, Validierung).
+[x] Sidebar-UI: `AskBoPanel` über dem Terminal (Buttons/Checkboxen+OK/
+Formular mit recommended-Placeholder — leer ⇒ Empfehlung gilt;
+beantwortet = eingefroren + ✓; unbekannte kinds degradieren zu Hinweis).
+ask_bo öffnet die Sidebar automatisch (startet aber KEIN Terminal —
+eigener „Terminal starten"-Knopf); „?"-Badge am Nav-Toggle bei offenen
+Fragen. Templates erweitert: `.mcp.json` + `CLAUDE.md` um
+speccify-desktop-ui. Schema-Vertrag: Event-/Antwort-Felder 1:1 wie
+iKanbanAi (`selectedOptions`/`fieldValues`-Semantik); Abgleich drüben
+bei der iKanbanAi-Anbindung.
 
 ### T8 — Wrap-up
 Doku (`docs/toolkit.md`: Toolbox-Format, Discovery-Vertrag, Terminal),

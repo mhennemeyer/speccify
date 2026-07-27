@@ -3254,6 +3254,7 @@ dependencies = [
  "portable-pty",
  "serde",
  "serde_json",
+ "speccify-mcp-core",
  "speccify-toolbox",
  "tauri",
  "tauri-build",

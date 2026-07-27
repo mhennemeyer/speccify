@@ -8,6 +8,10 @@
       "type": "http",
       "url": "http://127.0.0.1:8765"
     },
+    "speccify-desktop-ui": {
+      "type": "http",
+      "url": "http://127.0.0.1:8768"
+    },
     "playwright": {
       "command": "npx",
       "args": ["@playwright/mcp@latest"]

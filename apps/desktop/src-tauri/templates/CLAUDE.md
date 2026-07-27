@@ -23,6 +23,13 @@ Composer der Desktop-App editiert solche Specs.
   `list_actions`). Nicht freigegebene Befehle landen als
   Pending-Request zur Freigabe in der App — erwähnen und weiterarbeiten,
   nicht sofort erneut versuchen.
+- **speccify-desktop-ui** (`http://127.0.0.1:8768`, läuft nur solange die
+  Speccify-App offen ist): `ask_bo` stellt dem Owner eine Frage mit
+  UI-Element — `buttons` (Einzelauswahl), `multi_select` (Checkboxen),
+  `form` (Fragenliste; leere Eingabe = empfohlener Wert gilt). Der Call
+  wartet auf die Antwort; bei Timeout bleibt die Frage offen — mit
+  `ask_bo_result` nachfragen statt erneut stellen. Nutze das für
+  Entscheidungen statt langer Freitext-Rückfragen.
 - **playwright**: Browser-Automation (stdio, wird bei Bedarf gestartet).
 
 ## Konventionen in diesem Verzeichnis

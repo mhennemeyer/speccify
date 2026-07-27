@@ -1393,3 +1393,23 @@
   grün, tauri build grün (Speccify.app + dmg).
 - Offen: BO-Check (Settings→Working Dir + Autostart → ⌨ Terminal);
   T7 ask_bo als nächste Stufe; Server-Tab-Umstellung weiter offen.
+
+## 2026-07-27 (T7 ask_bo-Chat-Elemente)
+- desktop_ui.rs: App-gehosteter desktop-ui-MCP (:8768, mcp-core):
+  ask_bo blockiert via Condvar bis zur Sidebar-Antwort (Timeout 300s →
+  answered:false + interaction_id + „nicht erneut stellen"-Hint),
+  ask_bo_result holt sie später (T0.6). AskBoRegistry geteilt zwischen
+  Server-Thread (setup-Spawn) und Tauri-Command ask_bo_answer; Events
+  ask-bo / ask-bo-answered. 3 Unit-Tests (Block/Timeout+Später/Schema).
+- Frontend: AskBoPanel über dem Terminal in der (jetzt App-eigenen)
+  Sidebar — buttons/multi_select/form nach iKanbanAi-ChatInteraction,
+  leere Form-Eingabe ⇒ recommended, beantwortet = eingefroren ✓,
+  unbekannte kinds → Hinweis (Vorwärts-Kompat). ask_bo öffnet die
+  Sidebar automatisch (startet KEIN Terminal); „?"-Badge am Toggle.
+  TerminalPanel auf Innen-Komponente umgebaut (Container in App).
+- Templates: .mcp.json + CLAUDE.md um speccify-desktop-ui (:8768).
+- Verifikation: cargo test 6 (3 neue ask_bo) + clippy/fmt clean,
+  tsc+Vite grün, tauri build grün (Speccify.app + dmg).
+- Offen: BO-E2E (Terminal-Agent ruft ask_bo → Sidebar), iKanbanAi-
+  Schema-Abgleich drüben. Nächster Schritt: T8 Wrap-up (docs/toolkit.md,
+  Server-Tab, Tag-Vorschlag).
