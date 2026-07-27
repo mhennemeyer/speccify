@@ -186,10 +186,20 @@ builtin `parallels-dotnet.toml` → `speccify-parallels-mcp --port 8766`.
 seit T2; Discovery listet es mit `client_config` (command/args). Kein
 eigener Server nötig (D3).
 
-### T6 — Terminal-Seitenleiste (1–2 Tage)
-Rechte Sidebar (ein-/ausklappbar), PTY (D5) im Working Dir; beim Öffnen
-wird der **Autostart-Command aus den Settings** (Default `claude`)
-ausgeführt (T0.5). Läuft für macOS; Linux best effort, Windows nein.
+### T6 — Terminal-Seitenleiste ✅ (2026-07-26)
+[x] Rust `terminal.rs` (portable-pty): `terminal_open` (Login-Shell `-l`
+im Working Dir aus Settings, TERM=xterm-256color, Autostart-Command wird
+vorgetippt — tty puffert bis die Shell liest), `terminal_write/resize/kill`,
+Output als `term-out`/`term-exit`-Events; Terminals-State killt Shells beim
+App-Quit. PTY-Integrationstest (spawn+pretype+read) grün.
+[x] Frontend: `TerminalPanel` (xterm.js + fit-Addon, ResizeObserver,
+Neu-starten-Knopf, Exit-Hinweis), Sidebar rechts (520px) mit „⌨ Terminal"-
+Toggle unten in der Nav; **mountet erst beim ersten Öffnen** (sonst liefe
+der Autostart sofort beim App-Start), bleibt danach gemountet (Shell
+überlebt Toggle). Windows bewusst zurückgestellt.
+Verifikation: cargo test 3 (inkl. PTY-Smoke) + clippy clean, tsc+Vite grün,
+tauri build grün. **Offen: manueller BO-Check** (Settings → Working Dir +
+Autostart `claude` → ⌨ Terminal).
 
 ### T7 — `ask_bo`-Chat-Elemente (1–2 Tage)
 desktop-ui-MCP mit `ask_bo` (D4); Rendering der drei Interaktions-Arten

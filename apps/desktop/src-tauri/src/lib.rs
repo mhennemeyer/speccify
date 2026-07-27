@@ -10,6 +10,7 @@ use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager, State};
 
 mod settings;
+mod terminal;
 mod toolbox_cmd;
 
 /// Laufende Kind-Prozesse des Spike-Supervisors. Drop killt alle Kinder,
@@ -283,6 +284,7 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .manage(Supervisor(Mutex::new(HashMap::new())))
+        .manage(terminal::Terminals::default())
         .invoke_handler(tauri::generate_handler![
             run_dotagent,
             spawn_process,
@@ -293,7 +295,11 @@ pub fn run() {
             settings::briefing_status,
             settings::create_briefing_file,
             toolbox_cmd::toolbox_list,
-            toolbox_cmd::toolbox_scaffold
+            toolbox_cmd::toolbox_scaffold,
+            terminal::terminal_open,
+            terminal::terminal_write,
+            terminal::terminal_resize,
+            terminal::terminal_kill
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

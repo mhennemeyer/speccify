@@ -1,4 +1,5 @@
 import { useState } from "react";
+import TerminalPanel from "./components/TerminalPanel";
 import ComposerView from "./views/ComposerView";
 import LibraryView from "./views/LibraryView";
 import EnvironmentView from "./views/EnvironmentView";
@@ -19,6 +20,15 @@ type SectionId = (typeof SECTIONS)[number]["id"];
 
 export default function App() {
   const [active, setActive] = useState<SectionId>("composer");
+  const [terminalVisible, setTerminalVisible] = useState(false);
+  // Erst beim ersten Öffnen mounten (sonst liefe der Autostart-Command
+  // schon beim App-Start); danach gemountet lassen — Shell überlebt Toggle.
+  const [terminalStarted, setTerminalStarted] = useState(false);
+
+  const toggleTerminal = () => {
+    setTerminalStarted(true);
+    setTerminalVisible((current) => !current);
+  };
 
   return (
     <div className="flex h-screen bg-slate-50 text-slate-900">
@@ -39,6 +49,16 @@ export default function App() {
             {s.label}
           </button>
         ))}
+        <button
+          onClick={toggleTerminal}
+          className={`mt-auto rounded px-3 py-2 text-left text-sm ${
+            terminalVisible
+              ? "bg-slate-800 text-white"
+              : "text-slate-700 hover:bg-slate-100"
+          }`}
+        >
+          ⌨ Terminal
+        </button>
       </nav>
       <main className="flex-1 overflow-auto p-6">
         {/* Alle Views bleiben gemountet (nur inaktive versteckt): Tab-Wechsel
@@ -50,6 +70,7 @@ export default function App() {
           </div>
         ))}
       </main>
+      {terminalStarted ? <TerminalPanel visible={terminalVisible} /> : null}
     </div>
   );
 }

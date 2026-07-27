@@ -1377,3 +1377,19 @@
   clean, Exec-Harness 28/28, Desktop baut.
 - Nächster Schritt: T6 Terminal-Seitenleiste (xterm.js + portable-pty,
   Autostart-Command aus Settings). Offen: 8765/8766-Umschaltung + Server-Tab.
+
+## 2026-07-26 (T6 Terminal-Seitenleiste)
+- Rust terminal.rs (portable-pty 0.9): terminal_open spawnt die Login-
+  Shell (-l, $SHELL, TERM=xterm-256color) im Working Dir aus den Settings
+  und tippt den Autostart-Command vor (tty puffert bis zum ersten Read);
+  write/resize/kill-Commands; term-out/term-exit-Events aus dem Reader-
+  Thread (lossy UTF-8); Terminals-Drop killt Shells beim App-Quit.
+  PTY-Integrationstest ohne Tauri (spawn+pretype+read) grün.
+- Frontend TerminalPanel (xterm.js 5.5 + fit): rechte Sidebar 520px,
+  Nav-Toggle „⌨ Terminal", Restart-Knopf, Exit-Hinweis, ResizeObserver
+  mit Nachfitten beim Einblenden. Mount erst beim ersten Öffnen (kein
+  Autostart beim App-Start), danach persistent (Shell überlebt Toggle).
+- Verifikation: cargo test 3 (inkl. PTY-Smoke), clippy clean, tsc+Vite
+  grün, tauri build grün (Speccify.app + dmg).
+- Offen: BO-Check (Settings→Working Dir + Autostart → ⌨ Terminal);
+  T7 ask_bo als nächste Stufe; Server-Tab-Umstellung weiter offen.
