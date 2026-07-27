@@ -1429,3 +1429,14 @@
   Tests erweitert (pending vor/nach Antwort).
 - Verifikation: cargo test 6 grün, clippy/fmt clean, tsc+Vite grün,
   tauri build grün. BO-Re-Test des ask_bo-Flows offen.
+
+## 2026-07-27 (BO-Finding: Tastatur-Bedienung der ask_bo-Karten)
+- ask_bo-Flow vom BO als funktionierend bestätigt (nach Single-Instance +
+  Pending-Sync). Neues Finding: Listen-Antworten nicht per Pfeiltasten
+  bedienbar. Umgesetzt: neueste offene Karte bekommt Auto-Fokus;
+  buttons: ←/→ (auch ↑/↓) bewegt Auswahl ab Option 1 (= Empfehlung),
+  Enter bestätigt, Ziffern 1–9 wählen direkt; multi_select: ↑/↓ + Space
+  toggelt + Enter sendet; form: Enter springt zum nächsten Feld bzw.
+  sendet am Ende (leer = Empfehlung). Kurze Tastatur-Hints in den Karten;
+  Buttons/Checkboxen tabIndex=-1 (Fokus bleibt auf der Karte).
+- Verifikation: tsc+Vite grün, tauri build grün.
