@@ -38,3 +38,12 @@ aus (Linux bräuchte webkit2gtk), gebaut wird nativ auf macOS.
 ```bash
 pnpm run desktop:build     # .app/.dmg unter target/release/bundle/
 ```
+
+Beide Kommandos rufen vorher `scripts/build_sidecars.sh` auf: die drei
+MCP-Binaries (`speccify-exec-mcp`, `speccify-discovery-mcp`,
+`speccify-parallels-mcp`) werden nach
+`src-tauri/binaries/<name>-<target-triple>` gelegt und von Tauri als
+`externalBin` ins Bundle übernommen (macOS: `Contents/MacOS/`). Zur
+Laufzeit gilt **mitgeliefert > PATH** (`src-tauri/src/sidecar.rs`); im
+`tauri dev`-Betrieb liegen keine Sidecars neben dem Debug-Binary, dort
+greift der PATH-Fallback. `binaries/` ist gitignored.

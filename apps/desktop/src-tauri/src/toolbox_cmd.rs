@@ -9,6 +9,7 @@ use serde_json::Value;
 use speccify_toolbox::{client_config, http_port, load_all, probe_port, scaffold, Manifest};
 
 use crate::settings;
+use crate::sidecar::{self, BinarySource};
 
 #[derive(Serialize)]
 pub struct ToolboxList {
@@ -49,6 +50,9 @@ pub struct McpServerStatus {
     /// (die startet der Client selbst).
     running: Option<bool>,
     binary_found: bool,
+    /// Woher das Binary kommt: `bundled` (Sidecar im App-Bundle), `path`,
+    /// `explicit` (Pfad im Manifest) oder `missing` (R5.1).
+    binary_source: BinarySource,
     client_config: Option<Value>,
     /// Supervisor-Prozess-Id für spawn_process/kill_process.
     supervisor_id: String,
@@ -66,30 +70,22 @@ pub fn mcp_status() -> Result<Vec<McpServerStatus>, String> {
         .map(|manifest| {
             let port = http_port(&manifest);
             let running = port.map(probe_port);
-            let binary_found = manifest
+            let binary_source = manifest
                 .run
                 .as_ref()
-                .map(|run| binary_available(&run.command))
-                .unwrap_or(false);
+                .map(|run| sidecar::resolve(&run.command).1)
+                .unwrap_or(BinarySource::Missing);
             McpServerStatus {
                 port,
                 running,
-                binary_found,
+                binary_found: binary_source != BinarySource::Missing,
+                binary_source,
                 client_config: client_config(&manifest),
                 supervisor_id: format!("mcp-{}", manifest.slug),
                 manifest,
             }
         })
         .collect())
-}
-
-/// Ist das Binary über den angereicherten PATH auffindbar? (GUI-Apps erben
-/// auf macOS nur den Minimal-PATH — gleiche Anreicherung wie der Supervisor.)
-fn binary_available(command: &str) -> bool {
-    if command.contains('/') {
-        return PathBuf::from(command).is_file();
-    }
-    std::env::split_paths(&crate::augmented_path()).any(|dir| dir.join(command).is_file())
 }
 
 #[tauri::command]

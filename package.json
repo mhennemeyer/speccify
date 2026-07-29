@@ -11,8 +11,9 @@
     "composer:build": "pnpm --filter speccify-composer build",
     "composer:typecheck": "pnpm --filter speccify-composer typecheck",
     "composer:e2e": "pnpm --filter speccify-composer e2e",
-    "desktop:dev": "pnpm --filter speccify-desktop tauri dev",
-    "desktop:build": "pnpm --filter speccify-desktop tauri build",
+    "desktop:sidecars": "bash scripts/build_sidecars.sh",
+    "desktop:dev": "bash scripts/build_sidecars.sh --debug && pnpm --filter speccify-desktop tauri dev",
+    "desktop:build": "bash scripts/build_sidecars.sh && pnpm --filter speccify-desktop tauri build",
     "desktop:typecheck": "pnpm --filter speccify-desktop typecheck"
   }
 }

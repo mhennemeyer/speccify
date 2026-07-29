@@ -11,6 +11,7 @@ use tauri::{AppHandle, Emitter, Manager, State};
 
 mod desktop_ui;
 mod settings;
+mod sidecar;
 mod system_cmd;
 mod terminal;
 mod toolbox_cmd;
@@ -88,7 +89,10 @@ fn spawn_process(
     command: String,
     args: Vec<String>,
 ) -> Result<u32, String> {
-    let mut child = Command::new(&command)
+    // Gebündelte Sidecars gewinnen über den PATH (R5.1/D1) — in der
+    // verteilten App gibt es kein `cargo install`.
+    let binary = sidecar::command_for_spawn(&command);
+    let mut child = Command::new(&binary)
         .args(&args)
         .env("PATH", augmented_path())
         .stdin(Stdio::null())

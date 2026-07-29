@@ -8,3 +8,6 @@
 
 # Laufzeit-Artefakte (Allowlists/Pending der lokal gestarteten MCP-Server)
 .agent/
+
+# Sidecar-Binaries (aus crates/ gebaut via scripts/build_sidecars.sh, R5.1)
+/binaries/

@@ -38,11 +38,21 @@ Alle Server binden ausschließlich `127.0.0.1`.
 
 ## Binaries bauen/installieren
 
+Die gebaute App **bringt die drei MCP-Binaries als Sidecars mit**
+(`Speccify.app/Contents/MacOS/`, Plan `r5-distribution.md` R5.1) — für die
+verteilte App ist keine Rust-Toolchain und kein `cargo install` nötig. Die
+App löst ein Kommando in dieser Reihenfolge auf: **mitgeliefert > PATH >
+nicht gefunden**; der Server-Tab zeigt die Quelle pro Server an.
+
 ```bash
-# im Speccify-Repo (rust-toolchain.toml pinnt die Version):
+# App inkl. Sidecars bauen (baut die Crates vorher in --release):
+pnpm run desktop:build           # → target/release/bundle/macos/Speccify.app
+pnpm run desktop:sidecars        # nur die Sidecars neu bauen
+
+# im Speccify-Repo einzeln (rust-toolchain.toml pinnt die Version):
 cargo build --release            # → target/release/speccify-*-mcp
 
-# dauerhaft in den PATH (für Supervisor-Start aus der App):
+# optional dauerhaft in den PATH (Terminal-Nutzung, `tauri dev`-Fallback):
 cargo install --path crates/exec-mcp
 cargo install --path crates/discovery-mcp
 cargo install --path crates/parallels-mcp

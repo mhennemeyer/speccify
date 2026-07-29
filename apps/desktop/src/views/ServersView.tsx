@@ -20,9 +20,19 @@ interface McpServerStatus {
   port: number | null;
   running: boolean | null;
   binary_found: boolean;
+  /// Woher das Binary aufgelöst wurde (R5.1): Sidecar im App-Bundle, PATH,
+  /// expliziter Pfad im Manifest oder gar nicht gefunden.
+  binary_source: "bundled" | "path" | "explicit" | "missing";
   client_config: unknown;
   supervisor_id: string;
 }
+
+const BINARY_SOURCE_LABEL: Record<McpServerStatus["binary_source"], string> = {
+  bundled: "mitgeliefert",
+  path: "PATH",
+  explicit: "Pfad im Manifest",
+  missing: "nicht gefunden",
+};
 
 const fetchStatus = () => invoke<McpServerStatus[]>("mcp_status");
 
@@ -149,6 +159,9 @@ export default function ServersView() {
                     {server.manifest.slug}
                     {server.port ? ` · :${server.port}` : " · stdio"}
                     {server.running && !startedByUs ? " · läuft (extern)" : ""}
+                    {server.binary_found
+                      ? ` · Binary: ${BINARY_SOURCE_LABEL[server.binary_source]}`
+                      : ""}
                   </span>
                   <div className="ml-auto flex gap-2">
                     {isHttp ? (
@@ -166,7 +179,7 @@ export default function ServersView() {
                           title={
                             server.binary_found
                               ? undefined
-                              : "Binary nicht im PATH — siehe docs/toolkit.md"
+                              : "Binary weder im App-Bundle noch im PATH — siehe docs/toolkit.md"
                           }
                         >
                           Start
@@ -192,9 +205,11 @@ export default function ServersView() {
 
                 {!server.binary_found && server.manifest.run ? (
                   <p className="mt-2 text-xs text-amber-600">
-                    ⚠ <code>{server.manifest.run.command}</code> nicht im PATH — im
-                    Speccify-Repo <code>cargo install --path crates/…</code> ausführen
-                    (siehe docs/toolkit.md).
+                    ⚠ <code>{server.manifest.run.command}</code> nicht gefunden — weder
+                    im App-Bundle noch im PATH. Aus dem Repo:{" "}
+                    <code>./scripts/build_sidecars.sh</code> vor{" "}
+                    <code>pnpm run desktop:build</code> (oder{" "}
+                    <code>cargo install --path crates/…</code>), siehe docs/toolkit.md.
                   </p>
                 ) : null}
 
