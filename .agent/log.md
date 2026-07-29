@@ -1512,3 +1512,21 @@
   Bundle (desktop-ui-MCP :8768 antwortet). Bootstrap 1:1 außerhalb des
   Repos durchgespielt: venv aus dem Payload, Backend liefert
   /api/v1/health 200, /ui/ 200, /api/v1/specs aus den Fixtures.
+
+## 2026-07-29 (dev.sh — ein Kommando für die Desktop-App)
+- `scripts/dev.sh`: prüft Werkzeuge (uv/pnpm/cargo, mit Install-Hinweis),
+  lädt Deps (pnpm install, uv sync --all-packages + venv-Hygiene), baut
+  Sidecars und Engine-Payload nur bei Bedarf (mtime-Vergleich gegen die
+  Quellverzeichnisse) und startet dann `tauri dev` — mit `--release`
+  stattdessen Bundle bauen + Speccify.app öffnen. Flags: --refresh,
+  --no-start, --skip-engine, --help.
+- Guard: läuft schon eine Instanz (Port 8768, Single-Instance-App), bricht
+  das Skript mit Hinweis ab statt eine zweite ins Leere zu starten.
+- Nebenbefund: 13 dist-info-Ordner ohne RECORD in `.venv` (Altlast der in
+  P1 entfernten Django-Registry, `registry/` ist ungetrackt). uv kann sie
+  nicht deinstallieren und meldet sie bei jedem Sync — dev.sh weist jetzt
+  darauf hin (Aufräumen nur per frischem venv, bewusst nicht automatisch).
+- Verifikation: zweiter Lauf 0,9 s und überspringt alles; `touch` an einer
+  Composer-Quelle löst gezielt den Payload-Neubau aus (Hash identisch —
+  der Payload-Build ist deterministisch); Guard beendet mit Exit-Code 1;
+  422 Pytest weiterhin grün.

@@ -45,6 +45,10 @@ App löst ein Kommando in dieser Reihenfolge auf: **mitgeliefert > PATH >
 nicht gefunden**; der Server-Tab zeigt die Quelle pro Server an.
 
 ```bash
+# Alles auf einmal (idempotent: Deps, Sidecars, Engine-Payload, Start):
+./scripts/dev.sh                 # tauri dev
+./scripts/dev.sh --release       # .app/.dmg bauen und öffnen
+
 # App inkl. Sidecars bauen (baut die Crates vorher in --release):
 pnpm run desktop:build           # → target/release/bundle/macos/Speccify.app
 pnpm run desktop:sidecars        # nur die Sidecars neu bauen

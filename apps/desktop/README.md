@@ -24,6 +24,17 @@ Pläne: [`desktop-app-und-composer.md`](../../.agent/plans/desktop-app-und-compo
 
 ## Entwicklung
 
+Ein Kommando für alles (idempotent — fertige Schritte werden übersprungen):
+
+```bash
+./scripts/dev.sh                  # Deps + Sidecars + Engine-Payload, dann tauri dev
+./scripts/dev.sh --release        # stattdessen .app/.dmg bauen und öffnen
+./scripts/dev.sh --no-start       # nur vorbereiten
+./scripts/dev.sh --help           # alle Optionen
+```
+
+Einzelschritte von Hand:
+
 ```bash
 pnpm install                      # im Repo-Root (Workspace)
 pnpm run desktop:dev              # tauri dev (Frontend :1420)
