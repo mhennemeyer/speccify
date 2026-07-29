@@ -10,6 +10,7 @@ use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager, State};
 
 mod desktop_ui;
+mod engine;
 mod settings;
 mod sidecar;
 mod system_cmd;
@@ -32,9 +33,9 @@ impl Drop for Supervisor {
 }
 
 #[derive(Clone, Serialize)]
-struct LogEvent {
-    id: String,
-    line: String,
+pub(crate) struct LogEvent {
+    pub(crate) id: String,
+    pub(crate) line: String,
 }
 
 #[derive(Clone, Serialize)]
@@ -162,29 +163,21 @@ fn wait_for_port(port: u16, timeout: std::time::Duration) -> bool {
     false
 }
 
-/// Öffnet ein Composer-Fenster für das Speccify-Repo unter `repo`:
-/// spawnt ein eigenes `speccify-web-backend` auf einem freien Port
-/// (Supervisor-verwaltet, Logs als `proc-log`), wartet auf den Port und
-/// lädt `http://127.0.0.1:<port>/ui/` (Backend serviert die gebaute
-/// Composer-SPA same-origin). Fenster zu → Backend-Prozess stirbt.
-#[tauri::command]
-fn open_composer(app: AppHandle, state: State<Supervisor>, repo: String) -> Result<String, String> {
-    let repo = expand_home(repo.trim());
-    let backend_bin = repo.join(".venv/bin/speccify-web-backend");
-    if !backend_bin.is_file() {
-        return Err(format!(
-            "Kein speccify-web-backend unter {} — Repo-Pfad prüfen und einmal `uv sync` ausführen.",
-            backend_bin.display()
-        ));
-    }
-    if !repo.join("apps/composer/dist/index.html").is_file() {
-        return Err(
-            "Composer-SPA ist nicht gebaut — einmal `pnpm run composer:build` im Repo ausführen."
-                .into(),
-        );
-    }
+/// Start-Rezept fürs Composer-Backend: Binary + Arbeitsverzeichnis + Env.
+/// Zwei Quellen (Plan r5-distribution.md, D3): ein angegebenes Repo mit
+/// `.venv` gewinnt (Quellstand, Dogfooding), sonst die mitgelieferte Engine.
+struct BackendLaunch {
+    binary: PathBuf,
+    cwd: PathBuf,
+    env: Vec<(String, String)>,
+    source: &'static str,
+}
 
-    let port = free_port()?;
+fn repo_launch(repo: &std::path::Path) -> Option<BackendLaunch> {
+    let binary = repo.join(".venv/bin/speccify-web-backend");
+    if !binary.is_file() || !repo.join("apps/composer/dist/index.html").is_file() {
+        return None;
+    }
     // macOS-Quarantäne versteckt venv-.pth-Dateien wiederkehrend; PYTHONPATH
     // auf die src/-Verzeichnisse umgeht das (gleicher Workaround wie CLI/CI).
     let pythonpath = ["core/src", "cli/src", "mcp/src", "apps/web/backend/src"]
@@ -192,17 +185,103 @@ fn open_composer(app: AppHandle, state: State<Supervisor>, repo: String) -> Resu
         .map(|p| repo.join(p).to_string_lossy().into_owned())
         .collect::<Vec<_>>()
         .join(":");
+    Some(BackendLaunch {
+        binary,
+        cwd: repo.to_path_buf(),
+        env: vec![("PYTHONPATH".into(), pythonpath)],
+        source: "Repo",
+    })
+}
 
-    let mut child = Command::new(&backend_bin)
+/// Gebündelte Engine: Backend aus der Engine-venv, Specs/Cache/SPA aus den
+/// App-Resources (das Backend liest genau diese vier Env-Variablen).
+fn engine_launch(app: &AppHandle) -> Result<BackendLaunch, String> {
+    let status = engine::engine_status(app.clone())?;
+    if !status.ready {
+        return Err(if status.needs_update {
+            "Die mitgelieferte Engine stammt aus einer älteren App-Version — im Umgebungs-Tab neu installieren.".into()
+        } else {
+            "Keine Python-Engine installiert — im Umgebungs-Tab „Engine installieren“ (oder oben ein Speccify-Repo mit .venv angeben).".to_string()
+        });
+    }
+    let resources = engine::resources_dir(app).ok_or("Kein Engine-Payload im App-Bundle.")?;
+    let binary = engine::venv_bin(app, "speccify-web-backend")?;
+    if !binary.is_file() {
+        return Err(format!(
+            "{} fehlt — Engine neu installieren.",
+            binary.display()
+        ));
+    }
+    let project_root = settings::get_settings()
+        .ok()
+        .and_then(|s| s.working_dir)
+        .and_then(|raw| settings::resolve_working_dir(&raw).ok())
+        .unwrap_or_else(|| expand_home("~"));
+    Ok(BackendLaunch {
+        env: vec![
+            (
+                "SPECCIFY_COMPOSER_DIST".into(),
+                resources.join("composer").display().to_string(),
+            ),
+            (
+                "SPECCIFY_REGISTRY_PATH".into(),
+                resources.join("registry-fixtures").display().to_string(),
+            ),
+            (
+                "SPECCIFY_CACHE_DIR".into(),
+                resources.join("llm-cache").display().to_string(),
+            ),
+            (
+                "SPECCIFY_PROJECT_ROOT".into(),
+                project_root.display().to_string(),
+            ),
+        ],
+        cwd: project_root,
+        binary,
+        source: "mitgelieferte Engine",
+    })
+}
+
+/// Öffnet ein Composer-Fenster: spawnt ein eigenes `speccify-web-backend` auf
+/// einem freien Port (Supervisor-verwaltet, Logs als `proc-log`), wartet auf
+/// den Port und lädt `http://127.0.0.1:<port>/ui/` (Backend serviert die
+/// gebaute Composer-SPA same-origin). Fenster zu → Backend-Prozess stirbt.
+///
+/// `repo` darf leer sein — dann läuft der Composer gegen die mitgelieferte
+/// Engine (verteilte App ohne Repo).
+#[tauri::command]
+fn open_composer(app: AppHandle, state: State<Supervisor>, repo: String) -> Result<String, String> {
+    let trimmed = repo.trim();
+    let launch = match (!trimmed.is_empty()).then(|| expand_home(trimmed)) {
+        Some(repo) => match repo_launch(&repo) {
+            Some(launch) => launch,
+            // Repo angegeben, aber unbrauchbar: Engine-Fallback versuchen und
+            // im Fehlerfall beide Ursachen nennen.
+            None => engine_launch(&app).map_err(|engine_error| {
+                format!(
+                    "Kein nutzbares Repo unter {} (nötig: .venv/bin/speccify-web-backend via `uv sync` und apps/composer/dist via `pnpm run composer:build`). {engine_error}",
+                    repo.display()
+                )
+            })?,
+        },
+        None => engine_launch(&app)?,
+    };
+
+    let port = free_port()?;
+    let mut command = Command::new(&launch.binary);
+    command
         .args(["--host", "127.0.0.1", "--port", &port.to_string()])
-        .current_dir(&repo)
+        .current_dir(&launch.cwd)
         .env("PATH", augmented_path())
-        .env("PYTHONPATH", pythonpath)
         .stdin(Stdio::null())
         .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
+        .stderr(Stdio::piped());
+    for (key, value) in &launch.env {
+        command.env(key, value);
+    }
+    let mut child = command
         .spawn()
-        .map_err(|e| format!("{}: {e}", backend_bin.display()))?;
+        .map_err(|e| format!("{}: {e}", launch.binary.display()))?;
 
     let id = format!("composer-backend-{port}");
     if let Some(stdout) = child.stdout.take() {
@@ -219,7 +298,8 @@ fn open_composer(app: AppHandle, state: State<Supervisor>, repo: String) -> Resu
             let _ = child.wait();
         }
         return Err(format!(
-            "speccify-web-backend auf Port {port} nicht erreichbar (Log im Server-Tab prüfen)."
+            "speccify-web-backend ({}) auf Port {port} nicht erreichbar (Log im Server-Tab prüfen).",
+            launch.source
         ));
     }
 
@@ -232,7 +312,7 @@ fn open_composer(app: AppHandle, state: State<Supervisor>, repo: String) -> Resu
         format!("composer-{port}"),
         tauri::WebviewUrl::External(parsed),
     )
-    .title(format!("Speccify Composer · :{port}"))
+    .title(format!("Speccify Composer · {} · :{port}", launch.source))
     .inner_size(1320.0, 880.0)
     .build()
     .map_err(|e| format!("Fenster: {e}"))?;
@@ -300,6 +380,8 @@ pub fn run() {
             toolbox_cmd::toolbox_list,
             toolbox_cmd::toolbox_scaffold,
             toolbox_cmd::mcp_status,
+            engine::engine_status,
+            engine::engine_install,
             system_cmd::doctor,
             system_cmd::python_list,
             system_cmd::python_install,

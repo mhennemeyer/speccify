@@ -8,7 +8,9 @@ import { open } from "@tauri-apps/plugin-dialog";
 import { ActionButton, ErrorBox } from "../components/ui";
 
 const REPO_KEY = "speccify.repoPath";
-const DEFAULT_REPO = "~/Desktop/Work/speccify";
+// Leer = mitgelieferte Engine (R5.2). Ein Repo-Pfad gewinnt, wenn er eine
+// `.venv` und einen Composer-Build hat — Dogfooding gegen den Quellstand (D3).
+const DEFAULT_REPO = "";
 
 export default function ComposerView() {
   const [repo, setRepo] = useState(
@@ -33,21 +35,25 @@ export default function ComposerView() {
       <p className="text-sm text-slate-600">
         Öffnet den visuellen Composer in einem eigenen Fenster. Die App startet
         dafür ein <code>speccify-web-backend</code> auf einem freien Port
-        (Fenster schließen beendet es wieder). Voraussetzung im Repo:
-        einmal <code>uv sync</code> und <code>pnpm run composer:build</code>.
+        (Fenster schließen beendet es wieder). Ohne Angabe läuft der Composer
+        gegen die <strong>mitgelieferte Engine</strong> (Umgebungs-Tab →
+        „Engine installieren"). Mit Repo-Pfad läuft er gegen den Quellstand —
+        dafür dort einmal <code>uv sync</code> und{" "}
+        <code>pnpm run composer:build</code>.
       </p>
       <div>
         <label
           htmlFor="composer-repo"
           className="mb-1 block text-xs font-medium text-slate-500"
         >
-          Speccify-Repo
+          Speccify-Repo (optional)
         </label>
         <div className="flex gap-2">
           <input
             id="composer-repo"
             value={repo}
             onChange={(e) => setRepo(e.target.value)}
+            placeholder="leer = mitgelieferte Engine"
             className="w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm"
             spellCheck={false}
           />

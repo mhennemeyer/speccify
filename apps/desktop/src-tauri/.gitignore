@@ -11,3 +11,6 @@
 
 # Sidecar-Binaries (aus crates/ gebaut via scripts/build_sidecars.sh, R5.1)
 /binaries/
+
+# Engine-Payload (Wheels/Requirements/SPA via scripts/build_engine_payload.sh, R5.2)
+/resources/

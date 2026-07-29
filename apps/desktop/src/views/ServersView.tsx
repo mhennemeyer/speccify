@@ -22,13 +22,17 @@ interface McpServerStatus {
   binary_found: boolean;
   /// Woher das Binary aufgelöst wurde (R5.1): Sidecar im App-Bundle, PATH,
   /// expliziter Pfad im Manifest oder gar nicht gefunden.
-  binary_source: "bundled" | "path" | "explicit" | "missing";
+  binary_source: "bundled" | "engine" | "path" | "explicit" | "missing";
+  /** Aufgelöstes Start-Kommando (absoluter Pfad, wenn gefunden). */
+  resolved_command: string;
+  resolved_args: string[];
   client_config: unknown;
   supervisor_id: string;
 }
 
 const BINARY_SOURCE_LABEL: Record<McpServerStatus["binary_source"], string> = {
   bundled: "mitgeliefert",
+  engine: "Python-Engine",
   path: "PATH",
   explicit: "Pfad im Manifest",
   missing: "nicht gefunden",
@@ -74,8 +78,8 @@ export default function ServersView() {
       setLogs((current) => ({ ...current, [server.supervisor_id]: [] }));
       await invoke("spawn_process", {
         id: server.supervisor_id,
-        command: run.command,
-        args: run.args,
+        command: server.resolved_command || run.command,
+        args: server.resolved_args ?? run.args,
       });
       setStartedIds((current) => new Set(current).add(server.supervisor_id));
       // Port-Probe braucht einen Moment.

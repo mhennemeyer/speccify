@@ -39,7 +39,21 @@ aus (Linux bräuchte webkit2gtk), gebaut wird nativ auf macOS.
 pnpm run desktop:build     # .app/.dmg unter target/release/bundle/
 ```
 
-Beide Kommandos rufen vorher `scripts/build_sidecars.sh` auf: die drei
+Für eine App, die **ohne Repo** funktioniert, vorher einmal den
+Engine-Payload bauen (Wheels + gepinnte Requirements + Composer-SPA +
+Fixtures → `src-tauri/resources/`, ebenfalls gitignored):
+
+```bash
+./scripts/build_engine_payload.sh
+```
+
+Beim ersten Start baut die App daraus per `uv` eine venv unter
+`~/Library/Application Support/io.speccify.desktop/engine/venv`
+(Umgebungs-Tab → „Engine installieren"; braucht einmal Netz). Der Composer
+läuft dann gegen diese Engine; ein im Composer-Tab angegebenes Repo mit
+`.venv` gewinnt weiterhin.
+
+Beide Build-Kommandos rufen vorher `scripts/build_sidecars.sh` auf: die drei
 MCP-Binaries (`speccify-exec-mcp`, `speccify-discovery-mcp`,
 `speccify-parallels-mcp`) werden nach
 `src-tauri/binaries/<name>-<target-triple>` gelegt und von Tauri als

@@ -20,6 +20,8 @@ use std::path::{Path, PathBuf};
 pub enum BinarySource {
     /// Aus dem App-Bundle (Sidecar).
     Bundled,
+    /// Aus der installierten Python-Engine (`<venv>/bin`, R5.2).
+    Engine,
     /// Über den angereicherten PATH gefunden.
     Path,
     /// Im Manifest stand ein Pfad, der existiert.

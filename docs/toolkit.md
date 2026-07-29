@@ -99,7 +99,12 @@ Sicherheitsmodell ist die Token-Präfix-Allowlist
 - **Bibliothek**: alle Toolbox-Manifeste (builtin/global/working dir) mit
   Requirements-Badges + Scaffold.
 - **Server**: Toolbox-MCPs mit Laufzeitstatus (Port-Probe), Start/Stop
-  über den App-Supervisor (Logs live), Client-Config zum Kopieren.
+  über den App-Supervisor (Logs live), Client-Config zum Kopieren. Pro
+  Server steht, woher sein Binary kommt (mitgeliefert / Python-Engine /
+  PATH); die Client-Config nennt den aufgelösten absoluten Pfad, weil ein
+  MCP-Client stdio-Server ohne den PATH der App startet.
+- **Umgebung**: Doctor-Checks, Python-Versionen via uv — und die
+  **mitgelieferte Python-Engine** (siehe unten).
 - **⌨ Terminal**: echtes PTY (Login-Shell) im Working Dir; der
   Autostart-Command (Default `claude`) wird vorgetippt. ⌘C kopiert die
   Selektion, ⌘V fügt ein.
@@ -108,6 +113,33 @@ Sicherheitsmodell ist die Token-Präfix-Allowlist
   Space bei Checkboxen, Enter springt im Formular weiter.
 
 Windows ist bewusst zurückgestellt (Terminal/PTY zuerst macOS/Linux).
+
+## Python-Engine der App (ohne Repo)
+
+Spec-Engine und Composer-Backend sind Python. Damit die verteilte App
+ohne Repo-Checkout auskommt (Plan `r5-distribution.md`, R5.2), bringt sie
+einen **Payload** mit — die vier eigenen Wheels, die aus `uv.lock`
+exportierten Third-Party-Pins, die gebaute Composer-SPA sowie
+Referenz-Specs und Replay-Cache:
+
+```bash
+./scripts/build_engine_payload.sh      # vor pnpm run desktop:build
+```
+
+Umgebungs-Tab → **„Engine installieren"** baut daraus per `uv` eine venv
+unter `~/Library/Application Support/io.speccify.desktop/engine/venv`
+(Live-Log in der Karte). Das braucht **einmal Netz**: uv lädt die
+Third-Party-Wheels und, falls kein passendes Python 3.12 auf dem System
+liegt, auch den Interpreter. Ein Hash-Marker (`installed.json`) erkennt
+nach einem App-Update, dass neu installiert werden muss.
+
+Daraus bedienen sich:
+
+- **Composer** — ohne Repo-Angabe startet das Backend aus der Engine, mit
+  Specs/Cache/SPA aus den App-Resources. Ein angegebenes Repo mit `.venv`
+  und Composer-Build gewinnt (Dogfooding am Quellstand).
+- **speccify-mcp** — das Manifest `uv run speccify-mcp` wird auf
+  `<venv>/bin/speccify-mcp` abgebildet, sobald die Engine steht.
 
 ## Typischer Flow (Claude Code im Working Dir)
 

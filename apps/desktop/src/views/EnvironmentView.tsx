@@ -1,11 +1,17 @@
-// Umgebung: Doctor-Karten + Python-Versionen installieren (via uv).
+// Umgebung: Doctor-Karten, Python-Versionen (via uv) und die mitgelieferte
+// Python-Engine der App (R5.2) — deren venv wird hier installiert/erneuert.
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import {
+  ENGINE_LOG_ID,
   fetchDoctor,
+  fetchEngineStatus,
   fetchPythons,
+  installEngine,
   installPython,
   type DoctorCheck,
+  type EngineStatus,
   type PythonsInfo,
 } from "../lib/system";
 import {
@@ -19,12 +25,17 @@ import {
 interface EnvData {
   checks: DoctorCheck[];
   pythons: PythonsInfo;
+  engine: EngineStatus;
 }
 
 export default function EnvironmentView() {
   const { data, loading, refreshing, error, reload } = useAsync<EnvData>(async () => {
-    const [doctor, pythons] = await Promise.all([fetchDoctor(), fetchPythons()]);
-    return { checks: doctor.checks, pythons };
+    const [doctor, pythons, engine] = await Promise.all([
+      fetchDoctor(),
+      fetchPythons(),
+      fetchEngineStatus(),
+    ]);
+    return { checks: doctor.checks, pythons, engine };
   }, "environment");
 
   return (
@@ -41,6 +52,8 @@ export default function EnvironmentView() {
 
       <LoadingBoundary loading={loading} error={error} label="Umgebung wird geprüft…">
         {data && (
+          <>
+            <EngineCard engine={data.engine} onChanged={reload} />
           <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
             {data.checks.map((c) =>
               c.binary === "python3" ? (
@@ -55,9 +68,118 @@ export default function EnvironmentView() {
               ),
             )}
           </div>
+          </>
         )}
       </LoadingBoundary>
     </div>
+  );
+}
+
+/** Mitgelieferte Python-Engine (R5.2): Status + Installation mit Live-Log. */
+function EngineCard({
+  engine,
+  onChanged,
+}: {
+  engine: EngineStatus;
+  onChanged: () => Promise<unknown>;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [installError, setInstallError] = useState<string | null>(null);
+  const [log, setLog] = useState<string[]>([]);
+  const unlistenRef = useRef<UnlistenFn | null>(null);
+
+  useEffect(() => {
+    void listen<{ id: string; line: string }>("proc-log", (event) => {
+      if (event.payload.id !== ENGINE_LOG_ID) return;
+      setLog((current) => [...current.slice(-200), event.payload.line]);
+    }).then((unlisten) => {
+      unlistenRef.current = unlisten;
+    });
+    return () => {
+      unlistenRef.current?.();
+    };
+  }, []);
+
+  const install = async () => {
+    setInstallError(null);
+    setLog([]);
+    setBusy(true);
+    try {
+      await installEngine();
+      await onChanged();
+    } catch (e) {
+      setInstallError(String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const state = engine.ready
+    ? { icon: "✅", text: "einsatzbereit", tone: "border-slate-200 bg-white" }
+    : engine.needs_update
+      ? {
+          icon: "⚠️",
+          text: "veraltet (App wurde aktualisiert)",
+          tone: "border-amber-200 bg-amber-50",
+        }
+      : { icon: "❌", text: "nicht installiert", tone: "border-amber-200 bg-amber-50" };
+
+  return (
+    <article className={`mb-3 rounded-lg border p-4 ${state.tone}`}>
+      <div className="flex items-baseline justify-between">
+        <h3 className="font-medium text-slate-900">
+          {state.icon} Python-Engine (Spec-Engine + Composer-Backend)
+        </h3>
+        <span className="text-sm text-slate-500">{state.text}</span>
+      </div>
+      <p className="mt-1 truncate text-xs text-slate-400">{engine.venv_dir}</p>
+
+      {!engine.payload_found ? (
+        <p className="mt-2 text-sm text-amber-800">
+          Kein Engine-Payload im App-Bundle — vor dem Build einmal{" "}
+          <code className="rounded bg-amber-100 px-1">
+            ./scripts/build_engine_payload.sh
+          </code>{" "}
+          ausführen.
+        </p>
+      ) : (
+        <div className="mt-3 flex items-center gap-3 border-t border-slate-100 pt-3">
+          {engine.uv_source === "missing" ? (
+            <span className="text-xs text-amber-700">
+              braucht uv (<code>brew install uv</code>)
+            </span>
+          ) : (
+            <ActionButton
+              onClick={install}
+              className="bg-slate-800 text-white hover:bg-slate-700"
+              title="uv venv + uv pip install aus dem mitgelieferten Payload"
+            >
+              {engine.ready
+                ? "Neu installieren"
+                : engine.needs_update
+                  ? "Aktualisieren"
+                  : "Engine installieren"}
+            </ActionButton>
+          )}
+          {busy && <Spinner />}
+          <span className="text-xs text-slate-500">
+            Python {engine.python_version ?? "?"} · erste Installation lädt einmalig
+            aus dem Netz
+          </span>
+        </div>
+      )}
+
+      {log.length > 0 && (
+        <pre className="mt-3 max-h-48 overflow-auto rounded bg-slate-900 p-2 text-xs text-slate-100">
+          {log.join("\n")}
+        </pre>
+      )}
+      {installError && (
+        <div className="mt-2">
+          <ErrorBox message={installError} />
+        </div>
+      )}
+    </article>
   );
 }
 

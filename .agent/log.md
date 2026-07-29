@@ -1484,3 +1484,31 @@
   R5 (Signing/Notarisierung/Updater), danach dotagent archivieren.
 - Verifikation: cargo test 9+1(ignored) grün, clippy/fmt clean, tsc+Vite
   grün, tauri build grün.
+
+## 2026-07-29 (R5.1/R5.2 — App ohne Repo lauffähig)
+- Feinplan `.agent/plans/r5-distribution.md` (R5.1–R5.5, D1–D5): Weg von
+  „läuft aus meinem Repo" zu „Download, in /Programme ziehen, läuft".
+- **R5.1 Sidecars**: scripts/build_sidecars.sh baut exec/discovery/
+  parallels-mcp und legt sie als binaries/<name>-<triple> ab;
+  bundle.externalBin zieht sie nach Contents/MacOS. sidecar.rs löst
+  Kommandos auf (mitgeliefert > PATH > expliziter Pfad); spawn_process
+  und mcp_status nutzen das, der Server-Tab zeigt die Quelle.
+- **R5.2 Engine-Payload**: build_engine_payload.sh baut die vier eigenen
+  Wheels (uv build), exportiert gehashte Pins aus uv.lock und kopiert
+  Composer-SPA + registry-fixtures + llm-cache nach src-tauri/resources
+  (612 KB, gitignored, payload.json mit Hash). engine.rs: engine_status/
+  engine_install (uv venv + uv pip install, Live-Log als proc-log,
+  Marker installed.json). open_composer hat jetzt zwei Quellen —
+  Repo-Modus (D3) vor gebündelter Engine, die Resources kommen per
+  SPECCIFY_COMPOSER_DIST/_REGISTRY_PATH/_CACHE_DIR/_PROJECT_ROOT ins
+  Backend. mcp_status bildet `uv run speccify-mcp` auf <venv>/bin ab und
+  liefert absolute Pfade in der Client-Config (MCP-Clients haben unseren
+  PATH nicht). Umgebungs-Tab: Engine-Karte mit Installation + Log.
+- Bewusst offen: `uv` selbst als Sidecar (heute PATH/brew) — steht als
+  R5.2.7 im Plan.
+- Verifikation: 16 Desktop-Tests (9 + 7 neue) grün, 13 Rust-Suiten grün,
+  clippy/fmt clean, tsc+Vite grün, 422 Pytest grün; tauri build → App
+  enthält 3 Sidecars + Payload (17 MB, dmg 5,7 MB), startet aus dem
+  Bundle (desktop-ui-MCP :8768 antwortet). Bootstrap 1:1 außerhalb des
+  Repos durchgespielt: venv aus dem Payload, Backend liefert
+  /api/v1/health 200, /ui/ 200, /api/v1/specs aus den Fixtures.

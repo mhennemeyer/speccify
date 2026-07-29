@@ -69,21 +69,36 @@ distributions-fertig.
 4.  [x] Tests: reine Auflösungsfunktion gegen ein temporäres Verzeichnis
     (gebündelt gewinnt, Fallback PATH, absoluter Pfad unverändert).
 
-### R5.2 — Engine-Bootstrap (uv) — der Knackpunkt
-1.  `uv` als vierter Sidecar (Version gepinnt, Download-Skript mit
-    SHA256-Prüfung, ebenfalls gitignored).
-2.  `scripts/build_engine_payload.sh`: `uv build` für die vier
-    Python-Pakete + `uv export` als `requirements.lock` → Resource-Ordner
-    `apps/desktop/src-tauri/resources/engine/`.
-3.  `engine.rs`: `engine_status` (venv vorhanden? Version?),
-    `engine_install` (uv venv + `uv pip install`, Logs als `proc-log`),
-    `engine_python_bin()`; Marker-Datei mit Payload-Hash → Re-Install bei
-    App-Update.
-4.  `open_composer` umgestellt: Repo-Modus (D3) > gebündelte Engine;
-    Composer-SPA als Bundle-Resource, Pfad per Env an das Backend.
-5.  Toolbox-Manifest `speccify-mcp` zeigt auf die gebündelte Engine statt
-    auf `uv run` im Repo.
-6.  Settings-/Doctor-Tab: Engine-Status + „Engine installieren"-Aktion.
+### R5.2 — Engine-Bootstrap (uv) ✅ (2026-07-29) — der Knackpunkt
+1.  [x] `scripts/build_engine_payload.sh`: Wheels der vier Python-Pakete
+    (`uv build --wheel`) + `uv export` (gehashte Pins aus `uv.lock`) +
+    Composer-SPA + `registry-fixtures/` + `llm-cache/` nach
+    `apps/desktop/src-tauri/resources/` (gitignored, 612 KB); `payload.json`
+    trägt Hash, Python-Version und Wheel-Liste.
+2.  [x] `tauri.conf.json`: `bundle.resources = ["resources/**/*"]` →
+    `Contents/Resources/resources/…`.
+3.  [x] `engine.rs`: `engine_status` (ready/needs_update/payload_found/
+    uv_source) und `engine_install` (`uv venv` + `uv pip install -r` +
+    Wheels `--no-deps`, Live-Log als `proc-log`); Marker `installed.json`
+    mit Payload-Hash ⇒ Re-Install nach App-Update.
+4.  [x] `open_composer` mit zwei Quellen: `repo_launch` (D3, Repo mit
+    `.venv` + Composer-Build) > `engine_launch` (venv + Resources via
+    `SPECCIFY_COMPOSER_DIST`/`_REGISTRY_PATH`/`_CACHE_DIR`/`_PROJECT_ROOT`);
+    Fenstertitel nennt die Quelle. Repo-Feld ist jetzt optional.
+5.  [x] `mcp_status` löst `[run]`-Blöcke auf: Engine-venv (auch
+    `uv run <bin>` → `<venv>/bin/<bin>`) > Sidecar > PATH; Client-Config
+    und Supervisor-Start nutzen den aufgelösten absoluten Pfad.
+6.  [x] Umgebungs-Tab: Engine-Karte mit Status, Installation und Live-Log.
+7.  [ ] **Offen:** `uv` als vierter Sidecar mitliefern (heute PATH/brew).
+    Bis dahin braucht die verteilte App einmalig ein installiertes `uv` —
+    der Doctor sagt das, die Engine-Karte auch.
+
+**Verifiziert:** Bootstrap-Kommandos 1:1 außerhalb des Repos durchgespielt
+(venv aus dem Payload, `speccify-web-backend` gegen die Resources:
+`/api/v1/health` 200, `/ui/` 200, `/api/v1/specs` liefert die Fixtures);
+`.app` enthält Payload + Sidecars (17 MB App, 5,7 MB dmg) und startet
+(desktop-ui-MCP :8768 antwortet). Der Klick auf „Engine installieren"
+in der laufenden App ist BO-Dogfooding-Stoff.
 
 ### R5.3 — Signing + Notarisierung
 1.  `tauri.conf.json` → `bundle.macOS` (Signing-Identity via Env,
@@ -105,6 +120,16 @@ distributions-fertig.
 2.  dotagent archivieren (README-Verweis „Referenz für die
     Rust-Portierung"), Restore-Doku/Memories umziehen.
 3.  Rust-Plan `rust-neustart-toolkit-mcps.md` schließen.
+
+## Folgen von R5.2 (bewusst so entschieden)
+
+*   Steht die Engine, gewinnt sie für `speccify-mcp` auch dann, wenn ein
+    Repo vorhanden ist — `uv run speccify-mcp` funktioniert nur mit dem
+    Repo als CWD, die Engine dagegen aus jedem Working Dir. Der Server-Tab
+    zeigt die Quelle, ein eigenes Toolbox-Manifest mit absolutem Pfad
+    überstimmt sie.
+*   Das Composer-Repo-Feld ist neu leer vorbelegt; bestehende Eingaben
+    bleiben in `localStorage` erhalten.
 
 ## Risiken
 

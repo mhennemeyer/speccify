@@ -32,6 +32,25 @@ export const fetchPythons = () => invoke<PythonsInfo>("python_list");
 export const installPython = (version: string) =>
   invoke<unknown>("python_install", { version });
 
+/** Python-Engine der App (R5.2): venv aus dem mitgelieferten Payload. */
+export interface EngineStatus {
+  ready: boolean;
+  needs_update: boolean;
+  payload_found: boolean;
+  payload_hash: string | null;
+  installed_hash: string | null;
+  python_version: string | null;
+  venv_dir: string;
+  uv_source: "bundled" | "path" | "explicit" | "missing";
+}
+
+export const fetchEngineStatus = () => invoke<EngineStatus>("engine_status");
+
+/** Blockiert bis die venv steht; Fortschritt kommt als `proc-log`-Event. */
+export const installEngine = () => invoke<EngineStatus>("engine_install");
+
+export const ENGINE_LOG_ID = "engine-install";
+
 export interface BookEntry {
   title: string;
   file: string;
