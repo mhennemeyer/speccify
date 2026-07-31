@@ -44,6 +44,9 @@ Rust-Seite: `apps/desktop/src-tauri` ist Member des Root-Cargo-Workspace
 (`cargo build -p speccify-desktop`); der CI-`rust`-Job schließt das Crate
 aus (Linux bräuchte webkit2gtk), gebaut wird nativ auf macOS.
 
+Für signierte, notarisierte Releases: [`docs/release.md`](../../docs/release.md)
+(`./scripts/release_macos.sh`).
+
 ## Build
 
 ```bash

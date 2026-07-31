@@ -100,14 +100,37 @@ distributions-fertig.
 (desktop-ui-MCP :8768 antwortet). Der Klick auf „Engine installieren"
 in der laufenden App ist BO-Dogfooding-Stoff.
 
-### R5.3 — Signing + Notarisierung
-1.  `tauri.conf.json` → `bundle.macOS` (Signing-Identity via Env,
-    Hardened Runtime, Entitlements für unsandboxed Exec).
-2.  `scripts/release_macos.sh`: build → codesign (inkl. Sidecars) →
-    `notarytool submit --wait` → `stapler staple` → dmg.
-3.  `docs/release.md`: welche Credentials wo hinterlegt werden
-    (Keychain-Profil statt Repo-Secrets), Prüf-Kommandos (`spctl -a -vvv`).
-4.  BO-Aktionsliste: Developer-ID-Zertifikat, App-Specific Password.
+### R5.3 — Signing + Notarisierung ⏸ vorbereitet (2026-07-31)
+1.  [x] `tauri.conf.json` → `bundle.macOS`: `hardenedRuntime: true`,
+    `minimumSystemVersion: "10.15"` (Tauri-2-Minimum; Default wäre 10.13).
+    **Keine** `signingIdentity` in der Config — sie kommt aus
+    `APPLE_SIGNING_IDENTITY`, sonst wäre kein Dev-Build ohne Zertifikat
+    mehr möglich. **Keine Entitlements**: für Developer-ID-Distribution
+    ohne Sandbox braucht es keine; die Engine-venv läuft als eigener
+    Prozess, nicht als Code in unserem Adressraum.
+2.  [x] `scripts/release_macos.sh`: Preflight (Werkzeuge, Identity wirklich
+    im Keychain, Credentials — bricht **vor** dem Compile ab) → Sidecars +
+    Payload → `tauri build` (signiert, notarisiert und stapelt selbst) →
+    Verifikation: `codesign --verify --deep --strict`, Authority/Team,
+    **jedes Sidecar einzeln** auf Signatur + Hardened Runtime, `spctl`,
+    `stapler validate` für .app und .dmg. Flags: `--no-notarize`,
+    `--verify-only`.
+3.  [x] [`docs/release.md`](../../docs/release.md): Zertifikat und
+    App-Specific Password einrichten, Env-Variablen (mit dem Hinweis,
+    dass nichts davon ins Repo gehört), Verifikations-Kommandos,
+    Quarantäne-Test auf einem fremden Mac, Fehlerbild-Tabelle,
+    `notarytool log`-Abruf.
+4.  [ ] **BO-Aktion, blockiert R5.3-Abschluss:** Developer-ID-Zertifikat
+    (Apple Developer Program, 99 $/Jahr) in den Keychain + App-Specific
+    Password erzeugen, dann `./scripts/release_macos.sh` laufen lassen.
+    Erst dieser Lauf zeigt, ob Signatur/Notarisierung wirklich durchgehen.
+
+**Verifiziert (soweit ohne Zertifikat möglich):** Preflight bricht mit
+klarer Liste ab, wenn Credentials fehlen (Exit 1, nichts gebaut);
+`--verify-only` diagnostiziert das aktuelle unsignierte Bundle korrekt
+(kein TeamIdentifier, Sidecars ohne Hardened Runtime, Gatekeeper lehnt ab,
+kein Ticket); `tauri build` mit der neuen macOS-Config läuft durch,
+`LSMinimumSystemVersion` steht auf 10.15.
 
 ### R5.4 — Updater
 1.  `tauri-plugin-updater` + `bundle.createUpdaterArtifacts`; Public Key

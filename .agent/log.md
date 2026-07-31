@@ -1530,3 +1530,31 @@
   Composer-Quelle löst gezielt den Payload-Neubau aus (Hash identisch —
   der Payload-Build ist deterministisch); Guard beendet mit Exit-Code 1;
   422 Pytest weiterhin grün.
+
+## 2026-07-31 (R5.3 vorbereitet — Signing/Notarisierung)
+- `tauri.conf.json` → `bundle.macOS`: hardenedRuntime true,
+  minimumSystemVersion 10.15 (Tauri-2-Minimum statt Default 10.13).
+  Signing-Identity bewusst NICHT in der Config — sie kommt aus
+  APPLE_SIGNING_IDENTITY, sonst könnte niemand ohne Zertifikat bauen.
+  Keine Entitlements: Developer-ID ohne Sandbox braucht keine, und die
+  Engine-venv läuft als eigener Prozess (Hardened Runtime beschränkt nur
+  Code im eigenen Adressraum).
+- `scripts/release_macos.sh`: Preflight (codesign/xcrun/spctl, Identity
+  wirklich im Keychain via find-identity, Notarisierungs-Credentials —
+  Abbruch VOR dem Compile), dann Sidecars + Payload + `tauri build`
+  (Tauri signiert, notarisiert und stapelt selbst — Env-Namen aus dem
+  CLI-Binary 2.11.4 verifiziert), dann Verifikation: codesign --verify
+  --deep --strict, Authority/TeamIdentifier, jedes Sidecar einzeln auf
+  Signatur + runtime-Flag, spctl, stapler validate für .app und .dmg.
+  Flags: --no-notarize, --verify-only.
+- `docs/release.md`: Zertifikat + App-Specific Password einrichten,
+  Env-Variablen (nichts davon ins Repo), Verifikations-Kommandos,
+  Quarantäne-Test auf fremdem Mac, Fehlerbild-Tabelle, notarytool log.
+- Verifikation ohne Zertifikat: Preflight listet fehlende Credentials und
+  endet mit Exit 1 (nichts gebaut); --verify-only diagnostiziert das
+  aktuelle unsignierte Bundle korrekt (kein TeamIdentifier, Sidecars ohne
+  Hardened Runtime, Gatekeeper lehnt ab, kein Ticket); tauri build mit
+  neuer Config grün, LSMinimumSystemVersion = 10.15. Start-Smoke des
+  Bundles ausgelassen — auf :8768 lief die dev-Instanz des BO.
+- Offen und nur vom BO lösbar: Developer-ID-Zertifikat + App-Specific
+  Password, dann ein echter release_macos.sh-Lauf.

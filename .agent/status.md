@@ -14,10 +14,17 @@
   Pins aus `uv.lock` + Composer-SPA + Fixtures, 612 KB) im Bundle, venv-Bau
   per `uv` aus dem Umgebungs-Tab, Composer läuft wahlweise gegen Repo (D3)
   oder gebündelte Engine; `speccify-mcp` wird auf die Engine-venv aufgelöst.
-  Offen in R5.2: `uv` selbst mitliefern. **Als Nächstes: R5.3 Signing +
-  Notarisierung** (braucht BO-Credentials: Developer-ID-Zertifikat +
-  App-Specific Password), dann R5.4 Updater, R5.5 Download-Seite +
-  dotagent archivieren. **Tag-Vorschlag: `v0.17.0-r5-bundling`.**
+  Offen in R5.2: `uv` selbst mitliefern.
+  **R5.3 ⏸ vorbereitet (2026-07-31)**: `bundle.macOS` (Hardened Runtime,
+  minimumSystemVersion 10.15; Identity bewusst nur über Env),
+  `scripts/release_macos.sh` (Preflight → Build → Signatur-/Gatekeeper-/
+  Staple-Verifikation inkl. jedes Sidecars) und [`docs/release.md`](../docs/release.md).
+  **Blockiert auf BO-Aktion:** Developer-ID-Zertifikat + App-Specific
+  Password, dann `./scripts/release_macos.sh` — erst dieser Lauf beweist,
+  dass Signatur und Notarisierung durchgehen. Danach R5.4 Updater, R5.5
+  Download-Seite + dotagent archivieren.
+  Außerdem: `./scripts/dev.sh` baut/startet die App idempotent in einem
+  Kommando. **Tag-Vorschlag: `v0.17.0-r5-bundling`.**
 - **Toolkit-Vollausbau ABGESCHLOSSEN (2026-07-27)** — [`plans/toolkit-discovery-terminal.md`](./plans/toolkit-discovery-terminal.md) T0–T8 ✅: Rust-MCPs Exec (:8765, Kontrakt-Harness 28/28), Parallels (:8766), Discovery (:8767, `mcp_list` mit client_config), desktop-ui (:8768, `ask_bo`); Toolbox (TOML, 3 Quellen), Settings/Working Dir, Agent-Terminal (PTY + Autostart, Copy/Paste), ask_bo-Sidebar (Tastatur, robuste Zustellung), Server-Tab nativ (Supervisor-Start/Stop). Doku: [`docs/toolkit.md`](../docs/toolkit.md). **Tag-Vorschlag: `v0.16.0-toolkit-discovery-terminal`.**
 - **Offene Anschlüsse**: (a) iKanbanAi an Discovery/ask_bo anbinden (drüben); (b) Rust-Plan-Reststufen R3 System-CLI / R5 Distribution ([`plans/rust-neustart-toolkit-mcps.md`](./plans/rust-neustart-toolkit-mcps.md)) nach Dogfooding; (c) danach zurück zur Produkt-Roadmap: Composer/Specs schärfen (P3-Rest: Mock-Bundle-Rendering, Drag&Drop; P4 Builds; P5 Git-Quellen). BO-Empfehlung fürs Dogfooding: `cargo install --path crates/{exec,discovery,parallels}-mcp`, dann Server-Tab.
 - Desktop-App: A0+A1 abgenommen ([`plans/desktop-app-und-composer.md`](./plans/desktop-app-und-composer.md) abgeschlossen); Composer-Walkthrough für BO-Test weiter offen: [`docs/composer-tristate-walkthrough.md`](../docs/composer-tristate-walkthrough.md).
