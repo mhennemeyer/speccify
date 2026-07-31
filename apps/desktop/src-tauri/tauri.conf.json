@@ -29,7 +29,8 @@
     "externalBin": [
       "binaries/speccify-exec-mcp",
       "binaries/speccify-discovery-mcp",
-      "binaries/speccify-parallels-mcp"
+      "binaries/speccify-parallels-mcp",
+      "binaries/uv"
     ],
     "resources": ["resources/**/*"],
     "macOS": {

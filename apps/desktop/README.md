@@ -69,7 +69,8 @@ läuft dann gegen diese Engine; ein im Composer-Tab angegebenes Repo mit
 
 Beide Build-Kommandos rufen vorher `scripts/build_sidecars.sh` auf: die drei
 MCP-Binaries (`speccify-exec-mcp`, `speccify-discovery-mcp`,
-`speccify-parallels-mcp`) werden nach
+`speccify-parallels-mcp`) und das per `scripts/fetch_uv.sh` geladene `uv`
+werden nach
 `src-tauri/binaries/<name>-<target-triple>` gelegt und von Tauri als
 `externalBin` ins Bundle übernommen (macOS: `Contents/MacOS/`). Zur
 Laufzeit gilt **mitgeliefert > PATH** (`src-tauri/src/sidecar.rs`); im

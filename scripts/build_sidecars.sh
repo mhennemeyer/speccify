@@ -29,6 +29,10 @@ for arg in "$@"; do
   esac
 done
 
+# uv gehört ebenfalls ins Bundle (Engine-Bootstrap, R5.2) — eigenes Skript,
+# weil es geladen statt gebaut wird. Idempotent: No-Op, wenn schon da.
+./scripts/fetch_uv.sh
+
 BINARIES=(speccify-exec-mcp speccify-discovery-mcp speccify-parallels-mcp)
 TARGET_DIR="$REPO_ROOT/apps/desktop/src-tauri/binaries"
 TRIPLE="$(rustc -vV | awk '/^host: /{print $2}')"

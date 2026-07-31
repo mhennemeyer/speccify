@@ -61,7 +61,7 @@ pub fn resolve_in(
 }
 
 /// Verzeichnis neben dem laufenden App-Binary (dort landen die Sidecars).
-fn bundle_dir() -> Option<PathBuf> {
+pub fn bundle_dir() -> Option<PathBuf> {
     std::env::current_exe()
         .ok()
         .and_then(|exe| exe.parent().map(Path::to_path_buf))

@@ -111,10 +111,12 @@ Bei einer fertigen Release-App steht in der `codesign`-Ausgabe eine
 `flags=…(runtime)`; `spctl` meldet `accepted` mit `source=Notarized Developer ID`.
 
 **Die mitgelieferten Binaries zählen mit.** Im Bundle liegen neben der App
-drei Sidecars (`speccify-exec-mcp`, `speccify-discovery-mcp`,
-`speccify-parallels-mcp`). Tauri signiert sie mit, das Skript prüft jedes
-einzeln — ein unsigniertes Sidecar fällt bei der Notarisierung nicht
+vier Sidecars (`speccify-exec-mcp`, `speccify-discovery-mcp`,
+`speccify-parallels-mcp` und `uv`). Tauri signiert sie mit, das Skript prüft
+jedes einzeln — ein unsigniertes Sidecar fällt bei der Notarisierung nicht
 zwingend auf, wird aber später beim Start von Gatekeeper abgeschossen.
+`uv` ist Fremdcode: es wird von unserer Developer ID **re**-signiert, was für
+Developer-ID-Distribution zulässig und üblich ist.
 
 Echter Endtest: das `.dmg` auf einen **anderen** Mac kopieren (oder per
 Browser herunterladen, damit das Quarantäne-Flag gesetzt wird) und starten.
@@ -138,9 +140,8 @@ ersten Start per `uv` eine venv im Benutzerverzeichnis (siehe
 - Beim ersten Release auf einem fremden Mac trotzdem explizit testen:
   Umgebungs-Tab → „Engine installieren" → Composer öffnen.
 
-Offen aus R5.2: `uv` selbst liegt noch nicht im Bundle. Sobald es als
-vierter Sidecar mitgeliefert wird, wird es mitsigniert und muss hier nicht
-mehr gesondert vorausgesetzt werden.
+`uv` selbst liegt seit R5.2.7 als vierter Sidecar im Bundle und wird
+mitsigniert — ein systemweit installiertes `uv` ist keine Voraussetzung mehr.
 
 ## Typische Fehlerbilder
 

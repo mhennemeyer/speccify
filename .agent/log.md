@@ -1558,3 +1558,25 @@
   Bundles ausgelassen — auf :8768 lief die dev-Instanz des BO.
 - Offen und nur vom BO lösbar: Developer-ID-Zertifikat + App-Specific
   Password, dann ein echter release_macos.sh-Lauf.
+
+## 2026-07-31 (R5.2.7 — uv als vierter Sidecar, letzte Vorbedingung weg)
+- Vorgezogen vor R5.4: der Updater hängt wie R5.3 an BO-Zutaten
+  (Signaturschlüssel, Hosting), das mitgelieferte uv dagegen ist heute
+  komplett verifizierbar — und es war die letzte externe Vorbedingung
+  der verteilten App ("erst brew install uv").
+- `scripts/fetch_uv.sh`: lädt die gepinnte Version (0.12.0) samt der von
+  astral-sh veröffentlichten .sha256, verifiziert, extrahiert nach
+  binaries/uv-<triple>, legt einen Versions-Stempel an (idempotent) und
+  kopiert einen Lizenzhinweis nach resources/licenses/ (uv ist MIT bzw.
+  Apache-2.0). build_sidecars.sh ruft es auf, externalBin nimmt es mit.
+- `search_dirs()` (system_cmd.rs) sucht jetzt das App-Bundle VOR dem
+  PATH — sonst gewönne ein altes Homebrew-uv, und der Doctor meldete
+  "uv fehlt", obwohl die App eins mitbringt. Damit nutzen Doctor,
+  python_list und python_install automatisch das mitgelieferte Binary.
+- Verifikation: uv 0.12.0 baut die Engine-venv aus dem Payload und das
+  Backend antwortet daraus (health 200, /ui/ 200, specs aus Fixtures) —
+  also die Version selbst geprüft, nicht nur den Download; fetch_uv.sh
+  zweiter Lauf No-Op; `uv --version` und `uv venv` direkt aus
+  Speccify.app/Contents/MacOS lauffähig; 17 Desktop-Tests (neu:
+  bundle_dir_is_searched_first), 422 Pytest, clippy/fmt clean, tauri
+  build grün. Kosten: App 17 → 55 MB, dmg 5,7 → 22 MB.

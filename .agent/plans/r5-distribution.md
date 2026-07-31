@@ -89,9 +89,15 @@ distributions-fertig.
     `uv run <bin>` → `<venv>/bin/<bin>`) > Sidecar > PATH; Client-Config
     und Supervisor-Start nutzen den aufgelösten absoluten Pfad.
 6.  [x] Umgebungs-Tab: Engine-Karte mit Status, Installation und Live-Log.
-7.  [ ] **Offen:** `uv` als vierter Sidecar mitliefern (heute PATH/brew).
-    Bis dahin braucht die verteilte App einmalig ein installiertes `uv` —
-    der Doctor sagt das, die Engine-Karte auch.
+7.  [x] **`uv` als vierter Sidecar** (2026-07-31): `scripts/fetch_uv.sh`
+    lädt die gepinnte Version (0.12.0) und prüft sie gegen die von
+    astral-sh veröffentlichte SHA256; `build_sidecars.sh` ruft es
+    idempotent auf, `externalBin` nimmt es ins Bundle, ein Lizenzhinweis
+    wandert nach `resources/licenses/`. `search_dirs()` sucht das
+    App-Bundle **vor** dem PATH — damit sehen Doctor, `python_list` und
+    `python_install` das mitgelieferte uv, und ein älteres Homebrew-uv
+    überstimmt es nicht. Kosten: Bundle 17 → 55 MB, dmg 5,7 → 22 MB.
+    Damit hat die verteilte App **keine externe Vorbedingung mehr**.
 
 **Verifiziert:** Bootstrap-Kommandos 1:1 außerhalb des Repos durchgespielt
 (venv aus dem Payload, `speccify-web-backend` gegen die Resources:

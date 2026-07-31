@@ -84,7 +84,14 @@ fn search_dirs() -> Vec<PathBuf> {
     let mut seen = HashSet::new();
     let mut result = Vec::new();
     let path = std::env::var_os("PATH").unwrap_or_default();
-    for dir in std::env::split_paths(&path).chain(known.iter().map(PathBuf::from)) {
+    // Zuerst das App-Bundle: dort liegt das mitgelieferte `uv` (R5.2), mit dem
+    // die Engine gebaut wird — sonst meldete der Doctor „uv fehlt", obwohl die
+    // App eins dabei hat.
+    for dir in crate::sidecar::bundle_dir()
+        .into_iter()
+        .chain(std::env::split_paths(&path))
+        .chain(known.iter().map(PathBuf::from))
+    {
         if seen.insert(dir.clone()) {
             result.push(dir);
         }
@@ -431,6 +438,19 @@ pub fn kb_list() -> Value {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// Das App-Bundle muss vor dem PATH gesucht werden — sonst gewinnt ein
+    /// altes `uv` aus /opt/homebrew über das mitgelieferte (R5.2).
+    #[test]
+    fn bundle_dir_is_searched_first() {
+        let dirs = search_dirs();
+        if let Some(bundle) = crate::sidecar::bundle_dir() {
+            assert_eq!(dirs.first(), Some(&bundle));
+        }
+        // Keine Duplikate — sonst tauchen Fundorte doppelt im Doctor auf.
+        let unique: HashSet<_> = dirs.iter().collect();
+        assert_eq!(unique.len(), dirs.len());
+    }
 
     #[test]
     fn version_extraction() {

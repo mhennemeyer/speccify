@@ -137,6 +137,13 @@ Third-Party-Wheels und, falls kein passendes Python 3.12 auf dem System
 liegt, auch den Interpreter. Ein Hash-Marker (`installed.json`) erkennt
 nach einem App-Update, dass neu installiert werden muss.
 
+**`uv` selbst bringt die App mit** (`scripts/fetch_uv.sh` lädt die
+gepinnte Version gegen die veröffentlichte SHA256 und legt sie als
+vierten Sidecar ab). Ein systemweit installiertes `uv` ist damit keine
+Voraussetzung mehr; das Bundle wird dadurch rund 38 MB größer. Gesucht
+wird das App-Bundle **vor** dem PATH — ein älteres `uv` aus Homebrew
+überstimmt das mitgelieferte also nicht.
+
 Daraus bedienen sich:
 
 - **Composer** — ohne Repo-Angabe startet das Backend aus der Engine, mit
