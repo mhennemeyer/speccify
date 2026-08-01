@@ -90,6 +90,23 @@ if [[ "$VERIFY_ONLY" -eq 0 ]]; then
     esac
   fi
 
+  # Updater-Artefakte entstehen nur mit privatem Signaturschlüssel (R5.4).
+  # Ohne ihn wird schlicht ohne Updater gebaut — kein Fehler, aber sichtbar.
+  UPDATER=0
+  if [[ -n "${TAURI_SIGNING_PRIVATE_KEY:-}" ]]; then
+    PUBKEY="$(python3 -c "import json;print(json.load(open('apps/desktop/src-tauri/tauri.conf.json')).get('plugins',{}).get('updater',{}).get('pubkey',''))")"
+    if [[ -z "$PUBKEY" ]]; then
+      fail "TAURI_SIGNING_PRIVATE_KEY gesetzt, aber plugins.updater.pubkey in tauri.conf.json ist leer."
+      printf '    Public Key eintragen (docs/release.md), sonst prüft die App keine Updates.\n' >&2
+      PROBLEMS=$((PROBLEMS + 1))
+    else
+      UPDATER=1
+      ok "Updater-Artefakte werden signiert"
+    fi
+  else
+    warn "Ohne TAURI_SIGNING_PRIVATE_KEY: Build ohne Updater-Artefakte."
+  fi
+
   if [[ "$NOTARIZE" -eq 1 ]]; then
     if [[ -n "${APPLE_ID:-}" && -n "${APPLE_PASSWORD:-}" && -n "${APPLE_TEAM_ID:-}" ]]; then
       ok "Notarisierung über Apple ID ($APPLE_ID, Team $APPLE_TEAM_ID)"
@@ -121,14 +138,20 @@ if [[ "$VERIFY_ONLY" -eq 0 ]]; then
 
   step "tauri build (signieren, notarisieren, stapeln)"
   echo "  Die Notarisierung wartet auf Apple — das dauert typisch 2–15 Minuten."
+  # Updater-Artefakte sind in der Config aus: ein Build ohne Schlüssel würde
+  # sonst scheitern. Hier gezielt einschalten, wenn der Schlüssel da ist.
+  BUILD_ARGS=()
+  if [[ "$UPDATER" -eq 1 ]]; then
+    BUILD_ARGS+=(--config '{"bundle":{"createUpdaterArtifacts":true}}')
+  fi
   if [[ "$NOTARIZE" -eq 0 ]]; then
     # Notarisierungs-Variablen für diesen Lauf ausblenden: dann signiert die
     # Tauri-CLI nur und überspringt notarytool.
     env -u APPLE_ID -u APPLE_PASSWORD -u APPLE_TEAM_ID \
         -u APPLE_API_ISSUER -u APPLE_API_KEY -u APPLE_API_KEY_PATH \
-        pnpm --filter speccify-desktop tauri build
+        pnpm --filter speccify-desktop tauri build "${BUILD_ARGS[@]}"
   else
-    pnpm --filter speccify-desktop tauri build
+    pnpm --filter speccify-desktop tauri build "${BUILD_ARGS[@]}"
   fi
 fi
 
@@ -197,6 +220,15 @@ echo "  $APP"
 for dmg in "$DMG_DIR"/*.dmg; do
   echo "  $dmg  ($(du -h "$dmg" | cut -f1))"
 done
+UPDATE_DIR="$REPO_ROOT/target/release/bundle/macos"
+for artifact in "$UPDATE_DIR"/*.app.tar.gz "$UPDATE_DIR"/*.app.tar.gz.sig; do
+  echo "  $artifact  ($(du -h "$artifact" | cut -f1))"
+done
+if ls "$UPDATE_DIR"/*.app.tar.gz.sig >/dev/null 2>&1; then
+  echo ""
+  echo "  latest.json für speccify.io bauen (Signatur = Inhalt der .sig-Datei):"
+  echo "    docs/release.md → Abschnitt „Updater"
+fi
 
 TOTAL=$((VERIFY_PROBLEMS + SIDECAR_PROBLEMS))
 if [[ "$TOTAL" -gt 0 ]]; then

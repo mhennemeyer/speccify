@@ -333,11 +333,60 @@ fn open_composer(app: AppHandle, state: State<Supervisor>, repo: String) -> Resu
     Ok(url)
 }
 
+// --- Updater (Plan r5-distribution.md, R5.4) --------------------------------
+
+/// Public Key des Updaters aus der Config. Leer bedeutet „noch kein
+/// Signaturschlüssel erzeugt" — dann bleibt der Updater aus, statt beim
+/// App-Start am unlesbaren Schlüssel zu scheitern.
+fn updater_pubkey(config: &tauri::Config) -> Option<String> {
+    pubkey_from_plugin_config(config.plugins.0.get("updater"))
+}
+
+fn pubkey_from_plugin_config(updater: Option<&serde_json::Value>) -> Option<String> {
+    let key = updater?.get("pubkey")?.as_str()?.trim();
+    (!key.is_empty()).then(|| key.to_string())
+}
+
+#[derive(Serialize)]
+struct UpdaterStatus {
+    /// Ist ein Public Key hinterlegt? Sonst kann die UI gar nicht erst prüfen.
+    configured: bool,
+    current_version: String,
+    endpoints: Vec<String>,
+}
+
+/// Die UI fragt das ab, bevor sie einen „Nach Updates suchen"-Knopf zeigt.
+#[tauri::command]
+fn updater_status(app: AppHandle) -> UpdaterStatus {
+    let config = app.config();
+    let endpoints = config
+        .plugins
+        .0
+        .get("updater")
+        .and_then(|updater| updater.get("endpoints"))
+        .and_then(|value| value.as_array())
+        .map(|entries| {
+            entries
+                .iter()
+                .filter_map(|entry| entry.as_str().map(str::to_string))
+                .collect()
+        })
+        .unwrap_or_default();
+    UpdaterStatus {
+        configured: updater_pubkey(config).is_some(),
+        current_version: app.package_info().version.to_string(),
+        endpoints,
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let ask_bo = desktop_ui::AskBoRegistry::default();
     let ask_bo_for_setup = ask_bo.clone();
-    tauri::Builder::default()
+    let context = tauri::generate_context!();
+    let updater_configured = updater_pubkey(context.config()).is_some();
+
+    let builder = tauri::Builder::default()
         // Single-Instance zuerst (Plugin-Doku): eine zweite App-Instanz
         // würde sonst still einen eigenen desktop-ui-MCP versuchen und
         // ask_bo-Fragen in der falschen Instanz landen lassen.
@@ -391,8 +440,54 @@ pub fn run() {
             terminal::terminal_resize,
             terminal::terminal_kill,
             desktop_ui::ask_bo_answer,
-            desktop_ui::ask_bo_pending
-        ])
-        .run(tauri::generate_context!())
+            desktop_ui::ask_bo_pending,
+            updater_status
+        ]);
+
+    // Updater erst anhängen, wenn ein Public Key hinterlegt ist — ohne
+    // Schlüssel könnte er ohnehin keine Signatur prüfen.
+    let builder = if updater_configured {
+        builder.plugin(tauri_plugin_updater::Builder::new().build())
+    } else {
+        builder
+    };
+
+    builder
+        .run(context)
         .expect("error while running tauri application");
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    /// Ohne hinterlegten Public Key darf der Updater nicht angehängt werden —
+    /// sonst scheitert der Plugin-Setup und die App startet nicht mehr (R5.4).
+    #[test]
+    fn updater_stays_off_without_a_pubkey() {
+        assert_eq!(pubkey_from_plugin_config(None), None);
+        assert_eq!(pubkey_from_plugin_config(Some(&json!({}))), None);
+        assert_eq!(
+            pubkey_from_plugin_config(Some(&json!({"pubkey": ""}))),
+            None
+        );
+        assert_eq!(
+            pubkey_from_plugin_config(Some(&json!({"pubkey": "   \n"}))),
+            None
+        );
+        assert_eq!(
+            pubkey_from_plugin_config(Some(&json!({"pubkey": 42}))),
+            None,
+            "kein String ⇒ nicht konfiguriert statt Panik"
+        );
+
+        // Der Wert aus der ausgelieferten tauri.conf.json ist heute leer —
+        // schlägt hier fehl, sobald jemand einen echten Key einträgt und
+        // die Erwartung nicht mitzieht.
+        let configured = pubkey_from_plugin_config(Some(&json!({
+            "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6..."
+        })));
+        assert_eq!(configured.as_deref(), Some("dW50cnVzdGVkIGNvbW1lbnQ6..."));
+    }
 }

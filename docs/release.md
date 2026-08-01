@@ -160,10 +160,90 @@ xcrun notarytool history --apple-id "$APPLE_ID" --team-id "$APPLE_TEAM_ID" --pas
 xcrun notarytool log <submission-id> --apple-id "$APPLE_ID" --team-id "$APPLE_TEAM_ID" --password "$APPLE_PASSWORD"
 ```
 
-## Noch offen (R5.4/R5.5)
+## Updater
 
-- **Updater**: `tauri-plugin-updater` mit eigenem Signaturschlüssel und
-  `latest.json` auf speccify.io — dann aktualisiert sich die App selbst.
+Die App kann sich selbst aktualisieren (`tauri-plugin-updater`). Das ist
+**unabhängig von der Apple-Signatur**: Tauri signiert die Update-Artefakte
+zusätzlich mit einem eigenen minisign-Schlüsselpaar, damit niemand ein
+untergeschobenes Update einspielen kann.
+
+### Schlüsselpaar erzeugen (einmalig)
+
+```bash
+pnpm --filter speccify-desktop tauri signer generate -w ~/.speccify/updater.key
+```
+
+Das schreibt den **privaten** Schlüssel nach `~/.speccify/updater.key` (mit
+Passwort schützen, niemals ins Repo, nicht verlieren — ohne ihn kann keine
+bestehende Installation mehr aktualisiert werden) und gibt den **Public Key**
+aus. Diesen in `apps/desktop/src-tauri/tauri.conf.json` eintragen:
+
+```jsonc
+"plugins": {
+  "updater": {
+    "endpoints": ["https://speccify.io/releases/latest.json"],
+    "pubkey": "<hier der Public Key>"
+  }
+}
+```
+
+> Solange `pubkey` leer ist, hängt die App den Updater gar nicht erst ein und
+> der Umgebungs-Tab zeigt „Automatische Updates sind in diesem Build nicht
+> eingerichtet". Ein Build ohne Schlüssel bleibt damit voll funktionsfähig.
+
+### Release mit Updater bauen
+
+```bash
+export TAURI_SIGNING_PRIVATE_KEY="$(cat ~/.speccify/updater.key)"
+export TAURI_SIGNING_PRIVATE_KEY_PASSWORD="…"     # falls gesetzt
+./scripts/release_macos.sh
+```
+
+Ist der private Schlüssel gesetzt, schaltet das Skript
+`bundle.createUpdaterArtifacts` ein und es entstehen zusätzlich:
+
+```
+target/release/bundle/macos/Speccify.app.tar.gz       # das Update-Paket
+target/release/bundle/macos/Speccify.app.tar.gz.sig   # dessen Signatur
+```
+
+Ohne Schlüssel wird bewusst **ohne** Updater-Artefakte gebaut (mit Hinweis) —
+und wenn der Schlüssel gesetzt, aber kein `pubkey` eingetragen ist, bricht der
+Preflight ab: sonst entstünden Updates, die keine Installation prüfen kann.
+
+### `latest.json` auf speccify.io
+
+Der Endpoint muss dieses JSON liefern (Tauri-2-Format):
+
+```json
+{
+  "version": "0.2.0",
+  "notes": "Kurze Release-Notes, werden in der App angezeigt.",
+  "pub_date": "2026-08-01T10:00:00Z",
+  "platforms": {
+    "darwin-aarch64": {
+      "signature": "<kompletter Inhalt von Speccify.app.tar.gz.sig>",
+      "url": "https://speccify.io/releases/Speccify_0.2.0_aarch64.app.tar.gz"
+    }
+  }
+}
+```
+
+- `version` **ohne** führendes `v`; die App vergleicht mit ihrer eigenen
+  Version aus `tauri.conf.json` und meldet nur höhere.
+- `signature` ist der Dateiinhalt der `.sig`, nicht deren Pfad.
+- `pub_date` ist RFC 3339.
+- Für Intel-Macs käme `darwin-x86_64` dazu (siehe unten).
+- Antwortet der Endpoint `204 No Content`, gilt das als „kein Update" —
+  praktisch, um Updates kurzfristig zu stoppen.
+
+Ablauf pro Release: bauen → `.app.tar.gz` und `.dmg` hochladen →
+`latest.json` mit neuer Version, URL und Signatur aktualisieren. In der App:
+Umgebungs-Tab → „Nach Updates suchen"; nach dem Einspielen muss Speccify
+einmal neu gestartet werden.
+
+## Noch offen (R5.5)
+
 - **Download-Seite** in `apps/marketing` mit dem dmg-Link.
 - **Intel/Universal**: gebaut wird derzeit nur `aarch64`. Für Intel-Macs
   bräuchte es einen Universal-Build (`--target universal-apple-darwin`) inkl.

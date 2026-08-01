@@ -138,11 +138,30 @@ klarer Liste ab, wenn Credentials fehlen (Exit 1, nichts gebaut);
 kein Ticket); `tauri build` mit der neuen macOS-Config läuft durch,
 `LSMinimumSystemVersion` steht auf 10.15.
 
-### R5.4 — Updater
-1.  `tauri-plugin-updater` + `bundle.createUpdaterArtifacts`; Public Key
-    in die Config, Private Key bleibt beim BO.
-2.  `latest.json`-Vertrag + Ablage auf speccify.io; Update-Prüfung in der
-    App (Hinweis statt Zwang).
+### R5.4 — Updater ⏸ verdrahtet, wartet auf den Public Key (2026-08-01)
+1.  [x] `tauri-plugin-updater` (Rust + JS) eingebunden, `plugins.updater`
+    mit Endpoint `https://speccify.io/releases/latest.json` und **leerem**
+    `pubkey`; Capability `updater:default`.
+2.  [x] **Der Updater wird nur angehängt, wenn ein Public Key hinterlegt
+    ist** (`updater_pubkey`/`pubkey_from_plugin_config` in `lib.rs`) —
+    sonst scheiterte der Plugin-Setup und die App startete nicht mehr.
+    Kommando `updater_status` (configured/current_version/endpoints) sagt
+    der UI, ob sie überhaupt einen Knopf zeigen soll.
+3.  [x] Umgebungs-Tab: Karte mit App-Version und „Nach Updates suchen"
+    (dynamischer Import des Plugins); ohne Schlüssel steht dort der
+    Hinweis, dass dieser Build keine automatischen Updates hat.
+4.  [x] `release_macos.sh`: schaltet `createUpdaterArtifacts` per
+    `--config` ein, sobald `TAURI_SIGNING_PRIVATE_KEY` gesetzt ist, und
+    bricht ab, wenn dabei der `pubkey` fehlt (sonst entstünden Updates,
+    die keine Installation prüfen kann); listet `.app.tar.gz` + `.sig`.
+5.  [x] `docs/release.md`: Schlüssel erzeugen, `latest.json`-Vertrag
+    (Tauri-2-Format, Signatur = Dateiinhalt der `.sig`, 204 = kein
+    Update), Ablauf pro Release.
+6.  [ ] **BO-Aktion:** `pnpm --filter speccify-desktop tauri signer
+    generate -w ~/.speccify/updater.key` ausführen und den Public Key in
+    `tauri.conf.json` eintragen (privater Schlüssel bleibt beim BO).
+    Danach ist der Updater scharf — der echte Update-Durchlauf braucht
+    zusätzlich das Hosting aus R5.5.
 
 ### R5.5 — Wrap-up
 1.  Download-Seite in `apps/marketing` (speccify.io) mit dmg-Link.

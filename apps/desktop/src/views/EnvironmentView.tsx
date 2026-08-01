@@ -8,11 +8,13 @@ import {
   fetchDoctor,
   fetchEngineStatus,
   fetchPythons,
+  fetchUpdaterStatus,
   installEngine,
   installPython,
   type DoctorCheck,
   type EngineStatus,
   type PythonsInfo,
+  type UpdaterStatus,
 } from "../lib/system";
 import {
   ActionButton,
@@ -26,16 +28,18 @@ interface EnvData {
   checks: DoctorCheck[];
   pythons: PythonsInfo;
   engine: EngineStatus;
+  updater: UpdaterStatus;
 }
 
 export default function EnvironmentView() {
   const { data, loading, refreshing, error, reload } = useAsync<EnvData>(async () => {
-    const [doctor, pythons, engine] = await Promise.all([
+    const [doctor, pythons, engine, updater] = await Promise.all([
       fetchDoctor(),
       fetchPythons(),
       fetchEngineStatus(),
+      fetchUpdaterStatus(),
     ]);
-    return { checks: doctor.checks, pythons, engine };
+    return { checks: doctor.checks, pythons, engine, updater };
   }, "environment");
 
   return (
@@ -53,6 +57,7 @@ export default function EnvironmentView() {
       <LoadingBoundary loading={loading} error={error} label="Umgebung wird geprüft…">
         {data && (
           <>
+            <UpdateCard updater={data.updater} />
             <EngineCard engine={data.engine} onChanged={reload} />
           <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
             {data.checks.map((c) =>
@@ -72,6 +77,71 @@ export default function EnvironmentView() {
         )}
       </LoadingBoundary>
     </div>
+  );
+}
+
+/**
+ * App-Version + Update-Suche (R5.4). Der Updater lädt erst, wenn er
+ * konfiguriert ist — der Import passiert deshalb dynamisch, sonst zöge ein
+ * Build ohne Signaturschlüssel das Plugin unnötig ins Bundle.
+ */
+function UpdateCard({ updater }: { updater: UpdaterStatus }) {
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const check = async () => {
+    setError(null);
+    setMessage(null);
+    setBusy(true);
+    try {
+      const { check: checkUpdate } = await import("@tauri-apps/plugin-updater");
+      const update = await checkUpdate();
+      if (!update) {
+        setMessage("Kein Update verfügbar — die App ist aktuell.");
+        return;
+      }
+      setMessage(`Version ${update.version} wird geladen …`);
+      await update.downloadAndInstall();
+      setMessage(
+        `Version ${update.version} installiert — Speccify beenden und neu starten.`,
+      );
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <article className="mb-3 rounded-lg border border-slate-200 bg-white p-4">
+      <div className="flex items-baseline justify-between">
+        <h3 className="font-medium text-slate-900">Speccify</h3>
+        <span className="text-sm text-slate-500">Version {updater.current_version}</span>
+      </div>
+      {updater.configured ? (
+        <div className="mt-3 flex items-center gap-3 border-t border-slate-100 pt-3">
+          <ActionButton
+            onClick={check}
+            className="bg-slate-800 text-white hover:bg-slate-700"
+          >
+            Nach Updates suchen
+          </ActionButton>
+          {busy && <Spinner />}
+          {message && <span className="text-xs text-slate-500">{message}</span>}
+        </div>
+      ) : (
+        <p className="mt-2 text-xs text-slate-500">
+          Automatische Updates sind in diesem Build nicht eingerichtet (kein
+          Signaturschlüssel hinterlegt) — siehe docs/release.md.
+        </p>
+      )}
+      {error && (
+        <div className="mt-2">
+          <ErrorBox message={error} />
+        </div>
+      )}
+    </article>
   );
 }
 

@@ -9,6 +9,12 @@
     "beforeBuildCommand": "pnpm build",
     "frontendDist": "../dist"
   },
+  "plugins": {
+    "updater": {
+      "endpoints": ["https://speccify.io/releases/latest.json"],
+      "pubkey": ""
+    }
+  },
   "app": {
     "windows": [
       {

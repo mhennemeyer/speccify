@@ -1580,3 +1580,31 @@
   Speccify.app/Contents/MacOS lauffähig; 17 Desktop-Tests (neu:
   bundle_dir_is_searched_first), 422 Pytest, clippy/fmt clean, tauri
   build grün. Kosten: App 17 → 55 MB, dmg 5,7 → 22 MB.
+
+## 2026-08-01 (R5.4 — Updater verdrahtet, wartet auf den Public Key)
+- BO-Entscheidung: er erzeugt das minisign-Schlüsselpaar selbst, ich baue
+  alles andere und lasse den pubkey als einzige Lücke.
+- tauri-plugin-updater (Rust + JS) eingebunden; plugins.updater mit
+  Endpoint https://speccify.io/releases/latest.json und leerem pubkey,
+  Capability updater:default (wird beim Build aufgelöst — im generierten
+  ACL-Manifest enthalten).
+- Kernpunkt: der Updater wird NUR angehängt, wenn ein pubkey hinterlegt
+  ist (pubkey_from_plugin_config), sonst scheiterte der Plugin-Setup und
+  die App startete nicht mehr. Kommando updater_status liefert der UI
+  configured/current_version/endpoints.
+- Umgebungs-Tab: Karte mit App-Version + "Nach Updates suchen"; das
+  Plugin wird per dynamischem Import geladen und landet in einem eigenen
+  1-KB-Chunk (Haupt-Bundle referenziert plugin:updater nicht). Ohne
+  Schlüssel steht dort der Hinweis statt des Knopfes.
+- release_macos.sh: schaltet createUpdaterArtifacts per --config ein,
+  sobald TAURI_SIGNING_PRIVATE_KEY gesetzt ist, bricht ab wenn dabei der
+  pubkey fehlt, und listet .app.tar.gz + .sig.
+- docs/release.md: Schlüsselerzeugung, latest.json-Vertrag (Tauri-2-
+  Format, signature = Inhalt der .sig, 204 = kein Update), Release-Ablauf.
+- Verifikation: 18 Desktop-Tests grün (neu: updater_stays_off_without_a_
+  pubkey inkl. Nicht-String-Fall), clippy/fmt clean, tsc grün, 422
+  Pytest, tauri build grün (Hauptbinary 13,2 → 16,9 MB durch das Plugin);
+  Preflight mit gesetztem Key und leerem pubkey bricht korrekt ab.
+  Bundle-Start-Smoke erneut ausgelassen — auf :8768 lief die dev-Instanz
+  des BO; die Empty-Key-Logik deckt der Unit-Test ab, das Plugin wird in
+  dem Fall gar nicht erst registriert.

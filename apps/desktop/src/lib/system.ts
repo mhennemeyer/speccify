@@ -51,6 +51,15 @@ export const installEngine = () => invoke<EngineStatus>("engine_install");
 
 export const ENGINE_LOG_ID = "engine-install";
 
+/** Updater-Zustand (R5.4): ohne Public Key in der Config bleibt er aus. */
+export interface UpdaterStatus {
+  configured: boolean;
+  current_version: string;
+  endpoints: string[];
+}
+
+export const fetchUpdaterStatus = () => invoke<UpdaterStatus>("updater_status");
+
 export interface BookEntry {
   title: string;
   file: string;
