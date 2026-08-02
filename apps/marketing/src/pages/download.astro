@@ -1,0 +1,132 @@
+---
+// Download-Seite für die Desktop-App (Plan r5-distribution.md, R5.5).
+// Solange kein signiertes Release existiert, ist PUBLIC_DOWNLOAD_URL leer und
+// die Seite zeigt statt eines toten Links den Weg über einen eigenen Build —
+// gleiches Muster wie try-it.astro mit dem Playground.
+import MarketingLayout from "../layouts/MarketingLayout.astro";
+
+const title = "Speccify für macOS herunterladen";
+const description =
+  "Die Speccify-Desktop-App: Composer, MCP-Server und Agent-Terminal in einer signierten App — ohne Repo, ohne Toolchain.";
+
+const downloadUrl = import.meta.env.PUBLIC_DOWNLOAD_URL ?? "";
+const version = import.meta.env.PUBLIC_DOWNLOAD_VERSION ?? "";
+const hasRelease = Boolean(downloadUrl);
+
+const features = [
+  {
+    name: "Visueller Composer",
+    body: "Specs zusammenstecken, Mocks live sehen, als speccify.yaml speichern.",
+  },
+  {
+    name: "MCP-Server inklusive",
+    body: "Exec, Discovery, Parallels und die Spec-Engine bringt die App mit — deine Coding-Agents finden sie über eine fertige .mcp.json.",
+  },
+  {
+    name: "Agent-Terminal",
+    body: "Echtes PTY im Arbeitsverzeichnis, dein Agent startet auf Wunsch automatisch mit.",
+  },
+  {
+    name: "Rückfragen im UI",
+    body: "Agents stellen über ask_bo echte Rückfragen — mit Buttons, Mehrfachauswahl und Formularen statt Rateversuchen.",
+  },
+];
+---
+
+<MarketingLayout title={title} description={description}>
+  <main class="mx-auto max-w-5xl px-6 py-12">
+    <section class="flex flex-col items-center gap-5 py-8 text-center">
+      <p class="text-sm font-semibold uppercase tracking-widest text-sky-400">
+        Desktop-App für macOS
+      </p>
+      <h1 class="max-w-3xl text-4xl font-bold tracking-tight">
+        Speccify auf dem Rechner
+      </h1>
+      <p class="max-w-2xl text-lg text-slate-300">
+        Composer, MCP-Server und Agent-Terminal in einer App. Kein Repo, kein
+        Rust, kein Python-Setup — die App bringt alles mit, was sie braucht.
+      </p>
+
+      {
+        hasRelease ? (
+          <div class="flex flex-col items-center gap-3">
+            <a
+              href={downloadUrl}
+              class="rounded-md bg-sky-500 px-6 py-3 text-lg font-medium text-white transition hover:bg-sky-400"
+            >
+              Speccify {version} laden (.dmg)
+            </a>
+            <p class="text-sm text-slate-400">
+              Apple Silicon · macOS 11 oder neuer · signiert und notarisiert
+            </p>
+          </div>
+        ) : (
+          <div class="w-full rounded-xl border border-slate-800 bg-slate-900/50 p-8 text-left">
+            <p class="text-lg font-semibold text-slate-200">
+              Noch kein öffentlicher Build
+            </p>
+            <p class="mt-2 text-slate-400">
+              Die App ist fertig, das signierte Release steht noch aus. Bis
+              dahin baust du sie in zwei Schritten selbst — das Skript lädt
+              Abhängigkeiten, baut die App und startet sie:
+            </p>
+            <pre class="mt-4 overflow-x-auto rounded-lg border border-slate-800 bg-slate-950 p-4 text-sm text-slate-200"><code>git clone https://github.com/speccify/speccify
+cd speccify && ./scripts/dev.sh --release</code></pre>
+            <p class="mt-4 text-sm text-slate-400">
+              Voraussetzungen für den Selbstbau:
+              <code class="rounded bg-slate-800 px-1.5 py-0.5">uv</code>,
+              <code class="rounded bg-slate-800 px-1.5 py-0.5">pnpm</code> und
+              <code class="rounded bg-slate-800 px-1.5 py-0.5">cargo</code> —
+              das Skript prüft sie und nennt den Installationsbefehl, falls
+              etwas fehlt.
+            </p>
+          </div>
+        )
+      }
+    </section>
+
+    <section class="grid gap-6 py-8 md:grid-cols-2">
+      {
+        features.map((feature) => (
+          <div class="rounded-xl border border-slate-800 bg-slate-900/50 p-6">
+            <h2 class="mb-2 text-lg font-semibold text-slate-100">
+              {feature.name}
+            </h2>
+            <p class="text-slate-300">{feature.body}</p>
+          </div>
+        ))
+      }
+    </section>
+
+    <section class="py-8">
+      <h2 class="mb-4 text-2xl font-bold">Beim ersten Start</h2>
+      <div class="rounded-xl border border-slate-800 bg-slate-900/50 p-6">
+        <p class="text-slate-300">
+          Die App bringt ihre Python-Engine als Paket mit und baut daraus beim
+          ersten Start eine eigene Umgebung — ein Klick im Umgebungs-Tab
+          („Engine installieren"). Dafür braucht sie <strong>einmal</strong>
+          eine Internetverbindung; danach läuft alles offline. Nichts davon
+          landet in deinen Projekten oder in einer System-Python-Installation.
+        </p>
+        <p class="mt-4 text-slate-400">
+          Windows und Intel-Macs sind noch nicht dabei — die App wird derzeit
+          für Apple Silicon gebaut.
+        </p>
+      </div>
+    </section>
+
+    <section class="flex flex-col items-center gap-4 py-10 text-center">
+      <h2 class="text-xl font-bold">Lieber erst ausprobieren?</h2>
+      <p class="max-w-xl text-slate-300">
+        Der Playground rendert die Referenz-Specs im Browser — ohne
+        Installation.
+      </p>
+      <a
+        href="/try-it/"
+        class="rounded-md border border-slate-700 px-5 py-2.5 font-medium text-slate-200 transition hover:border-slate-500"
+      >
+        Zum Playground
+      </a>
+    </section>
+  </main>
+</MarketingLayout>

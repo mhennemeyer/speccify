@@ -5,6 +5,11 @@ Schickt eine identische Szenario-Batterie an die Python-Referenz (dotagent,
 Commit 2949d1d) und den Rust-Kandidaten (crates/exec-mcp, ab R1) und difft
 die normalisierten Antworten. Vertrag: docs/exec-mcp-contract.md.
 
+Stand R5: Speccify ruft dotagent nirgends mehr auf — dieser Harness ist das
+letzte Werkzeug, das die Referenz noch braucht, und läuft nur noch bei
+Änderungen am Wire-Vertrag. Ohne laufende Referenz (`--reference`) macht er
+einen Selbsttest gegen den Kandidaten.
+
 Beide Server müssen im MULTI-Modus laufen (ohne --project); jede Seite
 bekommt ihr eigenes frisches Fixture-Projekt, damit sich Pending-/Consume-
 Schreibzugriffe nicht mischen. Datei-Effekte (pending/allowlist) werden

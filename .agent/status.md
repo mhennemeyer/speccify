@@ -23,6 +23,14 @@
   Password, dann `./scripts/release_macos.sh` — erst dieser Lauf beweist,
   dass Signatur und Notarisierung durchgehen. Danach R5.4 Updater, R5.5
   Download-Seite + dotagent archivieren.
+  **R5.4 ⏸ verdrahtet (2026-08-01)**: `tauri-plugin-updater` eingebunden,
+  aber inert bis ein `pubkey` in `tauri.conf.json` steht — **BO-Aktion:**
+  `tauri signer generate -w ~/.speccify/updater.key`, Public Key eintragen.
+  **R5.5 ✅ (2026-08-02)**: Download-Seite `/download/` in `apps/marketing`
+  (dmg-Link nur bei gesetztem `PUBLIC_DOWNLOAD_URL`, sonst Selbstbau-
+  Anleitung), Doku zur dotagent-Ablösung entschärft; offen bleibt dort nur
+  die **BO-Aktion** „dotagent-Repo archivieren" (fremdes Repo, README-Text
+  liegt im Plan bereit).
   Außerdem: `./scripts/dev.sh` baut/startet die App idempotent in einem
   Kommando. **Tag-Vorschlag: `v0.17.0-r5-bundling`.**
 - **Toolkit-Vollausbau ABGESCHLOSSEN (2026-07-27)** — [`plans/toolkit-discovery-terminal.md`](./plans/toolkit-discovery-terminal.md) T0–T8 ✅: Rust-MCPs Exec (:8765, Kontrakt-Harness 28/28), Parallels (:8766), Discovery (:8767, `mcp_list` mit client_config), desktop-ui (:8768, `ask_bo`); Toolbox (TOML, 3 Quellen), Settings/Working Dir, Agent-Terminal (PTY + Autostart, Copy/Paste), ask_bo-Sidebar (Tastatur, robuste Zustellung), Server-Tab nativ (Supervisor-Start/Stop). Doku: [`docs/toolkit.md`](../docs/toolkit.md). **Tag-Vorschlag: `v0.16.0-toolkit-discovery-terminal`.**

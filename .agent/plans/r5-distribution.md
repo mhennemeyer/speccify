@@ -163,11 +163,30 @@ kein Ticket); `tauri build` mit der neuen macOS-Config läuft durch,
     Danach ist der Updater scharf — der echte Update-Durchlauf braucht
     zusätzlich das Hosting aus R5.5.
 
-### R5.5 — Wrap-up
-1.  Download-Seite in `apps/marketing` (speccify.io) mit dmg-Link.
-2.  dotagent archivieren (README-Verweis „Referenz für die
-    Rust-Portierung"), Restore-Doku/Memories umziehen.
-3.  Rust-Plan `rust-neustart-toolkit-mcps.md` schließen.
+### R5.5 — Wrap-up (2026-08-02)
+1.  [x] Download-Seite `apps/marketing/src/pages/download.astro`: zeigt den
+    dmg-Link nur bei gesetztem `PUBLIC_DOWNLOAD_URL`/`PUBLIC_DOWNLOAD_VERSION`,
+    sonst die Selbstbau-Anleitung (`./scripts/dev.sh --release`) statt eines
+    toten Links — gleiches Muster wie `PUBLIC_PLAYGROUND_URL` auf `/try-it/`.
+    Verlinkt aus Header, Footer und Hero. Beide Zustände gegen das gebaute
+    HTML geprüft.
+2.  [x] Doku entschärft: `docs/toolkit.md` und der Kontrakt-Harness sagen
+    jetzt, was wirklich gilt — dotagent wird nicht mehr aufgerufen, übrig
+    sind zwei Regressions-Netze (Diff-Harness, `#[ignore]`-Paritätstest).
+3.  [ ] **BO-Aktion — dotagent archivieren.** Bewusst nicht von mir
+    ausgeführt: fremdes Repo (`~/Desktop/Work/Articles/dotagent`), gleiche
+    Linie wie beim iKanbanAi-Übergabeplan. Vorschlag für dessen README:
+
+    > **Archiviert.** Dieses Repo war die Referenz für die Rust-Portierung
+    > des Agent-Toolkits nach Speccify (`crates/{exec,discovery,parallels}-mcp`,
+    > `apps/desktop`). Der Wire-Vertrag des Exec-MCP ist dort in
+    > `docs/exec-mcp-contract.md` festgehalten, die Parität mit
+    > `scripts/exec_mcp_contract.py` (28/28) nachgewiesen. Keine
+    > Weiterentwicklung.
+
+    Danach in Speccify: GitHub-Repo auf „Archived" stellen (falls gepusht).
+4.  [ ] Rust-Plan `rust-neustart-toolkit-mcps.md` schließen — sobald R5.3
+    (Zertifikat) und R5.4 (Schlüssel) durch sind.
 
 ## Folgen von R5.2 (bewusst so entschieden)
 

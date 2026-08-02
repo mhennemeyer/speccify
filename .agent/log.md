@@ -1608,3 +1608,24 @@
   Bundle-Start-Smoke erneut ausgelassen — auf :8768 lief die dev-Instanz
   des BO; die Empty-Key-Logik deckt der Unit-Test ab, das Plugin wird in
   dem Fall gar nicht erst registriert.
+
+## 2026-08-02 (R5.5 — Download-Seite, dotagent-Ablösung dokumentiert)
+- `apps/marketing/src/pages/download.astro`: Desktop-App-Seite mit
+  Feature-Karten, Hinweis auf den einmaligen Engine-Bootstrap (braucht
+  einmal Netz) und der Einschränkung Apple Silicon. Der dmg-Link
+  erscheint nur bei gesetztem PUBLIC_DOWNLOAD_URL/_VERSION — sonst steht
+  dort die Selbstbau-Anleitung (./scripts/dev.sh --release) statt eines
+  toten Links; gleiches Muster wie PUBLIC_PLAYGROUND_URL auf /try-it/.
+  Verlinkt aus Header, Footer und Hero; README um die Env-Tabelle ergänzt.
+- Verifikation: beide Zustände gegen das gebaute HTML geprüft (ohne Vars
+  Fallback-Text und kein .dmg im Markup; mit Vars der erwartete Link
+  "Speccify 0.2.0 laden (.dmg)" und kein Fallback); 24 Seiten bauen grün,
+  dist danach wieder ohne Release-URL erzeugt; 422 Pytest, ruff clean.
+- dotagent: die verbliebenen Erwähnungen in Code/Doku sind
+  Herkunftsnachweise und bleiben. docs/toolkit.md und der Kopf von
+  scripts/exec_mcp_contract.py sagen jetzt sauber, was gilt — Speccify
+  ruft dotagent nicht mehr auf, übrig sind zwei Regressions-Netze
+  (Diff-Harness, #[ignore]-Paritätstest für kb_list).
+- Das Archivieren des dotagent-Repos habe ich NICHT gemacht: fremdes Repo
+  (~/Desktop/Work/Articles/dotagent), gleiche Linie wie beim
+  iKanbanAi-Übergabeplan. Fertiger README-Text liegt im Plan (R5.5.3).

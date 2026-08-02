@@ -4,8 +4,11 @@ Der Infrastruktur-Workstream aus
 [`toolkit-discovery-terminal.md`](../.agent/plans/toolkit-discovery-terminal.md):
 Rust-MCP-Server + Toolbox als Fundament, die Desktop-App als Cockpit.
 Herkunft: Rust-Neustart der dotagent-Referenz (Commit `2949d1d`). Seit R3
-ruft Speccify dotagent nirgends mehr auf — das Repo dient nur noch als
-Kontrakt-Referenz (Diff-Harness/Paritätstests) bis zur Archivierung nach R5.
+ruft Speccify dotagent nirgends mehr auf; die verbliebenen Erwähnungen in
+Code und Doku sind Herkunftsnachweise. Nur zwei Werkzeuge brauchen das alte
+Repo überhaupt noch, und beide sind reine Regressions-Netze: der
+Kontrakt-Diff-Harness (`scripts/exec_mcp_contract.py`) und der
+`#[ignore]`-Paritätstest für `kb_list`.
 
 ## Die Server auf einen Blick
 
