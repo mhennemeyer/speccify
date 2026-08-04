@@ -1,7 +1,7 @@
 ---
+lifecycle: done
 sessionId: session-260529-200900-phase5d
 ---
-
 # Requirements
 
 ### Overview & Goals

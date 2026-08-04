@@ -1,3 +1,8 @@
+---
+lifecycle: done
+status: Master-Plan der Phasen 0–7 (alle geliefert) — als Roadmap-Quelle abgelöst vom Pivot-Plan, bleibt Referenz für Vision, Spec-Format und PM-Designentscheidungen
+sessionId: speccify-plan
+---
 # Plan: Projekt „speccify.io/de" – Spec-First Komponenten-Plattform für AI-Agenten
 
 > **Status**: 📋 Historischer Master-Plan — Roadmap seit dem OSS-Pivot: [`pivot-open-source-git-composer.md`](./pivot-open-source-git-composer.md)

@@ -1,7 +1,7 @@
 # Release: signierte Speccify.app für macOS
 
 Speccify wird **außerhalb des App Store** verteilt (Plan
-[`r5-distribution.md`](../.agent/plans/r5-distribution.md), D5): Download von
+[`r5-distribution.md`](../.agent/plans/archive/r5-distribution.md), D5): Download von
 speccify.io statt Store, ohne Sandbox — der Exec-MCP und der Prozess-Supervisor
 starten beliebige CLI-Befehle, das ginge sandboxed nicht.
 

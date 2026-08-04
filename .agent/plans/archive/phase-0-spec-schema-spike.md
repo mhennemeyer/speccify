@@ -1,3 +1,7 @@
+---
+lifecycle: done
+sessionId: phase-0-spec-schema-spike
+---
 # Phase 0 — Spec-Schema v0 + `flowcation lint` + 5 Referenz-Specs
 
 > **Status**: Done (abgeschlossen am 2026-05-05)

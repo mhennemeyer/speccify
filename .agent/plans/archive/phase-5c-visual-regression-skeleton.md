@@ -1,7 +1,7 @@
 ---
+lifecycle: done
 sessionId: session-260529-194249-kmre
 ---
-
 # Requirements
 
 ### Overview & Goals

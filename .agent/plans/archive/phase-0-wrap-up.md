@@ -1,8 +1,7 @@
 ---
+lifecycle: done
 sessionId: session-260505-181449-1wqk
-isActive: false
 ---
-
 > **Status**: ✅ Done — Phase 0 formal abgeschlossen
 > **Abgeschlossen**: 2026-05-06
 > **Vorgänger**: [`archive/phase-0-spec-schema-spike.md`](./archive/phase-0-spec-schema-spike.md)

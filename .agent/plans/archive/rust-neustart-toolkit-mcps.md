@@ -1,7 +1,8 @@
 ---
-isActive: false
+lifecycle: done
+status: R0–R3 geliefert; Ausführung lief über toolkit-discovery-terminal.md, R5 über r5-distribution.md — bleibt Kontrakt-/Referenzquelle für den Exec-Wire-Vertrag
+sessionId: rust-neustart-toolkit-mcps
 ---
-
 # Plan: Migration nach Rust — Toolkit & MCPs (aus dotagent)
 
 > **2026-07-25:** Die Ausführung von R1/R2 (+ Parallels/Playwright,

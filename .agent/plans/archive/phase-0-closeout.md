@@ -1,8 +1,7 @@
 ---
+lifecycle: done
 sessionId: session-260505-164252-ui7l
-isActive: true
 ---
-
 # Requirements
 
 ### Was ist im Phase-0-Plan noch offen?

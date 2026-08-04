@@ -1,8 +1,7 @@
 ---
+lifecycle: done
 sessionId: session-260527-2101
-isActive: false
 ---
-
 # Status — Phase 5a abgeschlossen (2026-05-27, Stages 2–5 in Follow-up-Session ergänzt)
 
 **Alle Stages Done.** Tag-Vorschlag an User: `v0.8.0-phase-5a`.

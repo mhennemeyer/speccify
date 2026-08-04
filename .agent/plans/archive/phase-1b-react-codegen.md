@@ -1,8 +1,7 @@
 ---
+lifecycle: done
 sessionId: session-260506-160000-1b
-isActive: true
 ---
-
 # Requirements
 
 ### Overview & Goals

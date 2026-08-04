@@ -347,7 +347,7 @@
 ## 2026-05-13 (Phase 1b Step 6 — Master-Plan-Sync + Phase-1b-Abschluss)
 - **Step 6 abgeschlossen, Phase 1b damit komplett.** Sync der Plan-Dokumente
   nach dem Step-5c-Commit; keine Code-Änderungen.
-- **`.agent/plans/speccify-plan.md`**: Phase 1b in der Sub-Spike-Liste auf
+- **`.agent/plans/archive/speccify-plan.md`**: Phase 1b in der Sub-Spike-Liste auf
   "abgeschlossen 2026-05-13" gesetzt; React-LLM-Strategie (Bedrock-Modell
   `bedrock/eu.anthropic.claude-opus-4-7` via `converse`, Reproduzierbarkeit
   durch Replay-Cache mit Cache-Key über `spec_sha256 + target + model +
@@ -745,7 +745,7 @@
     (`cd example-project && lock && pull && verify`).
   - `.gitignore` ergänzt um `example-project/out/` und
     `example-project/speccify.lock` (werden in CI bei jedem Lauf neu gebaut).
-  - Master-Plan `.agent/plans/speccify-plan.md` synchronisiert:
+  - Master-Plan `.agent/plans/archive/speccify-plan.md` synchronisiert:
     - Lockfile-Beispiel hat jetzt zwei Varianten: `kind: template` (Phase 1a,
       ohne API-Keys reproduzierbar) und `kind: llm` (Phase 1b+).
     - Phase 1 explizit in Sub-Spikes 1a / 1b / 1c / 1d zerlegt; 1a verlinkt
@@ -1064,7 +1064,7 @@
   self-contained); wird in P5 durch `GitRegistry` ersetzt/ergänzt.
 
 ## 2026-07-23 (P2-Plan — API-Vertrag, Komposition & Mock-Generator)
-- **Aktiver Phasen-Plan** [`plans/phase-p2-api-composition-mocks.md`](./plans/phase-p2-api-composition-mocks.md)
+- **Aktiver Phasen-Plan** [`plans/archive/phase-p2-api-composition-mocks.md`](./plans/archive/phase-p2-api-composition-mocks.md)
   erstellt. Stage 0 entfällt als Frage-Runde: Entscheidungen D1–D6 per
   User-Delegation („folge deinen Empfehlungen") direkt dokumentiert —
   Logic-Mocks fixture-basiert (D1), keine State-Machine / `behavior:`
@@ -1188,7 +1188,7 @@
   in diesem Repo **neu in Rust geschrieben** statt als Python-Pakete
   migriert; dotagent bleibt Referenzimplementierung (Exec-MCP-Referenz:
   dotagent-Commit `2949d1d`). Kein PyPI, kein App Store/Sandboxing.
-- **`.agent/plans/rust-neustart-toolkit-mcps.md`** (`isActive: true`):
+- **`.agent/plans/archive/rust-neustart-toolkit-mcps.md`** (`isActive: true`):
   vollständige Einweisung für Sessions ohne dotagent-Vorwissen —
   Hintergrund, Rust/Python-Schnitt (Engine + Composer-Backend bleiben
   Python), Wire-Kontrakt `POST /stream` (iKanbanAi hängt dran),
@@ -1486,7 +1486,7 @@
   grün, tauri build grün.
 
 ## 2026-07-29 (R5.1/R5.2 — App ohne Repo lauffähig)
-- Feinplan `.agent/plans/r5-distribution.md` (R5.1–R5.5, D1–D5): Weg von
+- Feinplan `.agent/plans/archive/r5-distribution.md` (R5.1–R5.5, D1–D5): Weg von
   „läuft aus meinem Repo" zu „Download, in /Programme ziehen, läuft".
 - **R5.1 Sidecars**: scripts/build_sidecars.sh baut exec/discovery/
   parallels-mcp und legt sie als binaries/<name>-<triple> ab;
@@ -1629,3 +1629,28 @@
 - Das Archivieren des dotagent-Repos habe ich NICHT gemacht: fremdes Repo
   (~/Desktop/Work/Articles/dotagent), gleiche Linie wie beim
   iKanbanAi-Übergabeplan. Fertiger README-Text liegt im Plan (R5.5.3).
+
+## 2026-08-04 (Plan-Ablage aufgeräumt)
+- BO-Wunsch: Pläne sollen archiviert oder Entwürfe sein, genau einer aktiv;
+  Schema wie in iKanbanAi (`lifecycle` / `status` / `sessionId` im
+  Frontmatter, statt des hiesigen `isActive: true|false`).
+- Alle 29 Pläne auf das neue Frontmatter umgestellt (Bodies unverändert);
+  `isActive` ist raus, `sessionId` bleibt bzw. kommt aus dem Dateinamen.
+- Sechs abgeschlossene Pläne nach `plans/archive/` verschoben
+  (desktop-app-und-composer, phase-p2-api-composition-mocks,
+  r5-distribution, rust-neustart-toolkit-mcps, speccify-plan,
+  toolkit-discovery-terminal). Top-Level enthält jetzt nur noch
+  `pivot-open-source-git-composer.md` (`lifecycle: active`) — die
+  Produkt-Roadmap, an der als Nächstes gearbeitet wird. Leeres `next/`
+  entfernt.
+- Verweise in 11 Dateien nachgezogen (nur Pfade, keine Prosa). Nebenbei
+  eine Altlast behoben: `.agent/agent.md` verlinkte mit repo-root-relativen
+  Pfaden (`./.agent/plans/…`), obwohl es selbst in `.agent/` liegt — dadurch
+  waren ~20 Links tot. Tote Plan-Links insgesamt: 23 → 6 (Rest sind
+  Altlasten in `.junie/` und in den Marketing-Docs, kein Plan-Thema).
+- Konvention in `agent.md` festgeschrieben (Abschnitt „Pläne: Ablage &
+  Lebenszyklus"), damit künftige Sessions sie einhalten. Bewusst NICHT in
+  `rules.md` — die ist ein Symlink auf `~/.agent/rules.md` und würde alle
+  Projekte betreffen; das wäre BO-Entscheidung.
+- Verifikation: 422 Pytest grün (Doku-Änderung, kein Code berührt);
+  Frontmatter-Durchlauf geprüft (1 × active, 28 × done, kein isActive mehr).

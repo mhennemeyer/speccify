@@ -1,3 +1,7 @@
+---
+lifecycle: done
+sessionId: package-manager-comparison
+---
 # Package-Manager-Vergleich für flowcation
 
 > **Status**: 📋 Entscheidungsvorlage – Input für die Sektion „npm-artiger Workflow konkret" im [flowcation-plan.md](../flowcation-plan.md).

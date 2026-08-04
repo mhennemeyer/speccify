@@ -4,8 +4,8 @@ Desktop-Cockpit für Speccify: Composer-Fenster, Toolbox, MCP-Server,
 Agent-Terminal, ask_bo. Ursprünglich aus dotagent `app/dashboard`
 übernommen (Commit `2949d1d`) — **seit R3 komplett ohne dotagent**:
 alle Daten kommen aus nativen Rust-Commands bzw. den Speccify-MCPs.
-Pläne: [`desktop-app-und-composer.md`](../../.agent/plans/desktop-app-und-composer.md),
-[`toolkit-discovery-terminal.md`](../../.agent/plans/toolkit-discovery-terminal.md);
+Pläne: [`desktop-app-und-composer.md`](../../.agent/plans/archive/desktop-app-und-composer.md),
+[`toolkit-discovery-terminal.md`](../../.agent/plans/archive/toolkit-discovery-terminal.md);
 Überblick: [`docs/toolkit.md`](../../docs/toolkit.md).
 
 ## Architektur

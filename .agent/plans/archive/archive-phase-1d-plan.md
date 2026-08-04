@@ -1,7 +1,7 @@
 ---
+lifecycle: done
 sessionId: session-260521-081738-1i8l
 ---
-
 # Requirements
 
 ### Overview & Goals

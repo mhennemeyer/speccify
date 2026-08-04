@@ -1,7 +1,8 @@
 ---
-isActive: false
+lifecycle: done
+status: T0–T8 abgeschlossen 2026-07-27 (Rust-MCPs, Toolbox, Settings, Agent-Terminal, ask_bo-Sidebar, Server-Tab)
+sessionId: toolkit-discovery-terminal
 ---
-
 # Plan: Toolkit-Vollausbau — Discovery, MCPs, Toolbox & Agent-Terminal
 
 > **Abgeschlossen 2026-07-27** — T0–T8 geliefert (inkl. BO-Findings aus

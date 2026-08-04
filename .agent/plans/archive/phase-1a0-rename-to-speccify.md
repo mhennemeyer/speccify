@@ -1,8 +1,7 @@
 ---
+lifecycle: done
 sessionId: session-260506-rename-speccify
-isActive: true
 ---
-
 # Phase 1a-0 — Rebrand „flowcation" → „speccify"
 
 > **Status**: ✅ Done (2026-05-06)

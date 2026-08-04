@@ -226,7 +226,7 @@ uv sync --reinstall-package django
 - [`.agent/plans/archive/phase-5d-visual-regression-coverage.md`](./.agent/plans/archive/phase-5d-visual-regression-coverage.md) — Abgeschlossen: Voller Visual-Regression-Sweep über 8 Pfade + Recorder-Script + Determinismus-Härte + Artifact-Upload bei CI-Failure.
 - [`.agent/plans/archive/phase-5c-visual-regression-skeleton.md`](./.agent/plans/archive/phase-5c-visual-regression-skeleton.md) — Abgeschlossen: Visual-Regression-Skeleton (`VisualRegressionBackend` + `PlaywrightPixelmatchDriver` + `visual_regression`-Pytest-Marker + `visual-regression.yml`-CI).
 - [`.agent/plans/archive/phase-5b-conformance-sweep.md`](./.agent/plans/archive/phase-5b-conformance-sweep.md) — Abgeschlossen: Replay-Cache-Recording für Angular/SwiftUI + echte Spec×Target-Build-Smokes + 75-Pfad-Cross-Consistency-Sweep.
-- [`.agent/plans/speccify-plan.md`](./.agent/plans/speccify-plan.md) — Master-Plan (langfristige Vision & Roadmap).
+- [`.agent/plans/archive/speccify-plan.md`](./.agent/plans/archive/speccify-plan.md) — Master-Plan (langfristige Vision & Roadmap).
 - [`.agent/plans/archive/phase-5a-conformance-backends.md`](./.agent/plans/archive/phase-5a-conformance-backends.md) — Abgeschlossen: Conformance-Build-Smoke gegen React/Angular (`tsc --noEmit`) und SwiftUI (`swiftc -typecheck`) inkl. Conformance-CI-Workflow.
 - [`.agent/plans/archive/phase-4-workspaces.md`](./.agent/plans/archive/phase-4-workspaces.md) — Abgeschlossen: Workspaces-Iteration (`lock`/`pull`/`add`/`verify` cross-member + MCP-Bridge).
 - [`.agent/plans/archive/phase-3-codegen-targets.md`](./.agent/plans/archive/phase-3-codegen-targets.md) — Abgeschlossen: zweites + drittes Codegen-Target (SwiftUI + Angular).

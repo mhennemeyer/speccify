@@ -1,7 +1,7 @@
 ---
+lifecycle: done
 sessionId: session-260602-170906-1ngv
 ---
-
 # Landing Page and Docs
 
 ### Phase 6 — Landingpage + Doku-Site (`speccify.io`)

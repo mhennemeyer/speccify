@@ -1,8 +1,7 @@
 ---
+lifecycle: done
 sessionId: session-260524-171600-3a
-isActive: false
 ---
-
 # Requirements
 
 ## Phase-3-Ziel: Zweites + drittes Codegen-Target + Conformance-Runner + Workspaces

@@ -1,7 +1,7 @@
 # Exec-MCP — Wire-Kontrakt (Referenz: dotagent `2949d1d`)
 
 Dieser Vertrag ist die Portierungs-Grundlage für `crates/exec-mcp` (Stufe R1
-im Plan [`rust-neustart-toolkit-mcps.md`](../.agent/plans/rust-neustart-toolkit-mcps.md)).
+im Plan [`rust-neustart-toolkit-mcps.md`](../.agent/plans/archive/rust-neustart-toolkit-mcps.md)).
 Quelle ist die Python-Referenz **dotagent** (`src/dotagent/mcp/{server,exec_tool,allowlist}.py`,
 Commit `2949d1d`); Kontrakt-Gegenseite ist die Mac-App **iKanbanAi**
 (`ExecStreamClient.swift`). **Der Rust-Port übernimmt alle Semantiken und

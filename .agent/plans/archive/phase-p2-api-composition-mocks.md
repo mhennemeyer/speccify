@@ -1,3 +1,8 @@
+---
+lifecycle: done
+status: P2-Kern abgeschlossen 2026-07-24 (Schema v1, 7 Referenz-Specs, deterministischer Mock-Codegen über CLI/MCP/Web); Stage 4 (voller API-Conformance-Harness) vertagt
+sessionId: phase-p2-api-composition-mocks
+---
 # Phase P2 — API-Vertrag, Komposition & Mock-Generator (Composer-Fundament)
 
 > **Status:** ✅ Kern abgeschlossen (2026-07-24) — Stages 1, 2, 3, 5, 6 geliefert; **Stage 4 (API-Conformance-Harness) bewusst hinter P3 vertagt** (siehe Update unten). Nächster Schritt: **P3 — Visueller Composer**.

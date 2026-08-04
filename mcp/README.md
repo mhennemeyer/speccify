@@ -10,7 +10,7 @@ MCP-Tool-Aufruf entspricht 1:1 einem `speccify <subcommand>` und
 liefert dieselben byte-identischen Outputs (vgl. Cross-Consistency-
 Test in `mcp/tests/test_tools_write.py`).
 
-**Aktive Phase**: Phase 1c — siehe [Phasen-Plan](../.agent/plans/phase-1c-mcp-server.md).
+**Aktive Phase**: Phase 1c — siehe [Phasen-Plan](../.agent/plans/archive/phase-1c-mcp-server.md).
 
 ## Installation & Start
 

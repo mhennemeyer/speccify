@@ -1,3 +1,8 @@
+---
+lifecycle: active
+status: P1 (Registry-Rückbau) + P2 (API/Komposition/Mocks) + P3-Runde-1 geliefert; offen: P3-Rest (Mock-Bundle-Rendering statt Contract-Interpretation, Drag & Drop), P4 `speccify build`, P5 Git-Quellen
+sessionId: pivot-open-source-git-composer
+---
 # Plan: Pivot — Open Source, Git-basierte Registry, Projekt-Builds & visueller Composer
 
 > **Status**: 📋 In Umsetzung (P1 gestartet 2026-07-23)

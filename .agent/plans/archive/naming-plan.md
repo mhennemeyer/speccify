@@ -1,3 +1,7 @@
+---
+lifecycle: done
+sessionId: naming-plan
+---
 # Plan: Umbenennung von „flowcation"
 
 > **Status**: 📋 Entwurf – Namensfindung & Markenrecherche

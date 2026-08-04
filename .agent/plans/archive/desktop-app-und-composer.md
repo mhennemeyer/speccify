@@ -1,7 +1,8 @@
 ---
-isActive: false
+lifecycle: done
+status: A0+A1 abgenommen 2026-07-25 (Desktop-App-Übernahme + Composer-Fenster); offen nur der BO-Walkthrough docs/composer-tristate-walkthrough.md
+sessionId: desktop-app-und-composer
 ---
-
 # Plan: Desktop-App-Übernahme (dotagent) & Composer-Integration
 
 > **Abgeschlossen 2026-07-25:** A0 + A1 geliefert und vom BO abgenommen

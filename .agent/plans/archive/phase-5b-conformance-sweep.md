@@ -1,3 +1,7 @@
+---
+lifecycle: done
+sessionId: phase-5b-conformance-sweep
+---
 # Phase 5b — Conformance Sweep, Replay-Cache-Recording & echte Spec×Target-Coverage
 
 > Status: **Alle Stages 0–6 Done** (2026-05-29). Plan archiviert; Tag-Vorschlag an User: `v0.9.0-phase-5b`.

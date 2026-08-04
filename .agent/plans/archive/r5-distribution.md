@@ -1,7 +1,8 @@
 ---
-isActive: true
+lifecycle: done
+status: code-complete 2026-08-02 (Sidecars, Engine-Payload, uv, Signing-Vorbereitung, Updater, Download-Seite) — offen nur BO-Aktionen: Developer-ID-Zertifikat (R5.3), Updater-Schlüssel erzeugen (R5.4), dotagent-Repo archivieren (R5.5)
+sessionId: r5-distribution
 ---
-
 # Plan: R5 — Distribution ohne Store (Speccify.app zum Herunterladen)
 
 **Angelegt 2026-07-29.** Feinplan zur letzten offenen Stufe von

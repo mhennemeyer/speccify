@@ -2,7 +2,7 @@
 
 JSON-Schema-Definitionen für `speccify.yaml`-Specs. Sprach-unabhängig (kein Python-Paket).
 
-**Aktive Phase**: Phase 3 — Multi-Target-Schema-Vorgriff. Siehe [Master-Plan, Zeilen 123–174 + 276–281](../.agent/plans/speccify-plan.md) und den [Phase-0-Spike-Plan](../.agent/plans/archive/phase-0-spec-schema-spike.md).
+**Aktive Phase**: Phase 3 — Multi-Target-Schema-Vorgriff. Siehe [Master-Plan, Zeilen 123–174 + 276–281](../.agent/plans/archive/speccify-plan.md) und den [Phase-0-Spike-Plan](../.agent/plans/archive/phase-0-spec-schema-spike.md).
 
 **Schema-Inventur**:
 - `spec.schema.json` — aktive Spec-Definition (Phase 0).

@@ -1,8 +1,7 @@
 ---
+lifecycle: done
 sessionId: session-260527-084420-cdqd
-isActive: false
 ---
-
 # Status — Phase 4 abgeschlossen (2026-05-27)
 
 **Alle 9 Steps Done.** Tag-Vorschlag an User: `v0.7.0-phase-4` (selbst nicht gesetzt, vgl. `rules.md`).
