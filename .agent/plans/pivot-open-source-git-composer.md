@@ -168,11 +168,23 @@ Vorbild: **Go-Module + SwiftPM**, nicht npm.
 **Weiter offen (bewusst):** nur Target `react`; Routen ohne Parameter/Guards/verschachteltes Routing; der Composer editiert `app:`-Routen noch nicht visuell.
 
 ### Phase P5 — Git-basierte Spec-Quellen
+
+> **In Umsetzung seit 2026-08-04.** Stufen und Entscheidungen hier (ein aktiver Plan).
+
 - `GitRegistry` (Registry-Protocol) mit Tag-Discovery, Shallow-Fetch, Content-Addressed Cache.
 - Identitäts-Schema + Lockfile v4 (Commit-Pin) + Migration bestehender Lockfiles.
 - CLI: `add <git-ref>`, `pull`, `verify` gegen Git-Quellen; neues `publish` als Tag-Helfer (validieren → taggen → push-Hinweis).
 - Index-Repo (Discovery): Format, CI-Validierung, `speccify search` liest Index; Composer-Palette kann aus dem Index laden.
 - MCP + Web auf Git-Quellen nachziehen (Cross-Consistency-Vertrag hält).
+
+**Entscheidungen (2026-08-04, per User-Delegation) — beantworten die offenen Fragen 1–3:**
+
+- **D16 — Identität = Git-Ref als Spec-Id** (Frage 1): `git+https://host/org/repo` für Single-Spec-Repos, `git+https://host/org/repo#pfad/im/repo` für Specs in Unterverzeichnissen. Damit ist die Id host-qualifiziert (kein Dependency-Confusion-Problem, keine Scope-Reservierung) **und passt ohne Änderung in das bestehende `Registry`-Protocol** (`list_versions`/`fetch` bekommen die Id) — Resolver, Lockfile und MVS bleiben unangetastet. Keine Alias-Tabelle, keine Migration bestehender `@scope/name`-Ids: beide Formen existieren nebeneinander, `@scope/name` bleibt die lokale/Fixture-Form.
+- **D17 — Tags sind die Versionen** (Frage 2): `v<semver>` im Single-Spec-Repo, `<pfad>/v<semver>` bei gesetztem `#pfad` (Go-Konvention). Ein Repo kann damit beliebig viele Specs unabhängig versionieren; die Regel ist mechanisch aus der Id ableitbar, es gibt keine zweite Konvention zu raten.
+- **D18 — Trust über Commit-Pin** (Frage 3): das Lockfile pinnt zusätzlich den Commit-SHA hinter dem Tag (Lockfile v4); `verify` prüft Tag → Commit → Spec-Bytes. Signierte Tags/gitsign bleiben ein späterer, additiver Slot — der bestehende `signature`-Block deckt das ab. Kein sigstore in P5.
+- **D19 — Der Cache ist ein Bare-Repo**: pro Repo-URL ein Bare-Clone unter `~/.cache/speccify/git/<hash>/`, Tags per `fetch --depth 1`, Spec-Bytes per `git cat-file blob <tag>:<pfad>` — kein Working Tree, kein Checkout. Nach einem Fetch ist alles offline reproduzierbar (`list_versions`/`fetch` lesen lokale Refs); `offline=True` verbietet jeden Netz-Zugriff hart. Tests laufen gegen `file://`-Fixture-Repos, CI braucht kein Netz.
+
+**Stufen:** P5.1 `GitRegistry` + Ref-Parsing + Cache ✅ · P5.2 Lockfile v4 (Commit-Pin) + `add`/`lock`/`pull`/`verify` gegen Git · P5.3 Discovery (Index-Repo + `speccify search`) · P5.4 MCP/Web/Composer nachziehen + Doku.
 
 ### Phase P6 — Ökosystem & Launch
 - Doku-Site umbauen (Composer, App-Builds, Git-Workflow), Quickstarts, Beispiel-Repos als Saatgut im Index.

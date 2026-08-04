@@ -55,6 +55,9 @@ class Spec:
     version: Version
     raw_bytes: bytes
     path: Path
+    # Nur bei Git-Quellen (Phase P5) gesetzt: der Commit hinter dem Tag —
+    # der Pin, den das Lockfile festhält (Entscheidung D18).
+    source_commit: str | None = None
 
     def parsed(self) -> dict:
         """Lazy parse: PyYAML auf den Original-Bytes."""

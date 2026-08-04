@@ -80,6 +80,14 @@ from speccify_core.conformance_visual import (
     VisualRegressionBackend,
     visual_driver_for,
 )
+from speccify_core.git_registry import (
+    DEFAULT_GIT_CACHE_DIR,
+    GitRef,
+    GitRegistry,
+    GitRegistryError,
+    is_git_ref,
+    parse_git_ref,
+)
 from speccify_core.loader import SpecLoader, SpecLoaderError
 from speccify_core.lockfile import (
     CURRENT_LOCKFILE_SCHEMA_VERSION,
@@ -210,6 +218,12 @@ __all__ = [
     "GeneratorPin",
     "LlmClient",
     "LlmGeneratorPin",
+    "DEFAULT_GIT_CACHE_DIR",
+    "GitRef",
+    "GitRegistry",
+    "GitRegistryError",
+    "is_git_ref",
+    "parse_git_ref",
     "LocalRegistry",
     "Registry",
     "RemoteRegistry",
