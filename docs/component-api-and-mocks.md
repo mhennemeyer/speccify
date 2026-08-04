@@ -131,6 +131,8 @@ deterministisch, ohne LLM im Loop.
 
 ## Cross-Referenzen
 
+- Ganze Projekte aus Specs: [`app-builds.md`](./app-builds.md) (`kind: app`, `speccify build`)
+
 - Pivot-Plan (Phasen, Entscheidungen D1–D6):
   [`.agent/plans/pivot-open-source-git-composer.md`](../.agent/plans/pivot-open-source-git-composer.md)
 - Conformance/Build-Smoke: [`conformance.md`](./conformance.md)

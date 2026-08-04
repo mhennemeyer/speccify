@@ -80,6 +80,19 @@ Mocks erfüllen denselben API-Vertrag wie die LLM-generierte Implementierung
 (Import-Swap-kompatibel) und sind die Render-Grundlage des visuellen
 Composers (P3). Details: [`docs/component-api-and-mocks.md`](./docs/component-api-and-mocks.md).
 
+### Ein ganzes Projekt bauen (`kind: app`)
+
+Eine App-Spec komponiert Screens zu einem lauffähigen Projekt: `speccify build`
+erzeugt Vite-Scaffold, Router und verdrahtete Screens — deterministisch, ohne
+LLM. Mit der Mock-Füllung (Default) läuft das Projekt sofort:
+
+```bash
+uv run speccify build @org/demo-app --registry ./registry-fixtures --out ./demo-app
+cd demo-app && pnpm install && pnpm dev
+```
+
+Details: [`docs/app-builds.md`](./docs/app-builds.md).
+
 ### Replay-Cache neu aufnehmen (Maintainer)
 
 `speccify pull`/`verify` laufen in CI ausschließlich offline gegen den
@@ -220,6 +233,7 @@ uv sync --reinstall-package django
 
 - [`.agent/agent.md`](./.agent/agent.md) — Onboarding für Coding-Agents (Vision, Repo-Layout, Konventionen).
 - [`docs/component-api-and-mocks.md`](./docs/component-api-and-mocks.md) — **Spec-Schema v1** (P2): formaler `api:`-Vertrag, `composition:` mit typgeprüfter Verdrahtung, deterministische Mocks (`speccify mock` / MCP `mock` / `POST /api/v1/mock`).
+- [`docs/app-builds.md`](./docs/app-builds.md) — **Projekt-Builds** (P4): `kind: app` mit Routen/Theme/Env, `navigate`-Verdrahtung, `speccify build --mocks` (+ MCP-Tool `build` / `POST /api/v1/build`).
 - [`docs/workspaces.md`](./docs/workspaces.md) — Cargo-Style Workspaces (Phase 4): Root-Lockfile, Per-Member-Outputs, MVS-Konflikt-UX.
 - [`docs/conformance.md`](./docs/conformance.md) — Build-Smoke gegen echte Toolchains (Phase 5a: React/Angular via `tsc --noEmit`, SwiftUI via `swiftc -typecheck`) **+ Cross-Consistency-Sweep**: `5 Specs × 3 Targets × 4 Pfade (Local/CLI/MCP/Web)` byte-identisch via `apps/web/backend/tests/test_cross_consistency_sweep.py`.
 - [`docs/visual-regression.md`](./docs/visual-regression.md) — **Phase 5d Voller Sweep**: Visual-Regression über `4 UI-Specs × {react, angular} = 8 Pfade` mit committed Referenz-PNGs (flache Konvention `<spec>-<target>.png`), Recorder-Script `scripts/record_visual_snapshots.py`, ein-Job-CI (`visual-regression.yml`), 10 % Default-Tolerance, Determinismus-Härte mittel (reduce-motion + color-scheme:light + monospace-Font-Stack).

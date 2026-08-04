@@ -103,7 +103,7 @@ Job (`apps/composer ui smoke`). Die Ports kollidieren bewusst nicht mit
 
 - Drag & Drop hängt Knoten um und fügt ein, sortiert aber nicht: die
   Reihenfolge innerhalb der Geschwister ändert man im Inspector (↑/↓).
-- Keine Routen-/Navigations-Semantik für `kind: app` (Phase P4).
+- Routen für `kind: app` gibt es (Phase P4, siehe [`app-builds.md`](./app-builds.md)), der Composer editiert sie aber noch nicht visuell — sie stehen im YAML.
 - Wiring-Quellen sind `payload.*`, `props.*` und Literale — keine Expressions.
 - Im Bearbeiten-Modus simuliert der Composer die Verdrahtung zwischen den
   einzeln gerenderten Knoten selbst (`simulate.ts`, gleiche Semantik wie der
@@ -115,5 +115,6 @@ Job (`apps/composer ui smoke`). Die Ports kollidieren bewusst nicht mit
 
 - Hands-on-Einstieg: [`composer-tristate-walkthrough.md`](./composer-tristate-walkthrough.md)
 - API-Vertrag & Mocks: [`component-api-and-mocks.md`](./component-api-and-mocks.md)
+- Projekt-Builds: [`app-builds.md`](./app-builds.md)
 - Lokaler Gesamt-Workflow: [`local-dev-e2e.md`](./local-dev-e2e.md)
 - Roadmap: [`.agent/plans/pivot-open-source-git-composer.md`](../.agent/plans/pivot-open-source-git-composer.md)

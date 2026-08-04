@@ -209,6 +209,54 @@ jobs:
       - name: Composer UI smoke (backend + vite + chromium)
         run: pnpm --filter speccify-composer e2e
 
+  app-build:
+    name: speccify build smoke (vite + browser)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      - name: Set up Python (from .python-version)
+        run: uv python install
+
+      - name: Sync workspace
+        run: uv sync --all-packages
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.3
+          run_install: false
+
+      # Der Smoke verlinkt apps/composer/node_modules ins generierte Projekt —
+      # dort stehen exakt die Pakete, die das Scaffold pinnt.
+      - name: Install dependencies (frozen lockfile, workspace root)
+        run: pnpm install --frozen-lockfile
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-composer-${{ runner.os }}-1.44.0
+
+      - name: Install Playwright Chromium
+        run: pnpm --filter speccify-composer exec playwright install --with-deps chromium
+
+      - name: Build the demo app and drive it in a browser
+        run: uv run pytest tests/test_app_build_smoke.py -m app_build -v
+
   rust:
     name: rust workspace (exec-mcp + discovery-mcp)
     runs-on: ubuntu-latest

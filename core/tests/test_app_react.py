@@ -85,8 +85,9 @@ def test_app_tsx_wires_navigate_and_set() -> None:
     app_tsx = _render().files["src/App.tsx"].decode()
     assert 'if (event === "login.login_succeeded") {' in app_tsx
     assert 'navigate("/suche");' in app_tsx
-    # Datenfluss über Screens: die Suchanfrage füllt initial_name vor.
-    assert '"initialName": String((payload as Record<string, unknown>)["query"] ?? "")' in app_tsx
+    # Datenfluss über Screens: die Notiz füllt initial_name im Kontaktformular vor.
+    assert 'if (event === "note.submitted") {' in app_tsx
+    assert '"initialName": String((payload as Record<string, unknown>)["value"] ?? "")' in app_tsx
 
 
 def test_static_props_and_route_titles_come_from_the_spec() -> None:
@@ -121,9 +122,10 @@ def test_scaffold_is_identical_for_mocks_and_implementations() -> None:
     """D14: nur `src/components/**` unterscheidet sich zwischen den Füllungen."""
     with_mocks = _render()
     implementations = {
-        "org/LoginScreen.tsx": b"export default function LoginScreen() { return null; }\n",
-        "org/SearchBar.tsx": b"export default function SearchBar() { return null; }\n",
-        "org/ContactForm.tsx": b"export default function ContactForm() { return null; }\n",
+        f"org/{component}.tsx": (
+            f"export default function {component}() {{ return null; }}\n".encode()
+        )
+        for component in ("LoginScreen", "SearchBar", "TextInput", "ContactForm")
     }
     without_mocks = _render(mocks=False, components=implementations)
 
@@ -146,7 +148,14 @@ def test_scaffold_is_identical_for_mocks_and_implementations() -> None:
 
 def test_missing_implementation_is_an_error() -> None:
     with pytest.raises(AppCodegenError, match="Implementierung für @org/contact-form fehlt"):
-        _render(mocks=False, components={"org/LoginScreen.tsx": b"", "org/SearchBar.tsx": b""})
+        _render(
+            mocks=False,
+            components={
+                "org/LoginScreen.tsx": b"",
+                "org/SearchBar.tsx": b"",
+                "org/TextInput.tsx": b"",
+            },
+        )
 
 
 def test_component_specs_are_rejected() -> None:
