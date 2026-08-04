@@ -1,6 +1,6 @@
 ---
 lifecycle: active
-status: P1 (Registry-Rückbau) + P2 (API/Komposition/Mocks) + P3-Runde-1 geliefert; offen: P3-Rest (Mock-Bundle-Rendering statt Contract-Interpretation, Drag & Drop), P4 `speccify build`, P5 Git-Quellen
+status: P1 (Registry-Rückbau) + P2 (API/Komposition/Mocks) + P3 komplett (MVP, Verfeinerung 1, Mock-Bundle-Rendering, Drag & Drop) geliefert; offen: P4 `speccify build`, P5 Git-Quellen
 sessionId: pivot-open-source-git-composer
 ---
 # Plan: Pivot — Open Source, Git-basierte Registry, Projekt-Builds & visueller Composer
@@ -123,7 +123,14 @@ Vorbild: **Go-Module + SwiftPM**, nicht npm.
 
 > **✅ MVP geliefert (2026-07-24):** `apps/composer/` (Vite-React-SPA, statisch exportierbar, `base: "./"`) + Composer-Backend-API (`GET /api/v1/specs/{scope}/{name}`, `POST /api/v1/validate`, `POST /api/v1/specs`, dazu `POST /api/v1/mock` aus P2). Palette/Canvas (interpretierte Mocks mit Live-Wiring-Simulation)/Inspector (typisierte Prop-Editoren, Verdrahtungs-Formular mit API-Dropdowns, eigene Events/Props inkl. `map_to`)/YAML-Round-Trip/Speichern in die Registry. Agent-Bedienbarkeit per Headless-E2E gepinnt (`test_composer_agent_flow.py`: komponieren → validieren → speichern → mocken, rein über HTTP).
 >
-> **✅ Verfeinerung Runde 1 (2026-07-24):** visuelles Slot-Befüllen (Slot-Zonen im Canvas als klickbares Einfüge-Ziel, rekursives Mock-Rendering, „Platzierung"-Umhängen im Inspector, Teilbaum-Entfernen mit Wiring-Cleanup), Undo/Redo (`{doc, children}`-Snapshots, Tipp-Koaleszierung, ⌘Z/⇧⌘Z + Topbar-Buttons) und Playwright-UI-Smoke (`apps/composer/e2e/`, 3 Tests gegen echtes Backend mit Wegwerf-Registry, eigener CI-Job). **Weiter offen:** `kind: app`-Routen (P4), Mock-Bundle-Rendering statt Contract-Interpretation, Drag & Drop statt Klick-Ziel.
+> **✅ Verfeinerung Runde 1 (2026-07-24):** visuelles Slot-Befüllen (Slot-Zonen im Canvas als klickbares Einfüge-Ziel, rekursives Mock-Rendering, „Platzierung"-Umhängen im Inspector, Teilbaum-Entfernen mit Wiring-Cleanup), Undo/Redo (`{doc, children}`-Snapshots, Tipp-Koaleszierung, ⌘Z/⇧⌘Z + Topbar-Buttons) und Playwright-UI-Smoke (`apps/composer/e2e/`, 3 Tests gegen echtes Backend mit Wegwerf-Registry, eigener CI-Job).
+>
+> **✅ Verfeinerung Runde 2 (2026-08-04) — P3 damit abgeschlossen:**
+> 1. **Mock-Bundle-Rendering statt Contract-Interpretation** (D7): neuer Endpoint `POST /api/v1/mock/draft` mockt das *ungespeicherte* Dokument (Kinder aus der Registry); `apps/composer/src/mockRuntime.ts` kompiliert die Closure im Browser (sucrase TSX → CJS, Mini-`require` für Closure-Importe, `"react"` an die Composer-Instanz gebunden) und `useMockBundle.ts` hält sie debounced aktuell. Der Canvas rendert damit **den generierten Code** — Prop-Darstellung, Event-Chips, Styles und Slot-Positionen kommen aus `*.mock.tsx`, nicht mehr aus einer zweiten Interpretation. Test: Entwurfs-Closure ist byte-identisch zur Registry-Closure derselben Spec.
+> 2. **Zwei Canvas-Modi** (D8): *Bearbeiten* (Baum mit Editor-Rahmen; der Composer liefert gemergte Props, Event-Callbacks und Slot-Inhalte, die Verdrahtung simuliert `simulate.ts`) und *Vorschau* (die Mock-Komponente des Dokuments selbst — Verdrahtung läuft im generierten Code). Beide Wege nebeneinander sind der laufende Abgleich zwischen Simulation und Generator.
+> 3. **Drag & Drop** (D9): Palette → Canvas/Slot-Zone, Knoten am Griff umhängen (samt Teilbaum, No-Op in den eigenen Teilbaum). Klick-Einfüge-Ziel bleibt als tastatur-/agent-freundlicher Weg. Desktop: Composer-Fenster mit `disable_drag_drop_handler()`, sonst frisst Tauris Datei-Drop-Handler die Events.
+>
+> **Weiter offen (bewusst nach P4 verschoben):** `kind: app`-Routen, Sortieren per Drag (Reihenfolge bleibt im Inspector), Typecheck im Browser (bleibt bei der Conformance-Stufe).
 >
 > **Rahmenbedingungen (User, 2026-07-24):**
 > 1. **Agent-bedienbar**: Der Composer muss von Coding-Agents (Claude) selbst nutzbar sein — jede UI-Aktion existiert auch als HTTP-API (Laden/Speichern/Validieren/Mocken), der Zustand ist die Spec-Datei auf Disk (Round-Trip), keine UI-only-Funktionen. Agents arbeiten wahlweise über die API/CLI/MCP oder per Browser-Automation.
@@ -158,6 +165,7 @@ Vorbild: **Go-Module + SwiftPM**, nicht npm.
 - **Registry-Schicksal**: Archiv-Branch `archive/pre-oss-pivot-registry` + Löschung aus dem Arbeitszweig. Discovery später über statisches Index-Repo (P5).
 - **Reihenfolge**: Composer-Fast-Track — API/Mocks (P2) und Composer (P3) vor Projekt-Builds (P4) und Git-Quellen (P5). Begründung: durch Rumprobieren im Composer schlauer werden, bevor Verdrahtungs-/Build-Semantik final geschnitten wird.
 - **Composer-Scope**: baut Apps **und** Composite-Komponenten (Komponenten aus Unterkomponenten); `composition:` wird gemeinsames Schema-Konzept.
+- **P3-Entscheidungen (2026-08-04, per User-Delegation)**: **D7** Canvas rendert die generierte Mock-Closure (Browser-Kompilat via sucrase) statt den Contract zu interpretieren — Preis: +215 kB im Composer-Bundle und `new Function`-Auswertung (Tauri-CSP ist `null`, Vite-Dev ohne CSP); Gewinn: keine zweite Mock-Implementierung, keine Drift. **D8** Editier-Modus rendert Knoten einzeln (Composer behält Selektion/Slot-Zonen/Wiring-Log), Vorschau-Modus rendert das Dokument-Mock am Stück; kein Iframe, weil Selektion und Drop-Ziele sonst über Frame-Grenzen laufen müssten. **D9** Drag & Drop per HTML5-DnD (Playwright-testbar, Tauri-tauglich mit `disable_drag_drop_handler()`) statt Pointer-Events-Eigenbau.
 - **P2-Entscheidungen (2026-07-23, per User-Delegation — Details im [P2-Plan](./phase-p2-api-composition-mocks.md))**: Logic-Mocks fixture-basiert (D1); keine State-Machine im API-Vertrag, `behavior:` reserviert (D2); kein automatisches Prop-Forwarding/Event-Bubbling in Composites, nur explizites Mapping (D3); Phase-7-S4 (`screenshots[].tolerance`) reitet auf dem Schema-Bump mit, Rest des Phase-7-Plans archiviert als Backlog (D4); Spec-Schema-Bump auf explizites `schema_version: 1` mit v0-Loader-Migration (D5); Mocks lockfile-frei, Reproduzierbarkeit über Spec-Hash + Template-Version (D6).
 
 ## Offene Fragen fürs Refinement

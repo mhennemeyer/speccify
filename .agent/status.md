@@ -8,10 +8,21 @@
 
 ## Nächste Schritte
 - **Aktiver Plan: [`plans/pivot-open-source-git-composer.md`](./plans/pivot-open-source-git-composer.md)**
-  (der einzige mit `lifecycle: active`) — offen: P3-Rest (Mock-Bundle-Rendering
-  statt Contract-Interpretation, Drag & Drop), danach P4 `speccify build`,
-  P5 Git-Quellen. Alle abgeschlossenen Pläne liegen unter `plans/archive/`;
-  Konvention siehe `agent.md` → „Pläne: Ablage & Lebenszyklus".
+  (der einzige mit `lifecycle: active`) — **P3 ist abgeschlossen (2026-08-04)**;
+  als Nächstes **P4 `speccify build`** (`kind: app`: Routen/Navigation/Theme auf
+  dem `composition:`-Fundament, `speccify build --target react [--mocks]`,
+  Beispiel-App + Playwright-Smoke), danach P5 Git-Quellen. Alle abgeschlossenen
+  Pläne liegen unter `plans/archive/`; Konvention siehe `agent.md` → „Pläne:
+  Ablage & Lebenszyklus".
+- **P3 Verfeinerung Runde 2 (2026-08-04)**: Canvas rendert die **generierte
+  Mock-Closure** (neuer Endpoint `POST /api/v1/mock/draft` für ungespeicherte
+  Entwürfe + Browser-Kompilat via sucrase in `apps/composer/src/mockRuntime.ts`)
+  statt den API-Contract nachzuzeichnen; zweiter Canvas-Modus „Vorschau"
+  (Dokument-Mock am Stück, Verdrahtung im generierten Code); **Drag & Drop**
+  (Palette → Canvas/Slot, Knoten am Griff umhängen; Desktop-Fenster mit
+  `disable_drag_drop_handler()`). **Verifikation: 426 Pytest, 5/5 Playwright,
+  Composer-Typecheck + Build (484 kB), 18 Desktop-Tests, clippy/fmt, ruff
+  clean.** Tag-Vorschlag: `v0.18.0-p3-composer-mock-bundle`.
 - **R5 Distribution abgeschlossen (2026-08-02)** — [`plans/archive/r5-distribution.md`](./plans/archive/r5-distribution.md):
   **R5.1 ✅** MCP-Binaries als Tauri-Sidecars im `.app` (kein `cargo install`
   mehr nötig; Auflösung mitgeliefert > PATH, Quelle im Server-Tab sichtbar).

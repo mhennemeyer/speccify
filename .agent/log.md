@@ -1654,3 +1654,44 @@
   Projekte betreffen; das wäre BO-Entscheidung.
 - Verifikation: 422 Pytest grün (Doku-Änderung, kein Code berührt);
   Frontmatter-Durchlauf geprüft (1 × active, 28 × done, kein isActive mehr).
+
+## 2026-08-04 (P3-Rest: Mock-Bundle-Rendering + Drag & Drop — P3 abgeschlossen)
+- Ausgangspunkt: der Canvas zeichnete den API-Contract nach (eigene
+  Prop-Grids, eigene Event-Chips). Zwei Mock-Implementierungen, also
+  garantierte Drift zum `speccify mock`-Output. Jetzt rendert der Canvas
+  die generierten Dateien selbst.
+- Backend: `POST /api/v1/mock/draft` (`services/mock.py::mock_draft_spec_yaml`)
+  mockt eine ungespeicherte Spec — Kinder aus der Registry, nur das Dokument
+  ist neu. Beide Mock-Responses tragen jetzt `entry` (Modulpfad der Spec in
+  der Closure); dafür `mock_output_path` im Core öffentlich gemacht.
+- Frontend: `mockRuntime.ts` transpiliert die Closure mit sucrase (TSX → CJS,
+  nur Syntax) und führt sie mit einem Mini-`require` aus: relative
+  Closure-Importe werden aufgelöst, `"react"` an die Composer-Instanz
+  gebunden (sonst brechen Hooks). `useMockBundle.ts` holt die Closure
+  debounced (250 ms); scheitert ein Zwischenstand, bleibt die letzte
+  lauffähige stehen und der Canvas zeigt „Mock veraltet".
+- Der Composer liefert der echten Komponente nur noch Props (camelCase wie
+  im Generator), Event-Callbacks (Payload zurück auf snake_case gemappt)
+  und Slot-Inhalte — die Slot-Zone landet damit exakt dort, wo der Mock
+  `data-speccify-slot` rendert. Fehlergrenze pro Mock; `synthesizePayload`
+  ist entfallen.
+- Zweiter Canvas-Modus „Vorschau": rendert die Mock-Komponente des Dokuments
+  selbst, inklusive der im generierten Code laufenden Verdrahtung. Damit
+  gibt es einen laufenden Abgleich zur Composer-Simulation (`simulate.ts`),
+  die im Bearbeiten-Modus weiterhin die Props zwischen den Knoten liefert.
+- Drag & Drop: Palette-Einträge ziehbar (Drop auf Canvas = Top-Level, auf
+  Slot-Zone = in den Slot), Knoten am Griff (⠿) umhängbar samt Teilbaum;
+  eigene MIME-Typen in `dnd.ts`, damit `dragover` ohne `getData` entscheiden
+  kann. Klick-Einfüge-Ziel und „+ als Kind" bleiben (agent-/tastaturfähig).
+  Desktop-Fenster jetzt mit `disable_drag_drop_handler()` — sonst schluckt
+  Tauris OS-Datei-Drop-Handler die HTML5-Drag-Events.
+- Nebenbei: Playwright startet Vite mit `--host 127.0.0.1`. Vite band hier
+  nur auf ::1, die webServer-Wartebedingung fragt IPv4 — der Smoke lief
+  120 s ins Timeout, bevor überhaupt ein Test startete.
+- Verifikation: 426 Pytest grün (+4: Entwurf==gespeichert byte-identisch,
+  ungespeichertes Composite, 404 bei unauflösbarem Kind, 400 ohne id);
+  5/5 Playwright grün (+2: Vorschau-Modus, Drag & Drop); Composer-Typecheck
+  + Build grün (269 → 484 kB, gzip 136 kB — der Preis für sucrase im
+  Bundle); 18 Desktop-Tests grün (+1 ignored), clippy/fmt clean; ruff clean.
+  Beide Modi zusätzlich per Screenshot gegengesehen.
+- Tag-Vorschlag: `v0.18.0-p3-composer-mock-bundle`.
