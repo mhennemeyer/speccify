@@ -137,6 +137,36 @@ test("Undo/Redo rollt Kind-Hinzufügen als einen Schritt zurück und vor", async
   await expect(page.locator(".topbar")).toContainText("keine Spec geöffnet");
 });
 
+test("Drag & Drop: aus der Palette in den Canvas und in eine Slot-Zone, Knoten umhängen", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await expect(page.locator(".palette-item").filter({ hasText: "@org/button@" })).toBeVisible();
+
+  await page.locator("#new-name").fill("dnd-widget");
+  await page.getByRole("button", { name: "Anlegen" }).click();
+
+  // Palette → Canvas-Hintergrund: neuer Top-Level-Knoten.
+  await page
+    .locator(".palette-item")
+    .filter({ hasText: "@org/button@" })
+    .dragTo(page.locator(".canvas"));
+  const button = page.locator(".mock-node").filter({ hasText: "@org/button@" });
+  await expect(button).toBeVisible();
+
+  // Palette → Slot-Zone: der Knoten landet im Slot, nicht auf Top-Level.
+  const slotZone = page.locator(".slot-zone").filter({ hasText: "icon_leading" });
+  await page.locator(".palette-item").filter({ hasText: "@org/text-input@" }).dragTo(slotZone);
+  const nested = page.locator(".slot-zone .mock-node").filter({ hasText: "text_input" });
+  await expect(nested).toBeVisible();
+  await expect(page.locator("textarea.yaml")).toHaveValue(/icon_leading/);
+
+  // Knoten am Griff zurück auf den Canvas ziehen → wieder Top-Level.
+  await nested.locator(".head").dragTo(page.locator(".canvas-bar"));
+  await expect(page.locator(".slot-zone .mock-node")).toHaveCount(0);
+  await expect(page.locator("#node-placement")).toHaveValue("");
+});
+
 test("Slot-Befüllen: Kind in Slot-Zone einfügen und wieder auf Top-Level ziehen", async ({
   page,
 }) => {

@@ -9,6 +9,7 @@ import {
   addChild,
   docToYaml,
   findTreeNode,
+  moveNodeToSlot,
   newComposite,
   removeChild,
   yamlToDoc,
@@ -177,14 +178,16 @@ export function App() {
     [doc, children, pushHistory],
   );
 
+  // `explicitTarget` kommt aus Drag & Drop (Drop-Ziel), sonst gilt die im
+  // Canvas angeklickte Slot-Zone.
   const handleAddChild = useCallback(
-    async (summary: SpecSummary) => {
+    async (specId: string, explicitTarget?: SlotTarget | null) => {
       if (!doc) {
         setStatus("Erst eine Composite/App anlegen oder öffnen.");
         return;
       }
       try {
-        const detail = await getSpecDetail(summary.id);
+        const detail = await getSpecDetail(specId);
         const info: ChildInfo = {
           id: detail.id,
           version: detail.version,
@@ -192,10 +195,12 @@ export function App() {
           title: detail.title,
           api: detail.api,
         };
-        // Aktives Einfüge-Ziel (Slot-Zone im Canvas) gewinnt; sonst Top-Level.
+        // Drop-Ziel gewinnt, sonst das aktive Einfüge-Ziel (angeklickte
+        // Slot-Zone), sonst Top-Level.
+        const candidate = explicitTarget !== undefined ? explicitTarget : slotTarget;
         const target =
-          slotTarget && findTreeNode(doc.composition?.tree ?? [], slotTarget.parentAlias)
-            ? slotTarget
+          candidate && findTreeNode(doc.composition?.tree ?? [], candidate.parentAlias)
+            ? candidate
             : null;
         const { doc: next, alias } = addChild(doc, info, target);
         pushHistory({ doc, children });
@@ -213,6 +218,28 @@ export function App() {
       }
     },
     [doc, children, slotTarget, pushHistory],
+  );
+
+  // Drag & Drop: bestehenden Knoten samt Teilbaum umhängen (Slot oder Top-Level).
+  const handleMoveNode = useCallback(
+    (alias: string, target: SlotTarget | null) => {
+      if (!doc) return;
+      const next = moveNodeToSlot(doc, alias, target);
+      if (next === doc) {
+        setStatus(`„${alias}" kann nicht in den eigenen Teilbaum.`);
+        return;
+      }
+      pushHistory({ doc, children });
+      setDoc(next);
+      setIssues(null);
+      setSelection(alias);
+      setStatus(
+        target
+          ? `„${alias}" nach ${target.parentAlias}.${target.slot} verschoben.`
+          : `„${alias}" auf Top-Level verschoben.`,
+      );
+    },
+    [doc, children, pushHistory],
   );
 
   const handleRemoveNode = useCallback(
@@ -397,7 +424,7 @@ export function App() {
           specs={specs}
           onNew={handleNew}
           onOpen={(summary) => void handleOpen(summary)}
-          onAddChild={(summary) => void handleAddChild(summary)}
+          onAddChild={(summary) => void handleAddChild(summary.id)}
         />
         <Canvas
           doc={doc}
@@ -412,6 +439,8 @@ export function App() {
           onSlotTargetToggle={handleSlotTargetToggle}
           onModeChange={setCanvasMode}
           onOwnEmit={handleOwnEmit}
+          onDropSpec={(specId, target) => void handleAddChild(specId, target)}
+          onDropNode={handleMoveNode}
         />
         <Inspector
           doc={doc}

@@ -378,3 +378,23 @@ textarea.yaml {
   gap: 12px;
   max-width: 720px;
 }
+
+/* Drag & Drop: aktives Drop-Ziel (Canvas-Hintergrund oder Slot-Zone). */
+.canvas.drop-target {
+  outline: 2px dashed var(--accent);
+  outline-offset: -6px;
+}
+
+.slot-zone.drop-target {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.mock-node .head {
+  cursor: grab;
+}
+
+.mock-node .head .grip {
+  color: var(--muted);
+  cursor: grab;
+}

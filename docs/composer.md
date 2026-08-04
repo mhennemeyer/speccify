@@ -18,8 +18,8 @@ pnpm run composer:dev        # http://localhost:5173
 
 | Bereich | Funktion |
 |---|---|
-| **Palette** (links) | Alle Registry-Specs. „+ als Kind" fügt eine Komponente in die aktuelle Komposition ein, „öffnen" lädt eine Spec in den Editor. Selbst gespeicherte Composites erscheinen sofort — **Komposition ist rekursiv**. |
-| **Canvas** (Mitte) | Rendert den **generierten Mock** — dieselben `*.mock.tsx`-Dateien, die `speccify mock` schreibt (im Browser kompiliert, siehe unten). Zwei Modi: *Bearbeiten* zeigt den Baum mit Editor-Rahmen (Klick selektiert, Event-Chips des Mocks feuern die Wiring-Simulation), *Vorschau* rendert die Mock-Komponente des Dokuments selbst — dort verdrahtet der generierte Code, nicht der Composer. **Slot-Zonen**: Komponenten mit Slots zeigen pro Slot eine Zone *an der Stelle, an der der Mock den Slot rendert* — anklicken macht sie zum Einfüge-Ziel („+ als Kind" aus der Palette fügt dann dort ein, erneut klicken hebt das Ziel auf); eingefügte Kinder rendern verschachtelt in der Zone. |
+| **Palette** (links) | Alle Registry-Specs. **Ziehen** legt die Komponente dort ab, wo man sie fallen lässt (Canvas = Top-Level, Slot-Zone = in den Slot); „+ als Kind" tut dasselbe per Klick, „öffnen" lädt eine Spec in den Editor. Selbst gespeicherte Composites erscheinen sofort — **Komposition ist rekursiv**. |
+| **Canvas** (Mitte) | Rendert den **generierten Mock** — dieselben `*.mock.tsx`-Dateien, die `speccify mock` schreibt (im Browser kompiliert, siehe unten). Zwei Modi: *Bearbeiten* zeigt den Baum mit Editor-Rahmen (Klick selektiert, Event-Chips des Mocks feuern die Wiring-Simulation), *Vorschau* rendert die Mock-Komponente des Dokuments selbst — dort verdrahtet der generierte Code, nicht der Composer. **Slot-Zonen**: Komponenten mit Slots zeigen pro Slot eine Zone *an der Stelle, an der der Mock den Slot rendert* — Komponenten hineinziehen, oder anklicken (macht sie zum Einfüge-Ziel für „+ als Kind"). Bestehende Knoten hängt man am Griff (⠿ in der Kopfzeile) um: in eine andere Slot-Zone oder zurück auf den Canvas-Hintergrund (= Top-Level), immer samt Teilbaum. |
 | **Inspector** (rechts) | *Knoten*: typisierte Prop-Editoren (Enum-Dropdowns etc.), Reihenfolge, **Platzierung** (Knoten samt Teilbaum zwischen Top-Level und Slots umhängen), Entfernen (entfernt den ganzen Teilbaum inkl. Wiring-Cleanup). *Verdrahtung*: Regeln ansehen/löschen + Formular mit API-getriebenen Dropdowns. *API*: eigene Events/Props (inkl. `map_to`-Forwarding). *Spec*: Name/Version/Kind/Summary. |
 | **YAML** (unten links) | Live generierte Spec-YAML; direkt editierbar („übernehmen" lädt sie zurück ins Modell). Validierungs-Issues erscheinen hier. |
 | **Event-Log** (unten rechts) | Trigger, `set`-Effekte und emittierte eigene Events der Simulation. |
@@ -69,6 +69,10 @@ curl -s -X POST localhost:8000/api/v1/mock/draft \
 - **Backend-Grenze**: ausschließlich HTTP (`/api/v1/...`). Im Dev proxied Vite
   auf `:8000`; `VITE_API_BASE` erlaubt der Tauri-Shell, auf einen Sidecar zu
   zeigen. CORS ist für `tauri://localhost` vorbereitet.
+- **Drag & Drop in der Desktop-App**: Das Composer-Fenster wird mit
+  `disable_drag_drop_handler()` gebaut (`apps/desktop/src-tauri/src/lib.rs`) —
+  sonst fängt Tauris OS-Datei-Drop-Handler die HTML5-Drag-Events ab und im
+  Canvas ließe sich nichts ablegen.
 - **Canvas-Rendering (Mock-Bundle)**: Der Canvas holt bei jeder Änderung die
   Mock-Closure des aktuellen Dokuments (`POST /api/v1/mock/draft`, debounced)
   und kompiliert sie im Browser (`sucrase`: TSX → CommonJS, Mini-`require` für
@@ -97,7 +101,8 @@ Job (`apps/composer ui smoke`). Die Ports kollidieren bewusst nicht mit
 
 ## Grenzen des MVP (bewusst)
 
-- Slot-Befüllen ist klick-basiert (Zone als Einfüge-Ziel), kein Drag & Drop.
+- Drag & Drop hängt Knoten um und fügt ein, sortiert aber nicht: die
+  Reihenfolge innerhalb der Geschwister ändert man im Inspector (↑/↓).
 - Keine Routen-/Navigations-Semantik für `kind: app` (Phase P4).
 - Wiring-Quellen sind `payload.*`, `props.*` und Literale — keine Expressions.
 - Im Bearbeiten-Modus simuliert der Composer die Verdrahtung zwischen den

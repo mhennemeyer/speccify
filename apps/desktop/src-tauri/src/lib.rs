@@ -314,6 +314,9 @@ fn open_composer(app: AppHandle, state: State<Supervisor>, repo: String) -> Resu
     )
     .title(format!("Speccify Composer · {} · :{port}", launch.source))
     .inner_size(1320.0, 880.0)
+    // Ohne das schluckt Tauris OS-Datei-Drop-Handler die HTML5-Drag-Events —
+    // im Composer wird per Drag & Drop komponiert (Palette → Canvas/Slot).
+    .disable_drag_drop_handler()
     .build()
     .map_err(|e| format!("Fenster: {e}"))?;
 

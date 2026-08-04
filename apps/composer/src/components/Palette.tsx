@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import { DRAG_SPEC } from "../dnd";
 import type { SpecSummary } from "../types";
 
 interface PaletteProps {
@@ -42,7 +43,16 @@ export function Palette({ specs, onNew, onOpen, onAddChild }: PaletteProps) {
 
       <h2 style={{ marginTop: 20 }}>Palette (Registry)</h2>
       {specs.map((spec) => (
-        <div className="palette-item" key={spec.id}>
+        <div
+          className="palette-item"
+          key={spec.id}
+          draggable
+          title="In den Canvas oder auf eine Slot-Zone ziehen"
+          onDragStart={(event) => {
+            event.dataTransfer.setData(DRAG_SPEC, spec.id);
+            event.dataTransfer.effectAllowed = "copy";
+          }}
+        >
           <strong>{spec.title}</strong>
           <span className="meta">
             {spec.id}@{spec.version}

@@ -11,8 +11,9 @@
 // Dokument-Mock-Komponente selbst, mit ihrer eigenen internen Verdrahtung —
 // die ehrlichste Kontrolle, ob die Spec das tut, was sie soll).
 
-import { Component, type ReactNode } from "react";
+import { Component, useState, type DragEvent, type ReactNode } from "react";
 
+import { DRAG_NODE, DRAG_SPEC, dragKind } from "../dnd";
 import type { SlotTarget } from "../doc";
 import { camel, componentName, eventPropName, mockModulePath } from "../mockRuntime";
 import type { MockBundleState } from "../useMockBundle";
@@ -33,6 +34,15 @@ interface CanvasProps {
   onSlotTargetToggle: (parentAlias: string, slot: string) => void;
   onModeChange: (mode: CanvasMode) => void;
   onOwnEmit: (eventName: string, payload: Record<string, unknown>) => void;
+  onDropSpec: (specId: string, target: SlotTarget | null) => void;
+  onDropNode: (alias: string, target: SlotTarget | null) => void;
+}
+
+// Schlüssel des gerade überfahrenen Drop-Ziels ("" = Canvas-Hintergrund).
+const ROOT_DROP = "";
+
+function targetKey(target: SlotTarget | null): string {
+  return target ? `${target.parentAlias}.${target.slot}` : ROOT_DROP;
 }
 
 // Render-Kontext, der unverändert durch die Rekursion gereicht wird.
@@ -41,10 +51,13 @@ interface NodeContext {
   selection: string | null;
   slotTarget: SlotTarget | null;
   bundle: MockBundleState;
+  dragOver: string | null;
   mergedPropsFor: (alias: string) => Record<string, unknown>;
   onSelect: (alias: string) => void;
   onFire: (alias: string, eventName: string, payload: Record<string, unknown>) => void;
   onSlotTargetToggle: (parentAlias: string, slot: string) => void;
+  onDragOverTarget: (key: string | null) => void;
+  onDrop: (event: DragEvent, target: SlotTarget | null) => void;
 }
 
 export function Canvas({
@@ -60,7 +73,20 @@ export function Canvas({
   onSlotTargetToggle,
   onModeChange,
   onOwnEmit,
+  onDropSpec,
+  onDropNode,
 }: CanvasProps) {
+  const [dragOver, setDragOver] = useState<string | null>(null);
+
+  const handleDrop = (event: DragEvent, target: SlotTarget | null) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setDragOver(null);
+    const kind = dragKind(event.dataTransfer);
+    if (kind === "spec") onDropSpec(event.dataTransfer.getData(DRAG_SPEC), target);
+    if (kind === "node") onDropNode(event.dataTransfer.getData(DRAG_NODE), target);
+  };
+
   if (!doc) {
     return (
       <main className="canvas">
@@ -77,14 +103,28 @@ export function Canvas({
     selection,
     slotTarget,
     bundle,
+    dragOver,
     mergedPropsFor,
     onSelect,
     onFire,
     onSlotTargetToggle,
+    onDragOverTarget: setDragOver,
+    onDrop: handleDrop,
   };
 
   return (
-    <main className="canvas">
+    <main
+      className={`canvas${dragOver === ROOT_DROP ? " drop-target" : ""}`}
+      onDragOver={(event) => {
+        if (mode !== "edit" || !dragKind(event.dataTransfer)) return;
+        event.preventDefault();
+        setDragOver(ROOT_DROP);
+      }}
+      onDragLeave={(event) => {
+        if (event.currentTarget === event.target) setDragOver(null);
+      }}
+      onDrop={(event) => (mode === "edit" ? handleDrop(event, null) : undefined)}
+    >
       <div className="canvas-bar">
         <div className="tabs">
           <button
@@ -160,15 +200,27 @@ function MockNode({ node, ctx }: { node: TreeNodeData; ctx: NodeContext }) {
   const slotContent: Record<string, ReactNode> = {};
   for (const slot of child.api.slots) {
     const filled = node.slots?.[slot.name] ?? [];
+    const target: SlotTarget = { parentAlias: alias, slot: slot.name };
     const isTarget =
       ctx.slotTarget?.parentAlias === alias && ctx.slotTarget.slot === slot.name;
+    const isDragOver = ctx.dragOver === targetKey(target);
     slotContent[camel(slot.name)] = (
       <div
-        className={`slot-zone${isTarget ? " target" : ""}`}
+        className={`slot-zone${isTarget ? " target" : ""}${isDragOver ? " drop-target" : ""}`}
         onClick={(clickEvent) => {
           clickEvent.stopPropagation();
           ctx.onSlotTargetToggle(alias, slot.name);
         }}
+        onDragOver={(dragEvent) => {
+          if (!dragKind(dragEvent.dataTransfer)) return;
+          dragEvent.preventDefault();
+          dragEvent.stopPropagation();
+          ctx.onDragOverTarget(targetKey(target));
+        }}
+        onDragLeave={(dragEvent) => {
+          if (dragEvent.currentTarget === dragEvent.target) ctx.onDragOverTarget(null);
+        }}
+        onDrop={(dropEvent) => ctx.onDrop(dropEvent, target)}
       >
         <div className="slot-label">
           Slot {slot.name}
@@ -179,7 +231,9 @@ function MockNode({ node, ctx }: { node: TreeNodeData; ctx: NodeContext }) {
           <MockNode key={slotNode.node} node={slotNode} ctx={ctx} />
         ))}
         {filled.length === 0 ? (
-          <span className="muted">leer — anklicken und dann „+ als Kind" aus der Palette</span>
+          <span className="muted">
+            leer — Komponente hierher ziehen (oder anklicken und „+ als Kind")
+          </span>
         ) : null}
       </div>
     );
@@ -201,7 +255,19 @@ function MockNode({ node, ctx }: { node: TreeNodeData; ctx: NodeContext }) {
 
   return (
     <div className={`mock-node${selected ? " selected" : ""}`} onClick={select}>
-      <div className="head">
+      <div
+        className="head"
+        draggable
+        title="Ziehen, um den Knoten samt Teilbaum umzuhängen"
+        onDragStart={(dragEvent) => {
+          dragEvent.stopPropagation();
+          dragEvent.dataTransfer.setData(DRAG_NODE, alias);
+          dragEvent.dataTransfer.effectAllowed = "move";
+        }}
+      >
+        <span className="grip" aria-hidden="true">
+          ⠿
+        </span>
         <strong>{alias}</strong>
         <span>{child.title}</span>
         <span className="badge">
