@@ -8,8 +8,10 @@ Subprocess testen lassen. Registriert werden sie zentral in
 
 - Step 2 (read-only): `resolve`, `lint`, `render`.
 - Step 3 (write): `lock`, `pull`, `verify`.
+- P2/P4: `mock` (Mock-Closure), `build` (Projekt aus `kind: app`).
 """
 
+from .build import BuildResult, run_build
 from .lint import LintResult, run_lint
 from .lock import LockResult, run_lock
 from .mock import MockResult, run_mock
@@ -19,6 +21,7 @@ from .resolve import ResolveResult, run_resolve
 from .verify import VerifyResult, run_verify
 
 __all__ = [
+    "BuildResult",
     "LintResult",
     "LockResult",
     "MockResult",
@@ -26,6 +29,7 @@ __all__ = [
     "RenderResult",
     "ResolveResult",
     "VerifyResult",
+    "run_build",
     "run_lint",
     "run_lock",
     "run_mock",

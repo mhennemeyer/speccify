@@ -17,6 +17,7 @@ from typing import Any
 from mcp.server.fastmcp import FastMCP
 
 from .tools import (
+    run_build,
     run_lint,
     run_lock,
     run_mock,
@@ -243,5 +244,40 @@ def _register_write_tools(server: FastMCP, config: ServerConfig) -> None:
             out_dir=Path(out_dir),
             registry_path=Path(registry_path) if registry_path else None,
             target=target,
+        )
+        return result.to_dict()
+
+    @server.tool(
+        name="build",
+        description=(
+            "Build a complete runnable React/Vite project from a `kind: app` "
+            "spec: scaffold, hash router and wired screens (deterministic, no "
+            "LLM), written to `out_dir`. `mocks=true` (default) fills "
+            "`src/components/` with deterministic mocks so the project runs "
+            "immediately; `mocks=false` uses the generated implementations "
+            "from the replay cache. Returns `{ok, files, out_dir, "
+            "template_set, template_version, mocks}`; failures report "
+            "`code=build_failed`/`cache_miss` in the structured result, not "
+            "as an MCP error. Mirrors `speccify build`."
+        ),
+    )
+    def build(
+        spec_ref: str,
+        out_dir: str = "./speccify_app",
+        registry_path: str | None = None,
+        target: str = "react",
+        mocks: bool = True,
+        offline: bool = True,
+        cache_dir: str | None = None,
+    ) -> dict[str, Any]:
+        result = run_build(
+            project_root=config.project_root,
+            spec_ref=spec_ref,
+            out_dir=Path(out_dir),
+            registry_path=Path(registry_path) if registry_path else None,
+            target=target,
+            mocks=mocks,
+            offline=offline,
+            cache_dir=Path(cache_dir) if cache_dir else None,
         )
         return result.to_dict()

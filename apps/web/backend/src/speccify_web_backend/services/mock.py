@@ -18,6 +18,7 @@ from speccify_core import (
     LocalRegistry,
     mock_output_path,
     parse_composition,
+    render_app_project,
     render_mock_closure,
     render_mock_files,
     resolve_composition_children,
@@ -137,4 +138,66 @@ def mock_draft_spec_yaml(
         template_set=MOCK_TEMPLATE_SET,
         template_version=MOCK_TEMPLATE_VERSION,
         entry=mock_output_path(spec_id, kind=str(parsed.get("kind", ""))),
+    )
+
+
+@dataclass(frozen=True)
+class BuildServiceResult:
+    """Ergebnis eines Projekt-Builds (`kind: app`, Phase P4)."""
+
+    spec_id: str
+    version: str
+    target: str
+    files: dict[str, str]
+    template_set: str
+    template_version: str
+    mocks: bool
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "spec_id": self.spec_id,
+            "version": self.version,
+            "target": self.target,
+            "files": self.files,
+            "template_set": self.template_set,
+            "template_version": self.template_version,
+            "mocks": self.mocks,
+        }
+
+
+def build_app_from_registry(
+    *,
+    spec_id: str,
+    version: str | None,
+    target: str,
+    registry_path: Path,
+) -> BuildServiceResult:
+    """Baut das Projekt einer App-Spec aus der Registry (Web-Adapter, nur Mocks).
+
+    Der Web-Pfad baut bewusst nur die Mock-Füllung: das Backend hat weder
+    Replay-Cache-Flags noch LLM-Zugang im Vertrag. Implementierungs-Builds
+    laufen über CLI/MCP (`--no-mocks`).
+    """
+    if target != "react":
+        raise UnknownMockTargetError(
+            f"Build-Target '{target}' wird nicht unterstützt (P4: nur 'react')."
+        )
+    registry = LocalRegistry(registry_path)
+    if version is None:
+        versions = registry.list_versions(spec_id)
+        if not versions:
+            raise LookupError(f"Keine Versionen für {spec_id} in der Registry.")
+        resolved_version = versions[-1]
+    else:
+        resolved_version = Version.parse(version)
+    spec = registry.fetch(spec_id, resolved_version)
+    result = render_app_project(spec, registry, mocks=True)
+    return BuildServiceResult(
+        spec_id=spec_id,
+        version=str(resolved_version),
+        target=target,
+        files={path: data.decode("utf-8") for path, data in result.files.items()},
+        template_set=result.template_set,
+        template_version=result.template_version,
+        mocks=result.mocks,
     )

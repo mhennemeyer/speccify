@@ -23,12 +23,12 @@ def test_build_server_returns_named_fastmcp_instance(tmp_path: Path) -> None:
 
 
 def test_tools_list_contains_step2_and_step3_tools(tmp_path: Path) -> None:
-    # Step 2 (`resolve`/`lint`/`render`) + Step 3 (`lock`/`pull`/`verify`).
-    # Resources/Prompts kommen in Step 4.
+    # Step 2 (`resolve`/`lint`/`render`) + Step 3 (`lock`/`pull`/`verify`)
+    # + `mock` (P2) + `build` (P4). Resources/Prompts kommen in Step 4.
     server = build_server(ServerConfig(project_root=tmp_path))
     tools = asyncio.run(server.list_tools())
     names = sorted(t.name for t in tools)
-    assert names == ["lint", "lock", "mock", "pull", "render", "resolve", "verify"]
+    assert names == ["build", "lint", "lock", "mock", "pull", "render", "resolve", "verify"]
 
 
 def test_resources_list_contains_step4_resources(tmp_path: Path) -> None:

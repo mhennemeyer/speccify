@@ -1,4 +1,4 @@
-"""Mock-Routen — deterministische Mock-Closures (kein LLM).
+"""Mock- und Build-Routen — deterministische Codegen-Pfade (kein LLM).
 
 - `POST /api/v1/mock` für eine Registry-Spec.
   Request body: `{spec_id, version?, target?}` (Default-Target `react`,
@@ -11,6 +11,9 @@
 Response (200, beide): `{spec_id, version, target, files, entry,
 template_set, template_version}` — `entry` ist der Modulpfad der Spec selbst
 innerhalb von `files`.
+
+- `POST /api/v1/build` baut das komplette Projekt einer `kind: app`-Spec
+  (P4, immer Mock-Füllung — Implementierungs-Builds laufen über CLI/MCP).
 
 Error mapping (CLI/MCP-Vokabular):
 
@@ -30,6 +33,7 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
 from speccify_core import (
+    AppCodegenError,
     CompositionResolutionError,
     MockCodegenError,
     MockUnavailableError,
@@ -38,6 +42,7 @@ from speccify_core import (
 
 from speccify_web_backend.services.mock import (
     UnknownMockTargetError,
+    build_app_from_registry,
     mock_draft_spec_yaml,
     mock_spec_from_registry,
 )
@@ -117,5 +122,39 @@ def mock_draft(payload: MockDraftRequest, request: Request) -> dict[str, Any]:
         raise HTTPException(
             status_code=400,
             detail={"error_code": "bad_request", "message": str(exc)},
+        ) from exc
+    return result.to_dict()
+
+
+class BuildRequest(BaseModel):
+    spec_id: str = Field(..., description="app spec, e.g. '@org/demo-app'")
+    version: str | None = Field(None, description="semver; default: latest in registry")
+    target: str = Field("react", description="build target (P4: 'react' only)")
+
+
+@router.post("/build")
+def build_app(payload: BuildRequest, request: Request) -> dict[str, Any]:
+    settings = request.app.state.settings
+    try:
+        result = build_app_from_registry(
+            spec_id=payload.spec_id,
+            version=payload.version,
+            target=payload.target,
+            registry_path=settings.registry_path,
+        )
+    except UnknownMockTargetError as exc:
+        raise HTTPException(
+            status_code=400,
+            detail={"error_code": "unknown_target", "message": str(exc)},
+        ) from exc
+    except (CompositionResolutionError, LookupError, RegistryError) as exc:
+        raise HTTPException(
+            status_code=404,
+            detail={"error_code": "not_found", "message": str(exc)},
+        ) from exc
+    except (AppCodegenError, ValueError) as exc:
+        raise HTTPException(
+            status_code=422,
+            detail={"error_code": "build_failed", "message": str(exc)},
         ) from exc
     return result.to_dict()

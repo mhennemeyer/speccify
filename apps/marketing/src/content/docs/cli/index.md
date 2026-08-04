@@ -11,6 +11,7 @@ hat eine eigene Referenzseite:
 | Command | Beschreibung |
 | --- | --- |
 | [`speccify add`](/cli/add/) | Fügt eine Spec-Dependency in speccify.yaml ein und aktualisiert speccify.lock. |
+| [`speccify build`](/cli/build/) | Baut ein lauffähiges Projekt aus einer `kind: app`-Spec. |
 | [`speccify conformance`](/cli/conformance/) | Prüft pro (Spec, Target), dass Renderer + Validator + Lockfile-Hash stimmen. |
 | [`speccify init`](/cli/init/) | Legt ein neues Speccify-Projekt mit minimalem `speccify.yaml` an. |
 | [`speccify lint`](/cli/lint/) | Validiert eine oder mehrere YAML-Specs gegen das Spec-Schema v0. |

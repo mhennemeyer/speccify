@@ -1,0 +1,62 @@
+schema_version: 1
+id: "@org/demo-app"
+version: 0.1.0
+kind: app
+title: Speccify Demo-App
+summary: >
+  Beispiel-App aus den Referenz-Specs (Phase P4): drei Screens — Anmelden,
+  Suchen, Kontakt — verdrahtet über Navigation und einen Datenfluss zwischen
+  zwei Screens. Baut mit `speccify build --mocks` sofort lauffähig.
+authors: [marc@speccify.io]
+license: MIT
+
+app:
+  routes:
+    - path: /
+      node: login
+      title: Anmelden
+    - path: /suche
+      node: search
+      title: Suche
+    - path: /kontakt
+      node: contact
+      title: Kontakt
+  theme:
+    tokens:
+      color_primary: "#0f766e"
+      color_text: "#0f172a"
+      radius_md: 8px
+  env:
+    - name: api_base_url
+      default: "http://localhost:8000"
+      description: Basis-URL der Backend-API.
+
+composition:
+  uses:
+    login: "@org/login-screen@^0.1"
+    search: "@org/search-bar@^0.1"
+    contact: "@org/contact-form@^0.1"
+  tree:
+    - node: login
+    - node: search
+      props:
+        placeholder: "Wonach suchst du?"
+    - node: contact
+  wiring:
+    # Nach erfolgreichem Login geht es zur Suche.
+    - when: login.login_succeeded
+      navigate: /suche
+    # Eine Suche führt zum Kontaktformular …
+    - when: search.submitted
+      navigate: /kontakt
+    # … und nimmt die Suchanfrage als Vorbelegung mit (Datenfluss über Screens).
+    - when: search.submitted
+      set: contact.initial_name
+      to: payload.query
+
+acceptance:
+  - given: Nutzer ist auf /
+    when: login_succeeded wird emittiert
+    then: die App zeigt /suche
+  - given: Nutzer sucht auf /suche
+    then: die App zeigt /kontakt mit der Suchanfrage als initial_name

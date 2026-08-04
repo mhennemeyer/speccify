@@ -18,6 +18,13 @@ from typing import Protocol
 from speccify_core.codegen import angular_llm as _angular_llm
 from speccify_core.codegen import react_llm as _react_llm
 from speccify_core.codegen import swiftui_llm as _swiftui_llm
+from speccify_core.codegen.app_react import (
+    APP_TEMPLATE_SET,
+    APP_TEMPLATE_VERSION,
+    AppCodegenError,
+    AppRender,
+    render_app_project,
+)
 from speccify_core.codegen.mock_react import (
     MOCK_TEMPLATE_SET,
     MOCK_TEMPLATE_VERSION,
@@ -145,6 +152,11 @@ def render_for_target(
 
 
 __all__ = [
+    "APP_TEMPLATE_SET",
+    "APP_TEMPLATE_VERSION",
+    "AppCodegenError",
+    "AppRender",
+    "render_app_project",
     "CacheKey",
     "CacheMissError",
     "CodegenError",

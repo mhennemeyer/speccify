@@ -9,6 +9,7 @@ import typer
 from speccify_core import SchemaValidator, SpecLoader, SpecLoaderError
 
 from speccify_cli.commands.add import add_command
+from speccify_cli.commands.build import build_command
 from speccify_cli.commands.conformance import conformance_command
 from speccify_cli.commands.init import init_command
 from speccify_cli.commands.lock import lock_command
@@ -30,6 +31,7 @@ app.command("pull")(pull_command)
 app.command("verify")(verify_command)
 app.command("conformance")(conformance_command)
 app.command("mock")(mock_command)
+app.command("build")(build_command)
 
 
 @app.callback()
