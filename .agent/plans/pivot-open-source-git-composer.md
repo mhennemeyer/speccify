@@ -143,9 +143,23 @@ Vorbild: **Go-Module + SwiftPM**, nicht npm.
 - Ziel: rumprobieren können — Erkenntnisse fließen als Refinement in P4/P5-Schnitt zurück.
 
 ### Phase P4 — Projekt-Builds (`kind: app`)
+
+> **In Umsetzung seit 2026-08-04.** Kein eigener Phasen-Plan: die Konvention „genau ein aktiver Plan" gilt, also stehen Stufen und Entscheidungen hier.
+
 - App-Spec-Schema finalisieren (Routen/Navigation/Theme/Env auf dem `composition:`-Fundament aus P2).
 - `speccify build --target react [--mocks]` → komplettes Vite-Projekt; mit `--mocks` sofort lauffähig.
 - Beispiel-App aus den Referenz-Specs; E2E-Test: Build mit Mocks läuft headless (Playwright-Smoke).
+
+**Entscheidungen (2026-08-04, per User-Delegation):**
+
+- **D10 — App-Form**: `kind: app` erbt `composition:` unverändert; jeder **Top-Level-Knoten ist ein Screen**. Neuer Block `app:` mit `routes[] {path, node, title?}` (erste Route = Startroute), optional `theme.tokens` (→ CSS-Variablen) und `env[] {name, default?, description?}`. Kein zweites Baum-Konzept, keine Layout-Sprache — Screens sind normale Composites.
+- **D11 — Navigation**: neue Wiring-Aktion `navigate: /pfad` neben `set`/`emit`. Typgeprüft gegen die deklarierten Routen-Pfade; nur in `kind: app` erlaubt. Bewusst keine Parameter/Guards/History-Semantik im ersten Schnitt (Risiko-Abschnitt: Verdrahtung minimal halten).
+- **D12 — Scaffold ohne Router-Dependency**: der Build erzeugt einen ~40-zeiligen Hash-Router (`src/router.tsx`) statt `react-router` einzubinden. Grund: das Projekt bleibt mit `react`/`react-dom`/`vite` lauffähig, der Build bleibt deterministisch und offline-fähig, und die Route-Semantik ist im generierten Code lesbar statt in einer Fremd-API versteckt.
+- **D13 — Ein Zustandsknoten**: `src/App.tsx` hält Wiring-State *und* Route und rendert nur den Knoten der aktiven Route — dieselbe Wiring-Semantik wie der Composite-Mock (`set` → State, `emit` → eigener Callback), plus `navigate`. Damit gibt es weiterhin genau eine Verdrahtungs-Implementierung pro Target.
+- **D14 — Zwei Füllungen, ein Scaffold**: `--mocks` legt die Mock-Closure unter `src/components/` ab, ohne Flag kommen dort die (LLM-)generierten Implementierungen aus dem Replay-Cache hin. Das Scaffold ist in beiden Fällen byte-identisch — Mock und Implementierung sind per Import-Swap austauschbar (P2-Vertrag).
+- **D15 — Adapter-Symmetrie**: `speccify build` (CLI), MCP-Tool `build` und `POST /api/v1/build` liefern byte-identische Dateien (Cross-Consistency-Vertrag). Der teure Beweis (echter `vite build` + Playwright) läuft wie Conformance/Visual-Regression hinter einem Pytest-Marker und in einem eigenen CI-Job, nicht in der Standard-Suite.
+
+**Stufen:** P4.1 Schema/Parser/Validierung (`app:`, `navigate:`) · P4.2 Core-Codegen `app_react` + Determinismus · P4.3 CLI/MCP/Web-Adapter + Cross-Consistency · P4.4 Beispiel-App + echter Vite-Build-Smoke + Doku.
 
 ### Phase P5 — Git-basierte Spec-Quellen
 - `GitRegistry` (Registry-Protocol) mit Tag-Discovery, Shallow-Fetch, Content-Addressed Cache.

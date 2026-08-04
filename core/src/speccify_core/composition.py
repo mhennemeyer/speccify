@@ -56,6 +56,7 @@ class WiringRule:
     with_: dict[str, Any] = field(default_factory=dict)
     set_: tuple[str, str] | None = None  # (alias, prop)
     to: Any = None
+    navigate: str | None = None  # Route-Pfad; nur `kind: app` (P4, Entscheidung D11)
 
 
 @dataclass(frozen=True)
@@ -114,6 +115,7 @@ def parse_composition(parsed: dict[str, Any]) -> Composition | None:
                 with_=dict(entry.get("with") or {}),
                 set_=_split_ref(entry["set"], "set") if "set" in entry else None,
                 to=entry.get("to"),
+                navigate=str(entry["navigate"]) if "navigate" in entry else None,
             )
         )
     return Composition(uses=uses, tree=tree, wiring=tuple(wiring))

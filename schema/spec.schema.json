@@ -90,6 +90,37 @@
         }
       }
     },
+    "app": {
+      "type": "object",
+      "description": "Projekt-Belange einer `kind: app`-Spec (Phase P4): Routen auf die Top-Level-Knoten der Komposition, Theme-Tokens und Env-Variablen. Nur für `kind: app` zulässig.",
+      "required": ["routes"],
+      "additionalProperties": false,
+      "properties": {
+        "routes": {
+          "type": "array",
+          "minItems": 1,
+          "description": "Routen-Tabelle; die erste Route ist die Startroute.",
+          "items": { "$ref": "#/$defs/route" }
+        },
+        "theme": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "tokens": {
+              "type": "object",
+              "description": "Design-Tokens; werden als CSS-Custom-Properties (--<name>) ausgegeben.",
+              "propertyNames": { "pattern": "^[a-z][a-z0-9_]*$" },
+              "additionalProperties": { "type": "string", "minLength": 1 }
+            }
+          }
+        },
+        "env": {
+          "type": "array",
+          "description": "Konfigurationswerte des Projekts (Build-Zeit, `import.meta.env`).",
+          "items": { "$ref": "#/$defs/envVar" }
+        }
+      }
+    },
     "uses": {
       "type": "array",
       "description": "Lose referenzierte Specs (ohne Kompositions-Semantik). `composition.uses` zählt zusätzlich automatisch als Dependency.",
@@ -281,12 +312,20 @@
       "type": "object",
       "required": ["when"],
       "additionalProperties": false,
-      "oneOf": [{ "required": ["emit"] }, { "required": ["set", "to"] }],
+      "oneOf": [
+        { "required": ["emit"] },
+        { "required": ["set", "to"] },
+        { "required": ["navigate"] }
+      ],
       "properties": {
         "when": {
           "type": "string",
           "pattern": "^[a-z][a-z0-9_]*\\.[a-z][a-z0-9_]*$",
           "description": "Auslöser: '<alias>.<event>'."
+        },
+        "navigate": {
+          "$ref": "#/$defs/routePath",
+          "description": "Nur `kind: app` (Phase P4): wechselt auf die Route mit diesem Pfad."
         },
         "emit": {
           "type": "string",
@@ -305,6 +344,35 @@
           "description": "Ziel-Prop eines Kindes: '<alias>.<prop>'."
         },
         "to": { "$ref": "#/$defs/wiringSource" }
+      }
+    },
+    "routePath": {
+      "type": "string",
+      "pattern": "^/[a-z0-9\\-/]*$",
+      "description": "Route-Pfad, immer mit '/' beginnend (keine Parameter im P4-Schnitt)."
+    },
+    "route": {
+      "type": "object",
+      "required": ["path", "node"],
+      "additionalProperties": false,
+      "properties": {
+        "path": { "$ref": "#/$defs/routePath" },
+        "node": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$",
+          "description": "Top-Level-Alias aus `composition.tree`, der diese Route rendert."
+        },
+        "title": { "type": "string", "minLength": 1 }
+      }
+    },
+    "envVar": {
+      "type": "object",
+      "required": ["name"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+        "default": { "type": "string" },
+        "description": { "type": "string" }
       }
     }
   }

@@ -24,6 +24,7 @@ from speccify_core import (
     component_api,
     parse_composition,
     resolve_composition_children,
+    validate_app,
     validate_composition,
 )
 from speccify_core.api import ComponentApi, TypeRef
@@ -177,6 +178,10 @@ def validate_spec_yaml(yaml_bytes: bytes, *, registry_path: Path) -> ValidationO
             composition = parse_composition(parsed)
         except ValueError as exc:
             issues.append({"path": "$.composition", "message": str(exc), "source": "composition"})
+        # App-Regeln (Routen, navigate, Theme/Env) — P4, unabhängig von der
+        # Registry-Auflösung der Kinder.
+        for app_issue in validate_app(parsed):
+            issues.append({"path": app_issue.path, "message": app_issue.message, "source": "app"})
 
     if composition is not None:
         try:

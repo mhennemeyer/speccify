@@ -12,6 +12,14 @@ from speccify_core.api import (
     component_api,
     types_compatible,
 )
+from speccify_core.app import (
+    APP_KIND,
+    AppSpec,
+    EnvVar,
+    Route,
+    parse_app,
+    validate_app,
+)
 from speccify_core.codegen import (
     MOCK_TEMPLATE_SET,
     MOCK_TEMPLATE_VERSION,
@@ -147,6 +155,12 @@ __all__ = [
     "Slot",
     "TypeRef",
     "component_api",
+    "APP_KIND",
+    "AppSpec",
+    "EnvVar",
+    "Route",
+    "parse_app",
+    "validate_app",
     "parse_composition",
     "types_compatible",
     "validate_composition",
