@@ -1,6 +1,6 @@
 ---
 lifecycle: active
-status: P1–P4 geliefert (Registry-Rückbau, API/Komposition/Mocks, Composer komplett, Projekt-Builds `kind: app`); offen: P5 Git-Quellen, P6 Ökosystem/Launch
+status: P1–P4 geliefert; P5 zur Hälfte (P5.1 GitRegistry + P5.2 Lockfile v4/CLI-Pfad ✅); offen: P5.3 Discovery, P5.4 MCP/Web/Composer, P6 Ökosystem/Launch
 sessionId: pivot-open-source-git-composer
 ---
 # Plan: Pivot — Open Source, Git-basierte Registry, Projekt-Builds & visueller Composer
