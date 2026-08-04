@@ -70,11 +70,11 @@ def _build_context(spec: Spec, target: str) -> dict[str, Any]:
     parsed = spec.parsed()
     return {
         "target": target,
-        "spec_id": spec.spec_id,
+        "spec_id": spec.name_id,
         "spec_version": str(spec.version),
         "template_set": TEMPLATE_SET,
         "template_version": TEMPLATE_VERSION,
-        "title": str(parsed.get("title", spec.spec_id)),
+        "title": str(parsed.get("title", spec.name_id)),
         "summary": str(parsed.get("summary", "")).strip(),
         "kind": str(parsed.get("kind", "")),
         "inputs": props_as_prompt_items(parsed),
@@ -98,7 +98,7 @@ def render_to_files(spec: Spec, target: str) -> dict[str, bytes]:
     Pfad-Konvention: `<scope>/<name>.md` aus der Spec-Id `@<scope>/<name>`.
     """
     text = render(spec, target)
-    rel_path = _output_path(spec.spec_id)
+    rel_path = _output_path(spec.name_id)
     return {rel_path: text.encode("utf-8")}
 
 

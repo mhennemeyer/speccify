@@ -1,15 +1,15 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://speccify.io/schema/lockfile/v3.json",
-  "title": "Speccify Lockfile v3",
-  "description": "Schema v3 für speccify.lock — Phase-3-Multi-Target. Bump gegenüber v2: Top-Level `target: str` → `targets: list[str]` (Cross-Product über alle gelockten Targets); jeder LockEntry hat weiterhin ein eigenes `target`-Feld (welches der Targets aus der Top-Level-Liste). v1- und v2-Lockfiles bleiben lesbar (Loader-seitige Migration: single-target → single-element targets-list). Aktiv geladenes Lockfile-Schema seit Phase-3-Stage-1b-β.",
+  "$id": "https://speccify.io/schema/lockfile/v4.json",
+  "title": "Speccify Lockfile v4",
+  "description": "Schema v4 für speccify.lock — Phase P5 (Git-Quellen). Bump gegenüber v3: Spec-Ids dürfen Git-Refs sein (`git+<url>[#<pfad>]`) und Entries können den aufgelösten Commit pinnen (`source_commit`). v1–v3-Lockfiles bleiben lesbar (Loader-seitige Migration); neu geschriebene Lockfiles sind immer v4.",
   "type": "object",
   "required": ["schema_version", "targets", "specs"],
   "additionalProperties": false,
   "properties": {
     "schema_version": {
       "type": "integer",
-      "const": 3
+      "const": 4
     },
     "targets": {
       "type": "array",
@@ -62,7 +62,7 @@
         "properties": {
           "id": {
             "type": "string",
-            "pattern": "^(spec://[a-z0-9][a-z0-9-]*|@[a-z0-9][a-z0-9-]*/[a-z0-9][a-z0-9-]*)$"
+            "pattern": "^(spec://[a-z0-9][a-z0-9-]*|@[a-z0-9][a-z0-9-]*/[a-z0-9][a-z0-9-]*|git\\+[^\\s#]+(#[^\\s#]+)?)$"
           },
           "version": {
             "type": "string",
@@ -75,6 +75,11 @@
           "resolved_via": {
             "type": "string",
             "minLength": 1
+          },
+          "source_commit": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{40}$",
+            "description": "Nur bei Git-Quellen: Commit-SHA hinter dem aufgelösten Tag (Trust-Pin, Entscheidung D18)."
           },
           "target": {
             "type": "string",

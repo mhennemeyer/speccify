@@ -36,6 +36,7 @@ from speccify_cli.commands._workspace import (
     LOCKFILE_FILENAME,
     MANIFEST_FILENAME,
     WorkspaceContext,
+    fetch_spec,
 )
 from speccify_cli.commands.pull import WORKSPACE_OUTPUT_DIRNAME
 
@@ -173,7 +174,8 @@ def run_verify_with_warnings(
     problems: list[str] = []
     warnings: list[str] = []
 
-    ctx = WorkspaceContext.load(project_dir, registry_override=registry_override)
+    # `--offline` gilt auch für Git-Quellen: kein Netz, nur der lokale Cache.
+    ctx = WorkspaceContext.load(project_dir, registry_override=registry_override, offline=offline)
     if not ctx.lockfile_path.is_file():
         return (
             [f"Kein Lockfile in {project_dir} (bitte `speccify lock` ausführen)."],
@@ -192,7 +194,7 @@ def run_verify_with_warnings(
             )
 
     # 1) Re-resolve und vergleiche mit Lockfile-Einträgen.
-    graph = Resolver(ctx.registry).resolve(ctx.manifest)
+    graph = Resolver(ctx.registries).resolve(ctx.manifest)
     if graph.target != lockfile.target:
         problems.append(f"Target-Drift: Manifest={graph.target!r}, Lockfile={lockfile.target!r}.")
 
@@ -224,7 +226,7 @@ def run_verify_with_warnings(
     llm_client = build_replay_client(offline=offline, cache_dir=cache_dir)
     for entry in lockfile.entries:
         try:
-            spec = ctx.registry.fetch(entry.id, Version.parse(entry.version))
+            spec = fetch_spec(ctx.registries, entry.id, Version.parse(entry.version))
         except RegistryError as exc:
             problems.append(str(exc))
             continue

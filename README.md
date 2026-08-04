@@ -80,6 +80,21 @@ Mocks erfüllen denselben API-Vertrag wie die LLM-generierte Implementierung
 (Import-Swap-kompatibel) und sind die Render-Grundlage des visuellen
 Composers (P3). Details: [`docs/component-api-and-mocks.md`](./docs/component-api-and-mocks.md).
 
+### Specs aus Git beziehen
+
+Eine Dependency kann direkt aus einem Git-Repo kommen — Repo-URL als Identität,
+Tags als Versionen, kein Registry-Login:
+
+```yaml
+dependencies:
+  "git+https://github.com/acme/rating-stars": "^1.2"
+  "git+https://github.com/acme/kit#specs/button": "^0.1"
+```
+
+`speccify lock` pinnt zusätzlich den Commit hinter dem Tag; nach dem ersten
+Auflösen laufen `pull`/`verify` offline gegen einen lokalen Bare-Clone-Cache.
+Details: [`docs/git-sources.md`](./docs/git-sources.md).
+
 ### Ein ganzes Projekt bauen (`kind: app`)
 
 Eine App-Spec komponiert Screens zu einem lauffähigen Projekt: `speccify build`
@@ -233,6 +248,7 @@ uv sync --reinstall-package django
 
 - [`.agent/agent.md`](./.agent/agent.md) — Onboarding für Coding-Agents (Vision, Repo-Layout, Konventionen).
 - [`docs/component-api-and-mocks.md`](./docs/component-api-and-mocks.md) — **Spec-Schema v1** (P2): formaler `api:`-Vertrag, `composition:` mit typgeprüfter Verdrahtung, deterministische Mocks (`speccify mock` / MCP `mock` / `POST /api/v1/mock`).
+- [`docs/git-sources.md`](./docs/git-sources.md) — **Git-Quellen** (P5): `git+<url>[#<pfad>]` als Spec-Id, Tags als Versionen, Commit-Pin im Lockfile v4, Bare-Clone-Cache + Offline-Modus.
 - [`docs/app-builds.md`](./docs/app-builds.md) — **Projekt-Builds** (P4): `kind: app` mit Routen/Theme/Env, `navigate`-Verdrahtung, `speccify build --mocks` (+ MCP-Tool `build` / `POST /api/v1/build`).
 - [`docs/workspaces.md`](./docs/workspaces.md) — Cargo-Style Workspaces (Phase 4): Root-Lockfile, Per-Member-Outputs, MVS-Konflikt-UX.
 - [`docs/conformance.md`](./docs/conformance.md) — Build-Smoke gegen echte Toolchains (Phase 5a: React/Angular via `tsc --noEmit`, SwiftUI via `swiftc -typecheck`) **+ Cross-Consistency-Sweep**: `5 Specs × 3 Targets × 4 Pfade (Local/CLI/MCP/Web)` byte-identisch via `apps/web/backend/tests/test_cross_consistency_sweep.py`.

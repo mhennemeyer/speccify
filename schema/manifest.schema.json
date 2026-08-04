@@ -44,13 +44,13 @@
     },
     "dependencies": {
       "type": "object",
-      "description": "Map von Spec-Id auf Versions-Range. Phase 1a unterstützt nur exakte Versionen und Caret-Ranges (^X.Y, ^X.Y.Z).",
+      "description": "Map von Spec-Id auf Versions-Range. Exakte Versionen und Caret-Ranges (^X.Y, ^X.Y.Z). Ab Phase P5 sind Git-Quellen als Schlüssel erlaubt: `git+<url>[#<pfad>]`.",
       "additionalProperties": {
         "type": "string",
         "pattern": "^(\\^?(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(\\.(0|[1-9]\\d*))?)$"
       },
       "propertyNames": {
-        "pattern": "^(spec://[a-z0-9][a-z0-9-]*|@[a-z0-9][a-z0-9-]*/[a-z0-9][a-z0-9-]*)$"
+        "pattern": "^(spec://[a-z0-9][a-z0-9-]*|@[a-z0-9][a-z0-9-]*/[a-z0-9][a-z0-9-]*|git\\+[^\\s#]+(#[^\\s#]+)?)$"
       }
     }
   }

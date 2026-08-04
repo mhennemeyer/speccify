@@ -139,6 +139,10 @@ class GitRegistry:
     def offline(self) -> bool:
         return self._offline
 
+    def serves(self, spec_id: str) -> bool:
+        """Nur `git+`-Ids — alles andere bedienen Local-/RemoteRegistry."""
+        return is_git_ref(spec_id)
+
     # --- git-Aufrufe ----------------------------------------------------------
 
     def _run_bytes(self, args: list[str], *, cwd: Path | None = None) -> bytes:

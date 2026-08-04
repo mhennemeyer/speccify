@@ -22,7 +22,11 @@ logger = logging.getLogger(__name__)
 _RANGE_PATTERN = re.compile(
     r"^(?P<op>\^?)(?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)(?:\.(?P<patch>0|[1-9]\d*))?$"
 )
+# `uses:`-Einträge: `@scope/name[@range]` oder eine Git-Quelle
+# `git+<url>[#<pfad>][@range]` (Phase P5). Die Range ist rein numerisch, deshalb
+# ist der Split am letzten `@` auch bei URLs eindeutig.
 _USES_PATTERN = re.compile(r"^(?P<id>@[a-z0-9][a-z0-9-]*/[a-z0-9][a-z0-9-]*)(?:@(?P<range>.+))?$")
+_GIT_USES_PATTERN = re.compile(r"^(?P<id>git\+[^\s]+?)(?:@(?P<range>\^?\d+\.\d+(?:\.\d+)?))?$")
 
 
 class ResolverError(Exception):
@@ -103,6 +107,8 @@ class Resolution:
     version: Version
     spec_sha256: str
     via: str = "registry-fixtures"
+    # Nur bei Git-Quellen gesetzt: der Commit hinter dem Tag (Phase P5, D18).
+    source_commit: str | None = None
 
 
 @dataclass(frozen=True)
@@ -129,17 +135,37 @@ def _scope_of(spec_id: str) -> str:
     """Extrahiert ``scope`` aus ``@scope/name`` (ohne führendes ``@``).
 
     Phase 2 Stage 6 nutzt das für Cross-Registry-Scope-Konflikt-Detection.
+    Git-Quellen (Phase P5) sind host-qualifiziert und damit selbst schon
+    eindeutig — dort ist die Id ihr eigener „Scope", ein Confusion-Angriff
+    über gleichnamige Scopes ist konstruktiv ausgeschlossen.
     """
+    if spec_id.startswith("git+"):
+        return spec_id
     match = _SCOPE_PREFIX_PATTERN.match(spec_id)
     if not match:
         raise ResolverError(f"Spec-Id '{spec_id}' hat keinen erkennbaren @scope-Präfix.")
     return match.group(1)
 
 
+def _serves(registry: Registry, spec_id: str) -> bool:
+    """Kann diese Registry diese Id überhaupt bedienen?
+
+    Registries dürfen (optional) ein ``serves``-Prädikat anbieten. Ohne das
+    Prädikat gilt „ja" — bestehende Implementierungen und Test-Doubles bleiben
+    damit unverändert gültig.
+    """
+    predicate = getattr(registry, "serves", None)
+    return True if predicate is None else bool(predicate(spec_id))
+
+
 def _parse_uses_entry(entry: str) -> tuple[str, str]:
-    match = _USES_PATTERN.match(entry)
+    pattern = _GIT_USES_PATTERN if entry.startswith("git+") else _USES_PATTERN
+    match = pattern.match(entry)
     if not match:
-        raise ResolverError(f"Ungültiger uses-Eintrag '{entry}': erwartet '@scope/name[@<range>]'.")
+        raise ResolverError(
+            f"Ungültiger uses-Eintrag '{entry}': erwartet '@scope/name[@<range>]' "
+            f"oder 'git+<url>[#<pfad>][@<range>]'."
+        )
     spec_id = match.group("id")
     range_raw = match.group("range") or "^0.0"  # Fallback, sollte selten vorkommen
     return spec_id, range_raw
@@ -263,6 +289,7 @@ class Resolver:
                 version=ver,
                 spec_sha256=_sha256_hex(spec.raw_bytes),
                 via=registry_for[spec_id].via,
+                source_commit=spec.source_commit,
             )
             for spec_id, (ver, spec) in sorted(resolved.items())
         ]
@@ -288,6 +315,8 @@ class Resolver:
             if owner_via is not None and registry.via != owner_via:
                 # Bereits an eine andere Registry gebunden — diese hier überspringen.
                 continue
+            if not _serves(registry, spec_id):
+                continue
             try:
                 versions = registry.list_versions(spec_id)
             except RegistryError as exc:
@@ -302,7 +331,7 @@ class Resolver:
             # Registry liefern *würde*, ist das ein Cross-Registry-Konflikt.
             if owner_via is not None:
                 for registry in self._registries:
-                    if registry.via == owner_via:
+                    if registry.via == owner_via or not _serves(registry, spec_id):
                         continue
                     try:
                         other_versions = registry.list_versions(spec_id)

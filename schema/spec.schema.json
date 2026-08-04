@@ -76,7 +76,7 @@
           "propertyNames": { "pattern": "^[a-z][a-z0-9_]*$" },
           "additionalProperties": {
             "type": "string",
-            "pattern": "^(spec://[a-z0-9][a-z0-9-]*|@[a-z0-9][a-z0-9-]*/[a-z0-9][a-z0-9-]*)(@[\\^~]?[0-9A-Za-z.\\-+*x]+)?$"
+            "pattern": "^(spec://[a-z0-9][a-z0-9-]*|@[a-z0-9][a-z0-9-]*/[a-z0-9][a-z0-9-]*|git\\+[^\\s#]+(#[^\\s#]+)?)(@[\\^~]?[0-9A-Za-z.\\-+*x]+)?$"
           }
         },
         "tree": {
@@ -123,10 +123,10 @@
     },
     "uses": {
       "type": "array",
-      "description": "Lose referenzierte Specs (ohne Kompositions-Semantik). `composition.uses` zählt zusätzlich automatisch als Dependency.",
+      "description": "Lose referenzierte Specs (ohne Kompositions-Semantik). `composition.uses` zählt zusätzlich automatisch als Dependency. Git-Quellen (P5): `git+<url>[#<pfad>][@range]`.",
       "items": {
         "type": "string",
-        "pattern": "^(spec://[a-z0-9][a-z0-9-]*|@[a-z0-9][a-z0-9-]*/[a-z0-9][a-z0-9-]*)(@[\\^~]?[0-9A-Za-z.\\-+*x]+)?$"
+        "pattern": "^(spec://[a-z0-9][a-z0-9-]*|@[a-z0-9][a-z0-9-]*/[a-z0-9][a-z0-9-]*|git\\+[^\\s#]+(#[^\\s#]+)?)(@[\\^~]?[0-9A-Za-z.\\-+*x]+)?$"
       }
     },
     "acceptance": {

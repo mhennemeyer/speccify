@@ -11,7 +11,6 @@ from pathlib import Path
 
 import typer
 from speccify_core import (
-    LocalRegistry,
     ProjectManifest,
     Resolver,
     ResolverError,
@@ -26,6 +25,8 @@ from speccify_cli.commands._workspace import (
     LOCKFILE_FILENAME,
     MANIFEST_FILENAME,
     WorkspaceContext,
+    build_registries,
+    list_versions,
 )
 
 _SPEC_REF_PATTERN = re.compile(
@@ -115,10 +116,10 @@ def run_add(
     if explicit_range is not None:
         new_range = explicit_range
     else:
-        available = ctx.registry.list_versions(spec_id)
+        available = list_versions(ctx.registries, spec_id)
         if not available:
             raise RegistryError(
-                f"Spec '{spec_id}' ist im Registry {ctx.registry.root} nicht verfügbar."
+                f"Spec '{spec_id}' ist weder in {ctx.registry.root} noch als Git-Quelle verfügbar."
             )
         latest = available[-1]
         new_range = f"^{latest.major}.{latest.minor}"
@@ -136,7 +137,7 @@ def run_add(
 
     # Implizit lock: Manifest neu laden (mit aktualisierten Deps), dann auflösen.
     refreshed = WorkspaceContext.load(project_dir, registry_override=registry_override)
-    graph = Resolver(refreshed.registry).resolve(refreshed.manifest)
+    graph = Resolver(refreshed.registries).resolve(refreshed.manifest)
     lockfile = build_lockfile(target=graph.target, resolutions=list(graph.resolutions))
     lockfile.write(refreshed.lockfile_path)
     return refreshed.manifest
@@ -156,10 +157,11 @@ def _run_workspace_add(
     if explicit_range is not None:
         new_range = explicit_range
     else:
-        available = member_ctx.registry.list_versions(spec_id)
+        available = list_versions(member_ctx.registries, spec_id)
         if not available:
             raise RegistryError(
-                f"Spec '{spec_id}' ist im Registry {member_ctx.registry.root} nicht verfügbar."
+                f"Spec '{spec_id}' ist weder in {member_ctx.registry.root} "
+                f"noch als Git-Quelle verfügbar."
             )
         latest = available[-1]
         new_range = f"^{latest.major}.{latest.minor}"
@@ -181,7 +183,7 @@ def _run_workspace_add(
         registry_path = registry_override.resolve()
     else:
         registry_path = workspace.root_manifest.resolved_registry_path()
-    lockfile = workspace.lock(LocalRegistry(registry_path))
+    lockfile = workspace.lock(build_registries(registry_path))
     lockfile.write(workspace_root / LOCKFILE_FILENAME)
     return new_manifest
 

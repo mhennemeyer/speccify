@@ -2,7 +2,8 @@
 
 Ursprünglich Phase-2-Datei (v2-Bump); seit Phase-3-Stage-1b-β deckt sie auch die
 v2→v3-Migration ab (`schema_version: 2`, `target: str` Top-Level werden Loader-seitig
-zu v3 mit `targets: list[str]` migriert).
+zu `targets: list[str]` migriert). Seit Phase P5 schreibt der Writer v4
+(Git-Ids + optionaler `source_commit`); Alt-Lockfiles bleiben lesbar.
 """
 
 from __future__ import annotations
@@ -45,10 +46,10 @@ def _entry(
     )
 
 
-def test_lockfile_default_schema_version_is_v3() -> None:
+def test_lockfile_default_schema_version_is_v4() -> None:
     lock = Lockfile(targets=("react",))
-    assert lock.schema_version == 3
-    assert CURRENT_LOCKFILE_SCHEMA_VERSION == 3
+    assert lock.schema_version == 4
+    assert CURRENT_LOCKFILE_SCHEMA_VERSION == 4
 
 
 def test_lockfile_default_signature_is_none() -> None:
@@ -111,7 +112,7 @@ def test_lockfile_writes_signature_field(tmp_path: Path) -> None:
     lock.write(out)
     data = yaml.safe_load(out.read_text(encoding="utf-8"))
     assert data["signature"] == {"kind": "none"}
-    assert data["schema_version"] == 3
+    assert data["schema_version"] == 4
 
 
 def test_lockfile_sigstore_signature_round_trip(tmp_path: Path) -> None:
@@ -128,7 +129,7 @@ def test_lockfile_sigstore_signature_round_trip(tmp_path: Path) -> None:
     assert loaded.signature.rekor_log_index == 42
 
 
-def test_lockfile_v1_loads_and_migrates_to_v3(tmp_path: Path) -> None:
+def test_lockfile_v1_loads_and_migrates_to_v4(tmp_path: Path) -> None:
     """Phase-1-Lockfiles (v1, ohne signature/yank_status/targets-list) bleiben lesbar."""
 
     v1 = tmp_path / "speccify.lock"
@@ -146,17 +147,17 @@ def test_lockfile_v1_loads_and_migrates_to_v3(tmp_path: Path) -> None:
         encoding="utf-8",
     )
     loaded = Lockfile.load(v1)
-    assert loaded.schema_version == 3
+    assert loaded.schema_version == 4
     assert loaded.targets == ("react",)
     assert isinstance(loaded.signature, NoneSignature)
     assert loaded.entries[0].yank_status == "none"
     assert loaded.entries[0].yank_reason is None
 
-    # Beim Re-Write wird das Lockfile auf v3 aktualisiert (Top-Level `targets`).
+    # Beim Re-Write wird das Lockfile auf v4 aktualisiert (Top-Level `targets`).
     out = tmp_path / "speccify.lock.new"
     loaded.write(out)
     data = yaml.safe_load(out.read_text(encoding="utf-8"))
-    assert data["schema_version"] == 3
+    assert data["schema_version"] == 4
     assert data["targets"] == ["react"]
     assert "target" not in data
     assert data["signature"] == {"kind": "none"}

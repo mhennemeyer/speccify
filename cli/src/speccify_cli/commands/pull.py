@@ -25,7 +25,6 @@ from speccify_core import (
     CodegenError,
     GeneratedFile,
     LlmGeneratorPin,
-    LocalRegistry,
     Lockfile,
     LockfileError,
     Workspace,
@@ -41,6 +40,8 @@ from speccify_cli.commands._workspace import (
     LOCKFILE_FILENAME,
     MANIFEST_FILENAME,
     WorkspaceContext,
+    build_registries,
+    fetch_spec,
 )
 
 WORKSPACE_OUTPUT_DIRNAME = "speccify_generated"
@@ -76,7 +77,7 @@ def _render_lock_entry_into(
     entry_id: str,
     target: str,
     out_dir: Path,
-    registry: Registry,
+    registries: list[Registry],
     llm_client: object,
 ) -> Lockfile:
     """Rendert einen Lock-Entry (`spec_id`, `target`) in `out_dir`.
@@ -91,7 +92,7 @@ def _render_lock_entry_into(
             f"Lockfile enthält keinen Eintrag für {entry_id!r} mit target={target!r}."
         )
     entry = matching[0]
-    spec = registry.fetch(entry.id, Version.parse(entry.version))
+    spec = fetch_spec(registries, entry.id, Version.parse(entry.version))
     rendered = render_for_target(spec, target, llm_client=llm_client)
     generated: list[GeneratedFile] = []
     for rel_path, data in sorted(rendered.files.items()):
@@ -132,7 +133,7 @@ def _run_workspace_pull(
         registry_path = registry_override.resolve()
     else:
         registry_path = workspace.root_manifest.resolved_registry_path()
-    registry = LocalRegistry(registry_path)
+    registries = build_registries(registry_path, offline=offline)
     llm_client = build_replay_client(offline=offline, cache_dir=cache_dir)
 
     updated = lockfile
@@ -155,7 +156,7 @@ def _run_workspace_pull(
                     entry.id,
                     target,
                     target_out,
-                    registry,
+                    registries,
                     llm_client,
                 )
 
@@ -185,7 +186,8 @@ def run_pull(
             cache_dir=cache_dir,
         )
 
-    ctx = WorkspaceContext.load(project_dir, registry_override=registry_override)
+    # `--offline` gilt auch für Git-Quellen: kein Netz, nur der lokale Cache.
+    ctx = WorkspaceContext.load(project_dir, registry_override=registry_override, offline=offline)
     if not ctx.lockfile_path.is_file():
         raise LockfileError(
             f"Kein Lockfile in {project_dir} gefunden. Bitte zuerst `speccify lock` ausführen."
@@ -209,7 +211,7 @@ def run_pull(
             entry.id,
             target,
             out_dir,
-            ctx.registry,
+            ctx.registries,
             llm_client,
         )
 

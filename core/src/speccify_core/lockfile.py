@@ -27,7 +27,7 @@ from speccify_core.codegen.stub import TEMPLATE_SET, TEMPLATE_VERSION
 DEFAULT_TEMPLATE_SET: str = TEMPLATE_SET
 DEFAULT_TEMPLATE_VERSION: str = TEMPLATE_VERSION
 
-# core/src/speccify_core/lockfile.py → ../../../schema/lockfile.schema.json (v3)
+# core/src/speccify_core/lockfile.py → ../../../schema/lockfile.schema.json (v4)
 DEFAULT_LOCKFILE_SCHEMA_PATH: Path = (
     Path(__file__).resolve().parents[3] / "schema" / "lockfile.schema.json"
 )
@@ -39,9 +39,12 @@ LEGACY_V1_LOCKFILE_SCHEMA_PATH: Path = (
 LEGACY_V2_LOCKFILE_SCHEMA_PATH: Path = (
     Path(__file__).resolve().parents[3] / "schema" / "lockfile.v2.schema.json"
 )
+LEGACY_V3_LOCKFILE_SCHEMA_PATH: Path = (
+    Path(__file__).resolve().parents[3] / "schema" / "lockfile.v3.schema.json"
+)
 
 # Aktuelle Schema-Version, die `Lockfile.write` immer schreibt.
-CURRENT_LOCKFILE_SCHEMA_VERSION: int = 3
+CURRENT_LOCKFILE_SCHEMA_VERSION: int = 4
 
 
 class LockfileError(Exception):
@@ -103,6 +106,8 @@ class LockEntry:
     # v2-Felder (Phase 2). Default `none` heißt: kein Yank, kein Grund.
     yank_status: str = "none"
     yank_reason: str | None = None
+    # v4-Feld (Phase P5): Commit hinter dem Tag — nur bei Git-Quellen gesetzt.
+    source_commit: str | None = None
 
 
 @dataclass(frozen=True)
@@ -163,17 +168,21 @@ class Lockfile:
                 f"Lockfile muss ein YAML-Mapping sein, ist aber {type(data).__name__}: {lock_path}"
             )
 
-        # Backward-compat: v1- und v2-Lockfiles werden gegen das jeweilige Alt-Schema geprüft
-        # und in-memory nach v3 migriert; neu geschriebene Lockfiles sind immer v3.
+        # Backward-compat: v1–v3-Lockfiles werden gegen das jeweilige Alt-Schema geprüft
+        # und in-memory nach v4 migriert; neu geschriebene Lockfiles sind immer v4.
+        # Migration heißt hier: nichts nachzutragen — `source_commit` bleibt leer,
+        # weil Alt-Lockfiles nur Nicht-Git-Quellen kennen.
         raw_version = data.get("schema_version")
         if schema_path is None and raw_version == 1:
             _validate_against_schema(data, LEGACY_V1_LOCKFILE_SCHEMA_PATH, lock_path)
         elif schema_path is None and raw_version == 2:
             _validate_against_schema(data, LEGACY_V2_LOCKFILE_SCHEMA_PATH, lock_path)
+        elif schema_path is None and raw_version == 3:
+            _validate_against_schema(data, LEGACY_V3_LOCKFILE_SCHEMA_PATH, lock_path)
         else:
             _validate_against_schema(data, schema_path or DEFAULT_LOCKFILE_SCHEMA_PATH, lock_path)
 
-        # In-Memory-Migration v1/v2 → v3: Top-Level `target: str` → `targets: [target]`.
+        # In-Memory-Migration v1/v2 → v3+: Top-Level `target: str` → `targets: [target]`.
         if "targets" in data:
             targets = tuple(data["targets"])
         elif "target" in data:
@@ -235,6 +244,7 @@ class Lockfile:
                 generated_files_sha256=tuple(files),
                 yank_status=e.yank_status,
                 yank_reason=e.yank_reason,
+                source_commit=e.source_commit,
             ),
         )
 
@@ -264,6 +274,7 @@ class Lockfile:
                 generated_files_sha256=e.generated_files_sha256,
                 yank_status=status,
                 yank_reason=reason if status == "yanked" else None,
+                source_commit=e.source_commit,
             ),
         )
 
@@ -285,6 +296,7 @@ class Lockfile:
                 generated_files_sha256=e.generated_files_sha256,
                 yank_status=e.yank_status,
                 yank_reason=e.yank_reason,
+                source_commit=e.source_commit,
             ),
         )
 
@@ -351,6 +363,7 @@ def build_lockfile(
             target=tgt,
             generator=generator,
             generated_files_sha256=(),
+            source_commit=getattr(r, "source_commit", None),
         )
         for r in sorted_resolutions
         for tgt in targets
@@ -367,6 +380,10 @@ def _entry_to_dict(entry: LockEntry) -> dict[str, Any]:
         "resolved_via": entry.resolved_via,
         "target": entry.target,
         "yank_status": entry.yank_status,
+    }
+    if entry.source_commit:
+        out["source_commit"] = entry.source_commit
+    out |= {
         "generator": _generator_to_dict(entry.generator),
         "generated_files_sha256": [{"path": f.path, "sha256": f.sha256} for f in sorted_files],
     }
@@ -413,6 +430,7 @@ def _entry_from_dict(item: dict[str, Any]) -> LockEntry:
         generated_files_sha256=files,
         yank_status=yank_status,
         yank_reason=yank_reason,
+        source_commit=item.get("source_commit"),
     )
 
 

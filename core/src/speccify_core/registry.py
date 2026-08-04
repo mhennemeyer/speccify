@@ -63,6 +63,23 @@ class Spec:
         """Lazy parse: PyYAML auf den Original-Bytes."""
         return yaml.safe_load(self.raw_bytes.decode("utf-8")) or {}
 
+    @property
+    def name_id(self) -> str:
+        """Die **in der Spec deklarierte** Id — Grundlage für Namen und Pfade im Codegen.
+
+        Für Registry-Specs ist das dieselbe Id wie `spec_id`. Bei Git-Quellen
+        (Phase P5) ist `spec_id` die Quelle (`git+<url>#<pfad>`), während die
+        Spec selbst weiterhin `@scope/name` heißt — generierte Dateien sollen
+        nach der Komponente heißen, nicht nach ihrem Fundort. Die Herkunft
+        hält das Lockfile fest.
+        """
+        declared = str(self.parsed().get("id", "")).strip()
+        if not declared:
+            return self.spec_id
+        # Optionales `@<version>`-Suffix aus der Id entfernen (`@org/button@0.1.0`).
+        match = re.match(r"^(?P<id>spec://[^@]+|@[^/]+/[^@]+)(?:@.+)?$", declared)
+        return match.group("id") if match else declared
+
 
 @runtime_checkable
 class Registry(Protocol):
@@ -108,6 +125,10 @@ class LocalRegistry:
     @property
     def via(self) -> str:
         return self._via
+
+    def serves(self, spec_id: str) -> bool:
+        """Nur scoped Ids (`@scope/name`) — Git-Quellen bedient die `GitRegistry`."""
+        return bool(_SCOPED_ID_PATTERN.match(spec_id))
 
     def list_versions(self, spec_id: str) -> list[Version]:
         """Sortiert aufsteigend; ignoriert Verzeichnisse mit ungültiger Version."""
@@ -203,6 +224,10 @@ class RemoteRegistry:
     @property
     def base_url(self) -> str:
         return self._base_url
+
+    def serves(self, spec_id: str) -> bool:
+        """Nur scoped Ids (`@scope/name`) — Git-Quellen bedient die `GitRegistry`."""
+        return bool(_SCOPED_ID_PATTERN.match(spec_id))
 
     def close(self) -> None:
         if self._owned_client:

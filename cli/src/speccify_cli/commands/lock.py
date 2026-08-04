@@ -12,7 +12,6 @@ from pathlib import Path
 
 import typer
 from speccify_core import (
-    LocalRegistry,
     Lockfile,
     ProjectManifest,
     Resolver,
@@ -27,6 +26,7 @@ from speccify_cli.commands._workspace import (
     LOCKFILE_FILENAME,
     MANIFEST_FILENAME,
     WorkspaceContext,
+    build_registries,
 )
 
 
@@ -47,8 +47,7 @@ def _run_workspace_lock(project_dir: Path, registry_override: Path | None) -> Lo
         registry_path = registry_override.resolve()
     else:
         registry_path = workspace.root_manifest.resolved_registry_path()
-    registry = LocalRegistry(registry_path)
-    lockfile = workspace.lock(registry)
+    lockfile = workspace.lock(build_registries(registry_path))
     lockfile.write(project_dir / LOCKFILE_FILENAME)
     return lockfile
 
@@ -58,7 +57,7 @@ def run_lock(project_dir: Path, registry_override: Path | None = None) -> Lockfi
     if _is_workspace_root(project_dir):
         return _run_workspace_lock(project_dir, registry_override)
     ctx = WorkspaceContext.load(project_dir, registry_override=registry_override)
-    graph = Resolver(ctx.registry).resolve(ctx.manifest)
+    graph = Resolver(ctx.registries).resolve(ctx.manifest)
     lockfile = build_lockfile(target=graph.target, resolutions=list(graph.resolutions))
     lockfile.write(ctx.lockfile_path)
     return lockfile

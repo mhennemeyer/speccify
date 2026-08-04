@@ -125,11 +125,11 @@ def _selector(spec_id: str) -> str:
 def _build_prompt_context(spec: Spec) -> dict[str, Any]:
     parsed = spec.parsed()
     return {
-        "spec_id": spec.spec_id,
+        "spec_id": spec.name_id,
         "spec_version": str(spec.version),
-        "component_name": _component_name(spec.spec_id),
-        "selector": _selector(spec.spec_id),
-        "title": str(parsed.get("title", spec.spec_id)),
+        "component_name": _component_name(spec.name_id),
+        "selector": _selector(spec.name_id),
+        "title": str(parsed.get("title", spec.name_id)),
         "summary": str(parsed.get("summary", "")).strip(),
         "kind": str(parsed.get("kind", "")),
         "inputs": props_as_prompt_items(parsed),
@@ -306,5 +306,5 @@ def render_to_files(
 ) -> tuple[dict[str, bytes], CacheKey]:
     """Rendert eine Spec zu `{relativer_pfad: bytes}` + zugehörigem Cache-Key."""
     result = render(spec, llm_client, seed=seed)
-    rel_path = _output_path(spec.spec_id)
+    rel_path = _output_path(spec.name_id)
     return {rel_path: result.text.encode("utf-8")}, result.cache_key
