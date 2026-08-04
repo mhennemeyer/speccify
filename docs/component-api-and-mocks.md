@@ -120,11 +120,14 @@ Zwei Läufe sind byte-identisch; Mocks brauchen keinen Lockfile-Eintrag
 | CLI | `speccify mock @org/search-bar` |
 | MCP | Tool `mock` (`spec_ref`, `out_dir`, `registry_path?`, `target?`) |
 | Web | `POST /api/v1/mock` mit `{spec_id, version?, target?}` |
+| Web (Entwurf) | `POST /api/v1/mock/draft` mit `{spec_yaml, target?}` |
 
-Alle drei liefern byte-identische Dateien (Cross-Consistency-Test
-`apps/web/backend/tests/test_mock_route.py`). Der Web-Endpoint ist der
-Vorbau für die Composer-Palette (P3): der Composer rendert ausschließlich
-Mocks — schnell, deterministisch, ohne LLM im Loop.
+Alle liefern byte-identische Dateien (Cross-Consistency-Test
+`apps/web/backend/tests/test_mock_route.py`, inkl. „Entwurf == gespeicherte
+Spec"). `mock/draft` mockt eine **noch nicht gespeicherte** Spec — Kinder
+kommen aus der Registry, nur das Dokument selbst ist neu. Damit rendert der
+Composer-Canvas den echten Mock-Output, statt ihn nachzuzeichnen (P3): schnell,
+deterministisch, ohne LLM im Loop.
 
 ## Cross-Referenzen
 

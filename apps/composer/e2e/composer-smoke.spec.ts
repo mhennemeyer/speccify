@@ -28,9 +28,12 @@ test("Composite komponieren, verdrahten, speichern und per YAML runden", async (
       .click();
     const node = page.locator(".mock-node").filter({ hasText: "button" });
     await expect(node).toBeVisible();
+    // Der Canvas rendert den generierten Mock: die Prop steht dort so, wie die
+    // Mock-Komponente sie darstellt (kein JSON-Echo des Composers mehr).
+    await expect(node.locator("[data-speccify-mock='@org/button']")).toBeVisible();
     // Knoten ist nach dem Hinzufügen selektiert — Inspector zeigt den Prop-Editor.
     await page.locator("#tree-prop-label").fill("Klick mich");
-    await expect(node).toContainText('"Klick mich"');
+    await expect(node).toContainText("Klick mich");
   });
 
   await test.step("Eigenes Event anlegen und verdrahten", async () => {
@@ -45,8 +48,9 @@ test("Composite komponieren, verdrahten, speichern und per YAML runden", async (
     await expect(page.locator(".rule").filter({ hasText: "wenn button.pressed" })).toBeVisible();
   });
 
-  await test.step("Simulation: Event-Chip feuert die Wiring-Regel", async () => {
-    await page.locator(".mock-node .chip").filter({ hasText: "pressed" }).first().click();
+  await test.step("Simulation: Event-Chip des Mocks feuert die Wiring-Regel", async () => {
+    // Der Chip kommt aus dem generierten Mock, nicht aus dem Composer.
+    await page.locator(".mock-node button").filter({ hasText: "pressed" }).first().click();
     await expect(page.locator(".log-entry").filter({ hasText: "button.pressed" })).toBeVisible();
     await expect(page.locator(".log-entry").filter({ hasText: "emittiert clicked" })).toBeVisible();
   });
@@ -73,6 +77,38 @@ test("Composite komponieren, verdrahten, speichern und per YAML runden", async (
       "@org/smoke-widget@0.2.0 · ui-component",
     );
   });
+});
+
+test("Vorschau rendert den Dokument-Mock mit eigener Verdrahtung", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator(".palette-item").filter({ hasText: "@org/button@" })).toBeVisible();
+
+  await page.locator("#new-name").fill("preview-widget");
+  await page.getByRole("button", { name: "Anlegen" }).click();
+  await page
+    .locator(".palette-item")
+    .filter({ hasText: "@org/button@" })
+    .getByRole("button", { name: "+ als Kind" })
+    .click();
+
+  // Eigenes Event + Wiring-Regel: button.pressed → clicked.
+  await page.getByRole("button", { name: "API", exact: true }).click();
+  await page.locator("#own-event-name").fill("clicked");
+  await page.getByRole("button", { name: "Event speichern" }).click();
+  await page.getByRole("button", { name: "Verdrahtung" }).click();
+  await page.locator("#wiring-when").selectOption("button.pressed");
+  await page.locator("#wiring-emit").selectOption("clicked");
+  await page.getByRole("button", { name: "Regel hinzufügen" }).click();
+
+  await page.getByRole("button", { name: "Vorschau" }).click();
+  // Gerendert wird der generierte Composite-Mock des Dokuments selbst.
+  const preview = page.locator(".preview-pane [data-speccify-mock='@org/preview-widget']");
+  await expect(preview).toBeVisible();
+  await expect(preview).toContainText("mock · composite");
+
+  // Die Verdrahtung läuft im generierten Code — der Callback landet im Log.
+  await preview.locator("button").filter({ hasText: "pressed" }).first().click();
+  await expect(page.locator(".log-entry").filter({ hasText: "emittiert clicked" })).toBeVisible();
 });
 
 test("Undo/Redo rollt Kind-Hinzufügen als einen Schritt zurück und vor", async ({ page }) => {

@@ -19,7 +19,7 @@ pnpm run composer:dev        # http://localhost:5173
 | Bereich | Funktion |
 |---|---|
 | **Palette** (links) | Alle Registry-Specs. „+ als Kind" fügt eine Komponente in die aktuelle Komposition ein, „öffnen" lädt eine Spec in den Editor. Selbst gespeicherte Composites erscheinen sofort — **Komposition ist rekursiv**. |
-| **Canvas** (Mitte) | Jeder Knoten wird als interpretierter Mock gerendert (Titel, aktuelle Props, Event-Chips). Chips feuern die Wiring-Simulation live. Klick selektiert. **Slot-Zonen**: Komponenten mit Slots zeigen pro Slot eine Zone — anklicken macht sie zum Einfüge-Ziel („+ als Kind" aus der Palette fügt dann dort ein, erneut klicken hebt das Ziel auf); eingefügte Kinder rendern verschachtelt in der Zone. |
+| **Canvas** (Mitte) | Rendert den **generierten Mock** — dieselben `*.mock.tsx`-Dateien, die `speccify mock` schreibt (im Browser kompiliert, siehe unten). Zwei Modi: *Bearbeiten* zeigt den Baum mit Editor-Rahmen (Klick selektiert, Event-Chips des Mocks feuern die Wiring-Simulation), *Vorschau* rendert die Mock-Komponente des Dokuments selbst — dort verdrahtet der generierte Code, nicht der Composer. **Slot-Zonen**: Komponenten mit Slots zeigen pro Slot eine Zone *an der Stelle, an der der Mock den Slot rendert* — anklicken macht sie zum Einfüge-Ziel („+ als Kind" aus der Palette fügt dann dort ein, erneut klicken hebt das Ziel auf); eingefügte Kinder rendern verschachtelt in der Zone. |
 | **Inspector** (rechts) | *Knoten*: typisierte Prop-Editoren (Enum-Dropdowns etc.), Reihenfolge, **Platzierung** (Knoten samt Teilbaum zwischen Top-Level und Slots umhängen), Entfernen (entfernt den ganzen Teilbaum inkl. Wiring-Cleanup). *Verdrahtung*: Regeln ansehen/löschen + Formular mit API-getriebenen Dropdowns. *API*: eigene Events/Props (inkl. `map_to`-Forwarding). *Spec*: Name/Version/Kind/Summary. |
 | **YAML** (unten links) | Live generierte Spec-YAML; direkt editierbar („übernehmen" lädt sie zurück ins Modell). Validierungs-Issues erscheinen hier. |
 | **Event-Log** (unten rechts) | Trigger, `set`-Effekte und emittierte eigene Events der Simulation. |
@@ -53,9 +53,12 @@ curl -s -X POST localhost:8000/api/v1/validate \
 curl -s -X POST localhost:8000/api/v1/specs \
   -H 'content-type: application/json' \
   -d '{"spec_yaml": "…"}' | jq
-# Mock-Closure (auch Canvas-Grundlage)
+# Mock-Closure einer gespeicherten Spec
 curl -s -X POST localhost:8000/api/v1/mock \
   -d '{"spec_id": "@org/search-bar"}' -H 'content-type: application/json' | jq '.files | keys'
+# Mock-Closure eines ungespeicherten Entwurfs — genau das, was der Canvas rendert
+curl -s -X POST localhost:8000/api/v1/mock/draft \
+  -d '{"spec_yaml": "…"}' -H 'content-type: application/json' | jq '{entry, files: (.files | keys)}'
 ```
 
 ## Architektur & Tauri-2-Zielbild
@@ -66,9 +69,18 @@ curl -s -X POST localhost:8000/api/v1/mock \
 - **Backend-Grenze**: ausschließlich HTTP (`/api/v1/...`). Im Dev proxied Vite
   auf `:8000`; `VITE_API_BASE` erlaubt der Tauri-Shell, auf einen Sidecar zu
   zeigen. CORS ist für `tauri://localhost` vorbereitet.
-- **Canvas-Rendering**: Der Canvas interpretiert den **API-Contract als JSON**
-  (gleiche Semantik wie die generierten `*.mock.tsx`-Dateien aus
-  `speccify mock`) — kein TSX-Compiler im Browser, deterministisch, Tauri-safe.
+- **Canvas-Rendering (Mock-Bundle)**: Der Canvas holt bei jeder Änderung die
+  Mock-Closure des aktuellen Dokuments (`POST /api/v1/mock/draft`, debounced)
+  und kompiliert sie im Browser (`sucrase`: TSX → CommonJS, Mini-`require` für
+  die Closure-Importe, `"react"` gebunden an die Composer-Instanz — siehe
+  `apps/composer/src/mockRuntime.ts`). Gerendert wird damit **der generierte
+  Code**, nicht eine zweite Interpretation des Contracts: keine Drift zwischen
+  Vorschau und `speccify mock`-Output. Kein LLM, kein Netz über diesen einen
+  Endpoint hinaus; Tauri-safe (CSP der Desktop-App erlaubt die Auswertung).
+  Der Composer steuert nur bei, was er als Editor weiß: gemergte Props,
+  Event-Callbacks und Slot-Inhalte. Schlägt der Bau eines Zwischenstands fehl,
+  bleibt die letzte lauffähige Closure stehen und der Canvas markiert sie als
+  „Mock veraltet".
 - **Zustand = Spec-Datei**: Der Composer hält keinen eigenen Speicher; Laden
   und Speichern gehen gegen die Registry auf Disk. Git ist die Historie.
 
@@ -88,8 +100,11 @@ Job (`apps/composer ui smoke`). Die Ports kollidieren bewusst nicht mit
 - Slot-Befüllen ist klick-basiert (Zone als Einfüge-Ziel), kein Drag & Drop.
 - Keine Routen-/Navigations-Semantik für `kind: app` (Phase P4).
 - Wiring-Quellen sind `payload.*`, `props.*` und Literale — keine Expressions.
-- Canvas interpretiert Contracts; Mock-Bundle-Rendering (echte `*.mock.tsx`)
-  bleibt Verfeinerungs-Kandidat.
+- Im Bearbeiten-Modus simuliert der Composer die Verdrahtung zwischen den
+  einzeln gerenderten Knoten selbst (`simulate.ts`, gleiche Semantik wie der
+  Generator); die *echte* generierte Verdrahtung läuft im Vorschau-Modus.
+- Kein Typecheck im Browser: `sucrase` transpiliert nur Syntax. Typfehler
+  fängt weiterhin die Conformance-Stufe (`tsc --noEmit`).
 
 ## Cross-Referenzen
 

@@ -25,7 +25,9 @@ export default defineConfig({
       env: { COMPOSER_E2E_BACKEND_PORT: String(BACKEND_PORT) },
     },
     {
-      command: `pnpm exec vite --port ${UI_PORT} --strictPort`,
+      // `--host 127.0.0.1`: ohne das bindet Vite je nach DNS-Auflösung von
+      // `localhost` nur auf ::1 — die Wartebedingung unten fragt IPv4 ab.
+      command: `pnpm exec vite --port ${UI_PORT} --strictPort --host 127.0.0.1`,
       url: `http://127.0.0.1:${UI_PORT}`,
       reuseExistingServer: false,
       timeout: 120_000,

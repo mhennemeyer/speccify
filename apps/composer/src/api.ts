@@ -5,7 +5,7 @@
 // Normalfall im Desktop-Composer-Fenster, das die SPA unter /ui vom
 // speccify-web-backend lädt, und im Vite-Dev via Proxy).
 
-import type { SpecDetail, SpecSummary, ValidationIssue } from "./types";
+import type { MockBundle, SpecDetail, SpecSummary, ValidationIssue } from "./types";
 
 declare global {
   interface Window {
@@ -58,6 +58,14 @@ export async function validateSpec(
   specYaml: string,
 ): Promise<{ ok: boolean; issues: ValidationIssue[] }> {
   return request("/api/v1/validate", {
+    method: "POST",
+    body: JSON.stringify({ spec_yaml: specYaml }),
+  });
+}
+
+/** Mock-Closure des (ungespeicherten) Dokuments — die Dateien, die der Canvas rendert. */
+export async function mockDraft(specYaml: string): Promise<MockBundle> {
+  return request("/api/v1/mock/draft", {
     method: "POST",
     body: JSON.stringify({ spec_yaml: specYaml }),
   });

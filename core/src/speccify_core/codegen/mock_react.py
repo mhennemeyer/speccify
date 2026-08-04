@@ -483,6 +483,15 @@ def _output_path(spec_id: str, *, kind: str) -> str:
     return f"{scope}/{_component_name(spec_id)}.mock.{extension}"
 
 
+def mock_output_path(spec_id: str, *, kind: str) -> str:
+    """Pfad der Mock-Datei einer Spec innerhalb der Closure (Einstiegspunkt).
+
+    Öffentlich, weil Konsumenten (Composer-Backend) aus einer gerenderten
+    Closure den Einstiegs-Modul-Pfad brauchen, ohne die Namensregeln zu kopieren.
+    """
+    return _output_path(spec_id, kind=kind)
+
+
 def render_mock_files(spec: Spec, children: Mapping[str, Spec] | None = None) -> dict[str, bytes]:
     """Rendert den Mock für genau eine Spec (Kind-Mocks werden importiert, nicht generiert)."""
     parsed = spec.parsed()

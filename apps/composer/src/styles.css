@@ -337,3 +337,44 @@ textarea.yaml {
   padding: 40px;
   text-align: center;
 }
+
+/* Canvas-Kopfzeile: Modus-Umschalter + Zustand der Mock-Closure. */
+.canvas-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: sticky;
+  top: -16px;
+  z-index: 1;
+  margin: -16px -16px 0;
+  padding: 8px 16px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+}
+
+.canvas-bar .tabs {
+  margin-bottom: 0;
+}
+
+.canvas-bar .spacer {
+  flex: 1;
+}
+
+.badge.warn {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.mock-missing {
+  color: var(--muted);
+  font-size: 12px;
+  border: 1px dotted var(--border);
+  border-radius: 6px;
+  padding: 8px;
+}
+
+.preview-pane {
+  display: grid;
+  gap: 12px;
+  max-width: 720px;
+}

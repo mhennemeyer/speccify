@@ -1,8 +1,13 @@
-// Wiring-Simulation für die Canvas-Vorschau: interpretiert die
+// Wiring-Simulation für den Bearbeiten-Modus: interpretiert die
 // `composition.wiring`-Regeln des Dokuments — dieselbe Semantik wie der
 // generierte React-Mock (`core/codegen/mock_react.py`): `set` schreibt in den
 // wired-State, `emit` re-emittiert ein eigenes Event, Quellen sind
 // `payload.<field>`, `props.<alias>.<prop>` oder Literale.
+//
+// Gerendert wird der echte Mock (siehe `mockRuntime.ts`); diese Simulation
+// liefert nur die Props zwischen den einzeln gerenderten Knoten und das
+// Event-Log. Im Vorschau-Modus läuft stattdessen die Verdrahtung des
+// generierten Dokument-Mocks selbst — der Abgleich beider Wege ist gewollt.
 
 import { findTreeNode } from "./doc";
 import type { ChildInfo, SpecDoc } from "./types";
@@ -99,37 +104,3 @@ export function fireEvent(
   return { state: nextState, emitted, setLog };
 }
 
-export function synthesizePayload(
-  child: ChildInfo,
-  eventName: string,
-  currentProps: Record<string, unknown>,
-): Record<string, unknown> {
-  // Gleiche Regel wie mock_react: Payload-Felder aus gleichnamigen Props,
-  // sonst Typ-Default.
-  const event = child.api.events.find((entry) => entry.name === eventName);
-  const payload: Record<string, unknown> = {};
-  for (const field of event?.payload ?? []) {
-    if (field.name in currentProps) {
-      payload[field.name] = currentProps[field.name];
-      continue;
-    }
-    switch (field.type.kind) {
-      case "string":
-        payload[field.name] = "";
-        break;
-      case "integer":
-      case "number":
-        payload[field.name] = 0;
-        break;
-      case "boolean":
-        payload[field.name] = false;
-        break;
-      case "enum":
-        payload[field.name] = field.type.enumValues[0];
-        break;
-      default:
-        payload[field.name] = null;
-    }
-  }
-  return payload;
-}

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { getSpecDetail, listSpecs, saveSpec, validateSpec, ApiError } from "./api";
 import { BottomBar } from "./components/BottomBar";
-import { Canvas } from "./components/Canvas";
+import { Canvas, type CanvasMode } from "./components/Canvas";
 import { Inspector } from "./components/Inspector";
 import { Palette } from "./components/Palette";
 import {
@@ -14,12 +14,8 @@ import {
   yamlToDoc,
   type SlotTarget,
 } from "./doc";
-import {
-  fireEvent,
-  mergedNodeProps,
-  synthesizePayload,
-  type WiredState,
-} from "./simulate";
+import { fireEvent, mergedNodeProps, type WiredState } from "./simulate";
+import { useMockBundle } from "./useMockBundle";
 import type {
   ChildInfo,
   LogEntry,
@@ -52,7 +48,11 @@ export function App() {
   const [past, setPast] = useState<Snapshot[]>([]);
   const [future, setFuture] = useState<Snapshot[]>([]);
   const [slotTarget, setSlotTarget] = useState<SlotTarget | null>(null);
+  const [canvasMode, setCanvasMode] = useState<CanvasMode>("edit");
   const lastPushRef = useRef(0);
+
+  // Der Canvas rendert die generierte Mock-Closure des aktuellen Dokuments.
+  const bundle = useMockBundle(doc);
 
   const refreshPalette = useCallback(async () => {
     try {
@@ -251,12 +251,10 @@ export function App() {
   );
 
   const handleFire = useCallback(
-    (alias: string, eventName: string) => {
+    (alias: string, eventName: string, payload: Record<string, unknown>) => {
       if (!doc) return;
       const child = children[alias];
       if (!child) return;
-      const merged = mergedPropsFor(alias);
-      const payload = synthesizePayload(child, eventName, merged);
       log({ kind: "trigger", text: `⚡ ${alias}.${eventName} ${JSON.stringify(payload)}` });
       const result = fireEvent(doc, children, wired, ownPropValues(doc), alias, eventName, payload);
       setWired(result.state);
@@ -273,8 +271,19 @@ export function App() {
         log({ kind: "info", text: "· keine Wiring-Regel getroffen" });
       }
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [doc, children, wired, log],
+  );
+
+  // Vorschau-Modus: das Dokument-Mock verdrahtet intern selbst und ruft nur noch
+  // die eigenen Event-Callbacks — die landen im selben Log.
+  const handleOwnEmit = useCallback(
+    (eventName: string, payload: Record<string, unknown>) => {
+      log({
+        kind: "emit",
+        text: `⇧ ${doc?.id ?? "Dokument"} emittiert ${eventName} ${JSON.stringify(payload)}`,
+      });
+    },
+    [doc, log],
   );
 
   const mergedPropsFor = useCallback(
@@ -395,10 +404,14 @@ export function App() {
           childrenInfo={children}
           selection={selection}
           slotTarget={slotTarget}
+          bundle={bundle}
+          mode={canvasMode}
           mergedPropsFor={mergedPropsFor}
           onSelect={setSelection}
           onFire={handleFire}
           onSlotTargetToggle={handleSlotTargetToggle}
+          onModeChange={setCanvasMode}
+          onOwnEmit={handleOwnEmit}
         />
         <Inspector
           doc={doc}

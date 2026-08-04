@@ -24,6 +24,7 @@ from speccify_core.codegen.mock_react import (
     MockCodegenError,
     MockRender,
     MockUnavailableError,
+    mock_output_path,
     render_mock_closure,
     render_mock_files,
 )
@@ -152,6 +153,7 @@ __all__ = [
     "MockCodegenError",
     "MockRender",
     "MockUnavailableError",
+    "mock_output_path",
     "render_mock_closure",
     "render_mock_files",
     "LlmClient",

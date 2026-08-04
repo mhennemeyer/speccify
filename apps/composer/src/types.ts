@@ -121,6 +121,17 @@ export interface SpecDoc {
   composition?: CompositionData;
 }
 
+/** Antwort von `POST /api/v1/mock/draft` — deterministische Mock-Closure. */
+export interface MockBundle {
+  spec_id: string;
+  version: string;
+  target: string;
+  files: Record<string, string>;
+  entry: string;
+  template_set: string;
+  template_version: string;
+}
+
 export interface ValidationIssue {
   path: string;
   message: string;

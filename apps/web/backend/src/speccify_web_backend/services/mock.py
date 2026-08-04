@@ -11,8 +11,18 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from speccify_core import LocalRegistry, render_mock_closure
-from speccify_core.registry import Version
+import yaml
+from speccify_core import (
+    MOCK_TEMPLATE_SET,
+    MOCK_TEMPLATE_VERSION,
+    LocalRegistry,
+    mock_output_path,
+    parse_composition,
+    render_mock_closure,
+    render_mock_files,
+    resolve_composition_children,
+)
+from speccify_core.registry import Spec, Version
 
 
 class UnknownMockTargetError(ValueError):
@@ -27,6 +37,7 @@ class MockServiceResult:
     files: dict[str, str]
     template_set: str
     template_version: str
+    entry: str
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -36,6 +47,7 @@ class MockServiceResult:
             "files": self.files,
             "template_set": self.template_set,
             "template_version": self.template_version,
+            "entry": self.entry,
         }
 
 
@@ -68,4 +80,61 @@ def mock_spec_from_registry(
         files={path: data.decode("utf-8") for path, data in result.files.items()},
         template_set=result.template_set,
         template_version=result.template_version,
+        entry=mock_output_path(spec_id, kind=str(spec.parsed().get("kind", ""))),
+    )
+
+
+def mock_draft_spec_yaml(
+    *,
+    spec_yaml: str,
+    target: str,
+    registry_path: Path,
+) -> MockServiceResult:
+    """Rendert die Mock-Closure für eine **ungespeicherte** Spec (Composer-Entwurf).
+
+    Der Composer rendert seinen Canvas aus genau diesen Dateien — dem Output, den
+    `speccify mock` nach dem Speichern erzeugen würde. Die Kinder kommen aus der
+    Registry (nur der Entwurf selbst ist ungespeichert), deshalb ist das Ergebnis
+    byte-identisch zur Registry-Variante, sobald der Entwurf gespeichert ist.
+    """
+    if target != "react":
+        raise UnknownMockTargetError(
+            f"Mock-Target '{target}' wird nicht unterstützt (P2: nur 'react')."
+        )
+    parsed = yaml.safe_load(spec_yaml)
+    if not isinstance(parsed, dict):
+        raise ValueError("Spec muss ein YAML-Mapping sein.")
+    spec_id = str(parsed.get("id", ""))
+    version_raw = str(parsed.get("version", ""))
+    if not spec_id or not version_raw:
+        raise ValueError("Entwurf braucht `id` und `version`, um gemockt zu werden.")
+
+    raw_bytes = spec_yaml.encode("utf-8")
+    draft = Spec(
+        spec_id=spec_id,
+        version=Version.parse(version_raw),
+        raw_bytes=raw_bytes,
+        path=Path("<draft>"),
+    )
+    registry = LocalRegistry(registry_path)
+
+    composition = parse_composition(parsed)
+    children: dict[str, Spec] = {}
+    if composition is not None:
+        children = resolve_composition_children(composition, registry)
+
+    files: dict[str, bytes] = {}
+    for child in children.values():
+        # Kinder kommen fertig aus der Registry — inkl. ihrer eigenen Closure.
+        files.update(render_mock_closure(child, registry).files)
+    files.update(render_mock_files(draft, children))
+
+    return MockServiceResult(
+        spec_id=spec_id,
+        version=str(draft.version),
+        target=target,
+        files={path: data.decode("utf-8") for path, data in files.items()},
+        template_set=MOCK_TEMPLATE_SET,
+        template_version=MOCK_TEMPLATE_VERSION,
+        entry=mock_output_path(spec_id, kind=str(parsed.get("kind", ""))),
     )
