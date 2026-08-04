@@ -1695,3 +1695,45 @@
   Bundle); 18 Desktop-Tests grün (+1 ignored), clippy/fmt clean; ruff clean.
   Beide Modi zusätzlich per Screenshot gegengesehen.
 - Tag-Vorschlag: `v0.18.0-p3-composer-mock-bundle`.
+
+## 2026-08-04 (P4 — `speccify build`: ganze Projekte aus `kind: app`)
+- Schema (P4.1): neuer `app:`-Block (`routes[] {path,node,title?}`,
+  `theme.tokens`, `env[]`) und dritte Wiring-Aktion `navigate: /pfad`.
+  Kein zweites Baum-Konzept: **Screens sind die Top-Level-Knoten der
+  Komposition**, `app.routes` sagt nur, welcher Knoten unter welchem Pfad
+  liegt. `core/app.py` parst und validiert (Routen zeigen auf Top-Level,
+  Pfade/Env-Namen eindeutig, `navigate` nur in Apps und nur auf deklarierte
+  Routen, `app:` nur bei `kind: app`); das Composer-Backend meldet die
+  Befunde als eigene Quelle „app".
+- Codegen (P4.2): `codegen/app_react.py` erzeugt ein vollständiges
+  Vite-React-Projekt. Bewusst ohne `react-router` — ein ~40-zeiliger
+  Hash-Router liegt als Datei im Projekt, damit es mit react/react-dom/vite
+  läuft und die Route-Semantik lesbar bleibt. `src/App.tsx` hält Wiring-State
+  *und* Route und rendert nur den Screen der aktiven Route; die
+  Wiring-Semantik ist dieselbe wie im Composite-Mock, plus `navigate`.
+  Theme-Tokens werden CSS-Variablen, `app.env` wird typisierter Zugriff auf
+  `import.meta.env` mit den Defaults aus der Spec.
+- Zwei Füllungen, ein Scaffold: `--mocks` legt die Mock-Closure ab und je
+  Screen einen Re-Export `<Name>.tsx → ./<Name>.mock` — der Import-Swap aus
+  dem P2-Vertrag als eine sichtbare Zeile. `--no-mocks` schreibt die
+  generierten Implementierungen an genau diese Stelle. Die Mock-Bytes sind
+  byte-identisch zu `speccify mock`; es gibt weiter genau einen Mock-Pfad.
+- Adapter (P4.3): `speccify build`, MCP-Tool `build` (8 Tools jetzt) und
+  `POST /api/v1/build` — byte-identisch, per Cross-Consistency-Test gepinnt.
+  Der Web-Pfad baut bewusst nur Mocks: das Backend hat weder Cache-Flags
+  noch LLM-Zugang im Vertrag.
+- Beweis (P4.4): `tests/test_app_build_smoke.py` hinter dem Marker
+  `app_build` (wie Conformance/Visual-Regression, eigener CI-Job) baut die
+  Demo-App, lässt `tsc --noEmit` und `vite build` darüber laufen, liefert
+  `dist/` aus und spielt sie mit Playwright durch: Startroute, Navigation per
+  Event, Datenfluss über Screens, unbekannte Route, keine Page-Errors.
+  Toolchain per Symlink auf `apps/composer/node_modules` statt `pnpm install`
+  im Wegwerf-Projekt; fehlt sie, wird übersprungen statt rot.
+- Beim Bauen gelernt: Event-Payloads eines Mocks entstehen aus gleichnamigen
+  Props — ein Datenfluss ist im gemockten Build also nur beobachtbar, wenn
+  seine Quelle eine statische Prop ist. Deshalb hat die Demo-App einen
+  Notiz-Screen (`@org/text-input` mit statischem `value`), dessen Wert im
+  Kontaktformular als `initial_name` landet. Steht in `docs/app-builds.md`.
+- Verifikation: 470 Pytest grün (+28), `pytest -m app_build` grün (67 s),
+  `speccify lint specs/*.yaml` grün, CLI-Doku-Drift grün, ruff clean.
+- Tag-Vorschlag: `v0.19.0-p4-app-builds`.

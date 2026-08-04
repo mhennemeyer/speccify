@@ -1,6 +1,6 @@
 ---
 lifecycle: active
-status: P1 (Registry-Rückbau) + P2 (API/Komposition/Mocks) + P3 komplett (MVP, Verfeinerung 1, Mock-Bundle-Rendering, Drag & Drop) geliefert; offen: P4 `speccify build`, P5 Git-Quellen
+status: P1–P4 geliefert (Registry-Rückbau, API/Komposition/Mocks, Composer komplett, Projekt-Builds `kind: app`); offen: P5 Git-Quellen, P6 Ökosystem/Launch
 sessionId: pivot-open-source-git-composer
 ---
 # Plan: Pivot — Open Source, Git-basierte Registry, Projekt-Builds & visueller Composer
@@ -144,7 +144,9 @@ Vorbild: **Go-Module + SwiftPM**, nicht npm.
 
 ### Phase P4 — Projekt-Builds (`kind: app`)
 
-> **In Umsetzung seit 2026-08-04.** Kein eigener Phasen-Plan: die Konvention „genau ein aktiver Plan" gilt, also stehen Stufen und Entscheidungen hier.
+> **✅ Geliefert 2026-08-04.** Kein eigener Phasen-Plan: die Konvention „genau ein aktiver Plan" gilt, also stehen Stufen und Entscheidungen hier.
+>
+> **Ergebnis**: `speccify build @org/demo-app` erzeugt ein Vite-React-Projekt, das durch `tsc --noEmit` und `vite build` geht und im Browser tut, was die Spec sagt — Startroute, `navigate`-Verdrahtung, Datenfluss über Screens, unbekannte Routen. Adapter: CLI, MCP-Tool `build`, `POST /api/v1/build` (byte-identisch). Beispiel-App `@org/demo-app` (4 Screens). Doku: [`docs/app-builds.md`](../../docs/app-builds.md).
 
 - App-Spec-Schema finalisieren (Routen/Navigation/Theme/Env auf dem `composition:`-Fundament aus P2).
 - `speccify build --target react [--mocks]` → komplettes Vite-Projekt; mit `--mocks` sofort lauffähig.
@@ -159,7 +161,11 @@ Vorbild: **Go-Module + SwiftPM**, nicht npm.
 - **D14 — Zwei Füllungen, ein Scaffold**: `--mocks` legt die Mock-Closure unter `src/components/` ab plus je Screen einen Re-Export (`<Name>.tsx` → `./<Name>.mock`) — der Import-Swap aus dem P2-Vertrag, sichtbar als eine Zeile. Ohne Flag stehen dort die (LLM-)generierten Implementierungen. Das Scaffold ist in beiden Fällen byte-identisch, bis auf die README-Zeile, die sagt, womit gebaut wurde.
 - **D15 — Adapter-Symmetrie**: `speccify build` (CLI), MCP-Tool `build` und `POST /api/v1/build` liefern byte-identische Dateien (Cross-Consistency-Vertrag). Der teure Beweis (echter `vite build` + Playwright) läuft wie Conformance/Visual-Regression hinter einem Pytest-Marker und in einem eigenen CI-Job, nicht in der Standard-Suite.
 
-**Stufen:** P4.1 Schema/Parser/Validierung (`app:`, `navigate:`) · P4.2 Core-Codegen `app_react` + Determinismus · P4.3 CLI/MCP/Web-Adapter + Cross-Consistency · P4.4 Beispiel-App + echter Vite-Build-Smoke + Doku.
+**Stufen (alle ✅):** P4.1 Schema/Parser/Validierung (`app:`, `navigate:`) · P4.2 Core-Codegen `app_react` + Determinismus · P4.3 CLI/MCP/Web-Adapter + Cross-Consistency · P4.4 Beispiel-App + echter Vite-Build-Smoke (`pytest -m app_build`, eigener CI-Job) + Doku.
+
+**Beim Bauen gelernt:** Event-Payloads eines Mocks entstehen aus gleichnamigen Props — ein Datenfluss ist im gemockten Build also nur sichtbar, wenn seine Quelle eine statische Prop ist. Deshalb hat die Demo-App einen Notiz-Screen (`@org/text-input` mit statischem `value`). Steht in `docs/app-builds.md`.
+
+**Weiter offen (bewusst):** nur Target `react`; Routen ohne Parameter/Guards/verschachteltes Routing; der Composer editiert `app:`-Routen noch nicht visuell.
 
 ### Phase P5 — Git-basierte Spec-Quellen
 - `GitRegistry` (Registry-Protocol) mit Tag-Discovery, Shallow-Fetch, Content-Addressed Cache.
