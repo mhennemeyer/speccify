@@ -8,12 +8,21 @@
 
 ## Nächste Schritte
 - **Aktiver Plan: [`plans/pivot-open-source-git-composer.md`](./plans/pivot-open-source-git-composer.md)**
-  (der einzige mit `lifecycle: active`) — **P3 und P4 sind abgeschlossen
-  (2026-08-04)**; als Nächstes **P5 Git-Quellen** (`GitRegistry` nach dem
-  `Registry`-Protocol, Identitäts-Schema + Lockfile-Commit-Pin, `add`/`pull`/
-  `verify` gegen Git, Index-Repo für Discovery). Alle abgeschlossenen Pläne
-  liegen unter `plans/archive/`; Konvention siehe `agent.md` → „Pläne:
-  Ablage & Lebenszyklus".
+  (der einzige mit `lifecycle: active`) — **P3 und P4 abgeschlossen, P5 zur
+  Hälfte (2026-08-04)**: P5.1 `GitRegistry` ✅ und P5.2 Lockfile v4 + CLI-Pfad ✅.
+  **Nächster Schritt: P5.3 Discovery** (Index-Repo-Format, CI-Validierung,
+  `speccify search` liest den lokal gecachten Index), danach P5.4 (MCP/Web/
+  Composer auf Git-Quellen nachziehen). Alle abgeschlossenen Pläne liegen
+  unter `plans/archive/`; Konvention siehe `agent.md` → „Pläne: Ablage &
+  Lebenszyklus".
+- **P5.1 + P5.2 Git-Quellen (2026-08-04)**: Spec-Ids der Form
+  `git+<url>[#<pfad>]`, Tags als Versionen (`v1.2.0` bzw. `<pfad>/v1.2.0`),
+  Bare-Clone-Cache unter `~/.cache/speccify/git/` (Override
+  `SPECCIFY_GIT_CACHE`), Lockfile v4 mit `source_commit`-Pin, `--offline` gilt
+  auch für Git. Doku [`docs/git-sources.md`](../docs/git-sources.md).
+  **Verifikation: 489 Pytest grün (+19 neu: GitRegistry gegen echte
+  file://-Repos, CLI-E2E lock/pull/verify inkl. gelöschter Quelle),
+  `-m app_build` grün, ruff clean.**
 - **P4 Projekt-Builds abgeschlossen (2026-08-04)**: `kind: app` mit `app:`-Block
   (Routen/Theme/Env) und dritter Wiring-Aktion `navigate:`; Core-Codegen
   `codegen/app_react.py` erzeugt ein Vite-React-Projekt (Hash-Router ohne

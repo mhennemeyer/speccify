@@ -184,7 +184,11 @@ Vorbild: **Go-Module + SwiftPM**, nicht npm.
 - **D18 — Trust über Commit-Pin** (Frage 3): das Lockfile pinnt zusätzlich den Commit-SHA hinter dem Tag (Lockfile v4); `verify` prüft Tag → Commit → Spec-Bytes. Signierte Tags/gitsign bleiben ein späterer, additiver Slot — der bestehende `signature`-Block deckt das ab. Kein sigstore in P5.
 - **D19 — Der Cache ist ein Bare-Repo**: pro Repo-URL ein Bare-Clone unter `~/.cache/speccify/git/<hash>/`, Tags per `fetch --depth 1`, Spec-Bytes per `git cat-file blob <tag>:<pfad>` — kein Working Tree, kein Checkout. Nach einem Fetch ist alles offline reproduzierbar (`list_versions`/`fetch` lesen lokale Refs); `offline=True` verbietet jeden Netz-Zugriff hart. Tests laufen gegen `file://`-Fixture-Repos, CI braucht kein Netz.
 
-**Stufen:** P5.1 `GitRegistry` + Ref-Parsing + Cache ✅ · P5.2 Lockfile v4 (Commit-Pin) + `add`/`lock`/`pull`/`verify` gegen Git · P5.3 Discovery (Index-Repo + `speccify search`) · P5.4 MCP/Web/Composer nachziehen + Doku.
+**Stufen:** P5.1 `GitRegistry` + Ref-Parsing + Cache ✅ · P5.2 Lockfile v4 (Commit-Pin) + `add`/`lock`/`pull`/`verify` gegen Git ✅ · **P5.3 Discovery (Index-Repo + `speccify search`) — nächster Schritt** · P5.4 MCP/Web/Composer nachziehen + Doku.
+
+**Stand nach P5.2 (2026-08-04):** der CLI-Pfad ist vollständig — ein Projekt kann seine Dependencies aus Git beziehen, das Lockfile pinnt den Commit, `pull`/`verify` laufen danach offline gegen den Bare-Clone-Cache. Doku: [`docs/git-sources.md`](../../docs/git-sources.md).
+
+**Beim Bauen entschieden (D20):** Der Codegen benennt Dateien nach der **in der Spec deklarierten** Id (`Spec.name_id`), nicht nach der Quelle — eine aus Git bezogene `@acme/button` heißt im generierten Projekt weiter `Button.tsx`. Herkunft ist eine Lockfile-Eigenschaft, kein Dateiname. Für Registry-Specs sind `name_id` und `spec_id` identisch, es ändert sich also kein Byte (per `-m app_build`-Smoke und den Cross-Consistency-Tests belegt).
 
 ### Phase P6 — Ökosystem & Launch
 - Doku-Site umbauen (Composer, App-Builds, Git-Workflow), Quickstarts, Beispiel-Repos als Saatgut im Index.

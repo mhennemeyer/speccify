@@ -1737,3 +1737,35 @@
 - Verifikation: 470 Pytest grün (+28), `pytest -m app_build` grün (67 s),
   `speccify lint specs/*.yaml` grün, CLI-Doku-Drift grün, ruff clean.
 - Tag-Vorschlag: `v0.19.0-p4-app-builds`.
+
+## 2026-08-04 (P5.1 + P5.2 — Git-Repos als Spec-Quelle)
+- Entscheidungen (beantworten die offenen Fragen 1–3 des Pivot-Plans):
+  **D16** die Repo-URL ist die Identität (`git+https://host/org/repo[#pfad]`)
+  — host-qualifiziert, kein Confusion-Problem, und es passt ohne Änderung ins
+  bestehende `Registry`-Protocol. **D17** Tags sind die Versionen (`v1.2.0`,
+  mit Pfad `<pfad>/v1.2.0`) — ein Monorepo versioniert seine Specs damit
+  unabhängig. **D18** Trust über Commit-Pin im Lockfile, sigstore bleibt ein
+  späterer additiver Slot. **D19** der Cache ist ein Bare-Clone pro Repo.
+- `GitRegistry` (P5.1): `fetch --depth 1` für Tags, `git cat-file blob
+  <tag>:<pfad>` für die Spec-Bytes — kein Working Tree, kein Checkout. Nach
+  einem Fetch ist alles offline lesbar; `offline=True` verbietet Netz hart und
+  sagt im Fehlerfall, wie man den Cache füllt. Tests laufen gegen echte
+  `file://`-Repos, CI braucht kein Netz.
+- Lockfile v4 (P5.2): Git-Ids erlaubt, neues Feld `source_commit`. v1–v3
+  bleiben lesbar (Loader-Migration), v3 liegt jetzt als Legacy-Schema-Datei
+  neben v1/v2.
+- Resolver: neues optionales `serves`-Prädikat pro Registry. Die lokale
+  Registry bedient `@scope/name`, die GitRegistry `git+…`; die Reihenfolge im
+  Set ist damit egal, und Registries ohne das Prädikat (Test-Doubles) bleiben
+  gültig. Git-Ids sind ihr eigener „Scope" — der Phase-2-Confusion-Schutz
+  greift weiter für scoped Ids.
+- Stolperstein: der Codegen leitet Dateinamen und Komponenten-Namen aus der
+  Spec-Id ab — mit einer Git-Id bricht das (`nicht im Format '@scope/name'`).
+  Lösung: `Spec.name_id` liefert die **in der Spec deklarierte** Id; der
+  Codegen benennt danach, die Herkunft hält das Lockfile. Für Registry-Specs
+  sind beide identisch, also ändert sich kein Byte — belegt durch die
+  Cross-Consistency-Tests und den `-m app_build`-Smoke.
+- Verifikation: 489 Pytest grün (+19), `pytest -m app_build` grün,
+  `speccify lint specs/*.yaml` grün, ruff clean.
+- Offen in P5: P5.3 Discovery (Index-Repo + `speccify search`), P5.4 MCP/Web/
+  Composer auf Git-Quellen nachziehen.
