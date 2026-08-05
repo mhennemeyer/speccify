@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://speccify.io/schema/index-entry/v1.json",
+  "title": "Speccify Index Entry v1",
+  "description": "Ein Eintrag eines Discovery-Index (Phase P5): Zeiger auf ein Spec-Repo plus Beschreibung für die Suche. Eine Datei pro Eintrag unter `entries/*.yaml`. Bewusst ohne Versionsangaben — Versionen sind Git-Tags und damit immer aktuell.",
+  "type": "object",
+  "required": ["schema_version", "source", "title", "summary"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "source": {
+      "type": "string",
+      "description": "Spec-Quelle als Git-Ref: `git+<url>[#<pfad-im-repo>]`.",
+      "pattern": "^git\\+https://[^\\s#]+(#[^\\s#]+)?$"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 300,
+      "description": "Ein Satz, was die Spec beschreibt. Landet in der Trefferliste."
+    },
+    "kind": {
+      "type": "string",
+      "enum": ["ui-component", "screen", "logic", "workflow", "app"]
+    },
+    "keywords": {
+      "type": "array",
+      "maxItems": 12,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9][a-z0-9-]*$"
+      }
+    },
+    "homepage": {
+      "type": "string",
+      "pattern": "^https://.+$"
+    },
+    "license": {
+      "type": "string",
+      "minLength": 1,
+      "description": "SPDX-Kennung, z. B. MIT."
+    }
+  }
+}

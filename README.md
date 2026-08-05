@@ -93,7 +93,16 @@ dependencies:
 
 `speccify lock` pinnt zusätzlich den Commit hinter dem Tag; nach dem ersten
 Auflösen laufen `pull`/`verify` offline gegen einen lokalen Bare-Clone-Cache.
-Details: [`docs/git-sources.md`](./docs/git-sources.md).
+
+Gefunden werden Specs über **Index-Repos** (Homebrew-Tap-Prinzip, eine Datei
+pro Spec-Repo, per PR erweiterbar) — kein zentraler Suchdienst:
+
+```bash
+speccify search --index git+https://github.com/acme/spec-index rating
+```
+
+Details: [`docs/git-sources.md`](./docs/git-sources.md), Index-Vorlage:
+[`index/README.md`](./index/README.md).
 
 ### Ein ganzes Projekt bauen (`kind: app`)
 
@@ -248,7 +257,7 @@ uv sync --reinstall-package django
 
 - [`.agent/agent.md`](./.agent/agent.md) — Onboarding für Coding-Agents (Vision, Repo-Layout, Konventionen).
 - [`docs/component-api-and-mocks.md`](./docs/component-api-and-mocks.md) — **Spec-Schema v1** (P2): formaler `api:`-Vertrag, `composition:` mit typgeprüfter Verdrahtung, deterministische Mocks (`speccify mock` / MCP `mock` / `POST /api/v1/mock`).
-- [`docs/git-sources.md`](./docs/git-sources.md) — **Git-Quellen** (P5): `git+<url>[#<pfad>]` als Spec-Id, Tags als Versionen, Commit-Pin im Lockfile v4, Bare-Clone-Cache + Offline-Modus.
+- [`docs/git-sources.md`](./docs/git-sources.md) — **Git-Quellen + Discovery** (P5): `git+<url>[#<pfad>]` als Spec-Id, Tags als Versionen, Commit-Pin im Lockfile v4, Bare-Clone-Cache + Offline-Modus, Index-Repos und `speccify search`.
 - [`docs/app-builds.md`](./docs/app-builds.md) — **Projekt-Builds** (P4): `kind: app` mit Routen/Theme/Env, `navigate`-Verdrahtung, `speccify build --mocks` (+ MCP-Tool `build` / `POST /api/v1/build`).
 - [`docs/workspaces.md`](./docs/workspaces.md) — Cargo-Style Workspaces (Phase 4): Root-Lockfile, Per-Member-Outputs, MVS-Konflikt-UX.
 - [`docs/conformance.md`](./docs/conformance.md) — Build-Smoke gegen echte Toolchains (Phase 5a: React/Angular via `tsc --noEmit`, SwiftUI via `swiftc -typecheck`) **+ Cross-Consistency-Sweep**: `5 Specs × 3 Targets × 4 Pfade (Local/CLI/MCP/Web)` byte-identisch via `apps/web/backend/tests/test_cross_consistency_sweep.py`.

@@ -72,11 +72,53 @@ Der Dependency-Confusion-Schutz aus Phase 2 (ein `@scope` gehört zu genau einer
 Registry) gilt weiter für scoped Ids. Git-Ids sind host-qualifiziert und damit
 konstruktiv eindeutig — dort ist die Id ihr eigener Scope.
 
-## Grenzen (Stand P5.2)
+## Discovery: Specs finden
 
-- Discovery (`speccify search`, Index-Repo) folgt in P5.3.
+Es gibt keinen zentralen Suchdienst. Ein **Index** ist ein Git-Repo (oder ein
+lokales Verzeichnis) mit einer Datei pro Spec-Repo — Vorbild: Homebrew-Taps,
+Scoop-Buckets:
+
+```
+<index-repo>/entries/<name>.yaml
+```
+
+```yaml
+schema_version: 1
+source: git+https://github.com/acme/rating-stars
+title: Rating Stars
+summary: Sternebewertung mit halben Sternen.
+kind: ui-component
+keywords: [rating, stars]
+license: MIT
+```
+
+Eine Datei pro Eintrag ist Absicht: ein PR fasst genau eine Datei an, es gibt
+keine Merge-Konflikte in einer wachsenden Sammelliste, und CI validiert jeden
+Eintrag einzeln (Schema: [`schema/index-entry.schema.json`](../schema/index-entry.schema.json)).
+
+Der Index sagt **nur, wo eine Spec liegt** — nie, welche Versionen es gibt.
+Versionen sind Tags und damit immer aktuell; ein Index kann nicht veralten.
+
+```bash
+speccify search rating                                   # Quellen s. u.
+speccify search --index git+https://github.com/acme/spec-index rating
+speccify search --json rating                            # für Agents/Skripte
+speccify search --offline rating                         # nur der lokale Cache
+```
+
+Quellen-Reihenfolge: `--index` (mehrfach) > `SPECCIFY_INDEX` (komma-getrennt,
+**nicht** doppelpunkt-getrennt — der steckt in jeder Git-URL) > `./index`.
+Mehrere Indizes werden zusammengeführt; bei derselben Quelle gewinnt die erste
+Nennung. Git-Indizes liegen im selben Bare-Clone-Cache wie Spec-Quellen.
+
+Vorlage und Beitrags-Ablauf: [`index/README.md`](../index/README.md).
+
+## Grenzen (Stand P5.3)
+
 - MCP-Tools, Web-Backend und Composer-Palette kennen Git-Quellen noch nicht
-  (P5.4) — CLI-Pfad (`lock`/`pull`/`verify`) ist vollständig.
+  (P5.4) — CLI-Pfad (`lock`/`pull`/`verify`/`search`) ist vollständig.
+- Der Index dieses Repos ist noch leer: Platzhalter-URLs wären tote Links,
+  gesät wird zum OSS-Launch (P6).
 - Nur `https://`- und `file://`-Remotes; SSH-Refs sind bewusst noch nicht
   freigeschaltet (Credential-Handling).
 - Tags müssen exaktes Semver tragen (`v1.2.0`), keine Pre-Releases.

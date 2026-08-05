@@ -85,6 +85,7 @@ from speccify_core.git_registry import (
     GitRef,
     GitRegistry,
     GitRegistryError,
+    GitRepoCache,
     is_git_ref,
     parse_git_ref,
 )
@@ -131,6 +132,16 @@ from speccify_core.resolver import (
     ResolverError,
     ScopeRegistryConflictError,
     VersionNotFoundError,
+)
+from speccify_core.spec_index import (
+    INDEX_ENTRY_DIR,
+    INDEX_ENTRY_SCHEMA_PATH,
+    IndexEntry,
+    SpecIndexError,
+    load_index,
+    load_indexes,
+    parse_index_entry,
+    search_index,
 )
 from speccify_core.validator import (
     DEFAULT_SCHEMA_PATH,
@@ -222,6 +233,15 @@ __all__ = [
     "GitRef",
     "GitRegistry",
     "GitRegistryError",
+    "GitRepoCache",
+    "INDEX_ENTRY_DIR",
+    "INDEX_ENTRY_SCHEMA_PATH",
+    "IndexEntry",
+    "SpecIndexError",
+    "load_index",
+    "load_indexes",
+    "parse_index_entry",
+    "search_index",
     "is_git_ref",
     "parse_git_ref",
     "LocalRegistry",

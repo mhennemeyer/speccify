@@ -18,4 +18,5 @@ hat eine eigene Referenzseite:
 | [`speccify lock`](/cli/lock/) | Löst Dependencies via MVS auf und schreibt speccify.lock (ohne Codegen-Aufruf). |
 | [`speccify mock`](/cli/mock/) | Generiert deterministische Mock-Komponenten (inkl. Kompositions-Kindern). |
 | [`speccify pull`](/cli/pull/) | Rendert resolved Specs aus dem Lockfile und aktualisiert Output-Hashes. |
+| [`speccify search`](/cli/search/) | Sucht Specs in den konfigurierten Discovery-Indizes. |
 | [`speccify verify`](/cli/verify/) | Prüft, dass Manifest, Lockfile und gerenderte Dateien zueinander passen. |
