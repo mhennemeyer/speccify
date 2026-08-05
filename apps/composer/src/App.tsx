@@ -1,6 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { getSpecDetail, listSpecs, saveSpec, validateSpec, ApiError } from "./api";
+import {
+  getSpecDetail,
+  getSpecDetailBySource,
+  listSpecs,
+  saveSpec,
+  searchIndex,
+  validateSpec,
+  ApiError,
+} from "./api";
 import { BottomBar } from "./components/BottomBar";
 import { Canvas, type CanvasMode } from "./components/Canvas";
 import { Inspector } from "./components/Inspector";
@@ -19,6 +27,7 @@ import { fireEvent, mergedNodeProps, type WiredState } from "./simulate";
 import { useMockBundle } from "./useMockBundle";
 import type {
   ChildInfo,
+  IndexHit,
   LogEntry,
   SpecDoc,
   SpecSummary,
@@ -39,6 +48,8 @@ const HISTORY_LIMIT = 100;
 
 export function App() {
   const [specs, setSpecs] = useState<SpecSummary[]>([]);
+  const [indexHits, setIndexHits] = useState<IndexHit[]>([]);
+  const [indexStatus, setIndexStatus] = useState("");
   const [doc, setDoc] = useState<SpecDoc | null>(null);
   const [children, setChildren] = useState<Record<string, ChildInfo>>({});
   const [selection, setSelection] = useState<string | null>(null);
@@ -66,6 +77,23 @@ export function App() {
   useEffect(() => {
     void refreshPalette();
   }, [refreshPalette]);
+
+  // Discovery: Specs, die nicht lokal liegen (Git-Quellen aus einem Index).
+  const handleSearchIndex = useCallback(async (query: string) => {
+    setIndexStatus("Suche …");
+    try {
+      const hits = await searchIndex(query);
+      setIndexHits(hits);
+      setIndexStatus(hits.length === 0 ? "Keine Treffer im Index." : "");
+    } catch (error) {
+      setIndexHits([]);
+      setIndexStatus(
+        error instanceof ApiError && error.status === 404
+          ? "Kein Index konfiguriert (SPECCIFY_INDEX)."
+          : `Index-Fehler: ${String(error)}`,
+      );
+    }
+  }, []);
 
   const log = useCallback((entry: LogEntry) => {
     setEventLog((entries) => [...entries.slice(-199), entry]);
@@ -187,9 +215,13 @@ export function App() {
         return;
       }
       try {
-        const detail = await getSpecDetail(specId);
+        // Git-Refs kommen aus dem Index und werden über die Quelle aufgelöst.
+        const detail = specId.startsWith("git+")
+          ? await getSpecDetailBySource(specId)
+          : await getSpecDetail(specId);
         const info: ChildInfo = {
           id: detail.id,
+          source: detail.source ?? detail.id,
           version: detail.version,
           kind: detail.kind,
           title: detail.title,
@@ -359,10 +391,13 @@ export function App() {
         const uses = next.composition?.uses ?? {};
         const loaded: Record<string, ChildInfo> = {};
         for (const [alias, ref] of Object.entries(uses)) {
-          const specId = ref.startsWith("@") ? `@${ref.slice(1).split("@")[0]}` : ref;
-          const detail = await getSpecDetail(specId);
+          // Range-Suffix abschneiden: `@org/x@^0.1` bzw. `git+…@^0.1`.
+          const detail = ref.startsWith("git+")
+            ? await getSpecDetailBySource(ref.replace(/@[\^~]?[\d.]+$/, ""))
+            : await getSpecDetail(ref.startsWith("@") ? `@${ref.slice(1).split("@")[0]}` : ref);
           loaded[alias] = {
             id: detail.id,
+            source: detail.source ?? detail.id,
             version: detail.version,
             kind: detail.kind,
             title: detail.title,
@@ -422,9 +457,12 @@ export function App() {
       <div className="layout">
         <Palette
           specs={specs}
+          indexHits={indexHits}
+          indexStatus={indexStatus}
           onNew={handleNew}
           onOpen={(summary) => void handleOpen(summary)}
-          onAddChild={(summary) => void handleAddChild(summary.id)}
+          onAddChild={(specId) => void handleAddChild(specId)}
+          onSearchIndex={(query) => void handleSearchIndex(query)}
         />
         <Canvas
           doc={doc}

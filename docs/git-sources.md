@@ -119,7 +119,7 @@ Vorlage und Beitrags-Ablauf: [`index/README.md`](../index/README.md).
 |---|---|---|
 | CLI | `lock`/`pull`/`verify` gegen `git+…`, `--offline` nutzt nur den Cache | `speccify search` |
 | MCP | dieselben Tools (`lock`/`pull`/`verify`), Registry-Fassade inklusive | Tool `search` |
-| Web/Composer | Validierung, Mock-Closure und `speccify build` lösen Git-Kinder auf | `GET /api/v1/index?q=` |
+| Web/Composer | Validierung, Mock-Closure und `speccify build` lösen Git-Kinder auf; die Palette hat eine Index-Suche | `GET /api/v1/index?q=` |
 
 Möglich macht das eine **Registry-Fassade** (`MultiRegistry`): der Resolver
 nimmt von sich aus eine Liste, alles andere (Kompositions-Auflösung, Mock- und
@@ -134,11 +134,10 @@ curl -s -X POST localhost:8000/api/v1/mock/draft -H 'content-type: application/j
   -d '{"spec_yaml": "… composition: {uses: {btn: git+https://host/repo@^0.1}, …}"}' | jq '.files | keys'
 ```
 
-## Grenzen (Stand P5.4)
+## Grenzen (Stand P5.5)
 
-- Die Composer-**Palette** listet weiterhin nur die lokale Registry; Git-Specs
-  kommen über YAML oder die API in eine Komposition. Die Index-Suche in der
-  Oberfläche ist der nächste Schritt.
+- Index-Treffer lassen sich als Kind einfügen, aber nicht „öffnen" (im Editor
+  bearbeiten) — dafür müsste der Composer in ein fremdes Repo schreiben.
 - Der Index dieses Repos ist noch leer: Platzhalter-URLs wären tote Links,
   gesät wird zum OSS-Launch (P6).
 - Nur `https://`- und `file://`-Remotes; SSH-Refs sind bewusst noch nicht

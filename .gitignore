@@ -54,5 +54,6 @@ target/
 
 # Composer-Playwright-Smoke (Wegwerf-Registry + Reports)
 apps/composer/e2e/.registry-tmp/
+apps/composer/e2e/.git-fixture/
 apps/composer/test-results/
 apps/composer/playwright-report/

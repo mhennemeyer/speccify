@@ -5,7 +5,7 @@
 // Normalfall im Desktop-Composer-Fenster, das die SPA unter /ui vom
 // speccify-web-backend lädt, und im Vite-Dev via Proxy).
 
-import type { MockBundle, SpecDetail, SpecSummary, ValidationIssue } from "./types";
+import type { IndexHit, MockBundle, SpecDetail, SpecSummary, ValidationIssue } from "./types";
 
 declare global {
   interface Window {
@@ -52,6 +52,19 @@ export async function getSpecDetail(specId: string, version?: string): Promise<S
   const path = specId.replace(/^@/, "");
   const query = version ? `?version=${encodeURIComponent(version)}` : "";
   return request<SpecDetail>(`/api/v1/specs/${path}${query}`);
+}
+
+/** Detail über die Quelle — funktioniert auch für Git-Refs (`git+…`). */
+export async function getSpecDetailBySource(source: string): Promise<SpecDetail> {
+  return request<SpecDetail>(`/api/v1/spec?source=${encodeURIComponent(source)}`);
+}
+
+/** Discovery: Specs in den konfigurierten Index-Repos suchen. */
+export async function searchIndex(query: string): Promise<IndexHit[]> {
+  const body = await request<{ hits: IndexHit[] }>(
+    `/api/v1/index?q=${encodeURIComponent(query)}`,
+  );
+  return body.hits;
 }
 
 export async function validateSpec(

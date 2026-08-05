@@ -170,9 +170,11 @@ export function addChild(
 ): { doc: SpecDoc; alias: string } {
   const next = cloneDoc(doc);
   ensureComposition(next);
+  // Alias aus dem deklarierten Namen, Referenz aus der Quelle: bei
+  // Git-Kindern heißt der Knoten `button`, während in `uses` der Git-Ref steht.
   const alias = suggestAlias(next, child.id);
   const [major, minor] = child.version.split(".");
-  next.composition.uses[alias] = `${child.id}@^${major}.${minor}`;
+  next.composition.uses[alias] = `${child.source}@^${major}.${minor}`;
   const entry: TreeNodeData = { node: alias };
   const parent = target ? findTreeNode(next.composition.tree, target.parentAlias) : null;
   if (target && parent) {

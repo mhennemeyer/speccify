@@ -13,8 +13,8 @@
     },
     "source": {
       "type": "string",
-      "description": "Spec-Quelle als Git-Ref: `git+<url>[#<pfad-im-repo>]`.",
-      "pattern": "^git\\+https://[^\\s#]+(#[^\\s#]+)?$"
+      "description": "Spec-Quelle als Git-Ref: `git+<url>[#<pfad-im-repo>]`. `https://` für geteilte Indizes; `file://` nur für lokale Indizes und Tests.",
+      "pattern": "^git\\+(https|file)://[^\\s#]+(#[^\\s#]+)?$"
     },
     "title": {
       "type": "string",

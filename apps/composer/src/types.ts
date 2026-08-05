@@ -51,7 +51,10 @@ export interface SpecSummary {
 }
 
 export interface ChildInfo {
+  /** Deklarierter Name der Spec — danach heißen generierte Dateien. */
   id: string;
+  /** Ref, über den sie geholt wurde; bei Git-Quellen ≠ `id` (P5). */
+  source: string;
   version: string;
   kind: string;
   title: string;
@@ -60,6 +63,7 @@ export interface ChildInfo {
 
 export interface SpecDetail {
   id: string;
+  source: string;
   version: string;
   versions: string[];
   kind: string;
@@ -130,6 +134,18 @@ export interface MockBundle {
   entry: string;
   template_set: string;
   template_version: string;
+}
+
+/** Treffer aus einem Discovery-Index (`GET /api/v1/index`). */
+export interface IndexHit {
+  source: string;
+  title: string;
+  summary: string;
+  kind: string;
+  keywords: string[];
+  homepage: string | null;
+  license: string | null;
+  origin: string;
 }
 
 export interface ValidationIssue {

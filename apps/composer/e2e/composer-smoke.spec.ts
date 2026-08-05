@@ -79,6 +79,39 @@ test("Composite komponieren, verdrahten, speichern und per YAML runden", async (
   });
 });
 
+test("Discovery: Spec aus dem Index-Repo als Kind einfügen", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator(".palette-item").filter({ hasText: "@org/button@" })).toBeVisible();
+
+  await page.locator("#new-name").fill("index-widget");
+  await page.getByRole("button", { name: "Anlegen" }).click();
+
+  await test.step("Index durchsuchen", async () => {
+    await page.locator("#index-query").fill("discovery");
+    await page.getByRole("button", { name: "Suchen" }).click();
+    await expect(page.locator(".index-item")).toHaveCount(1);
+    await expect(page.locator(".index-item .meta")).toContainText("git+file://");
+  });
+
+  await test.step("Git-Quelle als Kind — Canvas rendert ihren echten Mock", async () => {
+    await page.locator(".index-item").getByRole("button", { name: "+ als Kind" }).click();
+    const node = page.locator(".mock-node").filter({ hasText: "button" });
+    await expect(node).toBeVisible();
+    await expect(node.locator("[data-speccify-mock='@org/button']")).toBeVisible();
+    // In `uses` steht die Git-Quelle (YAML faltet lange Werte um), der Knoten
+    // heißt nach der deklarierten Id.
+    await expect(page.locator("textarea.yaml")).toHaveValue(
+      /git\+file:\/\/[\s\S]*button-repo@\^0\.1/,
+    );
+    await expect(page.locator("textarea.yaml")).toHaveValue(/- node: button/);
+  });
+
+  await test.step("Validierung löst die Git-Quelle auf", async () => {
+    await page.getByRole("button", { name: "Validieren" }).click();
+    await expect(page.locator(".ok")).toHaveText("✓ Schema + Komposition sauber.");
+  });
+});
+
 test("Vorschau rendert den Dokument-Mock mit eigener Verdrahtung", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator(".palette-item").filter({ hasText: "@org/button@" })).toBeVisible();

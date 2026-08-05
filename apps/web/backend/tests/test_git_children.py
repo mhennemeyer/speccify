@@ -103,3 +103,20 @@ def test_unknown_git_child_is_reported_as_issue(client: TestClient, tmp_path: Pa
     body = client.post("/api/v1/validate", json={"spec_yaml": draft}).json()
     assert body["ok"] is False
     assert any(issue["source"] == "composition" for issue in body["issues"])
+
+
+def test_spec_detail_by_source_carries_id_and_source(client: TestClient, button_repo: str) -> None:
+    """Detail über die Quelle: `id` ist der deklarierte Name, `source` der Git-Ref."""
+    response = client.get("/api/v1/spec", params={"source": button_repo})
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["id"] == "@org/button"
+    assert body["source"] == button_repo
+    assert body["version"] == "0.1.0"
+    assert [prop["name"] for prop in body["api"]["props"]][:1] == ["label"]
+
+
+def test_spec_detail_by_source_404_for_unknown_repo(client: TestClient, tmp_path: Path) -> None:
+    response = client.get("/api/v1/spec", params={"source": f"git+file://{tmp_path / 'weg'}"})
+    assert response.status_code == 404
+    assert response.json()["detail"]["error_code"] == "not_found"

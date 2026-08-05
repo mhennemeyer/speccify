@@ -398,3 +398,12 @@ textarea.yaml {
   color: var(--muted);
   cursor: grab;
 }
+
+/* Discovery-Treffer: optisch von den lokalen Palette-Einträgen abgesetzt. */
+.palette-item.index-item {
+  border-style: dashed;
+}
+
+.palette-item.index-item .meta {
+  overflow-wrap: anywhere;
+}

@@ -115,21 +115,26 @@ def spec_detail(
         resolved = resolve_composition_children(composition, registry)
         children = {
             alias: {
-                "id": child.spec_id,
+                "id": child.name_id,
+                "source": child.spec_id,
                 "version": str(child.version),
                 "kind": str(child.parsed().get("kind", "")),
-                "title": str(child.parsed().get("title", child.spec_id)),
+                "title": str(child.parsed().get("title", child.name_id)),
                 "api": api_contract_dict(component_api(child.parsed())),
             }
             for alias, child in resolved.items()
         }
 
     return {
-        "id": spec_id,
+        # `id` ist der **deklarierte** Name der Spec (danach heißen generierte
+        # Dateien), `source` der Ref, über den sie geholt wurde — bei
+        # Git-Quellen sind das zwei verschiedene Dinge (Phase P5).
+        "id": spec.name_id,
+        "source": spec_id,
         "version": str(resolved_version),
         "versions": [str(v) for v in versions],
         "kind": str(parsed.get("kind", "")),
-        "title": str(parsed.get("title", spec_id)),
+        "title": str(parsed.get("title", spec.name_id)),
         "summary": str(parsed.get("summary", "")).strip(),
         "yaml": spec.raw_bytes.decode("utf-8"),
         "api": api_contract_dict(component_api(parsed)),

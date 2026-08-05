@@ -5,6 +5,9 @@ der Zustand ist die Spec-YAML in der lokalen Registry (Round-Trip).
 
 - `GET  /api/v1/specs/{scope}/{name}?version=` — Detail inkl. API-Contract-JSON,
   Komposition und aufgelösten Kind-Contracts (für Canvas/Property-Panel/Wiring).
+- `GET  /api/v1/spec?source=&version=` — dasselbe Detail für **beliebige
+  Quellen**, insbesondere Git-Refs (`git+<url>[#<pfad>]`, Phase P5). Die
+  Antwort trägt `source`: genau den Ref, der in `composition.uses` gehört.
 - `POST /api/v1/validate` mit `{spec_yaml}` — `{ok, issues[]}` (Schema v1 +
   Kompositions-Typprüfung gegen die Registry). Nie 4xx für inhaltliche Fehler.
 - `POST /api/v1/specs` mit `{spec_yaml}` — validiert + schreibt in die Registry
@@ -33,6 +36,31 @@ router = APIRouter(prefix="/api/v1", tags=["composer"])
 
 class SpecYamlPayload(BaseModel):
     spec_yaml: str = Field(..., description="raw YAML source of the spec")
+
+
+@router.get("/spec")
+def get_spec_detail_by_source(
+    request: Request, source: str, version: str | None = None
+) -> dict[str, Any]:
+    """Detail einer Spec über ihre Quelle — lokal (`@scope/name`) oder Git-Ref."""
+    settings = request.app.state.settings
+    try:
+        return spec_detail(
+            registry_path=settings.registry_path,
+            registry=settings.registry(),
+            spec_id=source,
+            version=version,
+        )
+    except (LookupError, RegistryError) as exc:
+        raise HTTPException(
+            status_code=404,
+            detail={"error_code": "not_found", "message": str(exc)},
+        ) from exc
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=400,
+            detail={"error_code": "bad_request", "message": str(exc)},
+        ) from exc
 
 
 @router.get("/specs/{scope}/{name}")

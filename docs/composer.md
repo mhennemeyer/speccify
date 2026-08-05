@@ -18,7 +18,7 @@ pnpm run composer:dev        # http://localhost:5173
 
 | Bereich | Funktion |
 |---|---|
-| **Palette** (links) | Alle Registry-Specs. **Ziehen** legt die Komponente dort ab, wo man sie fallen lässt (Canvas = Top-Level, Slot-Zone = in den Slot); „+ als Kind" tut dasselbe per Klick, „öffnen" lädt eine Spec in den Editor. Selbst gespeicherte Composites erscheinen sofort — **Komposition ist rekursiv**. |
+| **Palette** (links) | Alle Registry-Specs. **Ziehen** legt die Komponente dort ab, wo man sie fallen lässt (Canvas = Top-Level, Slot-Zone = in den Slot); „+ als Kind" tut dasselbe per Klick, „öffnen" lädt eine Spec in den Editor. Selbst gespeicherte Composites erscheinen sofort — **Komposition ist rekursiv**. Darunter **Index (Discovery)**: Specs suchen, die gar nicht lokal liegen — Treffer aus einem Index-Repo lassen sich genauso einfügen oder ziehen, in `composition.uses` landet dann die Git-Quelle (P5). |
 | **Canvas** (Mitte) | Rendert den **generierten Mock** — dieselben `*.mock.tsx`-Dateien, die `speccify mock` schreibt (im Browser kompiliert, siehe unten). Zwei Modi: *Bearbeiten* zeigt den Baum mit Editor-Rahmen (Klick selektiert, Event-Chips des Mocks feuern die Wiring-Simulation), *Vorschau* rendert die Mock-Komponente des Dokuments selbst — dort verdrahtet der generierte Code, nicht der Composer. **Slot-Zonen**: Komponenten mit Slots zeigen pro Slot eine Zone *an der Stelle, an der der Mock den Slot rendert* — Komponenten hineinziehen, oder anklicken (macht sie zum Einfüge-Ziel für „+ als Kind"). Bestehende Knoten hängt man am Griff (⠿ in der Kopfzeile) um: in eine andere Slot-Zone oder zurück auf den Canvas-Hintergrund (= Top-Level), immer samt Teilbaum. |
 | **Inspector** (rechts) | *Knoten*: typisierte Prop-Editoren (Enum-Dropdowns etc.), Reihenfolge, **Platzierung** (Knoten samt Teilbaum zwischen Top-Level und Slots umhängen), Entfernen (entfernt den ganzen Teilbaum inkl. Wiring-Cleanup). *Verdrahtung*: Regeln ansehen/löschen + Formular mit API-getriebenen Dropdowns. *API*: eigene Events/Props (inkl. `map_to`-Forwarding). *Spec*: Name/Version/Kind/Summary. |
 | **YAML** (unten links) | Live generierte Spec-YAML; direkt editierbar („übernehmen" lädt sie zurück ins Modell). Validierungs-Issues erscheinen hier. |
@@ -61,6 +61,9 @@ curl -s -X POST localhost:8000/api/v1/mock/draft \
   -d '{"spec_yaml": "…"}' -H 'content-type: application/json' | jq '{entry, files: (.files | keys)}'
 # Discovery: Specs in den konfigurierten Index-Repos finden (P5)
 curl -s 'localhost:8000/api/v1/index?q=rating' | jq '.hits[].source'
+# Kind-Contract einer beliebigen Quelle — auch eines Git-Refs
+curl -s --get localhost:8000/api/v1/spec \
+  --data-urlencode 'source=git+https://github.com/acme/rating-stars' | jq '{id, source, version}'
 ```
 
 Kompositions-Kinder dürfen auch Git-Quellen sein (`git+<url>[#<pfad>]`) —
@@ -116,6 +119,8 @@ Job (`apps/composer ui smoke`). Die Ports kollidieren bewusst nicht mit
   Generator); die *echte* generierte Verdrahtung läuft im Vorschau-Modus.
 - Kein Typecheck im Browser: `sucrase` transpiliert nur Syntax. Typfehler
   fängt weiterhin die Conformance-Stufe (`tsc --noEmit`).
+- Die Index-Suche braucht eine konfigurierte Quelle (`SPECCIFY_INDEX`); ohne
+  sie sagt die Palette das und bleibt sonst unverändert benutzbar.
 
 ## Cross-Referenzen
 
