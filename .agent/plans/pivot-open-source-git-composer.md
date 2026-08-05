@@ -1,6 +1,6 @@
 ---
 lifecycle: active
-status: P1–P5 komplett (Git-Quellen, Lockfile v4, Discovery-Indizes, alle Adapter, Index-Suche in der Palette); offen: P6 Ökosystem & Launch
+status: P1–P5 komplett; P6 zur Hälfte (Doku-Site + Launch-Vorbereitung ✅); offen: Launch-Ausführung (BO) und Community-Aufbau
 sessionId: pivot-open-source-git-composer
 ---
 # Plan: Pivot — Open Source, Git-basierte Registry, Projekt-Builds & visueller Composer
@@ -199,8 +199,13 @@ Vorbild: **Go-Module + SwiftPM**, nicht npm.
 **Beim Bauen entschieden (D20):** Der Codegen benennt Dateien nach der **in der Spec deklarierten** Id (`Spec.name_id`), nicht nach der Quelle — eine aus Git bezogene `@acme/button` heißt im generierten Projekt weiter `Button.tsx`. Herkunft ist eine Lockfile-Eigenschaft, kein Dateiname. Für Registry-Specs sind `name_id` und `spec_id` identisch, es ändert sich also kein Byte (per `-m app_build`-Smoke und den Cross-Consistency-Tests belegt).
 
 ### Phase P6 — Ökosystem & Launch
-- Doku-Site umbauen (Composer, App-Builds, Git-Workflow), Quickstarts, Beispiel-Repos als Saatgut im Index.
+
+> **P6.1 geliefert 2026-08-05**: Doku-Site auf den heutigen Stand gezogen (Sync um API/Mocks, Composer, Projekt-Builds, Git-Quellen erweitert; Registry-Abschnitt raus; Stub-Seiten gefüllt; Landing + README auf die Git-Geschichte), plus [`docs/launch.md`](../../docs/launch.md) mit Checkliste, Saatgut-Plan und Post-Entwürfen.
+
+- Doku-Site umbauen (Composer, App-Builds, Git-Workflow), Quickstarts ✅, Beispiel-Repos als Saatgut im Index.
 - OSS-Launch (HN/X), Community-Aufbau.
+
+**Was jetzt noch offen ist, ist bewusst BO-Sache** (nichts davon selbst tun): Repo öffentlich anlegen und pushen, Saatgut-Repos für den Index erzeugen, Doku-Site deployen, signierte Mac-App (Developer-ID + Notarisierung), Updater-Schlüssel, Launch-Posts absetzen. Alles Nötige liegt vor — `docs/launch.md` nennt pro Punkt den Befehl bzw. den fertigen Text.
 
 ---
 

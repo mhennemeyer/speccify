@@ -8,13 +8,21 @@
 
 ## Nächste Schritte
 - **Aktiver Plan: [`plans/pivot-open-source-git-composer.md`](./plans/pivot-open-source-git-composer.md)**
-  (der einzige mit `lifecycle: active`) — **P3, P4 und P5 komplett
-  abgeschlossen (2026-08-05)**, inklusive Index-Suche in der Composer-Palette.
-  **Nächster Schritt: P6 Ökosystem & Launch** — Doku-Site auf
-  Composer/Builds/Git-Workflow umbauen, Quickstarts, Beispiel-Repos als
-  Saatgut im Index, OSS-Launch. Alle abgeschlossenen Pläne liegen unter
-  `plans/archive/`; Konvention siehe `agent.md` → „Pläne: Ablage &
-  Lebenszyklus".
+  (der einzige mit `lifecycle: active`) — **P1–P5 komplett, P6.1 (Doku-Site +
+  Launch-Vorbereitung) geliefert (2026-08-05)**. **Offen ist nur noch die
+  Launch-Ausführung — und die ist BO-Sache**: Repo öffentlich anlegen/pushen,
+  Saatgut-Repos für den Index, Doku-Site deployen, signierte Mac-App,
+  Updater-Schlüssel, Posts absetzen. Checkliste, Saatgut-Plan und fertige
+  Post-Entwürfe stehen in [`docs/launch.md`](../docs/launch.md). Alle
+  abgeschlossenen Pläne liegen unter `plans/archive/`; Konvention siehe
+  `agent.md` → „Pläne: Ablage & Lebenszyklus".
+- **P6.1 Doku-Site (2026-08-05)**: Sync um API/Mocks, Composer, Projekt-Builds
+  und Git-Quellen erweitert, Registry-Abschnitt (Pivot-Altlast) entfernt,
+  Stub-Seiten gefüllt (Installation, Erste Spec, Spec-Format, MCP, Targets),
+  Landing + README auf die Git-Geschichte gezogen; generierte Seiten tragen
+  ihren Hinweis jetzt als HTML-Kommentar statt als sichtbaren Text.
+  **Verifikation: 523 Pytest, Doku-Sync + CLI-Doku ohne Drift, Site baut 29
+  Seiten (vorher 24), ruff clean.**
 - **P5.5 Index-Suche in der Palette (2026-08-05)**: Specs aus einem
   Index-Repo suchen, einfügen und ziehen; `GET /api/v1/spec?source=` löst
   beliebige Quellen auf, die Detail-Antwort trennt `id` (deklarierter Name)

@@ -1822,3 +1822,28 @@
 - Verifikation: 523 Pytest grün, 6/6 Playwright grün, Composer-Typecheck +
   Build grün (486 kB), ruff clean. Palette zusätzlich per Screenshot geprüft.
 - Damit ist P5 komplett; als Nächstes P6 (Doku-Site, Saatgut-Repos, Launch).
+
+## 2026-08-05 (P6.1 — Doku-Site auf den heutigen Stand, Launch vorbereitet)
+- Die Site beschrieb noch die Welt vor dem Pivot: ein Sidebar-Abschnitt
+  „Registry" (das zurückgebaute Django-Backend), Stub-Seiten aus Stage 1
+  („Inhalt folgt in einer späteren Stage") und ein Hero, der Speccify „npm
+  für Spezifikationen" nannte — während Specs längst wie Go-Module über Git
+  geteilt werden.
+- Sync-Mapping um die vier Seiten erweitert, die den heutigen Workflow
+  erklären (API-Vertrag & Mocks, Composer, Projekt-Builds, Git-Quellen &
+  Discovery); Sidebar umgebaut; `registry/` gelöscht.
+- Stub-Seiten mit echtem Inhalt: Installation (die drei Wege CLI/MCP/Web),
+  Deine erste Spec (Spec → Mock → Composer → Build → über Git teilen),
+  Spec-Format, MCP-Referenz (alle 9 Tools; `mcp/README.md` hatte `mock`,
+  `build` und `search` noch nicht), Targets.
+- Gefundener Nebenfehler: der „AUTOGENERIERT"-Hinweis war ein
+  MDX-Kommentar (`{/* … */}`) in `.md`-Dateien — Starlight rendert das als
+  sichtbaren Text. Beide Generatoren schreiben jetzt HTML-Kommentare.
+- `docs/launch.md` als Vorbereitung: Vor-dem-Launch-Checkliste (alle
+  Verifikations-Kommandos), Plan fürs Saatgut im bewusst leeren Index (drei
+  Repos aus den Referenz-Specs, inkl. Befehlen), HN- und X-Entwürfe plus die
+  absehbaren Rückfragen. **Nichts davon ausgeführt** — Repo anlegen, pushen,
+  deployen und posten bleibt BO-Entscheidung.
+- Verifikation: 523 Pytest grün, Doku-Sync und CLI-Doku ohne Drift, Site
+  baut 29 Seiten (vorher 24), ruff clean; Landing und Doku-Seiten per
+  Screenshot gegengesehen.
