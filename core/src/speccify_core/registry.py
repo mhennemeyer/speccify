@@ -343,3 +343,59 @@ class RemoteRegistry:
         tmp.write_bytes(raw)
         tmp.replace(p)
         return p
+
+
+class MultiRegistry:
+    """Bündelt mehrere Registries hinter *einer* `Registry`-Fassade.
+
+    Der Resolver nimmt von sich aus eine Liste; alles andere (Kompositions-
+    Auflösung, Mock- und App-Codegen) erwartet genau eine Registry. Damit
+    Git-Quellen dort ohne Sonderfälle ankommen, verteilt diese Fassade jede
+    Anfrage an die erste Registry, die die Id bedient (`serves`).
+
+    `via` ist der Marker der zuletzt benutzten Registry — Aufrufer, die
+    Lockfiles schreiben, arbeiten weiterhin mit der Liste selbst.
+    """
+
+    def __init__(self, registries: list[Registry]) -> None:
+        if not registries:
+            raise RegistryError("MultiRegistry braucht mindestens eine Registry.")
+        self._registries = list(registries)
+
+    @property
+    def registries(self) -> list[Registry]:
+        return list(self._registries)
+
+    @property
+    def via(self) -> str:
+        return "multi"
+
+    def serves(self, spec_id: str) -> bool:
+        return any(self._serves(registry, spec_id) for registry in self._registries)
+
+    @staticmethod
+    def _serves(registry: Registry, spec_id: str) -> bool:
+        predicate = getattr(registry, "serves", None)
+        return True if predicate is None else bool(predicate(spec_id))
+
+    def list_versions(self, spec_id: str) -> list[Version]:
+        for registry in self._registries:
+            if not self._serves(registry, spec_id):
+                continue
+            versions = registry.list_versions(spec_id)
+            if versions:
+                return versions
+        return []
+
+    def fetch(self, spec_id: str, version: Version) -> Spec:
+        last_error: RegistryError | None = None
+        for registry in self._registries:
+            if not self._serves(registry, spec_id):
+                continue
+            try:
+                return registry.fetch(spec_id, version)
+            except RegistryError as exc:
+                last_error = exc
+        if last_error is not None:
+            raise last_error
+        raise RegistryError(f"Keine Registry im Set bedient '{spec_id}'.")

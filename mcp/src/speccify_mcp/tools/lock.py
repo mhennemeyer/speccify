@@ -10,10 +10,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from speccify_core import LocalRegistry, Resolver, Workspace, build_lockfile
+from speccify_core import Resolver, Workspace, build_lockfile
 from speccify_core.manifest import ManifestError, ProjectManifest
 
-from ._workspace import WorkspaceContext
+from ._workspace import WorkspaceContext, build_registry
 
 
 @dataclass(frozen=True)
@@ -69,7 +69,7 @@ def run_lock(
             reg_path = registry_path.resolve()
         else:
             reg_path = workspace.root_manifest.resolved_registry_path()
-        lockfile = workspace.lock(LocalRegistry(reg_path))
+        lockfile = workspace.lock(build_registry(reg_path))
         lockfile_path = target_root / "speccify.lock"
         lockfile.write(lockfile_path)
         entries = [

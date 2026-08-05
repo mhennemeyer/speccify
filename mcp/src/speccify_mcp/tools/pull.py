@@ -113,7 +113,8 @@ def run_pull(
             workspace=True,
         )
 
-    ctx = WorkspaceContext.load(project_root, registry_override=registry_path)
+    # `offline` gilt auch für Git-Quellen: kein Netz, nur der lokale Cache.
+    ctx = WorkspaceContext.load(project_root, registry_override=registry_path, offline=offline)
     if not ctx.lockfile_path.is_file():
         raise LockfileError(f"Kein Lockfile in {project_root}. Bitte zuerst `lock` aufrufen.")
     lockfile = Lockfile.load(ctx.lockfile_path)

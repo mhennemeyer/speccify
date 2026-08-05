@@ -12,8 +12,12 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from speccify_core import (
+    DEFAULT_GIT_CACHE_DIR,
+    GitRegistry,
     LocalRegistry,
+    MultiRegistry,
     ProjectManifest,
+    Registry,
     ReplayCache,
     ReplayCacheClient,
 )
@@ -21,6 +25,8 @@ from speccify_core import (
 MANIFEST_FILENAME = "speccify.yaml"
 LOCKFILE_FILENAME = "speccify.lock"
 CACHE_DIR_ENV = "SPECCIFY_CACHE_DIR"
+# Bare-Clone-Cache für Git-Quellen (Phase P5; gleiche Env wie in der CLI).
+GIT_CACHE_ENV = "SPECCIFY_GIT_CACHE"
 
 # Repo-lokaler Default-Cache (gleiche Konvention wie cli/_llm_client.py).
 # mcp/src/speccify_mcp/tools/_workspace.py → parents[4] == Repo-Root.
@@ -34,13 +40,17 @@ class WorkspaceContext:
     manifest_path: Path
     lockfile_path: Path
     manifest: ProjectManifest
-    registry: LocalRegistry
+    # Fassade über lokale Registry + Git-Quellen (Phase P5): `serves`
+    # entscheidet pro Id, wer antwortet.
+    registry: Registry
 
     @classmethod
     def load(
         cls,
         project_dir: Path,
         registry_override: Path | None = None,
+        *,
+        offline: bool = False,
     ) -> WorkspaceContext:
         manifest_path = project_dir / MANIFEST_FILENAME
         if not manifest_path.is_file():
@@ -51,7 +61,7 @@ class WorkspaceContext:
             if registry_override is not None
             else manifest.resolved_registry_path()
         )
-        registry = LocalRegistry(registry_path)
+        registry = build_registry(registry_path, offline=offline)
         return cls(
             project_dir=project_dir,
             manifest_path=manifest_path,
@@ -59,6 +69,18 @@ class WorkspaceContext:
             manifest=manifest,
             registry=registry,
         )
+
+
+def git_cache_dir() -> Path:
+    override = os.environ.get(GIT_CACHE_ENV)
+    return Path(override) if override else DEFAULT_GIT_CACHE_DIR
+
+
+def build_registry(registry_path: Path, *, offline: bool = False) -> Registry:
+    """Registry-Fassade der MCP-Tools: lokale Pseudo-Registry + Git-Quellen."""
+    return MultiRegistry(
+        [LocalRegistry(registry_path), GitRegistry(cache_dir=git_cache_dir(), offline=offline)]
+    )
 
 
 def resolve_cache_dir(override: Path | None) -> Path:

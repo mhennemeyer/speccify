@@ -12,6 +12,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from speccify_web_backend.routes import composer as composer_route
+from speccify_web_backend.routes import index as index_route
 from speccify_web_backend.routes import mock as mock_route
 from speccify_web_backend.routes import render as render_route
 from speccify_web_backend.routes import specs as specs_route
@@ -50,6 +51,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(render_route.router)
     app.include_router(mock_route.router)
     app.include_router(composer_route.router)
+    app.include_router(index_route.router)
 
     # Composer-SPA (gebautes apps/composer/dist) same-origin unter /ui —
     # das Composer-Fenster der Desktop-App lädt http://127.0.0.1:<port>/ui/

@@ -23,7 +23,7 @@ from speccify_core import (
     render_mock_files,
     resolve_composition_children,
 )
-from speccify_core.registry import Spec, Version
+from speccify_core.registry import Registry, Spec, Version
 
 
 class UnknownMockTargetError(ValueError):
@@ -58,13 +58,14 @@ def mock_spec_from_registry(
     version: str | None,
     target: str,
     registry_path: Path,
+    registry: Registry | None = None,
 ) -> MockServiceResult:
     """Rendert die Mock-Closure für eine Registry-Spec (neueste Version bei `None`)."""
     if target != "react":
         raise UnknownMockTargetError(
             f"Mock-Target '{target}' wird nicht unterstützt (P2: nur 'react')."
         )
-    registry = LocalRegistry(registry_path)
+    registry = registry or LocalRegistry(registry_path)
     if version is None:
         versions = registry.list_versions(spec_id)
         if not versions:
@@ -90,6 +91,7 @@ def mock_draft_spec_yaml(
     spec_yaml: str,
     target: str,
     registry_path: Path,
+    registry: Registry | None = None,
 ) -> MockServiceResult:
     """Rendert die Mock-Closure für eine **ungespeicherte** Spec (Composer-Entwurf).
 
@@ -117,7 +119,7 @@ def mock_draft_spec_yaml(
         raw_bytes=raw_bytes,
         path=Path("<draft>"),
     )
-    registry = LocalRegistry(registry_path)
+    registry = registry or LocalRegistry(registry_path)
 
     composition = parse_composition(parsed)
     children: dict[str, Spec] = {}
@@ -171,6 +173,7 @@ def build_app_from_registry(
     version: str | None,
     target: str,
     registry_path: Path,
+    registry: Registry | None = None,
 ) -> BuildServiceResult:
     """Baut das Projekt einer App-Spec aus der Registry (Web-Adapter, nur Mocks).
 
@@ -182,7 +185,7 @@ def build_app_from_registry(
         raise UnknownMockTargetError(
             f"Build-Target '{target}' wird nicht unterstützt (P4: nur 'react')."
         )
-    registry = LocalRegistry(registry_path)
+    registry = registry or LocalRegistry(registry_path)
     if version is None:
         versions = registry.list_versions(spec_id)
         if not versions:

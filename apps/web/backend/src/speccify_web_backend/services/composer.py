@@ -20,6 +20,7 @@ import yaml
 from speccify_core import (
     CompositionResolutionError,
     LocalRegistry,
+    RegistryError,
     SchemaValidator,
     component_api,
     parse_composition,
@@ -28,7 +29,7 @@ from speccify_core import (
     validate_composition,
 )
 from speccify_core.api import ComponentApi, TypeRef
-from speccify_core.registry import Version
+from speccify_core.registry import Registry, Version
 
 _SPEC_FILENAME = "spec.speccify.yaml"
 
@@ -95,11 +96,12 @@ def api_contract_dict(api: ComponentApi) -> dict[str, Any]:
 def spec_detail(
     *,
     registry_path: Path,
+    registry: Registry | None = None,
     spec_id: str,
     version: str | None = None,
 ) -> dict[str, Any]:
     """Detail einer Registry-Spec: YAML, Contract-JSON, Komposition, Kind-Contracts."""
-    registry = LocalRegistry(registry_path)
+    registry = registry or LocalRegistry(registry_path)
     versions = registry.list_versions(spec_id)
     if not versions:
         raise LookupError(f"Keine Versionen für {spec_id} in der Registry.")
@@ -148,7 +150,9 @@ class ValidationOutcome:
         return {"ok": self.ok, "issues": self.issues}
 
 
-def validate_spec_yaml(yaml_bytes: bytes, *, registry_path: Path) -> ValidationOutcome:
+def validate_spec_yaml(
+    yaml_bytes: bytes, *, registry_path: Path, registry: Registry | None = None
+) -> ValidationOutcome:
     """Volle Validierung: YAML-Parse → Schema v1 → Kompositions-Typprüfung.
 
     Kompositions-Kinder werden gegen die Registry aufgelöst; Auflösungsfehler
@@ -185,9 +189,11 @@ def validate_spec_yaml(yaml_bytes: bytes, *, registry_path: Path) -> ValidationO
 
     if composition is not None:
         try:
-            registry = LocalRegistry(registry_path)
-            children = resolve_composition_children(composition, registry)
-        except CompositionResolutionError as exc:
+            children = resolve_composition_children(
+                composition, registry or LocalRegistry(registry_path)
+            )
+        # Auch eine unerreichbare Git-Quelle ist ein Befund für die UI, kein Absturz.
+        except (CompositionResolutionError, RegistryError) as exc:
             issues.append(
                 {"path": "$.composition.uses", "message": str(exc), "source": "composition"}
             )
@@ -205,14 +211,16 @@ def validate_spec_yaml(yaml_bytes: bytes, *, registry_path: Path) -> ValidationO
     return ValidationOutcome(ok=not issues, issues=issues)
 
 
-def save_spec_yaml(yaml_bytes: bytes, *, registry_path: Path) -> dict[str, Any]:
+def save_spec_yaml(
+    yaml_bytes: bytes, *, registry_path: Path, registry: Registry | None = None
+) -> dict[str, Any]:
     """Validiert und schreibt eine Spec in die Registry (Pfad aus id + version).
 
     Nur scoped IDs (`@scope/name`) sind speicherbar — das Registry-Layout
     braucht den Scope. Überschreiben einer existierenden Version ist im
     Composer-Kontext erlaubt (lokales Dev-Tool, Git ist die Historie).
     """
-    outcome = validate_spec_yaml(yaml_bytes, registry_path=registry_path)
+    outcome = validate_spec_yaml(yaml_bytes, registry_path=registry_path, registry=registry)
     if not outcome.ok:
         raise SpecValidationFailed(outcome.issues)
 

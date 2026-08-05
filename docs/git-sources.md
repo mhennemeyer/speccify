@@ -113,10 +113,32 @@ Nennung. Git-Indizes liegen im selben Bare-Clone-Cache wie Spec-Quellen.
 
 Vorlage und Beitrags-Ablauf: [`index/README.md`](../index/README.md).
 
-## Grenzen (Stand P5.3)
+## Alle Wege, nicht nur die CLI
 
-- MCP-Tools, Web-Backend und Composer-Palette kennen Git-Quellen noch nicht
-  (P5.4) — CLI-Pfad (`lock`/`pull`/`verify`/`search`) ist vollständig.
+| Weg | Git-Quellen | Discovery |
+|---|---|---|
+| CLI | `lock`/`pull`/`verify` gegen `git+…`, `--offline` nutzt nur den Cache | `speccify search` |
+| MCP | dieselben Tools (`lock`/`pull`/`verify`), Registry-Fassade inklusive | Tool `search` |
+| Web/Composer | Validierung, Mock-Closure und `speccify build` lösen Git-Kinder auf | `GET /api/v1/index?q=` |
+
+Möglich macht das eine **Registry-Fassade** (`MultiRegistry`): der Resolver
+nimmt von sich aus eine Liste, alles andere (Kompositions-Auflösung, Mock- und
+App-Codegen) erwartet genau eine Registry. Die Fassade verteilt jede Anfrage an
+die erste Registry, die die Id bedient — Git-Quellen kommen damit überall ohne
+Sonderfall an. Eine unerreichbare Git-Quelle ist im Composer ein
+Validierungs-Befund, kein Absturz.
+
+```bash
+# Kompositions-Kind direkt aus einem Repo — Mock rendert sofort
+curl -s -X POST localhost:8000/api/v1/mock/draft -H 'content-type: application/json' \
+  -d '{"spec_yaml": "… composition: {uses: {btn: git+https://host/repo@^0.1}, …}"}' | jq '.files | keys'
+```
+
+## Grenzen (Stand P5.4)
+
+- Die Composer-**Palette** listet weiterhin nur die lokale Registry; Git-Specs
+  kommen über YAML oder die API in eine Komposition. Die Index-Suche in der
+  Oberfläche ist der nächste Schritt.
 - Der Index dieses Repos ist noch leer: Platzhalter-URLs wären tote Links,
   gesät wird zum OSS-Launch (P6).
 - Nur `https://`- und `file://`-Remotes; SSH-Refs sind bewusst noch nicht

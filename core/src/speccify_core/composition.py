@@ -13,6 +13,7 @@ Wert-Quellen in der Verdrahtung (`wiring[].to` / `wiring[].with.*`):
 
 from __future__ import annotations
 
+import re
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import Any
@@ -124,8 +125,24 @@ def parse_composition(parsed: dict[str, Any]) -> Composition | None:
 # --- Kind-Auflösung gegen eine Registry ---------------------------------------
 
 
+# Git-Kind-Referenz mit optionaler Range: `git+<url>[#<pfad>][@^0.1]`. Die Range
+# ist rein numerisch, deshalb ist der Split am letzten `@` auch bei URLs eindeutig.
+_GIT_CHILD_REF = re.compile(r"^(?P<id>git\+[^\s]+?)(?:@(?P<range>[\^~]?\d+\.\d+(?:\.\d+)?))?$")
+
+
 def parse_child_ref(ref: str) -> tuple[str, str]:
-    """`@org/button@^0.1` → (`@org/button`, `^0.1`); Range optional."""
+    """`@org/button@^0.1` → (`@org/button`, `^0.1`); Range optional.
+
+    Git-Quellen (Phase P5) werden genauso zerlegt: `git+<url>[#<pfad>][@range]`.
+    """
+    if ref.startswith("git+"):
+        match = _GIT_CHILD_REF.match(ref)
+        if match is None:
+            raise CompositionResolutionError(
+                f"Kompositions-Referenz '{ref}' ist keine gültige Git-Quelle "
+                f"(erwartet 'git+<url>[#<pfad>][@<range>]')."
+            )
+        return match.group("id"), match.group("range") or ""
     if not ref.startswith("@"):
         raise CompositionResolutionError(
             f"Kompositions-Referenz '{ref}' ist nicht scoped (@scope/name) — "

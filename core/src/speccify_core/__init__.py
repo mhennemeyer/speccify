@@ -117,6 +117,7 @@ from speccify_core.manifest import (
 )
 from speccify_core.registry import (
     LocalRegistry,
+    MultiRegistry,
     Registry,
     RegistryError,
     RemoteRegistry,
@@ -245,6 +246,7 @@ __all__ = [
     "is_git_ref",
     "parse_git_ref",
     "LocalRegistry",
+    "MultiRegistry",
     "Registry",
     "RemoteRegistry",
     "ScopeRegistryConflictError",

@@ -79,7 +79,8 @@ def run_verify(
 
     problems: list[str] = []
 
-    ctx = WorkspaceContext.load(project_root, registry_override=registry_path)
+    # `offline` gilt auch für Git-Quellen: kein Netz, nur der lokale Cache.
+    ctx = WorkspaceContext.load(project_root, registry_override=registry_path, offline=offline)
     if not ctx.lockfile_path.is_file():
         return VerifyResult(
             ok=False,

@@ -70,6 +70,7 @@ def mock_spec(payload: MockRequest, request: Request) -> dict[str, Any]:
             version=payload.version,
             target=payload.target,
             registry_path=settings.registry_path,
+            registry=settings.registry(),
         )
     except UnknownMockTargetError as exc:
         raise HTTPException(
@@ -102,6 +103,7 @@ def mock_draft(payload: MockDraftRequest, request: Request) -> dict[str, Any]:
             spec_yaml=payload.spec_yaml,
             target=payload.target,
             registry_path=settings.registry_path,
+            registry=settings.registry(),
         )
     except UnknownMockTargetError as exc:
         raise HTTPException(
@@ -141,6 +143,7 @@ def build_app(payload: BuildRequest, request: Request) -> dict[str, Any]:
             version=payload.version,
             target=payload.target,
             registry_path=settings.registry_path,
+            registry=settings.registry(),
         )
     except UnknownMockTargetError as exc:
         raise HTTPException(

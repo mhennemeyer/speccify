@@ -18,6 +18,7 @@ from .mock import MockResult, run_mock
 from .pull import PullResult, run_pull
 from .render import RenderResult, run_render
 from .resolve import ResolveResult, run_resolve
+from .search import SearchResult, run_search
 from .verify import VerifyResult, run_verify
 
 __all__ = [
@@ -28,6 +29,7 @@ __all__ = [
     "PullResult",
     "RenderResult",
     "ResolveResult",
+    "SearchResult",
     "VerifyResult",
     "run_build",
     "run_lint",
@@ -36,5 +38,6 @@ __all__ = [
     "run_pull",
     "run_render",
     "run_resolve",
+    "run_search",
     "run_verify",
 ]

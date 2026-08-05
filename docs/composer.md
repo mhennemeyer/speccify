@@ -59,7 +59,13 @@ curl -s -X POST localhost:8000/api/v1/mock \
 # Mock-Closure eines ungespeicherten Entwurfs — genau das, was der Canvas rendert
 curl -s -X POST localhost:8000/api/v1/mock/draft \
   -d '{"spec_yaml": "…"}' -H 'content-type: application/json' | jq '{entry, files: (.files | keys)}'
+# Discovery: Specs in den konfigurierten Index-Repos finden (P5)
+curl -s 'localhost:8000/api/v1/index?q=rating' | jq '.hits[].source'
 ```
+
+Kompositions-Kinder dürfen auch Git-Quellen sein (`git+<url>[#<pfad>]`) —
+Validierung und Mock-Rendering lösen sie über dieselbe Registry-Fassade auf wie
+die CLI. Details: [`git-sources.md`](./git-sources.md).
 
 ## Architektur & Tauri-2-Zielbild
 

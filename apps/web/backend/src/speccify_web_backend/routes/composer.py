@@ -43,6 +43,7 @@ def get_spec_detail(
     try:
         return spec_detail(
             registry_path=settings.registry_path,
+            registry=settings.registry(),
             spec_id=f"@{scope}/{name}",
             version=version,
         )
@@ -64,6 +65,7 @@ def validate_spec(payload: SpecYamlPayload, request: Request) -> dict[str, Any]:
     outcome = validate_spec_yaml(
         payload.spec_yaml.encode("utf-8"),
         registry_path=settings.registry_path,
+        registry=settings.registry(),
     )
     return outcome.to_dict()
 
@@ -75,6 +77,7 @@ def save_spec(payload: SpecYamlPayload, request: Request) -> dict[str, Any]:
         return save_spec_yaml(
             payload.spec_yaml.encode("utf-8"),
             registry_path=settings.registry_path,
+            registry=settings.registry(),
         )
     except SpecValidationFailed as exc:
         raise HTTPException(

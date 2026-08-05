@@ -24,6 +24,7 @@ from .tools import (
     run_pull,
     run_render,
     run_resolve,
+    run_search,
     run_verify,
 )
 
@@ -279,5 +280,31 @@ def _register_write_tools(server: FastMCP, config: ServerConfig) -> None:
             mocks=mocks,
             offline=offline,
             cache_dir=Path(cache_dir) if cache_dir else None,
+        )
+        return result.to_dict()
+
+    @server.tool(
+        name="search",
+        description=(
+            "Find specs in discovery indexes (git repos or local directories "
+            "with one file per spec repo). Sources: `index_sources` argument > "
+            "`SPECCIFY_INDEX` env > `<project>/index`. Returns `{ok, hits, "
+            "sources}` where each hit carries `{source, title, summary, kind, "
+            "keywords, homepage, license, origin}`; `source` is the git ref to "
+            "put into a manifest or `composition.uses`. Missing or broken "
+            "indexes report `code=no_index_configured`/`index_invalid` in the "
+            "structured result, not as an MCP error. Mirrors `speccify search`."
+        ),
+    )
+    def search(
+        query: str = "",
+        index_sources: list[str] | None = None,
+        offline: bool = False,
+    ) -> dict[str, Any]:
+        result = run_search(
+            project_root=config.project_root,
+            query=query,
+            index_sources=index_sources,
+            offline=offline,
         )
         return result.to_dict()
