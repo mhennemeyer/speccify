@@ -1,6 +1,6 @@
 ---
 lifecycle: active
-status: P1–P4 geliefert; P5 zur Hälfte (P5.1 GitRegistry + P5.2 Lockfile v4/CLI-Pfad ✅); offen: P5.3 Discovery, P5.4 MCP/Web/Composer, P6 Ökosystem/Launch
+status: P1–P5 geliefert (Git-Quellen, Lockfile v4, Discovery-Indizes, alle Adapter); offen: Composer-Palette mit Index-Suche, P6 Ökosystem/Launch
 sessionId: pivot-open-source-git-composer
 ---
 # Plan: Pivot — Open Source, Git-basierte Registry, Projekt-Builds & visueller Composer
@@ -169,7 +169,9 @@ Vorbild: **Go-Module + SwiftPM**, nicht npm.
 
 ### Phase P5 — Git-basierte Spec-Quellen
 
-> **In Umsetzung seit 2026-08-04.** Stufen und Entscheidungen hier (ein aktiver Plan).
+> **✅ Geliefert 2026-08-04/05.** Stufen und Entscheidungen hier (ein aktiver Plan).
+>
+> **Ergebnis**: Eine Dependency kann aus einem Git-Repo kommen (`git+<url>[#<pfad>]`, Tags als Versionen), das Lockfile pinnt den Commit, `pull`/`verify` laufen danach offline gegen einen Bare-Clone-Cache. Discovery über Index-Repos (eine Datei pro Spec-Repo) mit `speccify search`, MCP-Tool `search` und `GET /api/v1/index`. Doku: [`docs/git-sources.md`](../../docs/git-sources.md).
 
 - `GitRegistry` (Registry-Protocol) mit Tag-Discovery, Shallow-Fetch, Content-Addressed Cache.
 - Identitäts-Schema + Lockfile v4 (Commit-Pin) + Migration bestehender Lockfiles.
@@ -184,7 +186,11 @@ Vorbild: **Go-Module + SwiftPM**, nicht npm.
 - **D18 — Trust über Commit-Pin** (Frage 3): das Lockfile pinnt zusätzlich den Commit-SHA hinter dem Tag (Lockfile v4); `verify` prüft Tag → Commit → Spec-Bytes. Signierte Tags/gitsign bleiben ein späterer, additiver Slot — der bestehende `signature`-Block deckt das ab. Kein sigstore in P5.
 - **D19 — Der Cache ist ein Bare-Repo**: pro Repo-URL ein Bare-Clone unter `~/.cache/speccify/git/<hash>/`, Tags per `fetch --depth 1`, Spec-Bytes per `git cat-file blob <tag>:<pfad>` — kein Working Tree, kein Checkout. Nach einem Fetch ist alles offline reproduzierbar (`list_versions`/`fetch` lesen lokale Refs); `offline=True` verbietet jeden Netz-Zugriff hart. Tests laufen gegen `file://`-Fixture-Repos, CI braucht kein Netz.
 
-**Stufen:** P5.1 `GitRegistry` + Ref-Parsing + Cache ✅ · P5.2 Lockfile v4 (Commit-Pin) + `add`/`lock`/`pull`/`verify` gegen Git ✅ · **P5.3 Discovery (Index-Repo + `speccify search`) — nächster Schritt** · P5.4 MCP/Web/Composer nachziehen + Doku.
+**Stufen (alle ✅):** P5.1 `GitRegistry` + Ref-Parsing + Cache · P5.2 Lockfile v4 (Commit-Pin) + `lock`/`pull`/`verify` gegen Git · P5.3 Discovery (Index-Format, Schema, `speccify search`) · P5.4 MCP + Web-Backend auf Git-Quellen, `GET /api/v1/index`, MCP-Tool `search`.
+
+**Weitere Entscheidungen:** **D20** der Codegen benennt nach der deklarierten Id (`Spec.name_id`), nicht nach der Quelle — Herkunft ist eine Lockfile-Eigenschaft. **D21** eine Datei pro Index-Eintrag (`entries/*.yaml`): ein PR fasst eine Datei an, keine Merge-Konflikte, CI validiert einzeln; der Index nennt nie Versionen, weil Tags die Wahrheit sind. **D22** Such-Ranking Id > Titel > Keyword > Summary, `--json` für Agents. **D23** eine `MultiRegistry`-Fassade bringt Git-Quellen in alle Pfade, die genau *eine* Registry erwarten (Komposition, Mocks, Builds) — statt jede Aufrufstelle auf Listen umzubauen.
+
+**Offen (bewusst):** Die Composer-**Palette** listet weiter nur die lokale Registry; Git-Specs kommen über YAML oder die API in eine Komposition. Index-Suche in der Oberfläche ist der nächste sinnvolle Schritt. Außerdem: nur `https`/`file`-Remotes (kein SSH), Tags müssen exaktes Semver tragen, und der Repo-Index bleibt leer, bis das Ökosystem zum Launch gesät wird.
 
 **Stand nach P5.2 (2026-08-04):** der CLI-Pfad ist vollständig — ein Projekt kann seine Dependencies aus Git beziehen, das Lockfile pinnt den Commit, `pull`/`verify` laufen danach offline gegen den Bare-Clone-Cache. Doku: [`docs/git-sources.md`](../../docs/git-sources.md).
 

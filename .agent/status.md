@@ -8,21 +8,23 @@
 
 ## Nächste Schritte
 - **Aktiver Plan: [`plans/pivot-open-source-git-composer.md`](./plans/pivot-open-source-git-composer.md)**
-  (der einzige mit `lifecycle: active`) — **P3 und P4 abgeschlossen, P5 zur
-  Hälfte (2026-08-04)**: P5.1 `GitRegistry` ✅ und P5.2 Lockfile v4 + CLI-Pfad ✅.
-  **Nächster Schritt: P5.3 Discovery** (Index-Repo-Format, CI-Validierung,
-  `speccify search` liest den lokal gecachten Index), danach P5.4 (MCP/Web/
-  Composer auf Git-Quellen nachziehen). Alle abgeschlossenen Pläne liegen
-  unter `plans/archive/`; Konvention siehe `agent.md` → „Pläne: Ablage &
-  Lebenszyklus".
-- **P5.1 + P5.2 Git-Quellen (2026-08-04)**: Spec-Ids der Form
+  (der einzige mit `lifecycle: active`) — **P3, P4 und P5 abgeschlossen
+  (2026-08-05)**. **Nächster Schritt: Composer-Palette mit Index-Suche**
+  (Git-Specs aus einem Index direkt als Kind einfügen; Backend steht mit
+  `GET /api/v1/index`), danach **P6 Ökosystem & Launch** (Doku-Site auf
+  Composer/Builds/Git umbauen, Beispiel-Repos als Saatgut im Index,
+  OSS-Launch). Alle abgeschlossenen Pläne liegen unter `plans/archive/`;
+  Konvention siehe `agent.md` → „Pläne: Ablage & Lebenszyklus".
+- **P5 Git-Quellen + Discovery abgeschlossen (2026-08-04/05)**: Spec-Ids
   `git+<url>[#<pfad>]`, Tags als Versionen (`v1.2.0` bzw. `<pfad>/v1.2.0`),
-  Bare-Clone-Cache unter `~/.cache/speccify/git/` (Override
-  `SPECCIFY_GIT_CACHE`), Lockfile v4 mit `source_commit`-Pin, `--offline` gilt
-  auch für Git. Doku [`docs/git-sources.md`](../docs/git-sources.md).
-  **Verifikation: 489 Pytest grün (+19 neu: GitRegistry gegen echte
-  file://-Repos, CLI-E2E lock/pull/verify inkl. gelöschter Quelle),
-  `-m app_build` grün, ruff clean.**
+  Bare-Clone-Cache (`SPECCIFY_GIT_CACHE`), Lockfile v4 mit `source_commit`-Pin,
+  `--offline` auch für Git; Discovery über Index-Repos (eine Datei pro
+  Spec-Repo, `schema/index-entry.schema.json`, Vorlage in `index/`) mit
+  `speccify search`, MCP-Tool `search` und `GET /api/v1/index`; eine
+  `MultiRegistry`-Fassade bringt Git-Quellen in Komposition, Mocks und Builds.
+  Doku [`docs/git-sources.md`](../docs/git-sources.md).
+  **Verifikation: 521 Pytest grün (+52 gegenüber P4), 5/5 Playwright,
+  `-m app_build` grün, ruff clean.** Tag-Vorschlag: `v0.20.0-p5-git-quellen`.
 - **P4 Projekt-Builds abgeschlossen (2026-08-04)**: `kind: app` mit `app:`-Block
   (Routen/Theme/Env) und dritter Wiring-Aktion `navigate:`; Core-Codegen
   `codegen/app_react.py` erzeugt ein Vite-React-Projekt (Hash-Router ohne

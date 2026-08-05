@@ -1769,3 +1769,34 @@
   `speccify lint specs/*.yaml` grün, ruff clean.
 - Offen in P5: P5.3 Discovery (Index-Repo + `speccify search`), P5.4 MCP/Web/
   Composer auf Git-Quellen nachziehen.
+
+## 2026-08-05 (P5.3 + P5.4 — Discovery und Git-Quellen in allen Adaptern)
+- Discovery ohne zentralen Dienst: ein Index ist ein Git-Repo (oder ein
+  lokales Verzeichnis) mit **einer Datei pro Spec-Repo** unter `entries/*.yaml`
+  (D21). Ein PR fasst genau eine Datei an, es gibt keine Merge-Konflikte in
+  einer wachsenden Sammelliste, und CI validiert jeden Eintrag einzeln.
+  Der Index nennt bewusst **keine Versionen** — Tags sind die Wahrheit, ein
+  Index kann damit gar nicht veralten.
+- `speccify search` (Ranking Id > Titel > Keyword > Summary, `--json`,
+  `--offline`), MCP-Tool `search` (jetzt 9 Tools) und `GET /api/v1/index`.
+  Quellen-Reihenfolge überall gleich: explizit > `SPECCIFY_INDEX` > `./index`.
+  Trennzeichen ist das Komma, nicht `os.pathsep` — ein Doppelpunkt steckt in
+  jeder Git-URL.
+- `index/` im Repo mit README (Format, Beitrags-Ablauf) als Vorlage; Einträge
+  bleiben leer, bis zum Launch gesät wird. Platzhalter-URLs wären tote Links.
+- Git-Plumbing als `GitRepoCache` herausgelöst — Spec-Quellen und Index-Repos
+  teilen sich denselben Bare-Clone-Cache.
+- Der eigentliche Hebel für P5.4 war eine kleine Fassade: `MultiRegistry`.
+  Der Resolver nimmt von sich aus eine Liste, aber Kompositions-Auflösung,
+  Mock- und App-Codegen erwarten genau *eine* Registry. Statt jede
+  Aufrufstelle auf Listen umzubauen, verteilt die Fassade pro Id an die erste
+  Registry, die sie bedient (`serves`). Damit können Web-Backend und MCP ohne
+  Sonderfälle mit Git-Kindern arbeiten.
+- Nebenbei zwei Kanten geglättet: `parse_child_ref` kennt jetzt Git-Refs mit
+  Range (`composition.uses`), und eine unerreichbare Git-Quelle ist im
+  Composer ein Validierungs-Befund statt eines 404-Absturzes.
+- Verifikation: 521 Pytest grün, 5/5 Playwright, `-m app_build` grün,
+  CLI-Doku-Drift grün, ruff clean.
+- Offen: die Composer-**Palette** listet weiter nur die lokale Registry —
+  Index-Suche in der Oberfläche ist der nächste sinnvolle Schritt.
+- Tag-Vorschlag: `v0.20.0-p5-git-quellen`.
