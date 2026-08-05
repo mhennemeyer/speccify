@@ -3,7 +3,7 @@ title: "speccify add"
 description: "Fügt eine Spec-Dependency in speccify.yaml ein und aktualisiert speccify.lock."
 ---
 
-{/* AUTOGENERIERT via scripts/gen_cli_docs.py aus `speccify --help` — nicht von Hand editieren. */}
+<!-- AUTOGENERIERT via scripts/gen_cli_docs.py aus `speccify --help` — nicht von Hand editieren. -->
 
 Fügt eine Spec-Dependency in speccify.yaml ein und aktualisiert speccify.lock.
 

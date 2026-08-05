@@ -3,7 +3,7 @@ title: "Conformance — Build-Smoke (Phase 5a)"
 description: "Die Conformance-Suite prüft, dass der von Speccify generierte Code gegen die echten Ziel-Toolchains **kompiliert**. Phase-5a-Scope ist *Build-Smoke* (kein Linking, kein Bundle); der Visual-Regression-Skeleton folgt in Phase 5c (siehe [`docs/visual-regression.md`](./visual-regression.md))."
 ---
 
-{/* AUTOGENERIERT aus docs/ via scripts/sync_docs_to_site.py — nicht von Hand editieren. */}
+<!-- AUTOGENERIERT aus docs/ via scripts/sync_docs_to_site.py — nicht von Hand editieren. -->
 
 Die Conformance-Suite prüft, dass der von Speccify generierte Code gegen die
 echten Ziel-Toolchains **kompiliert**. Phase-5a-Scope ist *Build-Smoke* (kein

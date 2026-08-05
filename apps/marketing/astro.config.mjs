@@ -51,6 +51,18 @@ export default defineConfig({
           items: [{ autogenerate: { directory: "concepts" } }],
         },
         {
+          label: "Composer",
+          items: [{ autogenerate: { directory: "composer" } }],
+        },
+        {
+          label: "Projekt-Builds",
+          items: [{ autogenerate: { directory: "app-builds" } }],
+        },
+        {
+          label: "Git-Quellen & Discovery",
+          items: [{ autogenerate: { directory: "git-sources" } }],
+        },
+        {
           label: "CLI Reference",
           items: [{ autogenerate: { directory: "cli" } }],
         },
@@ -65,10 +77,6 @@ export default defineConfig({
         {
           label: "Conformance",
           items: [{ autogenerate: { directory: "conformance" } }],
-        },
-        {
-          label: "Registry",
-          items: [{ autogenerate: { directory: "registry" } }],
         },
         {
           label: "Workspaces",

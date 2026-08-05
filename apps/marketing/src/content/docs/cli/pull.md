@@ -3,7 +3,7 @@ title: "speccify pull"
 description: "Rendert resolved Specs aus dem Lockfile und aktualisiert Output-Hashes."
 ---
 
-{/* AUTOGENERIERT via scripts/gen_cli_docs.py aus `speccify --help` — nicht von Hand editieren. */}
+<!-- AUTOGENERIERT via scripts/gen_cli_docs.py aus `speccify --help` — nicht von Hand editieren. -->
 
 Rendert resolved Specs aus dem Lockfile und aktualisiert Output-Hashes.
 

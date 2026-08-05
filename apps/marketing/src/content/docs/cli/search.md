@@ -3,7 +3,7 @@ title: "speccify search"
 description: "Sucht Specs in den konfigurierten Discovery-Indizes."
 ---
 
-{/* AUTOGENERIERT via scripts/gen_cli_docs.py aus `speccify --help` — nicht von Hand editieren. */}
+<!-- AUTOGENERIERT via scripts/gen_cli_docs.py aus `speccify --help` — nicht von Hand editieren. -->
 
 Sucht Specs in den konfigurierten Discovery-Indizes.
 

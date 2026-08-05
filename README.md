@@ -1,17 +1,19 @@
 # Speccify
 
-> npm für Spezifikationen statt für Code — Komponenten beschreiben, nicht implementieren.
+> Spezifikationen statt Code — geteilt über Git, komponiert im Browser.
 > Der AI-Agent ist der Compiler in das Ziel-Framework.
 
-Speccify ist eine **vollständig quelloffene** Spec-First-Plattform für sprach- und framework-unabhängige
-Komponenten-Spezifikationen. Eine `speccify.yaml`-Spec beschreibt Verhalten, Inputs/Outputs,
-Akzeptanzkriterien und visuelle Referenzen einer Komponente — und ein AI-Agent generiert daraus
-deterministisch Code für SwiftUI, React, Angular, Jetpack Compose oder andere Targets. Verteilung über
-CLI (`speccify`) und MCP-Server; Specs werden über Git-Repos geteilt.
+Speccify ist eine **vollständig quelloffene** (MIT) Spec-First-Plattform für sprach- und
+framework-unabhängige Komponenten-Spezifikationen. Eine `speccify.yaml` beschreibt Verhalten,
+API-Vertrag, Akzeptanzkriterien und visuelle Referenzen — daraus entsteht
 
-Aktuelle Richtung (siehe [Pivot-Plan](./.agent/plans/pivot-open-source-git-composer.md)):
-formale, **mockbare Komponenten-APIs**, Komposition von Komponenten aus Unterkomponenten,
-komplette Projekt-Builds aus Specs und ein **visueller Composer** auf Mock-Basis.
+- **sofort ein lauffähiger Mock** (deterministisch, ohne LLM),
+- **ein komplettes Projekt** aus einer Komposition (`speccify build`),
+- **die echte Implementierung** für React, SwiftUI oder Angular (AI-Agent, per Lockfile gepinnt).
+
+Geteilt wird wie bei Go-Modulen über **Git-Repos** — kein Account, keine zentrale Registry.
+Komponiert wird wahlweise im **visuellen Composer**, über die CLI oder headless per MCP/HTTP
+(jede UI-Aktion existiert als Endpoint).
 
 ## Quickstart
 
@@ -280,13 +282,22 @@ uv sync --reinstall-package django
 
 ## Status
 
-**OSS-Pivot (2026-07-23)**: Speccify ist jetzt vollständig Open Source — kein
-Pro-Plan/Marketplace, kein zentrales Registry. Das Django-Registry (Phase 2)
-wurde zurückgebaut (Archiv-Branch `archive/pre-oss-pivot-registry`); Specs
-werden künftig über Git-Repos geteilt. Roadmap und Phasen:
+**OSS-Pivot abgeschlossen (P1–P5, Stand 2026-08-05)**: Speccify ist vollständig
+Open Source — kein Pro-Plan, kein Marketplace, keine zentrale Registry. Das
+Django-Registry wurde zurückgebaut (Archiv-Branch `archive/pre-oss-pivot-registry`).
+
+| Phase | Ergebnis |
+|---|---|
+| P1 | Open-Source-Fundament, Registry-Rückbau |
+| P2 | Spec-Schema v1: formaler `api:`-Vertrag, `composition:`, deterministische Mocks |
+| P3 | Visueller Composer — rendert die generierten Mocks, Drag & Drop, agent-bedienbar |
+| P4 | `speccify build`: komplettes Vite-Projekt aus einer `kind: app`-Spec |
+| P5 | Git-Repos als Spec-Quelle (Commit-Pin im Lockfile) + Discovery über Index-Repos |
+
+Roadmap und Entscheidungen:
 [`.agent/plans/pivot-open-source-git-composer.md`](./.agent/plans/pivot-open-source-git-composer.md).
-Nächster Schritt: **P2 — API-Vertrag, Komposition & Mock-Generator** als
-Fundament für den visuellen Composer (P3).
+Offen ist **P6 — Ökosystem & Launch**; die Vorbereitung steht in
+[`docs/launch.md`](./docs/launch.md).
 
 Davor abgeschlossen: Phasen 0–6 des ursprünglichen Plans (Schema v0, Resolver +
 Lockfile, React/SwiftUI/Angular-Codegen, MCP-Server, Browser-Playground,

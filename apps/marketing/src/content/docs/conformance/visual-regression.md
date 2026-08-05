@@ -3,7 +3,7 @@ title: "Visual Regression (Phase 5d — Voller Sweep)"
 description: "Visual-Regression-Stack: vergleicht generierten Component-Code mit committed Referenz-Screenshots via headless Chromium (Playwright) + Pixel-Diff (pixelmatch). **Phase 5d** erweitert das Phase-5c-Skeleton auf den vollen Sweep über **4 UI-Specs × {react, angular} = 8 Pfade**."
 ---
 
-{/* AUTOGENERIERT aus docs/ via scripts/sync_docs_to_site.py — nicht von Hand editieren. */}
+<!-- AUTOGENERIERT aus docs/ via scripts/sync_docs_to_site.py — nicht von Hand editieren. -->
 
 Visual-Regression-Stack: vergleicht generierten Component-Code mit committed
 Referenz-Screenshots via headless Chromium (Playwright) + Pixel-Diff

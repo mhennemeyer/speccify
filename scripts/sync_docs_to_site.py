@@ -26,7 +26,7 @@ _SITE_DOCS_DIR = _REPO_ROOT / "apps" / "marketing" / "src" / "content" / "docs"
 
 # Hinweis, der die generierten Dateien als nicht-handgepflegt markiert.
 _GENERATED_BANNER = (
-    "{/* AUTOGENERIERT aus docs/ via scripts/sync_docs_to_site.py — nicht von Hand editieren. */}"
+    "<!-- AUTOGENERIERT aus docs/ via scripts/sync_docs_to_site.py — nicht von Hand editieren. -->"
 )
 
 
@@ -48,6 +48,15 @@ DOC_MAPPINGS: tuple[DocMapping, ...] = (
         "/conformance/visual-regression/",
     ),
     DocMapping("workspaces.md", "workspaces/index.md", "/workspaces/"),
+    # OSS-Pivot (P2–P5): die vier Seiten, die den heutigen Workflow erklären.
+    DocMapping(
+        "component-api-and-mocks.md",
+        "concepts/api-and-mocks.md",
+        "/concepts/api-and-mocks/",
+    ),
+    DocMapping("composer.md", "composer/index.md", "/composer/"),
+    DocMapping("app-builds.md", "app-builds/index.md", "/app-builds/"),
+    DocMapping("git-sources.md", "git-sources/index.md", "/git-sources/"),
 )
 
 # Basename → Site-URL für das Umschreiben relativer Markdown-Links.

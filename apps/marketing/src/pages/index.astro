@@ -3,9 +3,9 @@
 // targets, "how it works", CTA. Footer + header live in MarketingLayout.
 import MarketingLayout from "../layouts/MarketingLayout.astro";
 
-const title = "Speccify — npm für Spezifikationen statt für Code";
+const title = "Speccify — Spezifikationen statt Code, geteilt über Git";
 const description =
-  "Beschreibe, was Software tun soll — nicht wie. Der AI-Agent ist der Compiler in dein Ziel-Framework, deine Sprache, dein Stack.";
+  "Beschreibe, was Software tun soll — nicht wie. Aus jeder Spec entsteht deterministisch ein Mock, aus Kompositionen ein lauffähiges Projekt. Geteilt wird über Git, komponiert wird visuell.";
 
 const problems = [
   "Dasselbe Verhalten wird pro Sprache und Framework von Hand neu gebaut — Implementierungen driften auseinander.",
@@ -15,8 +15,8 @@ const problems = [
 
 const solutions = [
   "Eine versionierte speccify.yaml ist die Single Source of Truth — für UI-Komponenten, reine Funktionen, Domain-Logik, Workflows bis hin zu ganzen Anwendungen.",
-  "Der AI-Agent rendert daraus deterministisch Code — reproduzierbar via Lockfile.",
-  "Conformance- und Visual-Regression-Checks sichern jedes Ziel ab.",
+  "Aus dem api:-Block entsteht ohne LLM ein lauffähiger Mock: komponieren, bevor irgendetwas implementiert ist.",
+  "Der AI-Agent rendert die Implementierung deterministisch — reproduzierbar via Lockfile, abgesichert durch Conformance- und Visual-Regression-Checks.",
 ];
 
 const useCases = [
@@ -35,22 +35,32 @@ const targets = [
 const steps = [
   {
     title: "1 · Spec",
-    body: "Beschreibe Inputs/Outputs, Verhalten und Akzeptanzkriterien in speccify.yaml.",
+    body: "Beschreibe API, Verhalten und Akzeptanzkriterien in speccify.yaml — oder komponiere sie visuell im Composer.",
   },
   {
     title: "2 · Resolver",
-    body: "MVS löst Dependencies auf und pinnt sie reproduzierbar in speccify.lock.",
+    body: "MVS löst Dependencies auf — aus der Registry oder direkt aus Git-Repos — und pinnt sie samt Commit in speccify.lock.",
   },
   {
-    title: "3 · Codegen",
-    body: "Der Agent generiert Code für dein Ziel — ob UI, Funktion, Domain-Logik oder Workflow.",
+    title: "3 · Mock",
+    body: "Aus dem api:-Block entsteht deterministisch ein Mock. Das Projekt läuft, bevor eine Zeile implementiert ist.",
+  },
+  {
+    title: "4 · Build",
+    body: "speccify build erzeugt ein komplettes Vite-Projekt; der Agent tauscht Mocks gegen echte Implementierungen.",
   },
 ];
 
-const demo = `$ speccify pull spec://button@1.0.0 --target react
-✓ resolved button@1.0.0
-✓ rendered  speccify_generated/react/Button.tsx
-✓ verified  output hash matches speccify.lock`;
+const demo = `$ speccify search rating
+Rating Stars  [ui-component]
+  git+https://github.com/acme/rating-stars
+
+$ speccify add git+https://github.com/acme/rating-stars@^1.2
+✓ resolved  v1.2.0 → commit 9f1c0b1
+✓ pinned    speccify.lock
+
+$ speccify build @org/demo-app --mocks --out ./app
+✓ 19 Datei(en) — cd app && pnpm install && pnpm dev`;
 ---
 
 <MarketingLayout title={title} description={description}>
@@ -61,14 +71,15 @@ const demo = `$ speccify pull spec://button@1.0.0 --target react
         Spec-First Platform für jede Software
       </p>
       <h1 class="max-w-3xl text-4xl font-bold tracking-tight sm:text-6xl">
-        npm für Spezifikationen statt für Code
+        Spezifikationen statt Code — geteilt über Git
       </h1>
       <p class="max-w-2xl text-lg text-slate-300">
         Eine <code class="rounded bg-slate-800 px-1.5 py-0.5">speccify.yaml</code>
         beschreibt einmal, <em>was</em> etwas tun soll — von einer UI-Komponente über
-        reine Funktionen und Domain-Logik bis hin zu Workflows und ganzen
-        Anwendungen. Speccify kompiliert sie deterministisch in dein Ziel — heute
-        React, SwiftUI und Angular, morgen weitere Sprachen und Frameworks.
+        reine Funktionen und Domain-Logik bis hin zu ganzen Anwendungen. Aus dem
+        API-Vertrag entsteht sofort ein lauffähiger Mock, aus Kompositionen ein
+        komplettes Projekt. Geteilt wird wie bei Go-Modulen über Git-Repos —
+        kein Account, keine zentrale Registry, alles MIT.
       </p>
       <div class="flex flex-wrap items-center justify-center gap-4">
         <a
@@ -155,7 +166,7 @@ const demo = `$ speccify pull spec://button@1.0.0 --target react
     <!-- How it works -->
     <section class="py-12">
       <h2 class="mb-6 text-center text-2xl font-bold">How it works</h2>
-      <div class="grid gap-4 md:grid-cols-3">
+      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {
           steps.map((step) => (
             <div class="rounded-xl border border-slate-800 bg-slate-900/50 p-6">

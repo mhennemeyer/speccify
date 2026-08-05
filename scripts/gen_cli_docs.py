@@ -26,8 +26,8 @@ _REPO_ROOT = Path(__file__).resolve().parent.parent
 _CLI_DOCS_DIR = _REPO_ROOT / "apps" / "marketing" / "src" / "content" / "docs" / "cli"
 
 _GENERATED_BANNER = (
-    "{/* AUTOGENERIERT via scripts/gen_cli_docs.py aus `speccify --help` — "
-    "nicht von Hand editieren. */}"
+    "<!-- AUTOGENERIERT via scripts/gen_cli_docs.py aus `speccify --help` — "
+    "nicht von Hand editieren. -->"
 )
 
 

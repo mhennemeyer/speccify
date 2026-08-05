@@ -3,7 +3,7 @@ title: "CLI Reference"
 description: "Übersicht aller speccify-Subcommands."
 ---
 
-{/* AUTOGENERIERT via scripts/gen_cli_docs.py aus `speccify --help` — nicht von Hand editieren. */}
+<!-- AUTOGENERIERT via scripts/gen_cli_docs.py aus `speccify --help` — nicht von Hand editieren. -->
 
 Das `speccify`-CLI bündelt alle Spec-First-Workflows. Jeder Subcommand
 hat eine eigene Referenzseite:

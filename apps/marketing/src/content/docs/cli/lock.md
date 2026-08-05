@@ -3,7 +3,7 @@ title: "speccify lock"
 description: "Löst Dependencies via MVS auf und schreibt speccify.lock (ohne Codegen-Aufruf)."
 ---
 
-{/* AUTOGENERIERT via scripts/gen_cli_docs.py aus `speccify --help` — nicht von Hand editieren. */}
+<!-- AUTOGENERIERT via scripts/gen_cli_docs.py aus `speccify --help` — nicht von Hand editieren. -->
 
 Löst Dependencies via MVS auf und schreibt speccify.lock (ohne Codegen-Aufruf).
 

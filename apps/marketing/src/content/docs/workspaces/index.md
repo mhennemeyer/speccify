@@ -3,7 +3,7 @@ title: "Speccify Workspaces"
 description: "Phase 4 macht Workspaces produktiv: `lock`, `pull`, `add` und `verify` sind workspace-aware; pro Member werden Outputs nach `<member>/speccify_generated/` materialisiert; das Lockfile lebt **einmal** im Workspace-Root."
 ---
 
-{/* AUTOGENERIERT aus docs/ via scripts/sync_docs_to_site.py — nicht von Hand editieren. */}
+<!-- AUTOGENERIERT aus docs/ via scripts/sync_docs_to_site.py — nicht von Hand editieren. -->
 
 > Cargo-Style Multi-Package-Layout für Speccify — ein Root-Manifest, mehrere
 > Members, **ein** gemeinsames Root-Lockfile mit globaler MVS.

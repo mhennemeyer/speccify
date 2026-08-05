@@ -3,7 +3,7 @@ title: "speccify conformance"
 description: "Prüft pro (Spec, Target), dass Renderer + Validator + Lockfile-Hash stimmen."
 ---
 
-{/* AUTOGENERIERT via scripts/gen_cli_docs.py aus `speccify --help` — nicht von Hand editieren. */}
+<!-- AUTOGENERIERT via scripts/gen_cli_docs.py aus `speccify --help` — nicht von Hand editieren. -->
 
 Prüft pro (Spec, Target), dass Renderer + Validator + Lockfile-Hash stimmen.
 

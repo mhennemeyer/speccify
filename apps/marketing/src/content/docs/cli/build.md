@@ -3,7 +3,7 @@ title: "speccify build"
 description: "Baut ein lauffähiges Projekt aus einer `kind: app`-Spec."
 ---
 
-{/* AUTOGENERIERT via scripts/gen_cli_docs.py aus `speccify --help` — nicht von Hand editieren. */}
+<!-- AUTOGENERIERT via scripts/gen_cli_docs.py aus `speccify --help` — nicht von Hand editieren. -->
 
 Baut ein lauffähiges Projekt aus einer `kind: app`-Spec.
 

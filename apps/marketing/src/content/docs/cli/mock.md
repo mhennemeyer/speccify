@@ -3,7 +3,7 @@ title: "speccify mock"
 description: "Generiert deterministische Mock-Komponenten (inkl. Kompositions-Kindern)."
 ---
 
-{/* AUTOGENERIERT via scripts/gen_cli_docs.py aus `speccify --help` — nicht von Hand editieren. */}
+<!-- AUTOGENERIERT via scripts/gen_cli_docs.py aus `speccify --help` — nicht von Hand editieren. -->
 
 Generiert deterministische Mock-Komponenten (inkl. Kompositions-Kindern).
 

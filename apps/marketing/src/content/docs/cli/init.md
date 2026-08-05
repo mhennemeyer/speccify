@@ -3,7 +3,7 @@ title: "speccify init"
 description: "Legt ein neues Speccify-Projekt mit minimalem `speccify.yaml` an."
 ---
 
-{/* AUTOGENERIERT via scripts/gen_cli_docs.py aus `speccify --help` — nicht von Hand editieren. */}
+<!-- AUTOGENERIERT via scripts/gen_cli_docs.py aus `speccify --help` — nicht von Hand editieren. -->
 
 Legt ein neues Speccify-Projekt mit minimalem `speccify.yaml` an.
 

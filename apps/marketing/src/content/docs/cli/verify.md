@@ -3,7 +3,7 @@ title: "speccify verify"
 description: "Prüft, dass Manifest, Lockfile und gerenderte Dateien zueinander passen."
 ---
 
-{/* AUTOGENERIERT via scripts/gen_cli_docs.py aus `speccify --help` — nicht von Hand editieren. */}
+<!-- AUTOGENERIERT via scripts/gen_cli_docs.py aus `speccify --help` — nicht von Hand editieren. -->
 
 Prüft, dass Manifest, Lockfile und gerenderte Dateien zueinander passen.
 

@@ -44,6 +44,9 @@ pydantic validiert, Outputs als `structuredContent` zurückgegeben.
 | `lock`    | `speccify lock`     | schreibt Lockfile | `manifest_path?`                                                 |
 | `pull`    | `speccify pull`     | schreibt Outputs  | `manifest_path?`, `out_dir`, `offline?`, `cache_dir?`            |
 | `verify`  | `speccify verify`   | read-only Drift   | `manifest_path?`, `out_dir`, `offline?`, `cache_dir?`            |
+| `mock`    | `speccify mock`     | schreibt Mocks    | `spec_ref`, `out_dir`, `registry_path?`, `target?`               |
+| `build`   | `speccify build`    | schreibt Projekt  | `spec_ref`, `out_dir`, `mocks?`, `registry_path?`, `target?`     |
+| `search`  | `speccify search`   | read-only         | `query`, `index_sources?`, `offline?`                            |
 
 `verify` liefert immer `{"ok": bool, "problems": [...]}` als
 strukturiertes Ergebnis — Drift ist **kein** MCP-Error, sondern eine

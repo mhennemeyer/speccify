@@ -3,7 +3,7 @@ title: "speccify lint"
 description: "Validiert eine oder mehrere YAML-Specs gegen das Spec-Schema v0."
 ---
 
-{/* AUTOGENERIERT via scripts/gen_cli_docs.py aus `speccify --help` — nicht von Hand editieren. */}
+<!-- AUTOGENERIERT via scripts/gen_cli_docs.py aus `speccify --help` — nicht von Hand editieren. -->
 
 Validiert eine oder mehrere YAML-Specs gegen das Spec-Schema v0.
 
