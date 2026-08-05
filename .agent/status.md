@@ -8,13 +8,19 @@
 
 ## Nächste Schritte
 - **Aktiver Plan: [`plans/pivot-open-source-git-composer.md`](./plans/pivot-open-source-git-composer.md)**
-  (der einzige mit `lifecycle: active`) — **P3, P4 und P5 abgeschlossen
-  (2026-08-05)**. **Nächster Schritt: Composer-Palette mit Index-Suche**
-  (Git-Specs aus einem Index direkt als Kind einfügen; Backend steht mit
-  `GET /api/v1/index`), danach **P6 Ökosystem & Launch** (Doku-Site auf
-  Composer/Builds/Git umbauen, Beispiel-Repos als Saatgut im Index,
-  OSS-Launch). Alle abgeschlossenen Pläne liegen unter `plans/archive/`;
-  Konvention siehe `agent.md` → „Pläne: Ablage & Lebenszyklus".
+  (der einzige mit `lifecycle: active`) — **P3, P4 und P5 komplett
+  abgeschlossen (2026-08-05)**, inklusive Index-Suche in der Composer-Palette.
+  **Nächster Schritt: P6 Ökosystem & Launch** — Doku-Site auf
+  Composer/Builds/Git-Workflow umbauen, Quickstarts, Beispiel-Repos als
+  Saatgut im Index, OSS-Launch. Alle abgeschlossenen Pläne liegen unter
+  `plans/archive/`; Konvention siehe `agent.md` → „Pläne: Ablage &
+  Lebenszyklus".
+- **P5.5 Index-Suche in der Palette (2026-08-05)**: Specs aus einem
+  Index-Repo suchen, einfügen und ziehen; `GET /api/v1/spec?source=` löst
+  beliebige Quellen auf, die Detail-Antwort trennt `id` (deklarierter Name)
+  und `source` (Ref für `composition.uses`).
+  **Verifikation: 523 Pytest, 6/6 Playwright (+1 Discovery-E2E gegen ein
+  echtes Git-Repo), Composer-Build 486 kB, ruff clean.**
 - **P5 Git-Quellen + Discovery abgeschlossen (2026-08-04/05)**: Spec-Ids
   `git+<url>[#<pfad>]`, Tags als Versionen (`v1.2.0` bzw. `<pfad>/v1.2.0`),
   Bare-Clone-Cache (`SPECCIFY_GIT_CACHE`), Lockfile v4 mit `source_commit`-Pin,

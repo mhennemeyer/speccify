@@ -1,6 +1,6 @@
 ---
 lifecycle: active
-status: P1–P5 geliefert (Git-Quellen, Lockfile v4, Discovery-Indizes, alle Adapter); offen: Composer-Palette mit Index-Suche, P6 Ökosystem/Launch
+status: P1–P5 komplett (Git-Quellen, Lockfile v4, Discovery-Indizes, alle Adapter, Index-Suche in der Palette); offen: P6 Ökosystem & Launch
 sessionId: pivot-open-source-git-composer
 ---
 # Plan: Pivot — Open Source, Git-basierte Registry, Projekt-Builds & visueller Composer
@@ -190,7 +190,9 @@ Vorbild: **Go-Module + SwiftPM**, nicht npm.
 
 **Weitere Entscheidungen:** **D20** der Codegen benennt nach der deklarierten Id (`Spec.name_id`), nicht nach der Quelle — Herkunft ist eine Lockfile-Eigenschaft. **D21** eine Datei pro Index-Eintrag (`entries/*.yaml`): ein PR fasst eine Datei an, keine Merge-Konflikte, CI validiert einzeln; der Index nennt nie Versionen, weil Tags die Wahrheit sind. **D22** Such-Ranking Id > Titel > Keyword > Summary, `--json` für Agents. **D23** eine `MultiRegistry`-Fassade bringt Git-Quellen in alle Pfade, die genau *eine* Registry erwarten (Komposition, Mocks, Builds) — statt jede Aufrufstelle auf Listen umzubauen.
 
-**Offen (bewusst):** Die Composer-**Palette** listet weiter nur die lokale Registry; Git-Specs kommen über YAML oder die API in eine Komposition. Index-Suche in der Oberfläche ist der nächste sinnvolle Schritt. Außerdem: nur `https`/`file`-Remotes (kein SSH), Tags müssen exaktes Semver tragen, und der Repo-Index bleibt leer, bis das Ökosystem zum Launch gesät wird.
+**P5.5 (2026-08-05):** Index-Suche in der Composer-Palette — Treffer aus einem Index-Repo lassen sich einfügen oder ziehen, in `composition.uses` landet die Git-Quelle, im Canvas rendert deren generierter Mock. Dafür trennt die Detail-Antwort jetzt `id` (deklarierter Name) und `source` (Ref), und `GET /api/v1/spec?source=` löst beliebige Quellen auf.
+
+**Offen (bewusst):** Index-Treffer lassen sich nicht „öffnen" (im Editor bearbeiten) — dafür müsste der Composer in ein fremdes Repo schreiben. Außerdem: nur `https`/`file`-Remotes (kein SSH), Tags müssen exaktes Semver tragen, und der Repo-Index bleibt leer, bis das Ökosystem zum Launch gesät wird.
 
 **Stand nach P5.2 (2026-08-04):** der CLI-Pfad ist vollständig — ein Projekt kann seine Dependencies aus Git beziehen, das Lockfile pinnt den Commit, `pull`/`verify` laufen danach offline gegen den Bare-Clone-Cache. Doku: [`docs/git-sources.md`](../../docs/git-sources.md).
 

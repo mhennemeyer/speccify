@@ -1800,3 +1800,25 @@
 - Offen: die Composer-**Palette** listet weiter nur die lokale Registry —
   Index-Suche in der Oberfläche ist der nächste sinnvolle Schritt.
 - Tag-Vorschlag: `v0.20.0-p5-git-quellen`.
+
+## 2026-08-05 (P5.5 — Index-Suche in der Composer-Palette)
+- Letzter Schritt, der Git-Quellen auch visuell nutzbar macht: die Palette
+  hat einen Abschnitt „Index (Discovery)" mit Suchfeld; Treffer lassen sich
+  wie lokale Specs einfügen oder in den Canvas ziehen.
+- Dafür musste die Detail-Antwort zwei Dinge trennen, die vorher dasselbe
+  waren: `id` ist der **deklarierte** Name der Spec (danach heißen
+  generierte Dateien und der Knoten-Alias), `source` der Ref, über den sie
+  geholt wurde und der in `composition.uses` gehört. Bei Git-Quellen sind
+  das zwei verschiedene Strings. Neuer Endpoint `GET /api/v1/spec?source=`
+  löst beliebige Quellen auf — der bestehende `/specs/{scope}/{name}` kann
+  keine URLs im Pfad tragen.
+- Index-Schema erlaubt jetzt auch `git+file://` (lokale Indizes und Tests);
+  geteilte Indizes bleiben bei https.
+- Der UI-Smoke legt sich seine Fixture selbst an: `start-backend.sh` baut ein
+  echtes Git-Repo mit der Button-Spec (Tag v0.1.0) plus einen Index, der
+  darauf zeigt, und setzt SPECCIFY_INDEX/SPECCIFY_GIT_CACHE. Der neue Test
+  geht den ganzen Weg: suchen → Git-Quelle als Kind → deren generierter Mock
+  steht im Canvas → Validierung löst die Git-Quelle auf.
+- Verifikation: 523 Pytest grün, 6/6 Playwright grün, Composer-Typecheck +
+  Build grün (486 kB), ruff clean. Palette zusätzlich per Screenshot geprüft.
+- Damit ist P5 komplett; als Nächstes P6 (Doku-Site, Saatgut-Repos, Launch).
