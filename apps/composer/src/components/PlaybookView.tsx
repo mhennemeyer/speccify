@@ -1,4 +1,9 @@
+import Markdown from "react-markdown";
+
+import { describeAge, isStale } from "../age";
 import type { PlaybookDetail, Selection } from "../types";
+import { Inline } from "./Inline";
+import { StepFlow } from "./StepFlow";
 
 interface Props {
   playbook: PlaybookDetail | null;
@@ -49,7 +54,9 @@ export function PlaybookView({
         {playbook.applies_to.requires.length > 0 ? (
           <ul className="plain">
             {playbook.applies_to.requires.map((item) => (
-              <li key={item}>requires: {item}</li>
+              <li key={item}>
+                requires: <Inline>{item}</Inline>
+              </li>
             ))}
           </ul>
         ) : null}
@@ -58,7 +65,9 @@ export function PlaybookView({
             <h3>Prerequisites</h3>
             <ul>
               {playbook.prerequisites.map((item) => (
-                <li key={item}>{item}</li>
+                <li key={item}>
+                  <Inline>{item}</Inline>
+                </li>
               ))}
             </ul>
           </>
@@ -66,10 +75,13 @@ export function PlaybookView({
       </section>
 
       <h3 className="section-title">Steps</h3>
-      <ol className="steps">
+      <div className="flow-and-steps">
+        <StepFlow steps={playbook.steps} selection={selection} onSelect={onSelect} />
+        <ol className="steps">
         {playbook.steps.map((step, index) => (
           <li key={step.id}>
             <section
+              id={`step-${step.id}`}
               className={`card step${isSelected(selection, "step", step.id) ? " selected" : ""}`}
               onClick={() => onSelect({ kind: "step", stepId: step.id })}
             >
@@ -91,19 +103,28 @@ export function PlaybookView({
                   </button>
                 </p>
               ) : (
-                <pre className="detail">{step.detail}</pre>
+                <div className="detail markdown">
+                  <Markdown>{step.detail}</Markdown>
+                </div>
               )}
-              {step.verify ? <p className="verify">verify: {step.verify}</p> : null}
+              {step.verify ? (
+                <p className="verify">
+                  verify: <Inline>{step.verify}</Inline>
+                </p>
+              ) : null}
               {step.sources.map((source) => (
                 <button
                   key={source.id}
-                  className={`chip${isSelected(selection, "source", source.id) ? " selected" : ""}`}
+                  className={`chip${isSelected(selection, "source", source.id) ? " selected" : ""}${
+                    isStale(source.retrieved) ? " stale" : ""
+                  }`}
+                  title={`${source.url} — ${describeAge(source.retrieved)}`}
                   onClick={(event) => {
                     event.stopPropagation();
                     onSelect({ kind: "source", sourceId: source.id });
                   }}
                 >
-                  {source.title} ({source.retrieved})
+                  {source.title} ({describeAge(source.retrieved)})
                 </button>
               ))}
               {step.assets.map((asset) => (
@@ -119,9 +140,10 @@ export function PlaybookView({
                 </button>
               ))}
             </section>
-          </li>
-        ))}
-      </ol>
+            </li>
+          ))}
+        </ol>
+      </div>
 
       {assetContent !== null ? (
         <section className="card asset-view">
@@ -135,7 +157,9 @@ export function PlaybookView({
           <h3>Pitfalls</h3>
           <ul>
             {playbook.pitfalls.map((pitfall) => (
-              <li key={pitfall}>{pitfall}</li>
+              <li key={pitfall}>
+                <Inline>{pitfall}</Inline>
+              </li>
             ))}
           </ul>
         </section>
@@ -149,7 +173,10 @@ export function PlaybookView({
               <a href={source.url} target="_blank" rel="noreferrer">
                 {source.title}
               </a>{" "}
-              <span className="muted">retrieved {source.retrieved}</span>
+              <span className={isStale(source.retrieved) ? "stale-note" : "muted"}>
+                retrieved {source.retrieved} · {describeAge(source.retrieved)}
+                {isStale(source.retrieved) ? " — worth re-reading" : ""}
+              </span>
             </li>
           ))}
         </ul>

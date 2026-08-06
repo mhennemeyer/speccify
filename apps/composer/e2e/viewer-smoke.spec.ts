@@ -7,9 +7,12 @@ import { expect, test } from "@playwright/test";
 test("open a playbook, walk its steps, select a source and an asset", async ({ page }) => {
   await page.goto("/");
 
-  await test.step("the library lists the reference playbooks", async () => {
+  await test.step("the library lists the reference playbooks and filters", async () => {
     await expect(page.locator(".library-item")).toHaveCount(2);
-    await expect(page.locator(".library-item").first()).toContainText("Developer ID");
+    await page.locator("#library-filter").fill("tauri");
+    await expect(page.locator(".library-item")).toHaveCount(1);
+    await page.locator("#library-filter").fill("");
+    await expect(page.locator(".library-item")).toHaveCount(2);
   });
 
   await test.step("opening shows steps, pitfalls and sources", async () => {
@@ -21,10 +24,38 @@ test("open a playbook, walk its steps, select a source and an asset", async ({ p
     await expect(page.locator(".pitfalls")).toContainText("unsigned sidecars");
   });
 
-  await test.step("clicking a step selects it", async () => {
+  await test.step("the workflow diagram mirrors the steps and drives selection", async () => {
+    await expect(page.locator(".step-flow .flow-node")).toHaveCount(5);
+    // The first step delegates to a child playbook.
+    await expect(page.locator(".step-flow .flow-node").first()).toHaveClass(/delegated/);
+    await page.locator(".step-flow .flow-node").nth(3).click();
+    await expect(page.locator(".card.step").filter({ hasText: "notarytool" })).toHaveClass(
+      /selected/,
+    );
+  });
+
+  await test.step("step detail renders as markdown, not as raw text", async () => {
     const step = page.locator(".card.step").filter({ hasText: "notarytool" });
     await step.click();
     await expect(step).toHaveClass(/selected/);
+    // The fenced block in the YAML becomes a real <pre><code>.
+    await expect(step.locator(".markdown pre code").first()).toContainText(
+      "xcrun notarytool submit",
+    );
+  });
+
+  await test.step("inline markdown is rendered, not shown as backticks", async () => {
+    // Prerequisites and verify criteria contain `code` — it must render.
+    await expect(page.locator(".card").first().locator("li code").first()).toContainText(
+      "pnpm tauri build",
+    );
+    await expect(page.locator(".verify code").first()).toBeVisible();
+  });
+
+  await test.step("source chips show their age", async () => {
+    await expect(page.locator(".chip").filter({ hasText: "Notarizing macOS" }).first()).toContainText(
+      "retrieved today",
+    );
   });
 
   await test.step("a source chip can be selected", async () => {
@@ -38,7 +69,16 @@ test("open a playbook, walk its steps, select a source and an asset", async ({ p
     await expect(page.locator(".asset-view pre")).toContainText("codesign --verify");
   });
 
+  await test.step("the index can be searched from the viewer", async () => {
+    await page.locator("#library-filter").fill("discovery");
+    await page.getByRole("button", { name: /Search the index/ }).click();
+    await expect(page.locator(".library-item.index-item")).toHaveCount(1);
+  });
+
   await test.step("a delegated step links to its child playbook", async () => {
+    // The filter is still narrowed from the index search — clear it first.
+    await page.locator("#library-filter").fill("");
+    await page.locator(".library-item").filter({ hasText: "notarize" }).click();
     await page.locator(".link").filter({ hasText: "apple-developer-id-cert" }).click();
     await expect(page.locator(".topbar .badge.accent")).toContainText(
       "@speccify/apple-developer-id-cert@1.0.0",

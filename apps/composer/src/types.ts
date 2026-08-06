@@ -52,3 +52,15 @@ export type Selection =
   | { kind: "step"; stepId: string }
   | { kind: "source"; sourceId: string }
   | { kind: "asset"; path: string };
+
+/** A hit from a discovery index (`GET /api/v1/index`). */
+export interface IndexHit {
+  source: string;
+  title: string;
+  summary: string;
+  kind: string;
+  keywords: string[];
+  homepage: string | null;
+  license: string | null;
+  origin: string;
+}

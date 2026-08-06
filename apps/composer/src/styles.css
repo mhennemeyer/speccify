@@ -118,3 +118,35 @@ body {
 ul.plain { list-style: none; padding: 0; }
 
 .empty { color: var(--muted); border: 2px dashed var(--border); border-radius: 12px; padding: 40px; text-align: center; }
+
+/* Workflow diagram next to the steps. */
+.flow-and-steps { display: grid; grid-template-columns: max-content 1fr; gap: 16px; align-items: start; }
+.step-flow { position: sticky; top: 0; }
+.flow-node rect { fill: var(--panel); stroke: var(--border); cursor: pointer; }
+.flow-node text { font-size: 12px; fill: #0f172a; pointer-events: none; }
+.flow-node .flow-meta { font-size: 10px; fill: var(--muted); }
+.flow-node.delegated rect { stroke-dasharray: 4 3; }
+.flow-node.selected rect { stroke: var(--accent); stroke-width: 2; fill: var(--accent-soft); }
+.flow-edge { stroke: var(--border); stroke-width: 1.5; }
+.flow-arrow-head { fill: var(--border); }
+
+/* Rendered markdown inside a step. */
+.markdown { white-space: normal; }
+.markdown :first-child { margin-top: 0; }
+.markdown :last-child { margin-bottom: 0; }
+.markdown pre { background: #e2e8f0; padding: 8px; border-radius: 6px; overflow-x: auto; }
+.markdown code { font-family: ui-monospace, monospace; font-size: 12px; }
+.markdown ul, .markdown ol { padding-left: 20px; }
+
+/* Ageing sources. */
+.chip.stale { border-color: #f59e0b; background: #fef3c7; }
+.stale-note { color: #b45309; font-size: 13px; }
+
+.filter { width: 100%; padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px; font: inherit; }
+.index-heading { margin-top: 14px; border-top: 1px solid var(--border); padding-top: 12px; }
+.library-item.index-item { border-style: dashed; }
+.library-item.index-item .meta { overflow-wrap: anywhere; }
+button.small { border: 1px solid var(--border); border-radius: 6px; background: var(--panel); padding: 4px 8px; font: inherit; font-size: 12px; cursor: pointer; }
+
+/* Inline markdown keeps one-liners readable without turning into a block. */
+.card li code, .verify code { background: #e2e8f0; border-radius: 4px; padding: 1px 4px; font-family: ui-monospace, monospace; font-size: 12px; }

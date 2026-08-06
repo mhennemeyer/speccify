@@ -27,8 +27,16 @@ the step you are looking at, without you restating it.
 
 | Area | What it shows |
 |---|---|
-| Library (left) | Every playbook in the local library: title, id, version, step count, keywords. |
-| View (centre) | Summary and prerequisites, the ordered steps (delegated ones link to their child playbook), verify criteria, source chips with retrieval dates, asset chips that expand inline, pitfalls, sources. |
+| Library (left) | Every playbook in the local library: title, id, version, step count, keywords. One filter box narrows the list *and* doubles as the query for the discovery index — "nothing here, look further" is one click, not a second search UI. |
+| Flow (centre-left) | The workflow at a glance: one node per step, delegated ones dashed, markers for assets and verify criteria. Clicking a node selects and scrolls to the step. Long playbooks are hard to hold in your head as a list. |
+| View (centre) | Summary and prerequisites, the ordered steps with their `detail` rendered as **markdown** (code blocks, lists, emphasis), verify criteria, source chips, asset chips that expand inline, pitfalls, sources. |
+
+## Ageing is visible
+
+Every source shows how old it is — "retrieved today", "4 months old" — and
+anything past the 180-day mark is highlighted in amber, in the chip and in the
+source list. The same threshold `speccify check` uses, so the viewer and the
+command line never disagree.
 
 ## Everything is an endpoint
 

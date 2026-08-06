@@ -1,7 +1,7 @@
 // HTTP client for the Speccify backend. Every viewer action exists as an
 // endpoint, so agents can do the same thing headlessly.
 
-import type { PlaybookDetail, PlaybookSummary } from "./types";
+import type { IndexHit, PlaybookDetail, PlaybookSummary } from "./types";
 
 declare global {
   interface Window {
@@ -54,4 +54,10 @@ export async function getAsset(
   return request(
     `/api/v1/playbook/asset?source=${encodeURIComponent(source)}&path=${encodeURIComponent(path)}`,
   );
+}
+
+/** Discovery: find playbooks that are not in the local library. */
+export async function searchIndex(query: string): Promise<IndexHit[]> {
+  const body = await request<{ hits: IndexHit[] }>(`/api/v1/index?q=${encodeURIComponent(query)}`);
+  return body.hits;
 }
