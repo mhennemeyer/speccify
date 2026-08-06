@@ -1998,3 +1998,30 @@
   hingen; die Bibliothek wächst ja.
 - Verifikation: 130 Pytest, `check --links` grün (13 Quellen), 1/1 Playwright,
   ruff clean.
+
+## 2026-08-06 (IAP-Playbook korrigiert — Rückfragen deckten echte Lücken auf)
+- Der BO fragte zurück: „Was ist die Build-Nummer-Grenze?" und „Was ist
+  Drei-Speicher-Kombination?". Beides waren Lücken **im Playbook**, nicht nur
+  in meiner Zusammenfassung — ein Leser hätte an denselben Stellen gestockt.
+- Beim Nachschlagen der App Review Guidelines (für seine Antwort zu 2)
+  stellte sich meine Kernaussage als zu grob heraus: **Guideline 3.1.1
+  erlaubt ausdrücklich einen zeitbasierten Trial für Nicht-Abo-Apps** — als
+  Non-Consumable auf Preisstufe 0 mit der Namenskonvention „XX-day Trial".
+  Richtig bleibt, dass StoreKit die Tage nicht zählt (das tun nur
+  Introductory Offers, abo-only); das Tier-0-Produkt macht den Trial im Store
+  sichtbar. Schritt 1 und 2 korrigiert.
+- 3.1.1 verlangt zusätzlich, vor Trial-Beginn Dauer, Folgen und Preis zu
+  nennen; 2.2 hält Demos/Trial-Versionen vom Store fern. Damit hat
+  „read-only statt Sperre" jetzt eine Quelle statt eines Bauchgefühls.
+- 3.1.1 nennt selbst **DeviceCheck** fürs Verwalten der Trial-Dauer — als
+  vierte Ablage ergänzt (zwei Bits bei Apple, überlebt Werksreset, braucht
+  Server).
+- Grandfathering: die Schwelle ist keine Ableitung, sondern ein
+  Nachschlagewert aus der Versionshistorie in App Store Connect. Steht jetzt
+  samt Beispiel-Code im Schritt.
+- Speicher-Empfehlung geschärft: zwei benannte Kombinationen statt „nimm
+  alle drei" — drei Ablagen sind kein Verdienstorden, sondern drei Dinge zum
+  Abgleichen.
+- Die Validierung hat beim Umbau eine verwaiste Quelle gefunden
+  (`asc_iap_types` hing an keinem Schritt mehr) — genau ihr Zweck.
+- Verifikation: lint + `check --links` grün (15 Quellen), 130 Pytest, ruff.
