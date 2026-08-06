@@ -29,11 +29,16 @@
   Filterfeld für Bibliothek und Index-Suche zugleich, Index-Treffer direkt
   öffenbar. **130 Pytest, 1/1 Playwright (Smoke deckt Filter, Diagramm,
   Markdown, Alter und Index ab), Viewer-Build 323 kB.**
-  **Als Nächstes**: W4 Kontext-Chat (`composer_selection` + Agent-Terminal)
-  und das **IAP-Referenz-Playbook** — der BO hat die beiden echten Projekte
-  genannt: `~/Desktop/Work/Personal/privid` und `~/Desktop/Work/CmdCeeVee`
-  (nur lesen, dort nichts committen). Offen bleibt: README, Landing-Page und
-  `docs/launch.md` tragen noch die alte Geschichte (W5).
+- **IAP-REFERENZ-PLAYBOOK GESCHRIEBEN (2026-08-06)**: `@speccify/iap-trial-then-unlock`
+  (9 Schritte, 9 Quellen, 3 Assets) + Child `@speccify/storekit-sandbox-testing`,
+  destilliert aus `privid` und `CmdCeeVee` (beide nur gelesen). Kern: **Apple
+  hat für Einmalkäufe keinen Testzeitraum** — Free Trials sind Introductory
+  Offers und damit abo-only; die eigentliche Arbeit ist, wo der Trial-Start
+  liegt (UserDefaults/Keychain/iCloud kombinieren, frühester Start gewinnt).
+  **Wartet auf BO-Korrektur.**
+  **Als Nächstes**: W4 Kontext-Chat (`composer_selection` + Agent-Terminal).
+  Offen bleibt: README, Landing-Page und `docs/launch.md` tragen noch die alte
+  Geschichte (W5).
 - **NEUAUSRICHTUNG (BO, 2026-08-06)**: Der Komponenten-Ansatz ist vom
   Fortschritt bei Coding-Agents überholt. Neue Richtung: **eine Spec ist ein
   Playbook für einen komplexen, wiederkehrenden Workflow** (Schritte, Quellen,

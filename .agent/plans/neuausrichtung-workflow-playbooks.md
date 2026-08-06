@@ -205,9 +205,9 @@ Offene Punkte mit dem BO klären (unten), Entscheidungen hier festschreiben.
 ## Offene Fragen an den BO
 
 1. **Sprache der Playbooks**: Doku und Repo sind deutsch, ein OSS-Ökosystem für Playbooks wäre auf Englisch reichweitenstärker. Für Schema-Felder und Referenz-Playbooks brauche ich eine Festlegung.
-2. **Referenz-Playbook** — *beantwortet 2026-08-06*: Ich schreibe es selbst aus den beiden echten Projekten, der BO korrigiert. Quellen (nur lesen, dort **nichts** committen — fremde Repos):
-   - `/Users/mhennemeyer/Desktop/Work/Personal/privid`
-   - `/Users/mhennemeyer/Desktop/Work/CmdCeeVee`
+2. **Referenz-Playbook** — *erledigt 2026-08-06*: `@speccify/iap-trial-then-unlock` (9 Schritte, 9 Quellen, 3 Assets) plus das Child `@speccify/storekit-sandbox-testing`, geschrieben aus `privid` und `CmdCeeVee` (nur gelesen, dort nichts committet). **Wartet auf BO-Korrektur** — besonders bei: Grandfathering-Details, ob „read-only statt Sperre" so gewollt ist, und ob die iCloud-Variante (CmdCeeVee) oder die Keychain-Variante (privid) als Empfehlung vorn stehen soll.
+
+   Bestätigt beim Schreiben: **Apple hat für Einmalkäufe keinen Testzeitraum** (Free Trials sind Introductory Offers = nur Abos). Das ist die Erkenntnis, die den Rechercheaufwand ausmacht, und sie steht jetzt als erster Schritt im Playbook.
 3. **Granularität**: Wie klein darf ein Child-Playbook sein („Datei in Xcode-Target aufnehmen")? Das entscheidet, ob Wiederverwendung real wird oder Deko bleibt.
 4. **Name/Vokabular**: bleibt es bei „Spec" (dann mit `kind: playbook`), oder soll das Produkt-Vokabular auf „Playbook" wechseln (CLI-Kommandos, Doku)? Betrifft W5 und die Website.
 

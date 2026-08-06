@@ -1968,3 +1968,33 @@
 - BO hat die Referenz-Projekte fürs IAP-Playbook genannt:
   `~/Desktop/Work/Personal/privid` und `~/Desktop/Work/CmdCeeVee` — im Plan
   notiert (nur lesen, fremde Repos).
+
+## 2026-08-06 (IAP-Referenz-Playbook aus zwei echten Projekten)
+- Beide BO-Projekte gelesen (`privid`, `CmdCeeVee`) — dort nichts geschrieben.
+  Sie lösen dasselbe Problem und kommen zur selben Architektur: freie App +
+  NonConsumable-Freischaltung + **selbstgebaute** 7-Tage-Frist.
+- Die Erkenntnis, die den Rechercheaufwand ausmacht und jetzt als erster
+  Schritt im Playbook steht: **Apple hat für Einmalkäufe keinen
+  Testzeitraum.** Free Trials sind Introductory Offers, die es nur für Abos
+  gibt. Wer „testen, dann besitzen" will, baut die Uhr selbst.
+- Die zweite Erkenntnis: Die Uhr ist trivial, die **Persistenz** nicht.
+  UserDefaults überlebt Backups, aber nicht das Löschen; die Keychain
+  überlebt das Löschen, aber nicht das neue Gerät; iCloud KVS spannt über
+  Geräte, braucht aber ein Konto. `privid` nutzt Keychain + UserDefaults,
+  `CmdCeeVee` iCloud + UserDefaults — im Playbook stehen alle drei mit ihren
+  Überlebenseigenschaften und der Merge-Regel „frühester Start gewinnt".
+- Weitere Fallstricke aus dem echten Code: High-Water-Mark gegen
+  zurückgestellte Uhren (bewusst ohne Bestrafung), `Transaction.updates` vor
+  der Entitlement-Prüfung abonnieren, `.pending` ist kein Fehler, ein Kauf
+  muss eine abgelaufene Frist schlagen, `originalAppVersion` ist auf iOS die
+  Build-Nummer und meldet in der Sandbox „1.0", Produkt-IDs vertragen keine
+  Bindestriche.
+- Assets sind **neu geschriebene Vorlagen** (StoreKit-Konfiguration,
+  TrialState.swift, StoreService.swift), kein kopierter Projektcode.
+- `speccify check --links` hat sich sofort bezahlt gemacht: eine Apple-URL,
+  die ich für richtig hielt, war ein 404. Genau der Fall, für den W2 gebaut
+  wurde — gefunden, bevor jemand der Anleitung folgt.
+- Nebenbei zwei Testannahmen korrigiert, die an „genau zwei Playbooks"
+  hingen; die Bibliothek wächst ja.
+- Verifikation: 130 Pytest, `check --links` grün (13 Quellen), 1/1 Playwright,
+  ruff clean.
