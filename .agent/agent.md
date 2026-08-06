@@ -35,7 +35,9 @@ sessionId: <dateiname-ohne-endung>
 
 Speccify ist eine **vollständig quelloffene** Spec-First-Plattform für sprach- und framework-unabhängige Komponenten-Spezifikationen. Eine `speccify.yaml`-Spec beschreibt Verhalten, Inputs/Outputs, Akzeptanzkriterien und visuelle Referenzen — und ein AI-Agent generiert daraus deterministisch Code für SwiftUI, React, Angular, Jetpack Compose oder andere Targets. Specs werden über Git-Repos geteilt (kein zentrales Registry, kein Pro-Plan/Marketplace).
 
-**Seit dem OSS-Pivot (2026-07-23)** ist die Roadmap-Quelle der Wahrheit: [`.agent/plans/pivot-open-source-git-composer.md`](./plans/pivot-open-source-git-composer.md) — vier Säulen: (1) Open Source statt Open Core, (2) Git-Repos als Datenteilung, (3) komplette Projekt-Builds aus Specs, (4) mockbare Komponenten-APIs + Composite-Komponenten als Fundament für den **visuellen Composer**. Der alte Master-Plan [`speccify-plan.md`](./plans/archive/speccify-plan.md) bleibt als Kontext für Vision/Spec-Format/PM-Designentscheidungen gültig.
+**Seit der Neuausrichtung (2026-08-06)** ist die Roadmap-Quelle der Wahrheit: [`.agent/plans/neuausrichtung-workflow-playbooks.md`](./plans/neuausrichtung-workflow-playbooks.md) — eine Spec ist ein **Playbook für einen komplexen, wiederkehrenden Workflow** (Schritte, Quellen, Assets, Fallstricke), gerichtet an Agents, die sich das Wissen sonst neu erarbeiten müssten. Der Composer wird Viewer + kontextsensitiver Chat; Git-Quellen, Discovery, MCP/Server und Desktop-App bleiben, der Codegen-Zweig (Mocks, App-Builds, LLM-Targets, Conformance) steht zum Rückbau an.
+
+Vorgeschichte: der abgeschlossene OSS-Pivot [`archive/pivot-open-source-git-composer.md`](./plans/archive/pivot-open-source-git-composer.md) (P1–P6.1) und der alte Master-Plan [`speccify-plan.md`](./plans/archive/speccify-plan.md) — beide nur noch als Kontext, nicht mehr als Richtung.
 
 ## Aktuelle Phase
 

@@ -139,6 +139,6 @@ deterministisch, ohne LLM im Loop.
 - Ganze Projekte aus Specs: [`app-builds.md`](/app-builds/) (`kind: app`, `speccify build`)
 
 - Pivot-Plan (Phasen, Entscheidungen D1–D6):
-  [`.agent/plans/pivot-open-source-git-composer.md`](../.agent/plans/pivot-open-source-git-composer.md)
+  [`.agent/plans/archive/pivot-open-source-git-composer.md`](../.agent/plans/archive/pivot-open-source-git-composer.md)
 - Conformance/Build-Smoke: [`conformance.md`](/conformance/)
 - Lokaler E2E-Workflow: [`local-dev-e2e.md`](./local-dev-e2e.md)

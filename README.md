@@ -295,7 +295,7 @@ Django-Registry wurde zurückgebaut (Archiv-Branch `archive/pre-oss-pivot-regist
 | P5 | Git-Repos als Spec-Quelle (Commit-Pin im Lockfile) + Discovery über Index-Repos |
 
 Roadmap und Entscheidungen:
-[`.agent/plans/pivot-open-source-git-composer.md`](./.agent/plans/pivot-open-source-git-composer.md).
+[`.agent/plans/archive/pivot-open-source-git-composer.md`](./.agent/plans/archive/pivot-open-source-git-composer.md).
 Offen ist **P6 — Ökosystem & Launch**; die Vorbereitung steht in
 [`docs/launch.md`](./docs/launch.md).
 

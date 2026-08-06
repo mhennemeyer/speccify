@@ -128,4 +128,4 @@ Job (`apps/composer ui smoke`). Die Ports kollidieren bewusst nicht mit
 - API-Vertrag & Mocks: [`component-api-and-mocks.md`](./component-api-and-mocks.md)
 - Projekt-Builds: [`app-builds.md`](./app-builds.md)
 - Lokaler Gesamt-Workflow: [`local-dev-e2e.md`](./local-dev-e2e.md)
-- Roadmap: [`.agent/plans/pivot-open-source-git-composer.md`](../.agent/plans/pivot-open-source-git-composer.md)
+- Roadmap: [`.agent/plans/archive/pivot-open-source-git-composer.md`](../.agent/plans/archive/pivot-open-source-git-composer.md)

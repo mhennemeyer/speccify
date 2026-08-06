@@ -1847,3 +1847,31 @@
 - Verifikation: 523 Pytest grün, Doku-Sync und CLI-Doku ohne Drift, Site
   baut 29 Seiten (vorher 24), ruff clean; Landing und Doku-Seiten per
   Screenshot gegengesehen.
+
+## 2026-08-06 (Neuausrichtung: Specs werden Workflow-Playbooks — Plan)
+- BO-Ansage: Der ursprüngliche Zweck ist vom Fortschritt bei Coding-Agents
+  überholt. Feingranulare Komponenten-Specs, aus denen man Größeres
+  zusammensetzt, bringen kaum noch Mehrwert — Agents sind auf dem Level
+  schon gut. Neue Idee: eine Spec beschreibt einen **komplexen,
+  wiederkehrenden Workflow** samt Quellen und Assets (Beispiel: „IAP mit
+  7 Tage Trial in macOS/iOS integrieren" — zweimal gemacht, jedes Mal
+  stundenlang recherchiert). Composer wird **Viewer + kontextsensitiver
+  Chat** ohne manuellen Edit-Modus; Child-Nodes (Wiederverwendung) bleiben;
+  MCPs/Server bleiben und werden ausgebaut.
+- Alten Plan `pivot-open-source-git-composer.md` auf `done` gesetzt und nach
+  `plans/archive/` verschoben, Verweise in 9 Dateien nachgezogen (Konvention:
+  genau ein aktiver Plan).
+- Neuer aktiver Plan `neuausrichtung-workflow-playbooks.md`: Vision, Delta
+  (was bleibt / was zurückgebaut wird), Schema-v2-Entwurf am IAP-Beispiel,
+  Specs als Bundles (Assets erzwingen Verzeichnisse + Bundle-Hash),
+  Viewer/Chat über MCP statt eigenem LLM-Client, `speccify check` als
+  Nachfolger von Conformance (Link-Rot + Quellen-Alter), fünf Phasen
+  W1–W5, fünf Entscheidungsvorschläge D1–D5 und vier Fragen an den BO.
+- Kernabwägung im Plan: der Codegen-Zweig (Mocks, App-Builds, LLM-Targets,
+  Replay-Cache, Conformance, Visual-Regression, Composer-Editor) trägt in
+  der neuen Welt nichts — ~2.700 Zeilen plus Tests und drei CI-Jobs.
+  Empfehlung: Archiv-Branch `archive/pre-playbook-pivot` + Löschung, wie
+  beim Registry-Rückbau in P1. Noch nicht ausgeführt: der Plan wartet auf
+  das Refinement.
+- Keine Code-Änderungen in dieser Session — nur Plan-Hygiene, wie bei
+  früheren Phasen-Kickoffs.

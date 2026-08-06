@@ -2,20 +2,30 @@
 
 ## Meta
 - **Typ:** Code
-- **Phase:** **P4 Projekt-Builds geliefert (2026-08-04)** — `speccify build` erzeugt aus einer `kind: app`-Spec ein lauffähiges Vite-React-Projekt (Details unter „Nächste Schritte"); davor am selben Tag P3 abgeschlossen (Mock-Bundle-Rendering im Canvas, Drag & Drop). Historie: **P3 Verfeinerung Runde 1 geliefert (2026-07-24)** — visuelles Slot-Befüllen (Slot-Zonen im Canvas als Einfüge-Ziel, rekursiver Tree inkl. `moveNodeToSlot`/„Platzierung" im Inspector, Teilbaum-Entfernen mit Wiring-Cleanup), Undo/Redo (Snapshot-History `{doc, children}`, Tipp-Koaleszierung 800 ms, ⌘Z/⇧⌘Z + Topbar-Buttons) und **Playwright-UI-Smoke** (`apps/composer/e2e/composer-smoke.spec.ts`, 3 Tests: Voll-Flow inkl. Wiring über die echte UI, Undo/Redo, Slot-Befüllen; Backend mit Wegwerf-Registry auf :8788, Vite :5199 — kollisionsfrei zu dev-up.sh; CI-Job `apps/composer ui smoke (playwright)`; lokal `pnpm run composer:e2e`). **Verifikation: 3/3 Playwright grün (6,2 s), Composer-Typecheck + Build grün (269 kB), 420 Pytest grün (Python unverändert).** Davor am selben Tag: **P3 Composer-MVP geliefert** — `apps/composer/` (Vite-React-SPA, Tauri-2-fähig) mit Palette/Canvas (interpretierte Mocks + Live-Wiring-Simulation)/Inspector/YAML-Round-Trip/Save; Composer-Backend-API (Detail/Validate/Save) im Web-Backend; Agent-Flow headless per E2E gepinnt; CI-Job `composer build`; `dev-up.sh` inkl. Composer (:5173); Doku `docs/composer.md`. **Verifikation: 420 Pytest grün, Composer-Build grün, ruff clean.** Davor am selben Tag: **P2 Kern abgeschlossen** — Spec-Schema v1 (harter Cut, `api:`-Block + `composition:` mit Typprüfung), 7 Referenz-Specs v1 (neu: `text-input` + `search-bar`-Composite), Replay-Cache mechanisch re-keyed, deterministischer React-Mock-Codegen über CLI (`speccify mock`) / MCP (Tool `mock`, 7 Tools) / Web (`POST /api/v1/mock`) byte-identisch; Mock-Closure typecheckt via gepinntem tsc (`@conformance`). Stage 4 (voller API-Harness) hinter P3 vertagt. Davor: OSS-Pivot P1 (2026-07-23, Registry-Rückbau, Archiv-Branch `archive/pre-oss-pivot-registry`). Roadmap: [`plans/pivot-open-source-git-composer.md`](./plans/pivot-open-source-git-composer.md). Branch: `feat/oss-pivot`. **Verifikation: 411 Pytest grün, Mock-tsc-Conformance grün, MCP-Smoke OK, ruff clean, CLI-Doku-Drift grün.**
+- **Phase:** **P4 Projekt-Builds geliefert (2026-08-04)** — `speccify build` erzeugt aus einer `kind: app`-Spec ein lauffähiges Vite-React-Projekt (Details unter „Nächste Schritte"); davor am selben Tag P3 abgeschlossen (Mock-Bundle-Rendering im Canvas, Drag & Drop). Historie: **P3 Verfeinerung Runde 1 geliefert (2026-07-24)** — visuelles Slot-Befüllen (Slot-Zonen im Canvas als Einfüge-Ziel, rekursiver Tree inkl. `moveNodeToSlot`/„Platzierung" im Inspector, Teilbaum-Entfernen mit Wiring-Cleanup), Undo/Redo (Snapshot-History `{doc, children}`, Tipp-Koaleszierung 800 ms, ⌘Z/⇧⌘Z + Topbar-Buttons) und **Playwright-UI-Smoke** (`apps/composer/e2e/composer-smoke.spec.ts`, 3 Tests: Voll-Flow inkl. Wiring über die echte UI, Undo/Redo, Slot-Befüllen; Backend mit Wegwerf-Registry auf :8788, Vite :5199 — kollisionsfrei zu dev-up.sh; CI-Job `apps/composer ui smoke (playwright)`; lokal `pnpm run composer:e2e`). **Verifikation: 3/3 Playwright grün (6,2 s), Composer-Typecheck + Build grün (269 kB), 420 Pytest grün (Python unverändert).** Davor am selben Tag: **P3 Composer-MVP geliefert** — `apps/composer/` (Vite-React-SPA, Tauri-2-fähig) mit Palette/Canvas (interpretierte Mocks + Live-Wiring-Simulation)/Inspector/YAML-Round-Trip/Save; Composer-Backend-API (Detail/Validate/Save) im Web-Backend; Agent-Flow headless per E2E gepinnt; CI-Job `composer build`; `dev-up.sh` inkl. Composer (:5173); Doku `docs/composer.md`. **Verifikation: 420 Pytest grün, Composer-Build grün, ruff clean.** Davor am selben Tag: **P2 Kern abgeschlossen** — Spec-Schema v1 (harter Cut, `api:`-Block + `composition:` mit Typprüfung), 7 Referenz-Specs v1 (neu: `text-input` + `search-bar`-Composite), Replay-Cache mechanisch re-keyed, deterministischer React-Mock-Codegen über CLI (`speccify mock`) / MCP (Tool `mock`, 7 Tools) / Web (`POST /api/v1/mock`) byte-identisch; Mock-Closure typecheckt via gepinntem tsc (`@conformance`). Stage 4 (voller API-Harness) hinter P3 vertagt. Davor: OSS-Pivot P1 (2026-07-23, Registry-Rückbau, Archiv-Branch `archive/pre-oss-pivot-registry`). Roadmap: [`plans/archive/pivot-open-source-git-composer.md`](./plans/archive/pivot-open-source-git-composer.md). Branch: `feat/oss-pivot`. **Verifikation: 411 Pytest grün, Mock-tsc-Conformance grün, MCP-Smoke OK, ruff clean, CLI-Doku-Drift grün.**
 - **Priorität:** Hoch (aktiver Umbau)
 - **Zuletzt aktualisiert:** 2026-08-04
 
 ## Nächste Schritte
-- **Aktiver Plan: [`plans/pivot-open-source-git-composer.md`](./plans/pivot-open-source-git-composer.md)**
-  (der einzige mit `lifecycle: active`) — **P1–P5 komplett, P6.1 (Doku-Site +
-  Launch-Vorbereitung) geliefert (2026-08-05)**. **Offen ist nur noch die
-  Launch-Ausführung — und die ist BO-Sache**: Repo öffentlich anlegen/pushen,
-  Saatgut-Repos für den Index, Doku-Site deployen, signierte Mac-App,
-  Updater-Schlüssel, Posts absetzen. Checkliste, Saatgut-Plan und fertige
-  Post-Entwürfe stehen in [`docs/launch.md`](../docs/launch.md). Alle
-  abgeschlossenen Pläne liegen unter `plans/archive/`; Konvention siehe
-  `agent.md` → „Pläne: Ablage & Lebenszyklus".
+- **NEUAUSRICHTUNG (BO, 2026-08-06)**: Der Komponenten-Ansatz ist vom
+  Fortschritt bei Coding-Agents überholt. Neue Richtung: **eine Spec ist ein
+  Playbook für einen komplexen, wiederkehrenden Workflow** (Schritte, Quellen,
+  Assets, Fallstricke) — Wissen, das ein Agent sich sonst jedes Mal neu
+  erarbeiten müsste. Der Composer wird **Viewer + kontextsensitiver Chat**
+  (kein Edit-Modus). Git-Quellen, Discovery, MCP/Server und die Desktop-App
+  bleiben und wachsen.
+  **Aktiver Plan: [`plans/neuausrichtung-workflow-playbooks.md`](./plans/neuausrichtung-workflow-playbooks.md)**
+  — Entwurf steht, **Stage 0 (Refinement) offen**: fünf Entscheidungsvorschläge
+  (D1 Rückbau des Codegen-Zweigs, D2 Chat über MCP statt eigenem LLM-Client,
+  D3 kein Edit-Modus, D4 Schema v2 als harter Cut, D5 Specs als Bundles) und
+  vier Fragen (Sprache, Referenz-Playbook, Granularität, Vokabular).
+  Danach W1 Schnitt & Fundament → W2 Agent-Vertrag → W3 Viewer → W4 Chat →
+  W5 Doku/Website.
+- **Vorherige Roadmap abgeschlossen und archiviert**:
+  [`plans/archive/pivot-open-source-git-composer.md`](./plans/archive/pivot-open-source-git-composer.md)
+  (P1–P5 geliefert, P6.1 Doku-Site + Launch-Vorbereitung). Was daraus trägt —
+  Git-Quellen, Discovery, MCP-Vertrag, Determinismus-Stack, Desktop-App —
+  läuft im neuen Plan weiter; der Codegen-Zweig steht zum Rückbau an.
 - **P6.1 Doku-Site (2026-08-05)**: Sync um API/Mocks, Composer, Projekt-Builds
   und Git-Quellen erweitert, Registry-Abschnitt (Pivot-Altlast) entfernt,
   Stub-Seiten gefüllt (Installation, Erste Spec, Spec-Format, MCP, Targets),

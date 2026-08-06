@@ -1,11 +1,11 @@
 ---
-lifecycle: active
-status: P1–P5 komplett; P6 zur Hälfte (Doku-Site + Launch-Vorbereitung ✅); offen: Launch-Ausführung (BO) und Community-Aufbau
+lifecycle: done
+status: abgeschlossen 2026-08-06 — P1–P5 geliefert, P6.1 Doku-Site + Launch-Vorbereitung; die Produktrichtung wurde danach neu gesetzt (siehe `neuausrichtung-workflow-playbooks.md`). Offene Punkte hier waren nur noch BO-Aktionen (`docs/launch.md`).
 sessionId: pivot-open-source-git-composer
 ---
 # Plan: Pivot — Open Source, Git-basierte Registry, Projekt-Builds & visueller Composer
 
-> **Status**: 📋 In Umsetzung (P1 gestartet 2026-07-23)
+> **Status**: ✅ Abgeschlossen (P1 2026-07-23 → P6.1 2026-08-05). **Abgelöst am 2026-08-06** durch [`neuausrichtung-workflow-playbooks.md`](../neuausrichtung-workflow-playbooks.md): der Composer-/Komponenten-Ansatz hat sich durch den Fortschritt bei Coding-Agents überholt. Was aus diesem Plan trägt (Git-Quellen, Discovery, MCP-Vertrag, Determinismus-Stack, Desktop-App), wird dort weitergeführt.
 > **Erstellt**: 2026-07-23
 > **Refinement 2026-07-23 (User)**: (1) Aufräumen sofort, Empfehlungen bestätigt (Registry → Archiv-Branch + Löschung). (2) **Visueller Composer so früh wie möglich** — durch Rumprobieren schlauer werden; Git-Datenteilung wird dafür nach hinten geschoben. (3) Der Composer baut nicht nur Apps, sondern auch **Composite-Komponenten** (Komponenten aus Unterkomponenten) — Komposition ist damit ein gemeinsames Schema-Konzept für Komponenten- und App-Specs.
 > **Ersetzt perspektivisch**: Teile von [`speccify-plan.md`](./speccify-plan.md) (Open-Core-Prinzip, zentrales Registry als Service, Marketplace, Phasen 5–7 alt)

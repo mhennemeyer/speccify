@@ -38,7 +38,7 @@ walkthrough.
 | `apps/web/` | Browser playground (FastAPI + Next.js) |
 | `apps/marketing/` | Landing page + docs site (Astro Starlight) |
 
-Roadmap: [`.agent/plans/pivot-open-source-git-composer.md`](./.agent/plans/pivot-open-source-git-composer.md).
+Roadmap: [`.agent/plans/archive/pivot-open-source-git-composer.md`](./.agent/plans/archive/pivot-open-source-git-composer.md).
 
 ## Ground rules
 

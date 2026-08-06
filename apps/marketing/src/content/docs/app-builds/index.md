@@ -123,4 +123,4 @@ Vertrag.
 
 - API-Vertrag & Mocks: [`component-api-and-mocks.md`](/concepts/api-and-mocks/)
 - Visueller Composer: [`composer.md`](/composer/)
-- Roadmap: [`.agent/plans/pivot-open-source-git-composer.md`](../.agent/plans/pivot-open-source-git-composer.md)
+- Roadmap: [`.agent/plans/archive/pivot-open-source-git-composer.md`](../.agent/plans/archive/pivot-open-source-git-composer.md)

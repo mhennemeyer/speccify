@@ -151,6 +151,6 @@ curl -s -X POST localhost:8000/api/v1/mock/draft -H 'content-type: application/j
 
 ## Cross-Referenzen
 
-- Roadmap & Entscheidungen D16–D19: [`.agent/plans/pivot-open-source-git-composer.md`](../.agent/plans/pivot-open-source-git-composer.md)
+- Roadmap & Entscheidungen D16–D19: [`.agent/plans/archive/pivot-open-source-git-composer.md`](../.agent/plans/archive/pivot-open-source-git-composer.md)
 - Lockfile-Format: [`schema/lockfile.schema.json`](../schema/lockfile.schema.json)
 - Lokaler Gesamt-Workflow: [`local-dev-e2e.md`](./local-dev-e2e.md)

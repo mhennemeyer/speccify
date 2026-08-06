@@ -50,7 +50,7 @@ Varianten:
 Specs liegen als YAML-Dateien im Repo (`specs/`, `registry-fixtures/`) und
 werden über Git geteilt. Die geplante Git-basierte Auflösung (Spec-Repos als
 Quellen, Discovery über ein Index-Repo) ist Phase P5 des
-[Pivot-Plans](../.agent/plans/pivot-open-source-git-composer.md); bis dahin
+[Pivot-Plans](../.agent/plans/archive/pivot-open-source-git-composer.md); bis dahin
 resolved die CLI gegen lokale Registry-Fixtures (`--registry`-Pfad).
 
 ## 3. Mit dem System über einen Agenten/MCP arbeiten
