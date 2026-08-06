@@ -18,7 +18,6 @@ def client() -> TestClient:
     settings = Settings(
         project_root=REPO_ROOT,
         library_path=REPO_ROOT / "playbooks",
-        cache_dir=REPO_ROOT / "tests",
     )
     return TestClient(create_app(settings))
 

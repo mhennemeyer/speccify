@@ -171,8 +171,9 @@ def _iter_targets() -> list[tuple[Path, str]]:
 def run_gen(*, check: bool) -> int:
     """Generiert die CLI-Doku. `check=True` schreibt nicht, meldet nur Drift."""
 
+    targets = _iter_targets()
     drift: list[str] = []
-    for dest_path, rendered in _iter_targets():
+    for dest_path, rendered in targets:
         if check:
             current = dest_path.read_text(encoding="utf-8") if dest_path.exists() else None
             if current != rendered:
@@ -180,6 +181,17 @@ def run_gen(*, check: bool) -> int:
             continue
         dest_path.parent.mkdir(parents=True, exist_ok=True)
         dest_path.write_text(rendered, encoding="utf-8")
+
+    # Entfernte Commands hinterlassen sonst Seiten, die weiter ausgeliefert
+    # werden — die Doku-Site würde einen Befehl bewerben, den es nicht gibt.
+    expected = {path for path, _ in targets}
+    for orphan in sorted(_CLI_DOCS_DIR.glob("*.md")):
+        if orphan in expected:
+            continue
+        if check:
+            drift.append(f"{orphan.relative_to(_REPO_ROOT)} (Command existiert nicht mehr)")
+        else:
+            orphan.unlink()
 
     if check and drift:
         sys.stderr.write(

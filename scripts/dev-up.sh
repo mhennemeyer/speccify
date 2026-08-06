@@ -1,18 +1,17 @@
 #!/usr/bin/env bash
 #
-# dev-up.sh — startet das komplette Speccify-System lokal für End-to-End-Dogfooding.
+# dev-up.sh — startet Speccify lokal für End-to-End-Dogfooding.
 #
-# Hochgefahren werden (jeweils im Vordergrund dieses Skripts als Hintergrund-Job,
-# mit Präfix-Logs und gemeinsamem Shutdown via Ctrl-C):
+# Hochgefahren werden (als Hintergrund-Jobs dieses Skripts, mit Präfix-Logs und
+# gemeinsamem Shutdown via Ctrl-C):
 #
-#   * Playground-Backend (FastAPI)  http://127.0.0.1:8000   speccify-web-backend + Composer-API
-#   * Composer (Vite-SPA)           http://localhost:5173   Visueller Composer
-#   * Playground-Frontend (Next.js) http://localhost:3000   Monaco-Editor-Spielwiese
-#   * Marketing/Doku (Astro)        http://localhost:4321   Landingpage + Doku
+#   * Backend (FastAPI)       http://127.0.0.1:8000   speccify-web-backend
+#   * Viewer (Vite-SPA)       http://localhost:5173   Playbook-Viewer
+#   * Marketing/Doku (Astro)  http://localhost:4321   Landingpage + Doku
 #
 # Nutzung:
 #   ./scripts/dev-up.sh                 # alles starten
-#   ./scripts/dev-up.sh --no-frontends  # nur Playground-Backend (kein pnpm/Node)
+#   ./scripts/dev-up.sh --no-frontends  # nur das Backend (kein pnpm/Node)
 #
 # Voraussetzungen: `uv sync` einmal gelaufen; für die Frontends `pnpm` installiert.
 
@@ -38,7 +37,6 @@ done
 
 BACKEND_PORT=8000
 COMPOSER_PORT=5173
-FRONTEND_PORT=3000
 MARKETING_PORT=4321
 
 PIDS=()
@@ -76,7 +74,7 @@ export UV_NO_SYNC=1
 
 echo "→ Starte Services (Ctrl-C beendet alle) …"
 
-# Playground-Backend (FastAPI, in-process speccify-core).
+# Backend (FastAPI, in-process speccify-core).
 ( trap - EXIT INT TERM; uv run speccify-web-backend --host 127.0.0.1 --port "${BACKEND_PORT}" 2>&1 | prefix backend ) &
 PIDS+=($!)
 
@@ -84,16 +82,12 @@ if [[ "$RUN_FRONTENDS" -eq 1 ]]; then
   echo "→ pnpm install (Workspace) …"
   pnpm install 2>&1 | prefix pnpm
 
-  # Composer (Vite-SPA, proxied /api → Backend).
+  # Viewer (Vite-SPA, proxied /api → Backend).
   ( trap - EXIT INT TERM; pnpm run composer:dev 2>&1 | prefix composer ) &
   PIDS+=($!)
 
-  # Playground-Frontend (Next.js).
-  ( trap - EXIT INT TERM; cd apps/web/frontend && pnpm dev 2>&1 | prefix frontend ) &
-  PIDS+=($!)
-
-  # Marketing/Doku (Astro) — Iframe zeigt auf das lokale Playground-Frontend.
-  ( trap - EXIT INT TERM; PUBLIC_PLAYGROUND_URL="http://localhost:${FRONTEND_PORT}" pnpm run marketing:dev 2>&1 | prefix marketing ) &
+  # Marketing/Doku (Astro).
+  ( trap - EXIT INT TERM; pnpm run marketing:dev 2>&1 | prefix marketing ) &
   PIDS+=($!)
 fi
 
@@ -102,12 +96,11 @@ cat <<EOF
 ────────────────────────────────────────────────────────────
   Speccify läuft lokal:
 
-    Playground-Backend (API)  : http://127.0.0.1:${BACKEND_PORT}
+    Backend (API)             : http://127.0.0.1:${BACKEND_PORT}
 EOF
 if [[ "$RUN_FRONTENDS" -eq 1 ]]; then
 cat <<EOF
-    Composer (visuell)        : http://localhost:${COMPOSER_PORT}
-    Playground-Frontend       : http://localhost:${FRONTEND_PORT}
+    Viewer                    : http://localhost:${COMPOSER_PORT}
     Marketing/Doku            : http://localhost:${MARKETING_PORT}
 EOF
 fi

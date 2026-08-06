@@ -224,12 +224,8 @@ fn engine_launch(app: &AppHandle) -> Result<BackendLaunch, String> {
                 resources.join("composer").display().to_string(),
             ),
             (
-                "SPECCIFY_REGISTRY_PATH".into(),
-                resources.join("registry-fixtures").display().to_string(),
-            ),
-            (
-                "SPECCIFY_CACHE_DIR".into(),
-                resources.join("llm-cache").display().to_string(),
+                "SPECCIFY_LIBRARY_PATH".into(),
+                resources.join("playbooks").display().to_string(),
             ),
             (
                 "SPECCIFY_PROJECT_ROOT".into(),

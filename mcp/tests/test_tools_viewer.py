@@ -26,7 +26,7 @@ def backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[str]:
     shutil.copytree(REPO_ROOT / "playbooks", library)
     reset_state()
     app = create_app(
-        Settings(project_root=REPO_ROOT, library_path=library, cache_dir=tmp_path / "cache")
+        Settings(project_root=REPO_ROOT, library_path=library)
     )
     config = uvicorn.Config(app, host="127.0.0.1", port=0, log_level="error")
     server = uvicorn.Server(config)

@@ -24,7 +24,6 @@ def client(tmp_path: Path) -> TestClient:
     settings = Settings(
         project_root=REPO_ROOT,
         library_path=library,
-        cache_dir=tmp_path / "cache",
     )
     return TestClient(create_app(settings))
 

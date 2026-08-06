@@ -1,64 +1,57 @@
-# Speccify Browser-Playground (Phase 1d)
+# Speccify web backend
 
-Demo-Oberfläche für die Speccify-Codegen-Pipeline. Frontend ist Next.js 15 /
-React 19 / TypeScript, Backend ist FastAPI (in-process über `speccify-core`).
-**Offline-only:** der Playground spielt ausschließlich gegen den eingecheckten
-Replay-Cache (`tests/fixtures/llm-cache/`); kein Live-LLM, keine Bedrock-
-Credentials im Browser.
+The HTTP face of `speccify-core`: the same playbook engine the CLI and the MCP
+server use, exposed over FastAPI. The viewer (`apps/composer/`) is its only
+frontend.
 
-## Stack
-
-- **Frontend** (`apps/web/frontend/`) — Next.js 15 (App-Router), React 19,
-  TypeScript strict, Monaco-Editor (`@monaco-editor/react`), zod für
-  Response-Validierung. Paket-Manager: `pnpm` (>=10), Node >=22 LTS
-  (`.nvmrc`).
-- **Backend** (`apps/web/backend/`) — uv-Workspace-Member
-  `speccify-web-backend`, FastAPI + Uvicorn, ruft direkt
-  `speccify-core.render_for_target` mit `ReplayCacheClient(offline=True)`.
+Everything runs in-process against `speccify-core` — there is no database, no
+auth and no persistence beyond the playbook library on disk.
 
 ## Quickstart
 
 ```bash
-# 1) Backend (Terminal A, im Repo-Root):
 uv run speccify-web-backend --host 127.0.0.1 --port 8000
-
-# 2) Frontend (Terminal B):
-cd apps/web/frontend
-pnpm install
-pnpm dev          # http://localhost:3000
 ```
 
-Der Next-Dev-Server proxied `/api/v1/*` automatisch auf
-`http://localhost:8000` (siehe `next.config.ts`, override via
-`SPECCIFY_BACKEND_URL`).
+Or, together with the viewer and the docs site:
+
+```bash
+./scripts/dev-up.sh
+```
 
 ## Endpoints (v1)
 
-- `GET /api/v1/specs` — Liste aus `<repo>/registry-fixtures/`
-  (override via `SPECCIFY_REGISTRY_PATH`). Liefert pro `(scope, name)` die
-  jeweils neueste Version mit `{id, version, title, yaml}`.
-- `POST /api/v1/render` — Body `{spec_id, version, spec_yaml, target}`. Ruft
-  `render_for_target` mit `ReplayCacheClient(offline=True)`. Antwort:
-  `{spec_id, target, files, generator_pin}`.
-- `GET /api/v1/health` — Smoke.
+**Playbooks** — read-only over the configured library:
 
-**Fehler-Codes:** `cache_miss` (422), `spec_invalid` (400), `unknown_target`
-(400), `bad_request` (400). Selbe Codes wie CLI/MCP.
+- `GET /api/v1/playbooks` — every playbook in the library, newest version each
+- `GET /api/v1/playbook?source=<id>` — one playbook, parsed and resolved
+- `GET /api/v1/playbook/asset?source=<id>&path=assets/…` — an asset's bytes
+- `GET /api/v1/index?q=…` — discovery search across configured index repos
+- `POST /api/v1/validate` — validate a `playbook.yaml` without storing it
 
-## Cross-Consistency CLI ↔ MCP ↔ Web
+**Session** — the bridge between the viewer and the agent beside it. Both
+pieces of state live in memory: this is one person, one viewer, one agent, on
+one machine, and a selection that outlived the session would be a lie about
+what is on screen.
 
-Der Vertrag „CLI, MCP-Server und Browser-Playground nutzen dieselbe
-Codegen-Pipeline" ist als Test verdrahtet:
-`apps/web/backend/tests/test_cross_consistency.py` rendert `@org/button@0.1.0`
-über alle drei Pfade (`speccify_cli.commands.pull.run_pull`,
-`speccify_mcp.tools.run_pull`, `speccify_web_backend.services.render.render_spec_from_yaml`)
-und vergleicht die TSX-Bytes byte-identisch.
+- `PUT /api/v1/selection` — the viewer pushes what the user clicked
+- `GET /api/v1/selection` — the same, **resolved** (the step with its detail,
+  verify and sources; or the asset's content). This is what the
+  `viewer_selection` MCP tool reads, so the agent does not need three more
+  calls to learn what "this step" means.
+- `POST /api/v1/proposal` — an agent proposes a changed playbook. Validated
+  immediately: an invalid proposal never reaches the UI, because otherwise the
+  user would be looking at a diff they cannot apply.
+- `GET /api/v1/proposal` / `DELETE /api/v1/proposal` — the viewer polls, or discards
+- `POST /api/v1/proposal/apply` — writes it to the local library. Only a human
+  click gets here, and git-sourced playbooks are refused (`not_local`):
+  changes belong in the source repository, or the next `pull` overwrites them.
 
-## Limitierungen (Phase 1d)
+**Error codes** are shared with the CLI and MCP: `not_found` (404),
+`invalid_playbook` / `invalid_yaml` (422), `not_local` (400).
 
-- Nur Target `react`.
-- Nur Replay-Cache; editierte YAML ⇒ Cache-Miss (erwartetes Verhalten, UI
-  erklärt es).
-- Kein Deployment, kein Auth, keine Persistenz.
+## Tests
 
-Master-Plan: [`.agent/plans/phase-1d-browser-playground.md`](../../.agent/plans/archive/phase-1d-browser-playground.md).
+```bash
+uv run pytest apps/web/backend/tests -v
+```

@@ -10,9 +10,8 @@
 #   resources/engine/requirements.txt  gepinnte Third-Party-Deps (uv export,
 #                                   inkl. Hashes — aus uv.lock, reproduzierbar)
 #   resources/engine/payload.json   Metadaten + Hash (Marker für Re-Install)
-#   resources/composer/             gebaute Composer-SPA (Backend serviert /ui)
-#   resources/registry-fixtures/    Referenz-Specs
-#   resources/llm-cache/            Replay-Cache (offline-Render)
+#   resources/composer/             gebaute Viewer-SPA (Backend serviert /ui)
+#   resources/playbooks/            Referenz-Playbooks (Bibliothek der App)
 #
 # Beim ersten Start baut die App daraus eine venv unter
 # ~/Library/Application Support/io.speccify.desktop/engine/venv (engine.rs).
@@ -53,22 +52,21 @@ uv export --no-dev --no-emit-workspace --all-packages \
 
 # Composer-SPA: das Backend serviert sie unter /ui (SPECCIFY_COMPOSER_DIST).
 if [[ "$SKIP_COMPOSER" -eq 0 ]]; then
-  echo "→ Composer-SPA bauen"
+  echo "→ Viewer-SPA bauen"
   pnpm run composer:build >/dev/null
 fi
 if [[ ! -f "$REPO_ROOT/apps/composer/dist/index.html" ]]; then
-  echo "Composer-SPA fehlt (apps/composer/dist) — ohne --skip-composer laufen lassen." >&2
+  echo "Viewer-SPA fehlt (apps/composer/dist) — ohne --skip-composer laufen lassen." >&2
   exit 1
 fi
-rm -rf "$RES/composer" "$RES/registry-fixtures" "$RES/llm-cache"
+rm -rf "$RES/composer" "$RES/playbooks"
 cp -R "$REPO_ROOT/apps/composer/dist" "$RES/composer"
-cp -R "$REPO_ROOT/registry-fixtures" "$RES/registry-fixtures"
-cp -R "$REPO_ROOT/tests/fixtures/llm-cache" "$RES/llm-cache"
+cp -R "$REPO_ROOT/playbooks" "$RES/playbooks"
 
 # Hash über alle Payload-Dateien: die App vergleicht ihn mit dem Marker der
 # installierten venv und installiert nach einem App-Update neu.
 PAYLOAD_HASH="$(
-  find "$ENGINE" "$RES/composer" "$RES/registry-fixtures" "$RES/llm-cache" \
+  find "$ENGINE" "$RES/composer" "$RES/playbooks" \
     -type f ! -name payload.json | LC_ALL=C sort |
     xargs shasum -a 256 | shasum -a 256 | awk '{print $1}'
 )"

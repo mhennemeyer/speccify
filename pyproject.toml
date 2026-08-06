@@ -1,17 +1,10 @@
 [project]
 name = "speccify-workspace"
 version = "0.0.0"
-description = "Speccify monorepo workspace — Spec-First component platform for AI agents."
+description = "Speccify monorepo workspace — playbooks for complex, recurring workflows."
 requires-python = ">=3.12"
 license = { text = "MIT" }
 authors = [{ name = "Marc Hennemeyer" }]
-
-[project.optional-dependencies]
-# Spiegelt `speccify-core[bedrock]` auf Workspace-Ebene, damit der im
-# Phasen-Plan dokumentierte Aufruf `uv sync --extra bedrock` (am Repo-Root)
-# funktioniert. CI installiert das Extra nicht; nur Maintainer brauchen es
-# für `scripts/record_llm_cache.py` (AWS-Bedrock-Live-Aufnahme).
-bedrock = ["speccify-core[bedrock]"]
 
 [tool.uv.workspace]
 members = ["core", "cli", "mcp", "apps/web/backend"]

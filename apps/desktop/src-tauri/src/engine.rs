@@ -317,7 +317,6 @@ mod tests {
             );
         }
         assert!(dir.join("composer").join("index.html").is_file());
-        assert!(dir.join("registry-fixtures").is_dir());
-        assert!(dir.join("llm-cache").is_dir());
+        assert!(dir.join("playbooks").is_dir());
     }
 }
