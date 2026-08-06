@@ -1937,3 +1937,34 @@
   der Referenz-Playbooks durch, alle vier lösen auf.
 - Verifikation: 130 Pytest grün (+15), `pytest -m links` grün, ruff clean,
   Doku-Sync und CLI-Doku ohne Drift.
+
+## 2026-08-06 (W3 — Viewer-Ausbau)
+- Workflow-Diagramm neben den Schritten: ein Knoten pro Schritt, delegierte
+  gestrichelt, Marker für Assets/verify, Klick wählt aus und scrollt hin.
+  Bewusst handgezeichnetes SVG statt Diagramm-Bibliothek — das Layout ist eine
+  einzige Spalte, und ein abhängigkeitsfreier Viewer wiegt mehr als generische
+  Graph-Fähigkeiten.
+- Markdown im `detail` über `react-markdown`. Wichtig dabei: die Bibliothek
+  rendert per Default **kein rohes HTML** — Playbooks kommen aus fremden
+  Git-Repos, ein `dangerouslySetInnerHTML`-Pfad wäre hier fahrlässig.
+- Beim Screenshot-Gegenlesen aufgefallen: Prerequisites, Pitfalls und
+  verify-Kriterien zeigten Backticks als Text, während der Schritt-Body sie
+  renderte. Das sieht aus wie ein Bug, also Inline-Markdown-Komponente
+  nachgezogen (ohne `<p>`-Wrapper).
+- Quellen-Alter: „retrieved today" / „4 months old", ab 180 Tagen bernstein.
+  Die Schwelle spiegelt `STALE_SOURCE_DAYS` aus dem Core — Viewer und
+  `speccify check` dürfen sich nicht widersprechen.
+- Ein Filterfeld für zwei Zwecke: es engt die Bibliothek ein und ist zugleich
+  die Query für den Discovery-Index. Statt einer zweiten Such-Oberfläche gibt
+  es einen Knopf „Search the index for …" — der natürliche Fluss ist ja
+  „lokal nichts gefunden, schau weiter".
+- Stolperstein beim Testen: nach der Index-Suche steht der Filter noch, also
+  ist die Bibliotheksliste leer — der E2E musste das berücksichtigen. Das ist
+  korrektes Verhalten, aber es zeigt, dass ein geteiltes Feld erklärt werden
+  muss (steht jetzt in `docs/viewer.md`).
+- Verifikation: 130 Pytest, 1/1 Playwright (Smoke deckt jetzt Filter,
+  Diagramm-Klick, gerendertes Markdown, Quellen-Alter und Index-Suche ab),
+  Viewer-Build 323 kB, ruff clean, Doku-Sync ohne Drift, Screenshot geprüft.
+- BO hat die Referenz-Projekte fürs IAP-Playbook genannt:
+  `~/Desktop/Work/Personal/privid` und `~/Desktop/Work/CmdCeeVee` — im Plan
+  notiert (nur lesen, fremde Repos).

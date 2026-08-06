@@ -175,8 +175,11 @@ Offene Punkte mit dem BO klären (unten), Entscheidungen hier festschreiben.
 - `speccify check` (Struktur offline, Link-Rot hinter Marker).
 - **Definition of Done**: ein Agent löst das IAP-Vorhaben allein über MCP — Suche → Playbook → Schritte → Assets, ohne die Doku-Site zu öffnen. Als headless-E2E gepinnt.
 
-### W3 — Viewer (Rest)
-- Grundgerüst steht seit W1. Offen: Schritt-**Diagramm** (Sequenz/Abhängigkeiten), Markdown-Rendering im `detail` statt `<pre>`, Alters-Warnung an Quellen (> 180 Tage), Suche/Filter über die Bibliothek, Index-Treffer im Viewer öffnen.
+### W3 — Viewer ✅ (2026-08-06)
+
+> Geliefert: Workflow-Diagramm (SVG, handgezeichnet — keine Diagramm-Lib für eine einspaltige Kette), Markdown im `detail` (`react-markdown`, kein rohes HTML, weil Playbooks aus fremden Repos kommen), Inline-Markdown auch in Prerequisites/Pitfalls/verify, Alters-Anzeige an Quellen mit derselben 180-Tage-Schwelle wie `speccify check`, **ein** Filterfeld für Bibliothek *und* Index-Suche, Index-Treffer direkt öffenbar.
+>
+> Entscheidung dabei: kein zweites Such-UI für Discovery. Das Filterfeld engt lokal ein und ist zugleich die Index-Query — „hier nichts, schau weiter" ist ein Klick.
 - **Definition of Done**: Referenz-Playbook ist im Viewer vollständig erfassbar; Playwright-Smoke auf Navigation + Selection.
 
 ### W4 — Kontextsensitiver Chat

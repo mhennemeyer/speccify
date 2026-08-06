@@ -23,10 +23,17 @@
   Netz); MCP-Tools `playbook_asset` + `playbook_check` (9 Tools). Der
   Agent-Vertrag ist per Test gepinnt: list → get → Child-Playbook → Schritt →
   Asset, nur über Tools. **130 Pytest, `-m links` grün.**
-  **Als Nächstes**: W3-Rest (Schritt-Diagramm, Markdown im `detail`,
-  Alters-Warnung im Viewer, Bibliotheks-Filter), dann W4 (Kontext-Chat über
-  `composer_selection`). Offen bleibt: README und Landing-Page tragen noch die
-  alte Geschichte, `docs/launch.md` ebenso (W5).
+- **W3 GELIEFERT (2026-08-06)**: Viewer-Ausbau — Workflow-Diagramm (SVG ohne
+  Lib), Markdown im `detail` und inline in Prerequisites/Pitfalls/verify,
+  Quellen-Alter mit derselben 180-Tage-Schwelle wie `speccify check`, ein
+  Filterfeld für Bibliothek und Index-Suche zugleich, Index-Treffer direkt
+  öffenbar. **130 Pytest, 1/1 Playwright (Smoke deckt Filter, Diagramm,
+  Markdown, Alter und Index ab), Viewer-Build 323 kB.**
+  **Als Nächstes**: W4 Kontext-Chat (`composer_selection` + Agent-Terminal)
+  und das **IAP-Referenz-Playbook** — der BO hat die beiden echten Projekte
+  genannt: `~/Desktop/Work/Personal/privid` und `~/Desktop/Work/CmdCeeVee`
+  (nur lesen, dort nichts committen). Offen bleibt: README, Landing-Page und
+  `docs/launch.md` tragen noch die alte Geschichte (W5).
 - **NEUAUSRICHTUNG (BO, 2026-08-06)**: Der Komponenten-Ansatz ist vom
   Fortschritt bei Coding-Agents überholt. Neue Richtung: **eine Spec ist ein
   Playbook für einen komplexen, wiederkehrenden Workflow** (Schritte, Quellen,
