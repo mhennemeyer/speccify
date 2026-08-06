@@ -1,0 +1,133 @@
+# Fastfile for a macOS app going to the Mac App Store.
+#
+# Design rules encoded here:
+#   * API key, never an Apple ID — no 2FA prompts, no expiring session.
+#   * Lanes stop *before* submitting. The upload is reversible; the
+#     submission is the last point a human looks at what ships.
+#   * Every build regenerates the Xcode project and derives its build number.
+
+require "fileutils"
+
+default_platform(:mac)
+
+APP_SCHEME  = "MyApp"
+APP_PROJECT = "MyApp.xcodeproj"
+APP_ID      = "com.example.myapp"
+
+# SwiftPM build plugins (SwiftLint, code generators) make xcodebuild stop for
+# a validation prompt that cannot be answered without a TTY. Know which
+# plugins you have — this flag agrees to run them.
+SKIP_PLUGIN_VALIDATION = "-skipPackagePluginValidation"
+
+# `sh` runs with fastlane/ as the working directory, not the repo root.
+REPO_ROOT       = File.expand_path("..", __dir__)
+SCREENSHOTS_DIR = File.join(REPO_ROOT, "fastlane", "screenshots")
+SCREENSHOT_LOCALES = %w[en-US de-DE es-ES fr-FR it ja zh-Hans].freeze
+
+# ENV.fetch, not ENV[] — a missing value must fail here with its own name,
+# not twenty seconds later inside an unrelated action.
+def asc_api_key
+  app_store_connect_api_key(
+    key_id:       ENV.fetch("ASC_KEY_ID"),
+    issuer_id:    ENV.fetch("ASC_ISSUER_ID"),
+    key_filepath: ENV.fetch("ASC_KEY_PATH"),
+    duration:     1200,   # seconds — documented maximum
+    in_house:     false
+  )
+end
+
+# Regenerate the (gitignored, generated) project and return a monotonic build
+# number. Caveat: a shallow CI clone yields a lower count and App Store
+# Connect rejects the upload *after* transferring it — fetch full history.
+def prepare_project
+  sh("cd .. && xcodegen generate")
+  number_of_commits(all: true)
+end
+
+platform :mac do
+  desc "Sanity check: are the ASC API key variables set?"
+  lane :check_asc do
+    %w[ASC_KEY_ID ASC_ISSUER_ID ASC_KEY_PATH].each do |var|
+      UI.user_error!("#{var} is not set — see fastlane/README.md") if ENV[var].to_s.empty?
+    end
+    UI.success("ASC API key environment looks good (key id: #{ENV['ASC_KEY_ID']}).")
+  end
+
+  desc "Generate the project and build a signed App Store artefact into build/."
+  lane :build do
+    build_number = prepare_project
+    build_mac_app(
+      project: APP_PROJECT,
+      scheme: APP_SCHEME,
+      configuration: "Release",
+      export_method: "app-store",      # developer-id = outside the store
+      output_directory: "build",
+      clean: true,
+      xcargs: "#{SKIP_PLUGIN_VALIDATION} CURRENT_PROJECT_VERSION=#{build_number}"
+    )
+  end
+
+  desc "Build and upload to TestFlight (internal testers)."
+  lane :beta do
+    build
+    upload_to_testflight(
+      api_key: asc_api_key,
+      skip_waiting_for_build_processing: true
+    )
+  end
+
+  desc "Build and upload to the App Store. Does NOT submit for review."
+  lane :release do
+    build
+    upload_to_app_store(
+      api_key: asc_api_key,
+      skip_screenshots: true,
+      skip_metadata: true,
+      # The API key does not cover precheck for in-app purchases.
+      precheck_include_in_app_purchases: false,
+      submit_for_review: false,
+      force: true                       # no interactive confirmation in CI
+    )
+  end
+
+  desc "Upload metadata only — no binary, no screenshots, no submission."
+  lane :metadata_dry_run do
+    upload_to_app_store(
+      api_key: asc_api_key,
+      skip_binary_upload: true,
+      skip_screenshots: true,
+      skip_metadata: false,
+      submit_for_review: false,
+      force: true,
+      run_precheck_before_submit: false
+    )
+  end
+
+  desc "Mirror the primary en-US screenshot set into every other store locale."
+  lane :screenshots_sync_locales do
+    src  = File.join(SCREENSHOTS_DIR, "en-US")
+    pngs = Dir.glob(File.join(src, "*.png")).sort
+    UI.user_error!("No PNGs in fastlane/screenshots/en-US/") if pngs.empty?
+
+    (SCREENSHOT_LOCALES - ["en-US"]).each do |loc|
+      dst = File.join(SCREENSHOTS_DIR, loc)
+      FileUtils.mkdir_p(dst)
+      FileUtils.rm_f(Dir.glob(File.join(dst, "*.png")))
+      pngs.each { |p| FileUtils.cp(p, dst) }
+      UI.message("→ #{loc}: #{pngs.size} screenshots")
+    end
+  end
+
+  desc "Upload screenshots only — no binary, no metadata, no submission."
+  lane :screenshots_dry_run do
+    upload_to_app_store(
+      api_key: asc_api_key,
+      skip_binary_upload: true,
+      skip_metadata: true,
+      skip_screenshots: false,
+      submit_for_review: false,
+      force: true,
+      run_precheck_before_submit: false
+    )
+  end
+end

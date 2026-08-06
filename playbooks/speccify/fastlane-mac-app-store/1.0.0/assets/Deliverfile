@@ -1,0 +1,18 @@
+# Deliverfile — shared configuration for upload_to_app_store (deliver).
+# Loaded automatically; individual lanes override with keyword arguments.
+
+app_identifier "com.example.myapp"
+
+# Paths are relative to the repo root — fastlane is invoked from there.
+metadata_path    "./fastlane/metadata"
+screenshots_path "./fastlane/screenshots"
+
+# Release when a human says so, in App Store Connect.
+automatic_release false
+
+# Never submit for review from a lane. Uploading is reversible; submitting
+# removes the last moment anyone reads the release notes.
+submit_for_review false
+
+# No interactive confirmation — there is no TTY in CI.
+force true
