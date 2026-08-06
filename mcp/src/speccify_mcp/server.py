@@ -16,6 +16,8 @@ from mcp.server.fastmcp import FastMCP
 
 from .tools import (
     run_lock,
+    run_playbook_asset,
+    run_playbook_check,
     run_playbook_get,
     run_playbook_list,
     run_playbook_step,
@@ -95,6 +97,55 @@ def build_server(config: ServerConfig) -> FastMCP:
             config.project_root,
             reference=reference,
             step_id=step_id,
+            library_path=Path(library_path) if library_path else None,
+            offline=offline,
+        ).to_dict()
+
+    @server.tool(
+        name="playbook_asset",
+        description=(
+            "Read a file that ships with a playbook — a script, a config, a "
+            "template. `path` is bundle-relative (e.g. 'assets/verify.sh') and "
+            "comes from a step's `assets` list or from `playbook_get`. Text is "
+            "returned as-is, binary as base64. Returns `{ok, path, encoding, "
+            "content}`."
+        ),
+    )
+    def playbook_asset(
+        reference: str,
+        path: str,
+        library_path: str | None = None,
+        offline: bool = False,
+    ) -> dict[str, Any]:
+        return run_playbook_asset(
+            config.project_root,
+            reference=reference,
+            path=path,
+            library_path=Path(library_path) if library_path else None,
+            offline=offline,
+        ).to_dict()
+
+    @server.tool(
+        name="playbook_check",
+        description=(
+            "Is this playbook still current? Checks structure and how long ago "
+            "each source was retrieved; with `links=true` it also verifies that "
+            "the source URLs still resolve (needs network). Worth running before "
+            "you follow a playbook you have not used in a while — stale "
+            "instructions are worse than none. Returns `{ok, findings}` where "
+            "each finding has a level of `error` or `warning`."
+        ),
+    )
+    def playbook_check(
+        reference: str,
+        links: bool = False,
+        library_path: str | None = None,
+        offline: bool = False,
+    ) -> dict[str, Any]:
+        return run_playbook_check(
+            config.project_root,
+            reference=reference,
+            links=links,
             library_path=Path(library_path) if library_path else None,
             offline=offline,
         ).to_dict()

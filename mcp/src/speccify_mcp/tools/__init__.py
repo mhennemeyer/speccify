@@ -7,8 +7,12 @@ exception just stops it.
 """
 
 from .library import (
+    AssetResult,
+    CheckResult,
     LibraryResult,
     PlaybookResult,
+    run_playbook_asset,
+    run_playbook_check,
     run_playbook_get,
     run_playbook_list,
     run_playbook_step,
@@ -17,11 +21,15 @@ from .project import ProjectResult, run_lock, run_pull, run_verify
 from .search import SearchResult, run_search
 
 __all__ = [
+    "AssetResult",
+    "CheckResult",
     "LibraryResult",
     "PlaybookResult",
     "ProjectResult",
     "SearchResult",
     "run_lock",
+    "run_playbook_asset",
+    "run_playbook_check",
     "run_playbook_get",
     "run_playbook_list",
     "run_playbook_step",

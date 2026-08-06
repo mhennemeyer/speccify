@@ -86,3 +86,61 @@ def test_verify_reports_drift_as_a_result(project: Path) -> None:
     verified = run_verify(project)
     assert not verified.ok
     assert any("bundle hash drift" in problem for problem in verified.problems)
+
+
+def test_playbook_asset_returns_the_script(project: Path) -> None:
+    from speccify_mcp.tools import run_playbook_asset
+
+    result = run_playbook_asset(project, reference=MAIN, path="assets/verify-signatures.sh")
+    assert result.ok, result.message
+    assert result.encoding == "utf-8"
+    assert "codesign --verify" in result.content
+
+
+def test_playbook_asset_lists_what_is_available(project: Path) -> None:
+    from speccify_mcp.tools import run_playbook_asset
+
+    result = run_playbook_asset(project, reference=MAIN, path="assets/nope")
+    assert not result.ok
+    assert "verify-signatures.sh" in result.message
+
+
+def test_playbook_check_reports_health(project: Path) -> None:
+    from speccify_mcp.tools import run_playbook_check
+
+    result = run_playbook_check(project, reference=MAIN)
+    assert result.ok, result.findings
+    assert result.findings == []
+
+
+def test_agent_can_work_through_a_playbook_over_mcp(project: Path) -> None:
+    """The contract W2 exists for: an agent solves the task through tools alone.
+
+    list -> get -> step -> asset, without reading the docs site or the repo.
+    """
+    from speccify_mcp.tools import (
+        run_playbook_asset,
+        run_playbook_get,
+        run_playbook_list,
+        run_playbook_step,
+    )
+
+    listed = run_playbook_list(project)
+    assert listed.ok
+    # "tauri" is unambiguous here; "notarization" also matches the child playbook.
+    chosen = next(entry for entry in listed.playbooks if "tauri" in entry["keywords"])
+
+    whole = run_playbook_get(project, reference=chosen["id"])
+    assert whole.ok
+    first, *_ = whole.playbook["steps"]
+    # The first step delegates — the agent can follow that reference.
+    child = run_playbook_get(project, reference=first["uses"].split("@^")[0])
+    assert child.ok and child.playbook["steps"]
+
+    signing = run_playbook_step(project, reference=chosen["id"], step_id="sign_build")
+    assert signing.ok
+    asset_path = signing.playbook["step"]["assets"][0]
+
+    asset = run_playbook_asset(project, reference=chosen["id"], path=asset_path)
+    assert asset.ok
+    assert asset.content.startswith("#!/usr/bin/env bash")

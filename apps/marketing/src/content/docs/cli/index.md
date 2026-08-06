@@ -11,6 +11,7 @@ hat eine eigene Referenzseite:
 | Command | Beschreibung |
 | --- | --- |
 | [`speccify add`](/cli/add/) | Add a playbook dependency and update the lockfile. |
+| [`speccify check`](/cli/check/) | Check whether playbooks are still current: source age and dead links. |
 | [`speccify init`](/cli/init/) | Create a speccify.yaml for a project that consumes playbooks. |
 | [`speccify lint`](/cli/lint/) | Validate playbooks: schema, cross-references and assets. |
 | [`speccify lock`](/cli/lock/) | Resolve dependencies and write speccify.lock. |

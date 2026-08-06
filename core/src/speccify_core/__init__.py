@@ -6,6 +6,12 @@ would otherwise hit twice. This package parses playbooks, resolves them from
 local or git sources, and pins them reproducibly.
 """
 
+from speccify_core.check import (
+    Finding,
+    check_links,
+    check_playbook,
+    check_source_age,
+)
 from speccify_core.git_registry import (
     DEFAULT_GIT_CACHE_DIR,
     GitLibrary,
@@ -94,6 +100,10 @@ __all__ = [
     "CURRENT_LOCKFILE_SCHEMA_VERSION",
     "CURRENT_MANIFEST_SCHEMA_VERSION",
     "DEFAULT_GIT_CACHE_DIR",
+    "Finding",
+    "check_links",
+    "check_playbook",
+    "check_source_age",
     "DEFAULT_LIBRARY_PATH",
     "DEFAULT_LOCKFILE_SCHEMA_PATH",
     "DEFAULT_MANIFEST_SCHEMA_PATH",

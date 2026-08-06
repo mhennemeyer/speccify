@@ -24,6 +24,8 @@ REFERENCE = "@speccify/macos-notarize-tauri"
 
 EXPECTED_TOOLS = {
     "lock",
+    "playbook_asset",
+    "playbook_check",
     "playbook_get",
     "playbook_list",
     "playbook_step",

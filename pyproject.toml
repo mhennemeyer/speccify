@@ -49,4 +49,8 @@ ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 testpaths = ["core", "cli", "mcp", "apps/web/backend", "tests"]
-addopts = "-q"
+# Link checks need the network and are opt-in: `pytest -m links`.
+addopts = "-q -m \"not links\""
+markers = [
+    "links: checks that playbook source URLs still resolve (needs network)",
+]

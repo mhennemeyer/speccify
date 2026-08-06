@@ -141,3 +141,37 @@ def test_lint_reports_broken_playbooks(tmp_path: Path) -> None:
     result = runner.invoke(app, ["lint", str(bundle)])
     assert result.exit_code == 1
     assert "fail" in result.output
+
+
+def test_check_is_clean_for_the_reference_library() -> None:
+    result = runner.invoke(app, ["check", str(LIBRARY)])
+    assert result.exit_code == 0, result.output
+    assert "0 error(s), 0 warning(s)" in result.output
+
+
+def test_check_warns_about_stale_sources() -> None:
+    result = runner.invoke(app, ["check", str(LIBRARY), "--stale-days", "0"])
+    assert result.exit_code == 0, result.output
+    # Warnings do not fail the run — only errors do.
+    assert "warning(s)" in result.output
+
+
+def test_check_fails_on_a_broken_playbook(tmp_path: Path) -> None:
+    bundle = tmp_path / "broken"
+    bundle.mkdir()
+    (bundle / "playbook.yaml").write_text(
+        "schema_version: 1\n"
+        "id: '@org/x'\n"
+        "version: 1.0.0\n"
+        "title: X\n"
+        "summary: Y\n"
+        "steps:\n"
+        "  - id: a\n"
+        "    title: A\n"
+        "    detail: do\n"
+        "    sources: [ghost]\n",
+        encoding="utf-8",
+    )
+    result = runner.invoke(app, ["check", str(bundle)])
+    assert result.exit_code == 1
+    assert "Unknown source" in result.output

@@ -39,6 +39,22 @@ curl -s --get localhost:8000/api/v1/playbook/asset \
 curl -s 'localhost:8000/api/v1/index?q=notarization' | jq '.hits[].source'
 ```
 
+## What agents use instead
+
+| Tool | Purpose |
+|---|---|
+| `playbook_list` | what exists in this project's library |
+| `playbook_get` | the whole playbook, sources resolved |
+| `playbook_step` | one step, with its `verify` criterion |
+| `playbook_asset` | a file that ships with the playbook |
+| `playbook_check` | is it still current? |
+| `search` | find playbooks in discovery indexes |
+| `lock` / `pull` / `verify` | pin, materialise, detect drift |
+
+The contract is pinned by a test that walks the whole chain — list, get,
+follow a delegated step into its child playbook, read a step, read its asset —
+using nothing but the tools.
+
 ## Status
 
 The viewer covers reading a playbook end to end. Still to come: the step

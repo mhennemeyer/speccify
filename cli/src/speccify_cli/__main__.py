@@ -5,6 +5,7 @@ from __future__ import annotations
 import typer
 
 from speccify_cli.commands.add import add_command
+from speccify_cli.commands.check import check_command
 from speccify_cli.commands.init import init_command
 from speccify_cli.commands.lint import lint_command
 from speccify_cli.commands.lock import lock_command
@@ -28,6 +29,7 @@ app.command("pull")(pull_command)
 app.command("verify")(verify_command)
 app.command("show")(show_command)
 app.command("lint")(lint_command)
+app.command("check")(check_command)
 
 
 @app.callback()

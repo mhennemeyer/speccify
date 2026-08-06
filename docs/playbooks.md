@@ -116,6 +116,26 @@ Agents use the MCP server instead: `playbook_list`, `playbook_get`,
 `playbook_step`, `search`, `lock`, `pull`, `verify` — the same core, so the
 answers cannot drift.
 
+## Staying true
+
+Code has compilers; playbooks have decay. `speccify check` asks whether a
+playbook is still *true* rather than merely well-formed:
+
+```bash
+speccify check playbooks/                 # structure + source age (offline)
+speccify check playbooks/ --links         # also: do the URLs still resolve?
+speccify check playbooks/ --stale-days 90 # tighter freshness bar
+```
+
+- **Structure** — the same rules `lint` applies.
+- **Age** — every source carries `retrieved`, so "last read 582 days ago"
+  is a fact rather than a feeling. Warnings do not fail the run; errors do.
+- **Reachability** — opt-in, because it needs the network. A 404 is an error,
+  a 500 a warning, a redirect is fine.
+
+Agents get the same thing through the `playbook_check` MCP tool — worth calling
+before following a playbook you have not used in a while.
+
 ## Reproducibility
 
 `speccify lock` pins each bundle by a **hash over all its files** (sorted paths
