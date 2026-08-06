@@ -134,6 +134,20 @@ speccify check playbooks/ --stale-days 90 # tighter freshness bar
   is a fact rather than a feeling. Warnings do not fail the run; errors do.
 - **Reachability** — opt-in, because it needs the network. A 404 is an error,
   a 500 a warning, a redirect is fine.
+- **Soft 404s** — some hosts answer `200` for pages that do not exist and put
+  "Page Not Found" in the body, which status-code checking cannot see. Before
+  checking a host, `check` requests a URL it invented; if that renders a page
+  announcing itself as missing, every source on that host whose page is *that
+  page* is reported as gone.
+
+  The canary's own status code is ignored on purpose — `developer.apple.com`
+  answers an honest 404 at the site root while returning `200` for missing
+  pages inside its help section, serving the identical body for both. What
+  calibration needs is what a missing page *looks like* on that host.
+
+  A host whose canary shows no such marker is never compared: a site that
+  serves one shell for every path cannot be told apart, and guessing there
+  would reject all of its sources.
 
 Agents get the same thing through the `playbook_check` MCP tool — worth calling
 before following a playbook you have not used in a while.

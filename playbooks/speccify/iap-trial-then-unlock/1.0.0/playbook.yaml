@@ -257,13 +257,18 @@ sources:
     note: Free trials are subscription offers — the reason a self-built clock is needed.
   - id: asc_create_iap
     title: Create in-app purchases
-    url: https://developer.apple.com/help/app-store-connect/manage-consumable-and-non-consumable-in-app-purchases/create-consumable-or-non-consumable-in-app-purchases
+    url: https://developer.apple.com/help/app-store-connect/manage-in-app-purchases/create-consumable-or-non-consumable-in-app-purchases
     retrieved: 2026-08-06
     note: Product ID rules and the permanence of the identifier.
   - id: universal_purchase
-    title: Universal purchase
-    url: https://developer.apple.com/help/app-store-connect/reference/universal-purchase
+    title: "Add platforms (universal purchase across macOS and iOS)"
+    url: https://developer.apple.com/help/app-store-connect/create-an-app-record/add-platforms/
     retrieved: 2026-08-06
+    note: >
+      One app record with several platforms is what makes a single purchase
+      unlock both. Separate records cannot be merged afterwards.
+      (Replaced the former `reference/universal-purchase` page, which Apple
+      removed — it answered 200 with a "Page Not Found" body.)
   - id: xcode_testing
     title: Setting up StoreKit testing in Xcode
     url: https://developer.apple.com/documentation/xcode/setting-up-storekit-testing-in-xcode
@@ -292,8 +297,8 @@ sources:
     retrieved: 2026-08-06
     note: Two bits per device, held by Apple — survives reinstalls and resets, needs a server.
   - id: asc_versions
-    title: View app status and versions
-    url: https://developer.apple.com/help/app-store-connect/manage-app-information/view-app-status-and-versions
+    title: "App information (version history, where the last paid build number is)"
+    url: https://developer.apple.com/help/app-store-connect/reference/app-information/
     retrieved: 2026-08-06
     note: Where to read the build number of the last paid release.
   - id: app_transaction
