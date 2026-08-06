@@ -1,22 +1,21 @@
-"""Git-Repos als Spec-Quelle (Phase P5): `GitRegistry` nach dem `Registry`-Protocol.
+"""Git repositories as playbook sources: `GitLibrary`.
 
-Vorbild sind Go-Module und SwiftPM, nicht npm: die **Repo-URL ist die
-Identität**, **Tags sind die Versionen**, und ein Commit-SHA macht das
-Ergebnis reproduzierbar. Es gibt keine zentrale Instanz, die Namen vergibt.
+Modelled on Go modules and SwiftPM, not npm: the **repository URL is the
+identity**, **tags are the versions**, and a commit SHA makes a resolution
+reproducible. Nobody hands out names centrally.
 
-Spec-Id (Entscheidung D16)::
+Playbook id::
 
-    git+https://github.com/acme/rating-stars            # Spec im Repo-Root
-    git+https://github.com/acme/kit#specs/button        # Spec in einem Unterordner
+    git+https://github.com/acme/iap-trial            # bundle at the repo root
+    git+https://github.com/acme/kit#playbooks/iap    # bundle in a subdirectory
 
-Tags (D17): `v<semver>` ohne Pfad, `<pfad>/v<semver>` mit Pfad — damit lassen
-sich beliebig viele Specs in einem Repo unabhängig versionieren.
+Tags: `v<semver>` without a path, `<path>/v<semver>` with one — so a monorepo
+can version any number of playbooks independently.
 
-Cache (D19): pro Repo ein **Bare-Clone** unter `<cache>/<hash>/repo.git`. Tags
-kommen per `fetch --depth 1`, die Spec-Bytes per `git cat-file blob <tag>:<pfad>`
-— kein Working Tree, kein Checkout. Nach einem Fetch ist alles offline
-reproduzierbar; `offline=True` verbietet jeden Netz-Zugriff hart, damit
-`verify` und CI ohne Netz laufen.
+Cache: one **bare clone** per repository under `<cache>/<hash>/repo.git`. Tags
+arrive via `fetch --depth 1`, bundle files via `ls-tree` + `cat-file` — no
+working tree, no checkout. After one fetch everything is readable offline;
+`offline=True` forbids network access outright so CI stays hermetic.
 """
 
 from __future__ import annotations
@@ -30,9 +29,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from urllib.parse import urlparse
 
-from speccify_core.registry import RegistryError, Spec, Version
+from speccify_core.playbook import ASSET_DIR, PLAYBOOK_FILENAME
+from speccify_core.registry import Bundle, LibraryError, Version
 
-SPEC_FILENAME = "spec.speccify.yaml"
 DEFAULT_GIT_CACHE_DIR = Path.home() / ".cache" / "speccify" / "git"
 DEFAULT_TIMEOUT = 60.0
 
@@ -41,36 +40,44 @@ _ALLOWED_SCHEMES = ("https", "file")
 _SEMVER_TAG = re.compile(r"^v(?P<version>\d+\.\d+\.\d+)$")
 
 
-class GitRegistryError(RegistryError):
-    """Git-Quelle war nicht auflösbar (Ref kaputt, git fehlt, Netz gesperrt)."""
+class GitLibraryError(LibraryError):
+    """A git source could not be resolved (bad ref, git missing, network blocked)."""
+
+
+# Older vocabulary, same error.
+GitRegistryError = GitLibraryError
 
 
 @dataclass(frozen=True)
 class GitRef:
-    """Zerlegte Git-Spec-Id: Repo-URL + optionaler Pfad im Repo."""
+    """A parsed git playbook id: repository URL plus optional path inside it."""
 
     url: str
     path: str = ""
 
     @property
-    def spec_id(self) -> str:
+    def playbook_id(self) -> str:
         return f"git+{self.url}#{self.path}" if self.path else f"git+{self.url}"
 
     @property
-    def spec_path(self) -> str:
-        """Pfad der Spec-Datei im Repo."""
-        return f"{self.path}/{SPEC_FILENAME}" if self.path else SPEC_FILENAME
+    def bundle_prefix(self) -> str:
+        """Path prefix of the bundle inside the repository (empty at the root)."""
+        return f"{self.path}/" if self.path else ""
+
+    @property
+    def playbook_path(self) -> str:
+        return f"{self.bundle_prefix}{PLAYBOOK_FILENAME}"
 
     @property
     def tag_prefix(self) -> str:
-        """`specs/button/` bei gesetztem Pfad, sonst leer (D17)."""
+        """`playbooks/iap/` when a path is set, empty otherwise."""
         return f"{self.path}/" if self.path else ""
 
     def tag_for(self, version: Version) -> str:
         return f"{self.tag_prefix}v{version}"
 
     def version_for(self, tag: str) -> Version | None:
-        """Version eines Tags — `None`, wenn der Tag nicht zu dieser Spec gehört."""
+        """The version a tag encodes — `None` when the tag belongs to another playbook."""
         if not tag.startswith(self.tag_prefix):
             return None
         match = _SEMVER_TAG.match(tag[len(self.tag_prefix) :])
@@ -82,27 +89,27 @@ class GitRef:
             return None
 
 
-def is_git_ref(spec_id: str) -> bool:
-    return spec_id.startswith("git+")
+def is_git_ref(playbook_id: str) -> bool:
+    return playbook_id.startswith("git+")
 
 
-def parse_git_ref(spec_id: str) -> GitRef:
-    """`git+https://host/org/repo#pfad` → `GitRef`. Wirft bei kaputten Refs."""
-    match = _GIT_REF_PATTERN.match(spec_id)
+def parse_git_ref(playbook_id: str) -> GitRef:
+    """`git+https://host/org/repo#path` -> `GitRef`; raises on malformed refs."""
+    match = _GIT_REF_PATTERN.match(playbook_id)
     if match is None:
-        raise GitRegistryError(
-            f"Ungültige Git-Spec-Id '{spec_id}': erwartet 'git+<url>[#<pfad-im-repo>]'."
+        raise GitLibraryError(
+            f"Ungültige Git-Spec-Id '{playbook_id}': erwartet 'git+<url>[#<pfad-im-repo>]'."
         )
     url = match.group("url").rstrip("/")
     parsed = urlparse(url)
     if parsed.scheme not in _ALLOWED_SCHEMES:
-        raise GitRegistryError(
-            f"Git-Spec-Id '{spec_id}': Schema '{parsed.scheme or '∅'}' wird nicht unterstützt "
+        raise GitLibraryError(
+            f"Git-Spec-Id '{playbook_id}': Schema '{parsed.scheme or '∅'}' wird nicht unterstützt "
             f"(erlaubt: {', '.join(_ALLOWED_SCHEMES)})."
         )
     path = (match.group("path") or "").strip("/")
     if path.startswith("..") or "/../" in path:
-        raise GitRegistryError(f"Git-Spec-Id '{spec_id}': Pfad darf nicht aus dem Repo zeigen.")
+        raise GitLibraryError(f"Git-Spec-Id '{playbook_id}': Pfad darf nicht aus dem Repo zeigen.")
     return GitRef(url=url, path=path)
 
 
@@ -139,7 +146,7 @@ class GitRepoCache:
     def run_bytes(self, args: list[str], *, cwd: Path | None = None) -> bytes:
         """Ruft git auf und liefert rohe stdout-Bytes (Hashes müssen exakt bleiben)."""
         if shutil.which(self._git) is None:
-            raise GitRegistryError(
+            raise GitLibraryError(
                 f"`{self._git}` ist nicht im PATH — Git-Quellen brauchen ein installiertes git."
             )
         try:
@@ -153,10 +160,10 @@ class GitRepoCache:
                 env={"GIT_TERMINAL_PROMPT": "0", "PATH": os.environ.get("PATH", "")},
             )
         except subprocess.TimeoutExpired as exc:
-            raise GitRegistryError(f"git {' '.join(args)}: Timeout nach {exc.timeout}s.") from exc
+            raise GitLibraryError(f"git {' '.join(args)}: Timeout nach {exc.timeout}s.") from exc
         if proc.returncode != 0:
             detail = proc.stderr.decode("utf-8", "replace").strip()
-            raise GitRegistryError(
+            raise GitLibraryError(
                 f"git {' '.join(args)} fehlgeschlagen (rc={proc.returncode}): {detail}"
             )
         return proc.stdout
@@ -177,7 +184,7 @@ class GitRepoCache:
         what = label or url
         if not repo.is_dir():
             if self._offline:
-                raise GitRegistryError(
+                raise GitLibraryError(
                     f"{what}: kein Cache unter {repo} und offline=True — "
                     f"einmal online auflösen oder Cache mitliefern."
                 )
@@ -190,11 +197,11 @@ class GitRepoCache:
         return repo
 
 
-class GitRegistry:
-    """Registry-Protocol-Implementierung über Git-Tags.
+class GitLibrary:
+    """`Library` implementation backed by git tags.
 
-    `via` ist bewusst der konstante Marker `"git"` — die Repo-URL steckt bereits
-    in der Spec-Id, das Lockfile verliert also nichts.
+    `via` is the constant marker `"git"` on purpose — the repository URL is
+    already part of the playbook id, so the lockfile loses nothing.
     """
 
     def __init__(
@@ -225,22 +232,24 @@ class GitRegistry:
     def offline(self) -> bool:
         return self._cache.offline
 
-    def serves(self, spec_id: str) -> bool:
-        """Nur `git+`-Ids — alles andere bedienen Local-/RemoteRegistry."""
-        return is_git_ref(spec_id)
+    def serves(self, playbook_id: str) -> bool:
+        """Only `git+` ids — everything else belongs to the local library."""
+        return is_git_ref(playbook_id)
 
     def _repo(self, ref: GitRef) -> Path:
         """Bare-Clone des Repos, Tags aktuell (bzw. nur lokal, wenn offline)."""
-        return self._cache.ensure(ref.url, refspec="+refs/tags/*:refs/tags/*", label=ref.spec_id)
+        return self._cache.ensure(
+            ref.url, refspec="+refs/tags/*:refs/tags/*", label=ref.playbook_id
+        )
 
     def _run(self, args: list[str], *, cwd: Path) -> str:
         return self._cache.run(args, cwd=cwd)
 
     # --- Registry-Protocol ----------------------------------------------------
 
-    def list_versions(self, spec_id: str) -> list[Version]:
-        """Alle Semver-Tags, die zu dieser Spec-Id gehören (aufsteigend sortiert)."""
-        ref = parse_git_ref(spec_id)
+    def list_versions(self, playbook_id: str) -> list[Version]:
+        """Every semver tag belonging to this playbook id, ascending."""
+        ref = parse_git_ref(playbook_id)
         repo = self._repo(ref)
         versions: list[Version] = []
         for tag in self._run(["tag", "--list"], cwd=repo).splitlines():
@@ -249,46 +258,68 @@ class GitRegistry:
                 versions.append(version)
         return sorted(set(versions))
 
-    def fetch(self, spec_id: str, version: Version) -> Spec:
-        """Liest die Spec-Bytes am passenden Tag — ohne Working Tree."""
-        ref = parse_git_ref(spec_id)
+    def fetch(self, playbook_id: str, version: Version) -> Bundle:
+        """Read the whole bundle at the matching tag — no working tree involved."""
+        ref = parse_git_ref(playbook_id)
         repo = self._repo(ref)
         tag = ref.tag_for(version)
         try:
             commit = self._run(["rev-parse", f"{tag}^{{commit}}"], cwd=repo).strip()
-        except GitRegistryError as exc:
-            available = ", ".join(str(v) for v in self.list_versions(spec_id)) or "keine"
-            raise GitRegistryError(
-                f"{spec_id}: Tag '{tag}' existiert nicht (verfügbar: {available})."
+        except GitLibraryError as exc:
+            available = ", ".join(str(v) for v in self.list_versions(playbook_id)) or "none"
+            raise GitLibraryError(
+                f"{playbook_id}: tag '{tag}' does not exist (available: {available})."
             ) from exc
+
+        files: dict[str, bytes] = {}
         try:
-            blob = self._cache.run_bytes(["cat-file", "blob", f"{tag}:{ref.spec_path}"], cwd=repo)
-        except GitRegistryError as exc:
-            raise GitRegistryError(
-                f"{spec_id}: '{ref.spec_path}' fehlt im Repo bei Tag '{tag}'."
+            files[PLAYBOOK_FILENAME] = self._cache.run_bytes(
+                ["cat-file", "blob", f"{tag}:{ref.playbook_path}"], cwd=repo
+            )
+        except GitLibraryError as exc:
+            raise GitLibraryError(
+                f"{playbook_id}: '{ref.playbook_path}' is missing at tag '{tag}'."
             ) from exc
-        return Spec(
-            spec_id=spec_id,
+
+        # Assets are optional; an empty tree simply lists nothing.
+        listing = self._run(
+            ["ls-tree", "-r", "--name-only", tag, f"{ref.bundle_prefix}{ASSET_DIR}/"],
+            cwd=repo,
+        )
+        for line in listing.splitlines():
+            path = line.strip()
+            if not path:
+                continue
+            files[path[len(ref.bundle_prefix) :]] = self._cache.run_bytes(
+                ["cat-file", "blob", f"{tag}:{path}"], cwd=repo
+            )
+
+        return Bundle(
+            source_id=playbook_id,
             version=version,
-            raw_bytes=blob,
-            path=Path(f"{ref.url}@{tag}:{ref.spec_path}"),
+            files=files,
+            origin=f"{ref.url}@{tag}",
             source_commit=commit,
         )
 
-    def resolve_commit(self, spec_id: str, version: Version) -> str:
-        """Commit-SHA hinter dem Tag — der Pin fürs Lockfile (D18)."""
-        ref = parse_git_ref(spec_id)
+    def resolve_commit(self, playbook_id: str, version: Version) -> str:
+        """The commit behind the tag — what the lockfile pins."""
+        ref = parse_git_ref(playbook_id)
         repo = self._repo(ref)
         return self._run(["rev-parse", f"{ref.tag_for(version)}^{{commit}}"], cwd=repo).strip()
+
+
+# Older vocabulary, same class.
+GitRegistry = GitLibrary
 
 
 __all__ = [
     "DEFAULT_GIT_CACHE_DIR",
     "GitRepoCache",
-    "SPEC_FILENAME",
     "GitRef",
+    "GitLibrary",
     "GitRegistry",
-    "GitRegistryError",
+    "GitLibraryError",
     "is_git_ref",
     "parse_git_ref",
 ]

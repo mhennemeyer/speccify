@@ -1,11 +1,7 @@
-// HTTP-Client für das Composer-Backend. Alle Composer-Aktionen laufen über
-// diese Endpoints — dieselbe API ist auch headless (Agent/CLI) nutzbar.
-// API-Base-Auflösung: `window.__SPECCIFY_API__` (Laufzeit, z. B. von einer
-// Shell injiziert) > `VITE_API_BASE` (Build-Zeit) > "" (same-origin — der
-// Normalfall im Desktop-Composer-Fenster, das die SPA unter /ui vom
-// speccify-web-backend lädt, und im Vite-Dev via Proxy).
+// HTTP client for the Speccify backend. Every viewer action exists as an
+// endpoint, so agents can do the same thing headlessly.
 
-import type { IndexHit, MockBundle, SpecDetail, SpecSummary, ValidationIssue } from "./types";
+import type { PlaybookDetail, PlaybookSummary } from "./types";
 
 declare global {
   interface Window {
@@ -16,24 +12,6 @@ declare global {
 const BASE: string =
   window.__SPECCIFY_API__ ?? (import.meta.env.VITE_API_BASE as string | undefined) ?? "";
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${BASE}${path}`, {
-    headers: { "Content-Type": "application/json" },
-    ...init,
-  });
-  if (!response.ok) {
-    let detail = "";
-    try {
-      const body = (await response.json()) as { detail?: unknown };
-      detail = JSON.stringify(body.detail ?? body);
-    } catch {
-      detail = response.statusText;
-    }
-    throw new ApiError(response.status, detail);
-  }
-  return (await response.json()) as T;
-}
-
 export class ApiError extends Error {
   status: number;
 
@@ -43,52 +21,37 @@ export class ApiError extends Error {
   }
 }
 
-export async function listSpecs(): Promise<SpecSummary[]> {
-  const body = await request<{ specs: SpecSummary[] }>("/api/v1/specs");
-  return body.specs;
+async function request<T>(path: string): Promise<T> {
+  const response = await fetch(`${BASE}${path}`, {
+    headers: { "Content-Type": "application/json" },
+  });
+  if (!response.ok) {
+    let detail = response.statusText;
+    try {
+      const body = (await response.json()) as { detail?: unknown };
+      detail = JSON.stringify(body.detail ?? body);
+    } catch {
+      /* keep the status text */
+    }
+    throw new ApiError(response.status, detail);
+  }
+  return (await response.json()) as T;
 }
 
-export async function getSpecDetail(specId: string, version?: string): Promise<SpecDetail> {
-  const path = specId.replace(/^@/, "");
-  const query = version ? `?version=${encodeURIComponent(version)}` : "";
-  return request<SpecDetail>(`/api/v1/specs/${path}${query}`);
+export async function listPlaybooks(): Promise<PlaybookSummary[]> {
+  const body = await request<{ playbooks: PlaybookSummary[] }>("/api/v1/playbooks");
+  return body.playbooks;
 }
 
-/** Detail über die Quelle — funktioniert auch für Git-Refs (`git+…`). */
-export async function getSpecDetailBySource(source: string): Promise<SpecDetail> {
-  return request<SpecDetail>(`/api/v1/spec?source=${encodeURIComponent(source)}`);
+export async function getPlaybook(source: string): Promise<PlaybookDetail> {
+  return request<PlaybookDetail>(`/api/v1/playbook?source=${encodeURIComponent(source)}`);
 }
 
-/** Discovery: Specs in den konfigurierten Index-Repos suchen. */
-export async function searchIndex(query: string): Promise<IndexHit[]> {
-  const body = await request<{ hits: IndexHit[] }>(
-    `/api/v1/index?q=${encodeURIComponent(query)}`,
+export async function getAsset(
+  source: string,
+  path: string,
+): Promise<{ path: string; encoding: string; content: string }> {
+  return request(
+    `/api/v1/playbook/asset?source=${encodeURIComponent(source)}&path=${encodeURIComponent(path)}`,
   );
-  return body.hits;
-}
-
-export async function validateSpec(
-  specYaml: string,
-): Promise<{ ok: boolean; issues: ValidationIssue[] }> {
-  return request("/api/v1/validate", {
-    method: "POST",
-    body: JSON.stringify({ spec_yaml: specYaml }),
-  });
-}
-
-/** Mock-Closure des (ungespeicherten) Dokuments — die Dateien, die der Canvas rendert. */
-export async function mockDraft(specYaml: string): Promise<MockBundle> {
-  return request("/api/v1/mock/draft", {
-    method: "POST",
-    body: JSON.stringify({ spec_yaml: specYaml }),
-  });
-}
-
-export async function saveSpec(
-  specYaml: string,
-): Promise<{ id: string; version: string; path: string }> {
-  return request("/api/v1/specs", {
-    method: "POST",
-    body: JSON.stringify({ spec_yaml: specYaml }),
-  });
 }

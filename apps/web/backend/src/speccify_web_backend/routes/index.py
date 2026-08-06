@@ -1,17 +1,15 @@
-"""`GET /api/v1/index` — Discovery-Suche über die konfigurierten Index-Quellen (P5).
+"""`GET /api/v1/index` — discovery across the configured index sources.
 
-Query-Parameter:
+Query parameters:
 
-- `q` (optional): Suchbegriff; leer listet alle Einträge.
-- `source` (optional, mehrfach): Index-Quelle überschreiben (lokales
-  Verzeichnis oder `git+<url>`). Ohne Angabe gelten die Quellen aus
-  `SPECCIFY_INDEX`.
+- `q` (optional): search term; empty lists everything.
+- `source` (optional, repeatable): override the index sources (local directory
+  or `git+<url>`). Without it, `SPECCIFY_INDEX` applies.
 
-Response (200): `{query, sources, hits: [{source, title, summary, kind,
-keywords, homepage, license, origin}]}`.
+Response (200): `{query, sources, hits: [...]}`.
 
-Damit findet auch der Composer (und jeder Agent über HTTP) Specs, ohne dass es
-einen zentralen Suchdienst gäbe — die Quelle ist immer ein Git-Repo.
+This is how the viewer — and any agent over HTTP — finds playbooks without a
+central search service; the source is always a git repository.
 """
 
 from __future__ import annotations
@@ -39,8 +37,7 @@ def search_indexes(
             detail={
                 "error_code": "no_index_configured",
                 "message": (
-                    "Keine Index-Quelle konfiguriert — `SPECCIFY_INDEX` setzen "
-                    "oder `?source=` angeben."
+                    "No index source configured — set `SPECCIFY_INDEX` or pass `?source=`."
                 ),
             },
         )

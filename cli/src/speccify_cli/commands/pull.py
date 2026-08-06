@@ -1,296 +1,72 @@
-"""`speccify pull`: rendert Specs aus dem Lockfile und schreibt Output-Hashes zurück.
+"""`speccify pull`: materialise the locked bundles into a directory.
 
-Phase 1b Step 5b:
-- Ruft den Codegen-Dispatcher `render_for_target(spec, target, llm_client=...)`
-  statt direkt den Stub-Adapter. Für `target == "react"` wird ein
-  `ReplayCacheClient` gegen den eingecheckten Replay-Cache eingespeist
-  (Default-Pfad in `_llm_client.py`).
-- Neue Flags: `--offline/--no-offline` (Default: `--offline`, kein Live-LLM-Call)
-  und `--cache-dir` (überschreibt `SPECCIFY_CACHE_DIR` und den Repo-Default).
-- Schreibt pro Spec einen `LlmGeneratorPin` ins Lockfile (`provider`,
-  `model`, `prompt_version`, optional `seed`, `cache_key=sha256:<digest>`),
-  zusätzlich zu `generated_files_sha256`.
+Agents usually read playbooks over MCP, but having them on disk makes them
+greppable, diffable and readable offline — assets included.
 """
 
 from __future__ import annotations
 
-import hashlib
-import os
-import tempfile
 from pathlib import Path
 
 import typer
-from speccify_core import (
-    CacheMissError,
-    CodegenError,
-    GeneratedFile,
-    LlmGeneratorPin,
-    Lockfile,
-    LockfileError,
-    Workspace,
-    WorkspaceError,
-    render_for_target,
-)
-from speccify_core.codegen import react_llm
-from speccify_core.manifest import ManifestError, ProjectManifest
-from speccify_core.registry import Registry, RegistryError, Version
+from speccify_core import Lockfile, LockfileError, RegistryError, Version, bundle_sha256
 
-from speccify_cli.commands._llm_client import build_replay_client
-from speccify_cli.commands._workspace import (
-    LOCKFILE_FILENAME,
-    MANIFEST_FILENAME,
-    WorkspaceContext,
-    build_registries,
-    fetch_spec,
-)
+from speccify_cli.commands._context import ProjectContext, fetch_bundle
 
-WORKSPACE_OUTPUT_DIRNAME = "speccify_generated"
-
-
-def _atomic_write(path: Path, data: bytes) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    fd, tmp_name = tempfile.mkstemp(prefix=".speccify-", dir=str(path.parent))
-    try:
-        with os.fdopen(fd, "wb") as fh:
-            fh.write(data)
-        os.replace(tmp_name, path)
-    except Exception:
-        if os.path.exists(tmp_name):
-            os.unlink(tmp_name)
-        raise
-
-
-def _is_workspace_root(project_dir: Path) -> bool:
-    """Detection: Manifest mit `workspaces:`-Key ⇒ Workspace-Root."""
-    manifest_path = project_dir / MANIFEST_FILENAME
-    if not manifest_path.is_file():
-        return False
-    try:
-        manifest = ProjectManifest.load(manifest_path)
-    except ManifestError:
-        return False
-    return manifest.is_workspace_root
-
-
-def _render_lock_entry_into(
-    lockfile: Lockfile,
-    entry_id: str,
-    target: str,
-    out_dir: Path,
-    registries: list[Registry],
-    llm_client: object,
-) -> Lockfile:
-    """Rendert einen Lock-Entry (`spec_id`, `target`) in `out_dir`.
-
-    Aktualisiert anschließend das Lockfile mit Output-Hashes + ggf. LLM-Pin.
-    `out_dir` ist die Wurzel für das Render-Layout (Renderer schreibt seine eigene
-    Unterstruktur — z. B. `org/Button.tsx` — relativ dazu).
-    """
-    matching = [e for e in lockfile.entries if e.id == entry_id and e.target == target]
-    if not matching:
-        raise LockfileError(
-            f"Lockfile enthält keinen Eintrag für {entry_id!r} mit target={target!r}."
-        )
-    entry = matching[0]
-    spec = fetch_spec(registries, entry.id, Version.parse(entry.version))
-    rendered = render_for_target(spec, target, llm_client=llm_client)
-    generated: list[GeneratedFile] = []
-    for rel_path, data in sorted(rendered.files.items()):
-        abs_path = out_dir / rel_path
-        _atomic_write(abs_path, data)
-        digest = hashlib.sha256(data).hexdigest()
-        generated.append(GeneratedFile(path=rel_path, sha256=f"sha256:{digest}"))
-    updated = lockfile.with_generated_files(entry.id, generated)
-    if rendered.cache_key is not None:
-        pin = LlmGeneratorPin(
-            provider=react_llm.PROVIDER,
-            model=rendered.cache_key.model,
-            prompt_version=rendered.cache_key.prompt_version,
-            cache_key=f"sha256:{rendered.cache_key.digest()}",
-            seed=rendered.cache_key.seed,
-        )
-        updated = updated.with_generator(entry.id, pin)
-    return updated
-
-
-def _run_workspace_pull(
-    project_dir: Path,
-    registry_override: Path | None,
-    *,
-    offline: bool,
-    cache_dir: Path | None,
-) -> Lockfile:
-    """Phase 4 Stage 3: Workspace-Pull — iteriert über Members, materialisiert je Member."""
-    workspace = Workspace.load(project_dir)
-    lockfile_path = project_dir / LOCKFILE_FILENAME
-    if not lockfile_path.is_file():
-        raise LockfileError(
-            f"Kein Lockfile in {project_dir} gefunden. Bitte zuerst `speccify lock` ausführen."
-        )
-    lockfile = Lockfile.load(lockfile_path)
-
-    if registry_override is not None:
-        registry_path = registry_override.resolve()
-    else:
-        registry_path = workspace.root_manifest.resolved_registry_path()
-    registries = build_registries(registry_path, offline=offline)
-    llm_client = build_replay_client(offline=offline, cache_dir=cache_dir)
-
-    updated = lockfile
-    for member in workspace.members:
-        # Per-Member-Output unter `<root>/<member-dir>/speccify_generated/<target>/`
-        # (Stage-0-Decision: sichtbar, committable).
-        member_dir = (project_dir / member.relative_path).parent
-        member_targets = member.manifest.targets
-        member_deps = set(member.manifest.dependencies.keys())
-        for target in member_targets:
-            target_out = member_dir / WORKSPACE_OUTPUT_DIRNAME / target
-            target_out.mkdir(parents=True, exist_ok=True)
-            # Nur Entries rendern, deren spec_id in den Member-Deps liegt UND deren
-            # target matched. Transitive Deps werden nicht pro Member materialisiert
-            # (Stage-0-Decision: Members entkoppelt; Aggregation nur in der Resolution).
-            relevant = [e for e in updated.entries if e.id in member_deps and e.target == target]
-            for entry in relevant:
-                updated = _render_lock_entry_into(
-                    updated,
-                    entry.id,
-                    target,
-                    target_out,
-                    registries,
-                    llm_client,
-                )
-
-    updated.write(lockfile_path)
-    return updated
+DEFAULT_OUT_DIR = "./speccify_playbooks"
 
 
 def run_pull(
     project_dir: Path,
     out_dir: Path,
-    target_override: str | None = None,
-    registry_override: Path | None = None,
     *,
-    offline: bool = True,
-    cache_dir: Path | None = None,
-) -> Lockfile:
-    if _is_workspace_root(project_dir):
-        if target_override is not None:
-            raise LockfileError(
-                "--target ist im Workspace-Modus nicht unterstützt — jeder Member liefert "
-                "seine eigenen Targets via `targets:` im Member-Manifest."
-            )
-        return _run_workspace_pull(
-            project_dir,
-            registry_override,
-            offline=offline,
-            cache_dir=cache_dir,
-        )
+    library_override: Path | None = None,
+    offline: bool = False,
+) -> list[Path]:
+    """Write every locked bundle to `<out_dir>/<scope>/<name>/`; returns the files written."""
+    context = ProjectContext.load(project_dir, library_override=library_override, offline=offline)
+    if not context.lockfile_path.is_file():
+        raise LockfileError(f"No lockfile in {project_dir}. Run `speccify lock` first.")
+    lockfile = Lockfile.load(context.lockfile_path)
 
-    # `--offline` gilt auch für Git-Quellen: kein Netz, nur der lokale Cache.
-    ctx = WorkspaceContext.load(project_dir, registry_override=registry_override, offline=offline)
-    if not ctx.lockfile_path.is_file():
-        raise LockfileError(
-            f"Kein Lockfile in {project_dir} gefunden. Bitte zuerst `speccify lock` ausführen."
-        )
-    lockfile = Lockfile.load(ctx.lockfile_path)
-
-    target = target_override or lockfile.target
-    if target_override is not None and target_override != lockfile.target:
-        raise LockfileError(
-            f"--target '{target_override}' weicht vom Lockfile-Target '{lockfile.target}' ab. "
-            f"Bitte zuerst `speccify lock` mit gewünschtem Target ausführen."
-        )
-
-    llm_client = build_replay_client(offline=offline, cache_dir=cache_dir)
-
-    out_dir.mkdir(parents=True, exist_ok=True)
-    updated = lockfile
+    written: list[Path] = []
     for entry in lockfile.entries:
-        updated = _render_lock_entry_into(
-            updated,
-            entry.id,
-            target,
-            out_dir,
-            ctx.registries,
-            llm_client,
-        )
-
-    updated.write(ctx.lockfile_path)
-    return updated
+        bundle = fetch_bundle(context.libraries, entry.id, Version.parse(entry.version))
+        actual = bundle_sha256(bundle.files)
+        if actual != entry.bundle_sha256:
+            raise RegistryError(
+                f"{entry.id}@{entry.version}: bundle hash differs from the lockfile "
+                f"({actual} != {entry.bundle_sha256}). Someone moved a tag."
+            )
+        target = out_dir / bundle.declared_id.lstrip("@")
+        for relative, data in sorted(bundle.files.items()):
+            path = target / relative
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(data)
+            written.append(path)
+    return written
 
 
 def pull_command(
-    project_dir: Path | None = typer.Option(  # noqa: B008
-        None,
-        "--project",
-        "-p",
-        exists=True,
-        file_okay=False,
-        dir_okay=True,
-        readable=True,
-        help="Projekt-Verzeichnis mit speccify.yaml/speccify.lock (Default: aktuelles Verz.).",
+    project_dir: Path = typer.Option(  # noqa: B008
+        Path("."), "--project", "-p", help="Project directory (default: current directory)."
     ),
     out: Path = typer.Option(  # noqa: B008
-        Path("./out"),
-        "--out",
-        file_okay=False,
-        dir_okay=True,
-        help="Ausgabeverzeichnis für gerenderte Dateien.",
+        Path(DEFAULT_OUT_DIR), "--out", help="Where to materialise the bundles."
     ),
-    target: str | None = typer.Option(  # noqa: B008
-        None,
-        "--target",
-        help="Codegen-Target (Default: Target aus Lockfile).",
+    library: Path | None = typer.Option(  # noqa: B008
+        None, "--library", help="Local playbook library (default: from the manifest)."
     ),
-    registry: Path | None = typer.Option(  # noqa: B008
-        None,
-        "--registry",
-        exists=True,
-        file_okay=False,
-        dir_okay=True,
-        readable=True,
-        help="Optionale Registry-Pfad-Überschreibung.",
-    ),
-    offline: bool = typer.Option(  # noqa: B008
-        True,
-        "--offline/--no-offline",
-        help="Nur Replay-Cache benutzen (Default). Mit --no-offline wird bei "
-        "Cache-Miss ein Live-Bedrock-Call gemacht (AWS-Credentials aus Umgebung/.env) "
-        "und das Ergebnis in den Cache geschrieben.",
-    ),
-    cache_dir: Path | None = typer.Option(  # noqa: B008
-        None,
-        "--cache-dir",
-        file_okay=False,
-        dir_okay=True,
-        help="Replay-Cache-Pfad (Default: tests/fixtures/llm-cache im Repo "
-        "bzw. $SPECCIFY_CACHE_DIR).",
+    offline: bool = typer.Option(
+        False, "--offline/--no-offline", help="Only read cached git sources, never the network."
     ),
 ) -> None:
-    """Rendert resolved Specs aus dem Lockfile und aktualisiert Output-Hashes."""
-    project = project_dir or Path.cwd()
+    """Materialise the locked playbooks (including assets) into a directory."""
     try:
-        lockfile = run_pull(
-            project,
-            out_dir=out,
-            target_override=target,
-            registry_override=registry,
-            offline=offline,
-            cache_dir=cache_dir,
-        )
-    except (
-        ManifestError,
-        RegistryError,
-        LockfileError,
-        FileNotFoundError,
-        CacheMissError,
-        CodegenError,
-        WorkspaceError,
-    ) as exc:
-        typer.echo(f"✗ speccify pull fehlgeschlagen: {exc}", err=True)
+        written = run_pull(project_dir, out, library_override=library, offline=offline)
+    except (LockfileError, RegistryError, FileNotFoundError) as exc:
+        typer.echo(f"x speccify pull failed: {exc}", err=True)
         raise typer.Exit(code=1) from exc
-
-    files_total = sum(len(e.generated_files_sha256) for e in lockfile.entries)
-    typer.echo(
-        f"✓ {files_total} Dateien gerendert ({len(lockfile.entries)} Specs) → {out.resolve()}"
-    )
+    for path in written:
+        typer.echo(f"ok {path}")
+    typer.echo(f"\n{len(written)} file(s) written to {out}.")

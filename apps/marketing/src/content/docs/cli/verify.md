@@ -1,11 +1,11 @@
 ---
 title: "speccify verify"
-description: "Prüft, dass Manifest, Lockfile und gerenderte Dateien zueinander passen."
+description: "Check that the lockfile still matches the manifest and the actual bundles."
 ---
 
 <!-- AUTOGENERIERT via scripts/gen_cli_docs.py aus `speccify --help` — nicht von Hand editieren. -->
 
-Prüft, dass Manifest, Lockfile und gerenderte Dateien zueinander passen.
+Check that the lockfile still matches the manifest and the actual bundles.
 
 ## Usage
 
@@ -17,8 +17,6 @@ speccify verify [OPTIONS]
 
 | Option | Beschreibung |
 | --- | --- |
-| `--project`, `-p` | Projekt-Verzeichnis mit speccify.yaml/speccify.lock (Default: aktuelles Verz.). |
-| `--out` | Verzeichnis mit gerenderten Dateien. |
-| `--registry` | Optionale Registry-Pfad-Überschreibung. |
-| `--offline`, `--no-offline` | Nur Replay-Cache benutzen (Default). |
-| `--cache-dir` | Replay-Cache-Pfad (Default: tests/fixtures/llm-cache im Repo bzw. $SPECCIFY_CACHE_DIR). |
+| `--project`, `-p` | Project directory (default: current directory). |
+| `--library` | Local playbook library (default: from the manifest). |
+| `--offline`, `--no-offline` | Only read cached git sources, never the network. |

@@ -1,149 +1,40 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://speccify.io/schema/lockfile/v4.json",
-  "title": "Speccify Lockfile v4",
-  "description": "Schema v4 für speccify.lock — Phase P5 (Git-Quellen). Bump gegenüber v3: Spec-Ids dürfen Git-Refs sein (`git+<url>[#<pfad>]`) und Entries können den aufgelösten Commit pinnen (`source_commit`). v1–v3-Lockfiles bleiben lesbar (Loader-seitige Migration); neu geschriebene Lockfiles sind immer v4.",
+  "$id": "https://speccify.io/schema/lockfile/v1.json",
+  "title": "Speccify Lockfile v1",
+  "description": "Pins the exact playbooks a project resolved to. Version 1 is a clean restart alongside the playbook schema: no code generation, so no generator pins and no output hashes — what matters is which bundle, from where, at which commit.",
   "type": "object",
-  "required": ["schema_version", "targets", "specs"],
+  "required": ["schema_version", "playbooks"],
   "additionalProperties": false,
   "properties": {
-    "schema_version": {
-      "type": "integer",
-      "const": 4
-    },
-    "targets": {
+    "schema_version": { "type": "integer", "const": 1 },
+    "playbooks": {
       "type": "array",
-      "description": "Codegen-Ziele dieses Lockfiles. Mindestens ein Eintrag; alphabetisch sortiert, deduplizierte Liste.",
-      "minItems": 1,
-      "items": {
-        "type": "string",
-        "minLength": 1
-      },
-      "uniqueItems": true
-    },
-    "signature": {
-      "description": "Reservierter Slot für Spec-Bundle-Signaturen (sigstore ab Phase 4+). Default: `{kind: \"none\"}`.",
-      "oneOf": [
-        {
-          "type": "object",
-          "required": ["kind"],
-          "additionalProperties": false,
-          "properties": {
-            "kind": { "type": "string", "const": "none" }
-          }
-        },
-        {
-          "type": "object",
-          "required": ["kind", "certificate", "rekor_log_index"],
-          "additionalProperties": false,
-          "properties": {
-            "kind": { "type": "string", "const": "sigstore" },
-            "certificate": { "type": "string", "minLength": 1 },
-            "rekor_log_index": { "type": "integer", "minimum": 0 }
-          }
-        }
-      ]
-    },
-    "specs": {
-      "type": "array",
-      "description": "Aufgelöste Specs, alphabetisch sortiert nach (id, target).",
+      "description": "Resolved playbooks, sorted by id.",
       "items": {
         "type": "object",
-        "required": [
-          "id",
-          "version",
-          "sha256",
-          "resolved_via",
-          "target",
-          "generator",
-          "generated_files_sha256"
-        ],
+        "required": ["id", "version", "resolved_via", "bundle_sha256"],
         "additionalProperties": false,
         "properties": {
           "id": {
             "type": "string",
-            "pattern": "^(spec://[a-z0-9][a-z0-9-]*|@[a-z0-9][a-z0-9-]*/[a-z0-9][a-z0-9-]*|git\\+[^\\s#]+(#[^\\s#]+)?)$"
+            "pattern": "^(@[a-z0-9][a-z0-9-]*/[a-z0-9][a-z0-9-]*|git\\+[^\\s#]+(#[^\\s#]+)?)$",
+            "description": "Local id or git source."
           },
           "version": {
             "type": "string",
             "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)$"
           },
-          "sha256": {
-            "type": "string",
-            "pattern": "^sha256:[0-9a-f]{64}$"
-          },
-          "resolved_via": {
-            "type": "string",
-            "minLength": 1
-          },
+          "resolved_via": { "type": "string", "minLength": 1 },
           "source_commit": {
             "type": "string",
             "pattern": "^[0-9a-f]{40}$",
-            "description": "Nur bei Git-Quellen: Commit-SHA hinter dem aufgelösten Tag (Trust-Pin, Entscheidung D18)."
+            "description": "Git sources only: the commit behind the tag."
           },
-          "target": {
+          "bundle_sha256": {
             "type": "string",
-            "minLength": 1,
-            "description": "Welches Target dieser Entry adressiert (eines der Top-Level-`targets`)."
-          },
-          "yank_status": {
-            "type": "string",
-            "enum": ["none", "yanked"],
-            "description": "Yank-Status zum Zeitpunkt des letzten `lock`-Aufrufs. Default `none`; bei `yanked` warnt `speccify verify`."
-          },
-          "yank_reason": {
-            "type": "string",
-            "minLength": 1,
-            "description": "Optionaler Yank-Grund, gespiegelt vom Registry."
-          },
-          "generator": {
-            "oneOf": [
-              {
-                "type": "object",
-                "required": ["kind", "template_set", "template_version"],
-                "additionalProperties": false,
-                "properties": {
-                  "kind": { "type": "string", "const": "template" },
-                  "template_set": { "type": "string", "minLength": 1 },
-                  "template_version": {
-                    "type": "string",
-                    "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)$"
-                  }
-                }
-              },
-              {
-                "type": "object",
-                "required": ["kind", "provider", "model", "prompt_version", "cache_key"],
-                "additionalProperties": false,
-                "properties": {
-                  "kind": { "type": "string", "const": "llm" },
-                  "provider": { "type": "string", "minLength": 1 },
-                  "model": { "type": "string", "minLength": 1 },
-                  "prompt_version": {
-                    "type": "string",
-                    "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)$"
-                  },
-                  "seed": { "type": "integer", "minimum": 0 },
-                  "cache_key": {
-                    "type": "string",
-                    "pattern": "^sha256:[0-9a-f]{64}$"
-                  }
-                }
-              }
-            ]
-          },
-          "generated_files_sha256": {
-            "type": "array",
-            "description": "Output-Datei-Hashes nach `pull`. Nach reinem `lock` ist die Liste leer.",
-            "items": {
-              "type": "object",
-              "required": ["path", "sha256"],
-              "additionalProperties": false,
-              "properties": {
-                "path": { "type": "string", "minLength": 1 },
-                "sha256": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
-              }
-            }
+            "pattern": "^sha256:[0-9a-f]{64}$",
+            "description": "Hash over the whole bundle (sorted paths plus contents), so assets are pinned too."
           }
         }
       }

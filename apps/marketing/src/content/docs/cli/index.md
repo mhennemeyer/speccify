@@ -10,13 +10,11 @@ hat eine eigene Referenzseite:
 
 | Command | Beschreibung |
 | --- | --- |
-| [`speccify add`](/cli/add/) | Fügt eine Spec-Dependency in speccify.yaml ein und aktualisiert speccify.lock. |
-| [`speccify build`](/cli/build/) | Baut ein lauffähiges Projekt aus einer `kind: app`-Spec. |
-| [`speccify conformance`](/cli/conformance/) | Prüft pro (Spec, Target), dass Renderer + Validator + Lockfile-Hash stimmen. |
-| [`speccify init`](/cli/init/) | Legt ein neues Speccify-Projekt mit minimalem `speccify.yaml` an. |
-| [`speccify lint`](/cli/lint/) | Validiert eine oder mehrere YAML-Specs gegen das Spec-Schema v0. |
-| [`speccify lock`](/cli/lock/) | Löst Dependencies via MVS auf und schreibt speccify.lock (ohne Codegen-Aufruf). |
-| [`speccify mock`](/cli/mock/) | Generiert deterministische Mock-Komponenten (inkl. Kompositions-Kindern). |
-| [`speccify pull`](/cli/pull/) | Rendert resolved Specs aus dem Lockfile und aktualisiert Output-Hashes. |
-| [`speccify search`](/cli/search/) | Sucht Specs in den konfigurierten Discovery-Indizes. |
-| [`speccify verify`](/cli/verify/) | Prüft, dass Manifest, Lockfile und gerenderte Dateien zueinander passen. |
+| [`speccify add`](/cli/add/) | Add a playbook dependency and update the lockfile. |
+| [`speccify init`](/cli/init/) | Create a speccify.yaml for a project that consumes playbooks. |
+| [`speccify lint`](/cli/lint/) | Validate playbooks: schema, cross-references and assets. |
+| [`speccify lock`](/cli/lock/) | Resolve dependencies and write speccify.lock. |
+| [`speccify pull`](/cli/pull/) | Materialise the locked playbooks (including assets) into a directory. |
+| [`speccify search`](/cli/search/) | Search playbooks in the configured discovery indexes. |
+| [`speccify show`](/cli/show/) | Print a playbook, or a single step of it. |
+| [`speccify verify`](/cli/verify/) | Check that the lockfile still matches the manifest and the actual bundles. |

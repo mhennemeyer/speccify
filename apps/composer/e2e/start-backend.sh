@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 #
-# Startet das FastAPI-Backend für den Playwright-Smoke gegen eine
-# Wegwerf-Kopie der registry-fixtures — Speichern im Test verschmutzt
-# weder specs/ noch registry-fixtures/.
+# Starts the FastAPI backend for the Playwright smoke against a throwaway copy
+# of the playbook library, so tests never touch the real one.
 
 set -euo pipefail
 
@@ -10,34 +9,32 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 PORT="${COMPOSER_E2E_BACKEND_PORT:-8788}"
 
-REG_TMP="$SCRIPT_DIR/.registry-tmp"
-rm -rf "$REG_TMP"
-cp -R "$REPO_ROOT/registry-fixtures" "$REG_TMP"
+LIB_TMP="$SCRIPT_DIR/.library-tmp"
+rm -rf "$LIB_TMP"
+cp -R "$REPO_ROOT/playbooks" "$LIB_TMP"
 
-export SPECCIFY_REGISTRY_PATH="$REG_TMP"
+export SPECCIFY_LIBRARY_PATH="$LIB_TMP"
 
-# Discovery-Fixture (P5): ein echtes Git-Repo mit der Button-Spec plus ein
-# Index, der darauf zeigt. Damit deckt der UI-Smoke den ganzen Weg ab —
-# Index-Suche → Git-Quelle als Kind → Mock im Canvas.
+# Discovery fixture: a real git repository holding a playbook, plus an index
+# pointing at it — so the UI smoke covers search as well.
 GIT_TMP="$SCRIPT_DIR/.git-fixture"
 rm -rf "$GIT_TMP"
 mkdir -p "$GIT_TMP/button-repo" "$GIT_TMP/index/entries" "$GIT_TMP/git-cache"
-cp "$REPO_ROOT/registry-fixtures/org/button/0.1.0/spec.speccify.yaml" "$GIT_TMP/button-repo/"
+cp "$REPO_ROOT/playbooks/speccify/apple-developer-id-cert/1.0.0/playbook.yaml" "$GIT_TMP/button-repo/"
 git -c init.defaultBranch=main init --quiet "$GIT_TMP/button-repo"
 git -C "$GIT_TMP/button-repo" \
   -c user.name="Speccify E2E" -c user.email="e2e@speccify.io" \
   add . >/dev/null
 git -C "$GIT_TMP/button-repo" \
   -c user.name="Speccify E2E" -c user.email="e2e@speccify.io" \
-  commit --quiet -m "button 0.1.0"
-git -C "$GIT_TMP/button-repo" tag v0.1.0
-cat > "$GIT_TMP/index/entries/button.yaml" <<YAML
+  commit --quiet -m "playbook 1.0.0"
+git -C "$GIT_TMP/button-repo" tag v1.0.0
+cat > "$GIT_TMP/index/entries/cert.yaml" <<YAML
 schema_version: 1
 source: git+file://$GIT_TMP/button-repo
-title: Button aus dem Index
-summary: Knopf mit Varianten — kommt aus einem Git-Repo, nicht aus der Registry.
-kind: ui-component
-keywords: [button, discovery]
+title: Developer ID certificate (from the index)
+summary: Comes from a git repository, not from the local library.
+keywords: [codesign, discovery]
 YAML
 
 export SPECCIFY_INDEX="$GIT_TMP/index"

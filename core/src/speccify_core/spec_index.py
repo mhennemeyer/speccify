@@ -1,4 +1,4 @@
-"""Discovery über statische Index-Repos (Phase P5 Stufe 3).
+"""Discovery through static index repositories.
 
 Es gibt kein zentrales Registry mehr — Discovery läuft wie bei Homebrew-Taps
 oder Scoop-Buckets über **Git-Repos mit einer Datei pro Spec-Repo**:

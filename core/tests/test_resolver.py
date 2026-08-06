@@ -1,4 +1,4 @@
-"""Resolver-Tests: Happy-Path, transitiv, Diamond, Konflikte, fehlende Versionen."""
+"""Tests for the playbook resolver (MVS over local sources)."""
 
 from __future__ import annotations
 
@@ -6,147 +6,98 @@ from pathlib import Path
 
 import pytest
 from speccify_core import (
-    LocalRegistry,
+    LocalLibrary,
     ProjectManifest,
     Range,
     RangeConflictError,
     Resolver,
-    ResolverError,
     Version,
     VersionNotFoundError,
+    build_lockfile,
+    parse_uses_entry,
 )
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
-FIXTURES = REPO_ROOT / "registry-fixtures"
+FIXTURES = Path("playbooks")
 
 
-def _manifest(deps: dict[str, str], target: str = "react") -> ProjectManifest:
-    return ProjectManifest(
-        schema_version=2,
-        targets=(target,),
-        dependencies=deps,
-        registry_path=str(FIXTURES),
-        source_path=None,
+def _manifest(**dependencies: str) -> ProjectManifest:
+    return ProjectManifest(dependencies=dict(dependencies))
+
+
+def test_range_parsing_and_containment() -> None:
+    caret = Range.parse("^1.2")
+    assert caret.contains(Version.parse("1.9.0"))
+    assert not caret.contains(Version.parse("2.0.0"))
+    zero = Range.parse("^0.1")
+    assert zero.contains(Version.parse("0.1.7"))
+    assert not zero.contains(Version.parse("0.2.0"))
+    exact = Range.parse("1.0.0")
+    assert exact.contains(Version.parse("1.0.0"))
+    assert not exact.contains(Version.parse("1.0.1"))
+
+
+@pytest.mark.parametrize(
+    ("entry", "expected"),
+    [
+        ("@org/x@^1.0", ("@org/x", "^1.0")),
+        ("@org/x", ("@org/x", "^0.0")),
+        ("git+https://host/repo@^1.2", ("git+https://host/repo", "^1.2")),
+        ("git+https://host/repo#play/a@2.0.0", ("git+https://host/repo#play/a", "2.0.0")),
+        ("git+https://host/repo", ("git+https://host/repo", "^0.0")),
+    ],
+)
+def test_parse_uses_entry(entry: str, expected: tuple[str, str]) -> None:
+    assert parse_uses_entry(entry) == expected
+
+
+def test_resolve_follows_child_playbooks() -> None:
+    graph = Resolver(LocalLibrary(FIXTURES)).resolve(
+        _manifest(**{"@speccify/macos-notarize-tauri": "^1.0"})
     )
+    resolved = {r.playbook_id: r for r in graph.resolutions}
+    # The child comes along because a step delegates to it.
+    assert set(resolved) == {
+        "@speccify/macos-notarize-tauri",
+        "@speccify/apple-developer-id-cert",
+    }
+    assert resolved["@speccify/apple-developer-id-cert"].version == Version.parse("1.0.0")
+    assert resolved["@speccify/macos-notarize-tauri"].bundle_sha256.startswith("sha256:")
+    assert resolved["@speccify/macos-notarize-tauri"].via == "local"
 
 
-def _registry() -> LocalRegistry:
-    return LocalRegistry(FIXTURES)
+def test_unknown_playbook_reports_who_asked() -> None:
+    with pytest.raises(VersionNotFoundError, match="<root>"):
+        Resolver(LocalLibrary(FIXTURES)).resolve(_manifest(**{"@org/nope": "^1.0"}))
 
 
-# ---- Range -----------------------------------------------------------
+def test_conflicting_ranges_fail_loudly() -> None:
+    resolver = Resolver(LocalLibrary(FIXTURES))
+    with pytest.raises(RangeConflictError, match="available: 1.0.0"):
+        resolver.resolve_constraints(
+            {
+                "@speccify/apple-developer-id-cert": [
+                    ("^1.0", "<root>"),
+                    ("^2.0", "@other/playbook@1.0.0"),
+                ]
+            }
+        )
 
 
-def test_range_caret_minor_only() -> None:
-    r = Range.parse("^0.1")
-    assert r.exact is False
-    assert r.min_version == Version(0, 1, 0)
-    assert r.upper_exclusive == Version(0, 2, 0)
-    assert r.contains(Version(0, 1, 5))
-    assert not r.contains(Version(0, 2, 0))
-
-
-def test_range_caret_full() -> None:
-    r = Range.parse("^1.2.3")
-    assert r.min_version == Version(1, 2, 3)
-    assert r.upper_exclusive == Version(2, 0, 0)
-    assert r.contains(Version(1, 9, 9))
-    assert not r.contains(Version(2, 0, 0))
-    assert not r.contains(Version(1, 2, 2))
-
-
-def test_range_exact() -> None:
-    r = Range.parse("0.1.1")
-    assert r.exact is True
-    assert r.contains(Version(0, 1, 1))
-    assert not r.contains(Version(0, 1, 2))
-
-
-def test_range_invalid() -> None:
-    with pytest.raises(ResolverError):
-        Range.parse("~0.1")
-    with pytest.raises(ResolverError):
-        Range.parse("0.1")  # exact braucht patch
-
-
-# ---- Resolver --------------------------------------------------------
-
-
-def test_resolver_happy_path_single_dep() -> None:
-    m = _manifest({"@org/button": "^0.1"})
-    graph = Resolver(_registry()).resolve(m)
-    assert graph.target == "react"
-    assert [r.spec_id for r in graph.resolutions] == ["@org/button"]
-    # MVS strikt: kleinste Version ab Min (0.1.0) ist 0.1.0.
-    assert graph.resolutions[0].version == Version(0, 1, 0)
-    assert graph.resolutions[0].spec_sha256.startswith("sha256:")
-
-
-def test_resolver_transitive_via_uses() -> None:
-    # contact-form@0.1.0 hat uses: @org/button@^0.1
-    m = _manifest({"@org/contact-form": "^0.1"})
-    graph = Resolver(_registry()).resolve(m)
-    ids = [r.spec_id for r in graph.resolutions]
-    assert ids == sorted(ids)
-    assert "@org/button" in ids
-    assert "@org/contact-form" in ids
-
-
-def test_resolver_diamond_picks_max_min() -> None:
-    # onboarding-wizard fordert button@^0.1 (min 0.1.0)
-    # login-screen fordert button@^0.1.1 (min 0.1.1)
-    # MVS: max(min) = 0.1.1, kleinster Kandidat in beiden Ranges = 0.1.1
-    m = _manifest(
-        {
-            "@org/onboarding-wizard": "^0.1",
-            "@org/login-screen": "^0.1",
-        }
+def test_lockfile_round_trip(tmp_path: Path) -> None:
+    graph = Resolver(LocalLibrary(FIXTURES)).resolve(
+        _manifest(**{"@speccify/macos-notarize-tauri": "^1.0"})
     )
-    graph = Resolver(_registry()).resolve(m)
-    by_id = {r.spec_id: r for r in graph.resolutions}
-    assert by_id["@org/button"].version == Version(0, 1, 1)
-    assert by_id["@org/onboarding-wizard"].version == Version(0, 1, 0)
-    assert by_id["@org/login-screen"].version == Version(0, 1, 0)
+    lockfile = build_lockfile(list(graph.resolutions))
+    path = tmp_path / "speccify.lock"
+    lockfile.write(path)
 
+    from speccify_core import Lockfile
 
-def test_resolver_resolutions_sorted_alphabetically() -> None:
-    m = _manifest(
-        {
-            "@org/onboarding-wizard": "^0.1",
-            "@org/button": "^0.1",
-        }
-    )
-    graph = Resolver(_registry()).resolve(m)
-    ids = [r.spec_id for r in graph.resolutions]
-    assert ids == sorted(ids)
-
-
-def test_resolver_missing_version_raises() -> None:
-    # button hat 0.1.0 und 0.1.1 — fordere 0.2.x → keine Kandidaten.
-    m = _manifest({"@org/button": "^0.2"})
-    with pytest.raises(RangeConflictError):
-        Resolver(_registry()).resolve(m)
-
-
-def test_resolver_unknown_spec_raises() -> None:
-    m = _manifest({"@org/does-not-exist": "^0.1"})
-    with pytest.raises(VersionNotFoundError):
-        Resolver(_registry()).resolve(m)
-
-
-def test_resolver_incompatible_ranges() -> None:
-    # exakt 0.1.0 vs. ^0.1.1 → keine Version erfüllt beide.
-    m = _manifest(
-        {
-            "@org/button": "0.1.0",
-            "@org/login-screen": "^0.1",  # zieht button@^0.1.1 ein
-        }
-    )
-    with pytest.raises(RangeConflictError):
-        Resolver(_registry()).resolve(m)
-
-
-def test_resolver_invalid_range_in_manifest() -> None:
-    m = _manifest({"@org/button": "~0.1"})
-    with pytest.raises(ResolverError):
-        Resolver(_registry()).resolve(m)
+    loaded = Lockfile.load(path)
+    assert loaded.schema_version == 1
+    assert [e.id for e in loaded.entries] == sorted(e.id for e in loaded.entries)
+    entry = loaded.entry("@speccify/macos-notarize-tauri")
+    assert entry.resolved_via == "local"
+    assert entry.bundle_sha256.startswith("sha256:")
+    # Local sources have no commit to pin.
+    assert entry.source_commit is None

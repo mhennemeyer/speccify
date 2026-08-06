@@ -51,15 +51,11 @@ export default defineConfig({
           items: [{ autogenerate: { directory: "concepts" } }],
         },
         {
-          label: "Composer",
-          items: [{ autogenerate: { directory: "composer" } }],
+          label: "Viewer",
+          items: [{ autogenerate: { directory: "viewer" } }],
         },
         {
-          label: "Projekt-Builds",
-          items: [{ autogenerate: { directory: "app-builds" } }],
-        },
-        {
-          label: "Git-Quellen & Discovery",
+          label: "Git sources & discovery",
           items: [{ autogenerate: { directory: "git-sources" } }],
         },
         {
@@ -69,18 +65,6 @@ export default defineConfig({
         {
           label: "MCP Reference",
           items: [{ autogenerate: { directory: "mcp" } }],
-        },
-        {
-          label: "Targets",
-          items: [{ autogenerate: { directory: "targets" } }],
-        },
-        {
-          label: "Conformance",
-          items: [{ autogenerate: { directory: "conformance" } }],
-        },
-        {
-          label: "Workspaces",
-          items: [{ autogenerate: { directory: "workspaces" } }],
         },
       ],
     }),

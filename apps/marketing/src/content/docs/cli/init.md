@@ -1,26 +1,20 @@
 ---
 title: "speccify init"
-description: "Legt ein neues Speccify-Projekt mit minimalem `speccify.yaml` an."
+description: "Create a speccify.yaml for a project that consumes playbooks."
 ---
 
 <!-- AUTOGENERIERT via scripts/gen_cli_docs.py aus `speccify --help` — nicht von Hand editieren. -->
 
-Legt ein neues Speccify-Projekt mit minimalem `speccify.yaml` an.
+Create a speccify.yaml for a project that consumes playbooks.
 
 ## Usage
 
 ```bash
-speccify init [OPTIONS] NAME
+speccify init [OPTIONS]
 ```
-
-## Arguments
-
-| Argument | Pflicht |
-| --- | --- |
-| `name` | ja |
 
 ## Options
 
 | Option | Beschreibung |
 | --- | --- |
-| `--target`, `-t` | Codegen-Ziel (z.B. react, swiftui, angular). Default: react. |
+| `--project`, `-p` | Project directory (default: current directory). |

@@ -1,160 +1,54 @@
-// Typen für die Composer-UI — spiegeln die JSON-Contracts des Backends
-// (`services/composer.py::api_contract_dict` + Routen-Responses).
+// Types mirroring the backend's JSON (routes/playbooks.py).
 
-export interface TypeInfo {
-  raw: string;
-  kind: "string" | "integer" | "number" | "boolean" | "enum" | "other";
-  enumValues: string[];
-}
-
-export interface PropContract {
-  name: string;
-  type: TypeInfo;
-  required: boolean;
-  default: unknown;
-  hasDefault: boolean;
-  description: string;
-  constraints: string[];
-  mapTo: string | null;
-}
-
-export interface PayloadField {
-  name: string;
-  type: TypeInfo;
-}
-
-export interface EventContract {
-  name: string;
-  payload: PayloadField[];
-  description: string;
-}
-
-export interface SlotContract {
-  name: string;
-  optional: boolean;
-  description: string;
-}
-
-export interface ApiContract {
-  props: PropContract[];
-  events: EventContract[];
-  slots: SlotContract[];
-  fixtures: { name: string; data: unknown; description: string }[];
-  outputs: { name: string; type: TypeInfo }[];
-}
-
-export interface SpecSummary {
+export interface SourceRef {
   id: string;
-  version: string;
   title: string;
-  yaml: string;
+  url: string;
+  retrieved: string;
+  note: string | null;
 }
 
-export interface ChildInfo {
-  /** Deklarierter Name der Spec — danach heißen generierte Dateien. */
+export interface PlaybookStep {
   id: string;
-  /** Ref, über den sie geholt wurde; bei Git-Quellen ≠ `id` (P5). */
-  source: string;
-  version: string;
-  kind: string;
   title: string;
-  api: ApiContract;
+  detail: string;
+  uses: string | null;
+  verify: string | null;
+  assets: string[];
+  sources: SourceRef[];
 }
 
-export interface SpecDetail {
+export interface PlaybookSummary {
   id: string;
   source: string;
   version: string;
-  versions: string[];
-  kind: string;
   title: string;
   summary: string;
-  yaml: string;
-  api: ApiContract;
-  composition: CompositionData | null;
-  children: Record<string, ChildInfo>;
-}
-
-// --- Editierbares Dokument (spiegelt die Spec-YAML-Struktur) -----------------
-
-export interface TreeNodeData {
-  node: string;
-  props?: Record<string, unknown>;
-  slots?: Record<string, TreeNodeData[]>;
-}
-
-export interface WiringRuleData {
-  when: string;
-  emit?: string;
-  with?: Record<string, unknown>;
-  set?: string;
-  to?: unknown;
-}
-
-export interface CompositionData {
-  uses: Record<string, string>;
-  tree: TreeNodeData[];
-  wiring?: WiringRuleData[];
-}
-
-export interface OwnPropData {
-  name: string;
-  type: string;
-  required?: boolean;
-  default?: unknown;
-  map_to?: string;
-}
-
-export interface OwnEventData {
-  name: string;
-  payload?: Record<string, string>;
-}
-
-export interface SpecDoc {
-  schema_version: 1;
-  id: string;
-  version: string;
-  kind: string;
-  title: string;
-  summary: string;
-  license?: string;
-  api?: {
-    props?: OwnPropData[];
-    events?: OwnEventData[];
-  };
-  composition?: CompositionData;
-}
-
-/** Antwort von `POST /api/v1/mock/draft` — deterministische Mock-Closure. */
-export interface MockBundle {
-  spec_id: string;
-  version: string;
-  target: string;
-  files: Record<string, string>;
-  entry: string;
-  template_set: string;
-  template_version: string;
-}
-
-/** Treffer aus einem Discovery-Index (`GET /api/v1/index`). */
-export interface IndexHit {
-  source: string;
-  title: string;
-  summary: string;
-  kind: string;
   keywords: string[];
-  homepage: string | null;
-  license: string | null;
-  origin: string;
+  platforms: string[];
+  steps: number;
 }
 
-export interface ValidationIssue {
-  path: string;
-  message: string;
+export interface PlaybookDetail {
+  id: string;
   source: string;
+  version: string;
+  title: string;
+  summary: string;
+  applies_to: { platforms: string[]; requires: string[]; keywords: string[] };
+  prerequisites: string[];
+  steps: PlaybookStep[];
+  sources: SourceRef[];
+  pitfalls: string[];
+  acceptance: { given: string | null; when: string | null; then: string | null }[];
+  assets: string[];
+  uses: string[];
+  yaml: string;
 }
 
-export interface LogEntry {
-  kind: "emit" | "set" | "trigger" | "info";
-  text: string;
-}
+/** What the user selected in the viewer — the context an agent asks about. */
+export type Selection =
+  | { kind: "playbook" }
+  | { kind: "step"; stepId: string }
+  | { kind: "source"; sourceId: string }
+  | { kind: "asset"; path: string };

@@ -1,8 +1,8 @@
-"""`search`-Tool: Specs in Discovery-Indizes finden (Phase P5).
+"""`search` tool: find playbooks in discovery indexes.
 
-Dünner Adapter über `speccify_core.spec_index` — gleiche Semantik wie
-`speccify search`. Fehlende oder kaputte Indizes sind strukturierte
-Antworten, keine MCP-Errors.
+Thin adapter over `speccify_core.spec_index` with the same semantics as
+`speccify search`. A missing or broken index is a structured result, not an
+MCP error.
 """
 
 from __future__ import annotations
@@ -18,7 +18,7 @@ DEFAULT_INDEX_DIRNAME = "index"
 
 @dataclass(frozen=True)
 class SearchResult:
-    """Strukturiertes Ergebnis des `search`-Tools."""
+    """Structured result of the `search` tool."""
 
     ok: bool
     hits: list[dict[str, Any]] = field(default_factory=list)
@@ -54,10 +54,9 @@ def run_search(
     index_sources: list[str] | None = None,
     offline: bool = False,
 ) -> SearchResult:
-    """Sucht in den konfigurierten Index-Quellen."""
+    """Search the configured index sources."""
+    from speccify_cli.commands._context import git_cache_dir
     from speccify_core import GitRepoCache, SpecIndexError, load_indexes, search_index
-
-    from ._workspace import git_cache_dir
 
     raw_sources = resolve_sources(project_root, index_sources)
     if not raw_sources:
@@ -65,8 +64,8 @@ def run_search(
             ok=False,
             code="no_index_configured",
             message=(
-                f"Keine Index-Quelle konfiguriert — `index_sources` übergeben, "
-                f"`{INDEX_ENV}` setzen oder ein `index/`-Verzeichnis im Projekt anlegen."
+                f"No index source configured — pass `index_sources`, set `{INDEX_ENV}`, "
+                f"or create an `index/` directory in the project."
             ),
         )
     sources: list[str | Path] = [

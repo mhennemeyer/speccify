@@ -8,7 +8,7 @@ Overrides via env vars:
   resolution (not used by the MVP routes yet — reserved for parity with the
   CLI/MCP adapters in later steps).
 - `SPECCIFY_REGISTRY_PATH`: directory of the local pseudo-registry from which
-  `GET /api/v1/specs` lists reference specs. Defaults to `<repo>/registry-fixtures`.
+  `GET /api/v1/playbooks` lists local playbooks. Defaults to `<repo>/registry-fixtures`.
 - `SPECCIFY_CACHE_DIR`: replay-cache directory. Defaults to
   `<repo>/tests/fixtures/llm-cache` (same convention as CLI/MCP).
 - `SPECCIFY_GIT_CACHE`: bare-clone cache for git spec sources and index repos
@@ -23,7 +23,7 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
-from speccify_core import DEFAULT_GIT_CACHE_DIR, GitRegistry, LocalRegistry, MultiRegistry, Registry
+from speccify_core import DEFAULT_GIT_CACHE_DIR, GitLibrary, Library, LocalLibrary, MultiLibrary
 
 # This file lives at apps/web/backend/src/speccify_web_backend/settings.py
 # parents[5] resolves to the repository root (one level deeper than the test
@@ -31,12 +31,12 @@ from speccify_core import DEFAULT_GIT_CACHE_DIR, GitRegistry, LocalRegistry, Mul
 _REPO_ROOT = Path(__file__).resolve().parents[5]
 
 DEFAULT_PROJECT_ROOT: Path = _REPO_ROOT
-DEFAULT_REGISTRY_PATH: Path = _REPO_ROOT / "registry-fixtures"
+DEFAULT_LIBRARY_PATH: Path = _REPO_ROOT / "playbooks"
 DEFAULT_CACHE_DIR: Path = _REPO_ROOT / "tests" / "fixtures" / "llm-cache"
 DEFAULT_COMPOSER_DIST: Path = _REPO_ROOT / "apps" / "composer" / "dist"
 
 PROJECT_ROOT_ENV = "SPECCIFY_PROJECT_ROOT"
-REGISTRY_PATH_ENV = "SPECCIFY_REGISTRY_PATH"
+LIBRARY_PATH_ENV = "SPECCIFY_LIBRARY_PATH"
 CACHE_DIR_ENV = "SPECCIFY_CACHE_DIR"
 COMPOSER_DIST_ENV = "SPECCIFY_COMPOSER_DIST"
 GIT_CACHE_ENV = "SPECCIFY_GIT_CACHE"
@@ -53,7 +53,7 @@ class Settings:
     """
 
     project_root: Path
-    registry_path: Path
+    library_path: Path
     cache_dir: Path
     # Gebaute Composer-SPA; wird — falls vorhanden — unter `/ui` mitserviert
     # (Composer-Fenster der Desktop-App, same-origin zur API).
@@ -68,26 +68,24 @@ class Settings:
         raw_index = os.environ.get(INDEX_ENV, "").strip()
         return cls(
             project_root=_path_from_env(PROJECT_ROOT_ENV, DEFAULT_PROJECT_ROOT),
-            registry_path=_path_from_env(REGISTRY_PATH_ENV, DEFAULT_REGISTRY_PATH),
+            library_path=_path_from_env(LIBRARY_PATH_ENV, DEFAULT_LIBRARY_PATH),
             cache_dir=_path_from_env(CACHE_DIR_ENV, DEFAULT_CACHE_DIR),
             composer_dist=_path_from_env(COMPOSER_DIST_ENV, DEFAULT_COMPOSER_DIST),
             git_cache_dir=_path_from_env(GIT_CACHE_ENV, DEFAULT_GIT_CACHE_DIR),
             index_sources=tuple(part.strip() for part in raw_index.split(",") if part.strip()),
         )
 
-    def registry(self) -> Registry:
-        """Registry-Fassade des Backends: lokale Pseudo-Registry + Git-Quellen.
+    def library(self) -> Library:
+        """The backend's playbook source: local library plus git sources.
 
-        Alles, was hier eine Registry erwartet (Kompositions-Auflösung, Mocks,
-        `speccify build`), sieht damit Git-Quellen ohne Sonderfall — genau wie
-        der CLI-Pfad. `serves` entscheidet pro Id, wer antwortet.
+        `serves` decides per id who answers, so git playbooks arrive here
+        without a special case — exactly like on the CLI path.
         """
-        return MultiRegistry(
-            [
-                LocalRegistry(self.registry_path),
-                GitRegistry(cache_dir=self.git_cache_dir),
-            ]
-        )
+        libraries: list[Library] = []
+        if self.library_path.is_dir():
+            libraries.append(LocalLibrary(self.library_path))
+        libraries.append(GitLibrary(cache_dir=self.git_cache_dir))
+        return MultiLibrary(libraries)
 
 
 def _path_from_env(env_var: str, default: Path) -> Path:

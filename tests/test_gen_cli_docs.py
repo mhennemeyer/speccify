@@ -20,12 +20,12 @@ def test_render_command_mdx_is_deterministic() -> None:
 
 def test_render_command_mdx_structure() -> None:
     commands = gen._collect_commands()
-    rendered = gen.render_command_mdx("lint", commands["lint"])
+    rendered = gen.render_command_mdx("show", commands["show"])
 
-    assert 'title: "speccify lint"' in rendered
+    assert 'title: "speccify show"' in rendered
     assert gen._GENERATED_BANNER in rendered
     assert "## Usage" in rendered
-    assert "speccify lint [OPTIONS] FILES..." in rendered
+    assert "speccify show [OPTIONS] REFERENCE" in rendered
     assert "## Arguments" in rendered
     assert "## Options" in rendered
 

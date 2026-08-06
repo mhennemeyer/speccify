@@ -1,26 +1,20 @@
 ---
 title: "speccify lint"
-description: "Validiert eine oder mehrere YAML-Specs gegen das Spec-Schema v0."
+description: "Validate playbooks: schema, cross-references and assets."
 ---
 
 <!-- AUTOGENERIERT via scripts/gen_cli_docs.py aus `speccify --help` — nicht von Hand editieren. -->
 
-Validiert eine oder mehrere YAML-Specs gegen das Spec-Schema v0.
+Validate playbooks: schema, cross-references and assets.
 
 ## Usage
 
 ```bash
-speccify lint [OPTIONS] FILES...
+speccify lint [OPTIONS] PATHS...
 ```
 
 ## Arguments
 
 | Argument | Pflicht |
 | --- | --- |
-| `files` | ja |
-
-## Options
-
-| Option | Beschreibung |
-| --- | --- |
-| `--schema` | Optionaler Pfad zu einem alternativen JSON-Schema (Default: schema/spec.schema.json). |
+| `paths` | ja |

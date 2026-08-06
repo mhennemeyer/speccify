@@ -1,8 +1,11 @@
-"""Lokale Pseudo-Registry für Phase 1a.
+"""Playbook sources: bundles, local libraries and the `Library` protocol.
 
-Layout: `<root>/<scope>/<name>/<version>/spec.speccify.yaml`. Spec-IDs sind in der Form
-`@<scope>/<name>` erwartet (siehe Manifest-Schema). `spec://`-IDs werden in 1a nicht
-verwendet, weil das lokale Registry-Layout zwingend einen Scope braucht.
+A playbook is a **bundle**, not a single file: `playbook.yaml` plus an optional
+`assets/` tree. That is what makes assets shareable and what the lockfile pins
+— a hash over the whole bundle, not just the YAML.
+
+Local layout: `<root>/<scope>/<name>/<version>/playbook.yaml`. Git sources live
+in `git_registry.py` and satisfy the same protocol.
 """
 
 from __future__ import annotations
@@ -12,23 +15,25 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol, runtime_checkable
-from urllib.parse import urlparse
 
-import httpx
-import yaml
+from speccify_core.playbook import ASSET_DIR, PLAYBOOK_FILENAME
 
-_SPEC_FILENAME = "spec.speccify.yaml"
 _SCOPED_ID_PATTERN = re.compile(r"^@([a-z0-9][a-z0-9-]*)/([a-z0-9][a-z0-9-]*)$")
 _SEMVER_PATTERN = re.compile(r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$")
 
 
-class RegistryError(Exception):
-    """Registry-Lookup ist fehlgeschlagen (Spec/Version fehlt, Layout kaputt)."""
+class LibraryError(Exception):
+    """A playbook could not be found or read."""
+
+
+# Kept as an alias: callers and error paths across CLI/MCP/web still speak of
+# "registry errors", and renaming that vocabulary everywhere buys nothing.
+RegistryError = LibraryError
 
 
 @dataclass(frozen=True, order=True)
 class Version:
-    """Semver-Version (Phase 1a: nur major.minor.patch, ohne Pre-Release/Build)."""
+    """SemVer without pre-release or build metadata."""
 
     major: int
     minor: int
@@ -38,9 +43,7 @@ class Version:
     def parse(cls, raw: str) -> Version:
         match = _SEMVER_PATTERN.match(raw)
         if not match:
-            raise ValueError(
-                f"Ungültige Version '{raw}': Phase 1a erlaubt nur major.minor.patch ohne Suffix."
-            )
+            raise ValueError(f"Invalid version '{raw}': expected major.minor.patch.")
         return cls(int(match.group(1)), int(match.group(2)), int(match.group(3)))
 
     def __str__(self) -> str:
@@ -48,75 +51,103 @@ class Version:
 
 
 @dataclass(frozen=True)
-class Spec:
-    """Geladene Spec inkl. Original-Bytes (für stabile Hashes) und Pfad."""
+class Bundle:
+    """A playbook bundle: every file that belongs to it, keyed by relative path.
 
-    spec_id: str
+    `files` always contains `playbook.yaml`; assets live under `assets/`.
+    `source_id` is where it came from (local id or git ref) — the *declared* id
+    lives inside the YAML and can differ.
+    """
+
+    source_id: str
     version: Version
-    raw_bytes: bytes
-    path: Path
-    # Nur bei Git-Quellen (Phase P5) gesetzt: der Commit hinter dem Tag —
-    # der Pin, den das Lockfile festhält (Entscheidung D18).
+    files: dict[str, bytes]
+    origin: str = ""
     source_commit: str | None = None
 
+    @property
+    def playbook_bytes(self) -> bytes:
+        try:
+            return self.files[PLAYBOOK_FILENAME]
+        except KeyError as exc:
+            raise LibraryError(
+                f"{self.source_id}@{self.version}: bundle has no {PLAYBOOK_FILENAME}."
+            ) from exc
+
     def parsed(self) -> dict:
-        """Lazy parse: PyYAML auf den Original-Bytes."""
-        return yaml.safe_load(self.raw_bytes.decode("utf-8")) or {}
+        import yaml
+
+        return yaml.safe_load(self.playbook_bytes.decode("utf-8")) or {}
 
     @property
-    def name_id(self) -> str:
-        """Die **in der Spec deklarierte** Id — Grundlage für Namen und Pfade im Codegen.
+    def declared_id(self) -> str:
+        """The id written inside the playbook; falls back to the source id."""
+        return str(self.parsed().get("id", "")) or self.source_id
 
-        Für Registry-Specs ist das dieselbe Id wie `spec_id`. Bei Git-Quellen
-        (Phase P5) ist `spec_id` die Quelle (`git+<url>#<pfad>`), während die
-        Spec selbst weiterhin `@scope/name` heißt — generierte Dateien sollen
-        nach der Komponente heißen, nicht nach ihrem Fundort. Die Herkunft
-        hält das Lockfile fest.
-        """
-        declared = str(self.parsed().get("id", "")).strip()
-        if not declared:
-            return self.spec_id
-        # Optionales `@<version>`-Suffix aus der Id entfernen (`@org/button@0.1.0`).
-        match = re.match(r"^(?P<id>spec://[^@]+|@[^/]+/[^@]+)(?:@.+)?$", declared)
-        return match.group("id") if match else declared
+    @property
+    def asset_paths(self) -> tuple[str, ...]:
+        return tuple(sorted(p for p in self.files if p.startswith(f"{ASSET_DIR}/")))
+
+    @property
+    def sha256(self) -> str:
+        return bundle_sha256(self.files)
+
+
+def bundle_sha256(files: dict[str, bytes]) -> str:
+    """Deterministic hash over a bundle: sorted paths plus their contents.
+
+    Paths are part of the hash, so renaming an asset changes it. Length
+    prefixes keep `a/b` + `c` from colliding with `a` + `b/c`.
+    """
+    digest = hashlib.sha256()
+    for path in sorted(files):
+        raw_path = path.encode("utf-8")
+        digest.update(len(raw_path).to_bytes(8, "big"))
+        digest.update(raw_path)
+        digest.update(len(files[path]).to_bytes(8, "big"))
+        digest.update(files[path])
+    return f"sha256:{digest.hexdigest()}"
 
 
 @runtime_checkable
-class Registry(Protocol):
-    """Gemeinsames Protokoll für lokale (`LocalRegistry`) und remote (`RemoteRegistry`)
-    Spec-Quellen. Stage 6 (Phase 2) führt es ein, damit der Resolver eine Liste
-    heterogener Registries gleichmäßig verarbeiten kann.
-
-    Implementierungen müssen ``via`` als stabile, im Lockfile speicherbare Quell-Id
-    bereitstellen (lokaler Pfad oder absolute URL). Der Resolver schreibt diesen Wert
-    in ``LockEntry.resolved_via``.
-    """
+class Library(Protocol):
+    """Common protocol for local and git playbook sources."""
 
     @property
     def via(self) -> str: ...
 
-    def list_versions(self, spec_id: str) -> list[Version]: ...
+    def serves(self, playbook_id: str) -> bool: ...
 
-    def fetch(self, spec_id: str, version: Version) -> Spec: ...
+    def list_versions(self, playbook_id: str) -> list[Version]: ...
+
+    def fetch(self, playbook_id: str, version: Version) -> Bundle: ...
 
 
-class LocalRegistry:
-    """Verzeichnis-basierte Pseudo-Registry. Read-only in Phase 1a.
+# Same reasoning as `RegistryError`: the protocol name stays available under the
+# older vocabulary so adapters do not need to churn.
+Registry = Library
 
-    Der Stage-6-Multi-Registry-Refactor hat ``via`` als Lockfile-Quell-Id eingeführt;
-    für lokale Registries bleibt der stabile Default-Marker ``"registry-fixtures"``
-    erhalten (damit existierende Lockfile-Snapshots aus Phase 1 weiter passen).
-    Wer eine mehrdeutige Multi-Registry-Konfiguration baut, kann beim Konstruktor
-    ein eigenes ``via`` mitgeben.
+
+def split_id(playbook_id: str) -> tuple[str, str]:
+    match = _SCOPED_ID_PATTERN.match(playbook_id)
+    if not match:
+        raise LibraryError(f"Playbook id '{playbook_id}' is not of the form '@scope/name'.")
+    return match.group(1), match.group(2)
+
+
+class LocalLibrary:
+    """Directory-backed playbook library (read-only).
+
+    Layout: `<root>/<scope>/<name>/<version>/playbook.yaml` plus `assets/`.
     """
 
     def __init__(self, root: str | Path, *, via: str | None = None) -> None:
         self._root = Path(root)
         if not self._root.exists():
-            raise RegistryError(f"Registry-Pfad existiert nicht: {self._root}")
+            raise LibraryError(f"Playbook library does not exist: {self._root}")
         if not self._root.is_dir():
-            raise RegistryError(f"Registry-Pfad ist kein Verzeichnis: {self._root}")
-        self._via = via if via is not None else "registry-fixtures"
+            raise LibraryError(f"Playbook library is not a directory: {self._root}")
+        self._via = via if via is not None else "local"
 
     @property
     def root(self) -> Path:
@@ -126,21 +157,17 @@ class LocalRegistry:
     def via(self) -> str:
         return self._via
 
-    def serves(self, spec_id: str) -> bool:
-        """Nur scoped Ids (`@scope/name`) — Git-Quellen bedient die `GitRegistry`."""
-        return bool(_SCOPED_ID_PATTERN.match(spec_id))
+    def serves(self, playbook_id: str) -> bool:
+        return bool(_SCOPED_ID_PATTERN.match(playbook_id))
 
-    def list_versions(self, spec_id: str) -> list[Version]:
-        """Sortiert aufsteigend; ignoriert Verzeichnisse mit ungültiger Version."""
-        scope, name = _split_id(spec_id)
-        spec_dir = self._root / scope / name
-        if not spec_dir.is_dir():
+    def list_versions(self, playbook_id: str) -> list[Version]:
+        scope, name = split_id(playbook_id)
+        directory = self._root / scope / name
+        if not directory.is_dir():
             return []
         versions: list[Version] = []
-        for entry in spec_dir.iterdir():
-            if not entry.is_dir():
-                continue
-            if not (entry / _SPEC_FILENAME).is_file():
+        for entry in directory.iterdir():
+            if not entry.is_dir() or not (entry / PLAYBOOK_FILENAME).is_file():
                 continue
             try:
                 versions.append(Version.parse(entry.name))
@@ -148,254 +175,107 @@ class LocalRegistry:
                 continue
         return sorted(versions)
 
-    def fetch(self, spec_id: str, version: Version) -> Spec:
-        scope, name = _split_id(spec_id)
-        spec_path = self._root / scope / name / str(version) / _SPEC_FILENAME
-        if not spec_path.is_file():
-            available = self.list_versions(spec_id)
-            raise RegistryError(
-                f"Spec '{spec_id}@{version}' nicht in Registry {self._root} gefunden. "
-                f"Verfügbare Versionen: {[str(v) for v in available] or '∅'}."
+    def list_playbooks(self) -> list[tuple[str, Version]]:
+        """Every playbook in this library, sorted — used by the viewer and `search`."""
+        found: list[tuple[str, Version]] = []
+        for scope_dir in sorted(p for p in self._root.iterdir() if p.is_dir()):
+            for name_dir in sorted(p for p in scope_dir.iterdir() if p.is_dir()):
+                playbook_id = f"@{scope_dir.name}/{name_dir.name}"
+                for version in self.list_versions(playbook_id):
+                    found.append((playbook_id, version))
+        return found
+
+    def fetch(self, playbook_id: str, version: Version) -> Bundle:
+        scope, name = split_id(playbook_id)
+        directory = self._root / scope / name / str(version)
+        if not (directory / PLAYBOOK_FILENAME).is_file():
+            available = [str(v) for v in self.list_versions(playbook_id)]
+            raise LibraryError(
+                f"Playbook '{playbook_id}@{version}' not found in {self._root}. "
+                f"Available: {available or 'none'}."
             )
-        raw = spec_path.read_bytes()
-        return Spec(spec_id=spec_id, version=version, raw_bytes=raw, path=spec_path)
-
-
-def _split_id(spec_id: str) -> tuple[str, str]:
-    match = _SCOPED_ID_PATTERN.match(spec_id)
-    if not match:
-        raise RegistryError(
-            f"Spec-Id '{spec_id}' ist nicht im erwarteten Format '@scope/name' "
-            f"(Phase 1a unterstützt nur scoped IDs in der lokalen Registry)."
-        )
-    return match.group(1), match.group(2)
-
-
-class RemoteRegistry:
-    """HTTP-Client gegen ein Speccify-Registry-Backend (Phase 2 Stage 6).
-
-    Spricht mit der REST-API unter ``/api/v1/registry/specs/<scope>/<name>`` und
-    ``/api/v1/registry/specs/<scope>/<name>/<version>`` (siehe ``registry/`` Backend).
-
-    Caching: Erfolgreich gefetchte Specs werden unter
-    ``<cache_dir>/<host>/<scope>/<name>/<version>/spec.speccify.yaml`` gespiegelt;
-    bei späteren Fetches wird der Cache **ohne** Netz-Roundtrip benutzt — das hält
-    ``speccify verify`` offline-reproduzierbar, wie in den Non-Functional Requirements
-    von Phase 2 verlangt.
-
-    Hash-Konsistenz: Beim Fetch wird der vom Server gelieferte ``sha256`` mit dem
-    sha256 der heruntergeladenen Bytes verglichen — Mismatch ist ein harter
-    ``RegistryError`` (möglicher MITM oder Server-Bug).
-
-    ``yanked`` Versionen werden in ``list_versions`` **nicht** ausgeblendet —
-    das Lockfile-/`verify`-System (Stage 5) markiert sie eigenständig und ein
-    bereits gelocktes Set soll auch nach einem Yank reproduzierbar bleiben.
-    """
-
-    def __init__(
-        self,
-        base_url: str,
-        *,
-        token: str | None = None,
-        cache_dir: Path | str | None = None,
-        client: httpx.Client | None = None,
-        timeout: float = 10.0,
-    ) -> None:
-        if not base_url:
-            raise RegistryError("RemoteRegistry braucht eine non-empty base_url.")
-        parsed = urlparse(base_url)
-        if parsed.scheme not in ("http", "https"):
-            raise RegistryError(f"RemoteRegistry base_url muss http(s) sein, war: {base_url!r}.")
-        self._base_url = base_url.rstrip("/")
-        self._token = token
-        self._cache_dir = Path(cache_dir) if cache_dir is not None else None
-        self._owned_client = client is None
-        self._client = client or httpx.Client(timeout=timeout)
-        # Host für Cache-Layout (z.B. ``registry.speccify.io_443``).
-        host = parsed.hostname or "unknown"
-        port_suffix = f"_{parsed.port}" if parsed.port else ""
-        self._host_dir = f"{host}{port_suffix}"
-
-    @property
-    def via(self) -> str:
-        """Lockfile-Quell-Identifier: die Basis-URL der Remote-Registry."""
-        return self._base_url
-
-    @property
-    def base_url(self) -> str:
-        return self._base_url
-
-    def serves(self, spec_id: str) -> bool:
-        """Nur scoped Ids (`@scope/name`) — Git-Quellen bedient die `GitRegistry`."""
-        return bool(_SCOPED_ID_PATTERN.match(spec_id))
-
-    def close(self) -> None:
-        if self._owned_client:
-            self._client.close()
-
-    def __enter__(self) -> RemoteRegistry:
-        return self
-
-    def __exit__(self, exc_type, exc, tb) -> None:
-        self.close()
-
-    # --- Lookup --------------------------------------------------------
-
-    def list_versions(self, spec_id: str) -> list[Version]:
-        scope, name = _split_id(spec_id)
-        url = f"{self._base_url}/api/v1/registry/specs/{scope}/{name}"
-        try:
-            resp = self._client.get(url, headers=self._headers())
-        except httpx.HTTPError as exc:
-            raise RegistryError(
-                f"Netzwerk-Fehler beim list_versions({spec_id}) gegen {url}: {exc}"
-            ) from exc
-        if resp.status_code == 404:
-            return []
-        if resp.status_code != 200:
-            raise RegistryError(
-                f"Unerwarteter Status {resp.status_code} bei list_versions({spec_id}) "
-                f"gegen {url}: {resp.text[:200]}"
-            )
-        data = resp.json()
-        versions: list[Version] = []
-        for v in data.get("versions") or []:
-            raw = v.get("version") if isinstance(v, dict) else None
-            if not isinstance(raw, str):
-                continue
-            try:
-                versions.append(Version.parse(raw))
-            except ValueError:
-                # Pre-Releases / non-SemVer werden konsistent mit LocalRegistry ignoriert.
-                continue
-        return sorted(versions)
-
-    def fetch(self, spec_id: str, version: Version) -> Spec:
-        scope, name = _split_id(spec_id)
-        cached = self._read_cache(scope, name, version)
-        if cached is not None:
-            raw, cache_path = cached
-            return Spec(spec_id=spec_id, version=version, raw_bytes=raw, path=cache_path)
-
-        url = f"{self._base_url}/api/v1/registry/specs/{scope}/{name}/{version}"
-        try:
-            resp = self._client.get(url, headers=self._headers())
-        except httpx.HTTPError as exc:
-            raise RegistryError(
-                f"Netzwerk-Fehler beim fetch({spec_id}@{version}) gegen {url}: {exc}"
-            ) from exc
-        if resp.status_code == 404:
-            raise RegistryError(
-                f"Spec '{spec_id}@{version}' nicht in Registry {self._base_url} gefunden."
-            )
-        if resp.status_code != 200:
-            raise RegistryError(
-                f"Unerwarteter Status {resp.status_code} bei fetch({spec_id}@{version}) "
-                f"gegen {url}: {resp.text[:200]}"
-            )
-        payload = resp.json()
-        yaml_str = payload.get("yaml")
-        server_sha = payload.get("sha256")
-        if not isinstance(yaml_str, str) or not isinstance(server_sha, str):
-            raise RegistryError(f"Antwort von {url} fehlt ``yaml`` oder ``sha256``: {payload!r}")
-        raw = yaml_str.encode("utf-8")
-        local_sha = hashlib.sha256(raw).hexdigest()
-        # Server liefert hex-Digest ohne ``sha256:``-Präfix (siehe registry/api).
-        if local_sha != server_sha:
-            raise RegistryError(
-                f"sha256-Mismatch beim Fetch von {spec_id}@{version}: "
-                f"Server={server_sha}, lokal={local_sha}."
-            )
-        cache_path = self._write_cache(scope, name, version, raw)
-        return Spec(
-            spec_id=spec_id,
+        files: dict[str, bytes] = {PLAYBOOK_FILENAME: (directory / PLAYBOOK_FILENAME).read_bytes()}
+        asset_root = directory / ASSET_DIR
+        if asset_root.is_dir():
+            for asset in sorted(asset_root.rglob("*")):
+                if asset.is_file():
+                    files[asset.relative_to(directory).as_posix()] = asset.read_bytes()
+        return Bundle(
+            source_id=playbook_id,
             version=version,
-            raw_bytes=raw,
-            path=cache_path if cache_path is not None else Path(url),
+            files=files,
+            origin=str(directory),
         )
 
-    # --- intern --------------------------------------------------------
 
-    def _headers(self) -> dict[str, str]:
-        h = {"Accept": "application/json"}
-        if self._token:
-            h["Authorization"] = f"Bearer {self._token}"
-        return h
+class MultiLibrary:
+    """Fans one `Library` facade out over several sources.
 
-    def _cache_path(self, scope: str, name: str, version: Version) -> Path | None:
-        if self._cache_dir is None:
-            return None
-        return self._cache_dir / self._host_dir / scope / name / str(version) / _SPEC_FILENAME
-
-    def _read_cache(self, scope: str, name: str, version: Version) -> tuple[bytes, Path] | None:
-        p = self._cache_path(scope, name, version)
-        if p is None or not p.is_file():
-            return None
-        return p.read_bytes(), p
-
-    def _write_cache(self, scope: str, name: str, version: Version, raw: bytes) -> Path | None:
-        p = self._cache_path(scope, name, version)
-        if p is None:
-            return None
-        p.parent.mkdir(parents=True, exist_ok=True)
-        # Atomarer Write via temp file in selbem Verzeichnis.
-        tmp = p.with_suffix(p.suffix + ".tmp")
-        tmp.write_bytes(raw)
-        tmp.replace(p)
-        return p
-
-
-class MultiRegistry:
-    """Bündelt mehrere Registries hinter *einer* `Registry`-Fassade.
-
-    Der Resolver nimmt von sich aus eine Liste; alles andere (Kompositions-
-    Auflösung, Mock- und App-Codegen) erwartet genau eine Registry. Damit
-    Git-Quellen dort ohne Sonderfälle ankommen, verteilt diese Fassade jede
-    Anfrage an die erste Registry, die die Id bedient (`serves`).
-
-    `via` ist der Marker der zuletzt benutzten Registry — Aufrufer, die
-    Lockfiles schreiben, arbeiten weiterhin mit der Liste selbst.
+    The resolver takes a list by itself; everything else (viewer, MCP tools,
+    web routes) expects exactly one source. This facade routes each request to
+    the first library that serves the id.
     """
 
-    def __init__(self, registries: list[Registry]) -> None:
-        if not registries:
-            raise RegistryError("MultiRegistry braucht mindestens eine Registry.")
-        self._registries = list(registries)
+    def __init__(self, libraries: list[Library]) -> None:
+        if not libraries:
+            raise LibraryError("MultiLibrary needs at least one library.")
+        self._libraries = list(libraries)
 
     @property
-    def registries(self) -> list[Registry]:
-        return list(self._registries)
+    def libraries(self) -> list[Library]:
+        return list(self._libraries)
 
     @property
     def via(self) -> str:
         return "multi"
 
-    def serves(self, spec_id: str) -> bool:
-        return any(self._serves(registry, spec_id) for registry in self._registries)
+    def serves(self, playbook_id: str) -> bool:
+        return any(self._serves(lib, playbook_id) for lib in self._libraries)
 
     @staticmethod
-    def _serves(registry: Registry, spec_id: str) -> bool:
-        predicate = getattr(registry, "serves", None)
-        return True if predicate is None else bool(predicate(spec_id))
+    def _serves(library: Library, playbook_id: str) -> bool:
+        predicate = getattr(library, "serves", None)
+        return True if predicate is None else bool(predicate(playbook_id))
 
-    def list_versions(self, spec_id: str) -> list[Version]:
-        for registry in self._registries:
-            if not self._serves(registry, spec_id):
+    def list_versions(self, playbook_id: str) -> list[Version]:
+        for library in self._libraries:
+            if not self._serves(library, playbook_id):
                 continue
-            versions = registry.list_versions(spec_id)
+            versions = library.list_versions(playbook_id)
             if versions:
                 return versions
         return []
 
-    def fetch(self, spec_id: str, version: Version) -> Spec:
-        last_error: RegistryError | None = None
-        for registry in self._registries:
-            if not self._serves(registry, spec_id):
+    def fetch(self, playbook_id: str, version: Version) -> Bundle:
+        last_error: LibraryError | None = None
+        for library in self._libraries:
+            if not self._serves(library, playbook_id):
                 continue
             try:
-                return registry.fetch(spec_id, version)
-            except RegistryError as exc:
+                return library.fetch(playbook_id, version)
+            except LibraryError as exc:
                 last_error = exc
         if last_error is not None:
             raise last_error
-        raise RegistryError(f"Keine Registry im Set bedient '{spec_id}'.")
+        raise LibraryError(f"No library serves '{playbook_id}'.")
+
+
+# Older vocabulary, same objects.
+LocalRegistry = LocalLibrary
+MultiRegistry = MultiLibrary
+
+
+__all__ = [
+    "Bundle",
+    "Library",
+    "LibraryError",
+    "LocalLibrary",
+    "LocalRegistry",
+    "MultiLibrary",
+    "MultiRegistry",
+    "Registry",
+    "RegistryError",
+    "Version",
+    "bundle_sha256",
+    "split_id",
+]

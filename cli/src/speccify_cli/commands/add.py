@@ -1,8 +1,4 @@
-"""`speccify add`: fügt eine Dependency in `speccify.yaml` ein und ruft intern `lock`.
-
-Default-Range bei `add @scope/name` ist `^<major.minor>` der höchsten Registry-Version.
-Mit explizitem `@<range>` (Caret oder exakt) wird die Range übernommen.
-"""
+"""`speccify add`: add a playbook to the manifest and re-lock."""
 
 from __future__ import annotations
 
@@ -10,238 +6,56 @@ import re
 from pathlib import Path
 
 import typer
-from speccify_core import (
-    ProjectManifest,
-    Resolver,
-    ResolverError,
-    Workspace,
-    WorkspaceError,
-    build_lockfile,
-)
-from speccify_core.manifest import ManifestError
-from speccify_core.registry import RegistryError
+from speccify_core import ManifestError, RegistryError, ResolverError, Version, parse_uses_entry
 
-from speccify_cli.commands._workspace import (
-    LOCKFILE_FILENAME,
-    MANIFEST_FILENAME,
-    WorkspaceContext,
-    build_registries,
-    list_versions,
-)
+from speccify_cli.commands._context import ProjectContext, list_versions
+from speccify_cli.commands.lock import run_lock
 
-_SPEC_REF_PATTERN = re.compile(
-    r"^(?P<id>@[a-z0-9][a-z0-9-]*/[a-z0-9][a-z0-9-]*)(?:@(?P<range>.+))?$"
-)
+_EXPLICIT_VERSION = re.compile(r"^(?P<id>.+)@(?P<version>\d+\.\d+\.\d+)$")
 
 
-def _parse_spec_ref(raw: str) -> tuple[str, str | None]:
-    match = _SPEC_REF_PATTERN.match(raw)
-    if not match:
-        raise typer.BadParameter(
-            f"Ungültige Spec-Referenz '{raw}': erwartet '@scope/name[@<range>]'."
-        )
-    return match.group("id"), match.group("range")
+def run_add(project_dir: Path, reference: str, library_override: Path | None = None) -> str:
+    """Add `reference` to the manifest; returns the range that was written."""
+    context = ProjectContext.load(project_dir, library_override=library_override)
 
-
-def _resolve_workspace_target_dir(
-    project_dir: Path,
-    member: str | None,
-    cwd: Path,
-) -> tuple[Path, Path]:
-    """Bestimmt für einen Workspace-Root das Ziel-Member-Verzeichnis + Root-Verzeichnis.
-
-    Stage-0-Decision (Phase 4): explizites `--member` schlägt CWD-Detection; ohne
-    Flag wird das Member aus `cwd` abgeleitet (muss innerhalb eines Member-Dirs
-    liegen). Im Root selbst ohne `--member` → Fehler.
-    """
-    workspace = Workspace.load(project_dir)
-    members_by_name = {
-        Path(m.relative_path).parent.name: (project_dir / m.relative_path).parent
-        for m in workspace.members
-    }
-    if member is not None:
-        if member not in members_by_name:
-            available = ", ".join(sorted(members_by_name)) or "(keine)"
-            raise WorkspaceError(
-                f"Workspace-Member '{member}' nicht gefunden. Verfügbar: {available}."
-            )
-        return members_by_name[member], project_dir
-
-    # CWD-Detection: ist `cwd` (oder ein Vorfahr) ein Member-Dir?
-    cwd_resolved = cwd.resolve()
-    for member_dir in members_by_name.values():
-        member_resolved = member_dir.resolve()
-        if cwd_resolved == member_resolved or member_resolved in cwd_resolved.parents:
-            return member_dir, project_dir
-    raise WorkspaceError(
-        "Im Workspace-Root ohne `--member` und ohne CWD-Member-Kontext: "
-        f"`speccify add` braucht `--member <name>` (verfügbar: "
-        f"{', '.join(sorted(members_by_name)) or '(keine)'})."
-    )
-
-
-def run_add(
-    spec_ref: str,
-    project_dir: Path,
-    registry_override: Path | None = None,
-    *,
-    member: str | None = None,
-    cwd: Path | None = None,
-) -> ProjectManifest:
-    spec_id, explicit_range = _parse_spec_ref(spec_ref)
-
-    # Workspace-Modus: in Member-Manifest schreiben, dann Root-Lock neu bauen.
-    manifest_path = project_dir / MANIFEST_FILENAME
-    if manifest_path.is_file():
-        try:
-            root_manifest = ProjectManifest.load(manifest_path)
-        except ManifestError:
-            root_manifest = None
+    match = _EXPLICIT_VERSION.match(reference)
+    if match and not reference.startswith("git+"):
+        playbook_id, version_raw = match.group("id"), match.group("version")
+    elif match:
+        playbook_id, version_raw = match.group("id"), match.group("version")
     else:
-        root_manifest = None
+        playbook_id, _ = parse_uses_entry(reference)
+        version_raw = None
 
-    if root_manifest is not None and root_manifest.is_workspace_root:
-        member_dir, root_dir = _resolve_workspace_target_dir(project_dir, member, cwd or Path.cwd())
-        return _run_workspace_add(
-            spec_id,
-            explicit_range,
-            member_dir=member_dir,
-            workspace_root=root_dir,
-            registry_override=registry_override,
-        )
-
-    # Single-Project-Pfad (unverändert).
-    ctx = WorkspaceContext.load(project_dir, registry_override=registry_override)
-
-    if explicit_range is not None:
-        new_range = explicit_range
-    else:
-        available = list_versions(ctx.registries, spec_id)
+    if version_raw is None:
+        available = list_versions(context.libraries, playbook_id)
         if not available:
-            raise RegistryError(
-                f"Spec '{spec_id}' ist weder in {ctx.registry.root} noch als Git-Quelle verfügbar."
-            )
-        latest = available[-1]
-        new_range = f"^{latest.major}.{latest.minor}"
-
-    deps = dict(ctx.manifest.dependencies)
-    deps[spec_id] = new_range
-    new_manifest = ProjectManifest(
-        schema_version=ctx.manifest.schema_version,
-        targets=ctx.manifest.targets,
-        dependencies=deps,
-        registry_path=ctx.manifest.registry_path,
-        source_path=ctx.manifest.source_path,
-    )
-    new_manifest.write(ctx.manifest_path)
-
-    # Implizit lock: Manifest neu laden (mit aktualisierten Deps), dann auflösen.
-    refreshed = WorkspaceContext.load(project_dir, registry_override=registry_override)
-    graph = Resolver(refreshed.registries).resolve(refreshed.manifest)
-    lockfile = build_lockfile(target=graph.target, resolutions=list(graph.resolutions))
-    lockfile.write(refreshed.lockfile_path)
-    return refreshed.manifest
-
-
-def _run_workspace_add(
-    spec_id: str,
-    explicit_range: str | None,
-    *,
-    member_dir: Path,
-    workspace_root: Path,
-    registry_override: Path | None,
-) -> ProjectManifest:
-    """Schreibt Spec in Member-Manifest, dann Workspace-Root-Lock neu (Stage-0-Decision)."""
-    member_ctx = WorkspaceContext.load(member_dir, registry_override=registry_override)
-
-    if explicit_range is not None:
-        new_range = explicit_range
+            raise RegistryError(f"'{playbook_id}' is not available locally or as a git source.")
+        version = available[-1]
     else:
-        available = list_versions(member_ctx.registries, spec_id)
-        if not available:
-            raise RegistryError(
-                f"Spec '{spec_id}' ist weder in {member_ctx.registry.root} "
-                f"noch als Git-Quelle verfügbar."
-            )
-        latest = available[-1]
-        new_range = f"^{latest.major}.{latest.minor}"
+        version = Version.parse(version_raw)
 
-    deps = dict(member_ctx.manifest.dependencies)
-    deps[spec_id] = new_range
-    new_manifest = ProjectManifest(
-        schema_version=member_ctx.manifest.schema_version,
-        targets=member_ctx.manifest.targets,
-        dependencies=deps,
-        registry_path=member_ctx.manifest.registry_path,
-        source_path=member_ctx.manifest.source_path,
-    )
-    new_manifest.write(member_ctx.manifest_path)
-
-    # Root-Lock neu aufbauen (aggregiert über alle Member inkl. dem soeben aktualisierten).
-    workspace = Workspace.load(workspace_root)
-    if registry_override is not None:
-        registry_path = registry_override.resolve()
-    else:
-        registry_path = workspace.root_manifest.resolved_registry_path()
-    lockfile = workspace.lock(build_registries(registry_path))
-    lockfile.write(workspace_root / LOCKFILE_FILENAME)
-    return new_manifest
+    range_raw = f"^{version.major}.{version.minor}"
+    context.manifest.with_dependency(playbook_id, range_raw).write(context.manifest_path)
+    run_lock(project_dir, library_override)
+    return range_raw
 
 
 def add_command(
-    spec_ref: str = typer.Argument(  # noqa: B008
-        ...,
-        help="Spec-Referenz: '@scope/name' oder '@scope/name@<range>' (Caret oder exakt).",
+    reference: str = typer.Argument(
+        ..., help="Playbook id ('@scope/name[@X.Y.Z]') or git source ('git+<url>[#<path>]')."
     ),
-    project_dir: Path | None = typer.Option(  # noqa: B008
-        None,
-        "--project",
-        "-p",
-        exists=True,
-        file_okay=False,
-        dir_okay=True,
-        readable=True,
-        help="Projekt-Verzeichnis mit speccify.yaml (Default: aktuelles Verzeichnis).",
+    project_dir: Path = typer.Option(  # noqa: B008
+        Path("."), "--project", "-p", help="Project directory (default: current directory)."
     ),
-    registry: Path | None = typer.Option(  # noqa: B008
-        None,
-        "--registry",
-        exists=True,
-        file_okay=False,
-        dir_okay=True,
-        readable=True,
-        help="Optionale Registry-Pfad-Überschreibung.",
-    ),
-    member: str | None = typer.Option(  # noqa: B008
-        None,
-        "--member",
-        "-m",
-        help=(
-            "Workspace-Member (Verzeichnisname unter dem Glob), in dessen "
-            "speccify.yaml geschrieben wird. Default: CWD-Detection."
-        ),
+    library: Path | None = typer.Option(  # noqa: B008
+        None, "--library", help="Local playbook library (default: from the manifest)."
     ),
 ) -> None:
-    """Fügt eine Spec-Dependency in speccify.yaml ein und aktualisiert speccify.lock."""
-    project = project_dir or Path.cwd()
+    """Add a playbook dependency and update the lockfile."""
     try:
-        manifest = run_add(
-            spec_ref,
-            project,
-            registry_override=registry,
-            member=member,
-            cwd=Path.cwd(),
-        )
-    except (
-        ManifestError,
-        RegistryError,
-        ResolverError,
-        FileNotFoundError,
-        WorkspaceError,
-    ) as exc:
-        typer.echo(f"✗ speccify add fehlgeschlagen: {exc}", err=True)
+        range_raw = run_add(project_dir, reference, library)
+    except (ResolverError, RegistryError, ManifestError, FileNotFoundError, ValueError) as exc:
+        typer.echo(f"x speccify add failed: {exc}", err=True)
         raise typer.Exit(code=1) from exc
-
-    typer.echo(
-        f"✓ {spec_ref} hinzugefügt; Manifest enthält {len(manifest.dependencies)} Dependencies."
-    )
+    typer.echo(f"ok added {reference} as {range_raw}")

@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   smoke:
-    name: lint + tests + spec-smoke
+    name: lint + tests + playbook smoke
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
@@ -47,37 +47,21 @@ jobs:
       - name: Pytest
         run: uv run pytest
 
-      - name: speccify lint reference specs
-        run: uv run speccify lint specs/*.speccify.yaml
+      - name: speccify lint reference playbooks
+        run: uv run speccify lint playbooks/
 
-      - name: speccify end-to-end smoke (lock + pull + verify + conformance, offline)
-        working-directory: example-project
-        run: |
-          uv run speccify lock
-          uv run speccify pull --offline --out ./out
-          uv run speccify verify --offline --out ./out
-          uv run speccify conformance
-
-      - name: speccify init + add + pull + verify smoke (offline)
-        env:
-          REPO_ROOT: ${{ github.workspace }}
-          SPECCIFY: ${{ github.workspace }}/.venv/bin/speccify
-          REGISTRY: ${{ github.workspace }}/registry-fixtures
-          CACHE_DIR: ${{ github.workspace }}/tests/fixtures/llm-cache
+      - name: speccify end-to-end smoke (init + add + lock + verify + pull + show)
         run: |
           set -euo pipefail
-          SMOKE_DIR="$(mktemp -d)"
-          pushd "$SMOKE_DIR" >/dev/null
-          "$SPECCIFY" init smoke-app --target react
-          cd smoke-app
-          "$SPECCIFY" add @org/button --registry "$REGISTRY"
-          "$SPECCIFY" lock --registry "$REGISTRY"
-          "$SPECCIFY" pull --offline --registry "$REGISTRY" \
-            --cache-dir "$CACHE_DIR" --out ./out
-          "$SPECCIFY" verify --offline --registry "$REGISTRY" \
-            --cache-dir "$CACHE_DIR" --out ./out
-          popd >/dev/null
-          rm -rf "$SMOKE_DIR"
+          WORK="$(mktemp -d)"
+          BIN="${{ github.workspace }}/.venv/bin/speccify"
+          LIB="${{ github.workspace }}/playbooks"
+          "$BIN" init --project "$WORK"
+          "$BIN" add @speccify/macos-notarize-tauri --project "$WORK" --library "$LIB"
+          "$BIN" verify --project "$WORK" --library "$LIB"
+          "$BIN" pull --project "$WORK" --library "$LIB" --out "$WORK/out"
+          test -f "$WORK/out/speccify/macos-notarize-tauri/assets/verify-signatures.sh"
+          "$BIN" show @speccify/macos-notarize-tauri --project "$WORK" --library "$LIB" --json > /dev/null
 
       - name: speccify-mcp smoke (stdio, offline)
         run: uv run python scripts/mcp_smoke.py
@@ -102,7 +86,7 @@ jobs:
       - name: Sync workspace
         run: uv sync --all-packages
 
-      - name: Pytest (apps/web backend, inkl. Cross-Consistency CLI ↔ MCP ↔ Web)
+      - name: Pytest (apps/web backend)
         run: uv run pytest apps/web/backend/tests -v
 
   web-frontend:
@@ -138,7 +122,7 @@ jobs:
         run: pnpm build
 
   composer:
-    name: apps/composer build (vite spa)
+    name: viewer build (vite spa)
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
@@ -160,11 +144,11 @@ jobs:
       - name: Install dependencies (frozen lockfile, workspace root)
         run: pnpm install --frozen-lockfile
 
-      - name: Typecheck + Build (statischer Export, Tauri-2-fähig)
+      - name: Typecheck + build (static export, Tauri-ready)
         run: pnpm --filter speccify-composer build
 
   composer-e2e:
-    name: apps/composer ui smoke (playwright)
+    name: viewer ui smoke (playwright)
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -180,7 +164,7 @@ jobs:
       - name: Set up Python (from .python-version)
         run: uv python install
 
-      - name: Sync workspace (Backend für den UI-Smoke)
+      - name: Sync workspace (backend for the UI smoke)
         run: uv sync --all-packages
 
       - name: Set up Node.js
@@ -206,56 +190,8 @@ jobs:
       - name: Install Playwright Chromium
         run: pnpm --filter speccify-composer exec playwright install --with-deps chromium
 
-      - name: Composer UI smoke (backend + vite + chromium)
+      - name: Viewer UI smoke (backend + vite + chromium)
         run: pnpm --filter speccify-composer e2e
-
-  app-build:
-    name: speccify build smoke (vite + browser)
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v3
-        with:
-          enable-cache: true
-
-      - name: Set up Python (from .python-version)
-        run: uv python install
-
-      - name: Sync workspace
-        run: uv sync --all-packages
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - name: Set up pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10.33.3
-          run_install: false
-
-      # Der Smoke verlinkt apps/composer/node_modules ins generierte Projekt —
-      # dort stehen exakt die Pakete, die das Scaffold pinnt.
-      - name: Install dependencies (frozen lockfile, workspace root)
-        run: pnpm install --frozen-lockfile
-
-      - name: Cache Playwright browsers
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-composer-${{ runner.os }}-1.44.0
-
-      - name: Install Playwright Chromium
-        run: pnpm --filter speccify-composer exec playwright install --with-deps chromium
-
-      - name: Build the demo app and drive it in a browser
-        run: uv run pytest tests/test_app_build_smoke.py -m app_build -v
 
   rust:
     name: rust workspace (exec-mcp + discovery-mcp)
@@ -311,5 +247,5 @@ jobs:
       - name: Install dependencies (frozen lockfile, workspace root)
         run: pnpm install --frozen-lockfile
 
-      - name: Typecheck + Build (Vite-Frontend der Tauri-App)
+      - name: Typecheck + build (Tauri app frontend)
         run: pnpm --filter speccify-desktop build

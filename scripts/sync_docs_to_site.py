@@ -41,22 +41,9 @@ class DocMapping:
 
 # Single Source of Truth für Quelle → Ziel → URL.
 DOC_MAPPINGS: tuple[DocMapping, ...] = (
-    DocMapping("conformance.md", "conformance/index.md", "/conformance/"),
-    DocMapping(
-        "visual-regression.md",
-        "conformance/visual-regression.md",
-        "/conformance/visual-regression/",
-    ),
-    DocMapping("workspaces.md", "workspaces/index.md", "/workspaces/"),
-    # OSS-Pivot (P2–P5): die vier Seiten, die den heutigen Workflow erklären.
-    DocMapping(
-        "component-api-and-mocks.md",
-        "concepts/api-and-mocks.md",
-        "/concepts/api-and-mocks/",
-    ),
-    DocMapping("composer.md", "composer/index.md", "/composer/"),
-    DocMapping("app-builds.md", "app-builds/index.md", "/app-builds/"),
+    DocMapping("playbooks.md", "concepts/playbooks.md", "/concepts/playbooks/"),
     DocMapping("git-sources.md", "git-sources/index.md", "/git-sources/"),
+    DocMapping("viewer.md", "viewer/index.md", "/viewer/"),
 )
 
 # Basename → Site-URL für das Umschreiben relativer Markdown-Links.

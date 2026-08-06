@@ -11,11 +11,8 @@ from __future__ import annotations
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from speccify_web_backend.routes import composer as composer_route
 from speccify_web_backend.routes import index as index_route
-from speccify_web_backend.routes import mock as mock_route
-from speccify_web_backend.routes import render as render_route
-from speccify_web_backend.routes import specs as specs_route
+from speccify_web_backend.routes import playbooks as playbooks_route
 from speccify_web_backend.settings import Settings
 
 
@@ -47,10 +44,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     def health() -> dict[str, str]:
         return {"status": "ok"}
 
-    app.include_router(specs_route.router)
-    app.include_router(render_route.router)
-    app.include_router(mock_route.router)
-    app.include_router(composer_route.router)
+    app.include_router(playbooks_route.router)
     app.include_router(index_route.router)
 
     # Composer-SPA (gebautes apps/composer/dist) same-origin unter /ui —

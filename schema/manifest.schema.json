@@ -1,56 +1,33 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://speccify.io/schema/manifest/v2.json",
-  "title": "Speccify Project Manifest v2",
-  "description": "Schema v2 für speccify.yaml — Phase-3-Multi-Target. Bump gegenüber v1: `target: str` → `targets: list[str]`. Phase-1-Manifeste (`schema_version: 1`) bleiben lesbar (Loader-seitige Migration zu single-element-list); neu geschriebene Manifeste sind immer v2. Aktiv geladenes Manifest-Schema seit Phase-3-Stage-1b-β.",
+  "$id": "https://speccify.io/schema/manifest/v1.json",
+  "title": "Speccify Project Manifest v1",
+  "description": "A project's speccify.yaml: which playbooks it depends on and where local ones live. Version 1 is a clean restart alongside the playbook schema — no targets, no workspaces.",
   "type": "object",
   "required": ["schema_version"],
   "additionalProperties": false,
   "properties": {
-    "schema_version": {
-      "type": "integer",
-      "const": 2
-    },
-    "targets": {
-      "type": "array",
-      "description": "Codegen-Ziele (z.B. react, swiftui, angular). Mindestens ein Eintrag; deduplizierte Liste. Optional bei reinem Workspace-Root (nur `workspaces:` gesetzt).",
-      "minItems": 1,
-      "items": {
-        "type": "string",
-        "minLength": 1
+    "schema_version": { "type": "integer", "const": 1 },
+    "dependencies": {
+      "type": "object",
+      "description": "Playbook id or git source -> version range (exact or caret).",
+      "propertyNames": {
+        "pattern": "^(@[a-z0-9][a-z0-9-]*/[a-z0-9][a-z0-9-]*|git\\+[^\\s#]+(#[^\\s#]+)?)$"
       },
-      "uniqueItems": true
-    },
-    "workspaces": {
-      "type": "array",
-      "description": "Phase-3-Stage-5: Glob-Muster für Workspace-Member-Verzeichnisse (Cargo-Stil). Relativ zum Root-Manifest. Beispiel: [\"packages/*\"].",
-      "minItems": 1,
-      "items": {
+      "additionalProperties": {
         "type": "string",
-        "minLength": 1
-      },
-      "uniqueItems": true
+        "pattern": "^(\\^?(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(\\.(0|[1-9]\\d*))?)$"
+      }
     },
-    "registry": {
+    "library": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
         "path": {
           "type": "string",
           "minLength": 1,
-          "description": "Pfad zur lokalen Pseudo-Registry (relativ zum Manifest oder absolut)."
+          "description": "Directory of local playbook bundles (default: ./playbooks)."
         }
-      }
-    },
-    "dependencies": {
-      "type": "object",
-      "description": "Map von Spec-Id auf Versions-Range. Exakte Versionen und Caret-Ranges (^X.Y, ^X.Y.Z). Ab Phase P5 sind Git-Quellen als Schlüssel erlaubt: `git+<url>[#<pfad>]`.",
-      "additionalProperties": {
-        "type": "string",
-        "pattern": "^(\\^?(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(\\.(0|[1-9]\\d*))?)$"
-      },
-      "propertyNames": {
-        "pattern": "^(spec://[a-z0-9][a-z0-9-]*|@[a-z0-9][a-z0-9-]*/[a-z0-9][a-z0-9-]*|git\\+[^\\s#]+(#[^\\s#]+)?)$"
       }
     }
   }

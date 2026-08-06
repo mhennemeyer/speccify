@@ -18,13 +18,11 @@ def test_render_mdx_frontmatter_and_banner() -> None:
 
 
 def test_render_mdx_rewrites_relative_links() -> None:
-    markdown = (
-        "# Conformance\n\nSiehe [VR](./visual-regression.md) und [WS](./workspaces.md#abschnitt).\n"
-    )
+    markdown = "# Playbooks\n\nSee [git](./git-sources.md) and [viewer](./viewer.md#selection).\n"
     rendered = sync.render_mdx(markdown)
 
-    assert "](/conformance/visual-regression/)" in rendered
-    assert "](/workspaces/#abschnitt)" in rendered
+    assert "](/git-sources/)" in rendered
+    assert "](/viewer/#selection)" in rendered
     assert "./visual-regression.md" not in rendered.split("---", 2)[-1]
 
 

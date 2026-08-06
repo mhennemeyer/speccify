@@ -1,0 +1,128 @@
+schema_version: 1
+id: "@speccify/macos-notarize-tauri"
+version: 1.0.0
+title: Sign and notarize a Tauri 2 app for distribution outside the App Store
+summary: >
+  Take a working Tauri 2 build to a `.dmg` that opens on a stranger's Mac
+  without a Gatekeeper warning — hardened runtime, sidecar signing, notarization
+  and stapling included.
+authors: [mhennemeyer@me.com]
+license: MIT
+
+applies_to:
+  platforms: [macos]
+  requires: ["Tauri 2", "Xcode command line tools", "Apple Developer Program"]
+  keywords: [tauri, codesign, notarization, gatekeeper, dmg, sidecar]
+
+prerequisites:
+  - '`pnpm tauri build` already produces a working unsigned .app'
+  - An app-specific password for notarytool exists (appleid.apple.com -> Sign-In and Security)
+
+steps:
+  - id: signing_identity
+    title: Have a Developer ID signing identity available
+    uses: "@speccify/apple-developer-id-cert@^1.0"
+
+  - id: harden_config
+    title: Turn on the hardened runtime in tauri.conf.json
+    detail: |
+      Notarization rejects anything without the hardened runtime. In
+      `src-tauri/tauri.conf.json`:
+
+      ```json
+      "bundle": {
+        "macOS": {
+          "hardenedRuntime": true,
+          "minimumSystemVersion": "10.15"
+        }
+      }
+      ```
+
+      Leave the signing identity **out** of the config and pass it through the
+      environment instead — otherwise every contributor needs your certificate
+      to build at all.
+    sources: [tauri_macos_bundle]
+    verify: '`codesign -d --entitlements - <app>` later shows the runtime flag.'
+
+  - id: sign_build
+    title: Build with signing enabled
+    detail: |
+      ```bash
+      export APPLE_SIGNING_IDENTITY="Developer ID Application: <name> (TEAMID)"
+      pnpm tauri build
+      ```
+
+      Tauri signs the main binary, but **every sidecar and embedded binary must
+      carry a valid signature too** — check them explicitly rather than trusting
+      the build:
+
+      ```bash
+      codesign --verify --deep --strict --verbose=2 "target/release/bundle/macos/<App>.app"
+      ```
+    sources: [tauri_signing]
+    assets: [assets/verify-signatures.sh]
+    verify: '`codesign --verify --deep --strict` exits 0 for the .app and each sidecar.'
+
+  - id: notarize
+    title: Submit to notarytool and wait for the verdict
+    detail: |
+      ```bash
+      xcrun notarytool submit "<App>.dmg" \
+        --apple-id "<apple-id>" --team-id "<TEAMID>" \
+        --password "<app-specific-password>" --wait
+      ```
+
+      On rejection, fetch the log — the summary alone rarely says enough:
+
+      ```bash
+      xcrun notarytool log <submission-id> --apple-id … --team-id … --password …
+      ```
+    sources: [notarytool_docs]
+    verify: notarytool reports status "Accepted".
+
+  - id: staple
+    title: Staple the ticket and verify like a stranger's Mac would
+    detail: |
+      Stapling puts the notarization ticket inside the artifact so first launch
+      works offline:
+
+      ```bash
+      xcrun stapler staple "<App>.dmg"
+      spctl --assess --type open --context context:primary-signature -v "<App>.dmg"
+      ```
+
+      `spctl` must answer `accepted` with `source=Notarized Developer ID`.
+    sources: [gatekeeper_docs]
+    verify: '`spctl --assess` prints "accepted" and "source=Notarized Developer ID".'
+
+sources:
+  - id: tauri_macos_bundle
+    title: Tauri — macOS bundle configuration
+    url: https://tauri.app/reference/config/#macconfig
+    retrieved: 2026-08-06
+    note: hardenedRuntime, minimumSystemVersion, signingIdentity.
+  - id: tauri_signing
+    title: Tauri — code signing for macOS
+    url: https://tauri.app/distribute/sign/macos/
+    retrieved: 2026-08-06
+    note: Environment variables the build reads.
+  - id: notarytool_docs
+    title: Notarizing macOS software before distribution
+    url: https://developer.apple.com/documentation/security/notarizing-macos-software-before-distribution
+    retrieved: 2026-08-06
+  - id: gatekeeper_docs
+    title: Customizing the notarization workflow
+    url: https://developer.apple.com/documentation/security/customizing-the-notarization-workflow
+    retrieved: 2026-08-06
+    note: Stapling and the spctl assessment.
+
+pitfalls:
+  - Notarization silently fails for unsigned sidecars — verify each embedded binary, not just the .app.
+  - '`spctl --assess` on the .app can pass while the .dmg fails; assess the artifact you actually ship.'
+  - An expired app-specific password produces an authentication error that reads like a network problem.
+  - Keeping the signing identity in tauri.conf.json breaks builds for everyone without your certificate.
+
+acceptance:
+  - given: a freshly built and notarized .dmg
+    when: it is opened on a Mac that has never seen the developer certificate
+    then: it launches without a Gatekeeper warning

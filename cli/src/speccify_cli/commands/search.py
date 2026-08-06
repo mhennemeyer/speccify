@@ -1,16 +1,15 @@
-"""`speccify search`: Specs in Discovery-Indizes finden (Phase P5 Stufe 3).
+"""`speccify search`: find playbooks in discovery indexes.
 
-Kein zentraler Suchdienst — ein Index ist ein Git-Repo (oder ein lokales
-Verzeichnis) mit einer Datei pro Spec-Repo. Quellen werden in dieser
-Reihenfolge bestimmt (Entscheidung D21):
+No central search service — an index is a git repository (or a local
+directory) with one file per playbook repository. Sources are resolved in this
+order:
 
-1. `--index` (mehrfach angebbar),
-2. `SPECCIFY_INDEX` (mehrere Quellen mit `,` getrennt — nicht mit `:`, das
-   steckt in jeder Git-URL),
-3. `./index`, wenn es existiert.
+1. `--index` (repeatable),
+2. `SPECCIFY_INDEX` (comma-separated — not colon, that lives in every git URL),
+3. `./index`, when it exists.
 
-`--json` liefert dieselben Treffer maschinenlesbar — Agents brauchen keinen
-Tabellen-Parser.
+`--json` returns the same hits machine-readably; agents should not have to
+parse a table.
 """
 
 from __future__ import annotations
@@ -22,7 +21,7 @@ from pathlib import Path
 import typer
 from speccify_core import GitRepoCache, SpecIndexError, load_indexes, search_index
 
-from speccify_cli.commands._workspace import git_cache_dir
+from speccify_cli.commands._context import git_cache_dir
 
 INDEX_ENV = "SPECCIFY_INDEX"
 DEFAULT_INDEX_DIR = "index"
@@ -33,13 +32,13 @@ def resolve_index_sources(
     *,
     project_dir: Path | None = None,
 ) -> list[str | Path]:
-    """Index-Quellen nach der dokumentierten Reihenfolge."""
+    """Index sources, in the documented order."""
     if explicit:
         return [_as_source(value) for value in explicit]
     from_env = os.environ.get(INDEX_ENV, "").strip()
     if from_env:
-        # Trennzeichen ist bewusst nur das Komma: `os.pathsep` ist auf POSIX ein
-        # Doppelpunkt und der steckt in jeder Git-URL.
+        # Comma only on purpose: `os.pathsep` is a colon on POSIX, and that
+        # appears in every git URL.
         return [_as_source(value.strip()) for value in from_env.split(",") if value.strip()]
     local = (project_dir or Path.cwd()) / DEFAULT_INDEX_DIR
     return [local] if local.is_dir() else []
@@ -55,36 +54,36 @@ def run_search(
     sources: list[str | Path],
     offline: bool = False,
 ) -> list[dict[str, object]]:
-    """Programmatischer Einstiegspunkt: liefert die Treffer als Dicts."""
+    """Programmatic entry point: hits as plain dicts."""
     cache = GitRepoCache(cache_dir=git_cache_dir(), offline=offline)
     entries = load_indexes(sources, cache=cache)
     return [entry.to_dict() for entry in search_index(entries, query)]
 
 
 def search_command(
-    query: str = typer.Argument("", help="Suchbegriff (leer: alle Einträge listen)."),
+    query: str = typer.Argument("", help="Search term (empty lists everything)."),
     index: list[str] = typer.Option(  # noqa: B008
         None,
         "--index",
-        help="Index-Quelle: lokales Verzeichnis oder 'git+<url>'. Mehrfach angebbar.",
+        help="Index source: local directory or 'git+<url>'. Repeatable.",
     ),
     offline: bool = typer.Option(
         False,
         "--offline/--no-offline",
-        help="Nur den lokalen Index-Cache lesen, kein Netz.",
+        help="Only read the local index cache, never the network.",
     ),
     as_json: bool = typer.Option(
         False,
         "--json",
-        help="Treffer als JSON ausgeben (für Agents/Skripte).",
+        help="Emit hits as JSON (for agents and scripts).",
     ),
 ) -> None:
-    """Sucht Specs in den konfigurierten Discovery-Indizes."""
+    """Search playbooks in the configured discovery indexes."""
     sources = resolve_index_sources(list(index) if index else None)
     if not sources:
         typer.echo(
-            "Keine Index-Quelle konfiguriert. Entweder `--index <verzeichnis|git+url>` "
-            f"angeben, `{INDEX_ENV}` setzen oder ein `./{DEFAULT_INDEX_DIR}`-Verzeichnis anlegen.",
+            "No index source configured. Pass `--index <directory|git+url>`, set "
+            f"`{INDEX_ENV}`, or create a `./{DEFAULT_INDEX_DIR}` directory.",
             err=True,
         )
         raise typer.Exit(code=1)
@@ -92,7 +91,7 @@ def search_command(
     try:
         hits = run_search(query, sources=sources, offline=offline)
     except SpecIndexError as exc:
-        typer.echo(f"✗ {exc}", err=True)
+        typer.echo(f"x {exc}", err=True)
         raise typer.Exit(code=1) from exc
 
     if as_json:
@@ -100,13 +99,13 @@ def search_command(
         return
 
     if not hits:
-        typer.echo(f"Keine Treffer für {query!r} in {len(sources)} Index-Quelle(n).")
+        typer.echo(f"No hits for {query!r} across {len(sources)} index source(s).")
         return
 
     for hit in hits:
-        keywords = ", ".join(hit["keywords"]) if hit["keywords"] else "—"
-        typer.echo(f"{hit['title']}  [{hit['kind'] or 'spec'}]")
+        keywords = ", ".join(hit["keywords"]) if hit["keywords"] else "-"
+        typer.echo(f"{hit['title']}  [{hit['kind'] or 'playbook'}]")
         typer.echo(f"  {hit['source']}")
         typer.echo(f"  {hit['summary']}")
-        typer.echo(f"  Keywords: {keywords}")
-    typer.echo(f"\n{len(hits)} Treffer. Hinzufügen mit: speccify add <quelle>")
+        typer.echo(f"  keywords: {keywords}")
+    typer.echo(f"\n{len(hits)} hit(s). Add one with: speccify add <source>")

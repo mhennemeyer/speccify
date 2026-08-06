@@ -1,4 +1,8 @@
-"""Projekt-Manifest (`speccify.yaml`) — Loader, Schema-Validation und deterministischer Writer."""
+"""Project manifest (`speccify.yaml`): which playbooks a project depends on.
+
+Version 1 is a clean restart alongside the playbook schema — no targets (there
+is no code generation), no workspaces (a playbook library is a flat directory).
+"""
 
 from __future__ import annotations
 
@@ -9,154 +13,109 @@ from typing import Any
 
 import yaml
 from jsonschema import Draft202012Validator
-from jsonschema import exceptions as js_exceptions
 
-# core/src/speccify_core/manifest.py → ../../../schema/manifest.schema.json
 DEFAULT_MANIFEST_SCHEMA_PATH: Path = (
     Path(__file__).resolve().parents[3] / "schema" / "manifest.schema.json"
 )
-
-DEFAULT_REGISTRY_PATH: str = "./registry-fixtures"
+DEFAULT_LIBRARY_PATH: str = "./playbooks"
+MANIFEST_FILENAME = "speccify.yaml"
+CURRENT_MANIFEST_SCHEMA_VERSION: int = 1
 
 
 class ManifestError(Exception):
-    """Manifest konnte nicht geladen oder nicht validiert werden."""
-
-
-CURRENT_MANIFEST_SCHEMA_VERSION: int = 2
+    """A manifest could not be read or validated."""
 
 
 @dataclass(frozen=True)
 class ProjectManifest:
-    """Immutables Projekt-Manifest. Pfade werden relativ zum Manifest aufgelöst.
-
-    Phase-3-Stage-1b-β: `targets: tuple[str, ...]` ist Single-Source-of-Truth (≥ 1 Eintrag).
-    `target` bleibt als Backward-Compat-Property (erstes Element der Liste).
-    """
-
-    schema_version: int
-    targets: tuple[str, ...] = ()
+    schema_version: int = CURRENT_MANIFEST_SCHEMA_VERSION
     dependencies: dict[str, str] = field(default_factory=dict)
-    registry_path: str = DEFAULT_REGISTRY_PATH
+    library_path: str = DEFAULT_LIBRARY_PATH
     source_path: Path | None = None
-    workspaces: tuple[str, ...] = ()
-
-    @property
-    def is_workspace_root(self) -> bool:
-        """True, wenn dieses Manifest mindestens ein `workspaces:`-Glob enthält."""
-        return bool(self.workspaces)
-
-    @property
-    def target(self) -> str:
-        """Backward-Compat: liefert das erste Target. Erwartet single-target-Manifest."""
-        if len(self.targets) != 1:
-            raise ManifestError(
-                f"Manifest hat {len(self.targets)} Targets, `.target` ist nur für "
-                f"single-target-Manifeste definiert. Nutze `.targets`."
-            )
-        return self.targets[0]
 
     @classmethod
-    def load(
-        cls,
-        path: str | Path,
-        schema_path: str | Path | None = None,
-    ) -> ProjectManifest:
+    def load(cls, path: str | Path, schema_path: str | Path | None = None) -> ProjectManifest:
         manifest_path = Path(path)
         try:
             text = manifest_path.read_text(encoding="utf-8")
         except OSError as exc:
-            raise ManifestError(f"Konnte Manifest nicht lesen: {manifest_path}: {exc}") from exc
-
+            raise ManifestError(f"Could not read manifest {manifest_path}: {exc}") from exc
         try:
             data = yaml.safe_load(text)
         except yaml.YAMLError as exc:
-            raise ManifestError(f"Ungültiges YAML in {manifest_path}: {exc}") from exc
-
+            raise ManifestError(f"Invalid YAML in {manifest_path}: {exc}") from exc
         if not isinstance(data, dict):
-            raise ManifestError(
-                f"Manifest muss ein YAML-Mapping sein, ist aber {type(data).__name__}: "
-                f"{manifest_path}"
-            )
+            raise ManifestError(f"A manifest must be a mapping: {manifest_path}")
 
-        # v1 → v2 Migration: `target: str` → `targets: [target]`, schema_version 1 → 2.
-        data = _migrate_manifest_to_v2(data)
-
-        _validate_against_schema(data, schema_path or DEFAULT_MANIFEST_SCHEMA_PATH, manifest_path)
-
-        registry_block = data.get("registry") or {}
-        registry_path = registry_block.get("path", DEFAULT_REGISTRY_PATH)
-        targets_raw = data.get("targets", []) or []
-        workspaces_raw = data.get("workspaces", []) or []
+        _validate(data, schema_path or DEFAULT_MANIFEST_SCHEMA_PATH, manifest_path)
+        library = data.get("library") or {}
         return cls(
-            schema_version=data["schema_version"],
-            targets=tuple(targets_raw),
-            dependencies=dict(data.get("dependencies", {})),
-            registry_path=registry_path,
+            schema_version=int(data["schema_version"]),
+            dependencies={str(k): str(v) for k, v in (data.get("dependencies") or {}).items()},
+            library_path=str(library.get("path", DEFAULT_LIBRARY_PATH)),
             source_path=manifest_path,
-            workspaces=tuple(workspaces_raw),
         )
 
-    def write(self, path: str | Path) -> None:
-        """Schreibt das Manifest deterministisch (sortierte Keys, stable Layout)."""
-        out_path = Path(path)
-        payload: dict[str, Any] = {"schema_version": self.schema_version}
-        if self.targets:
-            payload["targets"] = list(self.targets)
-        if self.workspaces:
-            payload["workspaces"] = list(self.workspaces)
-        payload["registry"] = {"path": self.registry_path}
-        payload["dependencies"] = dict(sorted(self.dependencies.items()))
-        text = yaml.safe_dump(
-            payload,
-            sort_keys=False,
-            default_flow_style=False,
-            allow_unicode=True,
+    def resolved_library_path(self) -> Path:
+        """Library directory, resolved relative to the manifest."""
+        base = self.source_path.parent if self.source_path else Path.cwd()
+        return (base / self.library_path).resolve()
+
+    def with_dependency(self, playbook_id: str, range_raw: str) -> ProjectManifest:
+        return ProjectManifest(
+            schema_version=self.schema_version,
+            dependencies={**self.dependencies, playbook_id: range_raw},
+            library_path=self.library_path,
+            source_path=self.source_path,
         )
-        out_path.write_text(text, encoding="utf-8")
 
-    def resolved_registry_path(self) -> Path:
-        """Löst `registry_path` relativ zum Manifest-Verzeichnis auf."""
-        registry = Path(self.registry_path)
-        if registry.is_absolute() or self.source_path is None:
-            return registry
-        return (self.source_path.parent / registry).resolve()
+    def to_dict(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"schema_version": self.schema_version}
+        if self.library_path != DEFAULT_LIBRARY_PATH:
+            out["library"] = {"path": self.library_path}
+        if self.dependencies:
+            out["dependencies"] = dict(sorted(self.dependencies.items()))
+        return out
 
-
-def _migrate_manifest_to_v2(data: dict[str, Any]) -> dict[str, Any]:
-    """In-Memory-Migration eines v1-Manifest-Dicts auf v2.
-
-    v1: `{schema_version: 1, target: str, ...}` → v2: `{schema_version: 2, targets: [target], ...}`.
-    Andere Schema-Versionen werden unverändert zurückgegeben (Schema-Validator meldet den Fehler).
-    """
-    if data.get("schema_version") == 1 and "target" in data and "targets" not in data:
-        migrated = dict(data)
-        migrated["schema_version"] = 2
-        migrated["targets"] = [migrated.pop("target")]
-        return migrated
-    return data
+    def write(self, path: str | Path | None = None) -> None:
+        target = Path(path) if path is not None else self.source_path
+        if target is None:
+            raise ManifestError("No path to write the manifest to.")
+        payload = self.to_dict()
+        _validate(payload, DEFAULT_MANIFEST_SCHEMA_PATH, target)
+        target.write_text(
+            yaml.safe_dump(payload, sort_keys=False, default_flow_style=False, allow_unicode=True),
+            encoding="utf-8",
+        )
 
 
-def _validate_against_schema(data: Any, schema_path: str | Path, source: Path) -> None:
-    schema_p = Path(schema_path)
-    with schema_p.open("r", encoding="utf-8") as fh:
-        schema: dict[str, Any] = json.load(fh)
-    Draft202012Validator.check_schema(schema)
-    validator = Draft202012Validator(schema)
+_VALIDATORS: dict[Path, Draft202012Validator] = {}
+
+
+def _validate(data: Any, schema_path: str | Path, context: Path) -> None:
+    key = Path(schema_path)
+    validator = _VALIDATORS.get(key)
+    if validator is None:
+        try:
+            schema = json.loads(key.read_text(encoding="utf-8"))
+        except OSError as exc:
+            raise ManifestError(f"Could not read manifest schema {key}: {exc}") from exc
+        validator = Draft202012Validator(schema)
+        _VALIDATORS[key] = validator
     errors = sorted(validator.iter_errors(data), key=lambda e: list(e.absolute_path))
     if errors:
-        formatted = "; ".join(_format_error(err) for err in errors)
-        raise ManifestError(f"Manifest entspricht nicht dem Schema ({source}): {formatted}")
+        first = errors[0]
+        location = "/".join(str(p) for p in first.absolute_path) or "$"
+        raise ManifestError(
+            f"{context}: manifest does not match the schema at {location}: {first.message}"
+        )
 
 
-def _format_error(error: js_exceptions.ValidationError) -> str:
-    if not error.absolute_path:
-        return error.message
-    parts: list[str] = []
-    for part in error.absolute_path:
-        if isinstance(part, int):
-            parts.append(f"[{part}]")
-        else:
-            parts.append(f".{part}")
-    pointer = "$" + "".join(parts)
-    return f"{pointer}: {error.message}"
+__all__ = [
+    "CURRENT_MANIFEST_SCHEMA_VERSION",
+    "DEFAULT_LIBRARY_PATH",
+    "DEFAULT_MANIFEST_SCHEMA_PATH",
+    "MANIFEST_FILENAME",
+    "ManifestError",
+    "ProjectManifest",
+]

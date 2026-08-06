@@ -1,11 +1,11 @@
 ---
 title: "speccify lock"
-description: "Löst Dependencies via MVS auf und schreibt speccify.lock (ohne Codegen-Aufruf)."
+description: "Resolve dependencies and write speccify.lock."
 ---
 
 <!-- AUTOGENERIERT via scripts/gen_cli_docs.py aus `speccify --help` — nicht von Hand editieren. -->
 
-Löst Dependencies via MVS auf und schreibt speccify.lock (ohne Codegen-Aufruf).
+Resolve dependencies and write speccify.lock.
 
 ## Usage
 
@@ -17,5 +17,5 @@ speccify lock [OPTIONS]
 
 | Option | Beschreibung |
 | --- | --- |
-| `--project`, `-p` | Projekt-Verzeichnis mit speccify.yaml (Default: aktuelles Verzeichnis). |
-| `--registry` | Optionale Registry-Pfad-Überschreibung. |
+| `--project`, `-p` | Project directory (default: current directory). |
+| `--library` | Local playbook library (default: from the manifest). |

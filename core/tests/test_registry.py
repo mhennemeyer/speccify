@@ -1,86 +1,81 @@
-"""Tests für `speccify_core.registry`."""
+"""Tests for bundles and the local playbook library."""
 
 from __future__ import annotations
 
 from pathlib import Path
 
 import pytest
-from speccify_core.registry import LocalRegistry, RegistryError, Version
+from speccify_core import (
+    LibraryError,
+    LocalLibrary,
+    MultiLibrary,
+    Version,
+    bundle_sha256,
+)
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
-REGISTRY_ROOT = REPO_ROOT / "registry-fixtures"
-
-
-def test_version_parse_and_order() -> None:
-    assert Version.parse("0.1.0") == Version(0, 1, 0)
-    assert Version.parse("1.2.3") == Version(1, 2, 3)
-    assert Version(0, 1, 0) < Version(0, 1, 1) < Version(0, 2, 0) < Version(1, 0, 0)
-    assert str(Version(1, 2, 3)) == "1.2.3"
+FIXTURES = Path("playbooks")
 
 
-@pytest.mark.parametrize("raw", ["0.1", "0.1.0-rc.1", "v0.1.0", "0.01.0", ""])
-def test_version_parse_rejects_phase1a_disallowed(raw: str) -> None:
+def test_bundle_carries_playbook_and_assets() -> None:
+    bundle = LocalLibrary(FIXTURES).fetch("@speccify/macos-notarize-tauri", Version.parse("1.0.0"))
+    assert set(bundle.files) == {"playbook.yaml", "assets/verify-signatures.sh"}
+    assert bundle.asset_paths == ("assets/verify-signatures.sh",)
+    assert bundle.declared_id == "@speccify/macos-notarize-tauri"
+
+
+def test_bundle_hash_covers_assets_and_paths() -> None:
+    base = {"playbook.yaml": b"a", "assets/x": b"b"}
+    assert bundle_sha256(base) == bundle_sha256({"assets/x": b"b", "playbook.yaml": b"a"})
+    assert bundle_sha256(base) != bundle_sha256({"playbook.yaml": b"a", "assets/y": b"b"})
+    assert bundle_sha256(base) != bundle_sha256({"playbook.yaml": b"a", "assets/x": b"c"})
+    # Length prefixes keep neighbouring fields from bleeding into each other.
+    assert bundle_sha256({"ab": b"c"}) != bundle_sha256({"a": b"bc"})
+
+
+def test_list_playbooks_is_sorted_and_complete() -> None:
+    found = LocalLibrary(FIXTURES).list_playbooks()
+    assert found == sorted(found)
+    assert ("@speccify/apple-developer-id-cert", Version.parse("1.0.0")) in found
+
+
+def test_unknown_version_names_what_is_available() -> None:
+    with pytest.raises(LibraryError, match="Available: \\['1.0.0'\\]"):
+        LocalLibrary(FIXTURES).fetch("@speccify/macos-notarize-tauri", Version.parse("9.9.9"))
+
+
+def test_unscoped_id_is_rejected() -> None:
+    with pytest.raises(LibraryError, match="@scope/name"):
+        LocalLibrary(FIXTURES).list_versions("no-scope")
+
+
+def test_library_root_must_exist(tmp_path: Path) -> None:
+    with pytest.raises(LibraryError):
+        LocalLibrary(tmp_path / "missing")
+
+
+def test_multi_library_routes_by_serves() -> None:
+    local = LocalLibrary(FIXTURES)
+
+    class OnlyGit:
+        via = "git"
+
+        def serves(self, playbook_id: str) -> bool:
+            return playbook_id.startswith("git+")
+
+        def list_versions(self, playbook_id: str):
+            return [Version.parse("2.0.0")]
+
+        def fetch(self, playbook_id: str, version: Version):
+            raise LibraryError("not reached in this test")
+
+    multi = MultiLibrary([local, OnlyGit()])
+    assert multi.serves("@speccify/macos-notarize-tauri")
+    assert multi.serves("git+https://host/repo")
+    assert multi.list_versions("git+https://host/repo") == [Version.parse("2.0.0")]
+    assert multi.list_versions("@speccify/macos-notarize-tauri") == [Version.parse("1.0.0")]
+
+
+def test_version_ordering_and_parsing() -> None:
+    assert Version.parse("1.2.3") > Version.parse("1.2.2")
     with pytest.raises(ValueError):
-        Version.parse(raw)
-
-
-def test_list_versions_sorted_for_button() -> None:
-    registry = LocalRegistry(REGISTRY_ROOT)
-    versions = registry.list_versions("@org/button")
-    assert versions == [Version(0, 1, 0), Version(0, 1, 1)]
-
-
-def test_list_versions_unknown_spec_returns_empty() -> None:
-    registry = LocalRegistry(REGISTRY_ROOT)
-    assert registry.list_versions("@org/does-not-exist") == []
-
-
-def test_fetch_returns_spec_with_bytes_and_version() -> None:
-    registry = LocalRegistry(REGISTRY_ROOT)
-    spec = registry.fetch("@org/button", Version(0, 1, 0))
-
-    assert spec.spec_id == "@org/button"
-    assert spec.version == Version(0, 1, 0)
-    assert spec.path.name == "spec.speccify.yaml"
-    # Originale Bytes (unverändert) für stabile Hashes:
-    assert spec.raw_bytes == spec.path.read_bytes()
-    parsed = spec.parsed()
-    assert parsed["id"] == "@org/button"
-    assert parsed["version"] == "0.1.0"
-
-
-def test_fetch_missing_version_lists_available() -> None:
-    registry = LocalRegistry(REGISTRY_ROOT)
-    with pytest.raises(RegistryError, match="0.1.0|0.1.1"):
-        registry.fetch("@org/button", Version(0, 9, 9))
-
-
-def test_invalid_id_format_rejected() -> None:
-    registry = LocalRegistry(REGISTRY_ROOT)
-    with pytest.raises(RegistryError, match="@scope/name"):
-        registry.list_versions("spec://button")
-
-
-def test_registry_root_must_exist(tmp_path: Path) -> None:
-    with pytest.raises(RegistryError):
-        LocalRegistry(tmp_path / "missing")
-
-
-def test_registry_root_must_be_directory(tmp_path: Path) -> None:
-    file_path = tmp_path / "not-a-dir"
-    file_path.write_text("x", encoding="utf-8")
-    with pytest.raises(RegistryError):
-        LocalRegistry(file_path)
-
-
-def test_all_phase0_specs_present() -> None:
-    registry = LocalRegistry(REGISTRY_ROOT)
-    for spec_id in (
-        "@org/button",
-        "@org/contact-form",
-        "@org/http-api-client",
-        "@org/onboarding-wizard",
-        "@org/login-screen",
-    ):
-        assert registry.list_versions(spec_id), f"missing fixture: {spec_id}"
-        registry.fetch(spec_id, Version(0, 1, 0))
+        Version.parse("1.2")

@@ -1,106 +1,38 @@
-"""Entry-Point für das `speccify`-CLI."""
+"""Speccify CLI — playbooks for coding agents."""
 
 from __future__ import annotations
 
-import sys
-from pathlib import Path
-
 import typer
-from speccify_core import SchemaValidator, SpecLoader, SpecLoaderError
 
 from speccify_cli.commands.add import add_command
-from speccify_cli.commands.build import build_command
-from speccify_cli.commands.conformance import conformance_command
 from speccify_cli.commands.init import init_command
+from speccify_cli.commands.lint import lint_command
 from speccify_cli.commands.lock import lock_command
-from speccify_cli.commands.mock import mock_command
 from speccify_cli.commands.pull import pull_command
 from speccify_cli.commands.search import search_command
+from speccify_cli.commands.show import show_command
 from speccify_cli.commands.verify import verify_command
 
 app = typer.Typer(
     name="speccify",
-    help="Speccify CLI — Spec-First Komponenten-Plattform.",
+    help="Speccify — playbooks for complex, recurring workflows.",
     no_args_is_help=True,
     add_completion=False,
 )
 
 app.command("init")(init_command)
-app.command("lock")(lock_command)
+app.command("search")(search_command)
 app.command("add")(add_command)
+app.command("lock")(lock_command)
 app.command("pull")(pull_command)
 app.command("verify")(verify_command)
-app.command("conformance")(conformance_command)
-app.command("mock")(mock_command)
-app.command("build")(build_command)
-app.command("search")(search_command)
+app.command("show")(show_command)
+app.command("lint")(lint_command)
 
 
 @app.callback()
 def _root() -> None:
-    """Speccify — Spec-First Komponenten-Plattform."""
-
-
-@app.command("lint")
-def lint(
-    files: list[Path] = typer.Argument(  # noqa: B008
-        ...,
-        exists=True,
-        file_okay=True,
-        dir_okay=False,
-        readable=True,
-        help="Pfade zu speccify.yaml-Specs.",
-    ),
-    schema: Path | None = typer.Option(  # noqa: B008
-        None,
-        "--schema",
-        help="Optionaler Pfad zu einem alternativen JSON-Schema "
-        "(Default: schema/spec.schema.json).",
-        exists=True,
-        file_okay=True,
-        dir_okay=False,
-        readable=True,
-    ),
-) -> None:
-    """Validiert eine oder mehrere YAML-Specs gegen das Spec-Schema v0."""
-
-    validator = SchemaValidator(schema_path=schema)
-    total_errors = 0
-    failed_files = 0
-
-    for file_path in files:
-        try:
-            data = SpecLoader.load(file_path)
-        except SpecLoaderError as exc:
-            typer.echo(f"✗ {file_path}: {exc}", err=True)
-            total_errors += 1
-            failed_files += 1
-            continue
-
-        # Projekt-Manifeste (`speccify.yaml`) haben kein `kind`-Feld; sie gehören
-        # nicht in den Spec-Validator. Sie werden in Phase 1a beim `lint` einfach
-        # übersprungen (eigene Manifest-Validation läuft beim Laden in `lock`/`add`).
-        if "kind" not in data:
-            typer.echo(f"↷ {file_path} (übersprungen: Projekt-Manifest, kein Spec-`kind`)")
-            continue
-
-        issues = validator.iter_issues(data)
-        if not issues:
-            typer.echo(f"✓ {file_path}")
-            continue
-
-        failed_files += 1
-        typer.echo(f"✗ {file_path}", err=True)
-        for issue in issues:
-            typer.echo(f"    {issue.format()}", err=True)
-            total_errors += 1
-
-    if failed_files:
-        typer.echo(
-            f"\n{failed_files} Datei(en) mit {total_errors} Problem(en).",
-            err=True,
-        )
-        raise typer.Exit(code=1)
+    """Speccify — playbooks for complex, recurring workflows."""
 
 
 def main() -> None:
@@ -108,4 +40,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    sys.exit(app())
+    main()

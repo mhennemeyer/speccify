@@ -1,11 +1,11 @@
 ---
 title: "speccify search"
-description: "Sucht Specs in den konfigurierten Discovery-Indizes."
+description: "Search playbooks in the configured discovery indexes."
 ---
 
 <!-- AUTOGENERIERT via scripts/gen_cli_docs.py aus `speccify --help` — nicht von Hand editieren. -->
 
-Sucht Specs in den konfigurierten Discovery-Indizes.
+Search playbooks in the configured discovery indexes.
 
 ## Usage
 
@@ -23,6 +23,6 @@ speccify search [OPTIONS] [QUERY]
 
 | Option | Beschreibung |
 | --- | --- |
-| `--index` | Index-Quelle: lokales Verzeichnis oder 'git+<url>'. Mehrfach angebbar. |
-| `--offline`, `--no-offline` | Nur den lokalen Index-Cache lesen, kein Netz. |
-| `--json` | Treffer als JSON ausgeben (für Agents/Skripte). |
+| `--index` | Index source: local directory or 'git+<url>'. Repeatable. |
+| `--offline`, `--no-offline` | Only read the local index cache, never the network. |
+| `--json` | Emit hits as JSON (for agents and scripts). |
