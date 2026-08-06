@@ -11,14 +11,54 @@ sources with their age, assets inline, child playbooks one click away.
 
 You do not hand-edit playbooks in a form. Agents write prose and YAML better
 than a property grid ever could, so the viewer is **read-only**: you select
-something, ask the agent next to it, and accept the change it proposes. The
-YAML pane stays as the escape hatch.
+something, ask the agent next to it, and accept the change it proposes.
 
 ## Selection is context
 
-Clicking a step, a source or an asset sets the *selection*. That selection is
-what a context-aware agent reads — so "why is this necessary?" resolves against
-the step you are looking at, without you restating it.
+Clicking a step, a source or an asset sets the *selection*, and the viewer
+pushes it to the backend. An agent reads it through the `viewer_selection` MCP
+tool — **already resolved**, so it does not need three more calls to learn what
+you clicked:
+
+```json
+{
+  "playbook": { "id": "@speccify/macos-notarize-tauri", "version": "1.0.0" },
+  "kind": "step",
+  "step": {
+    "id": "notarize",
+    "title": "Submit to notarytool and wait for the verdict",
+    "detail": "…",
+    "verify": "notarytool reports status \"Accepted\".",
+    "sources": [{ "title": "Notarizing macOS software…", "retrieved": "2026-08-06" }]
+  }
+}
+```
+
+That is what makes "why is this necessary?" resolve against the step on screen,
+without you restating it.
+
+## Changes arrive as proposals
+
+An agent does not write playbooks behind your back. It calls
+`playbook_propose` with the complete new `playbook.yaml`; the backend validates
+it and the viewer shows it as a **diff with Apply and Discard**. Nothing
+touches disk until you click Apply.
+
+Two guardrails: an invalid playbook is rejected at proposal time with the
+reason (so you never see a diff that cannot be applied), and playbooks that
+came from a **git source cannot be written** — changes there belong in that
+repository, as a commit and a new tag.
+
+## Working with an agent next to the viewer
+
+The chat is your existing coding agent, not a second one built into Speccify.
+Point it at the Speccify MCP server, open the viewer beside it, and the loop
+is:
+
+1. click the step you are wondering about,
+2. ask — the agent calls `viewer_selection` and answers about *that* step,
+3. if the answer should be part of the playbook, ask it to propose the change,
+4. read the diff, apply it.
 
 | Area | What it shows |
 |---|---|

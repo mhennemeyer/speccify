@@ -117,6 +117,7 @@ sources:
     note: Stapling and the spctl assessment.
 
 pitfalls:
+  - Proposed by an agent during the smoke test.
   - Notarization silently fails for unsigned sidecars — verify each embedded binary, not just the .app.
   - '`spctl --assess` on the .app can pass while the .dmg fails; assess the artifact you actually ship.'
   - An expired app-specific password produces an authentication error that reads like a network problem.

@@ -118,8 +118,10 @@ speccify verify                        # bundles still match the lockfile?
 ```
 
 Agents use the MCP server instead: `playbook_list`, `playbook_get`,
-`playbook_step`, `search`, `lock`, `pull`, `verify` — the same core, so the
-answers cannot drift.
+`playbook_step`, `playbook_asset`, `playbook_check`, `search`, `lock`, `pull`,
+`verify` — the same core, so the answers cannot drift. Two more connect an
+agent to the viewer a person is looking at: `viewer_selection` and
+`playbook_propose` (see [the viewer](/viewer/)).
 
 ## Staying true
 

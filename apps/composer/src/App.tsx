@@ -1,7 +1,19 @@
 import { useCallback, useEffect, useState } from "react";
 
-import { ApiError, getAsset, getPlaybook, listPlaybooks, searchIndex } from "./api";
+import {
+  ApiError,
+  applyProposal,
+  discardProposal,
+  getAsset,
+  getPlaybook,
+  getProposal,
+  listPlaybooks,
+  pushSelection,
+  searchIndex,
+  type Proposal,
+} from "./api";
 import { PlaybookView } from "./components/PlaybookView";
+import { ProposalPanel } from "./components/ProposalPanel";
 import { PlaybookList } from "./components/PlaybookList";
 import type { IndexHit, PlaybookDetail, PlaybookSummary, Selection } from "./types";
 
@@ -17,6 +29,7 @@ export function App() {
   const [assetContent, setAssetContent] = useState<string | null>(null);
   const [indexHits, setIndexHits] = useState<IndexHit[]>([]);
   const [indexStatus, setIndexStatus] = useState("");
+  const [proposal, setProposal] = useState<Proposal | null>(null);
   const [status, setStatus] = useState("");
 
   useEffect(() => {
@@ -36,6 +49,7 @@ export function App() {
       setSelection({ kind: "playbook" });
       setAssetContent(null);
       setStatus(`${loaded.id}@${loaded.version} loaded.`);
+      void pushSelection({ source: loaded.source, kind: "playbook" }).catch(() => undefined);
     } catch (error) {
       setStatus(
         error instanceof ApiError && error.status === 404
@@ -70,6 +84,16 @@ export function App() {
           .getElementById(`step-${next.stepId}`)
           ?.scrollIntoView({ behavior: "smooth", block: "nearest" });
       }
+      // Tell the backend what is selected: the agent next door reads it.
+      if (detail) {
+        void pushSelection({
+          source: detail.source,
+          kind: next.kind,
+          step_id: next.kind === "step" ? next.stepId : undefined,
+          source_id: next.kind === "source" ? next.sourceId : undefined,
+          asset_path: next.kind === "asset" ? next.path : undefined,
+        }).catch(() => undefined);
+      }
       if (next.kind === "asset" && detail) {
         try {
           const asset = await getAsset(detail.source, next.path);
@@ -83,6 +107,44 @@ export function App() {
     },
     [detail],
   );
+
+  // An agent can propose a change at any time; poll for it rather than making
+  // the user reload.
+  useEffect(() => {
+    let cancelled = false;
+    const tick = async () => {
+      try {
+        const pending = await getProposal();
+        if (!cancelled) setProposal(pending);
+      } catch {
+        /* backend not up yet — try again on the next tick */
+      }
+    };
+    void tick();
+    const timer = window.setInterval(() => void tick(), 2000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
+  }, []);
+
+  const acceptProposal = useCallback(async () => {
+    try {
+      const applied = await applyProposal();
+      setProposal(null);
+      setStatus(`Applied — ${applied.path}`);
+      if (detail) setDetail(await getPlaybook(detail.source));
+      setPlaybooks(await listPlaybooks());
+    } catch (error) {
+      setStatus(`Could not apply: ${String(error)}`);
+    }
+  }, [detail]);
+
+  const rejectProposal = useCallback(async () => {
+    await discardProposal().catch(() => undefined);
+    setProposal(null);
+    setStatus("Proposal discarded.");
+  }, []);
 
   return (
     <>
@@ -107,13 +169,23 @@ export function App() {
           onOpen={(source) => void open(source)}
           onSearchIndex={(query) => void searchTheIndex(query)}
         />
-        <PlaybookView
-          playbook={detail}
+        <div className="main">
+          {proposal && detail && proposal.source === detail.source ? (
+            <ProposalPanel
+              proposal={proposal}
+              currentYaml={detail.yaml}
+              onApply={() => void acceptProposal()}
+              onDiscard={() => void rejectProposal()}
+            />
+          ) : null}
+          <PlaybookView
+            playbook={detail}
           selection={selection}
           assetContent={assetContent}
-          onSelect={(next) => void select(next)}
-          onOpenChild={(source) => void open(source)}
-        />
+            onSelect={(next) => void select(next)}
+            onOpenChild={(source) => void open(source)}
+          />
+        </div>
       </div>
     </>
   );

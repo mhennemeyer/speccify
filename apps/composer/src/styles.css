@@ -150,3 +150,17 @@ button.small { border: 1px solid var(--border); border-radius: 6px; background: 
 
 /* Inline markdown keeps one-liners readable without turning into a block. */
 .card li code, .verify code { background: #e2e8f0; border-radius: 4px; padding: 1px 4px; font-family: ui-monospace, monospace; font-size: 12px; }
+
+/* An agent's proposal, waiting for a human. */
+.main { overflow-y: auto; display: grid; gap: 14px; align-content: start; padding: 0; }
+.main > .view { padding: 0; overflow: visible; }
+.card.proposal { border-color: var(--accent); cursor: default; margin: 20px 20px 0; }
+.diff { max-height: 320px; overflow: auto; background: #f8fafc; border: 1px solid var(--border); border-radius: 6px; padding: 8px; font-size: 12px; }
+.diff-line { font-family: ui-monospace, monospace; white-space: pre-wrap; }
+.diff-line.added { background: #dcfce7; }
+.diff-line.removed { background: #fee2e2; }
+.row { display: flex; gap: 8px; margin-top: 10px; }
+/* Order matters: `.row button` and `button.primary` have equal specificity,
+   so the primary rule has to come last or Apply turns white on white. */
+.row button { border: 1px solid var(--border); border-radius: 6px; background: var(--panel); padding: 6px 12px; font: inherit; cursor: pointer; }
+button.primary, .row button.primary { background: var(--accent); color: white; border: none; }

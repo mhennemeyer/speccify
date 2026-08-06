@@ -20,10 +20,12 @@ from .tools import (
     run_playbook_check,
     run_playbook_get,
     run_playbook_list,
+    run_playbook_propose,
     run_playbook_step,
     run_pull,
     run_search,
     run_verify,
+    run_viewer_selection,
 )
 
 SERVER_NAME = "speccify-mcp"
@@ -170,6 +172,40 @@ def build_server(config: ServerConfig) -> FastMCP:
             query=query,
             index_sources=index_sources,
             offline=offline,
+        ).to_dict()
+
+    @server.tool(
+        name="viewer_selection",
+        description=(
+            "What the user currently has selected in the Speccify viewer — the "
+            "playbook, and the step, source or asset they clicked, already "
+            "resolved. Call this **first** when the user asks about 'this step' "
+            "or 'why is that necessary' while looking at the viewer; it is the "
+            "context they did not restate. Returns `{ok, selection}`; an empty "
+            "selection means nothing is open."
+        ),
+    )
+    def viewer_selection() -> dict[str, Any]:
+        return run_viewer_selection().to_dict()
+
+    @server.tool(
+        name="playbook_propose",
+        description=(
+            "Propose a changed playbook. Pass the **complete** new "
+            "`playbook.yaml`; it is validated and then shown to the user in the "
+            "viewer as a diff. Nothing is written until they apply it — this is "
+            "how playbooks are edited, there is no edit mode. Returns "
+            "`{ok, code, message}`; invalid YAML or a broken playbook comes "
+            "back as `code=invalid_playbook` with the reason."
+        ),
+    )
+    def playbook_propose(
+        source: str,
+        playbook_yaml: str,
+        rationale: str = "",
+    ) -> dict[str, Any]:
+        return run_playbook_propose(
+            source=source, playbook_yaml=playbook_yaml, rationale=rationale
         ).to_dict()
 
     @server.tool(

@@ -19,6 +19,12 @@ from .library import (
 )
 from .project import ProjectResult, run_lock, run_pull, run_verify
 from .search import SearchResult, run_search
+from .viewer import (
+    ProposalResult,
+    ViewerResult,
+    run_playbook_propose,
+    run_viewer_selection,
+)
 
 __all__ = [
     "AssetResult",
@@ -26,14 +32,18 @@ __all__ = [
     "LibraryResult",
     "PlaybookResult",
     "ProjectResult",
+    "ProposalResult",
     "SearchResult",
+    "ViewerResult",
     "run_lock",
     "run_playbook_asset",
     "run_playbook_check",
     "run_playbook_get",
     "run_playbook_list",
+    "run_playbook_propose",
     "run_playbook_step",
     "run_pull",
     "run_search",
     "run_verify",
+    "run_viewer_selection",
 ]

@@ -78,6 +78,46 @@ test("open a playbook, walk its steps, select a source and an asset", async ({ p
     await expect(page.locator(".library-item.index-item")).toHaveCount(1);
   });
 
+  await test.step("selecting pushes context the agent can read", async () => {
+    await page.locator(".card.step").filter({ hasText: "notarytool" }).click();
+    const selection = await page.request.get("/api/v1/selection");
+    const body = await selection.json();
+    expect(body.selection.step.id).toBe("notarize");
+    expect(body.selection.playbook.id).toBe("@speccify/macos-notarize-tauri");
+  });
+
+  await test.step("an agent proposal shows as a diff and only applies on request", async () => {
+    const current = await (
+      await page.request.get("/api/v1/playbook", {
+        params: { source: "@speccify/macos-notarize-tauri" },
+      })
+    ).json();
+    const proposed = current.yaml.replace(
+      "pitfalls:",
+      "pitfalls:\n  - Proposed by an agent during the smoke test.",
+    );
+    const posted = await page.request.post("/api/v1/proposal", {
+      data: {
+        source: "@speccify/macos-notarize-tauri",
+        playbook_yaml: proposed,
+        rationale: "One more pitfall.",
+      },
+    });
+    expect(posted.ok()).toBeTruthy();
+
+    const panel = page.locator(".card.proposal");
+    await expect(panel).toBeVisible({ timeout: 10_000 });
+    await expect(panel.locator(".diff-line.added")).toContainText("Proposed by an agent");
+    // The Apply button must be readable, not white on white (regression: two
+    // CSS rules of equal specificity, primary lost to the generic one).
+    const apply = panel.getByRole("button", { name: "Apply" });
+    await expect(apply).toBeVisible();
+    await expect(apply).toHaveCSS("background-color", "rgb(15, 118, 110)");
+    await apply.click();
+    await expect(panel).toBeHidden();
+    await expect(page.locator(".pitfalls")).toContainText("Proposed by an agent");
+  });
+
   await test.step("a delegated step links to its child playbook", async () => {
     // The filter is still narrowed from the index search — clear it first.
     await page.locator("#library-filter").fill("");

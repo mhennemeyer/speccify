@@ -13,6 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from speccify_web_backend.routes import index as index_route
 from speccify_web_backend.routes import playbooks as playbooks_route
+from speccify_web_backend.routes import session as session_route
 from speccify_web_backend.settings import Settings
 
 
@@ -45,6 +46,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         return {"status": "ok"}
 
     app.include_router(playbooks_route.router)
+    app.include_router(session_route.router)
     app.include_router(index_route.router)
 
     # Composer-SPA (gebautes apps/composer/dist) same-origin unter /ui —
