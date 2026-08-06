@@ -8,11 +8,14 @@ test("open a playbook, walk its steps, select a source and an asset", async ({ p
   await page.goto("/");
 
   await test.step("the library lists the reference playbooks and filters", async () => {
-    await expect(page.locator(".library-item")).toHaveCount(2);
+    // `count()` does not auto-wait — make sure the list has loaded first.
+    await expect(page.locator(".library-item").first()).toBeVisible();
+    const all = await page.locator(".library-item").count();
+    expect(all).toBeGreaterThanOrEqual(4);
     await page.locator("#library-filter").fill("tauri");
     await expect(page.locator(".library-item")).toHaveCount(1);
     await page.locator("#library-filter").fill("");
-    await expect(page.locator(".library-item")).toHaveCount(2);
+    await expect(page.locator(".library-item")).toHaveCount(all);
   });
 
   await test.step("opening shows steps, pitfalls and sources", async () => {

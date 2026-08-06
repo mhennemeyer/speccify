@@ -126,9 +126,11 @@ def test_show_unknown_step_lists_the_known_ones(project: Path) -> None:
 
 
 def test_lint_accepts_the_reference_library() -> None:
+    """Every playbook shipped in this repo must always validate."""
     result = runner.invoke(app, ["lint", str(LIBRARY)])
     assert result.exit_code == 0, result.output
-    assert "2 playbook(s) validated" in result.output
+    assert "playbook(s) validated" in result.output
+    assert "fail" not in result.output
 
 
 def test_lint_reports_broken_playbooks(tmp_path: Path) -> None:
