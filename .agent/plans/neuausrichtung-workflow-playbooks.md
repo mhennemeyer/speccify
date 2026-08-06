@@ -154,7 +154,11 @@ Jede Phase ist einzeln shippable; nach jeder Phase Go/No-Go wie bisher.
 ### W0 — Refinement (jetzt)
 Offene Punkte mit dem BO klären (unten), Entscheidungen hier festschreiben.
 
-### W1 — Schnitt & Fundament
+### W1 — Schnitt & Fundament ✅ (2026-08-06)
+
+> Geliefert: Archiv-Branch `archive/pre-playbook-pivot`, Rückbau des kompletten Codegen-Zweigs (inkl. Workspaces und der alten Schemata), neues Playbook-Schema (Neustart bei `schema_version: 1`), `core/playbook.py` mit Validierung, Bundles in Local-/GitLibrary, Bundle-Hash im Lockfile v1, CLI/MCP/Web auf Playbooks, Viewer statt Editor, zwei echte Referenz-Playbooks, `docs/playbooks.md` + `docs/viewer.md`, CI-Smoke neu. **115 Pytest, 1/1 Playwright, MCP-Smoke, Viewer-Build, Doku-Site grün.**
+>
+> Vorgezogen aus W3: der Composer ist bereits ein lesender Viewer (Bibliothek, Schritte, Quellen mit Alter, Assets inline, Sprung ins Child-Playbook, Selection-State) — sonst wäre das Repo nach dem Rückbau kaputt gewesen.
 - Archiv-Branch `archive/pre-playbook-pivot`, dann Rückbau des Codegen-Zweigs (D1).
 - Spec-Schema **v2** mit `kind: playbook` (harter Cut, kein Migrationspfad); Validator + Lint.
 - Specs als **Bundles**: Local-/GitRegistry lesen Verzeichnisse, Bundle-Hash im Lockfile, `verify` darauf.
@@ -167,9 +171,8 @@ Offene Punkte mit dem BO klären (unten), Entscheidungen hier festschreiben.
 - `speccify check` (Struktur offline, Link-Rot hinter Marker).
 - **Definition of Done**: ein Agent löst das IAP-Vorhaben allein über MCP — Suche → Playbook → Schritte → Assets, ohne die Doku-Site zu öffnen. Als headless-E2E gepinnt.
 
-### W3 — Viewer
-- `apps/composer` vom Editor zum Viewer: Schritt-Ansicht (Diagramm + Detail), Quellen mit Alter, Asset-Vorschau, Child-Baum, Selection-State.
-- Editorteile (Inspector, Wiring-Formular, Drag & Drop, Undo/Redo) entfallen mit W1.
+### W3 — Viewer (Rest)
+- Grundgerüst steht seit W1. Offen: Schritt-**Diagramm** (Sequenz/Abhängigkeiten), Markdown-Rendering im `detail` statt `<pre>`, Alters-Warnung an Quellen (> 180 Tage), Suche/Filter über die Bibliothek, Index-Treffer im Viewer öffnen.
 - **Definition of Done**: Referenz-Playbook ist im Viewer vollständig erfassbar; Playwright-Smoke auf Navigation + Selection.
 
 ### W4 — Kontextsensitiver Chat

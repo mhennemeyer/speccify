@@ -7,6 +7,21 @@
 - **Zuletzt aktualisiert:** 2026-08-04
 
 ## Nächste Schritte
+- **W1 GELIEFERT (2026-08-06)**: Schnitt und Fundament stehen — Rückbau des
+  Codegen-Zweigs (Archiv-Branch `archive/pre-playbook-pivot`), neues
+  Playbook-Schema (Neustart bei `schema_version: 1`), Playbooks als **Bundles**
+  (Verzeichnis + `assets/`, Bundle-Hash im Lockfile), CLI (`init`/`search`/
+  `add`/`lock`/`pull`/`verify`/`show`/`lint`), MCP (`playbook_list`/
+  `playbook_get`/`playbook_step`/`search`/`lock`/`pull`/`verify`), Web-Routen,
+  read-only **Viewer** statt Editor, zwei echte Referenz-Playbooks
+  (macOS-Notarisierung + Developer-ID-Zertifikat als Child), `docs/playbooks.md`
+  und `docs/viewer.md`. Alles produktseitig auf Englisch.
+  **Verifikation: 115 Pytest, 1/1 Playwright, MCP-stdio-Smoke, Viewer-Build,
+  Doku-Site (32 Seiten), ruff clean.**
+  **Als Nächstes**: W2 (`speccify check` für Link-Rot und Quellen-Alter),
+  dann W3-Rest (Schritt-Diagramm, Markdown, Alters-Warnungen) und W4
+  (Kontext-Chat über `composer_selection`). Offen bleibt außerdem: README und
+  Landing-Page tragen noch die alte Geschichte (W5).
 - **NEUAUSRICHTUNG (BO, 2026-08-06)**: Der Komponenten-Ansatz ist vom
   Fortschritt bei Coding-Agents überholt. Neue Richtung: **eine Spec ist ein
   Playbook für einen komplexen, wiederkehrenden Workflow** (Schritte, Quellen,

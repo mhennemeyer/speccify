@@ -1875,3 +1875,39 @@
   das Refinement.
 - Keine Code-Änderungen in dieser Session — nur Plan-Hygiene, wie bei
   früheren Phasen-Kickoffs.
+
+## 2026-08-06 (W1 — Schnitt und Fundament für Playbooks)
+- Refinement mit dem BO: kein Schema v2, sondern **kompletter Neustart** (es
+  hat nie jemand außer ihm eine Spec benutzt); **alles auf Englisch**;
+  Vokabular „Playbook"; Granularität als D8 vorgeschlagen (Prüfstein: „hätte
+  ich beim zweiten Mal wieder nachschlagen müssen?").
+- Rückbau in einem Rutsch, Archiv-Branch `archive/pre-playbook-pivot`: Mocks,
+  `speccify build`, drei LLM-Targets, Replay-Cache, Conformance,
+  Visual-Regression, Composer-Editor, Workspaces, `specs/`,
+  `registry-fixtures/`, `example-project/`, die alten Schemata, drei CI-Jobs.
+- Neues Fundament: `schema/playbook.schema.json` + `core/playbook.py`. Die
+  interessanten Regeln stehen nicht im JSON-Schema, sondern daneben: ein
+  Schritt hat `detail` ODER `uses` (nie beides — sonst weiß ein Agent nicht,
+  welchem er folgen soll), Quellen müssen von einem Schritt referenziert sein,
+  Assets müssen im Bundle liegen.
+- Playbooks sind **Bundles**: Verzeichnis mit `playbook.yaml` + `assets/`.
+  Das erzwang neue Registry-Semantik (Verzeichnis statt Datei, auch über
+  `ls-tree`/`cat-file` im Git-Pfad) und einen Bundle-Hash über sortierte
+  Pfade + Inhalte — mit Längenpräfixen, damit `a/b`+`c` nicht mit `a`+`b/c`
+  kollidiert. Lockfile v1 pinnt diesen Hash plus den Commit.
+- Stolperstein: PyYAML macht aus `retrieved: 2026-08-06` ein `date`-Objekt,
+  das JSON-Schema will einen String. Autoren sollen keine Quotes tippen
+  müssen → Normalisierung vor der Validierung.
+- Zwei echte Referenz-Playbooks statt Fixtures aus dem Nichts: die
+  macOS-Signierung/Notarisierung einer Tauri-App (aus `docs/release.md`, also
+  selbst erarbeitetes Wissen) und das Developer-ID-Zertifikat als
+  wiederverwendetes Child. Damit ist die Wiederverwendung nicht Deko,
+  sondern im Referenzmaterial belegt.
+- Der Composer musste mit: nach dem Rückbau der Editor-Teile wäre er kaputt
+  gewesen. Er ist jetzt ein lesender Viewer mit Selection-State — der
+  Vorgriff auf W3, der W4 (Kontext-Chat) direkt anschlussfähig macht.
+- Verifikation: 115 Pytest grün, 1/1 Playwright (Viewer-Smoke inkl. Selection,
+  Asset-Anzeige, Sprung ins Child), MCP-stdio-Smoke grün, Viewer-Build,
+  Doku-Site 32 Seiten, ruff clean; CLI-Flow zusätzlich von Hand durchgespielt.
+- Offen: `speccify check` (W2), Schritt-Diagramm und Markdown im Viewer (W3),
+  Kontext-Chat (W4), README/Landing/Launch-Texte (W5).
