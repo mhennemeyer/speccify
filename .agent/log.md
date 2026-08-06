@@ -1911,3 +1911,29 @@
   Doku-Site 32 Seiten, ruff clean; CLI-Flow zusätzlich von Hand durchgespielt.
 - Offen: `speccify check` (W2), Schritt-Diagramm und Markdown im Viewer (W3),
   Kontext-Chat (W4), README/Landing/Launch-Texte (W5).
+
+## 2026-08-06 (W2 — `speccify check` und der Agent-Vertrag)
+- Kernfrage von W2: Playbooks veralten anders als Code. Kein Compiler meckert,
+  wenn Apple eine Doku-Seite verschiebt oder ein Schritt seit einem Release
+  nicht mehr stimmt. `speccify check` trennt deshalb sauber von `lint`:
+  `lint` = wohlgeformt, `check` = stimmt noch.
+- Drei Ebenen: Struktur (wie lint), **Alter** aus dem `retrieved`-Datum jeder
+  Quelle, und optional **Erreichbarkeit** (`--links`, hinter dem Pytest-Marker
+  `links`, weil Netz). 404 ist Fehler, 5xx Warnung, Redirect ok; Server, die
+  HEAD ablehnen, bekommen einen zweiten Versuch mit GET.
+- Entscheidung beim Bauen: Strukturfehler verdecken Alters-Warnungen. Bei
+  einem kaputten Playbook ist eine Liste alter Quellen nur Rauschen — erst
+  reparieren, dann über Aktualität reden.
+- MCP: `playbook_asset` (Skripte/Configs, die mit dem Playbook reisen — Text
+  direkt, Binäres base64, Fehlermeldung nennt die vorhandenen Assets) und
+  `playbook_check`. Damit 9 Tools.
+- Der Agent-Vertrag ist jetzt als Test gepinnt statt nur behauptet:
+  `playbook_list` → `playbook_get` → dem delegierten Schritt ins
+  Child-Playbook folgen → `playbook_step` → `playbook_asset`, ausschließlich
+  über Tools. Beim Schreiben aufgefallen: „notarization" als Auswahl-Keyword
+  war mehrdeutig (beide Referenz-Playbooks führen es) — der Test wählt jetzt
+  über „tauri".
+- Nebenbei bestätigt: `--links` läuft gegen die echten Apple-/Tauri-Quellen
+  der Referenz-Playbooks durch, alle vier lösen auf.
+- Verifikation: 130 Pytest grün (+15), `pytest -m links` grün, ruff clean,
+  Doku-Sync und CLI-Doku ohne Drift.

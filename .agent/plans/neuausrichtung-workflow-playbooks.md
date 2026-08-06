@@ -165,7 +165,11 @@ Offene Punkte mit dem BO klären (unten), Entscheidungen hier festschreiben.
 - Referenz-Playbook `@org/iap-trial-apple` aus dem BO-Beispiel + ein kleines Child-Playbook (beweist Wiederverwendung).
 - **Definition of Done**: `speccify lint` + `verify` grün auf dem Referenz-Playbook; Suite grün ohne Codegen-Tests.
 
-### W2 — Agent-Vertrag (MCP + HTTP + CLI)
+### W2 — Agent-Vertrag (MCP + HTTP + CLI) ✅ (2026-08-06)
+
+> Geliefert: `speccify check` (Struktur + Quellen-Alter offline, Link-Erreichbarkeit hinter `--links`), MCP-Tools `playbook_asset` und `playbook_check` (damit 9 Tools), Doku in `docs/playbooks.md`/`docs/viewer.md`. Der Agent-Vertrag ist per Test gepinnt: list → get → dem delegierten Schritt ins Child folgen → Schritt lesen → Asset lesen, nur über Tools. **130 Pytest, `-m links` grün.**
+>
+> Bewusste Feinheit: Strukturfehler verdecken Alters-Warnungen — bei einem kaputten Playbook ist die Liste alter Quellen nur Rauschen.
 - MCP-Tools: `playbook_search` (über Discovery-Index), `playbook_get` (Spec + Quellen + Asset-Liste), `playbook_step` (ein Schritt inkl. aufgelöster Quellen), `playbook_asset` (Datei-Inhalt).
 - HTTP-Pendants + CLI (`speccify show`, `speccify steps`), Cross-Consistency-Test wie gehabt.
 - `speccify check` (Struktur offline, Link-Rot hinter Marker).

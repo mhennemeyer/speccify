@@ -18,10 +18,15 @@
   und `docs/viewer.md`. Alles produktseitig auf Englisch.
   **Verifikation: 115 Pytest, 1/1 Playwright, MCP-stdio-Smoke, Viewer-Build,
   Doku-Site (32 Seiten), ruff clean.**
-  **Als Nächstes**: W2 (`speccify check` für Link-Rot und Quellen-Alter),
-  dann W3-Rest (Schritt-Diagramm, Markdown, Alters-Warnungen) und W4
-  (Kontext-Chat über `composer_selection`). Offen bleibt außerdem: README und
-  Landing-Page tragen noch die alte Geschichte (W5).
+- **W2 GELIEFERT (2026-08-06)**: `speccify check` — Struktur + Quellen-Alter
+  offline, Link-Erreichbarkeit hinter `--links` (Marker `links`, opt-in weil
+  Netz); MCP-Tools `playbook_asset` + `playbook_check` (9 Tools). Der
+  Agent-Vertrag ist per Test gepinnt: list → get → Child-Playbook → Schritt →
+  Asset, nur über Tools. **130 Pytest, `-m links` grün.**
+  **Als Nächstes**: W3-Rest (Schritt-Diagramm, Markdown im `detail`,
+  Alters-Warnung im Viewer, Bibliotheks-Filter), dann W4 (Kontext-Chat über
+  `composer_selection`). Offen bleibt: README und Landing-Page tragen noch die
+  alte Geschichte, `docs/launch.md` ebenso (W5).
 - **NEUAUSRICHTUNG (BO, 2026-08-06)**: Der Komponenten-Ansatz ist vom
   Fortschritt bei Coding-Agents überholt. Neue Richtung: **eine Spec ist ein
   Playbook für einen komplexen, wiederkehrenden Workflow** (Schritte, Quellen,
