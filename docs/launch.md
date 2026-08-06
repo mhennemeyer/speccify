@@ -1,118 +1,73 @@
-# Launch-Vorbereitung (P6)
+# Launch checklist
 
-Alles hier ist **vorbereitet, nicht ausgeführt**. Öffentliches Veröffentlichen
-— Repo anlegen, pushen, posten — ist eine bewusste Entscheidung und bleibt beim
-Maintainer. Diese Seite sammelt, was dafür fertig ist und was noch fehlt.
+What is left before this repository is public, and what to say when it is.
+Everything here is a decision or an account action — none of it can be done
+from inside the repository.
 
-## Vor dem Launch: was grün sein muss
+## Before the repository goes public
 
-```bash
-uv run pytest                                   # 523 Tests
-uv run pytest -m app_build tests/test_app_build_smoke.py
-uv run ruff check . && uv run ruff format --check .
-uv run python scripts/gen_cli_docs.py --check   # CLI-Doku ohne Drift
-uv run python scripts/sync_docs_to_site.py --check
-pnpm run composer:e2e                           # 6 UI-Tests
-pnpm --filter speccify-marketing build          # 29 Seiten
-```
+- [ ] **Create the remote and push.** There is no git remote today. The default
+      branch should be `main`; `feat/oss-pivot` carries the current work.
+- [ ] **Check `LICENSE` and the author line.** MIT, one copyright holder.
+- [ ] **Decide what the archive branches say.** `archive/pre-oss-pivot-registry`
+      and `archive/pre-playbook-pivot` hold the two abandoned directions. They
+      are honest history and cost nothing to keep — but they are public once
+      pushed. Either push them with that framing or leave them local.
+- [ ] **Seed the index repository.** Discovery needs at least one index with a
+      handful of entries, otherwise `speccify search` is an empty room. Format
+      and the pull-request flow are in [`../index/README.md`](../index/README.md).
+- [ ] **Deploy the docs site.** `pnpm --filter speccify-marketing build`
+      produces a static site; [`deploy.md`](./deploy.md) has the target.
 
-Dazu die zwei Dinge, die nur der Maintainer kann:
+## Optional, and clearly marked as pending
 
-- **Signierte Mac-App**: Developer-ID-Zertifikat + App-Specific Password, dann
-  `./scripts/release_macos.sh` (siehe [`release.md`](./release.md)). Ohne einen
-  echten Lauf ist unbewiesen, dass Signatur und Notarisierung durchgehen.
-- **Updater-Schlüssel**: `pnpm --filter speccify-desktop tauri signer generate
-  -w ~/.speccify/updater.key`, Public Key nach
-  `apps/desktop/src-tauri/tauri.conf.json`. Ohne Key bleibt der Updater bewusst
-  inaktiv.
+Neither blocks a launch, and both are visible on the site as "not yet":
 
-## Repo öffentlich machen
+- [ ] **Signed Mac app.** Needs an Apple Developer ID and an app-specific
+      password, then `./scripts/release_macos.sh`. Until `PUBLIC_DOWNLOAD_URL`
+      is set, the download page shows the self-build route instead of a dead
+      link.
+- [ ] **Updater key.** `pnpm --filter speccify-desktop tauri signer generate`.
+      The public key in `tauri.conf.json` is empty today, which keeps the
+      updater deliberately inert rather than half-wired.
 
-1. GitHub-Repo anlegen und pushen (bisher gibt es kein Remote).
-2. `README.md`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `LICENSE` (MIT) sind da.
-3. Doku-Site deployen (siehe [`deploy.md`](./deploy.md)); `PUBLIC_DOWNLOAD_URL`
-   setzen, sonst zeigt `/download/` die Selbstbau-Anleitung statt eines toten
-   Links.
-4. Platzhalter ersetzen: In den Docs stehen `github.com/acme/...`-Beispiele —
-   die dürfen als Beispiele bleiben, aber der Link auf
-   `github.com/speccify/speccify` in `concepts/spec-format` muss auf das echte
-   Repo zeigen.
+## What to say
 
-## Ökosystem säen
+The honest version of the story, because it is the interesting part:
 
-Der Discovery-Index (`index/entries/`) ist **absichtlich leer**: Einträge auf
-Repos, die es nicht gibt, wären tote Links. Zum Launch gehören ein bis drei
-echte Spec-Repos, damit `speccify search` beim ersten Versuch etwas findet.
+> Speccify started as fine-grained component specs you would compose into
+> larger things. Coding agents got good enough that describing a button stopped
+> being worth doing. What they still lack is the knowledge *around* a task — the
+> order, the fine print, the dead ends. So a spec became a **playbook**: a
+> complex, recurring workflow with its steps, the sources each one came from,
+> the assets it needs, and the pitfalls you only find out about once.
 
-Vorschlag als Saatgut — die vorhandenen Referenz-Specs, je als eigenes Repo:
+Three things that hold up in a discussion, because each is implemented:
 
-| Repo | Spec | Warum |
-|---|---|---|
-| `speccify/spec-button` | `registry-fixtures/org/button` | kleinster sinnvoller Baustein |
-| `speccify/spec-text-input` | `registry-fixtures/org/text-input` | zeigt Events mit Payload |
-| `speccify/spec-search-bar` | `registry-fixtures/org/search-bar` | Composite über die beiden anderen — beweist Komposition über Repo-Grenzen |
+1. **Rot is a first-class concern.** Every source carries the date it was
+   retrieved; `speccify check` reports age and, with `--links`, whether the URL
+   still resolves. A stale playbook is worse than none, so the tool says so.
+2. **No registry, no account.** The repository URL is the identity, tags are
+   the versions — Go modules, not npm. Discovery is index repositories you
+   extend by pull request.
+3. **No edit mode.** Reading and asking is what a human does now; the writing
+   is done by the agent next to the viewer, and every change arrives as a diff
+   with an Apply button.
 
-Pro Repo:
+The thing to be upfront about: the four reference playbooks in `playbooks/`
+come from two real projects, but this has not been used by anyone else yet. It
+is a working tool with a sample size of one.
 
-```bash
-mkdir spec-button && cd spec-button && git init
-cp <speccify>/registry-fixtures/org/button/0.1.0/spec.speccify.yaml .
-git add . && git commit -m "button 0.1.0" && git tag v0.1.0
-git push --follow-tags
-```
+## Where to post
 
-Danach je eine Datei in `index/entries/` (Format:
-[`index/README.md`](../index/README.md)), Commit, fertig — `speccify search`
-findet sie sofort, und die CI validiert jeden Eintrag.
+Order matters — the first one sets the framing that gets quoted afterwards.
 
-## Launch-Text (Entwurf)
+1. **GitHub repository** with the README as the landing text.
+2. **Hacker News**, "Show HN". The pivot story is the hook, not the feature
+   list.
+3. **Mastodon / X**, one thread of the same story with a link.
+4. **Reddit** — r/MacApps for the trial-purchase playbook specifically, since
+   that is the one with a concrete audience.
 
-**Titel (HN)**: *Speccify – Spezifikationen statt Code, geteilt über Git*
-
-> Speccify beschreibt Software-Komponenten in einer versionierten
-> `speccify.yaml`: API-Vertrag, Verhalten, Akzeptanzkriterien. Zwei Dinge
-> machen das praktisch statt akademisch:
->
-> **1. Jede Spec ist sofort lauffähig.** Aus dem API-Block entsteht
-> deterministisch ein Mock — ohne LLM, ohne Netz, byte-identisch reproduzierbar.
-> Man kann eine App komponieren und im Browser bedienen, bevor eine Zeile
-> implementiert ist. Der visuelle Composer rendert genau diese Mocks, nicht
-> Platzhalter-Grafiken: das ist der Unterschied zu den No-Code-Ansätzen, die an
-> Code-Drift gescheitert sind — hier ist die Spec die Quelle, der Composer nur
-> ein Editor darauf.
->
-> **2. Geteilt wird über Git, nicht über ein Registry.** Wie bei Go-Modulen ist
-> die Repo-URL die Identität, Tags sind die Versionen. Veröffentlichen heißt
-> `git tag` + `git push`. Das Lockfile pinnt zusätzlich den Commit; nach dem
-> ersten Auflösen läuft alles offline. Discovery über Index-Repos im
-> Homebrew-Tap-Prinzip — eine Datei pro Spec-Repo, per PR erweiterbar.
->
-> Die Implementierung generiert ein AI-Agent, aber reproduzierbar: Modell,
-> Prompt-Version und Cache-Key stehen im Lockfile, CI läuft gegen einen
-> eingecheckten Replay-Cache, und Conformance-Checks bauen den generierten Code
-> gegen die echten Toolchains.
->
-> Alles MIT, kein Hosted-Service, kein Account. CLI, MCP-Server (für
-> Coding-Agents) und Web-API liefern byte-identische Ergebnisse.
-
-**Kurzfassung (X/Mastodon)**:
-
-> Spezifikationen statt Code: Aus einer `speccify.yaml` entsteht sofort ein
-> lauffähiger Mock — komponier deine App, bevor du sie implementierst.
-> Geteilt über Git wie Go-Module, Commit-gepinnt, alles MIT.
-
-**Was ich beim Posten erwarten würde** (und wofür Antworten bereitliegen
-sollten): „Warum kein npm/Registry?" → Dependency-Confusion und
-Namens-Squatting entfallen mit host-qualifizierten Ids; „Ist das nicht nur
-Codegen?" → nein, der Determinismus-Stack (Lockfile, Replay-Cache,
-Conformance) ist der Kern; „Was, wenn das LLM Mist baut?" → Mock und
-Implementierung erfüllen denselben Vertrag, Drift ist ein `verify`-Fehler.
-
-## Danach
-
-- Issue-Templates stehen (`.github/ISSUE_TEMPLATE/`).
-- Erste Fremd-PRs werden vermutlich Index-Einträge sein — die CI-Validierung
-  dafür läuft bereits (`core/tests/test_spec_index.py::test_repo_index_is_valid`).
-- Offene Produkt-Themen, die sich gut als „good first issue" eignen: weitere
-  Build-Targets (`speccify build --target swiftui`), SSH-Remotes für
-  Git-Quellen, Pre-Release-Tags, Routen-Editor im Composer.
+Do not post to all four at once. If the first conversation surfaces a
+misunderstanding, it is cheaper to fix the README before the rest goes out.

@@ -33,21 +33,24 @@ walkthrough.
 | `core/` | `speccify-core` — spec loader, schema validator, MVS resolver, codegen |
 | `cli/` | `speccify` CLI — thin adapter over `core/` |
 | `mcp/` | MCP server for coding agents — thin adapter over `core/` |
-| `schema/` | JSON schemas (spec, manifest, lockfile) |
-| `specs/` | Reference specs |
-| `apps/web/` | Browser playground (FastAPI + Next.js) |
+| `schema/` | JSON schemas (playbook, manifest, lockfile, index entry) |
+| `playbooks/` | Reference playbooks |
+| `apps/web/` | HTTP backend (FastAPI) |
+| `apps/composer/` | The playbook viewer (React + Vite) |
 | `apps/marketing/` | Landing page + docs site (Astro Starlight) |
 
-Roadmap: [`.agent/plans/archive/pivot-open-source-git-composer.md`](./.agent/plans/archive/pivot-open-source-git-composer.md).
+Roadmap: [`.agent/plans/`](./.agent/plans/) — exactly one plan is active at a time.
 
 ## Ground rules
 
-- **Determinism first.** CI runs fully offline against the checked-in LLM
-  replay cache (`tests/fixtures/llm-cache/`). Never add tests that need
-  network access or API keys to the default suite.
-- **Resolver/codegen lives in `core/`** — `cli/`, `mcp/` and the web backend
-  are thin adapters. Cross-consistency tests enforce byte-identical output
-  across all paths; keep them green.
+- **The default suite is offline.** Never add tests that need network access
+  or API keys to it. The one exception is the link check, which lives behind
+  the `links` pytest marker and is deselected by default (`pytest -m links`).
+- **Logic lives in `core/`** — `cli/`, `mcp/` and the web backend are thin
+  adapters over it, so the three paths cannot give different answers.
+- **A playbook's sources carry a `retrieved` date.** If you touch a playbook,
+  re-read what you changed and update that date. Stale instructions are worse
+  than none, because an agent will follow them confidently.
 - **Tests with assertions for all code.** Run `uv run pytest` and
   `uv run ruff check .` before opening a PR.
 - **Conventional Commits**: `feat:`, `fix:`, `chore:`, `docs:`, `refactor:`,

@@ -1,131 +1,117 @@
-# Lokaler End-to-End-Workflow (Dogfooding)
+# Local walkthrough: from a playbook to an agent using it
 
-Dieser Walkthrough fährt **das gesamte Speccify-System lokal** hoch und führt
-einmal durch den kompletten Workflow: über einen Agenten/CLI mit dem System
-arbeiten und aus einer Spec **echten Code generieren** (Live-Bedrock).
+This runs the whole system on your machine and walks the path a playbook takes:
+write it, check it, look at it, hand it to an agent. Nothing here needs the
+network except the optional link check.
 
-## 0. Voraussetzungen
-
-- `uv` installiert (`brew install uv`), einmal `uv sync` gelaufen.
-- `pnpm` installiert (nur für die beiden Web-Frontends nötig).
-- Eine `.env` am Repo-Root mit AWS-Bedrock-Credentials für den Live-Codegen:
-
-  ```dotenv
-  AWS_ACCESS_KEY_ID=...
-  AWS_SECRET_ACCESS_KEY=...
-  AWS_REGION=eu-central-1
-  ```
-
-  Reine Offline-Nutzung (Replay-Cache) braucht **keine** `.env`.
-
-## 1. Alles mit einem Befehl starten
+## 1. Bring it up
 
 ```bash
+uv sync --all-packages
 ./scripts/dev-up.sh
 ```
 
-Das Skript
+| Service | URL | What it is |
+|---|---|---|
+| Backend (FastAPI) | <http://127.0.0.1:8000> | `speccify-core` over HTTP |
+| Viewer (Vite) | <http://localhost:5173> | the playbook viewer |
+| Docs site (Astro) | <http://localhost:4321> | landing page + docs |
 
-1. entversteckt die macOS-Venv-`.pth`-Dateien und setzt `UV_NO_SYNC=1`
-   (verhindert, dass `uv run` zwischen Aufrufen die editable-Installs erneut
-   versteckt),
-2. startet alle Services parallel mit Präfix-Logs:
-
-   | Service | URL | Zweck |
-   |---|---|---|
-   | Playground-Backend (FastAPI) | <http://127.0.0.1:8000> | `/api/v1/render`, `/api/v1/specs` |
-   | Playground-Frontend (Next.js) | <http://localhost:3000> | Monaco-Editor-Spielwiese |
-   | Marketing/Doku (Astro) | <http://localhost:4321> | Landingpage + Doku |
-
-`Ctrl-C` beendet alle Services gemeinsam.
-
-Varianten:
+`Ctrl-C` stops all of them. Without Node installed:
 
 ```bash
-./scripts/dev-up.sh --no-frontends   # nur Playground-Backend (kein pnpm/Node)
+./scripts/dev-up.sh --no-frontends   # backend only
 ```
 
-## 2. Specs teilen
+## 2. Look at the reference playbooks
 
-Specs liegen als YAML-Dateien im Repo (`specs/`, `registry-fixtures/`) und
-werden über Git geteilt. Die geplante Git-basierte Auflösung (Spec-Repos als
-Quellen, Discovery über ein Index-Repo) ist Phase P5 des
-[Pivot-Plans](../.agent/plans/archive/pivot-open-source-git-composer.md); bis dahin
-resolved die CLI gegen lokale Registry-Fixtures (`--registry`-Pfad).
+Four playbooks live in `playbooks/speccify/`. Open the viewer and pick
+**Ship a trial-then-unlock in-app purchase** — it is the one with everything in
+it: nine steps, three assets, a delegated step that pulls in a second playbook.
 
-## 3. Mit dem System über einen Agenten/MCP arbeiten
+What is worth noticing:
 
-Der MCP-Server (`speccify-mcp`) exponiert die CLI-Operationen für Coding-Agents.
-Beispiel-Konfiguration für einen MCP-fähigen Agenten (z. B. Junie/Claude):
+- The **workflow diagram** at the top is the step order. A step drawn with a
+  double border delegates to another playbook via `uses`.
+- Every **source** shows how long ago it was retrieved. Past 180 days it turns
+  into a warning — the same threshold `speccify check` uses, deliberately, so
+  the screen and the CLI never disagree.
+- There is **no edit button**. That is the design, not a gap; see step 5.
 
-```json
-{
-  "mcpServers": {
-    "speccify": {
-      "command": "uv",
-      "args": ["run", "speccify-mcp"],
-      "cwd": "/ABSOLUTER/PFAD/zu/speccify"
-    }
-  }
-}
-```
-
-Damit kann der Agent `lint`, `resolve`, `render`, `lock`, `pull` und `verify`
-aufrufen.
-
-## 4. Aus einer Spec echten Code generieren
-
-### Offline (deterministisch, Replay-Cache)
+## 3. Check them
 
 ```bash
-cd example-project
+uv run speccify lint playbooks/            # structure only
+uv run speccify check playbooks/           # + how old every source is
+uv run speccify check playbooks/ --links   # + does every URL still resolve
+```
+
+The first two are offline and belong in a normal test run. `--links` needs the
+network and is slow, which is why it sits behind the `links` pytest marker and
+is deselected by default:
+
+```bash
+uv run pytest -m links      # the network checks, explicitly
+```
+
+Try breaking one on purpose — change a `retrieved:` date to two years ago, or
+point a source at a URL that 404s. Both should be reported, and the structural
+errors should shadow the age warnings rather than pile up next to them.
+
+## 4. Use one from an agent
+
+The MCP server speaks the same core over stdio:
+
+```bash
+uv run python scripts/mcp_smoke.py     # lists the tools and exercises them
+```
+
+In an agent, the sequence that matters is: `playbook_list` → `playbook_get` →
+`playbook_step` → `playbook_asset`. That path is pinned by a test
+(`mcp/tests/`), because an agent that has to guess the order is an agent that
+gets it wrong halfway through a release.
+
+## 5. The agent beside the viewer
+
+Select a step in the viewer. The viewer pushes that selection to the backend,
+and `viewer_selection` hands it to the agent **resolved** — the step with its
+detail, its verify line and its sources, not just an id. Ask "why is this
+necessary?" and it answers about the step on your screen.
+
+When the answer belongs in the playbook, the agent calls `playbook_propose`
+with the full new YAML. The backend validates it immediately, so an invalid
+proposal never becomes a diff you cannot apply. The viewer shows the diff with
+**Apply** and **Discard**. Nothing touches disk until you click.
+
+Two things it will refuse:
+
+- **Playbooks from git sources.** Changes belong in the source repository — as
+  a commit and a new tag. A local edit would be overwritten by the next `pull`.
+- **Anything that does not validate.** The proposal is rejected at the door
+  with the reason.
+
+## 6. Consume a playbook from a git repository
+
+In a scratch directory:
+
+```bash
+uv run speccify init
+uv run speccify add git+file:///path/to/a/playbook/repo
 uv run speccify lock
-uv run speccify pull            # --offline ist Default
+uv run speccify verify
 ```
 
-Materialisiert den generierten Code nach `speccify_generated/<target>/`.
-Nutzt nur den eingecheckten Replay-Cache — kein API-Verbrauch.
+`speccify.lock` now pins the bundle hash *and* the commit behind the tag.
+`verify` re-fetches and compares — if the tag was moved, this is where you find
+out. Details in [`git-sources.md`](./git-sources.md).
 
-### Live (echte Bedrock-Generierung, auch für neue Specs)
+## Troubleshooting
 
-```bash
-uv run speccify pull --no-offline
-```
-
-Bei einem Cache-Miss holt die CLI eine **Live-Antwort über AWS Bedrock**
-(Credentials aus Umgebung / `.env`) und schreibt das Ergebnis in den
-Replay-Cache. Damit kannst du auch eine **selbst geschriebene neue Spec**
-generieren lassen:
-
-1. Neue `*.speccify.yaml` schreiben (siehe `specs/` als Vorlage).
-2. Ins Manifest/Workspace aufnehmen und `uv run speccify lock`.
-3. `uv run speccify pull --no-offline` — die erste Generierung geht live,
-   danach liegt sie im Cache und ist reproduzierbar.
-
-> Hinweis: Der Live-Pfad ist nicht deterministisch und kostet API-Calls. CI
-> ruft `pull`/`verify` immer mit `--offline`; der Live-Pfad wird dort nie
-> betreten.
-
-### Über das Playground-Frontend
-
-Öffne <http://localhost:3000>, schreib/füge eine Spec ein und render gegen das
-lokale Backend (<http://127.0.0.1:8000>). Die Marketing-Seite
-<http://localhost:4321/try-it> bettet das Playground per Iframe ein
-(`PUBLIC_PLAYGROUND_URL` zeigt im Dev-Skript auf das lokale Frontend).
-
-## 5. Troubleshooting
-
-- **`No module named 'speccify_core'`** (o. ä.): macOS hat die
-  editable-`.pth` versteckt. Fix: `./scripts/fix-venv-hidden.sh --deep`. Das
-  Dev-Skript macht das automatisch und setzt `UV_NO_SYNC=1`, damit `uv run`
-  sie nicht erneut versteckt.
-- **Port belegt**: Vorherige `dev-up.sh`-Instanz noch aktiv — beende sie mit
-  `Ctrl-C` bzw. kill der `uvicorn`-Prozesse.
-- **Live-Codegen schlägt mit Auth-Fehler fehl**: `.env` mit gültigen
-  Bedrock-Credentials und passender `AWS_REGION` prüfen.
-
-## Cross-Referenzen
-
-- Conformance/Build-Smoke: [`conformance.md`](./conformance.md)
-- Workspaces: [`workspaces.md`](./workspaces.md)
-- Deploy der Doku/Landing: [`deploy.md`](./deploy.md)
+- **Vite only listens on `::1` here.** Playwright waits on `127.0.0.1`, so the
+  composer's `playwright.config.ts` starts the dev server with
+  `--host 127.0.0.1`. If you start it by hand, do the same.
+- **`uv run` re-syncs and re-hides editable `.pth` files** under macOS
+  quarantine. `dev-up.sh` runs the hygiene script once and then sets
+  `UV_NO_SYNC=1`; when running commands by hand, export
+  `PYTHONPATH="$PWD/core/src:$PWD/cli/src:$PWD/mcp/src:$PWD/apps/web/backend/src"`.
+- **Git-source tests skip cleanly** when `git` is not on `PATH`.

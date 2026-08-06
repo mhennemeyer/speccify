@@ -1,74 +1,91 @@
 # speccify-mcp
 
-MCP-Server, der Coding-Agents (Claude Code, Junie, Cursor, Aider) den
-gleichen Workflow wie die `speccify`-CLI über das
-[Model Context Protocol](https://modelcontextprotocol.io) gibt —
-ohne dass die Agenten Spec- oder Lockfile-Wissen mitbringen müssen.
+An MCP server that gives coding agents (Claude Code, Cursor, Aider, Junie) the
+playbooks in a project over the
+[Model Context Protocol](https://modelcontextprotocol.io) — the knowledge an
+agent would otherwise have to research every time.
 
-Der Server ist ein **dünner Adapter über `speccify-core`**: jeder
-MCP-Tool-Aufruf entspricht 1:1 einem `speccify <subcommand>` und
-liefert dieselben byte-identischen Outputs (vgl. Cross-Consistency-
-Test in `mcp/tests/test_tools_write.py`).
+Every tool is a **thin adapter over `speccify-core`**, the same code the CLI
+runs, so an agent and a human never get different answers.
 
-**Aktive Phase**: Phase 1c — siehe [Phasen-Plan](../.agent/plans/archive/phase-1c-mcp-server.md).
-
-## Installation & Start
+## Install and run
 
 ```bash
-uv sync --all-packages         # installiert auch `speccify-mcp`
-speccify-mcp --project .       # startet stdio-Server gegen CWD
-# oder:
+uv sync --all-packages         # installs `speccify-mcp` too
+speccify-mcp --project .       # stdio server against the CWD
+# or:
 SPECCIFY_PROJECT_ROOT=. speccify-mcp
 ```
 
-- Transport: ausschließlich `stdio` (Phase 1c).
-- Logs gehen nach `stderr`. Log-Level via `--log-level` oder
-  `SPECCIFY_LOG_LEVEL` (Default `INFO`).
-- Offline-Default: solange `--offline` aktiv ist (Default für die
-  `pull`/`render`/`verify`-Tools) wird ausschließlich gegen den
-  Replay-Cache gelesen; ohne Cache-Hit gibt es einen strukturierten
-  Fehler statt eines Netz-Calls.
-- Cache-Pfad via `SPECCIFY_CACHE_DIR` (Default: eingecheckter
-  Repo-Cache `tests/fixtures/llm-cache/`).
+- Transport: `stdio` only.
+- Logs go to `stderr`; level via `--log-level` or `SPECCIFY_LOG_LEVEL`
+  (default `INFO`).
+- `--offline` (the default for `pull` and `verify`) reads only the local
+  bare-clone cache. Without a cache hit you get a structured error rather than
+  a silent network call.
 
 ## Tools
 
-Alle Tools sind reine Adapter über `speccify-core`. Inputs werden via
-pydantic validiert, Outputs als `structuredContent` zurückgegeben.
+### Reading playbooks
 
-| Tool      | CLI-Pendant         | Effekt            | Wichtige Inputs                                                  |
-|-----------|---------------------|-------------------|------------------------------------------------------------------|
-| `lint`    | `speccify lint`     | read-only         | `spec_path`                                                      |
-| `resolve` | (Lockfile-Plan)     | read-only         | `manifest_path?`                                                 |
-| `render`  | (Render in-memory)  | read-only         | `spec_id`, `target`, `offline?`, `cache_dir?`                    |
-| `lock`    | `speccify lock`     | schreibt Lockfile | `manifest_path?`                                                 |
-| `pull`    | `speccify pull`     | schreibt Outputs  | `manifest_path?`, `out_dir`, `offline?`, `cache_dir?`            |
-| `verify`  | `speccify verify`   | read-only Drift   | `manifest_path?`, `out_dir`, `offline?`, `cache_dir?`            |
-| `mock`    | `speccify mock`     | schreibt Mocks    | `spec_ref`, `out_dir`, `registry_path?`, `target?`               |
-| `build`   | `speccify build`    | schreibt Projekt  | `spec_ref`, `out_dir`, `mocks?`, `registry_path?`, `target?`     |
-| `search`  | `speccify search`   | read-only         | `query`, `index_sources?`, `offline?`                            |
+`reference` is a playbook id (`@scope/name`) or a git source
+(`git+<url>[#<path>]`). All of these also take `offline` and `library_path`.
 
-`verify` liefert immer `{"ok": bool, "problems": [...]}` als
-strukturiertes Ergebnis — Drift ist **kein** MCP-Error, sondern eine
-Antwort, die ein Agent auswerten kann.
+| Tool | What it does | Key inputs |
+|---|---|---|
+| `playbook_list` | everything in the library: id, title, summary, step count | `library_path?` |
+| `playbook_get` | one playbook: steps, sources, prerequisites, pitfalls | `reference` |
+| `playbook_step` | one step, with its sources resolved and its `verify` line | `reference`, `step_id` |
+| `playbook_asset` | a file shipped with the playbook (text as-is, binary base64) | `reference`, `path` |
+| `playbook_check` | structure plus source age; `links=true` also checks URLs | `reference`, `links?` |
+
+The order `playbook_list` → `playbook_get` → `playbook_step` → `playbook_asset`
+is pinned by a test: an agent that has to guess it is an agent that gets it
+wrong halfway through a release.
+
+### Finding and pinning
+
+| Tool | CLI equivalent | Effect |
+|---|---|---|
+| `search` | `speccify search` | read-only, across discovery indexes |
+| `lock` | `speccify lock` | writes `speccify.lock` |
+| `pull` | `speccify pull` | fetches bundles into the local library |
+| `verify` | `speccify verify` | read-only; re-fetches and compares hashes |
+
+### Working next to the viewer
+
+| Tool | What it does |
+|---|---|
+| `viewer_selection` | what the user selected in the viewer, already resolved |
+| `playbook_propose` | propose a changed playbook; the user sees a diff |
+
+`viewer_selection` returns the step itself — detail, verify line, resolved
+sources — so "why is this necessary?" needs no follow-up calls. It talks HTTP
+to the backend (`SPECCIFY_API`, default `http://127.0.0.1:8000`); if that is
+not running, the answer is `code=backend_unreachable` with the command to start
+it, not a crash.
+
+`playbook_propose` takes the **complete** new `playbook.yaml`. It is validated
+immediately, so an invalid proposal never becomes a diff the user cannot apply,
+and nothing is written until a human clicks Apply. Playbooks from git sources
+are refused — changes belong in the source repository, as a commit and a tag.
+
+## Errors are answers
+
+Failures come back as structured results, not MCP errors: `verify` returns
+`{ok, problems[]}`, `search` reports `code=no_index_configured`,
+`playbook_get` reports `code=not_found`. An agent can react to those.
 
 ## Resources
 
-| URI                                  | Inhalt                                                                |
-|--------------------------------------|-----------------------------------------------------------------------|
-| `speccify://manifest`                | `speccify.yaml` des aktiven Projekts (YAML, UTF-8).                   |
-| `speccify://lockfile`                | `speccify.lock` des aktiven Projekts; Hint-Kommentar, wenn nicht da.  |
-| `spec://{scope}/{name}@{version}`    | YAML-Bytes einer Spec aus der Registry des aktiven Manifests.         |
+| URI | Content |
+|---|---|
+| `speccify://manifest` | the project's `speccify.yaml` |
+| `speccify://lockfile` | the project's `speccify.lock` |
 
-## Prompts
+Both return a hint about what to run when the file does not exist yet.
 
-| Name       | Argumente                                                     | Zweck                                                             |
-|------------|---------------------------------------------------------------|-------------------------------------------------------------------|
-| `add-spec` | `spec_ref` (required), `out_dir` (default `./src/components`) | Anleitung an den Agenten: `resolve` → `lock` → `pull` → `verify`. |
-
-## Client-Konfiguration
-
-### Claude Code / Junie / Cursor
+## Client configuration
 
 ```json
 {
@@ -81,8 +98,7 @@ Antwort, die ein Agent auswerten kann.
 }
 ```
 
-Wenn `speccify-mcp` nicht im `PATH` liegt (z. B. lokales `uv`-Venv),
-hilft ein expliziter Aufruf:
+If `speccify-mcp` is not on `PATH` (a local `uv` venv, for example):
 
 ```json
 {
@@ -95,14 +111,13 @@ hilft ein expliziter Aufruf:
 }
 ```
 
-## Smoke-Test (lokal & CI)
+## Smoke test (local and CI)
 
 ```bash
 uv run python scripts/mcp_smoke.py
 ```
 
-Startet `speccify-mcp` per `stdio`, fährt einen MCP-Handshake mit dem
-offiziellen Python-Client und prüft `tools/list`, `tools/call render`
-(offline) und `resources/read speccify://manifest`. Exit-Code `0` =
-grün. Der gleiche Aufruf läuft als CI-Step `speccify-mcp smoke (stdio,
-offline)`.
+Starts `speccify-mcp` over stdio, runs a real MCP handshake with the official
+Python client and checks `tools/list`, a `tools/call` and
+`resources/read speccify://manifest`. Exit code `0` means green. The same call
+runs as a CI step.

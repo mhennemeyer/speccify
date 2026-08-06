@@ -1,21 +1,24 @@
 ---
 title: Installation
-description: Speccify lokal aufsetzen — CLI, MCP-Server und Composer.
+description: Set Speccify up locally — CLI, MCP server and viewer.
 ---
 
-Speccify ist ein Python-Workspace (CLI, MCP-Server, Web-Backend) plus zwei
-Node-Apps (Composer, Doku-Site). Alles ist MIT-lizenziert; es gibt keinen
-Account und keinen Hosted-Service.
+Speccify is a Python workspace (CLI, MCP server, web backend) plus two Node
+apps (viewer, docs site). Everything is MIT licensed; there is no account and
+no hosted service.
 
-## Voraussetzungen
+## Prerequisites
 
-| Werkzeug | Wofür |
+| Tool | What for |
 |---|---|
-| [uv](https://docs.astral.sh/uv/) | Python-Workspace (CLI, MCP, Backend) |
-| Node ≥ 22 + pnpm | Composer, Doku-Site, generierte Projekte |
-| `git` | Specs aus Git-Repos beziehen (Phase P5) |
+| [uv](https://docs.astral.sh/uv/) | the Python workspace (CLI, MCP, backend) |
+| Node ≥ 22 + pnpm | viewer and docs site |
+| `git` | consuming playbooks from git repositories |
 
-## Einrichten
+Only `uv` is required. Without Node you still get the CLI and the MCP server,
+which is the whole tool minus the viewer.
+
+## Set up
 
 ```bash
 git clone <repo-url> speccify && cd speccify
@@ -23,36 +26,35 @@ uv sync --all-packages
 pnpm install --frozen-lockfile
 ```
 
-Prüfen, ob alles steht:
+Check that it stands:
 
 ```bash
 uv run speccify --help
-uv run speccify lint specs/*.yaml
+uv run speccify lint playbooks/
 uv run pytest -q
 ```
 
-## Die drei Wege
+## The three ways in
 
-Jede Fähigkeit gibt es dreimal — als CLI, als MCP-Tool und über HTTP. Alle
-drei liefern **byte-identische** Dateien; das ist per Cross-Consistency-Test
-festgenagelt.
+Every capability exists as a CLI command, an MCP tool and an HTTP endpoint —
+all three over the same `speccify-core`, so they cannot drift apart.
 
 ```bash
 # CLI
-uv run speccify mock @org/search-bar --registry ./registry-fixtures
+uv run speccify check playbooks/ --links
 
-# MCP-Server (stdio) für Coding-Agents
+# MCP server (stdio) for coding agents
 uv run speccify-mcp --project .
 
-# Web-Backend + visueller Composer
-./scripts/dev-up.sh          # Backend :8000, Composer :5173
+# Backend + viewer + docs site
+./scripts/dev-up.sh          # :8000, :5173, :4321
 ```
 
-Als Desktop-App: `./scripts/dev.sh --release` baut `Speccify.app`
-(siehe [Download](/download/)).
+As a desktop app: `./scripts/dev.sh --release` builds `Speccify.app`
+(see [Download](/download/)).
 
-## Weiter
+## Next
 
-- [Deine erste Spec](/getting-started/first-spec/)
-- [Spec-Format](/concepts/spec-format/)
-- [Visueller Composer](/composer/)
+- [Your first playbook](/getting-started/first-playbook/)
+- [The playbook format](/concepts/playbooks/)
+- [The viewer](/viewer/)

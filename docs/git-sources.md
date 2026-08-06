@@ -1,82 +1,90 @@
-# Git-Repos als Spec-Quelle (Phase P5)
+# Git repositories as playbook sources
 
-Specs werden wie Go-Module oder SwiftPM-Pakete geteilt: **die Repo-URL ist die
-Identität, Tags sind die Versionen**. Es gibt keine zentrale Instanz, die Namen
-vergibt, kein Login, kein Publish-Upload — Veröffentlichen heißt `git tag` +
-`git push`.
+Playbooks are shared like Go modules or SwiftPM packages: **the repository URL
+is the identity, tags are the versions**. Nothing central hands out names,
+there is no login and no publish upload — releasing is `git tag` + `git push`.
 
-## Eine Git-Quelle referenzieren
+## Referencing a git source
 
 ```yaml
 # speccify.yaml
-schema_version: 2
-targets: [react]
+schema_version: 1
 dependencies:
-  "git+https://github.com/acme/rating-stars": "^1.2"       # Spec im Repo-Root
-  "git+https://github.com/acme/kit#specs/button": "^0.1"   # Spec im Unterordner
+  "git+https://github.com/acme/notarize-playbook": "^1.2"      # bundle at the repo root
+  "git+https://github.com/acme/kit#playbooks/iap": "^0.1"      # bundle in a subdirectory
 ```
 
-Dasselbe geht in `uses:` und `composition.uses:` einer Spec.
+The same form works in a step's `uses:`, which is how one playbook delegates
+part of its work to another.
 
-| Form | Erwartete Datei | Erwartete Tags |
+| Form | Expected bundle | Expected tags |
 |---|---|---|
-| `git+<url>` | `spec.speccify.yaml` im Repo-Root | `v1.2.0` |
-| `git+<url>#<pfad>` | `<pfad>/spec.speccify.yaml` | `<pfad>/v1.2.0` |
+| `git+<url>` | `playbook.yaml` at the repo root | `v1.2.0` |
+| `git+<url>#<path>` | `<path>/playbook.yaml` | `<path>/v1.2.0` |
 
-Damit kann ein Monorepo beliebig viele Specs unabhängig versionieren; welche
-Tags zu welcher Spec gehören, ist mechanisch aus der Id ableitbar.
+A monorepo can therefore version any number of playbooks independently: which
+tags belong to which playbook follows mechanically from the id.
 
-Die Spec behält ihren eigenen Namen (`id: "@acme/button"`): **danach heißen die
-generierten Dateien**. Die Id im Manifest sagt, *woher* sie kommt — die Herkunft
-hält das Lockfile fest, nicht der Dateiname.
+A playbook keeps its own name (`id: "@acme/notarize"`) — that is what it is
+called once fetched. The id in the manifest says *where it came from*; the
+lockfile records that origin, not the directory name.
 
-## Reproduzierbarkeit
+## A playbook is a bundle
 
-`speccify lock` schreibt neben Version und Spec-Hash den **Commit hinter dem
-Tag** (Lockfile v4, Feld `source_commit`):
+The unit is not a single file but the directory: `playbook.yaml` plus whatever
+lives under `assets/`. A playbook whose script arrived but whose steps did not
+would be worse than one that failed to arrive at all, so the whole bundle is
+hashed together — sorted paths, each path and each content length-prefixed so
+`a/b` + `c` cannot hash the same as `a` + `b/c`.
+
+## Reproducibility
+
+`speccify lock` records the bundle hash and, behind a tag, the **commit**:
 
 ```yaml
-specs:
-  - id: git+https://github.com/acme/rating-stars
+schema_version: 1
+playbooks:
+  - id: git+https://github.com/acme/notarize-playbook
     version: 1.2.0
-    sha256: sha256:…
     resolved_via: git
     source_commit: 9f1c0b1c1b2a4e7f5d3c8a90b1e2f3a4c5d6e7f8
+    bundle_sha256: sha256:…
 ```
 
-Ein umgehängter Tag ändert damit nachweisbar den Lockfile-Diff. `verify` prüft
-weiterhin Tag → Spec-Bytes → Output-Hashes; der Commit ist der zusätzliche
-Anker. Signierte Tags sind ein späterer, additiver Schritt (der
-`signature`-Block im Lockfile ist dafür reserviert).
+A tag that gets moved therefore shows up as a lockfile diff rather than as a
+silent change in what you read. `verify` re-fetches and compares; the commit is
+the additional anchor. Signed tags are a later, additive step.
 
-## Cache und Offline
+## Cache and offline
 
-Pro Repo legt Speccify einen **Bare-Clone** unter `~/.cache/speccify/git/` an
-(Override: `SPECCIFY_GIT_CACHE`). Tags kommen per `fetch --depth 1`, die
-Spec-Bytes per `git cat-file blob <tag>:<pfad>` — es gibt keinen Working Tree
-und kein Checkout.
+Speccify keeps one **bare clone** per repository under `~/.cache/speccify/git/`
+(override with `SPECCIFY_GIT_CACHE`). Tags come from `fetch --depth 1`, the
+bundle from `git cat-file blob <tag>:<path>` — there is no working tree and no
+checkout.
 
-Nach dem ersten Auflösen ist alles offline reproduzierbar: `pull --offline` und
-`verify --offline` lesen ausschließlich lokale Refs. Fehlt der Cache, bricht der
-Lauf mit einem Hinweis ab, statt heimlich ins Netz zu gehen. `git` läuft dabei
-immer mit `GIT_TERMINAL_PROMPT=0` — ein privates Repo scheitert mit einer
-Fehlermeldung statt in einem Passwort-Prompt zu hängen.
+After the first resolve everything is reproducible offline: `pull --offline`
+and `verify --offline` read local refs only. If the cache is missing, the run
+stops with a hint instead of quietly going to the network. `git` always runs
+with `GIT_TERMINAL_PROMPT=0`, so a private repository fails with an error
+rather than hanging in a password prompt.
 
-## Zusammenspiel mit der lokalen Registry
+## Alongside the local library
 
-Beide Quellen laufen nebeneinander: jede Registry sagt über `serves`, welche
-Ids sie bedient (`@scope/name` → lokale Registry, `git+…` → Git). Bestehende
-Projekte verhalten sich unverändert; ein Projekt darf beide Formen mischen.
+Both sources run side by side: each library declares through `serves` which ids
+it answers for (`@scope/name` → local library, `git+…` → git). A project may
+mix both forms freely.
 
-Der Dependency-Confusion-Schutz aus Phase 2 (ein `@scope` gehört zu genau einer
-Registry) gilt weiter für scoped Ids. Git-Ids sind host-qualifiziert und damit
-konstruktiv eindeutig — dort ist die Id ihr eigener Scope.
+A **facade** (`MultiLibrary`) makes that work everywhere: the resolver takes a
+list of libraries by nature, but everything else expects exactly one. The
+facade routes each request to the first library that serves the id, so git
+sources arrive without a special case anywhere downstream. An unreachable git
+source is a validation finding in the viewer, not a crash.
 
-## Discovery: Specs finden
+## Discovery: finding playbooks
 
-Es gibt keinen zentralen Suchdienst. Ein **Index** ist ein Git-Repo (oder ein
-lokales Verzeichnis) mit einer Datei pro Spec-Repo — Vorbild: Homebrew-Taps,
-Scoop-Buckets:
+There is no central search service. An **index** is a git repository (or a
+local directory) with one file per playbook repository — the model is Homebrew
+taps and Scoop buckets:
 
 ```
 <index-repo>/entries/<name>.yaml
@@ -84,68 +92,58 @@ Scoop-Buckets:
 
 ```yaml
 schema_version: 1
-source: git+https://github.com/acme/rating-stars
-title: Rating Stars
-summary: Sternebewertung mit halben Sternen.
-kind: ui-component
-keywords: [rating, stars]
+source: git+https://github.com/acme/notarize-playbook
+title: Notarize a Tauri app for macOS
+summary: Sign, notarize and staple so it opens without a Gatekeeper warning.
+keywords: [macos, tauri, notarization]
 license: MIT
 ```
 
-Eine Datei pro Eintrag ist Absicht: ein PR fasst genau eine Datei an, es gibt
-keine Merge-Konflikte in einer wachsenden Sammelliste, und CI validiert jeden
-Eintrag einzeln (Schema: [`schema/index-entry.schema.json`](../schema/index-entry.schema.json)).
+One file per entry is deliberate: a pull request touches exactly one file,
+there are no merge conflicts in a growing list, and CI validates each entry on
+its own (schema: [`schema/index-entry.schema.json`](../schema/index-entry.schema.json)).
 
-Der Index sagt **nur, wo eine Spec liegt** — nie, welche Versionen es gibt.
-Versionen sind Tags und damit immer aktuell; ein Index kann nicht veralten.
+The index says **only where a playbook lives** — never which versions exist.
+Versions are tags and therefore always current, which means an index cannot go
+stale.
 
 ```bash
-speccify search rating                                   # Quellen s. u.
-speccify search --index git+https://github.com/acme/spec-index rating
-speccify search --json rating                            # für Agents/Skripte
-speccify search --offline rating                         # nur der lokale Cache
+speccify search notarization
+speccify search --index git+https://github.com/acme/playbook-index notarization
+speccify search --json notarization      # for agents and scripts
+speccify search --offline notarization   # local cache only
 ```
 
-Quellen-Reihenfolge: `--index` (mehrfach) > `SPECCIFY_INDEX` (komma-getrennt,
-**nicht** doppelpunkt-getrennt — der steckt in jeder Git-URL) > `./index`.
-Mehrere Indizes werden zusammengeführt; bei derselben Quelle gewinnt die erste
-Nennung. Git-Indizes liegen im selben Bare-Clone-Cache wie Spec-Quellen.
+Source order: `--index` (repeatable) > `SPECCIFY_INDEX` (comma-separated —
+**not** colon-separated, that character lives in every git URL) > `./index`.
+Multiple indexes are merged; for the same source the first mention wins. Git
+indexes live in the same bare-clone cache as playbook sources.
 
-Vorlage und Beitrags-Ablauf: [`index/README.md`](../index/README.md).
+Template and contribution flow: [`index/README.md`](../index/README.md).
 
-## Alle Wege, nicht nur die CLI
+## Every way in, not just the CLI
 
-| Weg | Git-Quellen | Discovery |
+| Path | Git sources | Discovery |
 |---|---|---|
-| CLI | `lock`/`pull`/`verify` gegen `git+…`, `--offline` nutzt nur den Cache | `speccify search` |
-| MCP | dieselben Tools (`lock`/`pull`/`verify`), Registry-Fassade inklusive | Tool `search` |
-| Web/Composer | Validierung, Mock-Closure und `speccify build` lösen Git-Kinder auf; die Palette hat eine Index-Suche | `GET /api/v1/index?q=` |
+| CLI | `lock`/`pull`/`verify` against `git+…`, `--offline` uses only the cache | `speccify search` |
+| MCP | the same tools, library facade included | tool `search` |
+| Web/viewer | playbooks and their delegated children resolve across sources | `GET /api/v1/index?q=` |
 
-Möglich macht das eine **Registry-Fassade** (`MultiRegistry`): der Resolver
-nimmt von sich aus eine Liste, alles andere (Kompositions-Auflösung, Mock- und
-App-Codegen) erwartet genau eine Registry. Die Fassade verteilt jede Anfrage an
-die erste Registry, die die Id bedient — Git-Quellen kommen damit überall ohne
-Sonderfall an. Eine unerreichbare Git-Quelle ist im Composer ein
-Validierungs-Befund, kein Absturz.
+Playbooks fetched from a git source are **read-only** in the viewer. A change
+belongs in the source repository — as a commit and a new tag — because a local
+edit would be overwritten by the next `pull`. `playbook_propose` refuses those
+with `not_local` and says so.
 
-```bash
-# Kompositions-Kind direkt aus einem Repo — Mock rendert sofort
-curl -s -X POST localhost:8000/api/v1/mock/draft -H 'content-type: application/json' \
-  -d '{"spec_yaml": "… composition: {uses: {btn: git+https://host/repo@^0.1}, …}"}' | jq '.files | keys'
-```
+## Limits
 
-## Grenzen (Stand P5.5)
+- The index in this repository is still empty: placeholder URLs would be dead
+  links, so it gets seeded at launch.
+- Only `https://` and `file://` remotes; SSH refs are deliberately not enabled
+  yet (credential handling).
+- Tags must carry exact semver (`v1.2.0`), no pre-releases.
 
-- Index-Treffer lassen sich als Kind einfügen, aber nicht „öffnen" (im Editor
-  bearbeiten) — dafür müsste der Composer in ein fremdes Repo schreiben.
-- Der Index dieses Repos ist noch leer: Platzhalter-URLs wären tote Links,
-  gesät wird zum OSS-Launch (P6).
-- Nur `https://`- und `file://`-Remotes; SSH-Refs sind bewusst noch nicht
-  freigeschaltet (Credential-Handling).
-- Tags müssen exaktes Semver tragen (`v1.2.0`), keine Pre-Releases.
+## Cross-references
 
-## Cross-Referenzen
-
-- Roadmap & Entscheidungen D16–D19: [`.agent/plans/archive/pivot-open-source-git-composer.md`](../.agent/plans/archive/pivot-open-source-git-composer.md)
-- Lockfile-Format: [`schema/lockfile.schema.json`](../schema/lockfile.schema.json)
-- Lokaler Gesamt-Workflow: [`local-dev-e2e.md`](./local-dev-e2e.md)
+- Playbook format: [`playbooks.md`](./playbooks.md)
+- Lockfile format: [`schema/lockfile.schema.json`](../schema/lockfile.schema.json)
+- Local walkthrough: [`local-dev-e2e.md`](./local-dev-e2e.md)

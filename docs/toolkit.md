@@ -19,7 +19,7 @@ Kontrakt-Diff-Harness (`scripts/exec_mcp_contract.py`) und der
 | **speccify-discovery** | 8767 | Streamable HTTP + stdio | `mcp_list`, `tools_list`, `actions_propose`, `scaffold` | `crates/discovery-mcp` |
 | **speccify-desktop-ui** | 8768 | Streamable HTTP (nur solange die App läuft) | `ask_bo`, `ask_bo_result` | App-Prozess (`apps/desktop`) |
 | **playwright** | – | stdio (Client startet `npx @playwright/mcp`) | Browser-Automation | Toolbox-Manifest |
-| **speccify-mcp** | – | stdio (`uv run speccify-mcp` im Repo) | Spec-Engine (resolve/lint/render/…/mock) | `mcp/` (Python) |
+| **speccify-mcp** | – | stdio (`uv run speccify-mcp` im Repo) | Playbook-Engine (`playbook_*`, `search`, `lock`/`pull`/`verify`, Viewer-Brücke) | `mcp/` (Python) |
 
 Alle Server binden ausschließlich `127.0.0.1`.
 
@@ -123,11 +123,11 @@ Windows ist bewusst zurückgestellt (Terminal/PTY zuerst macOS/Linux).
 
 ## Python-Engine der App (ohne Repo)
 
-Spec-Engine und Composer-Backend sind Python. Damit die verteilte App
+Playbook-Engine und Web-Backend sind Python. Damit die verteilte App
 ohne Repo-Checkout auskommt (Plan `r5-distribution.md`, R5.2), bringt sie
 einen **Payload** mit — die vier eigenen Wheels, die aus `uv.lock`
-exportierten Third-Party-Pins, die gebaute Composer-SPA sowie
-Referenz-Specs und Replay-Cache:
+exportierten Third-Party-Pins, die gebaute Viewer-SPA sowie die
+Referenz-Playbooks:
 
 ```bash
 ./scripts/build_engine_payload.sh      # vor pnpm run desktop:build
@@ -149,9 +149,9 @@ wird das App-Bundle **vor** dem PATH — ein älteres `uv` aus Homebrew
 
 Daraus bedienen sich:
 
-- **Composer** — ohne Repo-Angabe startet das Backend aus der Engine, mit
-  Specs/Cache/SPA aus den App-Resources. Ein angegebenes Repo mit `.venv`
-  und Composer-Build gewinnt (Dogfooding am Quellstand).
+- **Viewer** — ohne Repo-Angabe startet das Backend aus der Engine, mit
+  Playbooks und SPA aus den App-Resources. Ein angegebenes Repo mit `.venv`
+  und Viewer-Build gewinnt (Dogfooding am Quellstand).
 - **speccify-mcp** — das Manifest `uv run speccify-mcp` wird auf
   `<venv>/bin/speccify-mcp` abgebildet, sobald die Engine steht.
 

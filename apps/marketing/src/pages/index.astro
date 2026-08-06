@@ -1,66 +1,70 @@
 ---
-// Full Tailwind landing page (Stage 4): hero, problem/solution, demo snippet,
-// targets, "how it works", CTA. Footer + header live in MarketingLayout.
+// Landing page: hero, problem/solution, a real playbook excerpt, how it works,
+// CTA. Header and footer live in MarketingLayout.
 import MarketingLayout from "../layouts/MarketingLayout.astro";
 
-const title = "Speccify — Spezifikationen statt Code, geteilt über Git";
+const title = "Speccify — Playbooks for work you have done before";
 const description =
-  "Beschreibe, was Software tun soll — nicht wie. Aus jeder Spec entsteht deterministisch ein Mock, aus Kompositionen ein lauffähiges Projekt. Geteilt wird über Git, komponiert wird visuell.";
+  "A playbook captures a complex, recurring workflow: the ordered steps, the sources they came from, the assets they need, and the pitfalls you only find out about once. Written for coding agents, shared over Git.";
 
 const problems = [
-  "Dasselbe Verhalten wird pro Sprache und Framework von Hand neu gebaut — Implementierungen driften auseinander.",
-  "Verhalten und Akzeptanzkriterien leben verstreut in Tickets, Code und Köpfen.",
-  "Updates müssen in jedem Ziel-Repo einzeln nachgezogen werden.",
+  "The same intricate task — notarizing an app, wiring up a trial purchase, a migration — is researched from scratch every time it comes up.",
+  "What you learned the hard way ends up in a scratch file, a closed ticket, or nowhere. It is not there the next time.",
+  "Agents are good at writing the code and bad at knowing the fine print: which order, which flag, which step Apple silently requires.",
 ];
 
 const solutions = [
-  "Eine versionierte speccify.yaml ist die Single Source of Truth — für UI-Komponenten, reine Funktionen, Domain-Logik, Workflows bis hin zu ganzen Anwendungen.",
-  "Aus dem api:-Block entsteht ohne LLM ein lauffähiger Mock: komponieren, bevor irgendetwas implementiert ist.",
-  "Der AI-Agent rendert die Implementierung deterministisch — reproduzierbar via Lockfile, abgesichert durch Conformance- und Visual-Regression-Checks.",
+  "One versioned playbook holds the steps, the sources each one came from, and the assets it needs — the whole workflow, not a summary of it.",
+  "speccify check reports how old every source is and whether its URL still resolves. Instructions that quietly went stale are worse than none.",
+  "Agents read playbooks directly over MCP — find one, read a step, fetch an asset. No copy-paste from a wiki.",
 ];
 
 const useCases = [
-  { name: "UI-Komponenten", note: "Buttons, Formulare, ganze Screens" },
-  { name: "Reine Funktionen", note: "Validierung, Parsing, Transformationen" },
-  { name: "Domain-Logik", note: "Geschäftsregeln, Berechnungen, Policies" },
-  { name: "Workflows & Apps", note: "Mehrschrittige Prozesse bis zur ganzen Anwendung" },
-];
-
-const targets = [
-  { name: "React", note: "TypeScript + tsc-Build-Smoke" },
-  { name: "SwiftUI", note: "swiftc -typecheck" },
-  { name: "Angular", note: "Standalone Components" },
+  { name: "Platform rituals", note: "Notarization, entitlements, store review" },
+  { name: "Payments & auth", note: "Trials, subscriptions, OAuth flows" },
+  { name: "Migrations", note: "Version bumps with an order that matters" },
+  { name: "Release & ops", note: "Signing, rollout, rollback" },
 ];
 
 const steps = [
   {
-    title: "1 · Spec",
-    body: "Beschreibe API, Verhalten und Akzeptanzkriterien in speccify.yaml — oder komponiere sie visuell im Composer.",
+    title: "1 · Write it once",
+    body: "The second time you do something, write it down: steps, the sources you actually read, the assets you needed.",
   },
   {
-    title: "2 · Resolver",
-    body: "MVS löst Dependencies auf — aus der Registry oder direkt aus Git-Repos — und pinnt sie samt Commit in speccify.lock.",
+    title: "2 · Tag it",
+    body: "Publishing is git tag and git push. The repository URL is the identity, tags are the versions. No account, no registry.",
   },
   {
-    title: "3 · Mock",
-    body: "Aus dem api:-Block entsteht deterministisch ein Mock. Das Projekt läuft, bevor eine Zeile implementiert ist.",
+    title: "3 · Pin it",
+    body: "speccify.lock pins each playbook by a hash over its whole bundle and, for git sources, by commit. What you used still says the same thing.",
   },
   {
-    title: "4 · Build",
-    body: "speccify build erzeugt ein komplettes Vite-Projekt; der Agent tauscht Mocks gegen echte Implementierungen.",
+    title: "4 · Hand it to an agent",
+    body: "Over MCP the agent reads the steps and assets itself — and speccify check tells you when a source has gone stale.",
   },
 ];
 
-const demo = `$ speccify search rating
-Rating Stars  [ui-component]
-  git+https://github.com/acme/rating-stars
+const demo = `$ speccify search notarization
+Notarize a Tauri app for macOS  [macos, tauri]
+  git+https://github.com/speccify/playbooks#macos-notarize-tauri
 
-$ speccify add git+https://github.com/acme/rating-stars@^1.2
-✓ resolved  v1.2.0 → commit 9f1c0b1
+$ speccify add git+https://github.com/speccify/playbooks#macos-notarize-tauri
+✓ resolved  v1.0.0 → commit 9f1c0b1
 ✓ pinned    speccify.lock
 
-$ speccify build @org/demo-app --mocks --out ./app
-✓ 19 Datei(en) — cd app && pnpm install && pnpm dev`;
+$ speccify check playbooks/ --links
+warning  $.sources[2]  last retrieved 214 days ago — re-read it`;
+
+const playbook = `steps:
+  - id: trial_storage
+    title: Store the start date where deleting the app cannot reach
+    detail: |
+      UserDefaults survives a backup but not a delete; the Keychain
+      survives a delete but not a new device. Write to both, read
+      the union, earliest start wins.
+    sources: [review_guidelines]
+    verify: Deleting and reinstalling does not reset the days left.`;
 ---
 
 <MarketingLayout title={title} description={description}>
@@ -68,18 +72,18 @@ $ speccify build @org/demo-app --mocks --out ./app
     <!-- Hero -->
     <section class="flex flex-col items-center gap-6 py-20 text-center">
       <p class="text-sm font-semibold uppercase tracking-widest text-sky-400">
-        Spec-First Platform für jede Software
+        Playbooks for coding agents
       </p>
       <h1 class="max-w-3xl text-4xl font-bold tracking-tight sm:text-6xl">
-        Spezifikationen statt Code — geteilt über Git
+        You have done this before. Write it down once.
       </h1>
       <p class="max-w-2xl text-lg text-slate-300">
-        Eine <code class="rounded bg-slate-800 px-1.5 py-0.5">speccify.yaml</code>
-        beschreibt einmal, <em>was</em> etwas tun soll — von einer UI-Komponente über
-        reine Funktionen und Domain-Logik bis hin zu ganzen Anwendungen. Aus dem
-        API-Vertrag entsteht sofort ein lauffähiger Mock, aus Kompositionen ein
-        komplettes Projekt. Geteilt wird wie bei Go-Modulen über Git-Repos —
-        kein Account, keine zentrale Registry, alles MIT.
+        A <strong class="text-slate-100">playbook</strong> captures a complex,
+        recurring workflow — the ordered steps, the sources they came from, the
+        assets they need, and the pitfalls you only find out about once. It is
+        written for coding agents, versioned, pinned by hash, and checked for
+        rot. Shared like Go modules over Git — no account, no central registry,
+        all MIT.
       </p>
       <div class="flex flex-wrap items-center justify-center gap-4">
         <a
@@ -92,7 +96,7 @@ $ speccify build @org/demo-app --mocks --out ./app
           href="/download/"
           class="rounded-md border border-slate-700 px-5 py-2.5 font-medium text-slate-200 transition hover:border-slate-500"
         >
-          Mac-App
+          Mac app
         </a>
         <a
           href="https://github.com/speccify/speccify"
@@ -103,34 +107,39 @@ $ speccify build @org/demo-app --mocks --out ./app
       </div>
     </section>
 
-    <!-- Problem / Lösung -->
+    <!-- Problem / solution -->
     <section class="grid gap-8 py-12 md:grid-cols-2">
       <div class="rounded-xl border border-slate-800 bg-slate-900/50 p-6">
-        <h2 class="mb-4 text-lg font-semibold text-rose-300">Das Problem</h2>
+        <h2 class="mb-4 text-lg font-semibold text-rose-300">The problem</h2>
         <ul class="space-y-3 text-slate-300">
           {problems.map((item) => <li>· {item}</li>)}
         </ul>
       </div>
       <div class="rounded-xl border border-slate-800 bg-slate-900/50 p-6">
-        <h2 class="mb-4 text-lg font-semibold text-emerald-300">Die Lösung</h2>
+        <h2 class="mb-4 text-lg font-semibold text-emerald-300">The idea</h2>
         <ul class="space-y-3 text-slate-300">
           {solutions.map((item) => <li>· {item}</li>)}
         </ul>
       </div>
     </section>
 
-    <!-- Demo snippet -->
+    <!-- What a playbook looks like -->
     <section class="py-12">
-      <h2 class="mb-4 text-center text-2xl font-bold">Ein Befehl, ein Target</h2>
-      <pre class="overflow-x-auto rounded-xl border border-slate-800 bg-black/60 p-6 text-sm text-emerald-200"><code>{demo}</code></pre>
+      <h2 class="mb-2 text-center text-2xl font-bold">What a step looks like</h2>
+      <p class="mx-auto mb-6 max-w-2xl text-center text-slate-400">
+        From the in-app-purchase playbook in this repository. A step says what
+        to do, what it was learned from, and how you know it worked.
+      </p>
+      <pre class="overflow-x-auto rounded-xl border border-slate-800 bg-black/60 p-6 text-sm text-sky-200"><code>{playbook}</code></pre>
     </section>
 
-    <!-- Was du spezifizieren kannst -->
+    <!-- Worth writing down -->
     <section class="py-12">
-      <h2 class="mb-2 text-center text-2xl font-bold">Was du spezifizieren kannst</h2>
+      <h2 class="mb-2 text-center text-2xl font-bold">Worth writing down</h2>
       <p class="mx-auto mb-6 max-w-2xl text-center text-slate-400">
-        Speccify ist sprach- und framework-unabhängig. Eine Spec beschreibt
-        Verhalten — nicht nur Optik.
+        The test is not how big a task is. It is: <em class="text-slate-300"
+          >would I have had to look this up again the second time?</em
+        >
       </p>
       <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {
@@ -144,23 +153,10 @@ $ speccify build @org/demo-app --mocks --out ./app
       </div>
     </section>
 
-    <!-- Targets -->
+    <!-- Demo snippet -->
     <section class="py-12">
-      <h2 class="mb-2 text-center text-2xl font-bold">Aktuelle Targets</h2>
-      <p class="mx-auto mb-6 max-w-2xl text-center text-slate-400">
-        Diese Ziele werden heute deterministisch generiert — die Architektur ist
-        bewusst offen für weitere Sprachen und Frameworks.
-      </p>
-      <div class="grid gap-4 sm:grid-cols-3">
-        {
-          targets.map((target) => (
-            <div class="rounded-xl border border-slate-800 bg-slate-900/50 p-6 text-center">
-              <p class="text-lg font-semibold text-sky-300">{target.name}</p>
-              <p class="mt-2 text-sm text-slate-400">{target.note}</p>
-            </div>
-          ))
-        }
-      </div>
+      <h2 class="mb-4 text-center text-2xl font-bold">Find it, pin it, check it</h2>
+      <pre class="overflow-x-auto rounded-xl border border-slate-800 bg-black/60 p-6 text-sm text-emerald-200"><code>{demo}</code></pre>
     </section>
 
     <!-- How it works -->
@@ -180,18 +176,21 @@ $ speccify build @org/demo-app --mocks --out ./app
       </div>
     </section>
 
-    <!-- CTA -->
+    <!-- Viewer -->
     <section class="flex flex-col items-center gap-5 py-16 text-center">
-      <h2 class="text-2xl font-bold">Probier es im Browser</h2>
+      <h2 class="text-2xl font-bold">Read it with an agent beside you</h2>
       <p class="max-w-xl text-slate-300">
-        Der Live-Playground rendert die Referenz-Specs offline gegen React,
-        SwiftUI und Angular — ohne Setup.
+        The viewer shows the workflow as a diagram, the steps as rendered
+        markdown, every source with its age. There is no edit mode: you select
+        a step and ask the agent next to it, which reads that selection through
+        MCP. When the answer belongs in the playbook, it proposes the change
+        and you see a diff. Nothing is written until you click Apply.
       </p>
       <a
-        href="/try-it/"
+        href="/getting-started/installation/"
         class="rounded-md bg-sky-500 px-6 py-3 font-medium text-white transition hover:bg-sky-400"
       >
-        Zum Playground
+        Get started
       </a>
     </section>
   </main>

@@ -1,5 +1,5 @@
 ---
-// Shared shell for the non-Starlight marketing routes (landing + try-it +
+// Shared shell for the non-Starlight marketing routes (landing, download,
 // legal placeholders). Starlight docs routes keep their own default theme;
 // this layout only governs the Tailwind-styled marketing pages.
 import "../styles/landing.css";
@@ -43,7 +43,6 @@ const plausibleEnabled = import.meta.env.PROD && Boolean(plausibleDomain);
         <a class="transition hover:text-white" href="/getting-started/installation/"
           >Docs</a
         >
-        <a class="transition hover:text-white" href="/try-it/">Try it</a>
         <a class="transition hover:text-white" href="/download/">Download</a>
         <a
           class="transition hover:text-white"
@@ -61,7 +60,6 @@ const plausibleEnabled = import.meta.env.PROD && Boolean(plausibleDomain);
           <a class="transition hover:text-slate-300" href="https://github.com/speccify/speccify"
             >GitHub</a
           >
-          <a class="transition hover:text-slate-300" href="/try-it/">Playground</a>
           <a class="transition hover:text-slate-300" href="/download/">Download</a>
           <a class="transition hover:text-slate-300" href="/getting-started/installation/"
             >Docs</a
