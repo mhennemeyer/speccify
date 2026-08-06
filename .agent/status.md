@@ -36,9 +36,16 @@
   Offers und damit abo-only; die eigentliche Arbeit ist, wo der Trial-Start
   liegt (UserDefaults/Keychain/iCloud kombinieren, frühester Start gewinnt).
   **Wartet auf BO-Korrektur.**
-  **Als Nächstes**: W4 Kontext-Chat (`composer_selection` + Agent-Terminal).
-  Offen bleibt: README, Landing-Page und `docs/launch.md` tragen noch die alte
-  Geschichte (W5).
+- **W4 GELIEFERT (2026-08-06)**: Kontext-Brücke zum Agenten —
+  `viewer_selection` liefert die Auswahl **aufgelöst** (Playbook, Schritt samt
+  `detail`/`verify`/Quellen, Asset-Inhalt), `playbook_propose` nimmt einen
+  kompletten neuen YAML-Text, das Backend validiert sofort, der Viewer zeigt
+  einen Diff mit Apply/Discard. Nichts landet ohne Klick auf der Platte;
+  Git-Quellen sind schreibgeschützt. **11 MCP-Tools. 144 Pytest, 1/1
+  Playwright (Smoke geht klicken → Auswahl prüfen → Vorschlag → Diff →
+  anwenden durch).**
+  **Als Nächstes**: nur noch **W5** — README, Landing-Page und
+  `docs/launch.md` tragen weiterhin die alte Komponenten-Geschichte.
 - **NEUAUSRICHTUNG (BO, 2026-08-06)**: Der Komponenten-Ansatz ist vom
   Fortschritt bei Coding-Agents überholt. Neue Richtung: **eine Spec ist ein
   Playbook für einen komplexen, wiederkehrenden Workflow** (Schritte, Quellen,

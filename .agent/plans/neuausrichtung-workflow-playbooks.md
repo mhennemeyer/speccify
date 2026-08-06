@@ -182,10 +182,13 @@ Offene Punkte mit dem BO klären (unten), Entscheidungen hier festschreiben.
 > Entscheidung dabei: kein zweites Such-UI für Discovery. Das Filterfeld engt lokal ein und ist zugleich die Index-Query — „hier nichts, schau weiter" ist ein Klick.
 - **Definition of Done**: Referenz-Playbook ist im Viewer vollständig erfassbar; Playwright-Smoke auf Navigation + Selection.
 
-### W4 — Kontextsensitiver Chat
-- MCP-Tool `composer_selection` + Selection-Push aus dem Viewer.
-- Chat-Panel neben dem Viewer (Agent-Terminal-Anbindung), Änderungsvorschläge als Diff mit „übernehmen".
-- **Definition of Done**: Schritt anklicken, „warum ist das nötig?" fragen, Antwort bezieht sich nachweislich auf den ausgewählten Schritt; ein vorgeschlagener Zusatz landet nach Bestätigung in der Spec.
+### W4 — Kontextsensitiver Chat ✅ (2026-08-06)
+
+> Geliefert: `viewer_selection` (Auswahl **aufgelöst** — Playbook, Schritt samt `detail`/`verify`/Quellen oder Asset-Inhalt) und `playbook_propose` (kompletter neuer YAML-Text, sofort validiert) als MCP-Tools; Selection-Push aus dem Viewer; Diff-Panel mit Apply/Discard. **11 MCP-Tools.**
+>
+> Entscheidungen dabei: Sitzungszustand bewusst im Speicher (eine Auswahl, die die Sitzung überlebt, wäre eine Lüge); Playbooks aus Git-Quellen lassen sich nicht schreiben (Änderungen gehören ins Quell-Repo); Diff ohne Bibliothek (LCS über Zeilen, ~60 Zeilen — für ein Panel lohnt keine dauerhafte Abhängigkeit).
+>
+> Das Chat-Fenster selbst ist der Agent, den man ohnehin benutzt (D2) — Speccify liefert ihm nur den Kontext. `docs/viewer.md` beschreibt die Schleife: klicken → fragen → vorschlagen lassen → Diff lesen → anwenden.
 
 ### W5 — Doku, Website, Ökosystem
 - `docs/` neu schneiden: Playbook-Format, Agent-Vertrag, Viewer/Chat, Git-Quellen (bleibt), `check`. Alte Seiten (Mocks, App-Builds, Composer-Editor) entfernen.

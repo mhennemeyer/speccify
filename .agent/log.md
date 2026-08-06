@@ -2025,3 +2025,32 @@
 - Die Validierung hat beim Umbau eine verwaiste Quelle gefunden
   (`asc_iap_types` hing an keinem Schritt mehr) — genau ihr Zweck.
 - Verifikation: lint + `check --links` grün (15 Quellen), 130 Pytest, ruff.
+
+## 2026-08-06 (W4 — Kontext-Brücke zwischen Viewer und Agent)
+- Kern der Neuausrichtung, jetzt fertig: Der Viewer meldet jeden Klick ans
+  Backend, `viewer_selection` gibt ihn **aufgelöst** zurück — Playbook,
+  Schritt samt `detail`/`verify`/Quellen, oder der Asset-Inhalt. Ein Agent
+  muss nicht dreimal nachfragen, um zu wissen, worüber geredet wird.
+- Gegenrichtung: `playbook_propose` nimmt den kompletten neuen YAML-Text.
+  Das Backend validiert **sofort** — ein ungültiger Vorschlag erreicht die
+  Oberfläche gar nicht erst, sonst stünde dort ein Diff, den man nicht
+  anwenden kann. Der Viewer zeigt Diff + Apply/Discard; auf die Platte kommt
+  nichts ohne Klick.
+- Zwei Leitplanken, beide bewusst: Playbooks aus **Git-Quellen** lassen sich
+  nicht schreiben (Änderungen gehören ins Quell-Repo als Commit und neuer
+  Tag), und der Sitzungszustand liegt **im Speicher** — eine Auswahl, die die
+  Sitzung überlebt, wäre eine Lüge über das, was der Nutzer gerade ansieht.
+- Diff selbst gebaut (LCS über Zeilen + Kontext-Verdichtung, ~60 Zeilen).
+  Für ein einzelnes Panel lohnt keine Abhängigkeit, die man dauerhaft pflegt.
+- Der MCP-Test läuft gegen ein **echtes Backend** auf freiem Port statt gegen
+  ein Fake: Die Tools sprechen HTTP, ein Mock hätte genau den Teil
+  wegabstrahiert, der schiefgehen kann.
+- Screenshot-Gegenlesen hat wieder etwas gefunden: der Apply-Knopf war
+  unsichtbar — `.row button` und `button.primary` haben gleiche Spezifität,
+  die generische Regel stand später, also weißer Text auf weißem Grund.
+  Behoben und im Smoke festgenagelt (prüft jetzt die Hintergrundfarbe).
+- Verifikation: 144 Pytest (+14), 1/1 Playwright (klicken → Auswahl über die
+  API prüfen → Vorschlag → Diff → anwenden → Änderung im Playbook), ruff,
+  Doku-Sync.
+- Damit ist von der Neuausrichtung nur noch W5 offen: README, Landing-Page
+  und `docs/launch.md` tragen die alte Komponenten-Geschichte.
