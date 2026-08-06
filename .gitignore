@@ -52,8 +52,14 @@ registry/db.sqlite3
 # Rust (Cargo.lock IST eingecheckt — Binaries, kein Library-Crate)
 target/
 
-# Composer-Playwright-Smoke (Wegwerf-Registry + Reports)
-apps/composer/e2e/.registry-tmp/
+# Composer-Playwright-Smoke: Wegwerf-Bibliothek + Git-Fixture, beide vom Test
+# bei jedem Lauf neu erzeugt (e2e/start-backend.sh).
+apps/composer/e2e/.library-tmp/
 apps/composer/e2e/.git-fixture/
+# Hieß bis W1 `.registry-tmp`; die Umbenennung hier nachzuziehen wurde
+# vergessen, seitdem wanderte die Kopie stillschweigend in jeden Commit. Der
+# Eintrag bleibt, weil auf manchen Rechnern noch ein altes `.registry-tmp` mit
+# Komponenten-Specs von vor dem Rückbau liegt — löschbar, erzeugt niemand mehr.
+apps/composer/e2e/.registry-tmp/
 apps/composer/test-results/
 apps/composer/playwright-report/

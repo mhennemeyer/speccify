@@ -83,9 +83,19 @@ class ProjectContext:
         offline: bool = False,
     ) -> ProjectContext:
         manifest_path = project_dir / MANIFEST_FILENAME
-        if not manifest_path.is_file():
-            raise FileNotFoundError(f"No {MANIFEST_FILENAME} in {project_dir}.")
-        manifest = ProjectManifest.load(manifest_path)
+        if manifest_path.is_file():
+            manifest = ProjectManifest.load(manifest_path)
+        elif library_override is not None:
+            # Pointed straight at a library, so there is nothing a manifest
+            # would still have to answer. Demanding one here would mean an
+            # agent cannot read a playbook that simply lives in some
+            # repository — which is most of them.
+            manifest = ProjectManifest()
+        else:
+            raise FileNotFoundError(
+                f"No {MANIFEST_FILENAME} in {project_dir}. "
+                f"Run `speccify init`, or pass --library to read a library directly."
+            )
         library_path = (
             library_override.resolve()
             if library_override is not None

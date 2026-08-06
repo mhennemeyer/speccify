@@ -45,6 +45,20 @@ test("open a playbook, walk its steps, select a source and an asset", async ({ p
     await expect(step.locator(".markdown pre code").first()).toContainText(
       "xcrun notarytool submit",
     );
+    // Prose is prose. `.detail` is monospace because it also renders raw asset
+    // content; when markdown is rendered into it, the font has to come back —
+    // the same specificity trap that once made the Apply button invisible.
+    const proseFont = await step
+      .locator(".markdown p")
+      .first()
+      .evaluate((node) => getComputedStyle(node).fontFamily);
+    expect(proseFont).not.toMatch(/mono/i);
+    // ...while code inside it stays monospace.
+    const codeFont = await step
+      .locator(".markdown pre code")
+      .first()
+      .evaluate((node) => getComputedStyle(node).fontFamily);
+    expect(codeFont).toMatch(/mono/i);
   });
 
   await test.step("inline markdown is rendered, not shown as backticks", async () => {

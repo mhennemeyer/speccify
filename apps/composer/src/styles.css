@@ -130,8 +130,16 @@ ul.plain { list-style: none; padding: 0; }
 .flow-edge { stroke: var(--border); stroke-width: 1.5; }
 .flow-arrow-head { fill: var(--border); }
 
-/* Rendered markdown inside a step. */
-.markdown { white-space: normal; }
+/* Rendered markdown inside a step.
+   `.detail` is also used bare for asset content, where monospace is right.
+   Here it is prose, so undo the font too — not only the pre-wrapping.
+   Inline code and fences set their own font below. */
+.markdown {
+  white-space: normal;
+  font-family: system-ui, sans-serif;
+  font-size: 13px;
+  line-height: 1.55;
+}
 .markdown :first-child { margin-top: 0; }
 .markdown :last-child { margin-bottom: 0; }
 .markdown pre { background: #e2e8f0; padding: 8px; border-radius: 6px; overflow-x: auto; }
