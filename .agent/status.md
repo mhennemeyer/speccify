@@ -2,9 +2,9 @@
 
 ## Meta
 - **Typ:** Code
-- **Phase:** **P4 Projekt-Builds geliefert (2026-08-04)** — `speccify build` erzeugt aus einer `kind: app`-Spec ein lauffähiges Vite-React-Projekt (Details unter „Nächste Schritte"); davor am selben Tag P3 abgeschlossen (Mock-Bundle-Rendering im Canvas, Drag & Drop). Historie: **P3 Verfeinerung Runde 1 geliefert (2026-07-24)** — visuelles Slot-Befüllen (Slot-Zonen im Canvas als Einfüge-Ziel, rekursiver Tree inkl. `moveNodeToSlot`/„Platzierung" im Inspector, Teilbaum-Entfernen mit Wiring-Cleanup), Undo/Redo (Snapshot-History `{doc, children}`, Tipp-Koaleszierung 800 ms, ⌘Z/⇧⌘Z + Topbar-Buttons) und **Playwright-UI-Smoke** (`apps/composer/e2e/composer-smoke.spec.ts`, 3 Tests: Voll-Flow inkl. Wiring über die echte UI, Undo/Redo, Slot-Befüllen; Backend mit Wegwerf-Registry auf :8788, Vite :5199 — kollisionsfrei zu dev-up.sh; CI-Job `apps/composer ui smoke (playwright)`; lokal `pnpm run composer:e2e`). **Verifikation: 3/3 Playwright grün (6,2 s), Composer-Typecheck + Build grün (269 kB), 420 Pytest grün (Python unverändert).** Davor am selben Tag: **P3 Composer-MVP geliefert** — `apps/composer/` (Vite-React-SPA, Tauri-2-fähig) mit Palette/Canvas (interpretierte Mocks + Live-Wiring-Simulation)/Inspector/YAML-Round-Trip/Save; Composer-Backend-API (Detail/Validate/Save) im Web-Backend; Agent-Flow headless per E2E gepinnt; CI-Job `composer build`; `dev-up.sh` inkl. Composer (:5173); Doku `docs/composer.md`. **Verifikation: 420 Pytest grün, Composer-Build grün, ruff clean.** Davor am selben Tag: **P2 Kern abgeschlossen** — Spec-Schema v1 (harter Cut, `api:`-Block + `composition:` mit Typprüfung), 7 Referenz-Specs v1 (neu: `text-input` + `search-bar`-Composite), Replay-Cache mechanisch re-keyed, deterministischer React-Mock-Codegen über CLI (`speccify mock`) / MCP (Tool `mock`, 7 Tools) / Web (`POST /api/v1/mock`) byte-identisch; Mock-Closure typecheckt via gepinntem tsc (`@conformance`). Stage 4 (voller API-Harness) hinter P3 vertagt. Davor: OSS-Pivot P1 (2026-07-23, Registry-Rückbau, Archiv-Branch `archive/pre-oss-pivot-registry`). Roadmap: [`plans/archive/pivot-open-source-git-composer.md`](./plans/archive/pivot-open-source-git-composer.md). Branch: `feat/oss-pivot`. **Verifikation: 411 Pytest grün, Mock-tsc-Conformance grün, MCP-Smoke OK, ruff clean, CLI-Doku-Drift grün.**
+- **Phase:** **Neuausrichtung auf Workflow-Playbooks abgeschlossen (2026-08-06)** — W1–W5 geliefert: Rückbau des Codegen-Zweigs, Playbook-Schema (Neustart bei `schema_version: 1`), Playbooks als Bundles, `speccify check` gegen Verrottung, read-only Viewer mit Workflow-Diagramm, Kontext-Brücke zum Agenten (`viewer_selection` / `playbook_propose`), Außendarstellung komplett auf Playbooks und Englisch. Offen nur noch BO-Aktionen (Repo öffentlich, Index säen, Doku-Site deployen, IAP-Playbook gegenlesen). Plan archiviert: [`plans/archive/neuausrichtung-workflow-playbooks.md`](./plans/archive/neuausrichtung-workflow-playbooks.md). Branch: `feat/oss-pivot`. Historie der Komponenten-Ära (P1–P6.1) in [`plans/archive/pivot-open-source-git-composer.md`](./plans/archive/pivot-open-source-git-composer.md).
 - **Priorität:** Hoch (aktiver Umbau)
-- **Zuletzt aktualisiert:** 2026-08-04
+- **Zuletzt aktualisiert:** 2026-08-06
 
 ## Nächste Schritte
 - **W1 GELIEFERT (2026-08-06)**: Schnitt und Fundament stehen — Rückbau des
@@ -44,8 +44,24 @@
   Git-Quellen sind schreibgeschützt. **11 MCP-Tools. 144 Pytest, 1/1
   Playwright (Smoke geht klicken → Auswahl prüfen → Vorschlag → Diff →
   anwenden durch).**
-  **Als Nächstes**: nur noch **W5** — README, Landing-Page und
-  `docs/launch.md` tragen weiterhin die alte Komponenten-Geschichte.
+- **W5 GELIEFERT (2026-08-06)**: Außendarstellung auf Playbooks und (D6) auf
+  Englisch — README, Landing-Page, `docs/launch.md`, `docs/local-dev-e2e.md`,
+  `docs/git-sources.md`, `index/README.md`, `mcp/README.md`, CONTRIBUTING,
+  Getting-Started und MCP-Referenz. `/try-it/` gelöscht (bewarb einen
+  Playground, den es seit W1 nicht mehr gibt).
+  **Dabei gefunden: der Desktop-Build war kaputt** — `build_engine_payload.sh`
+  kopierte `registry-fixtures/` und `tests/fixtures/llm-cache/`, beide beim
+  Rückbau entfernt, und `lib.rs` setzte `SPECCIFY_REGISTRY_PATH`, das das
+  Backend nicht mehr liest. Beides auf `playbooks/` gezogen. Dazu
+  `apps/web/frontend` (Playground gegen entfernte Routen), `record-llm-cache.sh`,
+  das `bedrock`-Extra und `Settings.cache_dir` entfernt; `gen_cli_docs.py`
+  löscht jetzt verwaiste Befehlsseiten (`build`/`mock`/`conformance` waren noch
+  auf der Doku-Site).
+  **144 Pytest, 1/1 Playwright, 18/19 Desktop-Tests, ruff clean, Doku-Sync +
+  CLI-Doku ohne Drift, Marketing-Build 21 Seiten, keine toten internen Links,
+  `speccify check playbooks/` 0 Fehler.**
+  **Als Nächstes**: kein offener Entwicklungsschritt — die Neuausrichtung ist
+  komplett. Was bleibt, sind BO-Aktionen aus `docs/launch.md`.
 - **NEUAUSRICHTUNG (BO, 2026-08-06)**: Der Komponenten-Ansatz ist vom
   Fortschritt bei Coding-Agents überholt. Neue Richtung: **eine Spec ist ein
   Playbook für einen komplexen, wiederkehrenden Workflow** (Schritte, Quellen,
@@ -53,13 +69,11 @@
   erarbeiten müsste. Der Composer wird **Viewer + kontextsensitiver Chat**
   (kein Edit-Modus). Git-Quellen, Discovery, MCP/Server und die Desktop-App
   bleiben und wachsen.
-  **Aktiver Plan: [`plans/neuausrichtung-workflow-playbooks.md`](./plans/neuausrichtung-workflow-playbooks.md)**
-  — Entwurf steht, **Stage 0 (Refinement) offen**: fünf Entscheidungsvorschläge
-  (D1 Rückbau des Codegen-Zweigs, D2 Chat über MCP statt eigenem LLM-Client,
-  D3 kein Edit-Modus, D4 Schema v2 als harter Cut, D5 Specs als Bundles) und
-  vier Fragen (Sprache, Referenz-Playbook, Granularität, Vokabular).
-  Danach W1 Schnitt & Fundament → W2 Agent-Vertrag → W3 Viewer → W4 Chat →
-  W5 Doku/Website.
+  **Plan abgeschlossen und archiviert: [`plans/archive/neuausrichtung-workflow-playbooks.md`](./plans/archive/neuausrichtung-workflow-playbooks.md)**
+  — D1–D8 entschieden (Rückbau des Codegen-Zweigs, Chat über MCP statt eigenem
+  LLM-Client, kein Edit-Modus, Schema-Neustart statt Migration, Playbooks als
+  Bundles, alles produktseitig englisch, Vokabular „Playbook",
+  Granularitäts-Prüfstein). W1–W5 alle geliefert.
 - **Vorherige Roadmap abgeschlossen und archiviert**:
   [`plans/archive/pivot-open-source-git-composer.md`](./plans/archive/pivot-open-source-git-composer.md)
   (P1–P5 geliefert, P6.1 Doku-Site + Launch-Vorbereitung). Was daraus trägt —

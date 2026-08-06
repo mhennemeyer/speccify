@@ -2054,3 +2054,40 @@
   Doku-Sync.
 - Damit ist von der Neuausrichtung nur noch W5 offen: README, Landing-Page
   und `docs/launch.md` tragen die alte Komponenten-Geschichte.
+
+## 2026-08-06 (W5 — Außendarstellung auf Playbooks; Neuausrichtung abgeschlossen)
+- **W5 geliefert**, damit sind W1–W5 komplett und der Plan ist archiviert
+  (`plans/archive/neuausrichtung-workflow-playbooks.md`).
+- README, Landing-Page und alle Doku-Seiten auf Playbooks und (D6) auf
+  Englisch. Die Prüffrage steht jetzt vorn: „Hätte ich beim zweiten Mal wieder
+  nachschlagen müssen?" Der Pivot selbst steht im README — er ist die
+  interessante Hälfte der Geschichte, nicht etwas zum Verstecken.
+- `/try-it/` gelöscht statt umgeschrieben: die Seite bewarb einen Playground,
+  den es seit W1 nicht mehr gibt. Ein Hosted-Ersatz wäre erfunden gewesen.
+- **Der Desktop-Build war kaputt und niemandem aufgefallen.**
+  `build_engine_payload.sh` kopiert `registry-fixtures/` und
+  `tests/fixtures/llm-cache/` in die App-Resources — beide beim Rückbau
+  entfernt, mit `set -e` bricht das Skript ab. Selbst repariert hätte die App
+  eine leere Bibliothek gezeigt: `lib.rs` setzte `SPECCIFY_REGISTRY_PATH`, das
+  Backend liest `SPECCIFY_LIBRARY_PATH`. Beides zieht jetzt auf `playbooks/`.
+  Das ist der Preis dafür, dass der Rückbau die Rust-Seite nicht mitgeprüft
+  hat — die Python-Suite war grün, der Build war es nicht.
+- Weitere Leichen entfernt: `apps/web/frontend` (Next.js-Playground gegen
+  `/api/v1/specs` und `/api/v1/render`, beide weg; hing nicht im
+  pnpm-Workspace, wurde aber von CI gebaut und von `dev-up.sh` gestartet),
+  `record-llm-cache.sh` (exec't eine nicht existierende Python-Datei), das
+  `bedrock`-Extra (boto3 zog 6 Pakete ins Lock), `Settings.cache_dir`.
+- `gen_cli_docs.py --check` hat verwaiste Seiten nicht bemerkt: `build`,
+  `mock` und `conformance` standen weiter auf der Doku-Site. Der Check meldet
+  sie jetzt, der Lauf löscht sie. Ohne das passiert es beim nächsten Umbau
+  wieder.
+- Die MCP-Referenz nannte Tools, die es nicht gibt, und Input-Namen, die nie
+  gestimmt haben. Gegen `server.py` geprüft: es heißt `reference`, nicht
+  `source`, und `playbook_list` nimmt kein `query`.
+- Verifikation: 144 Pytest (1 deselected), 1/1 Playwright, 18/19 Desktop-Tests
+  (1 ignored), ruff clean, MCP-stdio-Smoke, Doku-Sync + CLI-Doku ohne Drift,
+  Marketing-Build 21 Seiten (vorher 25: −1 Playground, −3 Geister-Befehle),
+  keine toten internen Links im gebauten Site-Output,
+  `build_engine_payload.sh` läuft wieder durch, `speccify check playbooks/`
+  0 Fehler.
+- Offen sind nur noch BO-Aktionen aus `docs/launch.md`.

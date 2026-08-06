@@ -1,11 +1,11 @@
 ---
-lifecycle: active
-status: Entwurf 2026-08-06 — Neuausrichtung von Komponenten-Specs auf Workflow-Playbooks; Stage 0 (Refinement mit BO) offen, danach W1
+lifecycle: done
+status: Geliefert 2026-08-06 — W1–W5 komplett; offen nur noch BO-Aktionen (Repo öffentlich, Index säen, Doku-Site deployen, IAP-Playbook gegenlesen)
 sessionId: neuausrichtung-workflow-playbooks
 ---
 # Plan: Neuausrichtung — Specs als Workflow-Playbooks für Agents
 
-> **Status**: 📋 Entwurf, wartet auf Refinement (2026-08-06)
+> **Status**: ✅ Geliefert (2026-08-06) — W1–W5 abgeschlossen, D1–D8 entschieden.
 > **Ersetzt**: [`archive/pivot-open-source-git-composer.md`](./archive/pivot-open-source-git-composer.md) (P1–P6.1 geliefert)
 > **Auslöser (BO, 2026-08-06)**: Der ursprüngliche Zweck ist vom technischen Fortschritt bei Agents überholt. Feingranulare Komponenten-Specs, aus denen man größere Komponenten und Anwendungen zusammensetzt, bringen kaum noch Mehrwert — moderne Agents sind auf diesem Level bereits gut genug.
 
@@ -190,7 +190,25 @@ Offene Punkte mit dem BO klären (unten), Entscheidungen hier festschreiben.
 >
 > Das Chat-Fenster selbst ist der Agent, den man ohnehin benutzt (D2) — Speccify liefert ihm nur den Kontext. `docs/viewer.md` beschreibt die Schleife: klicken → fragen → vorschlagen lassen → Diff lesen → anwenden.
 
-### W5 — Doku, Website, Ökosystem
+### W5 — Doku, Website, Ökosystem ✅ (2026-08-06)
+Geliefert: README, Landing-Page und alle Doku-Seiten auf Playbooks und (D6) auf
+Englisch. `/try-it/` gelöscht — die Seite bewarb einen Playground, den es seit
+W1 nicht mehr gibt. `docs/local-dev-e2e.md` neu geschrieben (beschrieb ein
+Frontend auf :3000 und Codegen gegen Bedrock). MCP-Referenz gegen `server.py`
+geprüft: sie nannte Tools, die es nicht gibt, und Input-Namen, die nie
+gestimmt haben.
+
+Dabei gefunden und mitrepariert (Commit `8bdf8c8`): der **Desktop-Build war
+kaputt** — das Payload-Skript kopierte zwei beim Rückbau entfernte
+Verzeichnisse, und `lib.rs` setzte eine Env-Variable, die das Backend nicht
+mehr liest. Dazu `apps/web/frontend` (Playground gegen entfernte Routen),
+`record-llm-cache.sh`, das `bedrock`-Extra und `Settings.cache_dir` entfernt;
+`gen_cli_docs.py` löscht jetzt verwaiste Befehlsseiten, statt sie
+weiterzuliefern.
+
+Offen (BO): Index säen, Doku-Site deployen — beide in `docs/launch.md`.
+
+**Ursprünglicher Umriss:**
 - `docs/` neu schneiden: Playbook-Format, Agent-Vertrag, Viewer/Chat, Git-Quellen (bleibt), `check`. Alte Seiten (Mocks, App-Builds, Composer-Editor) entfernen.
 - Website: Hero, „How it works", Doku-Sidebar, Index-Format (Keywords/Plattformen für Playbooks), `docs/launch.md` neu texten.
 - Saatgut: die ersten echten Playbooks (BO-Wissen) als Index-Einträge.
