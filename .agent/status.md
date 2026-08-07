@@ -7,6 +7,16 @@
 - **Zuletzt aktualisiert:** 2026-08-07
 
 ## Nächste Schritte
+- **NEUER AKTIVER PLAN (2026-08-07)**: [`plans/skills-als-format.md`](./plans/skills-als-format.md)
+  — Playbooks werden **Agent Skills** (`SKILL.md` als Speicherformat, kein
+  Export). BO-Entscheid zum Namen: *ein Playbook ist ein Skill, der andere
+  Skills referenziert*. Grund: Ein Playbook war erst nach Installation
+  nützlich, ein Skill wirkt, sobald er im Verzeichnis liegt. Der Spec ist
+  herstellerneutral (agentskills.io), hat mit `metadata` eine offizielle
+  Hintertür für Fremdfelder und keine Vorgaben für den Body. Was Speccify
+  draufsetzt: Frische, Pinning, Komposition, Herkunft — plus zwei neue,
+  kleine Hebel (Lint gegen die Best-Practice-Checkliste, Token-Budget), die
+  auch für Leute nützlich sind, die nur Skills haben. **S0 (Refinement) offen.**
 - **VERÖFFENTLICHT (2026-08-07)**: Repo ist öffentlich unter
   <https://github.com/mhennemeyer/speccify>, `main` ist Default. Der 2009er
   RSpec-Klon gleichen Namens bleibt unangetastet unter `master` — nichts
@@ -219,6 +229,16 @@ Fundament für alle weiteren Phasen.
   Mypy + Pytest + `speccify lint` ab.
 
 ## Nächste Schritte
+- **NEUER AKTIVER PLAN (2026-08-07)**: [`plans/skills-als-format.md`](./plans/skills-als-format.md)
+  — Playbooks werden **Agent Skills** (`SKILL.md` als Speicherformat, kein
+  Export). BO-Entscheid zum Namen: *ein Playbook ist ein Skill, der andere
+  Skills referenziert*. Grund: Ein Playbook war erst nach Installation
+  nützlich, ein Skill wirkt, sobald er im Verzeichnis liegt. Der Spec ist
+  herstellerneutral (agentskills.io), hat mit `metadata` eine offizielle
+  Hintertür für Fremdfelder und keine Vorgaben für den Body. Was Speccify
+  draufsetzt: Frische, Pinning, Komposition, Herkunft — plus zwei neue,
+  kleine Hebel (Lint gegen die Best-Practice-Checkliste, Token-Budget), die
+  auch für Leute nützlich sind, die nur Skills haben. **S0 (Refinement) offen.**
 - **VERÖFFENTLICHT (2026-08-07)**: Repo ist öffentlich unter
   <https://github.com/mhennemeyer/speccify>, `main` ist Default. Der 2009er
   RSpec-Klon gleichen Namens bleibt unangetastet unter `master` — nichts
