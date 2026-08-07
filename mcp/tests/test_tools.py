@@ -127,8 +127,9 @@ def test_agent_can_work_through_a_playbook_over_mcp(project: Path) -> None:
 
     listed = run_playbook_list(project)
     assert listed.ok
-    # "tauri" is unambiguous here; "notarization" also matches the child playbook.
-    chosen = next(entry for entry in listed.playbooks if "tauri" in entry["keywords"])
+    # Pick by stack, the axis an agent filters on: "tauri" is unambiguous here,
+    # while "notarization" would also match the child playbook.
+    chosen = next(entry for entry in listed.playbooks if "tauri" in entry["stack"])
 
     whole = run_playbook_get(project, reference=chosen["id"])
     assert whole.ok

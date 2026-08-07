@@ -11,8 +11,9 @@ license: MIT
 
 applies_to:
   platforms: [macos]
+  stack: [tauri]
   requires: ["Tauri 2", "Xcode command line tools", "Apple Developer Program"]
-  keywords: [tauri, codesign, notarization, gatekeeper, dmg, sidecar]
+  keywords: [codesign, notarization, gatekeeper, dmg, sidecar]
 
 prerequisites:
   - '`pnpm tauri build` already produces a working unsigned .app'

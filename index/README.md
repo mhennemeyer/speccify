@@ -18,14 +18,18 @@ schema_version: 1
 source: git+https://github.com/acme/notarize-playbook   # or with #path/in/repo
 title: Notarize a Tauri app for macOS
 summary: Sign, notarize and staple so it opens without a Gatekeeper warning.
-keywords: [macos, tauri, notarization, gatekeeper]
+platforms: [macos]
+stack: [tauri]
+keywords: [notarization, gatekeeper, codesign]
 homepage: https://github.com/acme/notarize-playbook
 license: MIT
 ```
 
-Required: `schema_version`, `source`, `title`, `summary`. Everything else is
-optional, but `keywords` is what makes an entry findable — `speccify search`
-matches against title, summary and keywords.
+Required: `schema_version`, `source`, `title`, `summary`. The rest is optional
+but decides whether anyone finds the entry: `speccify search` matches
+`platforms` and `stack` **exactly**, and title, summary and `keywords` by
+substring. The axes mean the same thing as in a playbook's `applies_to` — see
+[the playbook format](../docs/playbooks.md) for the recommended spellings.
 
 One file per entry is deliberate: a pull request touches exactly one file,
 there are no merge conflicts in a growing list, and CI validates each entry on

@@ -20,6 +20,7 @@ export function describeAge(retrieved: string, today = new Date()): string {
   if (age === null) return "unknown age";
   if (age < 0) return "dated in the future";
   if (age === 0) return "retrieved today";
+  if (age === 1) return "1 day old";
   if (age < 60) return `${age} days old`;
   return `${Math.round(age / 30)} months old`;
 }

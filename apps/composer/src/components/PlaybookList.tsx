@@ -19,6 +19,7 @@ function matches(playbook: PlaybookSummary, needle: string): boolean {
     playbook.summary,
     ...playbook.keywords,
     ...playbook.platforms,
+    ...playbook.stack,
   ]
     .join(" ")
     .toLowerCase()
@@ -47,7 +48,7 @@ export function PlaybookList({
         id="library-filter"
         className="filter"
         value={filter}
-        placeholder="Filter by title, keyword, platform…"
+        placeholder="Filter by title, stack, platform, keyword…"
         onChange={(event) => setFilter(event.target.value)}
       />
       {visible.map((playbook) => (
@@ -61,6 +62,15 @@ export function PlaybookList({
             {playbook.id}@{playbook.version} · {playbook.steps} steps
           </span>
           <span className="muted">{playbook.summary}</span>
+          {playbook.stack.length > 0 || playbook.platforms.length > 0 ? (
+            <span className="axes">
+              {[...playbook.stack, ...playbook.platforms].map((term) => (
+                <span key={term} className="axis">
+                  {term}
+                </span>
+              ))}
+            </span>
+          ) : null}
           {playbook.keywords.length > 0 ? (
             <span className="keywords">{playbook.keywords.join(" · ")}</span>
           ) : null}

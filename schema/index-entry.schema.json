@@ -4,7 +4,12 @@
   "title": "Speccify Index Entry v1",
   "description": "Ein Eintrag eines Discovery-Index (Phase P5): Zeiger auf ein Spec-Repo plus Beschreibung für die Suche. Eine Datei pro Eintrag unter `entries/*.yaml`. Bewusst ohne Versionsangaben — Versionen sind Git-Tags und damit immer aktuell.",
   "type": "object",
-  "required": ["schema_version", "source", "title", "summary"],
+  "required": [
+    "schema_version",
+    "source",
+    "title",
+    "summary"
+  ],
   "additionalProperties": false,
   "properties": {
     "schema_version": {
@@ -26,9 +31,25 @@
       "maxLength": 300,
       "description": "Ein Satz, was die Spec beschreibt. Landet in der Trefferliste."
     },
-    "kind": {
-      "type": "string",
-      "enum": ["ui-component", "screen", "logic", "workflow", "app"]
+    "platforms": {
+      "type": "array",
+      "maxItems": 8,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9][a-z0-9-]*$"
+      },
+      "description": "Same axis as a playbook's applies_to.platforms."
+    },
+    "stack": {
+      "type": "array",
+      "maxItems": 8,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9][a-z0-9-]*$"
+      },
+      "description": "Same axis as a playbook's applies_to.stack."
     },
     "keywords": {
       "type": "array",

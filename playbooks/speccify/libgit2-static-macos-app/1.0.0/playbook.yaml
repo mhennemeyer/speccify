@@ -12,8 +12,9 @@ license: MIT
 
 applies_to:
   platforms: [macos]
+  stack: [swiftpm, xcode]
   requires: ["CMake", "Xcode command line tools", "A SwiftPM package in the app"]
-  keywords: [libgit2, static-linking, swiftpm, sandbox, universal-binary, securetransport, app-store]
+  keywords: [libgit2, static-linking, sandbox, universal-binary, securetransport, app-store]
 
 prerequisites:
   - A local SwiftPM package inside the app repository (not a remote dependency — see the `unsafeFlags` step).

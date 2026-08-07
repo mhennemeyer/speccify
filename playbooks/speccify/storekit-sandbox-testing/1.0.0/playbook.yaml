@@ -11,8 +11,9 @@ license: MIT
 
 applies_to:
   platforms: [macos, ios]
+  stack: [storekit, xcode]
   requires: ["Xcode", "App Store Connect access"]
-  keywords: [storekit, sandbox, testing, iap, purchases]
+  keywords: [sandbox, testing, iap, purchases]
 
 prerequisites:
   - An app with at least one in-app purchase product in the code

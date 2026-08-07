@@ -91,7 +91,16 @@ class Acceptance:
 
 @dataclass(frozen=True)
 class AppliesTo:
+    """How an agent decides this playbook is the right one.
+
+    Three axes on purpose: `platforms` is where it runs, `stack` is what you
+    must be building with, `keywords` is everything else. Keeping them apart
+    means "what do I have for Tauri?" is a lookup rather than a substring
+    search through a list that also holds `dmg` and `gatekeeper`.
+    """
+
     platforms: tuple[str, ...] = ()
+    stack: tuple[str, ...] = ()
     requires: tuple[str, ...] = ()
     keywords: tuple[str, ...] = ()
 
@@ -220,6 +229,7 @@ def parse_playbook(data: Any) -> Playbook:
         ),
         applies_to=AppliesTo(
             platforms=tuple(str(p) for p in applies_raw.get("platforms", ())),
+            stack=tuple(str(s) for s in applies_raw.get("stack", ())),
             requires=tuple(str(r) for r in applies_raw.get("requires", ())),
             keywords=tuple(str(k) for k in applies_raw.get("keywords", ())),
         ),

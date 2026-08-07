@@ -20,13 +20,21 @@ from speccify_core import (
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
-def _entry(source: str, title: str, summary: str, keywords: str = "[rating, stars]") -> str:
+def _entry(
+    source: str,
+    title: str,
+    summary: str,
+    keywords: str = "[rating, stars]",
+    platforms: str = "[macos]",
+    stack: str = "[tauri]",
+) -> str:
     return (
         "schema_version: 1\n"
         f"source: {source}\n"
         f"title: {title}\n"
         f"summary: {summary}\n"
-        "kind: ui-component\n"
+        f"platforms: {platforms}\n"
+        f"stack: {stack}\n"
         f"keywords: {keywords}\n"
         "license: MIT\n"
     )
@@ -217,3 +225,54 @@ def test_repo_index_is_valid() -> None:
     """CI-Gate für PRs an `index/`: jeder Eintrag valide, keine Quelle doppelt."""
     entries = load_index(REPO_ROOT / "index")
     assert isinstance(entries, list)
+
+
+# --- Achsen: Plattform und Stack ------------------------------------------------
+
+
+def test_entry_carries_platform_and_stack() -> None:
+    raw = _entry("git+https://host/repo", "T", "S", platforms="[macos, ios]", stack="[tauri]")
+    entry = parse_index_entry(raw.encode(), origin="local:index", name="t.yaml")
+    assert entry.platforms == ("macos", "ios")
+    assert entry.stack == ("tauri",)
+    assert "kind" not in entry.to_dict()
+
+
+def test_stack_is_searchable_and_outranks_a_keyword_hit() -> None:
+    """"What do I have for Tauri?" must be a lookup, not a substring hunt."""
+    for_tauri = parse_index_entry(
+        _entry("git+https://host/a", "Notarize", "Ship it.", keywords="[codesign]",
+               stack="[tauri]").encode(),
+        origin="i", name="a.yaml",
+    )
+    mentions_it = parse_index_entry(
+        _entry("git+https://host/b", "Something else", "Unrelated.",
+               keywords="[tauri-adjacent]", stack="[]").encode(),
+        origin="i", name="b.yaml",
+    )
+    hits = search_index([mentions_it, for_tauri], "tauri")
+    assert [h.source for h in hits] == ["git+https://host/a", "git+https://host/b"]
+
+
+def test_platform_matches_exactly_not_by_substring() -> None:
+    """`ios` must not match `macos` — that is why axes compare exactly."""
+    entry = parse_index_entry(
+        _entry("git+https://host/a", "Mac thing", "Only for the Mac.",
+               keywords="[codesign]", platforms="[macos]", stack="[]").encode(),
+        origin="i", name="a.yaml",
+    )
+    assert search_index([entry], "macos") == [entry]
+    assert search_index([entry], "ios") == []
+
+
+def test_the_old_kind_field_is_rejected() -> None:
+    """The component-era enum is gone; an entry still carrying it must fail."""
+    raw = (
+        "schema_version: 1\n"
+        "source: git+https://host/repo\n"
+        "title: T\n"
+        "summary: S\n"
+        "kind: ui-component\n"
+    )
+    with pytest.raises(SpecIndexError, match="kind"):
+        parse_index_entry(raw.encode(), origin="i", name="t.yaml")

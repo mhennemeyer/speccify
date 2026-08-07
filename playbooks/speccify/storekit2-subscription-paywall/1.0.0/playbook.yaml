@@ -12,8 +12,9 @@ license: MIT
 
 applies_to:
   platforms: [macos, ios]
+  stack: [storekit]
   requires: ["App Store Connect access", "Xcode", "A paid Apple Developer Program membership"]
-  keywords: [storekit, storekit2, subscription, paywall, free-trial, introductory-offer, app-review]
+  keywords: [subscription, paywall, free-trial, introductory-offer, app-review]
 
 prerequisites:
   - The app id exists under your team and the app record exists in App Store Connect.

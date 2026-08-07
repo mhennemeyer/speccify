@@ -68,6 +68,7 @@ def run_playbook_list(project_root: Path, *, library_path: Path | None = None) -
                     "summary": parsed.summary,
                     "keywords": list(parsed.applies_to.keywords),
                     "platforms": list(parsed.applies_to.platforms),
+                    "stack": list(parsed.applies_to.stack),
                     "steps": len(parsed.steps),
                 }
             )

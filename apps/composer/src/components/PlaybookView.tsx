@@ -48,6 +48,9 @@ export function PlaybookView({
       >
         <h2>{playbook.title}</h2>
         <p>{playbook.summary}</p>
+        {playbook.applies_to.stack.length > 0 ? (
+          <p className="muted">stack: {playbook.applies_to.stack.join(", ")}</p>
+        ) : null}
         {playbook.applies_to.platforms.length > 0 ? (
           <p className="muted">platforms: {playbook.applies_to.platforms.join(", ")}</p>
         ) : null}

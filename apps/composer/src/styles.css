@@ -59,6 +59,17 @@ body {
 
 .library-item.active { border-color: var(--accent); background: var(--accent-soft); }
 .library-item .meta { font-family: ui-monospace, monospace; font-size: 11px; color: var(--muted); }
+/* Plattform und Stack sind die Achsen, nach denen gesucht wird — als Chips
+   abgesetzt, damit sie nicht in der Keyword-Zeile untergehen. */
+.library-item .axes { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
+.library-item .axis {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-radius: 4px;
+  padding: 0 6px;
+  font-size: 11px;
+  font-weight: 600;
+}
 .keywords { font-size: 11px; color: var(--accent); }
 
 .view { overflow-y: auto; padding: 20px; display: grid; gap: 14px; align-content: start; }

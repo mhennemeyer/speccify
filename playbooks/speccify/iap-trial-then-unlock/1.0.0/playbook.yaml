@@ -11,8 +11,9 @@ license: MIT
 
 applies_to:
   platforms: [macos, ios]
+  stack: [storekit]
   requires: ["Xcode >= 16", "Apple Developer Program", "StoreKit 2 (iOS 15 / macOS 12+)"]
-  keywords: [storekit, iap, trial, non-consumable, paywall, universal-purchase]
+  keywords: [iap, trial, non-consumable, paywall, universal-purchase]
 
 prerequisites:
   - An app record exists in App Store Connect

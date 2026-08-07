@@ -13,6 +13,7 @@ license: MIT
 
 applies_to:
   platforms: [macos, ios]
+  stack: [swift]
   requires: ["Apple Developer Program membership", "Both apps under the same team"]
   keywords: [icloud, ubiquity-container, clouddocuments, nsfilecoordinator, nsfileversion, entitlements, companion-app]
 

@@ -26,6 +26,7 @@ export interface PlaybookSummary {
   summary: string;
   keywords: string[];
   platforms: string[];
+  stack: string[];
   steps: number;
 }
 
@@ -35,7 +36,7 @@ export interface PlaybookDetail {
   version: string;
   title: string;
   summary: string;
-  applies_to: { platforms: string[]; requires: string[]; keywords: string[] };
+  applies_to: { platforms: string[]; stack: string[]; requires: string[]; keywords: string[] };
   prerequisites: string[];
   steps: PlaybookStep[];
   sources: SourceRef[];
@@ -58,7 +59,8 @@ export interface IndexHit {
   source: string;
   title: string;
   summary: string;
-  kind: string;
+  platforms: string[];
+  stack: string[];
   keywords: string[];
   homepage: string | null;
   license: string | null;

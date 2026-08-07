@@ -63,6 +63,7 @@ def _detail(bundle) -> dict[str, Any]:
         "summary": playbook.summary,
         "applies_to": {
             "platforms": list(playbook.applies_to.platforms),
+            "stack": list(playbook.applies_to.stack),
             "requires": list(playbook.applies_to.requires),
             "keywords": list(playbook.applies_to.keywords),
         },
@@ -103,6 +104,7 @@ def list_playbooks(request: Request) -> dict[str, Any]:
                 "summary": parsed.summary,
                 "keywords": list(parsed.applies_to.keywords),
                 "platforms": list(parsed.applies_to.platforms),
+                "stack": list(parsed.applies_to.stack),
                 "steps": len(parsed.steps),
             }
         )

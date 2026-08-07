@@ -55,7 +55,8 @@ class IndexEntry:
     source: str
     title: str
     summary: str
-    kind: str = ""
+    platforms: tuple[str, ...] = ()
+    stack: tuple[str, ...] = ()
     keywords: tuple[str, ...] = ()
     homepage: str | None = None
     license: str | None = None
@@ -67,7 +68,8 @@ class IndexEntry:
             "source": self.source,
             "title": self.title,
             "summary": self.summary,
-            "kind": self.kind,
+            "platforms": list(self.platforms),
+            "stack": list(self.stack),
             "keywords": list(self.keywords),
             "homepage": self.homepage,
             "license": self.license,
@@ -109,7 +111,8 @@ def parse_index_entry(raw: bytes, *, origin: str, name: str) -> IndexEntry:
         source=str(data["source"]),
         title=str(data["title"]),
         summary=str(data["summary"]),
-        kind=str(data.get("kind", "")),
+        platforms=tuple(str(p) for p in data.get("platforms", ())),
+        stack=tuple(str(s) for s in data.get("stack", ())),
         keywords=tuple(str(k) for k in data.get("keywords", ())),
         homepage=data.get("homepage"),
         license=data.get("license"),
@@ -188,7 +191,14 @@ def load_indexes(
 
 
 def score_entry(entry: IndexEntry, query: str) -> int:
-    """Trefferstärke (0 = kein Treffer). Reihenfolge: Id > Titel > Keyword > Summary."""
+    """Trefferstärke (0 = kein Treffer).
+
+    Reihenfolge: Id > Titel > exakte Achse (Plattform/Stack) > Keyword > Summary.
+
+    Die Achsen zählen mehr als Keywords, aber nur bei **exaktem** Treffer: wer
+    `tauri` sucht, meint Playbooks *für* Tauri, nicht solche, die das Wort
+    beiläufig führen. Teiltreffer bleiben der Keyword-Ebene überlassen.
+    """
     needle = query.strip().lower()
     if not needle:
         return 1
@@ -199,6 +209,8 @@ def score_entry(entry: IndexEntry, query: str) -> int:
         score = max(score, 40)
     if needle in entry.title.lower():
         score = max(score, 30)
+    if any(needle == term.lower() for term in (*entry.stack, *entry.platforms)):
+        score = max(score, 25)
     if any(needle in keyword.lower() for keyword in entry.keywords):
         score = max(score, 20)
     if needle in entry.summary.lower():
@@ -207,7 +219,7 @@ def score_entry(entry: IndexEntry, query: str) -> int:
 
 
 def search_index(entries: list[IndexEntry], query: str) -> list[IndexEntry]:
-    """Sucht case-insensitiv über Id/Titel/Keywords/Summary; leere Query listet alles."""
+    """Sucht case-insensitiv über Id/Titel/Plattform/Stack/Keywords/Summary."""
     scored = [(score_entry(entry, query), entry) for entry in entries]
     hits = [(score, entry) for score, entry in scored if score > 0]
     hits.sort(key=lambda item: (-item[0], item[1].source))

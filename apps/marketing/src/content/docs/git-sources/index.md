@@ -100,7 +100,9 @@ schema_version: 1
 source: git+https://github.com/acme/notarize-playbook
 title: Notarize a Tauri app for macOS
 summary: Sign, notarize and staple so it opens without a Gatekeeper warning.
-keywords: [macos, tauri, notarization]
+platforms: [macos]
+stack: [tauri]
+keywords: [notarization, gatekeeper]
 license: MIT
 ```
 

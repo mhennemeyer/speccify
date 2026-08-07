@@ -103,9 +103,12 @@ def search_command(
         return
 
     for hit in hits:
-        keywords = ", ".join(hit["keywords"]) if hit["keywords"] else "-"
-        typer.echo(f"{hit['title']}  [{hit['kind'] or 'playbook'}]")
+        # Stack and platform first: they are what someone scanning a result
+        # list decides on. Keywords are the long tail.
+        axes = ", ".join([*hit["stack"], *hit["platforms"]]) or "any stack"
+        typer.echo(f"{hit['title']}  [{axes}]")
         typer.echo(f"  {hit['source']}")
         typer.echo(f"  {hit['summary']}")
-        typer.echo(f"  keywords: {keywords}")
+        if hit["keywords"]:
+            typer.echo(f"  keywords: {', '.join(hit['keywords'])}")
     typer.echo(f"\n{len(hits)} hit(s). Add one with: speccify add <source>")

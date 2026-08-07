@@ -12,8 +12,9 @@ license: MIT
 
 applies_to:
   platforms: [macos]
+  stack: [fastlane, xcode]
   requires: ["Xcode", "Ruby with bundler", "App Store Connect access with App Manager role"]
-  keywords: [fastlane, app-store, mac-app-store, ci, app-store-connect-api, testflight, xcodegen]
+  keywords: [app-store, mac-app-store, ci, app-store-connect-api, testflight, xcodegen]
 
 prerequisites:
   - The app record exists in App Store Connect and the app id is registered under your team.

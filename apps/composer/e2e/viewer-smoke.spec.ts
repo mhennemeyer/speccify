@@ -12,8 +12,13 @@ test("open a playbook, walk its steps, select a source and an asset", async ({ p
     await expect(page.locator(".library-item").first()).toBeVisible();
     const all = await page.locator(".library-item").count();
     expect(all).toBeGreaterThanOrEqual(4);
+    // "tauri" is a stack, not a keyword — the filter has to reach the axes.
     await page.locator("#library-filter").fill("tauri");
     await expect(page.locator(".library-item")).toHaveCount(1);
+    // ...and the axes are visible, so a human can see *why* it matched.
+    await expect(
+      page.locator(".library-item .axis").filter({ hasText: "tauri" }),
+    ).toBeVisible();
     await page.locator("#library-filter").fill("");
     await expect(page.locator(".library-item")).toHaveCount(all);
   });
@@ -70,9 +75,12 @@ test("open a playbook, walk its steps, select a source and an asset", async ({ p
   });
 
   await test.step("source chips show their age", async () => {
-    await expect(page.locator(".chip").filter({ hasText: "Notarizing macOS" }).first()).toContainText(
-      "retrieved today",
-    );
+    // Not "retrieved today" — that assertion only held on the day the playbook
+    // was written and went red the morning after. What matters is that an age
+    // is shown at all, and that a fresh source is not flagged as stale.
+    const chip = page.locator(".chip").filter({ hasText: "Notarizing macOS" }).first();
+    await expect(chip).toContainText(/retrieved today|day[s]? old|months old/);
+    await expect(chip).not.toHaveClass(/stale/);
   });
 
   await test.step("a source chip can be selected", async () => {

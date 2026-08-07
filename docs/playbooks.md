@@ -33,9 +33,10 @@ summary: >
   a Gatekeeper warning.
 
 applies_to:                     # how an agent decides this is the right one
-  platforms: [macos]
+  platforms: [macos]            # where it runs
+  stack: [tauri]                # what you must be building with
   requires: ["Tauri 2", "Apple Developer Program"]
-  keywords: [tauri, codesign, notarization]
+  keywords: [codesign, notarization]
 
 prerequisites:
   - "`pnpm tauri build` already produces a working unsigned .app"
@@ -84,6 +85,46 @@ Validate with `speccify lint playbooks/`.
 
 Deliberately absent: an execution engine. The agent is the executor; the
 playbook is context, not a scripting language.
+
+## Finding the right playbook
+
+`applies_to` has three axes, and keeping them apart is what makes "what do I
+have for Tauri?" a lookup instead of a substring hunt through a list that also
+contains `dmg` and `gatekeeper`:
+
+| Axis | Question it answers | Examples |
+|---|---|---|
+| `platforms` | Where does this run? | `macos`, `ios`, `linux`, `windows`, `web` |
+| `stack` | What must I be building with? | `tauri`, `swiftui`, `react`, `storekit`, `fastlane`, `swiftpm` |
+| `keywords` | Everything else worth finding it by | `notarization`, `paywall`, `sse` |
+
+Leave an axis empty when the playbook holds regardless — the Streamable-HTTP
+client playbook names no platform and no stack, because it is true in any
+language. An empty axis is a statement, not an omission.
+
+`speccify search` matches the axes **exactly** and keywords by substring, so
+`ios` does not match `macos`, and a stack hit outranks a keyword hit.
+
+### Recommended spellings
+
+Neither axis is a fixed list in the schema, on purpose. Speccify has no central
+authority handing out names — that is the whole point of using git repositories
+as identity — and an enum would reintroduce one: every new framework would need
+a schema release, and older Speccify versions would reject playbooks written
+for it.
+
+The cost of that freedom is drift (`app-store` and `appstore`, `iap` and
+`in-app-purchase`). So converge by convention, the way npm keywords do:
+
+- **lowercase, hyphenated**, no spaces — `mac-app-store`, not `Mac App Store`
+- **singular**, unless the thing is plural by nature — `subscription`, `docs`
+- the **name the ecosystem uses for itself** — `swiftpm`, not `swift-package-manager`
+- platforms: `macos`, `ios`, `ipados`, `tvos`, `visionos`, `linux`, `windows`, `android`, `web`
+- stacks in use here today: `tauri`, `swift`, `swiftui`, `swiftpm`, `xcode`,
+  `storekit`, `fastlane`
+
+Before inventing a term, check what the existing playbooks use:
+`speccify search --json ""` lists everything with its axes.
 
 ## Reuse
 
