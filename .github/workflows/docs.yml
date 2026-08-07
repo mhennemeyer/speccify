@@ -90,7 +90,13 @@ jobs:
       - name: Link check (lychee)
         uses: lycheeverse/lychee-action@v2
         with:
-          args: --no-progress --offline apps/marketing/dist
+          # `--root-dir`: the build uses root-relative links (/docs/…), which
+          # lychee cannot resolve in a local directory without being told
+          # where the root is. Without it every internal link is an error.
+          args: >-
+            --no-progress --offline
+            --root-dir ${{ github.workspace }}/apps/marketing/dist
+            apps/marketing/dist
           fail: true
 
       - name: Markdown lint (repo docs)

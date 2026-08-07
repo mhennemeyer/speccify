@@ -17,6 +17,7 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
+from typing import Any
 
 import typer
 from speccify_core import GitRepoCache, SpecIndexError, load_indexes, search_index
@@ -102,13 +103,19 @@ def search_command(
         typer.echo(f"No hits for {query!r} across {len(sources)} index source(s).")
         return
 
+    def terms(hit: dict[str, Any], key: str) -> list[str]:
+        """A hit is a plain dict, so the list fields need asserting."""
+        value = hit.get(key)
+        return [str(item) for item in value] if isinstance(value, list) else []
+
     for hit in hits:
         # Stack and platform first: they are what someone scanning a result
         # list decides on. Keywords are the long tail.
-        axes = ", ".join([*hit["stack"], *hit["platforms"]]) or "any stack"
+        axes = ", ".join([*terms(hit, "stack"), *terms(hit, "platforms")]) or "any stack"
         typer.echo(f"{hit['title']}  [{axes}]")
         typer.echo(f"  {hit['source']}")
         typer.echo(f"  {hit['summary']}")
-        if hit["keywords"]:
-            typer.echo(f"  keywords: {', '.join(hit['keywords'])}")
+        keywords = terms(hit, "keywords")
+        if keywords:
+            typer.echo(f"  keywords: {', '.join(keywords)}")
     typer.echo(f"\n{len(hits)} hit(s). Add one with: speccify add <source>")
