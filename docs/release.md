@@ -26,7 +26,6 @@ ausliefern will.
 
 ---
 
-
 Damit macOS die heruntergeladene App startet, braucht sie beides:
 
 1. **Code Signing** mit einem *Developer ID Application*-Zertifikat
@@ -224,7 +223,7 @@ export TAURI_SIGNING_PRIVATE_KEY_PASSWORD="…"     # falls gesetzt
 Ist der private Schlüssel gesetzt, schaltet das Skript
 `bundle.createUpdaterArtifacts` ein und es entstehen zusätzlich:
 
-```
+```text
 target/release/bundle/macos/Speccify.app.tar.gz       # das Update-Paket
 target/release/bundle/macos/Speccify.app.tar.gz.sig   # dessen Signatur
 ```

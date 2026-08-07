@@ -86,7 +86,7 @@ There is no central search service. An **index** is a git repository (or a
 local directory) with one file per playbook repository — the model is Homebrew
 taps and Scoop buckets:
 
-```
+```text
 <index-repo>/entries/<name>.yaml
 ```
 

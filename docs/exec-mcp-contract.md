@@ -55,6 +55,8 @@ Tool-Ergebnisse haben immer die Form
 1. `command` fehlt/leer → Fehler-Result `run_command benötigt 'command' (String).`
 2. Projekt auflösen (s. o.).
 3. **Allowlist-Check** (s. u.); nicht erlaubt → Pending-Eintrag +
+<!-- Fehlertext wörtlich: der Kontrakt verlangt Byte-Gleichheit, ein Umbruch machte ihn falsch. -->
+<!-- markdownlint-disable-next-line MD013 -->
    Fehler-Result `Command not allowlisted: "<cmd>". It was recorded for approval — ask the project owner to approve it (pending list in the app), then try again.`
 4. Ausführung: `shlex`-Split → **argv ohne Shell**, `cwd` = Projekt-Root,
    Timeout **600 s** (Server-Option `--timeout` übersteuert), stdout/stderr
@@ -71,6 +73,8 @@ Tool-Ergebnisse haben immer die Form
 - `name` fehlt/leer → `run_action benötigt 'name' (String).`
 - Lookup in `.agent/actions.json` (Format: [`schema/actions.schema.json`](../schema/actions.schema.json)).
 - Unbekannt → `Unknown action "<name>". Known actions: <sortiert, komma-getrennt|(none)>. Use list_actions for details.`
+<!-- Fehlertext wörtlich: der Kontrakt verlangt Byte-Gleichheit, ein Umbruch machte ihn falsch. -->
+<!-- markdownlint-disable-next-line MD013 -->
 - `confirmed: false` → `Action "<name>" is not confirmed yet — ask the project owner to confirm it in the Actions tab, then try again.`
 - Ohne `command` → `Action "<name>" has no command.`
 - Sonst: Delegation an den `run_command`-Pfad (inkl. Allowlist!).

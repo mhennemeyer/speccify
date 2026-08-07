@@ -24,7 +24,7 @@ from inside the repository.
 
 ### DNS for speccify.io
 
-```
+```text
 A      @      185.199.108.153
 A      @      185.199.109.153
 A      @      185.199.110.153

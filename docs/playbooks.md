@@ -17,7 +17,7 @@ instruction, it is a step inside a playbook, not a playbook.
 A playbook is a **bundle**: a directory with `playbook.yaml` and an optional
 `assets/` tree.
 
-```
+```text
 playbooks/speccify/macos-notarize-tauri/1.0.0/
   playbook.yaml
   assets/verify-signatures.sh
@@ -119,7 +119,8 @@ The cost of that freedom is drift (`app-store` and `appstore`, `iap` and
 - **lowercase, hyphenated**, no spaces — `mac-app-store`, not `Mac App Store`
 - **singular**, unless the thing is plural by nature — `subscription`, `docs`
 - the **name the ecosystem uses for itself** — `swiftpm`, not `swift-package-manager`
-- platforms: `macos`, `ios`, `ipados`, `tvos`, `visionos`, `linux`, `windows`, `android`, `web`
+- platforms: `macos`, `ios`, `ipados`, `tvos`, `visionos`, `linux`, `windows`,
+  `android`, `web`
 - stacks in use here today: `tauri`, `swift`, `swiftui`, `swiftpm`, `xcode`,
   `storekit`, `fastlane`
 

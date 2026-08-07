@@ -1,0 +1,20 @@
+{
+  // Repo docs are hand-wrapped at ~78 characters, which MD013 is happy with.
+  // What it cannot handle is the two things that legitimately exceed it:
+  // tables, where wrapping would break the syntax, and code blocks, where it
+  // would break the command. Enforcing the rule there produced 42 findings
+  // and zero improvements, which is how a linter gets switched off entirely.
+  "config": {
+    "MD013": {
+      // 120, not 80: some lines quote error strings verbatim, and wrapping
+      // those would make them wrong.
+      "line_length": 120,
+      "tables": false,
+      "code_blocks": false
+    },
+    // Cosmetic pipe spacing, and only present in newer linter versions —
+    // enabling it would make local and CI disagree about what is broken.
+    "MD060": false
+  },
+  "globs": ["docs/**/*.md"]
+}
