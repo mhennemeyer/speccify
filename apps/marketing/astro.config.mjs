@@ -32,7 +32,10 @@ export default defineConfig({
     starlight({
       title: "Speccify",
       description:
-        "npm für Spezifikationen statt für Code — Komponenten beschreiben, nicht implementieren.",
+        "Playbooks for complex, recurring workflows — written for coding agents, shared over Git.",
+      // Without this, Starlight asks for /favicon.svg on every docs page and
+      // the site ships a 404 the marketing pages do not have.
+      favicon: "/logo.svg",
       head: plausibleHead,
       social: [
         {
