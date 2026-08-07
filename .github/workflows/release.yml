@@ -26,6 +26,9 @@ name: Release desktop app
 # Generate the updater key with:
 #   pnpm --filter speccify-desktop tauri signer generate -w ~/.speccify/updater.key
 
+# Tags are the trigger; `workflow_dispatch` re-runs an existing tag after a
+# failed build without moving it.
+
 on:
   push:
     tags: ["v*"]

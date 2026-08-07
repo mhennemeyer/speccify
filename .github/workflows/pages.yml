@@ -7,6 +7,10 @@ name: Deploy site
 # on main, so a broken site cannot be deployed by a green PR that was never
 # merged.
 
+# Run it by hand from the Actions tab ("Run workflow") when you need to
+# publish without a matching change — the path filters below are narrow
+# on purpose, so unrelated pushes do not redeploy.
+
 on:
   push:
     branches: [main]

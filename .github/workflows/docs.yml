@@ -9,7 +9,8 @@ name: Docs & Marketing Site
 #   4. Link-Check über den Build-Output (`lychee`).
 #   5. Markdown-Lint über die Repo-`docs/`-Quellen.
 #
-# Default-CI (`ci.yml`) bleibt unberührt.
+# Default-CI (`ci.yml`) bleibt unberührt. Der Deploy selbst liegt in
+# `pages.yml` und läuft nur auf `main` — hier wird nur geprüft.
 
 on:
   push:
