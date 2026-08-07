@@ -15,10 +15,14 @@
   `pages.yml` bei jedem Push auf `main`. `public/CNAME` trägt speccify.io; die
   Domain wird aktiv, sobald der BO DNS setzt und die Custom-Domain in den
   Pages-Einstellungen einträgt (Werte in `docs/launch.md`).
-  **Release-Pipeline**: `release.yml` baut auf `v*`-Tags (Sidecars,
-  Engine-Payload, `tauri build`) und legt einen **Entwurfs**-Release an.
-  Signierung und Updater hängen an Secrets; ohne sie läuft sie und liefert
-  unsigniert. **Noch nie ausgeführt** — es gibt keinen Tag (BO setzt Tags).
+  **Release-Pipeline gelaufen (BO-Auftrag)**: Tag `v0.2.0`, Build grün,
+  Entwurfs-Release mit `.dmg` + `.app.tar.gz` (je 23 MB). Bundle geprüft —
+  arm64, vier Sidecars, Engine mit 4 Wheels, Viewer-SPA, alle 10 Playbooks,
+  Signatur `adhoc`. **Entwurf noch nicht veröffentlicht.** Erster Lauf war rot:
+  Tauri prüft die **Existenz** von `APPLE_CERTIFICATE`, nicht den Inhalt — ein
+  leeres Secret ließ `security import` scheitern. Anmeldedaten werden jetzt
+  gestaged und nur bei Inhalt exportiert. Auslöser auf `v[0-9]+.[0-9]+.[0-9]+`
+  verengt (`v*` hätte die zwölf Phasen-Tags getroffen).
   **Erster CI-Lauf überhaupt** (es gab nie ein Remote) hat sechs echte Fehler
   freigelegt, alle behoben: Playwright 1.44 kennt Ubuntu 24.04 nicht
   (`libasound2` → `libasound2t64`), Node 20 vs. Astros >= 22.12 (jetzt eine
@@ -223,10 +227,14 @@ Fundament für alle weiteren Phasen.
   `pages.yml` bei jedem Push auf `main`. `public/CNAME` trägt speccify.io; die
   Domain wird aktiv, sobald der BO DNS setzt und die Custom-Domain in den
   Pages-Einstellungen einträgt (Werte in `docs/launch.md`).
-  **Release-Pipeline**: `release.yml` baut auf `v*`-Tags (Sidecars,
-  Engine-Payload, `tauri build`) und legt einen **Entwurfs**-Release an.
-  Signierung und Updater hängen an Secrets; ohne sie läuft sie und liefert
-  unsigniert. **Noch nie ausgeführt** — es gibt keinen Tag (BO setzt Tags).
+  **Release-Pipeline gelaufen (BO-Auftrag)**: Tag `v0.2.0`, Build grün,
+  Entwurfs-Release mit `.dmg` + `.app.tar.gz` (je 23 MB). Bundle geprüft —
+  arm64, vier Sidecars, Engine mit 4 Wheels, Viewer-SPA, alle 10 Playbooks,
+  Signatur `adhoc`. **Entwurf noch nicht veröffentlicht.** Erster Lauf war rot:
+  Tauri prüft die **Existenz** von `APPLE_CERTIFICATE`, nicht den Inhalt — ein
+  leeres Secret ließ `security import` scheitern. Anmeldedaten werden jetzt
+  gestaged und nur bei Inhalt exportiert. Auslöser auf `v[0-9]+.[0-9]+.[0-9]+`
+  verengt (`v*` hätte die zwölf Phasen-Tags getroffen).
   **Erster CI-Lauf überhaupt** (es gab nie ein Remote) hat sechs echte Fehler
   freigelegt, alle behoben: Playwright 1.44 kennt Ubuntu 24.04 nicht
   (`libasound2` → `libasound2t64`), Node 20 vs. Astros >= 22.12 (jetzt eine
