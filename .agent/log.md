@@ -2091,3 +2091,27 @@
   `build_engine_payload.sh` läuft wieder durch, `speccify check playbooks/`
   0 Fehler.
 - Offen sind nur noch BO-Aktionen aus `docs/launch.md`.
+
+## 2026-08-07 (Veröffentlichung: Repo, Website, Release-Pipeline)
+- **Repo öffentlich**: `mhennemeyer/speccify`, `main` als Default. Das Repo
+  enthielt ein **anderes** Projekt von 2009 („A minimal RSpec clone", 3 Stars,
+  zwei davon fremd) — `master` bleibt unangetastet, damit nichts verloren geht
+  und alte Links weiter funktionieren.
+- **Hygiene vor dem Push**: keine Secrets (geprüft). `.agent/chats/` (rohe
+  Sitzungstranskripte) und `.junie/` entfernt, Namen zweier privater Projekte
+  neutralisiert — ein öffentliches Git-Log bekommt man nicht zurück.
+  Urheberangabe korrigiert (LICENSE + 5 pyproject sagten „Marc"), Commit-Mail
+  auf die private Adresse umgestellt.
+- **Website live** über `pages.yml`; Deploy prüft vorher erneut, dass Doku-Site
+  und Repo übereinstimmen.
+- **Release-Pipeline** steht, ist aber **ungetestet** — sie braucht einen Tag,
+  und Tags setzt der BO.
+- **Der erste CI-Lauf überhaupt** war die eigentliche Arbeit: Es gab nie ein
+  Remote, also lief nichts davon je. Sechs echte Fehler, alle behoben (Details
+  in `.agent/status.md`).
+- **Lehre**: Ein Werkzeug, das nie lief, ist kein grünes Werkzeug. Playwright,
+  mypy, lychee und markdownlint haben zusammen sechs Fehler gemeldet, die
+  lokal alle „grün" waren — mypy sogar deshalb, weil es gar nicht startete.
+- **Lehre 2**: Das Repo liegt in einem iCloud-synchronisierten Ordner. 70
+  Konfliktkopien im Arbeitsverzeichnis, eine davon eine fremde Binary in der
+  venv. Das ist kein Repo-Problem, sondern ein Ablageort-Problem.

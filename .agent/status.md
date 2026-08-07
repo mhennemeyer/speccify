@@ -4,9 +4,35 @@
 - **Typ:** Code
 - **Phase:** **Neuausrichtung auf Workflow-Playbooks abgeschlossen (2026-08-06)** — W1–W5 geliefert: Rückbau des Codegen-Zweigs, Playbook-Schema (Neustart bei `schema_version: 1`), Playbooks als Bundles, `speccify check` gegen Verrottung, read-only Viewer mit Workflow-Diagramm, Kontext-Brücke zum Agenten (`viewer_selection` / `playbook_propose`), Außendarstellung komplett auf Playbooks und Englisch. Offen nur noch BO-Aktionen (Repo öffentlich, Index säen, Doku-Site deployen, IAP-Playbook gegenlesen). Plan archiviert: [`plans/archive/neuausrichtung-workflow-playbooks.md`](./plans/archive/neuausrichtung-workflow-playbooks.md). Branch: `feat/oss-pivot`. Historie der Komponenten-Ära (P1–P6.1) in [`plans/archive/pivot-open-source-git-composer.md`](./plans/archive/pivot-open-source-git-composer.md).
 - **Priorität:** Hoch (aktiver Umbau)
-- **Zuletzt aktualisiert:** 2026-08-06
+- **Zuletzt aktualisiert:** 2026-08-07
 
 ## Nächste Schritte
+- **VERÖFFENTLICHT (2026-08-07)**: Repo ist öffentlich unter
+  <https://github.com/mhennemeyer/speccify>, `main` ist Default. Der 2009er
+  RSpec-Klon gleichen Namens bleibt unangetastet unter `master` — nichts
+  verloren, alte Links funktionieren.
+  **Website live**: <https://mhennemeyer.github.io/speccify/> (21 Seiten), per
+  `pages.yml` bei jedem Push auf `main`. `public/CNAME` trägt speccify.io; die
+  Domain wird aktiv, sobald der BO DNS setzt und die Custom-Domain in den
+  Pages-Einstellungen einträgt (Werte in `docs/launch.md`).
+  **Release-Pipeline**: `release.yml` baut auf `v*`-Tags (Sidecars,
+  Engine-Payload, `tauri build`) und legt einen **Entwurfs**-Release an.
+  Signierung und Updater hängen an Secrets; ohne sie läuft sie und liefert
+  unsigniert. **Noch nie ausgeführt** — es gibt keinen Tag (BO setzt Tags).
+  **Erster CI-Lauf überhaupt** (es gab nie ein Remote) hat sechs echte Fehler
+  freigelegt, alle behoben: Playwright 1.44 kennt Ubuntu 24.04 nicht
+  (`libasound2` → `libasound2t64`), Node 20 vs. Astros >= 22.12 (jetzt eine
+  Quelle: `.nvmrc`), `ruff format` lief lokal nie mit, ein Typfehler in
+  `search.py` — **weil mypy lokal kaputt war**: `.venv/bin/mypy` hatte einen
+  Shebang auf die venv eines fremden Projekts, von iCloud hierher
+  synchronisiert. lychee ohne `--root-dir` (450 Scheinfehler), danach ein
+  echter: fehlendes `favicon.svg` auf allen Doku-Seiten. Dabei fiel die letzte
+  alte Beschreibung auf („npm für Spezifikationen") — sie stand in
+  `astro.config.mjs`, nicht in Markdown, deshalb hatte W5 sie übersehen.
+  **Achtung iCloud**: Das Repo liegt unter `~/Desktop` und wird synchronisiert;
+  70 Konfliktkopien (`datei 2.ext`) lagen im Arbeitsverzeichnis und haben die
+  lokale Testzahl still verfälscht (253 statt 157). Per `.gitignore`
+  ausgesperrt — das eigentliche Problem bleibt der Ablageort.
 - **W1 GELIEFERT (2026-08-06)**: Schnitt und Fundament stehen — Rückbau des
   Codegen-Zweigs (Archiv-Branch `archive/pre-playbook-pivot`), neues
   Playbook-Schema (Neustart bei `schema_version: 1`), Playbooks als **Bundles**
@@ -189,6 +215,32 @@ Fundament für alle weiteren Phasen.
   Mypy + Pytest + `speccify lint` ab.
 
 ## Nächste Schritte
+- **VERÖFFENTLICHT (2026-08-07)**: Repo ist öffentlich unter
+  <https://github.com/mhennemeyer/speccify>, `main` ist Default. Der 2009er
+  RSpec-Klon gleichen Namens bleibt unangetastet unter `master` — nichts
+  verloren, alte Links funktionieren.
+  **Website live**: <https://mhennemeyer.github.io/speccify/> (21 Seiten), per
+  `pages.yml` bei jedem Push auf `main`. `public/CNAME` trägt speccify.io; die
+  Domain wird aktiv, sobald der BO DNS setzt und die Custom-Domain in den
+  Pages-Einstellungen einträgt (Werte in `docs/launch.md`).
+  **Release-Pipeline**: `release.yml` baut auf `v*`-Tags (Sidecars,
+  Engine-Payload, `tauri build`) und legt einen **Entwurfs**-Release an.
+  Signierung und Updater hängen an Secrets; ohne sie läuft sie und liefert
+  unsigniert. **Noch nie ausgeführt** — es gibt keinen Tag (BO setzt Tags).
+  **Erster CI-Lauf überhaupt** (es gab nie ein Remote) hat sechs echte Fehler
+  freigelegt, alle behoben: Playwright 1.44 kennt Ubuntu 24.04 nicht
+  (`libasound2` → `libasound2t64`), Node 20 vs. Astros >= 22.12 (jetzt eine
+  Quelle: `.nvmrc`), `ruff format` lief lokal nie mit, ein Typfehler in
+  `search.py` — **weil mypy lokal kaputt war**: `.venv/bin/mypy` hatte einen
+  Shebang auf die venv eines fremden Projekts, von iCloud hierher
+  synchronisiert. lychee ohne `--root-dir` (450 Scheinfehler), danach ein
+  echter: fehlendes `favicon.svg` auf allen Doku-Seiten. Dabei fiel die letzte
+  alte Beschreibung auf („npm für Spezifikationen") — sie stand in
+  `astro.config.mjs`, nicht in Markdown, deshalb hatte W5 sie übersehen.
+  **Achtung iCloud**: Das Repo liegt unter `~/Desktop` und wird synchronisiert;
+  70 Konfliktkopien (`datei 2.ext`) lagen im Arbeitsverzeichnis und haben die
+  lokale Testzahl still verfälscht (253 statt 157). Per `.gitignore`
+  ausgesperrt — das eigentliche Problem bleibt der Ablageort.
 - [x] Phase 1b Step 1 — `speccify init <name> [--target react]` (minimal:
       nur `speccify.yaml`, kein Skeleton). 7 neue CLI-Tests grün, alle 81
       Tests grün, ruff/format/mypy clean.
