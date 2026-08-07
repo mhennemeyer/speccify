@@ -14,9 +14,11 @@ from inside the repository.
       the site still match the repository.
 - [x] **Releases build themselves.** `release.yml` builds the app on a `v*`
       tag and opens a draft release.
-- [ ] **Point speccify.io at GitHub Pages.** Four `A` records for the apex and
-      a `CNAME` for `www` — the exact values are below. `apps/marketing/public/CNAME`
-      already carries the domain, so nothing else changes when DNS resolves.
+- [x] **speccify.io points at GitHub Pages.** Four `A` records on the apex, a
+      `CNAME` for `www`, custom domain set, Let's Encrypt certificate issued and
+      HTTPS enforced. The wildcard `*.example.com` record was removed: it served
+      a stranger's 404 page under the domain and would have masked a typo in any
+      future subdomain record with a page instead of `NXDOMAIN`.
 - [ ] **Check `LICENSE` and the author line.** MIT, one copyright holder.
 - [ ] **Seed the index repository.** Discovery needs at least one index with a
       handful of entries, otherwise `speccify search` is an empty room. Format
