@@ -249,9 +249,7 @@ def test_uninformative_200_does_not_calibrate() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(200, html=shell)
 
-    findings = _check(
-        _sources_playbook("https://spa.example/a", "https://spa.example/b"), handler
-    )
+    findings = _check(_sources_playbook("https://spa.example/a", "https://spa.example/b"), handler)
     assert findings == [], [f.format() for f in findings]
 
 

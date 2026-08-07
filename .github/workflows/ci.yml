@@ -153,8 +153,11 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-composer-${{ runner.os }}-1.44.0
+          key: playwright-composer-${{ runner.os }}-1.62.1
 
+      # `--with-deps` on Ubuntu 24.04 needs a Playwright that knows the
+      # time_t transition: noble renamed libasound2 to libasound2t64, and
+      # older releases still ask for the old name and fail with apt code 100.
       - name: Install Playwright Chromium
         run: pnpm --filter speccify-composer exec playwright install --with-deps chromium
 

@@ -69,3 +69,12 @@ apps/composer/playwright-report/
 .agent/chats/
 # Reste eines abgelösten Agent-Tools (durch `.agent/` ersetzt).
 .junie/
+
+# iCloud-Konfliktkopien. Das Repo liegt unter ~/Desktop, der bei aktivem
+# „Schreibtisch & Dokumente" von iCloud synchronisiert wird; dabei entstehen
+# Dubletten der Form `datei 2.ext`. Sie werden von pytest und ruff
+# mitgesammelt und haben die lokale Testzahl still verfälscht.
+* [0-9].*
+* [0-9][0-9].*
+* [0-9]
+* [0-9][0-9]

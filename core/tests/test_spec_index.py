@@ -239,16 +239,24 @@ def test_entry_carries_platform_and_stack() -> None:
 
 
 def test_stack_is_searchable_and_outranks_a_keyword_hit() -> None:
-    """"What do I have for Tauri?" must be a lookup, not a substring hunt."""
+    """ "What do I have for Tauri?" must be a lookup, not a substring hunt."""
     for_tauri = parse_index_entry(
-        _entry("git+https://host/a", "Notarize", "Ship it.", keywords="[codesign]",
-               stack="[tauri]").encode(),
-        origin="i", name="a.yaml",
+        _entry(
+            "git+https://host/a", "Notarize", "Ship it.", keywords="[codesign]", stack="[tauri]"
+        ).encode(),
+        origin="i",
+        name="a.yaml",
     )
     mentions_it = parse_index_entry(
-        _entry("git+https://host/b", "Something else", "Unrelated.",
-               keywords="[tauri-adjacent]", stack="[]").encode(),
-        origin="i", name="b.yaml",
+        _entry(
+            "git+https://host/b",
+            "Something else",
+            "Unrelated.",
+            keywords="[tauri-adjacent]",
+            stack="[]",
+        ).encode(),
+        origin="i",
+        name="b.yaml",
     )
     hits = search_index([mentions_it, for_tauri], "tauri")
     assert [h.source for h in hits] == ["git+https://host/a", "git+https://host/b"]
@@ -257,9 +265,16 @@ def test_stack_is_searchable_and_outranks_a_keyword_hit() -> None:
 def test_platform_matches_exactly_not_by_substring() -> None:
     """`ios` must not match `macos` — that is why axes compare exactly."""
     entry = parse_index_entry(
-        _entry("git+https://host/a", "Mac thing", "Only for the Mac.",
-               keywords="[codesign]", platforms="[macos]", stack="[]").encode(),
-        origin="i", name="a.yaml",
+        _entry(
+            "git+https://host/a",
+            "Mac thing",
+            "Only for the Mac.",
+            keywords="[codesign]",
+            platforms="[macos]",
+            stack="[]",
+        ).encode(),
+        origin="i",
+        name="a.yaml",
     )
     assert search_index([entry], "macos") == [entry]
     assert search_index([entry], "ios") == []
