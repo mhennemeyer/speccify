@@ -1,16 +1,21 @@
 ---
-// Download page for the desktop app. While no signed release exists,
-// PUBLIC_DOWNLOAD_URL is empty and the page shows the self-build route instead
-// of a dead link.
+// Download page for the desktop app.
+//
+// The download always points at the latest GitHub release, so this page never
+// needs redeploying when a release ships. What it must be honest about is the
+// Gatekeeper warning: the build is not signed with an Apple Developer ID yet,
+// and a download page that hides that produces "the app is damaged" reports.
 import MarketingLayout from "../layouts/MarketingLayout.astro";
 
 const title = "Download Speccify for macOS";
 const description =
   "The Speccify desktop app: playbook viewer, MCP servers and agent terminal in one signed app — no repository, no toolchain.";
 
-const downloadUrl = import.meta.env.PUBLIC_DOWNLOAD_URL ?? "";
-const version = import.meta.env.PUBLIC_DOWNLOAD_VERSION ?? "";
-const hasRelease = Boolean(downloadUrl);
+const repo = "https://github.com/mhennemeyer/speccify";
+// Resolves to the newest published release; no rebuild of this page needed.
+const downloadUrl = `${repo}/releases/latest`;
+// Set once a Developer ID certificate is in the repository secrets.
+const isSigned = import.meta.env.PUBLIC_RELEASE_SIGNED === "true";
 
 const features = [
   {
@@ -46,42 +51,59 @@ const features = [
         Rust, no Python setup — it brings everything it needs.
       </p>
 
+      <div class="flex flex-col items-center gap-3">
+        <a
+          href={downloadUrl}
+          class="rounded-md bg-sky-500 px-6 py-3 text-lg font-medium text-white transition hover:bg-sky-400"
+        >
+          Download the latest release
+        </a>
+        <p class="text-sm text-slate-400">
+          Apple Silicon · macOS 11 or newer{isSigned ? " · signed and notarized" : ""}
+        </p>
+      </div>
+
       {
-        hasRelease ? (
-          <div class="flex flex-col items-center gap-3">
-            <a
-              href={downloadUrl}
-              class="rounded-md bg-sky-500 px-6 py-3 text-lg font-medium text-white transition hover:bg-sky-400"
-            >
-              Download Speccify {version} (.dmg)
-            </a>
-            <p class="text-sm text-slate-400">
-              Apple Silicon · macOS 11 or newer · signed and notarized
+        !isSigned && (
+          <div class="w-full rounded-xl border border-amber-500/40 bg-amber-500/5 p-6 text-left">
+            <p class="text-lg font-semibold text-amber-200">
+              Gatekeeper will complain on first launch
             </p>
-          </div>
-        ) : (
-          <div class="w-full rounded-xl border border-slate-800 bg-slate-900/50 p-8 text-left">
-            <p class="text-lg font-semibold text-slate-200">
-              No public build yet
+            <p class="mt-2 text-slate-300">
+              The build is not signed with an Apple Developer ID yet, so macOS
+              refuses it the first time — usually with “Speccify is damaged and
+              can’t be opened”, which is misleading: nothing is damaged, it is
+              simply unsigned. Open it once via right-click → Open, or lift the
+              quarantine flag:
             </p>
-            <p class="mt-2 text-slate-400">
-              The app is finished; the signed release is still pending. Until
-              then you build it yourself in two steps — the script fetches
-              dependencies, builds the app and starts it:
-            </p>
-            <pre class="mt-4 overflow-x-auto rounded-lg border border-slate-800 bg-slate-950 p-4 text-sm text-slate-200"><code>git clone https://github.com/speccify/speccify
-cd speccify && ./scripts/dev.sh --release</code></pre>
+            <pre class="mt-4 overflow-x-auto rounded-lg border border-slate-800 bg-slate-950 p-4 text-sm text-slate-200"><code>xattr -dr com.apple.quarantine /Applications/Speccify.app</code></pre>
             <p class="mt-4 text-sm text-slate-400">
-              Prerequisites for building it yourself:
-              <code class="rounded bg-slate-800 px-1.5 py-0.5">uv</code>,
-              <code class="rounded bg-slate-800 px-1.5 py-0.5">pnpm</code> and
-              <code class="rounded bg-slate-800 px-1.5 py-0.5">cargo</code> —
-              the script checks for them and names the install command if one
-              is missing.
+              Only do that for software you trust. If you would rather not,
+              build it yourself — the instructions are below, and the result is
+              identical because the release is built from this repository by a
+              public workflow.
             </p>
           </div>
         )
       }
+
+      <div class="w-full rounded-xl border border-slate-800 bg-slate-900/50 p-6 text-left">
+        <p class="text-lg font-semibold text-slate-200">Or build it yourself</p>
+        <p class="mt-2 text-slate-400">
+          Two steps — the script fetches dependencies, builds the app and starts
+          it:
+        </p>
+        <pre class="mt-4 overflow-x-auto rounded-lg border border-slate-800 bg-slate-950 p-4 text-sm text-slate-200"><code>git clone https://github.com/mhennemeyer/speccify
+cd speccify && ./scripts/dev.sh --release</code></pre>
+        <p class="mt-4 text-sm text-slate-400">
+          Prerequisites:
+          <code class="rounded bg-slate-800 px-1.5 py-0.5">uv</code>,
+          <code class="rounded bg-slate-800 px-1.5 py-0.5">pnpm</code> and
+          <code class="rounded bg-slate-800 px-1.5 py-0.5">cargo</code> — the
+          script checks for them and names the install command if one is
+          missing.
+        </p>
+      </div>
     </section>
 
     <section class="grid gap-6 py-8 md:grid-cols-2">

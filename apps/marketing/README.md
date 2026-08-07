@@ -46,8 +46,6 @@ Plausible wird **nur in Production** und **nur** bei gesetzter Env-Variable
 
 | Variable | Beispiel |
 |---|---|
-| `PUBLIC_DOWNLOAD_URL` | `https://speccify.io/releases/Speccify_0.2.0_aarch64.dmg` |
-| `PUBLIC_DOWNLOAD_VERSION` | `0.2.0` |
 
 Ohne die Variablen erscheint statt eines toten Links die Selbstbau-Anleitung
 (`./scripts/dev.sh --release`) — gleiches Muster wie `PUBLIC_PLAYGROUND_URL`

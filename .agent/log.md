@@ -1966,11 +1966,11 @@
   Diagramm-Klick, gerendertes Markdown, Quellen-Alter und Index-Suche ab),
   Viewer-Build 323 kB, ruff clean, Doku-Sync ohne Drift, Screenshot geprüft.
 - BO hat die Referenz-Projekte fürs IAP-Playbook genannt:
-  `~/Desktop/Work/Personal/privid` und `~/Desktop/Work/CmdCeeVee` — im Plan
+  zwei eigene, nicht öffentliche Apps (Pfade im BO-Gedächtnis) — im Plan
   notiert (nur lesen, fremde Repos).
 
 ## 2026-08-06 (IAP-Referenz-Playbook aus zwei echten Projekten)
-- Beide BO-Projekte gelesen (`privid`, `CmdCeeVee`) — dort nichts geschrieben.
+- Beide BO-Projekte gelesen — dort nichts geschrieben.
   Sie lösen dasselbe Problem und kommen zur selben Architektur: freie App +
   NonConsumable-Freischaltung + **selbstgebaute** 7-Tage-Frist.
 - Die Erkenntnis, die den Rechercheaufwand ausmacht und jetzt als erster
@@ -1980,8 +1980,8 @@
 - Die zweite Erkenntnis: Die Uhr ist trivial, die **Persistenz** nicht.
   UserDefaults überlebt Backups, aber nicht das Löschen; die Keychain
   überlebt das Löschen, aber nicht das neue Gerät; iCloud KVS spannt über
-  Geräte, braucht aber ein Konto. `privid` nutzt Keychain + UserDefaults,
-  `CmdCeeVee` iCloud + UserDefaults — im Playbook stehen alle drei mit ihren
+  Geräte, braucht aber ein Konto. Die eine App nutzt Keychain + UserDefaults,
+  die andere iCloud + UserDefaults — im Playbook stehen alle drei mit ihren
   Überlebenseigenschaften und der Merge-Regel „frühester Start gewinnt".
 - Weitere Fallstricke aus dem echten Code: High-Water-Mark gegen
   zurückgestellte Uhren (bewusst ohne Bestrafung), `Transaction.updates` vor

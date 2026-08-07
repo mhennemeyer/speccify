@@ -1,9 +1,31 @@
-# Release: signierte Speccify.app für macOS
+# Release: Speccify.app für macOS
 
 Speccify wird **außerhalb des App Store** verteilt (Plan
-[`r5-distribution.md`](../.agent/plans/archive/r5-distribution.md), D5): Download von
-speccify.io statt Store, ohne Sandbox — der Exec-MCP und der Prozess-Supervisor
-starten beliebige CLI-Befehle, das ginge sandboxed nicht.
+[`r5-distribution.md`](../.agent/plans/archive/r5-distribution.md), D5): Download über
+GitHub-Releases statt Store, ohne Sandbox — der Exec-MCP und der
+Prozess-Supervisor starten beliebige CLI-Befehle, das ginge sandboxed nicht.
+
+## Der normale Weg: ein Tag
+
+`.github/workflows/release.yml` baut auf jedem `v*`-Tag: Sidecars,
+Engine-Payload, `tauri build`, und legt einen **Entwurfs-Release** an. Der
+letzte Blick auf das, was Nutzer bekommen, ist ein Mensch, der die
+Release-Seite öffnet — nicht eine grüne Pipeline.
+
+```bash
+git tag v0.2.0 && git push origin v0.2.0
+```
+
+Ohne hinterlegte Secrets baut die Pipeline **unsigniert** und der Updater
+bleibt inert. Das ist Absicht: eine Pipeline, die erst mit Apple-Konto läuft,
+ist eine Pipeline, die man erst beim Launch zum ersten Mal testet. Welche
+Secrets was freischalten, steht im Kopf des Workflows.
+
+Das lokale Skript unten bleibt für Tests und für den Fall, dass man ohne CI
+ausliefern will.
+
+---
+
 
 Damit macOS die heruntergeladene App startet, braucht sie beides:
 
@@ -181,7 +203,7 @@ aus. Diesen in `apps/desktop/src-tauri/tauri.conf.json` eintragen:
 ```jsonc
 "plugins": {
   "updater": {
-    "endpoints": ["https://speccify.io/releases/latest.json"],
+    "endpoints": ["https://github.com/mhennemeyer/speccify/releases/latest/download/latest.json"],
     "pubkey": "<hier der Public Key>"
   }
 }
@@ -223,7 +245,7 @@ Der Endpoint muss dieses JSON liefern (Tauri-2-Format):
   "platforms": {
     "darwin-aarch64": {
       "signature": "<kompletter Inhalt von Speccify.app.tar.gz.sig>",
-      "url": "https://speccify.io/releases/Speccify_0.2.0_aarch64.app.tar.gz"
+      "url": "https://github.com/mhennemeyer/speccify/releases/download/v0.2.0/Speccify_0.2.0_aarch64.app.tar.gz"
     }
   }
 }

@@ -21,7 +21,7 @@ which is the whole tool minus the viewer.
 ## Set up
 
 ```bash
-git clone <repo-url> speccify && cd speccify
+git clone https://github.com/mhennemeyer/speccify && cd speccify
 uv sync --all-packages
 pnpm install --frozen-lockfile
 ```

@@ -17,4 +17,4 @@ members = [
 version = "0.0.0"
 edition = "2024"
 license = "MIT"
-repository = "https://github.com/speccify/speccify"
+repository = "https://github.com/mhennemeyer/speccify"

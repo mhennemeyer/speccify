@@ -226,7 +226,7 @@ Offen (BO): Index säen, Doku-Site deployen — beide in `docs/launch.md`.
 ## Offene Fragen an den BO
 
 1. **Sprache der Playbooks**: Doku und Repo sind deutsch, ein OSS-Ökosystem für Playbooks wäre auf Englisch reichweitenstärker. Für Schema-Felder und Referenz-Playbooks brauche ich eine Festlegung.
-2. **Referenz-Playbook** — *erledigt 2026-08-06*: `@speccify/iap-trial-then-unlock` (9 Schritte, 9 Quellen, 3 Assets) plus das Child `@speccify/storekit-sandbox-testing`, geschrieben aus `privid` und `CmdCeeVee` (nur gelesen, dort nichts committet). **Wartet auf BO-Korrektur** — besonders bei: Grandfathering-Details, ob „read-only statt Sperre" so gewollt ist, und ob die iCloud-Variante (CmdCeeVee) oder die Keychain-Variante (privid) als Empfehlung vorn stehen soll.
+2. **Referenz-Playbook** — *erledigt 2026-08-06*: `@speccify/iap-trial-then-unlock` (9 Schritte, 9 Quellen, 3 Assets) plus das Child `@speccify/storekit-sandbox-testing`, geschrieben aus zwei eigene, nicht öffentliche Apps (nur gelesen, dort nichts committet). **Wartet auf BO-Korrektur** — besonders bei: Grandfathering-Details, ob „read-only statt Sperre" so gewollt ist, und ob die iCloud-Variante oder die Keychain-Variante als Empfehlung vorn stehen soll.
 
    Bestätigt beim Schreiben: **Apple hat für Einmalkäufe keinen Testzeitraum** (Free Trials sind Introductory Offers = nur Abos). Das ist die Erkenntnis, die den Rechercheaufwand ausmacht, und sie steht jetzt als erster Schritt im Playbook.
 3. **Granularität**: Wie klein darf ein Child-Playbook sein („Datei in Xcode-Target aufnehmen")? Das entscheidet, ob Wiederverwendung real wird oder Deko bleibt.

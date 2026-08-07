@@ -63,3 +63,9 @@ apps/composer/e2e/.git-fixture/
 apps/composer/e2e/.registry-tmp/
 apps/composer/test-results/
 apps/composer/playwright-report/
+
+# Agent-Sitzungsartefakte: rohe Chat-Transkripte mit absoluten Pfaden. Sie
+# dokumentieren nichts, was `.agent/log.md` nicht besser sagt.
+.agent/chats/
+# Reste eines abgelösten Agent-Tools (durch `.agent/` ersetzt).
+.junie/

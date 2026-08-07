@@ -11,7 +11,9 @@
   },
   "plugins": {
     "updater": {
-      "endpoints": ["https://speccify.io/releases/latest.json"],
+      "endpoints": [
+        "https://github.com/mhennemeyer/speccify/releases/latest/download/latest.json"
+      ],
       "pubkey": ""
     }
   },
@@ -38,7 +40,9 @@
       "binaries/speccify-parallels-mcp",
       "binaries/uv"
     ],
-    "resources": ["resources/**/*"],
+    "resources": [
+      "resources/**/*"
+    ],
     "macOS": {
       "minimumSystemVersion": "10.15",
       "hardenedRuntime": true

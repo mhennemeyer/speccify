@@ -6,30 +6,56 @@ from inside the repository.
 
 ## Before the repository goes public
 
-- [ ] **Create the remote and push.** There is no git remote today. The default
-      branch should be `main`; `feat/oss-pivot` carries the current work.
+- [x] **Remote and workflows.** `main` is the default branch;
+      `master` holds an unrelated 2009 project of the same name and is left
+      untouched, so old links keep working.
+- [x] **Site deploys itself.** `pages.yml` publishes `apps/marketing/` to
+      GitHub Pages on every push to `main`, after re-checking that the docs on
+      the site still match the repository.
+- [x] **Releases build themselves.** `release.yml` builds the app on a `v*`
+      tag and opens a draft release.
+- [ ] **Point speccify.io at GitHub Pages.** Four `A` records for the apex and
+      a `CNAME` for `www` — the exact values are below. `apps/marketing/public/CNAME`
+      already carries the domain, so nothing else changes when DNS resolves.
 - [ ] **Check `LICENSE` and the author line.** MIT, one copyright holder.
-- [ ] **Decide what the archive branches say.** `archive/pre-oss-pivot-registry`
-      and `archive/pre-playbook-pivot` hold the two abandoned directions. They
-      are honest history and cost nothing to keep — but they are public once
-      pushed. Either push them with that framing or leave them local.
 - [ ] **Seed the index repository.** Discovery needs at least one index with a
       handful of entries, otherwise `speccify search` is an empty room. Format
       and the pull-request flow are in [`../index/README.md`](../index/README.md).
-- [ ] **Deploy the docs site.** `pnpm --filter speccify-marketing build`
-      produces a static site; [`deploy.md`](./deploy.md) has the target.
+
+### DNS for speccify.io
+
+```
+A      @      185.199.108.153
+A      @      185.199.109.153
+A      @      185.199.110.153
+A      @      185.199.111.153
+CNAME  www    mhennemeyer.github.io.
+```
+
+Then enable *Enforce HTTPS* in the repository's Pages settings — it only
+becomes available once the certificate has been issued, which takes a few
+minutes after DNS propagates.
 
 ## Optional, and clearly marked as pending
 
-Neither blocks a launch, and both are visible on the site as "not yet":
+Neither blocks a launch, and the first is visible on the site as "not yet":
 
-- [ ] **Signed Mac app.** Needs an Apple Developer ID and an app-specific
-      password, then `./scripts/release_macos.sh`. Until `PUBLIC_DOWNLOAD_URL`
-      is set, the download page shows the self-build route instead of a dead
-      link.
-- [ ] **Updater key.** `pnpm --filter speccify-desktop tauri signer generate`.
-      The public key in `tauri.conf.json` is empty today, which keeps the
-      updater deliberately inert rather than half-wired.
+- [ ] **Signed Mac app.** Needs an Apple Developer ID certificate and an
+      app-specific password as repository secrets — the workflow header lists
+      the exact names. Until then the release is unsigned, and the download
+      page says so plainly instead of letting people meet "Speccify is damaged"
+      with no explanation. Set the repository variable
+      `PUBLIC_RELEASE_SIGNED=true` once signing is live to drop that notice.
+- [ ] **Updater key.**
+      `pnpm --filter speccify-desktop tauri signer generate -w ~/.speccify/updater.key`,
+      then the private key as the secret `TAURI_SIGNING_PRIVATE_KEY` and the
+      public key as the repository *variable* `TAURI_UPDATER_PUBKEY`. The
+      updater stays deliberately inert until both exist — a half-wired updater
+      is worse than none.
+- [ ] **Intel Macs.** The release builds for Apple Silicon only, because
+      `build_sidecars.sh` builds sidecars for the host triple and a universal
+      bundle needs both. It is a change to that script, not a flag in the
+      workflow.
 
 ## What to say
 

@@ -1,0 +1,200 @@
+name: Release desktop app
+
+# Builds Speccify.app on a tag and publishes it as a GitHub release.
+#
+# The app has to run on a machine with no Rust, no Python and no pnpm, so the
+# build assembles three things before Tauri packages anything:
+#
+#   1. sidecars  — the Rust MCP binaries plus a pinned `uv`, named per target
+#                  triple (scripts/build_sidecars.sh, which calls fetch_uv.sh)
+#   2. payload   — the Python engine as wheels, the built viewer and the
+#                  reference playbooks (scripts/build_engine_payload.sh)
+#   3. bundle    — `tauri build`
+#
+# Signing and the updater are OPTIONAL and driven entirely by secrets. With
+# none set, this produces an unsigned .dmg and no updater artifacts — which is
+# the honest first release rather than a pipeline that cannot run until an
+# Apple account exists. Add the secrets and the same workflow signs, notarizes
+# and publishes `latest.json`, with no change to this file:
+#
+#   APPLE_CERTIFICATE            base64 of the Developer ID .p12
+#   APPLE_CERTIFICATE_PASSWORD   its password
+#   APPLE_SIGNING_IDENTITY       "Developer ID Application: Name (TEAMID)"
+#   APPLE_ID / APPLE_PASSWORD / APPLE_TEAM_ID     for notarization
+#   TAURI_SIGNING_PRIVATE_KEY / ..._PASSWORD      for the updater
+#
+# Generate the updater key with:
+#   pnpm --filter speccify-desktop tauri signer generate -w ~/.speccify/updater.key
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to build (must already exist)"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: macOS (Apple Silicon)
+    runs-on: macos-14
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.tag || github.ref }}
+          # build_engine_payload.sh derives nothing from history, but a shallow
+          # clone would hide tags the release notes refer to.
+          fetch-depth: 0
+
+      # Apple Silicon only, deliberately: build_sidecars.sh builds for the
+      # host triple, and a universal bundle needs every sidecar for both
+      # architectures. Intel support is a change to that script, not a flag
+      # here — see docs/release.md.
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            crates
+            apps/desktop/src-tauri
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      - name: Set up Python (from .python-version)
+        run: uv python install
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: pnpm
+
+      - name: Install dependencies
+        run: |
+          uv sync --all-packages
+          pnpm install --frozen-lockfile
+
+      # A release that ships a broken engine is worse than a late one.
+      - name: Test
+        run: |
+          uv run pytest
+          uv run speccify lint playbooks/
+
+      # `secrets` is not among the contexts available to `if:`, so the
+      # presence of each credential is translated into an output once.
+      - name: Detect available credentials
+        id: caps
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_UPDATER_PUBKEY: ${{ vars.TAURI_UPDATER_PUBKEY }}
+        run: |
+          if [ -n "$APPLE_CERTIFICATE" ]; then
+            echo "signing=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "signing=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::No Apple certificate configured — building unsigned."
+          fi
+          if [ -n "$TAURI_SIGNING_PRIVATE_KEY" ] && [ -n "$TAURI_UPDATER_PUBKEY" ]; then
+            echo "updater=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "updater=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Updater stays inert — needs both the signing key and the public key."
+          fi
+
+      - name: Build sidecars (MCP binaries + pinned uv)
+        run: ./scripts/build_sidecars.sh
+
+      - name: Build engine payload (wheels + viewer + playbooks)
+        run: ./scripts/build_engine_payload.sh
+
+      # Import the Developer ID certificate into a throwaway keychain. Skipped
+      # entirely when the secret is absent, so the unsigned path stays green.
+      - name: Import signing certificate
+        if: steps.caps.outputs.signing == 'true'
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+        run: |
+          KEYCHAIN=$RUNNER_TEMP/build.keychain
+          KEYCHAIN_PASSWORD=$(uuidgen)
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          echo -n "$APPLE_CERTIFICATE" | base64 --decode -o "$RUNNER_TEMP/cert.p12"
+          security import "$RUNNER_TEMP/cert.p12" -k "$KEYCHAIN" \
+            -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: \
+            -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN" >/dev/null
+          security list-keychain -d user -s "$KEYCHAIN" login.keychain
+          rm -f "$RUNNER_TEMP/cert.p12"
+
+      # The updater refuses to be half-wired: artifacts are only produced when
+      # there is a key to sign them with and a public key to verify them
+      # against. Without both, the app ships with the updater inert — which is
+      # what tauri.conf.json says out of the box.
+      - name: Enable updater artifacts
+        if: steps.caps.outputs.updater == 'true'
+        env:
+          CONF: apps/desktop/src-tauri/tauri.conf.json
+          TAURI_UPDATER_PUBKEY: ${{ vars.TAURI_UPDATER_PUBKEY }}
+        run: |
+          python3 -c 'import json, os; p = os.environ["CONF"]; c = json.load(open(p)); c.setdefault("bundle", {})["createUpdaterArtifacts"] = True; c.setdefault("plugins", {}).setdefault("updater", {})["pubkey"] = os.environ["TAURI_UPDATER_PUBKEY"]; json.dump(c, open(p, "w"), indent=2)'
+          echo "updater artifacts enabled"
+
+      - name: Build and publish
+        uses: tauri-apps/tauri-action@v0
+        env:
+          # Signing — empty means unsigned, which tauri handles without failing.
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          # Notarization — only attempted when all three are present.
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          # Updater signature.
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectPath: apps/desktop
+          tagName: ${{ github.event.inputs.tag || github.ref_name }}
+          releaseName: "Speccify __VERSION__"
+          releaseBody: |
+            Playbooks for complex, recurring workflows.
+
+            **Apple Silicon, macOS 11 or newer.** Intel Macs are not covered yet.
+
+            This build is not signed with an Apple Developer ID yet, so
+            Gatekeeper will refuse it on first launch. Open it once with
+            right-click → Open, or run:
+
+            ```
+            xattr -dr com.apple.quarantine /Applications/Speccify.app
+            ```
+
+            On first launch the app builds its Python environment from the
+            bundled payload — one click in the Environment tab. That needs an
+            internet connection once; everything after runs offline.
+          # Draft on purpose: the last look at what reaches people is a
+          # human opening the release page, not a green pipeline.
+          releaseDraft: true
+          prerelease: false

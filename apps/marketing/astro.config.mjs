@@ -38,7 +38,7 @@ export default defineConfig({
         {
           icon: "github",
           label: "GitHub",
-          href: "https://github.com/speccify/speccify",
+          href: "https://github.com/mhennemeyer/speccify",
         },
       ],
       sidebar: [

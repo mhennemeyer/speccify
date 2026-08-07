@@ -31,7 +31,7 @@
   Markdown, Alter und Index ab), Viewer-Build 323 kB.**
 - **IAP-REFERENZ-PLAYBOOK GESCHRIEBEN (2026-08-06)**: `@speccify/iap-trial-then-unlock`
   (9 Schritte, 9 Quellen, 3 Assets) + Child `@speccify/storekit-sandbox-testing`,
-  destilliert aus `privid` und `CmdCeeVee` (beide nur gelesen). Kern: **Apple
+  destilliert aus zwei eigene, nicht öffentliche Apps (beide nur gelesen). Kern: **Apple
   hat für Einmalkäufe keinen Testzeitraum** — Free Trials sind Introductory
   Offers und damit abo-only; die eigentliche Arbeit ist, wo der Trial-Start
   liegt (UserDefaults/Keychain/iCloud kombinieren, frühester Start gewinnt).
