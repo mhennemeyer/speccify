@@ -4,7 +4,7 @@ version = "0.0.0"
 description = "Speccify monorepo workspace — playbooks for complex, recurring workflows."
 requires-python = ">=3.12"
 license = { text = "MIT" }
-authors = [{ name = "Marc Hennemeyer" }]
+authors = [{ name = "Matthias Hennemeyer" }]
 
 [tool.uv.workspace]
 members = ["core", "cli", "mcp", "apps/web/backend"]

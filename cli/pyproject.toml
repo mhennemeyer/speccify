@@ -4,7 +4,7 @@ version = "0.0.0"
 description = "Speccify CLI — `speccify` command (init, add, pull, lock, verify, publish, lint)."
 requires-python = ">=3.12"
 license = { text = "MIT" }
-authors = [{ name = "Marc Hennemeyer" }]
+authors = [{ name = "Matthias Hennemeyer" }]
 dependencies = [
     "speccify-core",
     "typer>=0.12",

@@ -4,7 +4,7 @@ version = "0.0.0"
 description = "Speccify web playground backend — thin FastAPI adapter over speccify-core."
 requires-python = ">=3.12"
 license = { text = "MIT" }
-authors = [{ name = "Marc Hennemeyer" }]
+authors = [{ name = "Matthias Hennemeyer" }]
 dependencies = [
     "speccify-core",
     "fastapi>=0.115,<1.0",
