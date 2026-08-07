@@ -131,27 +131,6 @@ jobs:
       - name: Build engine payload (wheels + viewer + playbooks)
         run: ./scripts/build_engine_payload.sh
 
-      # Import the Developer ID certificate into a throwaway keychain. Skipped
-      # entirely when the secret is absent, so the unsigned path stays green.
-      - name: Import signing certificate
-        if: steps.caps.outputs.signing == 'true'
-        env:
-          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
-          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-        run: |
-          KEYCHAIN=$RUNNER_TEMP/build.keychain
-          KEYCHAIN_PASSWORD=$(uuidgen)
-          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
-          security set-keychain-settings -lut 21600 "$KEYCHAIN"
-          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
-          echo -n "$APPLE_CERTIFICATE" | base64 --decode -o "$RUNNER_TEMP/cert.p12"
-          security import "$RUNNER_TEMP/cert.p12" -k "$KEYCHAIN" \
-            -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
-          security set-key-partition-list -S apple-tool:,apple:,codesign: \
-            -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN" >/dev/null
-          security list-keychain -d user -s "$KEYCHAIN" login.keychain
-          rm -f "$RUNNER_TEMP/cert.p12"
-
       # The updater refuses to be half-wired: artifacts are only produced when
       # there is a key to sign them with and a public key to verify them
       # against. Without both, the app ships with the updater inert — which is
@@ -165,20 +144,46 @@ jobs:
           python3 -c 'import json, os; p = os.environ["CONF"]; c = json.load(open(p)); c.setdefault("bundle", {})["createUpdaterArtifacts"] = True; c.setdefault("plugins", {}).setdefault("updater", {})["pubkey"] = os.environ["TAURI_UPDATER_PUBKEY"]; json.dump(c, open(p, "w"), indent=2)'
           echo "updater artifacts enabled"
 
-      - name: Build and publish
-        uses: tauri-apps/tauri-action@v0
+      # Tauri decides whether to sign by the **presence** of these variables,
+      # not by their content — and `env: FOO: ${{ secrets.FOO }}` defines FOO
+      # as an empty string when the secret does not exist. That made it run
+      # `security import` with an empty certificate and abort the bundle
+      # (first release build, 2026-08-07). So they are exported only when they
+      # actually carry something.
+      - name: Stage credentials
         env:
-          # Signing — empty means unsigned, which tauri handles without failing.
+          SIGNING: ${{ steps.caps.outputs.signing }}
+          UPDATER: ${{ steps.caps.outputs.updater }}
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
           APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
-          # Notarization — only attempted when all three are present.
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-          # Updater signature.
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: |
+          stage() {
+            eval "value=\${$1:-}"
+            [ -n "$value" ] || return 0
+            printf '%s<<__SPECCIFY_EOF__\n%s\n__SPECCIFY_EOF__\n' "$1" "$value" >> "$GITHUB_ENV"
+            echo "staged $1"
+          }
+          if [ "$SIGNING" = "true" ]; then
+            for name in APPLE_CERTIFICATE APPLE_CERTIFICATE_PASSWORD APPLE_SIGNING_IDENTITY \
+                        APPLE_ID APPLE_PASSWORD APPLE_TEAM_ID; do
+              stage "$name"
+            done
+          fi
+          if [ "$UPDATER" = "true" ]; then
+            for name in TAURI_SIGNING_PRIVATE_KEY TAURI_SIGNING_PRIVATE_KEY_PASSWORD; do
+              stage "$name"
+            done
+          fi
+
+      - name: Build and publish
+        uses: tauri-apps/tauri-action@v0
+        env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           projectPath: apps/desktop
