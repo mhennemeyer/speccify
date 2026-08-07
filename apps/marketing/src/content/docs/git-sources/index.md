@@ -108,7 +108,7 @@ license: MIT
 
 One file per entry is deliberate: a pull request touches exactly one file,
 there are no merge conflicts in a growing list, and CI validates each entry on
-its own (schema: [`schema/index-entry.schema.json`](../schema/index-entry.schema.json)).
+its own (schema: [`schema/index-entry.schema.json`](https://github.com/mhennemeyer/speccify/blob/main/schema/index-entry.schema.json)).
 
 The index says **only where a playbook lives** — never which versions exist.
 Versions are tags and therefore always current, which means an index cannot go
@@ -126,7 +126,7 @@ Source order: `--index` (repeatable) > `SPECCIFY_INDEX` (comma-separated —
 Multiple indexes are merged; for the same source the first mention wins. Git
 indexes live in the same bare-clone cache as playbook sources.
 
-Template and contribution flow: [`index/README.md`](../index/README.md).
+Template and contribution flow: [`index/README.md`](https://github.com/mhennemeyer/speccify/blob/main/index/README.md).
 
 ## Every way in, not just the CLI
 
@@ -152,5 +152,5 @@ with `not_local` and says so.
 ## Cross-references
 
 - Playbook format: [`playbooks.md`](/concepts/playbooks/)
-- Lockfile format: [`schema/lockfile.schema.json`](../schema/lockfile.schema.json)
-- Local walkthrough: [`local-dev-e2e.md`](./local-dev-e2e.md)
+- Lockfile format: [`schema/lockfile.schema.json`](https://github.com/mhennemeyer/speccify/blob/main/schema/lockfile.schema.json)
+- Local walkthrough: [`local-dev-e2e.md`](https://github.com/mhennemeyer/speccify/blob/main/docs/local-dev-e2e.md)

@@ -26,12 +26,34 @@ def test_render_mdx_rewrites_relative_links() -> None:
     assert "./visual-regression.md" not in rendered.split("---", 2)[-1]
 
 
-def test_render_mdx_keeps_unknown_links() -> None:
-    markdown = "# T\n\nText.\n\n[Extern](https://example.com) [X](./unknown.md).\n"
+def test_render_mdx_keeps_external_links() -> None:
+    markdown = "# T\n\nText.\n\n[Extern](https://example.com).\n"
+    assert "https://example.com" in sync.render_mdx(markdown)
+
+
+def test_render_mdx_points_repo_files_at_github() -> None:
+    """Ein Link auf eine Repo-Datei ist auf der Site sonst ein 404.
+
+    Der Sync kennt nur die Seiten, die er selbst erzeugt. Alles andere
+    Relative zeigt auf eine Datei im Repository — die gibt es unter der
+    Doku-URL nicht, und niemandem fällt es auf, weil der Link plausibel
+    aussieht.
+    """
+    markdown = (
+        "# T\n\nText.\n\n"
+        "[Schema](../schema/playbook.schema.json) "
+        "[Nachbar](./local-dev-e2e.md) "
+        "[Index](../index/README.md#format).\n"
+    )
     rendered = sync.render_mdx(markdown)
 
-    assert "https://example.com" in rendered
-    assert "./unknown.md" in rendered  # nicht im Mapping → unverändert
+    blob = "https://github.com/mhennemeyer/speccify/blob/main"
+    assert f"{blob}/schema/playbook.schema.json" in rendered
+    # `./x` liegt in docs/, `../x` ist repo-relativ — der Pfad muss das treffen.
+    assert f"{blob}/docs/local-dev-e2e.md" in rendered
+    # Anker bleiben erhalten.
+    assert f"{blob}/index/README.md#format" in rendered
+    assert "../schema" not in rendered
 
 
 def test_check_is_green_after_write() -> None:

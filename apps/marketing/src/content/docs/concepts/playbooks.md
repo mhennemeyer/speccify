@@ -74,7 +74,7 @@ acceptance:
     then: it launches without a Gatekeeper warning
 ```
 
-Schema: [`schema/playbook.schema.json`](../schema/playbook.schema.json).
+Schema: [`schema/playbook.schema.json`](https://github.com/mhennemeyer/speccify/blob/main/schema/playbook.schema.json).
 Validate with `speccify lint playbooks/`.
 
 ## The parts, and why they exist

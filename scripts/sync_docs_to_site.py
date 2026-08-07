@@ -49,6 +49,9 @@ DOC_MAPPINGS: tuple[DocMapping, ...] = (
 # Basename → Site-URL für das Umschreiben relativer Markdown-Links.
 _LINK_URL_BY_SOURCE: dict[str, str] = {m.source: m.url for m in DOC_MAPPINGS}
 
+# Ziel für Links, die auf Repo-Dateien statt auf Site-Seiten zeigen.
+_REPO_BLOB = "https://github.com/mhennemeyer/speccify/blob/main"
+
 
 def _yaml_quote(value: str) -> str:
     """Quotet einen String sicher als doppelt-gequoteten YAML-Scalar."""
@@ -91,7 +94,16 @@ def _extract_description(body: str) -> str:
 
 
 def _rewrite_links(body: str) -> str:
-    """Schreibt relative `./<datei>.md`-Links auf Site-URLs um."""
+    """Macht die Links der Repo-`docs/` auf der Site benutzbar.
+
+    Zwei Fälle, und der zweite ist der, den man vergisst:
+
+    * `./<datei>.md` einer **synchronisierten** Seite → deren Site-URL.
+    * Alles andere Relative (`../schema/x.json`, `./nicht-synced.md`) zeigt auf
+      eine **Repo-Datei**, die es auf der Site nicht gibt. Solche Links landen
+      als 404 in der Doku, ohne dass es jemandem auffällt — sie werden auf
+      GitHub umgebogen.
+    """
 
     def _replace(match: re.Match[str]) -> str:
         source = match.group("source")
@@ -102,7 +114,19 @@ def _rewrite_links(body: str) -> str:
         return f"]({url}{anchor})"
 
     pattern = re.compile(r"\]\(\./(?P<source>[A-Za-z0-9_-]+\.md)(?P<anchor>#[^)]*)?\)")
-    return pattern.sub(_replace, body)
+    body = pattern.sub(_replace, body)
+
+    def _to_repo(match: re.Match[str]) -> str:
+        target = match.group("target")
+        anchor = match.group("anchor") or ""
+        # `../x` steht relativ zu docs/, ist also repo-relativ; `./x` liegt in docs/.
+        path = target[3:] if target.startswith("../") else f"docs/{target[2:]}"
+        return f"]({_REPO_BLOB}/{path}{anchor})"
+
+    repo_link = re.compile(
+        r"\]\((?P<target>\.\.?/[A-Za-z0-9_./-]+\.(?:json|md|sh|ya?ml|toml|py))(?P<anchor>#[^)]*)?\)"
+    )
+    return repo_link.sub(_to_repo, body)
 
 
 def render_mdx(markdown: str) -> str:
