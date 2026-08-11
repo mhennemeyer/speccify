@@ -7,16 +7,22 @@
 - **Zuletzt aktualisiert:** 2026-08-07
 
 ## Nächste Schritte
-- **NEUER AKTIVER PLAN (2026-08-07)**: [`plans/skills-als-format.md`](./plans/skills-als-format.md)
-  — Playbooks werden **Agent Skills** (`SKILL.md` als Speicherformat, kein
-  Export). BO-Entscheid zum Namen: *ein Playbook ist ein Skill, der andere
-  Skills referenziert*. Grund: Ein Playbook war erst nach Installation
-  nützlich, ein Skill wirkt, sobald er im Verzeichnis liegt. Der Spec ist
-  herstellerneutral (agentskills.io), hat mit `metadata` eine offizielle
-  Hintertür für Fremdfelder und keine Vorgaben für den Body. Was Speccify
-  draufsetzt: Frische, Pinning, Komposition, Herkunft — plus zwei neue,
-  kleine Hebel (Lint gegen die Best-Practice-Checkliste, Token-Budget), die
-  auch für Leute nützlich sind, die nur Skills haben. **S0 (Refinement) offen.**
+- **AKTIVER PLAN: [`plans/skills-als-format.md`](./plans/skills-als-format.md)**
+  (Produktdefinition, 2026-08-11). **Playbook heisst jetzt Skill** — der Begriff
+  war artifiziell fuer etwas, das im Kern ein Agent Skill mit Metadaten ist. Das
+  Besondere ist Organisation, Lookup, Kombination.
+  **Nutzer: eine Person mit mehreren parallelen Projekten** (kein Team). Problem:
+  Wissen und Setup wandern nicht zwischen den eigenen Projekten.
+  **Rollen**: Skills verwaltet der Agent (MCP), Werkzeuge und Umgebung der Mensch
+  (Desktop-UI). **Ablauf als Daten**, nicht im Programm — uebernehmen heisst Repo
+  ziehen, anpassen heisst forken.
+  Sechs Workflows durchgespielt (W-A bis W-F), Nicht-Ziele festgehalten, sechs
+  Entscheidungsvorschlaege und drei offene Fragen. **Erst definieren, dann bauen**
+  — auf BO-Wunsch nach drei Richtungswechseln in einer Woche.
+  Zwei Funde: fremde Repos mit vielen Skills existieren schon
+  (`anthropics/skills` = 17) ⇒ **Kaltstart-Problem entfaellt**; und Speccify
+  liefert einen Skill mit, der Agenten beibringt Speccify zu benutzen ⇒ es wirkt,
+  ohne dass man es jedem Projekt erklaert.
 - **VERÖFFENTLICHT (2026-08-07)**: Repo ist öffentlich unter
   <https://github.com/mhennemeyer/speccify>, `main` ist Default. Der 2009er
   RSpec-Klon gleichen Namens bleibt unangetastet unter `master` — nichts
