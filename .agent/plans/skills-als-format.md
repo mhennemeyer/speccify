@@ -173,6 +173,71 @@ noch nicht entworfen.
 
 *Ergebnis:* Speccify wird die eine Anlaufstelle, statt eine weitere Insel.
 
+### W-G — In einem fremden Projekt arbeiten
+
+Ich arbeite in einem Projekt, dessen Konventionen mir nicht gehoeren.
+
+1. **Gast-Modus**: Speccify erzeugt keine Datei, die `git status` zeigt.
+   Manifest und materialisierte Skills werden ueber `.git/info/exclude`
+   ausgeblendet — das ist pro Klon, wird nie committet und ist genau dafuer da.
+2. **Zwei Geltungsbereiche**: `~/.claude/skills/` ist, was ich mitbringe;
+   `.claude/skills/` ist, was das Projekt vorschreibt. Speccify braucht also ein
+   **persoenliches Manifest** neben dem pro Projekt.
+3. **Meine Skills sind pro Projekt abschaltbar.** Loesen sie im fremden Projekt
+   automatisch aus, bringe ich genau das Chaos hinein, das ich beklage — nur
+   selbst verursacht. Definiert das Projekt einen eigenen Ablauf, gewinnt der.
+4. **Vertraulichkeit**: Loese ich dort etwas und will es behalten, darf das nicht
+   versehentlich in ein oeffentliches Repo wandern (interne URLs, Architektur,
+   Namen). Beim Veroeffentlichen aus einem fremden Projekt heraus wird nach dem
+   Ziel-Repo gefragt, Vorgabe privat.
+
+*Ergebnis:* Ich kann mein Wissen mitbringen, ohne es jemandem aufzudraengen —
+und ohne fremdes Wissen versehentlich mitzunehmen.
+
+### W-H — Ein Skill erweist sich als schlecht
+
+Vier Faelle, vier Antworten: **falsch** (korrigieren oder zurueckziehen),
+**veraltet** (Frische-Pfad, existiert), **ueberholt** (auf Nachfolger zeigen),
+**gefaehrlich** (hart zurueckziehen).
+
+1. **Markieren, nicht loeschen.** Wie `npm deprecate`, `cargo yank`, `retract`
+   in go.mod: bestehende Installationen laufen weiter, nur die Neuauswahl wird
+   verhindert. In der Quelle: `metadata.speccify.deprecated` mit Grund, optional
+   `speccify.superseded-by`.
+   Loeschen ist schlechter — wer per Commit gepinnt hat, loest weiter auf, aber
+   `verify` gegen den Tag scheitert mit einer irrefuehrenden Meldung.
+2. **`check` und Viewer zeigen es deutlich**, samt Grund und Nachfolger.
+3. **Pinning schuetzt vor Ueberraschungen und damit auch vor Ruecknahmen.** Ein
+   Projekt mit gepinnter v1.2.0 behaelt sie. Speccify kann beim naechsten
+   `check` warnen — mehr nicht. In fremde `.claude/skills/` reicht niemand
+   hinein. Das ist bei jedem Paketmanager so und wird so dokumentiert, statt so
+   zu tun, als ginge mehr.
+4. **Wo ist er ueberall installiert?** Braucht die Projektliste (s. u.).
+5. **Was hat er angerichtet?** Ein Skill sollte eine Spur hinterlassen: steht im
+   Log, welchem Skill der Agent gefolgt ist, weiss man, was nachzupruefen ist.
+   Bei der bestehenden `log.md`-Konvention fast geschenkt.
+
+*Ergebnis:* Ein Fehler ist eingrenzbar statt unauffindbar.
+
+---
+
+## Der vierte Ort: die Projektliste
+
+W-G und W-H brauchen beide etwas, das der bisherige Entwurf nicht hat:
+**Speccify muss von meinen Projekten wissen, nicht nur vom aktuellen.**
+
+Damit loest sich der urspruengliche BO-Entwurf („man legt das
+Speccify-Work-Verzeichnis fest") richtig auf: Der Instinkt stimmte, die Form
+nicht. Es braucht kein Verzeichnis, in dem Skills liegen, sondern eine
+maschinenweite **Liste der Projekte und Quellen** — genau das, was die App beim
+Oeffnen zeigt.
+
+* Projekte tragen sich bei `speccify init` selbst ein; die App raeumt tote
+  Eintraege weg. Kein Scannen des Dateisystems.
+* Beantwortet „welche meiner Projekte haben diesen Skill?" und „wo laeuft mein
+  Ablauf, wo der des Projekts?".
+* Enthaelt die persoenlichen Quellen-Voreinstellungen fuer neue Projekte.
+
 ---
 
 ## Nicht-Ziele (bewusst, für jetzt)
