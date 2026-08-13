@@ -51,8 +51,12 @@ _FRONTMATTER_RE = re.compile(r"\A---\r?\n(?P<yaml>.*?)\r?\n---\r?\n?(?P<body>.*)
 _HEADING_RE = re.compile(r"^##\s+(?P<title>.+?)\s*$", re.MULTILINE)
 _VERIFY_RE = re.compile(r"^\*\*Verify:?\*\*\s*(?P<text>.+?)\s*$", re.MULTILINE | re.IGNORECASE)
 # `- [Title](url) — retrieved 2026-08-13`  (em dash or hyphen, "retrieved" optional-ish)
+# The URL may contain balanced parentheses — Apple's Swift documentation URLs
+# end in `sync()`, and a naive `[^)]+` swallows the link at the first bracket
+# and then never sees the retrieval date behind it.
 _SOURCE_RE = re.compile(
-    r"^\s*[-*]\s*\[(?P<title>[^\]]+)\]\((?P<url>[^)\s]+)\)"
+    r"^\s*[-*]\s*\[(?P<title>[^\]]+)\]"
+    r"\((?P<url>[^()\s]*(?:\([^()\s]*\)[^()\s]*)*)\)"
     r"(?:\s*[—–-]\s*retrieved\s*(?P<retrieved>\d{4}-\d{2}-\d{2}))?",
     re.MULTILINE | re.IGNORECASE,
 )

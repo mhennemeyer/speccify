@@ -21,6 +21,7 @@ from speccify_core import (
     check_playbook,
     parse_playbook,
 )
+from speccify_core.skill_check import check_skill_directory, find_skills
 
 from speccify_cli.commands.lint import find_bundles
 
@@ -52,13 +53,13 @@ def check_bundle(
 
     findings = check_playbook(data, bundle_files=files, today=today, stale_days=stale_days)
     if links and not any(finding.is_error for finding in findings):
-        findings.extend(check_links(parse_playbook(data)))
+        findings.extend(check_links(parse_playbook(data).sources))
     return findings
 
 
 def check_command(
     paths: list[Path] = typer.Argument(  # noqa: B008
-        ..., exists=True, readable=True, help="Playbook bundles (or a tree containing them)."
+        ..., exists=True, readable=True, help="Skill directories (or a tree containing them)."
     ),
     links: bool = typer.Option(
         False, "--links/--no-links", help="Also check that every source URL still resolves."
@@ -67,17 +68,25 @@ def check_command(
         STALE_SOURCE_DAYS, "--stale-days", help="Warn about sources older than this."
     ),
 ) -> None:
-    """Check whether playbooks are still current: source age and dead links."""
-    bundles: list[Path] = []
+    """Check whether skills are still current: source age, dead links, best practice."""
+    # Skills first; the playbook branch is a migration leftover and goes away
+    # with the last `playbook.yaml` in the tree.
+    targets: list[tuple[Path, bool]] = []
     for path in paths:
-        bundles.extend(find_bundles(path if path.is_dir() else path.parent))
-    if not bundles:
-        typer.echo("No playbooks found.", err=True)
+        root = path if path.is_dir() else path.parent
+        targets += [(d, True) for d in find_skills(root)]
+        targets += [(d, False) for d in find_bundles(root)]
+    if not targets:
+        typer.echo("No skills found.", err=True)
         raise typer.Exit(code=1)
 
     errors = warnings = 0
-    for bundle in bundles:
-        findings = check_bundle(bundle, links=links, stale_days=stale_days)
+    for bundle, is_skill in targets:
+        findings = (
+            check_skill_directory(bundle, links=links, stale_days=stale_days)
+            if is_skill
+            else check_bundle(bundle, links=links, stale_days=stale_days)
+        )
         if not findings:
             typer.echo(f"ok  {bundle}")
             continue
@@ -89,7 +98,7 @@ def check_command(
             else:
                 warnings += 1
 
-    summary = f"\n{len(bundles)} playbook(s): {errors} error(s), {warnings} warning(s)."
+    summary = f"\n{len(targets)} skill(s): {errors} error(s), {warnings} warning(s)."
     if errors:
         typer.echo(summary, err=True)
         raise typer.Exit(code=1)

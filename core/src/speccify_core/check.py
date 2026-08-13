@@ -102,12 +102,16 @@ def check_source_age(
 
 
 def check_links(
-    playbook: Playbook,
+    sources: Any,
     *,
     timeout: float = DEFAULT_TIMEOUT,
     transport: Any = None,
+    path_prefix: str = "$.sources",
 ) -> list[Finding]:
     """Network check: are the sources still reachable?
+
+    Takes anything iterable of objects with a `.url` — a playbook's sources or
+    a skill's. The format has never mattered here.
 
     A redirect is fine, a 404 is not. Servers that dislike HEAD get a second
     chance with GET before being reported.
@@ -125,8 +129,8 @@ def check_links(
     findings: list[Finding] = []
     probes: dict[str, _SoftNotFound | None] = {}
     with httpx.Client(timeout=timeout, follow_redirects=True, transport=transport) as client:
-        for index, source in enumerate(playbook.sources):
-            path = f"$.sources[{index}]"
+        for index, source in enumerate(sources):
+            path = f"{path_prefix}[{index}]"
             host = _host_key(source.url)
             if host not in probes:
                 probes[host] = _probe_soft_404(client, source.url)

@@ -230,7 +230,7 @@ def run_playbook_check(
 
     findings = check_playbook(bundle.parsed(), bundle_files=set(bundle.files))
     if links and not any(finding.is_error for finding in findings):
-        findings.extend(check_links(parse_playbook(bundle.parsed())))
+        findings.extend(check_links(parse_playbook(bundle.parsed()).sources))
     return CheckResult(
         ok=not any(finding.is_error for finding in findings),
         findings=[{"level": f.level, "path": f.path, "message": f.message} for f in findings],

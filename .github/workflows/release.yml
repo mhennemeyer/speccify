@@ -101,7 +101,7 @@ jobs:
       - name: Test
         run: |
           uv run pytest
-          uv run speccify lint playbooks/
+          uv run speccify lint skills/
 
       # `secrets` is not among the contexts available to `if:`, so the
       # presence of each credential is translated into an output once.

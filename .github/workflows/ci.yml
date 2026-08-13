@@ -47,8 +47,10 @@ jobs:
       - name: Pytest
         run: uv run pytest
 
-      - name: speccify lint reference playbooks
-        run: uv run speccify lint playbooks/
+      - name: speccify lint + check the shipped skills
+        run: |
+          uv run speccify lint skills/ playbooks/
+          uv run speccify check skills/
 
       - name: speccify end-to-end smoke (init + add + lock + verify + pull + show)
         run: |

@@ -113,7 +113,7 @@ def test_reference_sources_still_resolve() -> None:
     library = LocalLibrary(FIXTURES)
     for playbook_id, version in library.list_playbooks():
         bundle = library.fetch(playbook_id, version)
-        findings = check_links(parse_playbook(bundle.parsed()))
+        findings = check_links(parse_playbook(bundle.parsed()).sources)
         errors = [f.format() for f in findings if f.is_error]
         assert errors == [], f"{playbook_id}: {errors}"
 
@@ -171,7 +171,7 @@ def _transport(handler: Any) -> Any:
 def _check(playbook_data: Any, handler: Any) -> list[Any]:
     from speccify_core import check_links
 
-    return check_links(parse_playbook(playbook_data), transport=_transport(handler))
+    return check_links(parse_playbook(playbook_data).sources, transport=_transport(handler))
 
 
 def test_soft_404_is_reported_even_though_the_status_is_200() -> None:

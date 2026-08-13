@@ -1,4 +1,8 @@
-"""`speccify lint`: validate playbook bundles."""
+"""`speccify lint`: validate skill directories against the specification.
+
+Also still validates `playbook.yaml` bundles — a migration leftover that goes
+away with the last one in the tree.
+"""
 
 from __future__ import annotations
 
@@ -7,6 +11,8 @@ from pathlib import Path
 import typer
 import yaml
 from speccify_core import ASSET_DIR, PLAYBOOK_FILENAME, validate_playbook
+from speccify_core.skill import SkillError, validate_skill
+from speccify_core.skill_check import find_skills, load_skill
 
 
 def lint_bundle(bundle_dir: Path) -> list[str]:
@@ -37,25 +43,36 @@ def find_bundles(root: Path) -> list[Path]:
     return sorted(path.parent for path in root.rglob(PLAYBOOK_FILENAME))
 
 
+def lint_skill(directory: Path) -> list[str]:
+    """Validate one skill directory against the Agent Skills specification."""
+    try:
+        skill, files = load_skill(directory)
+    except SkillError as exc:
+        return [f"$: {exc}"]
+    return [issue.format() for issue in validate_skill(skill, bundle_files=files)]
+
+
 def lint_command(
     paths: list[Path] = typer.Argument(  # noqa: B008
         ...,
         exists=True,
         readable=True,
-        help="Playbook bundle directories (or a directory tree containing them).",
+        help="Skill directories (or a directory tree containing them).",
     ),
 ) -> None:
-    """Validate playbooks: schema, cross-references and assets."""
-    bundles: list[Path] = []
+    """Validate skills against the Agent Skills specification."""
+    targets: list[tuple[Path, bool]] = []
     for path in paths:
-        bundles.extend(find_bundles(path if path.is_dir() else path.parent))
-    if not bundles:
-        typer.echo("No playbooks found.", err=True)
+        root = path if path.is_dir() else path.parent
+        targets += [(d, True) for d in find_skills(root)]
+        targets += [(d, False) for d in find_bundles(root)]
+    if not targets:
+        typer.echo("No skills found.", err=True)
         raise typer.Exit(code=1)
 
     failed = 0
-    for bundle in bundles:
-        issues = lint_bundle(bundle)
+    for bundle, is_skill in targets:
+        issues = lint_skill(bundle) if is_skill else lint_bundle(bundle)
         if not issues:
             typer.echo(f"ok  {bundle}")
             continue
@@ -65,6 +82,6 @@ def lint_command(
             typer.echo(f"     {issue}", err=True)
 
     if failed:
-        typer.echo(f"\n{failed} of {len(bundles)} playbooks have problems.", err=True)
+        typer.echo(f"\n{failed} of {len(targets)} skills have problems.", err=True)
         raise typer.Exit(code=1)
-    typer.echo(f"\n{len(bundles)} playbook(s) validated.")
+    typer.echo(f"\n{len(targets)} skill(s) validated.")

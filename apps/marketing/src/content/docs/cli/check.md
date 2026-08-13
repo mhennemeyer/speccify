@@ -1,11 +1,11 @@
 ---
 title: "speccify check"
-description: "Check whether playbooks are still current: source age and dead links."
+description: "Check whether skills are still current: source age, dead links, best practice."
 ---
 
 <!-- AUTOGENERIERT via scripts/gen_cli_docs.py aus `speccify --help` — nicht von Hand editieren. -->
 
-Check whether playbooks are still current: source age and dead links.
+Check whether skills are still current: source age, dead links, best practice.
 
 ## Usage
 

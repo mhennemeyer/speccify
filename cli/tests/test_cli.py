@@ -146,10 +146,10 @@ def test_show_without_manifest_or_library_names_both_ways_out(tmp_path: Path) ->
 
 
 def test_lint_accepts_the_reference_library() -> None:
-    """Every playbook shipped in this repo must always validate."""
+    """Everything shipped in this repo must always validate."""
     result = runner.invoke(app, ["lint", str(LIBRARY)])
     assert result.exit_code == 0, result.output
-    assert "playbook(s) validated" in result.output
+    assert "skill(s) validated" in result.output
     assert "fail" not in result.output
 
 
@@ -197,3 +197,16 @@ def test_check_fails_on_a_broken_playbook(tmp_path: Path) -> None:
     result = runner.invoke(app, ["check", str(bundle)])
     assert result.exit_code == 1
     assert "Unknown source" in result.output
+
+
+def test_lint_and_check_accept_the_shipped_skills() -> None:
+    """The skills in `skills/` are the product; they must never be broken."""
+    skills = REPO_ROOT / "skills"
+    lint = runner.invoke(app, ["lint", str(skills)])
+    assert lint.exit_code == 0, lint.output
+    assert "skill(s) validated" in lint.output
+
+    # Offline: specification, best practice and source age — no network.
+    check = runner.invoke(app, ["check", str(skills)])
+    assert check.exit_code == 0, check.output
+    assert "0 error(s)" in check.output

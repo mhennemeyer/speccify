@@ -191,3 +191,20 @@ def test_bundle_must_contain_skill_md() -> None:
     skill = parse_skill(MINIMAL)
     assert validate_skill(skill, bundle_files={"README.md"})
     assert validate_skill(skill, bundle_files={"SKILL.md"}) == []
+
+
+def test_source_url_may_contain_parentheses() -> None:
+    """Apple's Swift documentation URLs end in `sync()`.
+
+    A naive `[^)]+` swallows the link at the first bracket and then never sees
+    the retrieval date behind it — the source silently loses its age.
+    """
+    text = (
+        "---\nname: a-skill\ndescription: Something. Use when something.\n---\n\n"
+        "## Sources\n\n"
+        "- [AppStore.sync()](https://developer.apple.com/documentation/storekit/appstore/sync())"
+        " — retrieved 2026-08-06\n"
+    )
+    (source,) = parse_skill(text).sources
+    assert source.url.endswith("/appstore/sync()")
+    assert source.retrieved == "2026-08-06"
