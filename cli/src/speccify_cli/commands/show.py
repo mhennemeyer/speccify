@@ -1,7 +1,12 @@
-"""`speccify show`: read a playbook — the whole thing or a single step.
+"""`speccify show`: read a skill without installing it.
 
-This is the command an agent reaches for when it wants the knowledge rather
-than the files.
+Once a skill is in `.claude/skills/` the agent reads it from disk — that is the
+whole point of storing skills in their own format. This command is for the
+moment *before* that: what is in this thing, and do I want it?
+
+So the payload leads with the body. The inferred structure (steps, sources)
+comes along because it is cheap and answers "how big is this" and "how old is
+what it rests on" without reading all of it.
 """
 
 from __future__ import annotations
@@ -10,7 +15,7 @@ import json
 from pathlib import Path
 
 import typer
-from speccify_core import RegistryError, parse_playbook, parse_uses_entry
+from speccify_core import RegistryError, parse_uses_entry
 
 from speccify_cli.commands._context import ProjectContext, fetch_bundle, list_versions
 
@@ -19,126 +24,92 @@ def run_show(
     project_dir: Path,
     reference: str,
     *,
-    step_id: str | None = None,
     library_override: Path | None = None,
     offline: bool = False,
 ) -> dict:
-    """Return a playbook (or one step) as a plain dict."""
+    """Return a skill as a plain dict."""
     context = ProjectContext.load(project_dir, library_override=library_override, offline=offline)
-    playbook_id, _ = parse_uses_entry(reference)
-    versions = list_versions(context.libraries, playbook_id)
+    skill_id, _ = parse_uses_entry(reference)
+    versions = list_versions(context.libraries, skill_id)
     if not versions:
-        raise RegistryError(f"'{playbook_id}' is not available locally or as a git source.")
-    bundle = fetch_bundle(context.libraries, playbook_id, versions[-1])
-    playbook = parse_playbook(bundle.parsed())
-
-    def source_dict(source_id: str) -> dict:
-        source = playbook.source(source_id)
-        return (
-            {}
-            if source is None
-            else {
-                "id": source.id,
-                "title": source.title,
-                "url": source.url,
-                "retrieved": source.retrieved,
-                "note": source.note,
-            }
-        )
-
-    def step_dict(step) -> dict:
-        return {
-            "id": step.id,
-            "title": step.title,
-            "detail": step.detail,
-            "uses": step.uses,
-            "verify": step.verify,
-            "assets": list(step.assets),
-            "sources": [source_dict(s) for s in step.sources],
-        }
-
-    if step_id is not None:
-        step = playbook.step(step_id)
-        if step is None:
-            known = ", ".join(s.id for s in playbook.steps)
-            raise RegistryError(f"'{playbook_id}' has no step '{step_id}'. Known steps: {known}.")
-        return {"playbook": playbook.id, "version": playbook.version, "step": step_dict(step)}
+        raise RegistryError(f"'{skill_id}' is not available locally or as a git source.")
+    bundle = fetch_bundle(context.libraries, skill_id, versions[-1])
+    if not bundle.is_skill:
+        raise RegistryError(f"'{skill_id}' is not a skill — the bundle has no SKILL.md.")
+    skill = bundle.skill()
 
     return {
-        "id": playbook.id,
+        "id": skill.qualified_id,
+        "name": skill.name,
         "source": bundle.source_id,
-        "version": playbook.version,
-        "title": playbook.title,
-        "summary": playbook.summary,
-        "applies_to": {
-            "platforms": list(playbook.applies_to.platforms),
-            "requires": list(playbook.applies_to.requires),
-            "keywords": list(playbook.applies_to.keywords),
-        },
-        "prerequisites": list(playbook.prerequisites),
-        "steps": [step_dict(step) for step in playbook.steps],
-        "sources": [source_dict(s.id) for s in playbook.sources],
-        "pitfalls": list(playbook.pitfalls),
-        "assets": list(bundle.asset_paths),
+        "version": skill.version,
+        "description": skill.description,
+        "license": skill.license,
+        "compatibility": skill.compatibility,
+        "stack": list(skill.stack),
+        "platforms": list(skill.platforms),
+        "uses": list(skill.uses),
+        "deprecated": skill.deprecated,
+        "superseded_by": skill.superseded_by,
+        # The instructions themselves — what the agent would actually follow.
+        "body": skill.body,
+        "steps": [
+            {"number": step.number, "title": step.title, "verify": step.verify}
+            for step in skill.steps
+        ],
+        "sources": [
+            {"title": source.title, "url": source.url, "retrieved": source.retrieved}
+            for source in skill.sources
+        ],
+        "files": sorted(path for path in bundle.files if path != "SKILL.md"),
     }
 
 
 def show_command(
-    reference: str = typer.Argument(..., help="Playbook id or git source."),
-    step: str | None = typer.Option(None, "--step", help="Show only this step."),
+    reference: str = typer.Argument(..., help="Skill id or git source."),
     project_dir: Path = typer.Option(  # noqa: B008
         Path("."), "--project", "-p", help="Project directory (default: current directory)."
     ),
     library: Path | None = typer.Option(  # noqa: B008
-        None, "--library", help="Local playbook library (default: from the manifest)."
+        None, "--library", help="Local skill library (default: from the manifest)."
     ),
     offline: bool = typer.Option(
         False, "--offline/--no-offline", help="Only read cached git sources, never the network."
     ),
     as_json: bool = typer.Option(False, "--json", help="Emit JSON (for agents and scripts)."),
 ) -> None:
-    """Print a playbook, or a single step of it."""
+    """Print a skill: what it is, what it builds on, and how old its sources are."""
     try:
-        data = run_show(
-            project_dir, reference, step_id=step, library_override=library, offline=offline
-        )
+        data = run_show(project_dir, reference, library_override=library, offline=offline)
     except (RegistryError, FileNotFoundError, ValueError) as exc:
-        typer.echo(f"x {exc}", err=True)
+        typer.echo(f"x speccify show failed: {exc}", err=True)
         raise typer.Exit(code=1) from exc
 
     if as_json:
         typer.echo(json.dumps(data, indent=2, ensure_ascii=False))
         return
 
-    if step is not None:
-        one = data["step"]
-        typer.echo(f"{data['playbook']}@{data['version']} - step {one['id']}: {one['title']}")
-        if one["uses"]:
-            typer.echo(f"  delegates to: {one['uses']}")
-        if one["detail"]:
-            typer.echo(f"\n{one['detail']}")
-        if one["verify"]:
-            typer.echo(f"\nverify: {one['verify']}")
-        for source in one["sources"]:
-            typer.echo(
-                f"source: {source['title']} — {source['url']} (retrieved {source['retrieved']})"
-            )
-        return
+    typer.echo(f"{data['id']}@{data['version'] or '?'}")
+    typer.echo(f"  {data['description']}")
+    if data["deprecated"]:
+        successor = f" — use {data['superseded_by']}" if data["superseded_by"] else ""
+        typer.echo(f"  WITHDRAWN: {data['deprecated']}{successor}", err=True)
+    if data["compatibility"]:
+        typer.echo(f"  {data['compatibility']}")
+    axes = ", ".join([*data["stack"], *data["platforms"]])
+    if axes:
+        typer.echo(f"  {axes}")
+    for used in data["uses"]:
+        typer.echo(f"  builds on: {used}")
 
-    typer.echo(f"{data['id']}@{data['version']} — {data['title']}")
-    typer.echo(f"{data['summary']}\n")
-    for prerequisite in data["prerequisites"]:
-        typer.echo(f"  requires: {prerequisite}")
-    typer.echo(f"\nSteps ({len(data['steps'])}):")
-    for index, one in enumerate(data["steps"], start=1):
-        suffix = f"  -> {one['uses']}" if one["uses"] else ""
-        typer.echo(f"  {index}. [{one['id']}] {one['title']}{suffix}")
-    if data["pitfalls"]:
-        typer.echo("\nPitfalls:")
-        for pitfall in data["pitfalls"]:
-            typer.echo(f"  - {pitfall}")
+    if data["steps"]:
+        typer.echo(f"\n{len(data['steps'])} step(s):")
+        for step in data["steps"]:
+            prefix = f"{step['number']}. " if step["number"] is not None else "- "
+            typer.echo(f"  {prefix}{step['title']}")
     if data["sources"]:
-        typer.echo("\nSources:")
+        typer.echo(f"\n{len(data['sources'])} source(s):")
         for source in data["sources"]:
-            typer.echo(f"  - {source['title']} ({source['retrieved']}) {source['url']}")
-    typer.echo("\nRead a single step with: speccify show <id> --step <step-id>")
+            typer.echo(f"  {source['title']} ({source['retrieved'] or 'no date'})")
+    if data["files"]:
+        typer.echo(f"\nfiles: {', '.join(data['files'])}")

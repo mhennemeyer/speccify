@@ -16,14 +16,13 @@ from mcp.server.fastmcp import FastMCP
 
 from .tools import (
     run_lock,
-    run_playbook_asset,
-    run_playbook_check,
-    run_playbook_get,
-    run_playbook_list,
     run_playbook_propose,
-    run_playbook_step,
     run_pull,
     run_search,
+    run_skill_asset,
+    run_skill_check,
+    run_skill_get,
+    run_skill_list,
     run_verify,
     run_viewer_selection,
 )
@@ -43,21 +42,21 @@ def build_server(config: ServerConfig) -> FastMCP:
     server = FastMCP(name=SERVER_NAME)
 
     @server.tool(
-        name="playbook_list",
+        name="skill_list",
         description=(
             "List the playbooks available in this project's library: id, version, "
             "title, summary, keywords, platforms and step count. Start here when "
             "you do not know what exists. Returns `{ok, playbooks}`."
         ),
     )
-    def playbook_list(library_path: str | None = None) -> dict[str, Any]:
-        return run_playbook_list(
+    def skill_list(library_path: str | None = None) -> dict[str, Any]:
+        return run_skill_list(
             config.project_root,
             library_path=Path(library_path) if library_path else None,
         ).to_dict()
 
     @server.tool(
-        name="playbook_get",
+        name="skill_get",
         description=(
             "Read a whole playbook: ordered steps, resolved sources (with the date "
             "they were retrieved), prerequisites, pitfalls and the list of bundled "
@@ -67,12 +66,12 @@ def build_server(config: ServerConfig) -> FastMCP:
             "`{ok, playbook}`; unknown references report `code=not_found`."
         ),
     )
-    def playbook_get(
+    def skill_get(
         reference: str,
         library_path: str | None = None,
         offline: bool = False,
     ) -> dict[str, Any]:
-        return run_playbook_get(
+        return run_skill_get(
             config.project_root,
             reference=reference,
             library_path=Path(library_path) if library_path else None,
@@ -80,31 +79,7 @@ def build_server(config: ServerConfig) -> FastMCP:
         ).to_dict()
 
     @server.tool(
-        name="playbook_step",
-        description=(
-            "Read a single step of a playbook, with its sources resolved. Use this "
-            "to work through a playbook one step at a time; each step carries a "
-            "`verify` criterion telling you how to confirm it worked before moving "
-            "on. A step may delegate to another playbook via `uses`. Returns "
-            "`{ok, playbook: {step}}`."
-        ),
-    )
-    def playbook_step(
-        reference: str,
-        step_id: str,
-        library_path: str | None = None,
-        offline: bool = False,
-    ) -> dict[str, Any]:
-        return run_playbook_step(
-            config.project_root,
-            reference=reference,
-            step_id=step_id,
-            library_path=Path(library_path) if library_path else None,
-            offline=offline,
-        ).to_dict()
-
-    @server.tool(
-        name="playbook_asset",
+        name="skill_asset",
         description=(
             "Read a file that ships with a playbook — a script, a config, a "
             "template. `path` is bundle-relative (e.g. 'assets/verify.sh') and "
@@ -113,13 +88,13 @@ def build_server(config: ServerConfig) -> FastMCP:
             "content}`."
         ),
     )
-    def playbook_asset(
+    def skill_asset(
         reference: str,
         path: str,
         library_path: str | None = None,
         offline: bool = False,
     ) -> dict[str, Any]:
-        return run_playbook_asset(
+        return run_skill_asset(
             config.project_root,
             reference=reference,
             path=path,
@@ -128,7 +103,7 @@ def build_server(config: ServerConfig) -> FastMCP:
         ).to_dict()
 
     @server.tool(
-        name="playbook_check",
+        name="skill_check",
         description=(
             "Is this playbook still current? Checks structure and how long ago "
             "each source was retrieved; with `links=true` it also verifies that "
@@ -138,13 +113,13 @@ def build_server(config: ServerConfig) -> FastMCP:
             "each finding has a level of `error` or `warning`."
         ),
     )
-    def playbook_check(
+    def skill_check(
         reference: str,
         links: bool = False,
         library_path: str | None = None,
         offline: bool = False,
     ) -> dict[str, Any]:
-        return run_playbook_check(
+        return run_skill_check(
             config.project_root,
             reference=reference,
             links=links,

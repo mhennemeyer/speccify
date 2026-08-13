@@ -88,54 +88,42 @@ def test_pull_materialises_bundles_including_assets(project: Path) -> None:
     assert (out / "macos-notarize-tauri" / "assets" / "verify-signatures.sh").is_file()
 
 
-def test_show_prints_steps_and_pitfalls(project: Path) -> None:
+def test_show_describes_a_skill_without_installing_it(tmp_path: Path) -> None:
+    """`show` is for the moment before installing: what is this, do I want it?"""
+    skills = REPO_ROOT / "skills"
+    runner.invoke(app, ["init", "--project", str(tmp_path)])
     result = runner.invoke(
-        app, ["show", MAIN, "--project", str(project), "--library", str(LIBRARY)]
+        app, ["show", MAIN, "--project", str(tmp_path), "--library", str(skills)]
     )
     assert result.exit_code == 0, result.output
-    assert "Steps (5)" in result.output
-    assert "Pitfalls" in result.output
+    assert "5 step(s)" in result.output
+    assert "builds on: @speccify/apple-developer-id-cert" in result.output
+    assert "4 source(s)" in result.output
 
 
-def test_show_single_step_as_json(project: Path) -> None:
+def test_show_as_json_carries_the_body(tmp_path: Path) -> None:
+    skills = REPO_ROOT / "skills"
+    runner.invoke(app, ["init", "--project", str(tmp_path)])
     result = runner.invoke(
         app,
-        [
-            "show",
-            MAIN,
-            "--step",
-            "notarize",
-            "--json",
-            "--project",
-            str(project),
-            "--library",
-            str(LIBRARY),
-        ],
+        ["show", MAIN, "--json", "--project", str(tmp_path), "--library", str(skills)],
     )
     assert result.exit_code == 0, result.output
     payload = json.loads(result.output)
-    assert payload["step"]["id"] == "notarize"
-    assert payload["step"]["sources"][0]["url"].startswith("https://")
-
-
-def test_show_unknown_step_lists_the_known_ones(project: Path) -> None:
-    result = runner.invoke(
-        app,
-        ["show", MAIN, "--step", "nope", "--project", str(project), "--library", str(LIBRARY)],
-    )
-    assert result.exit_code == 1
-    assert "Known steps" in result.output
+    assert payload["id"] == MAIN
+    assert "hardened runtime" in payload["body"]
+    assert payload["uses"] == ["@speccify/apple-developer-id-cert@^1.0"]
 
 
 def test_show_works_without_a_manifest_when_pointed_at_a_library(tmp_path: Path) -> None:
-    """Reading a playbook is not a project operation.
+    """Reading a skill is not a project operation.
 
-    Most playbooks live in some repository that is not a Speccify project. If
+    Most skills live in some repository that is not a Speccify project. If
     `--library` names one, requiring a `speccify.yaml` next to it would stop an
     agent from reading anything it had not first `add`ed.
     """
     result = runner.invoke(
-        app, ["show", MAIN, "--project", str(tmp_path), "--library", str(LIBRARY)]
+        app, ["show", MAIN, "--project", str(tmp_path), "--library", str(REPO_ROOT / "skills")]
     )
     assert result.exit_code == 0, result.output
     assert MAIN in result.output

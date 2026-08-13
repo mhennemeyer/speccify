@@ -43,10 +43,16 @@ class PlaybookResult:
         }
 
 
-def run_playbook_list(project_root: Path, *, library_path: Path | None = None) -> LibraryResult:
-    """Every playbook available to this project."""
+def run_skill_list(project_root: Path, *, library_path: Path | None = None) -> LibraryResult:
+    """Every skill available to this project.
+
+    Deliberately shallow: name, description and the axes. The description is
+    what decides whether a skill is the right one, and the body costs context
+    that this call should not spend for nine skills the agent will not use.
+    """
     from speccify_cli.commands._context import ProjectContext
-    from speccify_core import LibraryError, LocalLibrary, parse_playbook
+    from speccify_core import LibraryError
+    from speccify_core.skill_library import LocalSkillLibrary
 
     try:
         if library_path is not None:
@@ -55,36 +61,35 @@ def run_playbook_list(project_root: Path, *, library_path: Path | None = None) -
             root = ProjectContext.load(project_root).manifest.resolved_library_path()
         if not root.is_dir():
             return LibraryResult(ok=True, playbooks=[])
-        library = LocalLibrary(root)
-        playbooks = []
-        for playbook_id, version in library.list_playbooks():
-            bundle = library.fetch(playbook_id, version)
-            parsed = parse_playbook(bundle.parsed())
-            playbooks.append(
+        library = LocalSkillLibrary(root)
+        skills = []
+        for skill_id, version in library.list_playbooks():
+            skill = library.fetch(skill_id, version).skill()
+            skills.append(
                 {
-                    "id": parsed.id,
-                    "version": parsed.version,
-                    "title": parsed.title,
-                    "summary": parsed.summary,
-                    "keywords": list(parsed.applies_to.keywords),
-                    "platforms": list(parsed.applies_to.platforms),
-                    "stack": list(parsed.applies_to.stack),
-                    "steps": len(parsed.steps),
+                    "id": skill.qualified_id,
+                    "name": skill.name,
+                    "version": skill.version,
+                    "description": skill.description,
+                    "stack": list(skill.stack),
+                    "platforms": list(skill.platforms),
+                    "uses": list(skill.uses),
+                    "deprecated": skill.deprecated,
                 }
             )
-        return LibraryResult(ok=True, playbooks=playbooks)
+        return LibraryResult(ok=True, playbooks=skills)
     except (LibraryError, FileNotFoundError, ValueError) as exc:
         return LibraryResult(ok=False, code="library_unavailable", message=str(exc))
 
 
-def run_playbook_get(
+def run_skill_get(
     project_root: Path,
     *,
     reference: str,
     library_path: Path | None = None,
     offline: bool = False,
 ) -> PlaybookResult:
-    """A whole playbook: steps, resolved sources, pitfalls, asset list."""
+    """A whole skill — body included. For inspecting one that is not installed."""
     from speccify_cli.commands.show import run_show
     from speccify_core import LibraryError
 
@@ -92,31 +97,6 @@ def run_playbook_get(
         data = run_show(
             project_root,
             reference,
-            library_override=library_path,
-            offline=offline,
-        )
-    except (LibraryError, FileNotFoundError, ValueError) as exc:
-        return PlaybookResult(ok=False, code="not_found", message=str(exc))
-    return PlaybookResult(ok=True, playbook=data)
-
-
-def run_playbook_step(
-    project_root: Path,
-    *,
-    reference: str,
-    step_id: str,
-    library_path: Path | None = None,
-    offline: bool = False,
-) -> PlaybookResult:
-    """One step with its sources resolved — the unit an agent works through."""
-    from speccify_cli.commands.show import run_show
-    from speccify_core import LibraryError
-
-    try:
-        data = run_show(
-            project_root,
-            reference,
-            step_id=step_id,
             library_override=library_path,
             offline=offline,
         )
@@ -161,7 +141,7 @@ class CheckResult:
         }
 
 
-def run_playbook_asset(
+def run_skill_asset(
     project_root: Path,
     *,
     reference: str,
@@ -177,14 +157,14 @@ def run_playbook_asset(
 
     try:
         context = ProjectContext.load(project_root, library_override=library_path, offline=offline)
-        playbook_id, _ = parse_uses_entry(reference)
-        versions = list_versions(context.libraries, playbook_id)
+        skill_id, _ = parse_uses_entry(reference)
+        versions = list_versions(context.libraries, skill_id)
         if not versions:
-            raise LibraryError(f"'{playbook_id}' is not available.")
-        bundle = fetch_bundle(context.libraries, playbook_id, versions[-1])
+            raise LibraryError(f"'{skill_id}' is not available.")
+        bundle = fetch_bundle(context.libraries, skill_id, versions[-1])
         data = bundle.files.get(path)
         if data is None:
-            available = ", ".join(bundle.asset_paths) or "none"
+            available = ", ".join(sorted(p for p in bundle.files if p != "SKILL.md")) or "none"
             raise LibraryError(f"'{path}' is not in this bundle. Available: {available}.")
     except (LibraryError, FileNotFoundError, ValueError) as exc:
         return AssetResult(ok=False, code="not_found", message=str(exc))
@@ -200,7 +180,7 @@ def run_playbook_asset(
         )
 
 
-def run_playbook_check(
+def run_skill_check(
     project_root: Path,
     *,
     reference: str,
@@ -208,29 +188,27 @@ def run_playbook_check(
     library_path: Path | None = None,
     offline: bool = False,
 ) -> CheckResult:
-    """Is this playbook still current? Structure, source age, optionally links."""
+    """Is this skill still current and well made? Spec, best practice, source age."""
     from speccify_cli.commands._context import ProjectContext, fetch_bundle, list_versions
-    from speccify_core import (
-        LibraryError,
-        check_links,
-        check_playbook,
-        parse_playbook,
-        parse_uses_entry,
-    )
+    from speccify_core import LibraryError, check_links, parse_uses_entry
+    from speccify_core.skill_check import check_skill
 
     try:
         context = ProjectContext.load(project_root, library_override=library_path, offline=offline)
-        playbook_id, _ = parse_uses_entry(reference)
-        versions = list_versions(context.libraries, playbook_id)
+        skill_id, _ = parse_uses_entry(reference)
+        versions = list_versions(context.libraries, skill_id)
         if not versions:
-            raise LibraryError(f"'{playbook_id}' is not available.")
-        bundle = fetch_bundle(context.libraries, playbook_id, versions[-1])
+            raise LibraryError(f"'{skill_id}' is not available.")
+        bundle = fetch_bundle(context.libraries, skill_id, versions[-1])
+        if not bundle.is_skill:
+            raise LibraryError(f"'{skill_id}' is not a skill — the bundle has no SKILL.md.")
+        skill = bundle.skill()
     except (LibraryError, FileNotFoundError, ValueError) as exc:
         return CheckResult(ok=False, code="not_found", message=str(exc))
 
-    findings = check_playbook(bundle.parsed(), bundle_files=set(bundle.files))
+    findings = check_skill(skill, bundle_files=set(bundle.files))
     if links and not any(finding.is_error for finding in findings):
-        findings.extend(check_links(parse_playbook(bundle.parsed()).sources))
+        findings.extend(check_links(skill.sources))
     return CheckResult(
         ok=not any(finding.is_error for finding in findings),
         findings=[{"level": f.level, "path": f.path, "message": f.message} for f in findings],

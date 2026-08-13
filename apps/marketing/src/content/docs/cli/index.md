@@ -17,5 +17,5 @@ hat eine eigene Referenzseite:
 | [`speccify lock`](/cli/lock/) | Resolve dependencies and write speccify.lock. |
 | [`speccify pull`](/cli/pull/) | Materialise the locked skills (with assets) where the agent finds them. |
 | [`speccify search`](/cli/search/) | Search playbooks in the configured discovery indexes. |
-| [`speccify show`](/cli/show/) | Print a playbook, or a single step of it. |
+| [`speccify show`](/cli/show/) | Print a skill: what it is, what it builds on, and how old its sources are. |
 | [`speccify verify`](/cli/verify/) | Check that the lockfile still matches the manifest and the actual bundles. |

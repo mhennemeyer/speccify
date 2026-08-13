@@ -1,11 +1,11 @@
 ---
 title: "speccify show"
-description: "Print a playbook, or a single step of it."
+description: "Print a skill: what it is, what it builds on, and how old its sources are."
 ---
 
 <!-- AUTOGENERIERT via scripts/gen_cli_docs.py aus `speccify --help` — nicht von Hand editieren. -->
 
-Print a playbook, or a single step of it.
+Print a skill: what it is, what it builds on, and how old its sources are.
 
 ## Usage
 
@@ -23,8 +23,7 @@ speccify show [OPTIONS] REFERENCE
 
 | Option | Beschreibung |
 | --- | --- |
-| `--step` | Show only this step. |
 | `--project`, `-p` | Project directory (default: current directory). |
-| `--library` | Local playbook library (default: from the manifest). |
+| `--library` | Local skill library (default: from the manifest). |
 | `--offline`, `--no-offline` | Only read cached git sources, never the network. |
 | `--json` | Emit JSON (for agents and scripts). |

@@ -8,10 +8,10 @@ from pathlib import Path
 import pytest
 from speccify_mcp.tools import (
     run_lock,
-    run_playbook_get,
-    run_playbook_list,
-    run_playbook_step,
     run_pull,
+    run_skill_asset,
+    run_skill_get,
+    run_skill_list,
     run_verify,
 )
 
@@ -21,53 +21,44 @@ MAIN = "@speccify/macos-notarize-tauri"
 
 @pytest.fixture
 def project(tmp_path: Path) -> Path:
-    """A project with its own copy of the playbook library.
-
-    The library path is stated rather than defaulted: the default moved to
-    `./skills` with the format, and these tests still exercise the playbook
-    branch until the MCP tools are ported too.
-    """
-    shutil.copytree(REPO_ROOT / "playbooks", tmp_path / "playbooks")
-    (tmp_path / "speccify.yaml").write_text(
-        "schema_version: 1\nlibrary:\n  path: ./playbooks\n", encoding="utf-8"
-    )
+    """A project with its own copy of the skill library."""
+    shutil.copytree(REPO_ROOT / "skills", tmp_path / "skills")
+    (tmp_path / "speccify.yaml").write_text("schema_version: 1\n", encoding="utf-8")
     return tmp_path
 
 
-def test_playbook_list_describes_the_library(project: Path) -> None:
-    result = run_playbook_list(project)
+def test_skill_list_describes_the_library(project: Path) -> None:
+    """Shallow on purpose: name, description, axes — not the bodies."""
+    result = run_skill_list(project)
     assert result.ok, result.message
-    titles = {entry["id"]: entry for entry in result.playbooks}
-    assert MAIN in titles
-    assert titles[MAIN]["steps"] == 5
-    assert "notarization" in titles[MAIN]["keywords"]
+    entries = {entry["id"]: entry for entry in result.playbooks}
+    assert MAIN in entries
+    assert "tauri" in entries[MAIN]["stack"]
+    assert "notarization" in entries[MAIN]["description"].lower()
+    assert "body" not in entries[MAIN], "listing must not carry the instructions"
 
 
-def test_playbook_get_resolves_sources_per_step(project: Path) -> None:
-    result = run_playbook_get(project, reference=MAIN)
+def test_skill_get_carries_the_body_and_its_sources(project: Path) -> None:
+    """`get` is for a skill that is *not* installed — so it leads with the body."""
+    result = run_skill_get(project, reference=MAIN)
     assert result.ok, result.message
-    steps = result.playbook["steps"]
-    assert [step["id"] for step in steps][0] == "signing_identity"
-    notarize = next(step for step in steps if step["id"] == "notarize")
-    assert notarize["sources"][0]["retrieved"] == "2026-08-06"
-    assert result.playbook["assets"] == ["assets/verify-signatures.sh"]
+    skill = result.playbook
 
-
-def test_playbook_step_returns_one_step(project: Path) -> None:
-    result = run_playbook_step(project, reference=MAIN, step_id="staple")
-    assert result.ok, result.message
-    assert result.playbook["step"]["verify"].startswith("`spctl --assess`")
+    assert "hardened runtime" in skill["body"]
+    assert [step["number"] for step in skill["steps"]] == [1, 2, 3, 4, 5]
+    assert all(source["retrieved"] == "2026-08-06" for source in skill["sources"])
+    assert skill["files"] == ["assets/verify-signatures.sh"]
 
 
 def test_unknown_reference_is_structured(project: Path) -> None:
-    result = run_playbook_get(project, reference="@org/nope")
+    result = run_skill_get(project, reference="@org/nope")
     assert not result.ok
     assert result.code == "not_found"
 
 
 def test_lock_pull_verify_round_trip(project: Path) -> None:
     (project / "speccify.yaml").write_text(
-        f"schema_version: 1\nlibrary:\n  path: ./playbooks\ndependencies:\n  '{MAIN}': ^1.0\n",
+        f"schema_version: 1\ndependencies:\n  '{MAIN}': ^1.0\n",
         encoding="utf-8",
     )
     locked = run_lock(project)
@@ -84,13 +75,11 @@ def test_lock_pull_verify_round_trip(project: Path) -> None:
 
 def test_verify_reports_drift_as_a_result(project: Path) -> None:
     (project / "speccify.yaml").write_text(
-        f"schema_version: 1\nlibrary:\n  path: ./playbooks\ndependencies:\n  '{MAIN}': ^1.0\n",
+        f"schema_version: 1\ndependencies:\n  '{MAIN}': ^1.0\n",
         encoding="utf-8",
     )
     run_lock(project)
-    playbook = (
-        project / "playbooks" / "speccify" / "macos-notarize-tauri" / "1.0.0" / "playbook.yaml"
-    )
+    playbook = project / "skills" / "macos-notarize-tauri" / "SKILL.md"
     playbook.write_text(playbook.read_text(encoding="utf-8") + "\n# touched\n", encoding="utf-8")
     verified = run_verify(project)
     assert not verified.ok
@@ -98,59 +87,49 @@ def test_verify_reports_drift_as_a_result(project: Path) -> None:
 
 
 def test_playbook_asset_returns_the_script(project: Path) -> None:
-    from speccify_mcp.tools import run_playbook_asset
+    from speccify_mcp.tools import run_skill_asset
 
-    result = run_playbook_asset(project, reference=MAIN, path="assets/verify-signatures.sh")
+    result = run_skill_asset(project, reference=MAIN, path="assets/verify-signatures.sh")
     assert result.ok, result.message
     assert result.encoding == "utf-8"
     assert "codesign --verify" in result.content
 
 
 def test_playbook_asset_lists_what_is_available(project: Path) -> None:
-    from speccify_mcp.tools import run_playbook_asset
+    from speccify_mcp.tools import run_skill_asset
 
-    result = run_playbook_asset(project, reference=MAIN, path="assets/nope")
+    result = run_skill_asset(project, reference=MAIN, path="assets/nope")
     assert not result.ok
     assert "verify-signatures.sh" in result.message
 
 
 def test_playbook_check_reports_health(project: Path) -> None:
-    from speccify_mcp.tools import run_playbook_check
+    from speccify_mcp.tools import run_skill_check
 
-    result = run_playbook_check(project, reference=MAIN)
+    result = run_skill_check(project, reference=MAIN)
     assert result.ok, result.findings
     assert result.findings == []
 
 
-def test_agent_can_work_through_a_playbook_over_mcp(project: Path) -> None:
-    """The contract W2 exists for: an agent solves the task through tools alone.
+def test_an_agent_can_find_and_read_a_skill_over_mcp(project: Path) -> None:
+    """The path that matters, pinned so it cannot drift.
 
-    list -> get -> step -> asset, without reading the docs site or the repo.
+    list -> pick by stack -> get (body included) -> follow the child it builds
+    on -> read a bundled file. No step tool: an installed skill is read from
+    disk, and every tool definition costs context in every session.
     """
-    from speccify_mcp.tools import (
-        run_playbook_asset,
-        run_playbook_get,
-        run_playbook_list,
-        run_playbook_step,
-    )
-
-    listed = run_playbook_list(project)
+    listed = run_skill_list(project)
     assert listed.ok
-    # Pick by stack, the axis an agent filters on: "tauri" is unambiguous here,
-    # while "notarization" would also match the child playbook.
     chosen = next(entry for entry in listed.playbooks if "tauri" in entry["stack"])
 
-    whole = run_playbook_get(project, reference=chosen["id"])
+    whole = run_skill_get(project, reference=chosen["id"])
     assert whole.ok
-    first, *_ = whole.playbook["steps"]
-    # The first step delegates — the agent can follow that reference.
-    child = run_playbook_get(project, reference=first["uses"].split("@^")[0])
-    assert child.ok and child.playbook["steps"]
+    assert whole.playbook["body"].strip(), "the body is what the agent follows"
 
-    signing = run_playbook_step(project, reference=chosen["id"], step_id="sign_build")
-    assert signing.ok
-    asset_path = signing.playbook["step"]["assets"][0]
+    # It builds on another skill, and that one resolves too.
+    (child,) = whole.playbook["uses"]
+    resolved = run_skill_get(project, reference=child)
+    assert resolved.ok, resolved.message
 
-    asset = run_playbook_asset(project, reference=chosen["id"], path=asset_path)
-    assert asset.ok
-    assert asset.content.startswith("#!/usr/bin/env bash")
+    asset = run_skill_asset(project, reference=chosen["id"], path="assets/verify-signatures.sh")
+    assert asset.ok and "codesign" in (asset.content or "")

@@ -19,17 +19,16 @@ from mcp.client.stdio import stdio_client
 from mcp import ClientSession, StdioServerParameters
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-PLAYBOOKS = REPO_ROOT / "playbooks"
+SKILLS = REPO_ROOT / "skills"
 REFERENCE = "@speccify/macos-notarize-tauri"
 
 EXPECTED_TOOLS = {
     "lock",
     "playbook_propose",
-    "playbook_asset",
-    "playbook_check",
-    "playbook_get",
-    "playbook_list",
-    "playbook_step",
+    "skill_asset",
+    "skill_check",
+    "skill_get",
+    "skill_list",
     "pull",
     "search",
     "verify",
@@ -38,16 +37,9 @@ EXPECTED_TOOLS = {
 
 
 def _prepare_project(tmp: Path) -> Path:
-    """A throwaway project with its own copy of the playbook library.
-
-    The library path is stated rather than defaulted: the default moved to
-    `./skills` with the format, while the MCP tools still read playbooks until
-    they are ported.
-    """
-    shutil.copytree(PLAYBOOKS, tmp / "playbooks")
-    (tmp / "speccify.yaml").write_text(
-        "schema_version: 1\nlibrary:\n  path: ./playbooks\n", encoding="utf-8"
-    )
+    """A throwaway project with its own copy of the skill library."""
+    shutil.copytree(SKILLS, tmp / "skills")
+    (tmp / "speccify.yaml").write_text("schema_version: 1\n", encoding="utf-8")
     return tmp
 
 
@@ -75,13 +67,18 @@ async def _run(project: Path) -> None:
             )
             print(f"[ok] tools/list = {sorted(names)}", file=sys.stderr)
 
-            result = await session.call_tool("playbook_get", {"reference": REFERENCE})
+            result = await session.call_tool("skill_get", {"reference": REFERENCE})
             payload = result.structuredContent or {}
-            assert payload.get("ok"), f"playbook_get failed: {payload}"
-            steps = payload["playbook"]["steps"]
-            assert len(steps) == 5, f"expected 5 steps, got {len(steps)}"
-            assert steps[0]["uses"], "the first step should delegate to a child playbook"
-            print(f"[ok] playbook_get -> {len(steps)} steps", file=sys.stderr)
+            assert payload.get("ok"), f"skill_get failed: {payload}"
+            skill = payload["playbook"]
+            assert len(skill["steps"]) == 5, f"expected 5 steps, got {len(skill['steps'])}"
+            # A composed skill: it names what it builds on.
+            assert skill["uses"], "this skill should build on a child skill"
+            assert skill["body"].strip(), "the body is what the agent would follow"
+            print(
+                f"[ok] skill_get -> {len(skill['steps'])} steps, builds on {skill['uses']}",
+                file=sys.stderr,
+            )
 
             manifest = await session.read_resource("speccify://manifest")
             assert "schema_version" in manifest.contents[0].text
