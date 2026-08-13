@@ -1,6 +1,6 @@
 ---
 lifecycle: active
-status: Produktdefinition 2026-08-11 — ein Nutzer, mehrere Projekte; Skills als Format; Ablauf als Daten. Workflows durchgespielt, Bauphasen noch grob.
+status: Bauen 2026-08-13 — M1 (lokaler Kreislauf) ist das Ziel; Ablauf-Definition geparkt, wird aus dem Neubau echter Projekte gelernt.
 sessionId: skills-als-format
 ---
 # Plan: Speccify — Skills organisieren, finden, kombinieren
@@ -270,7 +270,54 @@ Oeffnen zeigt.
 3. **Was passiert mit dem Entwurfs-Release v0.2.0?** Noch nicht veröffentlicht.
    Liegen lassen, bis das hier steht?
 
-## Bauphasen (grob, erst nach der Definition schärfen)
+## Entscheid 2026-08-13: erst benutzen, dann den Ablauf definieren
+
+> BO: „Lass uns Speccify soweit fertig machen, dass wir die Skills hier lokal in
+> Projekten benutzen können. Dann lass uns einige Projekte, die noch ohne Skill
+> und mit älteren LLMs/Agents entwickelt wurden, mit Hilfe von Skills und
+> Speccify neu bauen."
+
+Die Frage, **wie** Abläufe definiert werden, wird **geparkt** — nicht verworfen.
+Sie darf der Weiterentwicklung nicht im Weg stehen. Ein Ablauf, den man am
+Schreibtisch erfindet, ist weniger wert als einer, der beim Neubau echter
+Projekte entsteht; danach lässt er sich aufschreiben, weil er dann existiert.
+
+### M1 — Der lokale Kreislauf (das aktuelle Ziel)
+
+**Fertig heißt:** Ich kann in einem Projekt sagen, welche Skills ich will, sie
+landen dort, wo der Agent sie von selbst findet, und was ich neu lerne, kommt
+zurück ins Repo.
+
+Konkret die drei Workflows W-A, W-B, W-C — und **nur** die:
+
+1. `SKILL.md` ist das Format (lesen, schreiben, prüfen).
+2. Die zehn vorhandenen Inhalte sind konvertiert und liegen in einem Repo.
+3. `speccify pull` materialisiert nach `.claude/skills/`.
+4. Was ich neu schreibe, geht zurück ins Repo.
+5. `speccify check` prüft Frische und die Best-Practice-Regeln.
+
+**Wie klein das ist:** `pull` schreibt heute schon Bundles in ein Verzeichnis;
+Manifest, Lockfile, Resolver, Git-Quellen und Hashing arbeiten auf
+Verzeichnissen und überleben den Formatwechsel unverändert. Der Delta ist der
+Parser, das Zielverzeichnis und die Konvertierung.
+
+**Was M1 ausdrücklich nicht braucht:** MCP-Server (der Agent liest Skills nativ,
+sobald sie im Verzeichnis liegen), Desktop-App, Viewer, Token-Bericht,
+Fremdquellen, Gast-Modus, Rücknahme. Alles später — und dann mit dem Wissen aus
+dem Neubau statt mit Vermutungen.
+
+**Prüfstein:** Dogfooding. Dieses Repo benutzt seine eigenen Skills, und ein
+zweites Projekt zieht sie.
+
+### M2 — Echte Projekte neu bauen
+
+Ältere Projekte, die ohne Skills und mit älteren Agents entstanden sind, mit
+Skills und Speccify neu bauen. Das ist die Evaluation: Was fehlt wirklich, was
+war Vermutung, wie sieht der Ablauf aus, wenn man ihn tut statt ihn zu planen.
+
+Ergebnis von M2 speist die geparkte Ablauf-Frage — und erst dann M3.
+
+## Spätere Phasen (nach M2 schärfen)
 
 * **S1** Format: `SKILL.md` lesen/schreiben/prüfen, die zehn Inhalte
   konvertiert. Danach funktionieren sie in Claude Code ohne Speccify.
