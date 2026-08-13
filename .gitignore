@@ -78,3 +78,7 @@ apps/composer/playwright-report/
 * [0-9][0-9].*
 * [0-9]
 * [0-9][0-9]
+
+# Materialisierte Skills — erzeugt aus skills/ bzw. dem Manifest.
+# Wegwerfbar wie node_modules; die Quelle ist skills/.
+.claude/skills/
