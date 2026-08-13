@@ -17,18 +17,15 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
-import yaml
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
 from speccify_core import (
-    PLAYBOOK_FILENAME,
     LibraryError,
-    LocalLibrary,
-    Version,
-    parse_playbook,
     parse_uses_entry,
-    validate_playbook,
 )
+from speccify_core.skill import SKILL_FILENAME, SkillError, parse_skill
+from speccify_core.skill_check import check_skill
+from speccify_core.skill_library import LocalSkillLibrary
 
 router = APIRouter(prefix="/api/v1", tags=["session"])
 
@@ -56,86 +53,73 @@ def reset_state() -> None:
 
 class SelectionPayload(BaseModel):
     source: str = Field(..., description="playbook id or git source currently open")
-    kind: str = Field("playbook", description="playbook | step | source | asset")
-    step_id: str | None = None
-    source_id: str | None = None
-    asset_path: str | None = None
+    kind: str = Field("skill", description="skill | step | source | file")
+    step_title: str | None = None
+    source_url: str | None = None
+    file_path: str | None = None
 
 
 class ProposalPayload(BaseModel):
     source: str = Field(..., description="playbook the proposal applies to")
-    playbook_yaml: str = Field(..., description="the full proposed playbook.yaml")
+    skill_markdown: str = Field(..., description="the full proposed SKILL.md")
     rationale: str = Field("", description="one or two sentences: what changed and why")
 
 
 def _resolve_selection(request: Request, selection: dict[str, Any]) -> dict[str, Any]:
     """Fill a raw selection with what it actually points at.
 
-    The agent should not have to make three more calls to learn that the user
-    clicked step `notarize` and what that step says.
+    The agent should not have to make three more calls to learn which step the
+    user clicked and what it says.
     """
     if not selection:
         return {}
     resolved = dict(selection)
     try:
         library = request.app.state.settings.library()
-        playbook_id, _ = parse_uses_entry(selection["source"])
-        versions = library.list_versions(playbook_id)
+        skill_id, _ = parse_uses_entry(selection["source"])
+        versions = library.list_versions(skill_id)
         if not versions:
             return resolved
-        bundle = library.fetch(playbook_id, versions[-1])
-        playbook = parse_playbook(bundle.parsed())
+        bundle = library.fetch(skill_id, versions[-1])
+        skill = bundle.skill()
     except (LibraryError, ValueError, KeyError):
         return resolved
 
-    resolved["playbook"] = {
-        "id": playbook.id,
-        "version": playbook.version,
-        "title": playbook.title,
-        "summary": playbook.summary,
+    resolved["skill"] = {
+        "id": skill.qualified_id,
+        "version": skill.version,
+        "description": skill.description,
     }
     kind = selection.get("kind")
-    if kind == "step" and selection.get("step_id"):
-        step = playbook.step(str(selection["step_id"]))
+    if kind == "step" and selection.get("step_title"):
+        wanted = str(selection["step_title"])
+        step = next((s for s in skill.steps if s.title == wanted), None)
         if step is not None:
             resolved["step"] = {
-                "id": step.id,
+                "number": step.number,
                 "title": step.title,
-                "detail": step.detail,
-                "uses": step.uses,
+                "body": step.body,
                 "verify": step.verify,
-                "assets": list(step.assets),
-                "sources": [
-                    {
-                        "id": s.id,
-                        "title": s.title,
-                        "url": s.url,
-                        "retrieved": s.retrieved,
-                    }
-                    for s in (playbook.source(sid) for sid in step.sources)
-                    if s is not None
-                ],
             }
-    elif kind == "source" and selection.get("source_id"):
-        source = playbook.source(str(selection["source_id"]))
+    elif kind == "source" and selection.get("source_url"):
+        wanted = str(selection["source_url"])
+        source = next((s for s in skill.sources if s.url == wanted), None)
         if source is not None:
             resolved["source_entry"] = {
-                "id": source.id,
                 "title": source.title,
                 "url": source.url,
                 "retrieved": source.retrieved,
-                "note": source.note,
             }
-    elif kind == "asset" and selection.get("asset_path"):
-        data = bundle.files.get(str(selection["asset_path"]))
+    elif kind == "file" and selection.get("file_path"):
+        data = bundle.files.get(str(selection["file_path"]))
         if data is not None:
             try:
-                resolved["asset"] = {
-                    "path": selection["asset_path"],
+                resolved["file"] = {
+                    "path": selection["file_path"],
                     "content": data.decode("utf-8"),
                 }
             except UnicodeDecodeError:
-                resolved["asset"] = {"path": selection["asset_path"], "content": None}
+                resolved["file"] = {"path": selection["file_path"], "content": None}
     return resolved
 
 
@@ -154,29 +138,36 @@ def get_selection(request: Request) -> dict[str, Any]:
 
 @router.post("/proposal")
 def post_proposal(payload: ProposalPayload, request: Request) -> dict[str, Any]:
-    """An agent proposes a changed playbook. Validated, never written."""
+    """An agent proposes a changed skill. Validated, never written.
+
+    Only specification errors block: a proposal that cannot be applied must
+    not become a diff on screen. Style findings ride along so the human sees
+    them next to the change instead of after it.
+    """
     try:
-        data = yaml.safe_load(payload.playbook_yaml)
-    except yaml.YAMLError as exc:
+        skill = parse_skill(payload.skill_markdown)
+    except SkillError as exc:
         raise HTTPException(
             status_code=422,
-            detail={"error_code": "invalid_yaml", "message": str(exc)},
+            detail={"error_code": "invalid_skill", "message": str(exc)},
         ) from exc
 
-    issues = validate_playbook(data)
-    if issues:
+    findings = check_skill(skill)
+    errors = [f for f in findings if f.is_error]
+    if errors:
         raise HTTPException(
             status_code=422,
             detail={
-                "error_code": "invalid_playbook",
-                "message": "; ".join(issue.format() for issue in issues[:5]),
+                "error_code": "invalid_skill",
+                "message": "; ".join(f.format() for f in errors[:5]),
             },
         )
 
     state().proposal = {
         "source": payload.source,
-        "playbook_yaml": payload.playbook_yaml,
+        "skill_markdown": payload.skill_markdown,
         "rationale": payload.rationale,
+        "findings": [{"level": f.level, "path": f.path, "message": f.message} for f in findings],
     }
     return {"ok": True, "message": "Proposal is waiting for the user to apply it."}
 
@@ -204,31 +195,30 @@ def apply_proposal(request: Request) -> dict[str, Any]:
         )
 
     settings = request.app.state.settings
-    playbook_id, _ = parse_uses_entry(str(proposal["source"]))
-    if playbook_id.startswith("git+"):
+    skill_id, _ = parse_uses_entry(str(proposal["source"]))
+    if skill_id.startswith("git+"):
         raise HTTPException(
             status_code=400,
             detail={
                 "error_code": "not_local",
                 "message": (
-                    "This playbook comes from a git source. Changes belong in that "
+                    "This skill comes from a git source. Changes belong in that "
                     "repository — clone it, apply there, tag a new version."
                 ),
             },
         )
     try:
-        library = LocalLibrary(settings.library_path)
-        versions = library.list_versions(playbook_id)
-        if not versions:
-            raise LibraryError(f"'{playbook_id}' is not in the local library.")
-        version: Version = versions[-1]
+        library = LocalSkillLibrary(settings.library_path)
+        if not library.list_versions(skill_id):
+            raise LibraryError(f"'{skill_id}' is not in the local library.")
     except LibraryError as exc:
         raise HTTPException(
             status_code=404, detail={"error_code": "not_found", "message": str(exc)}
         ) from exc
 
-    scope, name = playbook_id.lstrip("@").split("/", 1)
-    target = settings.library_path / scope / name / str(version) / PLAYBOOK_FILENAME
-    target.write_text(proposal["playbook_yaml"], encoding="utf-8")
+    # `name` is the directory; the scope lives in the file, not the path.
+    name = skill_id.rsplit("/", 1)[-1]
+    target = settings.library_path / name / SKILL_FILENAME
+    target.write_text(proposal["skill_markdown"], encoding="utf-8")
     state().proposal = {}
     return {"ok": True, "path": str(target)}

@@ -78,13 +78,13 @@ def run_viewer_selection() -> ViewerResult:
     return ViewerResult(ok=True, selection=selection)
 
 
-def run_playbook_propose(
+def run_skill_propose(
     *,
     source: str,
-    playbook_yaml: str,
+    skill_markdown: str,
     rationale: str = "",
 ) -> ProposalResult:
-    """Offer a changed playbook to the user; they apply it, not you."""
+    """Offer a changed skill to the user; they apply it, not you."""
     import httpx
 
     try:
@@ -93,7 +93,7 @@ def run_playbook_propose(
                 f"{api_base()}/api/v1/proposal",
                 json={
                     "source": source,
-                    "playbook_yaml": playbook_yaml,
+                    "skill_markdown": skill_markdown,
                     "rationale": rationale,
                 },
             )
@@ -104,7 +104,7 @@ def run_playbook_propose(
         detail = response.json().get("detail", {})
         return ProposalResult(
             ok=False,
-            code=str(detail.get("error_code", "invalid_playbook")),
+            code=str(detail.get("error_code", "invalid_skill")),
             message=str(detail.get("message", "The proposed playbook is not valid.")),
         )
     if response.status_code >= 400:

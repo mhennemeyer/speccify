@@ -12,8 +12,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from speccify_web_backend.routes import index as index_route
-from speccify_web_backend.routes import playbooks as playbooks_route
 from speccify_web_backend.routes import session as session_route
+from speccify_web_backend.routes import skills as skills_route
 from speccify_web_backend.settings import Settings
 
 
@@ -45,7 +45,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     def health() -> dict[str, str]:
         return {"status": "ok"}
 
-    app.include_router(playbooks_route.router)
+    app.include_router(skills_route.router)
     app.include_router(session_route.router)
     app.include_router(index_route.router)
 

@@ -1,60 +1,24 @@
-"""`speccify check`: is the knowledge in these playbooks still current?
+"""`speccify check`: is this skill still true, and is it well made?
 
-`lint` asks whether a playbook is well-formed. `check` asks whether it is still
-*true*: how old its sources are, and — with `--links` — whether they still
-resolve. Network checks are opt-in so a normal run stays fast and hermetic.
+Three layers, and only the last needs the network:
+
+* **specification** — what `lint` covers, repeated here so one command answers
+  the whole question,
+* **best practice** — the official authoring checklist, which no other tool
+  enforces,
+* **freshness** — how old the sources are and whether they still resolve.
+
+Errors fail the run; warnings report. `--links` is opt-in because it is slow
+and a flaky proxy should never fail a normal test run.
 """
 
 from __future__ import annotations
 
-from datetime import date
 from pathlib import Path
 
 import typer
-import yaml
-from speccify_core import (
-    ASSET_DIR,
-    PLAYBOOK_FILENAME,
-    STALE_SOURCE_DAYS,
-    Finding,
-    check_links,
-    check_playbook,
-    parse_playbook,
-)
+from speccify_core.skill import STALE_SOURCE_DAYS
 from speccify_core.skill_check import check_skill_directory, find_skills
-
-from speccify_cli.commands.lint import find_bundles
-
-
-def check_bundle(
-    bundle_dir: Path,
-    *,
-    links: bool = False,
-    today: date | None = None,
-    stale_days: int = STALE_SOURCE_DAYS,
-) -> list[Finding]:
-    """Health of one bundle: structure, source age and optionally reachability."""
-    playbook_path = bundle_dir / PLAYBOOK_FILENAME
-    if not playbook_path.is_file():
-        return [Finding("error", "$", f"no {PLAYBOOK_FILENAME} in {bundle_dir}")]
-    try:
-        data = yaml.safe_load(playbook_path.read_text(encoding="utf-8"))
-    except yaml.YAMLError as exc:
-        return [Finding("error", "$", f"invalid YAML: {exc}")]
-
-    files = {PLAYBOOK_FILENAME}
-    asset_root = bundle_dir / ASSET_DIR
-    if asset_root.is_dir():
-        files |= {
-            asset.relative_to(bundle_dir).as_posix()
-            for asset in asset_root.rglob("*")
-            if asset.is_file()
-        }
-
-    findings = check_playbook(data, bundle_files=files, today=today, stale_days=stale_days)
-    if links and not any(finding.is_error for finding in findings):
-        findings.extend(check_links(parse_playbook(data).sources))
-    return findings
 
 
 def check_command(
@@ -69,28 +33,20 @@ def check_command(
     ),
 ) -> None:
     """Check whether skills are still current: source age, dead links, best practice."""
-    # Skills first; the playbook branch is a migration leftover and goes away
-    # with the last `playbook.yaml` in the tree.
-    targets: list[tuple[Path, bool]] = []
+    targets: list[Path] = []
     for path in paths:
-        root = path if path.is_dir() else path.parent
-        targets += [(d, True) for d in find_skills(root)]
-        targets += [(d, False) for d in find_bundles(root)]
+        targets += find_skills(path if path.is_dir() else path.parent)
     if not targets:
         typer.echo("No skills found.", err=True)
         raise typer.Exit(code=1)
 
     errors = warnings = 0
-    for bundle, is_skill in targets:
-        findings = (
-            check_skill_directory(bundle, links=links, stale_days=stale_days)
-            if is_skill
-            else check_bundle(bundle, links=links, stale_days=stale_days)
-        )
+    for directory in targets:
+        findings = check_skill_directory(directory, links=links, stale_days=stale_days)
         if not findings:
-            typer.echo(f"ok  {bundle}")
+            typer.echo(f"ok  {directory}")
             continue
-        typer.echo(f"--- {bundle}")
+        typer.echo(f"--- {directory}")
         for finding in findings:
             typer.echo(f"    {finding.format()}", err=finding.is_error)
             if finding.is_error:

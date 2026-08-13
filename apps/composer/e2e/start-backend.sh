@@ -11,16 +11,16 @@ PORT="${COMPOSER_E2E_BACKEND_PORT:-8788}"
 
 LIB_TMP="$SCRIPT_DIR/.library-tmp"
 rm -rf "$LIB_TMP"
-cp -R "$REPO_ROOT/playbooks" "$LIB_TMP"
+cp -R "$REPO_ROOT/skills" "$LIB_TMP"
 
 export SPECCIFY_LIBRARY_PATH="$LIB_TMP"
 
-# Discovery fixture: a real git repository holding a playbook, plus an index
+# Discovery fixture: a real git repository holding a skill, plus an index
 # pointing at it — so the UI smoke covers search as well.
 GIT_TMP="$SCRIPT_DIR/.git-fixture"
 rm -rf "$GIT_TMP"
 mkdir -p "$GIT_TMP/button-repo" "$GIT_TMP/index/entries" "$GIT_TMP/git-cache"
-cp "$REPO_ROOT/playbooks/speccify/apple-developer-id-cert/1.0.0/playbook.yaml" "$GIT_TMP/button-repo/"
+cp "$REPO_ROOT/skills/apple-developer-id-cert/SKILL.md" "$GIT_TMP/button-repo/"
 git -c init.defaultBranch=main init --quiet "$GIT_TMP/button-repo"
 git -C "$GIT_TMP/button-repo" \
   -c user.name="Speccify E2E" -c user.email="e2e@speccify.io" \

@@ -21,7 +21,7 @@ from .search import SearchResult, run_search
 from .viewer import (
     ProposalResult,
     ViewerResult,
-    run_playbook_propose,
+    run_skill_propose,
     run_viewer_selection,
 )
 
@@ -39,7 +39,7 @@ __all__ = [
     "run_skill_check",
     "run_skill_get",
     "run_skill_list",
-    "run_playbook_propose",
+    "run_skill_propose",
     "run_pull",
     "run_search",
     "run_verify",

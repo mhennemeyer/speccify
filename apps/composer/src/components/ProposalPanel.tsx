@@ -4,7 +4,7 @@ import type { Proposal } from "../api";
 
 interface Props {
   proposal: Proposal;
-  currentYaml: string;
+  current: string;
   onApply: () => void;
   onDiscard: () => void;
 }
@@ -16,7 +16,7 @@ interface DiffLine {
 
 /**
  * Line diff, longest-common-subsequence style. Small enough to hand-roll:
- * playbooks are hundreds of lines, and a diff library for one panel would be
+ * skills are hundreds of lines, and a diff library for one panel would be
  * a dependency that has to be kept current for the rest of the app's life.
  */
 function diff(before: string, after: string): DiffLine[] {
@@ -81,10 +81,10 @@ function condense(lines: DiffLine[], context = 2): DiffLine[] {
   return out;
 }
 
-export function ProposalPanel({ proposal, currentYaml, onApply, onDiscard }: Props) {
+export function ProposalPanel({ proposal, current, onApply, onDiscard }: Props) {
   const lines = useMemo(
-    () => condense(diff(currentYaml, proposal.playbook_yaml)),
-    [currentYaml, proposal.playbook_yaml],
+    () => condense(diff(current, proposal.skill_markdown)),
+    [current, proposal.skill_markdown],
   );
   const changed = lines.filter((line) => line.kind !== "same").length;
 

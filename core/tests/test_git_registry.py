@@ -36,17 +36,17 @@ def _git(repo: Path, *args: str) -> None:
     )
 
 
-def _playbook_yaml(playbook_id: str, version: str, title: str = "Fetched") -> str:
+def _skill_markdown(playbook_id: str, version: str, title: str = "fetched") -> str:
+    scope, name = playbook_id.lstrip("@").split("/", 1)
     return (
-        "schema_version: 1\n"
-        f"id: '{playbook_id}'\n"
-        f"version: {version}\n"
-        f"title: {title}\n"
-        "summary: Loaded from a git repository.\n"
-        "steps:\n"
-        "  - id: only\n"
-        "    title: The only step\n"
-        "    detail: Do the thing.\n"
+        "---\n"
+        f"name: {name}\n"
+        f"description: {title} — loaded from a git repository. Use when testing.\n"
+        "metadata:\n"
+        f'  speccify.version: "{version}"\n'
+        f"  speccify.scope: {scope}\n"
+        "---\n\n"
+        "## 1 — The only step\n\nDo the thing.\n"
     )
 
 
@@ -57,8 +57,8 @@ def single_playbook_repo(tmp_path: Path) -> str:
     repo.mkdir()
     _git(repo, "init", "--quiet", "--initial-branch", "main")
     for version in ("0.1.0", "0.2.0"):
-        (repo / "playbook.yaml").write_text(
-            _playbook_yaml("@acme/rating-stars", version), encoding="utf-8"
+        (repo / "SKILL.md").write_text(
+            _skill_markdown("@acme/rating-stars", version), encoding="utf-8"
         )
         _git(repo, "add", ".")
         _git(repo, "commit", "--quiet", "-m", f"release {version}")
@@ -75,8 +75,8 @@ def multi_playbook_repo(tmp_path: Path) -> str:
     for name, version in (("button", "0.1.0"), ("text-input", "1.4.2"), ("button", "0.3.0")):
         target = repo / "playbooks" / name
         target.mkdir(parents=True, exist_ok=True)
-        (target / "playbook.yaml").write_text(
-            _playbook_yaml(f"@acme/{name}", version, title=name), encoding="utf-8"
+        (target / "SKILL.md").write_text(
+            _skill_markdown(f"@acme/{name}", version, title=name), encoding="utf-8"
         )
         _git(repo, "add", ".")
         _git(repo, "commit", "--quiet", "-m", f"{name} {version}")
@@ -90,14 +90,14 @@ def multi_playbook_repo(tmp_path: Path) -> str:
 def test_parse_git_ref_splits_url_and_path() -> None:
     ref = parse_git_ref("git+https://github.com/acme/kit#playbooks/button")
     assert ref == GitRef(url="https://github.com/acme/kit", path="playbooks/button")
-    assert ref.playbook_path == "playbooks/button/playbook.yaml"
+    assert ref.skill_path == "playbooks/button/SKILL.md"
     assert ref.tag_for(Version.parse("1.2.0")) == "playbooks/button/v1.2.0"
 
 
 def test_parse_git_ref_without_path() -> None:
     ref = parse_git_ref("git+https://github.com/acme/rating-stars")
     assert ref.path == ""
-    assert ref.playbook_path == "playbook.yaml"
+    assert ref.skill_path == "SKILL.md"
     assert ref.tag_for(Version.parse("1.2.0")) == "v1.2.0"
     assert ref.playbook_id == "git+https://github.com/acme/rating-stars"
 
@@ -144,7 +144,7 @@ def test_fetch_returns_bundle_and_commit(single_playbook_repo: str, tmp_path: Pa
     registry = GitLibrary(cache_dir=tmp_path / "cache")
     bundle = registry.fetch(single_playbook_repo, Version.parse("0.1.0"))
     assert bundle.source_id == single_playbook_repo
-    assert bundle.parsed()["version"] == "0.1.0"
+    assert bundle.skill().version == "0.1.0"
     assert bundle.source_commit and len(bundle.source_commit) == 40
     # The pin is stable and points at the same tag.
     assert (
@@ -164,7 +164,11 @@ def test_multi_playbook_repo_versions_are_independent(
     text_input = f"{multi_playbook_repo}#playbooks/text-input"
     assert registry.list_versions(button) == [Version.parse("0.1.0"), Version.parse("0.3.0")]
     assert registry.list_versions(text_input) == [Version.parse("1.4.2")]
-    assert registry.fetch(text_input, Version.parse("1.4.2")).parsed()["title"] == "text-input"
+    assert (
+        registry.fetch(text_input, Version.parse("1.4.2"))
+        .skill()
+        .description.startswith("text-input")
+    )
 
 
 def test_unknown_version_names_the_available_ones(
@@ -175,9 +179,9 @@ def test_unknown_version_names_the_available_ones(
         registry.fetch(single_playbook_repo, Version.parse("9.9.9"))
 
 
-def test_missing_playbook_file_is_reported(multi_playbook_repo: str, tmp_path: Path) -> None:
+def test_missing_skill_file_is_reported(multi_playbook_repo: str, tmp_path: Path) -> None:
     registry = GitLibrary(cache_dir=tmp_path / "cache")
-    # The tag exists, but no bundle lives under that path.
+    # The tag exists, but no skill lives under that path.
     ghost = f"{multi_playbook_repo}#playbooks/ghost"
     with pytest.raises(GitLibraryError):
         registry.fetch(ghost, Version.parse("0.1.0"))
@@ -200,9 +204,7 @@ def test_cache_is_a_bare_repo_and_survives_the_source(
         Version.parse("0.1.0"),
         Version.parse("0.2.0"),
     ]
-    assert (
-        offline.fetch(single_playbook_repo, Version.parse("0.2.0")).parsed()["version"] == "0.2.0"
-    )
+    assert offline.fetch(single_playbook_repo, Version.parse("0.2.0")).skill().version == "0.2.0"
 
 
 def test_offline_without_cache_fails_with_a_hint(single_playbook_repo: str, tmp_path: Path) -> None:

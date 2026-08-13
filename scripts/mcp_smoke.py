@@ -24,7 +24,7 @@ REFERENCE = "@speccify/macos-notarize-tauri"
 
 EXPECTED_TOOLS = {
     "lock",
-    "playbook_propose",
+    "skill_propose",
     "skill_asset",
     "skill_check",
     "skill_get",

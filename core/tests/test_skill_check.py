@@ -157,3 +157,18 @@ def test_the_shipped_skills_are_clean() -> None:
     for directory in directories:
         findings = check_skill_directory(directory, today=TODAY)
         assert findings == [], f"{directory.name}: {[f.format() for f in findings]}"
+
+
+@pytest.mark.links
+def test_the_shipped_skills_sources_still_resolve() -> None:
+    """Opt-in, needs the network: `pytest -m links`.
+
+    The offline checks cannot tell a live URL from a dead one, and a skill
+    whose sources have moved is exactly the failure this project exists to
+    catch.
+    """
+    root = Path(__file__).resolve().parents[2] / "skills"
+    for directory in find_skills(root):
+        findings = check_skill_directory(directory, links=True, today=TODAY)
+        errors = [f.format() for f in findings if f.is_error]
+        assert errors == [], f"{directory.name}: {errors}"

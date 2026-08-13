@@ -6,7 +6,6 @@ from pathlib import Path
 
 import pytest
 from speccify_core import (
-    LocalLibrary,
     ProjectManifest,
     Range,
     RangeConflictError,
@@ -16,8 +15,9 @@ from speccify_core import (
     build_lockfile,
     parse_uses_entry,
 )
+from speccify_core.skill_library import LocalSkillLibrary
 
-FIXTURES = Path("playbooks")
+FIXTURES = Path("skills")
 
 
 def _manifest(**dependencies: str) -> ProjectManifest:
@@ -51,7 +51,7 @@ def test_parse_uses_entry(entry: str, expected: tuple[str, str]) -> None:
 
 
 def test_resolve_follows_child_playbooks() -> None:
-    graph = Resolver(LocalLibrary(FIXTURES)).resolve(
+    graph = Resolver(LocalSkillLibrary(FIXTURES)).resolve(
         _manifest(**{"@speccify/macos-notarize-tauri": "^1.0"})
     )
     resolved = {r.playbook_id: r for r in graph.resolutions}
@@ -67,11 +67,11 @@ def test_resolve_follows_child_playbooks() -> None:
 
 def test_unknown_playbook_reports_who_asked() -> None:
     with pytest.raises(VersionNotFoundError, match="<root>"):
-        Resolver(LocalLibrary(FIXTURES)).resolve(_manifest(**{"@org/nope": "^1.0"}))
+        Resolver(LocalSkillLibrary(FIXTURES)).resolve(_manifest(**{"@org/nope": "^1.0"}))
 
 
 def test_conflicting_ranges_fail_loudly() -> None:
-    resolver = Resolver(LocalLibrary(FIXTURES))
+    resolver = Resolver(LocalSkillLibrary(FIXTURES))
     with pytest.raises(RangeConflictError, match="available: 1.0.0"):
         resolver.resolve_constraints(
             {
@@ -84,7 +84,7 @@ def test_conflicting_ranges_fail_loudly() -> None:
 
 
 def test_lockfile_round_trip(tmp_path: Path) -> None:
-    graph = Resolver(LocalLibrary(FIXTURES)).resolve(
+    graph = Resolver(LocalSkillLibrary(FIXTURES)).resolve(
         _manifest(**{"@speccify/macos-notarize-tauri": "^1.0"})
     )
     lockfile = build_lockfile(list(graph.resolutions))

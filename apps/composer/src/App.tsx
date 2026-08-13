@@ -4,28 +4,28 @@ import {
   ApiError,
   applyProposal,
   discardProposal,
-  getAsset,
-  getPlaybook,
+  getFile,
+  getSkill,
   getProposal,
-  listPlaybooks,
+  listSkills,
   pushSelection,
   searchIndex,
   type Proposal,
 } from "./api";
-import { PlaybookView } from "./components/PlaybookView";
+import { SkillView } from "./components/SkillView";
 import { ProposalPanel } from "./components/ProposalPanel";
-import { PlaybookList } from "./components/PlaybookList";
-import type { IndexHit, PlaybookDetail, PlaybookSummary, Selection } from "./types";
+import { SkillList } from "./components/SkillList";
+import type { IndexHit, Selection, SkillDetail, SkillSummary } from "./types";
 
 /**
- * The viewer: read a playbook, click into it, ask an agent about what you
+ * The viewer: read a skill, click into it, ask an agent about what you
  * clicked. There is deliberately no edit mode — changes come from the agent as
  * a proposal, the YAML pane is the escape hatch.
  */
 export function App() {
-  const [playbooks, setPlaybooks] = useState<PlaybookSummary[]>([]);
-  const [detail, setDetail] = useState<PlaybookDetail | null>(null);
-  const [selection, setSelection] = useState<Selection>({ kind: "playbook" });
+  const [skills, setSkills] = useState<SkillSummary[]>([]);
+  const [detail, setDetail] = useState<SkillDetail | null>(null);
+  const [selection, setSelection] = useState<Selection>({ kind: "skill" });
   const [assetContent, setAssetContent] = useState<string | null>(null);
   const [indexHits, setIndexHits] = useState<IndexHit[]>([]);
   const [indexStatus, setIndexStatus] = useState("");
@@ -35,21 +35,21 @@ export function App() {
   useEffect(() => {
     void (async () => {
       try {
-        setPlaybooks(await listPlaybooks());
+        setSkills(await listSkills());
       } catch (error) {
-        setStatus(`Could not load playbooks: ${String(error)}`);
+        setStatus(`Could not load skills: ${String(error)}`);
       }
     })();
   }, []);
 
   const open = useCallback(async (source: string) => {
     try {
-      const loaded = await getPlaybook(source);
+      const loaded = await getSkill(source);
       setDetail(loaded);
-      setSelection({ kind: "playbook" });
+      setSelection({ kind: "skill" });
       setAssetContent(null);
       setStatus(`${loaded.id}@${loaded.version} loaded.`);
-      void pushSelection({ source: loaded.source, kind: "playbook" }).catch(() => undefined);
+      void pushSelection({ source: loaded.source, kind: "skill" }).catch(() => undefined);
     } catch (error) {
       setStatus(
         error instanceof ApiError && error.status === 404
@@ -79,29 +79,24 @@ export function App() {
     async (next: Selection) => {
       setSelection(next);
       setAssetContent(null);
-      if (next.kind === "step") {
-        document
-          .getElementById(`step-${next.stepId}`)
-          ?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-      }
       // Tell the backend what is selected: the agent next door reads it.
       if (detail) {
         void pushSelection({
           source: detail.source,
           kind: next.kind,
-          step_id: next.kind === "step" ? next.stepId : undefined,
-          source_id: next.kind === "source" ? next.sourceId : undefined,
-          asset_path: next.kind === "asset" ? next.path : undefined,
+          step_title: next.kind === "step" ? next.title : undefined,
+          source_url: next.kind === "source" ? next.url : undefined,
+          file_path: next.kind === "file" ? next.path : undefined,
         }).catch(() => undefined);
       }
-      if (next.kind === "asset" && detail) {
+      if (next.kind === "file" && detail) {
         try {
-          const asset = await getAsset(detail.source, next.path);
+          const file = await getFile(detail.source, next.path);
           setAssetContent(
-            asset.encoding === "utf-8" ? asset.content : "(binary asset — download to inspect)",
+            file.encoding === "utf-8" ? file.content : "(binary file — download to inspect)",
           );
         } catch (error) {
-          setAssetContent(`Could not load asset: ${String(error)}`);
+          setAssetContent(`Could not load file: ${String(error)}`);
         }
       }
     },
@@ -133,8 +128,8 @@ export function App() {
       const applied = await applyProposal();
       setProposal(null);
       setStatus(`Applied — ${applied.path}`);
-      if (detail) setDetail(await getPlaybook(detail.source));
-      setPlaybooks(await listPlaybooks());
+      if (detail) setDetail(await getSkill(detail.source));
+      setSkills(await listSkills());
     } catch (error) {
       setStatus(`Could not apply: ${String(error)}`);
     }
@@ -155,14 +150,14 @@ export function App() {
             {detail.id}@{detail.version}
           </span>
         ) : (
-          <span className="muted">no playbook open</span>
+          <span className="muted">no skill open</span>
         )}
         <div className="spacer" />
         <span className="muted">{status}</span>
       </header>
       <div className="layout">
-        <PlaybookList
-          playbooks={playbooks}
+        <SkillList
+          skills={skills}
           indexHits={indexHits}
           indexStatus={indexStatus}
           activeSource={detail?.source ?? null}
@@ -173,15 +168,15 @@ export function App() {
           {proposal && detail && proposal.source === detail.source ? (
             <ProposalPanel
               proposal={proposal}
-              currentYaml={detail.yaml}
+              current={detail.raw}
               onApply={() => void acceptProposal()}
               onDiscard={() => void rejectProposal()}
             />
           ) : null}
-          <PlaybookView
-            playbook={detail}
-          selection={selection}
-          assetContent={assetContent}
+          <SkillView
+            skill={detail}
+            selection={selection}
+            fileContent={assetContent}
             onSelect={(next) => void select(next)}
             onOpenChild={(source) => void open(source)}
           />

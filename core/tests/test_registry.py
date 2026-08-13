@@ -7,54 +7,64 @@ from pathlib import Path
 import pytest
 from speccify_core import (
     LibraryError,
-    LocalLibrary,
     MultiLibrary,
     Version,
     bundle_sha256,
 )
+from speccify_core.skill_library import LocalSkillLibrary
 
-FIXTURES = Path("playbooks")
+FIXTURES = Path("skills")
 
 
 def test_bundle_carries_playbook_and_assets() -> None:
-    bundle = LocalLibrary(FIXTURES).fetch("@speccify/macos-notarize-tauri", Version.parse("1.0.0"))
-    assert set(bundle.files) == {"playbook.yaml", "assets/verify-signatures.sh"}
+    bundle = LocalSkillLibrary(FIXTURES).fetch(
+        "@speccify/macos-notarize-tauri", Version.parse("1.0.0")
+    )
+    assert set(bundle.files) == {"SKILL.md", "assets/verify-signatures.sh"}
     assert bundle.asset_paths == ("assets/verify-signatures.sh",)
     assert bundle.declared_id == "@speccify/macos-notarize-tauri"
 
 
 def test_bundle_hash_covers_assets_and_paths() -> None:
-    base = {"playbook.yaml": b"a", "assets/x": b"b"}
-    assert bundle_sha256(base) == bundle_sha256({"assets/x": b"b", "playbook.yaml": b"a"})
-    assert bundle_sha256(base) != bundle_sha256({"playbook.yaml": b"a", "assets/y": b"b"})
-    assert bundle_sha256(base) != bundle_sha256({"playbook.yaml": b"a", "assets/x": b"c"})
+    base = {"SKILL.md": b"a", "assets/x": b"b"}
+    assert bundle_sha256(base) == bundle_sha256({"assets/x": b"b", "SKILL.md": b"a"})
+    assert bundle_sha256(base) != bundle_sha256({"SKILL.md": b"a", "assets/y": b"b"})
+    assert bundle_sha256(base) != bundle_sha256({"SKILL.md": b"a", "assets/x": b"c"})
     # Length prefixes keep neighbouring fields from bleeding into each other.
     assert bundle_sha256({"ab": b"c"}) != bundle_sha256({"a": b"bc"})
 
 
 def test_list_playbooks_is_sorted_and_complete() -> None:
-    found = LocalLibrary(FIXTURES).list_playbooks()
+    found = LocalSkillLibrary(FIXTURES).list_playbooks()
     assert found == sorted(found)
     assert ("@speccify/apple-developer-id-cert", Version.parse("1.0.0")) in found
 
 
 def test_unknown_version_names_what_is_available() -> None:
-    with pytest.raises(LibraryError, match="Available: \\['1.0.0'\\]"):
-        LocalLibrary(FIXTURES).fetch("@speccify/macos-notarize-tauri", Version.parse("9.9.9"))
+    with pytest.raises(LibraryError, match="Available: 1.0.0"):
+        LocalSkillLibrary(FIXTURES).fetch("@speccify/macos-notarize-tauri", Version.parse("9.9.9"))
 
 
-def test_unscoped_id_is_rejected() -> None:
-    with pytest.raises(LibraryError, match="@scope/name"):
-        LocalLibrary(FIXTURES).list_versions("no-scope")
+def test_a_bare_name_resolves_too() -> None:
+    """`name` is the lookup key — `.claude/skills/<name>/` is where agents look.
+
+    The scope lives in the file, not in the path, so both forms find the same
+    directory. Requiring a scope here would mean an agent could not ask for a
+    skill by the only name it has seen.
+    """
+    library = LocalSkillLibrary(FIXTURES)
+    assert library.list_versions("macos-notarize-tauri") == library.list_versions(
+        "@speccify/macos-notarize-tauri"
+    )
 
 
 def test_library_root_must_exist(tmp_path: Path) -> None:
     with pytest.raises(LibraryError):
-        LocalLibrary(tmp_path / "missing")
+        LocalSkillLibrary(tmp_path / "missing")
 
 
 def test_multi_library_routes_by_serves() -> None:
-    local = LocalLibrary(FIXTURES)
+    local = LocalSkillLibrary(FIXTURES)
 
     class OnlyGit:
         via = "git"

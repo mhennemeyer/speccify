@@ -13,10 +13,8 @@ from __future__ import annotations
 import hashlib
 import re
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Protocol, runtime_checkable
 
-from speccify_core.playbook import ASSET_DIR, PLAYBOOK_FILENAME
 from speccify_core.skill import SKILL_FILENAME, Skill, parse_skill
 
 _SCOPED_ID_PATTERN = re.compile(r"^@([a-z0-9][a-z0-9-]*)/([a-z0-9][a-z0-9-]*)$")
@@ -67,51 +65,32 @@ class Bundle:
     source_commit: str | None = None
 
     @property
-    def playbook_bytes(self) -> bytes:
-        try:
-            return self.files[PLAYBOOK_FILENAME]
-        except KeyError as exc:
-            raise LibraryError(
-                f"{self.source_id}@{self.version}: bundle has no {PLAYBOOK_FILENAME}."
-            ) from exc
-
-    def parsed(self) -> dict:
-        import yaml
-
-        return yaml.safe_load(self.playbook_bytes.decode("utf-8")) or {}
-
-    @property
     def is_skill(self) -> bool:
         """A bundle is a skill when it carries a `SKILL.md`."""
         return SKILL_FILENAME in self.files
 
     def skill(self) -> Skill:
-        return parse_skill(self.files[SKILL_FILENAME].decode("utf-8"))
+        try:
+            return parse_skill(self.files[SKILL_FILENAME].decode("utf-8"))
+        except KeyError as exc:
+            raise LibraryError(
+                f"{self.source_id}@{self.version}: bundle has no {SKILL_FILENAME}."
+            ) from exc
 
     @property
     def declared_id(self) -> str:
         """The id written inside the bundle; falls back to the source id."""
-        if self.is_skill:
-            return self.skill().qualified_id or self.source_id
-        return str(self.parsed().get("id", "")) or self.source_id
+        return self.skill().qualified_id or self.source_id
 
     @property
     def uses(self) -> tuple[str, ...]:
-        """What this bundle builds on — the one thing the resolver needs from it.
-
-        A skill declares it in `metadata.speccify.uses`, a playbook in
-        `steps[].uses`. Keeping both readings here means the resolver never has
-        to know which format it is looking at.
-        """
-        if self.is_skill:
-            return self.skill().uses
-        from speccify_core.playbook import parse_playbook
-
-        return tuple(parse_playbook(self.parsed()).uses)
+        """What this skill builds on — the one thing the resolver needs from it."""
+        return self.skill().uses
 
     @property
     def asset_paths(self) -> tuple[str, ...]:
-        return tuple(sorted(p for p in self.files if p.startswith(f"{ASSET_DIR}/")))
+        """Everything bundled beside the SKILL.md."""
+        return tuple(sorted(p for p in self.files if p != SKILL_FILENAME))
 
     @property
     def sha256(self) -> str:
@@ -158,79 +137,6 @@ def split_id(playbook_id: str) -> tuple[str, str]:
     if not match:
         raise LibraryError(f"Playbook id '{playbook_id}' is not of the form '@scope/name'.")
     return match.group(1), match.group(2)
-
-
-class LocalLibrary:
-    """Directory-backed playbook library (read-only).
-
-    Layout: `<root>/<scope>/<name>/<version>/playbook.yaml` plus `assets/`.
-    """
-
-    def __init__(self, root: str | Path, *, via: str | None = None) -> None:
-        self._root = Path(root)
-        if not self._root.exists():
-            raise LibraryError(f"Playbook library does not exist: {self._root}")
-        if not self._root.is_dir():
-            raise LibraryError(f"Playbook library is not a directory: {self._root}")
-        self._via = via if via is not None else "local"
-
-    @property
-    def root(self) -> Path:
-        return self._root
-
-    @property
-    def via(self) -> str:
-        return self._via
-
-    def serves(self, playbook_id: str) -> bool:
-        return bool(_SCOPED_ID_PATTERN.match(playbook_id))
-
-    def list_versions(self, playbook_id: str) -> list[Version]:
-        scope, name = split_id(playbook_id)
-        directory = self._root / scope / name
-        if not directory.is_dir():
-            return []
-        versions: list[Version] = []
-        for entry in directory.iterdir():
-            if not entry.is_dir() or not (entry / PLAYBOOK_FILENAME).is_file():
-                continue
-            try:
-                versions.append(Version.parse(entry.name))
-            except ValueError:
-                continue
-        return sorted(versions)
-
-    def list_playbooks(self) -> list[tuple[str, Version]]:
-        """Every playbook in this library, sorted — used by the viewer and `search`."""
-        found: list[tuple[str, Version]] = []
-        for scope_dir in sorted(p for p in self._root.iterdir() if p.is_dir()):
-            for name_dir in sorted(p for p in scope_dir.iterdir() if p.is_dir()):
-                playbook_id = f"@{scope_dir.name}/{name_dir.name}"
-                for version in self.list_versions(playbook_id):
-                    found.append((playbook_id, version))
-        return found
-
-    def fetch(self, playbook_id: str, version: Version) -> Bundle:
-        scope, name = split_id(playbook_id)
-        directory = self._root / scope / name / str(version)
-        if not (directory / PLAYBOOK_FILENAME).is_file():
-            available = [str(v) for v in self.list_versions(playbook_id)]
-            raise LibraryError(
-                f"Playbook '{playbook_id}@{version}' not found in {self._root}. "
-                f"Available: {available or 'none'}."
-            )
-        files: dict[str, bytes] = {PLAYBOOK_FILENAME: (directory / PLAYBOOK_FILENAME).read_bytes()}
-        asset_root = directory / ASSET_DIR
-        if asset_root.is_dir():
-            for asset in sorted(asset_root.rglob("*")):
-                if asset.is_file():
-                    files[asset.relative_to(directory).as_posix()] = asset.read_bytes()
-        return Bundle(
-            source_id=playbook_id,
-            version=version,
-            files=files,
-            origin=str(directory),
-        )
 
 
 class MultiLibrary:
@@ -286,7 +192,6 @@ class MultiLibrary:
 
 
 # Older vocabulary, same objects.
-LocalRegistry = LocalLibrary
 MultiRegistry = MultiLibrary
 
 
@@ -294,8 +199,6 @@ __all__ = [
     "Bundle",
     "Library",
     "LibraryError",
-    "LocalLibrary",
-    "LocalRegistry",
     "MultiLibrary",
     "MultiRegistry",
     "Registry",

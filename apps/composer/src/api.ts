@@ -1,7 +1,7 @@
 // HTTP client for the Speccify backend. Every viewer action exists as an
 // endpoint, so agents can do the same thing headlessly.
 
-import type { IndexHit, PlaybookDetail, PlaybookSummary } from "./types";
+import type { IndexHit, SkillDetail, SkillSummary } from "./types";
 
 declare global {
   interface Window {
@@ -39,21 +39,21 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return (await response.json()) as T;
 }
 
-export async function listPlaybooks(): Promise<PlaybookSummary[]> {
-  const body = await request<{ playbooks: PlaybookSummary[] }>("/api/v1/playbooks");
-  return body.playbooks;
+export async function listSkills(): Promise<SkillSummary[]> {
+  const body = await request<{ skills: SkillSummary[] }>("/api/v1/skills");
+  return body.skills;
 }
 
-export async function getPlaybook(source: string): Promise<PlaybookDetail> {
-  return request<PlaybookDetail>(`/api/v1/playbook?source=${encodeURIComponent(source)}`);
+export async function getSkill(source: string): Promise<SkillDetail> {
+  return request<SkillDetail>(`/api/v1/skill?source=${encodeURIComponent(source)}`);
 }
 
-export async function getAsset(
+export async function getFile(
   source: string,
   path: string,
 ): Promise<{ path: string; encoding: string; content: string }> {
   return request(
-    `/api/v1/playbook/asset?source=${encodeURIComponent(source)}&path=${encodeURIComponent(path)}`,
+    `/api/v1/skill/file?source=${encodeURIComponent(source)}&path=${encodeURIComponent(path)}`,
   );
 }
 
@@ -67,9 +67,9 @@ export async function searchIndex(query: string): Promise<IndexHit[]> {
 export async function pushSelection(selection: {
   source: string;
   kind: string;
-  step_id?: string;
-  source_id?: string;
-  asset_path?: string;
+  step_title?: string;
+  source_url?: string;
+  file_path?: string;
 }): Promise<void> {
   await request("/api/v1/selection", {
     method: "PUT",
@@ -77,10 +77,18 @@ export async function pushSelection(selection: {
   });
 }
 
+export interface Finding {
+  level: "error" | "warning";
+  path: string;
+  message: string;
+}
+
 export interface Proposal {
   source: string;
-  playbook_yaml: string;
+  skill_markdown: string;
   rationale: string;
+  /** Style notes that did not block the proposal — shown beside the diff. */
+  findings: Finding[];
 }
 
 /** A change an agent suggested; empty object when there is none. */
@@ -88,7 +96,7 @@ export async function getProposal(): Promise<Proposal | null> {
   const body = await request<{ proposal: Proposal | Record<string, never> }>(
     "/api/v1/proposal",
   );
-  return "playbook_yaml" in body.proposal ? (body.proposal as Proposal) : null;
+  return "skill_markdown" in body.proposal ? (body.proposal as Proposal) : null;
 }
 
 export async function applyProposal(): Promise<{ path: string }> {

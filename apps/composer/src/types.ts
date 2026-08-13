@@ -1,58 +1,60 @@
-// Types mirroring the backend's JSON (routes/playbooks.py).
+// Types mirroring the backend's JSON (routes/playbooks.py, routes/session.py).
 
 export interface SourceRef {
-  id: string;
   title: string;
   url: string;
-  retrieved: string;
-  note: string | null;
+  retrieved: string | null;
 }
 
-export interface PlaybookStep {
-  id: string;
+/** A `##` section of the body. Inferred, never declared — the spec puts no
+ *  requirements on a skill's markdown. */
+export interface SkillStep {
+  number: number | null;
   title: string;
-  detail: string;
-  uses: string | null;
   verify: string | null;
-  assets: string[];
-  sources: SourceRef[];
 }
 
-export interface PlaybookSummary {
+export interface SkillSummary {
   id: string;
+  name: string;
   source: string;
   version: string;
-  title: string;
-  summary: string;
-  keywords: string[];
-  platforms: string[];
+  description: string;
   stack: string[];
+  platforms: string[];
+  uses: string[];
+  deprecated: string | null;
   steps: number;
 }
 
-export interface PlaybookDetail {
+export interface SkillDetail {
   id: string;
+  name: string;
   source: string;
-  version: string;
-  title: string;
-  summary: string;
-  applies_to: { platforms: string[]; stack: string[]; requires: string[]; keywords: string[] };
-  prerequisites: string[];
-  steps: PlaybookStep[];
-  sources: SourceRef[];
-  pitfalls: string[];
-  acceptance: { given: string | null; when: string | null; then: string | null }[];
-  assets: string[];
+  version: string | null;
+  description: string;
+  license: string | null;
+  compatibility: string | null;
+  stack: string[];
+  platforms: string[];
   uses: string[];
-  yaml: string;
+  deprecated: string | null;
+  superseded_by: string | null;
+  /** The skill itself — what an agent would follow. */
+  markdown: string;
+  steps: SkillStep[];
+  sources: SourceRef[];
+  files: string[];
+  /** The raw SKILL.md, so a proposal can be diffed against it. */
+  raw: string;
 }
 
 /** What the user selected in the viewer — the context an agent asks about. */
 export type Selection =
-  | { kind: "playbook" }
-  | { kind: "step"; stepId: string }
-  | { kind: "source"; sourceId: string }
-  | { kind: "asset"; path: string };
+  | { kind: "skill" }
+  | { kind: "step"; title: string }
+  | { kind: "source"; url: string }
+  | { kind: "file"; path: string };
 
 /** A hit from a discovery index (`GET /api/v1/index`). */
 export interface IndexHit {

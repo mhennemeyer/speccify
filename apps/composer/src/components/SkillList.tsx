@@ -1,9 +1,9 @@
 import { useMemo, useState } from "react";
 
-import type { IndexHit, PlaybookSummary } from "../types";
+import type { IndexHit, SkillSummary } from "../types";
 
 interface Props {
-  playbooks: PlaybookSummary[];
+  skills: SkillSummary[];
   indexHits: IndexHit[];
   indexStatus: string;
   activeSource: string | null;
@@ -11,23 +11,22 @@ interface Props {
   onSearchIndex: (query: string) => void;
 }
 
-function matches(playbook: PlaybookSummary, needle: string): boolean {
+function matches(skill: SkillSummary, needle: string): boolean {
   if (!needle) return true;
   return [
-    playbook.title,
-    playbook.id,
-    playbook.summary,
-    ...playbook.keywords,
-    ...playbook.platforms,
-    ...playbook.stack,
+    skill.name,
+    skill.id,
+    skill.description,
+    ...skill.platforms,
+    ...skill.stack,
   ]
     .join(" ")
     .toLowerCase()
     .includes(needle);
 }
 
-export function PlaybookList({
-  playbooks,
+export function SkillList({
+  skills,
   indexHits,
   indexStatus,
   activeSource,
@@ -37,13 +36,13 @@ export function PlaybookList({
   const [filter, setFilter] = useState("");
   const needle = filter.trim().toLowerCase();
   const visible = useMemo(
-    () => playbooks.filter((playbook) => matches(playbook, needle)),
-    [playbooks, needle],
+    () => skills.filter((skill) => matches(skill, needle)),
+    [skills, needle],
   );
 
   return (
     <aside className="library">
-      <h2>Playbooks</h2>
+      <h2>Skills</h2>
       <input
         id="library-filter"
         className="filter"
@@ -51,39 +50,37 @@ export function PlaybookList({
         placeholder="Filter by title, stack, platform, keyword…"
         onChange={(event) => setFilter(event.target.value)}
       />
-      {visible.map((playbook) => (
+      {visible.map((skill) => (
         <button
-          key={playbook.source}
-          className={`library-item${playbook.source === activeSource ? " active" : ""}`}
-          onClick={() => onOpen(playbook.source)}
+          key={skill.source}
+          className={`library-item${skill.source === activeSource ? " active" : ""}`}
+          onClick={() => onOpen(skill.source)}
         >
-          <strong>{playbook.title}</strong>
+          <strong>{skill.name}</strong>
           <span className="meta">
-            {playbook.id}@{playbook.version} · {playbook.steps} steps
+            {skill.id}@{skill.version} · {skill.steps} steps
           </span>
-          <span className="muted">{playbook.summary}</span>
-          {playbook.stack.length > 0 || playbook.platforms.length > 0 ? (
+          <span className="muted">{skill.description}</span>
+          {skill.stack.length > 0 || skill.platforms.length > 0 ? (
             <span className="axes">
-              {[...playbook.stack, ...playbook.platforms].map((term) => (
+              {[...skill.stack, ...skill.platforms].map((term) => (
                 <span key={term} className="axis">
                   {term}
                 </span>
               ))}
             </span>
           ) : null}
-          {playbook.keywords.length > 0 ? (
-            <span className="keywords">{playbook.keywords.join(" · ")}</span>
-          ) : null}
+          {null}
         </button>
       ))}
-      {playbooks.length === 0 ? (
-        <p className="muted">No playbooks in the library — is the backend running?</p>
+      {skills.length === 0 ? (
+        <p className="muted">No skills in the library — is the backend running?</p>
       ) : null}
-      {playbooks.length > 0 && visible.length === 0 ? (
+      {skills.length > 0 && visible.length === 0 ? (
         <p className="muted">Nothing matches “{filter}”.</p>
       ) : null}
 
-      {/* Discovery: playbooks that are not in this library at all. */}
+      {/* Discovery: skills that are not in this library at all. */}
       <h2 className="index-heading">Index</h2>
       <form
         onSubmit={(event) => {

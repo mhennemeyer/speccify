@@ -11,7 +11,7 @@ from speccify_cli.__main__ import app
 from typer.testing import CliRunner
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-LIBRARY = REPO_ROOT / "playbooks"
+LIBRARY = REPO_ROOT / "skills"
 MAIN = "@speccify/macos-notarize-tauri"
 CHILD = "@speccify/apple-developer-id-cert"
 
@@ -66,9 +66,9 @@ def test_verify_reports_bundle_drift(project: Path, tmp_path: Path) -> None:
         ).exit_code
         == 0
     )
-    playbook = library / "speccify" / "macos-notarize-tauri" / "1.0.0" / "playbook.yaml"
-    playbook.write_text(
-        playbook.read_text(encoding="utf-8").replace("summary: >", "summary: >-"), encoding="utf-8"
+    skill = library / "macos-notarize-tauri" / "SKILL.md"
+    skill.write_text(
+        skill.read_text(encoding="utf-8") + "\n<!-- edited elsewhere -->\n", encoding="utf-8"
     )
     result = runner.invoke(app, ["verify", "--project", str(project), "--library", str(library)])
     assert result.exit_code == 1
@@ -84,7 +84,7 @@ def test_pull_materialises_bundles_including_assets(project: Path) -> None:
     assert result.exit_code == 0, result.output
     # Flat by name, not `<scope>/<name>`: `<skills-root>/<name>/SKILL.md` is
     # what an agent looks up, and pull writes where it will be found.
-    assert (out / "macos-notarize-tauri" / "playbook.yaml").is_file()
+    assert (out / "macos-notarize-tauri" / "SKILL.md").is_file()
     assert (out / "macos-notarize-tauri" / "assets" / "verify-signatures.sh").is_file()
 
 
@@ -143,11 +143,11 @@ def test_lint_accepts_the_reference_library() -> None:
     assert "fail" not in result.output
 
 
-def test_lint_reports_broken_playbooks(tmp_path: Path) -> None:
-    bundle = tmp_path / "broken"
+def test_lint_reports_a_broken_skill(tmp_path: Path) -> None:
+    bundle = tmp_path / "Broken-Name"
     bundle.mkdir()
-    (bundle / "playbook.yaml").write_text(
-        "schema_version: 1\nid: '@org/x'\nversion: 1.0.0\ntitle: X\nsummary: Y\nsteps: []\n",
+    (bundle / "SKILL.md").write_text(
+        "---\nname: Broken-Name\ndescription: Something. Use when something.\n---\n",
         encoding="utf-8",
     )
     result = runner.invoke(app, ["lint", str(bundle)])
@@ -168,25 +168,18 @@ def test_check_warns_about_stale_sources() -> None:
     assert "warning(s)" in result.output
 
 
-def test_check_fails_on_a_broken_playbook(tmp_path: Path) -> None:
+def test_check_fails_on_a_reference_the_agent_cannot_read(tmp_path: Path) -> None:
+    """A dangling pointer is an error, not a style note — the agent will try it."""
     bundle = tmp_path / "broken"
     bundle.mkdir()
-    (bundle / "playbook.yaml").write_text(
-        "schema_version: 1\n"
-        "id: '@org/x'\n"
-        "version: 1.0.0\n"
-        "title: X\n"
-        "summary: Y\n"
-        "steps:\n"
-        "  - id: a\n"
-        "    title: A\n"
-        "    detail: do\n"
-        "    sources: [ghost]\n",
+    (bundle / "SKILL.md").write_text(
+        "---\nname: broken\ndescription: Something. Use when something.\n---\n\n"
+        "See [the details](DETAILS.md).\n",
         encoding="utf-8",
     )
     result = runner.invoke(app, ["check", str(bundle)])
     assert result.exit_code == 1
-    assert "Unknown source" in result.output
+    assert "DETAILS.md" in result.output
 
 
 def test_lint_and_check_accept_the_shipped_skills() -> None:

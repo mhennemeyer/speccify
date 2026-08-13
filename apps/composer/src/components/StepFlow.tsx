@@ -1,9 +1,9 @@
-import type { PlaybookStep, Selection } from "../types";
+import type { Selection, SkillStep } from "../types";
 
 interface Props {
-  steps: PlaybookStep[];
+  steps: SkillStep[];
   selection: Selection;
-  onSelect: (selection: Selection) => void;
+  onSelect: (title: string) => void;
 }
 
 const NODE_HEIGHT = 44;
@@ -12,16 +12,16 @@ const NODE_WIDTH = 210;
 const LEFT = 16;
 
 /**
- * The workflow at a glance: one node per step, in order, with the delegated
- * ones marked. Long playbooks are hard to hold in your head as a list — this is
- * the map next to the territory. Clicking a node selects the step.
+ * The workflow at a glance: one node per inferred step, in order. A long skill
+ * is hard to hold in your head as a wall of markdown — this is the map next to
+ * the territory. Clicking a node selects the step.
  *
  * Hand-drawn SVG rather than a diagram library: the layout is a single column,
  * and a dependency-free viewer is worth more than generic graph support.
  */
 export function StepFlow({ steps, selection, onSelect }: Props) {
   const height = steps.length * NODE_HEIGHT + (steps.length - 1) * NODE_GAP;
-  const selectedStepId = selection.kind === "step" ? selection.stepId : null;
+  const selectedTitle = selection.kind === "step" ? selection.title : null;
 
   return (
     <svg
@@ -34,9 +34,9 @@ export function StepFlow({ steps, selection, onSelect }: Props) {
     >
       {steps.map((step, index) => {
         const y = index * (NODE_HEIGHT + NODE_GAP);
-        const isSelected = step.id === selectedStepId;
+        const isSelected = step.title === selectedTitle;
         return (
-          <g key={step.id} role="listitem">
+          <g key={step.title} role="listitem">
             {index > 0 ? (
               <line
                 className="flow-edge"
@@ -48,19 +48,16 @@ export function StepFlow({ steps, selection, onSelect }: Props) {
               />
             ) : null}
             <g
-              className={`flow-node${isSelected ? " selected" : ""}${
-                step.uses ? " delegated" : ""
-              }`}
-              onClick={() => onSelect({ kind: "step", stepId: step.id })}
+              className={`flow-node${isSelected ? " selected" : ""}`}
+              onClick={() => onSelect(step.title)}
             >
               <rect x={LEFT} y={y} width={NODE_WIDTH} height={NODE_HEIGHT} rx={8} />
               <text x={LEFT + 12} y={y + 18}>
-                {index + 1}. {step.title.length > 24 ? `${step.title.slice(0, 23)}…` : step.title}
+                {step.number ?? index + 1}.{" "}
+                {step.title.length > 24 ? `${step.title.slice(0, 23)}…` : step.title}
               </text>
               <text className="flow-meta" x={LEFT + 12} y={y + 34}>
-                {step.uses ? "delegated" : step.id}
-                {step.assets.length > 0 ? " · asset" : ""}
-                {step.verify ? " · verify" : ""}
+                {step.verify ? "has a verify step" : "\u00a0"}
               </text>
             </g>
           </g>

@@ -4,8 +4,8 @@ Everything defaults to the repository checkout, so the backend works from a
 fresh `uv sync` without environment plumbing. Overrides via env vars:
 
 - `SPECCIFY_PROJECT_ROOT`: project root for `speccify.yaml` / `speccify.lock`.
-- `SPECCIFY_LIBRARY_PATH`: the playbook library `GET /api/v1/playbooks` lists.
-  Defaults to `<repo>/playbooks`.
+- `SPECCIFY_LIBRARY_PATH`: the playbook library `GET /api/v1/skills` lists.
+  Defaults to `<repo>/skills`.
 - `SPECCIFY_COMPOSER_DIST`: the built viewer SPA, served under `/ui` when present.
 - `SPECCIFY_GIT_CACHE`: bare-clone cache for git playbook sources and index
   repos. Defaults to `~/.cache/speccify/git` (same convention as the CLI).
@@ -19,7 +19,8 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
-from speccify_core import DEFAULT_GIT_CACHE_DIR, GitLibrary, Library, LocalLibrary, MultiLibrary
+from speccify_core import DEFAULT_GIT_CACHE_DIR, GitLibrary, Library, MultiLibrary
+from speccify_core.skill_library import LocalSkillLibrary
 
 # This file lives at apps/web/backend/src/speccify_web_backend/settings.py
 # parents[5] resolves to the repository root (one level deeper than the test
@@ -27,7 +28,7 @@ from speccify_core import DEFAULT_GIT_CACHE_DIR, GitLibrary, Library, LocalLibra
 _REPO_ROOT = Path(__file__).resolve().parents[5]
 
 DEFAULT_PROJECT_ROOT: Path = _REPO_ROOT
-DEFAULT_LIBRARY_PATH: Path = _REPO_ROOT / "playbooks"
+DEFAULT_LIBRARY_PATH: Path = _REPO_ROOT / "skills"
 DEFAULT_COMPOSER_DIST: Path = _REPO_ROOT / "apps" / "composer" / "dist"
 
 PROJECT_ROOT_ENV = "SPECCIFY_PROJECT_ROOT"
@@ -75,7 +76,7 @@ class Settings:
         """
         libraries: list[Library] = []
         if self.library_path.is_dir():
-            libraries.append(LocalLibrary(self.library_path))
+            libraries.append(LocalSkillLibrary(self.library_path))
         libraries.append(GitLibrary(cache_dir=self.git_cache_dir))
         return MultiLibrary(libraries)
 

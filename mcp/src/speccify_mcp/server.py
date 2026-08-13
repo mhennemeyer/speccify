@@ -16,13 +16,13 @@ from mcp.server.fastmcp import FastMCP
 
 from .tools import (
     run_lock,
-    run_playbook_propose,
     run_pull,
     run_search,
     run_skill_asset,
     run_skill_check,
     run_skill_get,
     run_skill_list,
+    run_skill_propose,
     run_verify,
     run_viewer_selection,
 )
@@ -164,23 +164,23 @@ def build_server(config: ServerConfig) -> FastMCP:
         return run_viewer_selection().to_dict()
 
     @server.tool(
-        name="playbook_propose",
+        name="skill_propose",
         description=(
-            "Propose a changed playbook. Pass the **complete** new "
-            "`playbook.yaml`; it is validated and then shown to the user in the "
+            "Propose a changed skill. Pass the **complete** new "
+            "`SKILL.md`; it is validated and then shown to the user in the "
             "viewer as a diff. Nothing is written until they apply it — this is "
             "how playbooks are edited, there is no edit mode. Returns "
             "`{ok, code, message}`; invalid YAML or a broken playbook comes "
-            "back as `code=invalid_playbook` with the reason."
+            "back as `code=invalid_skill` with the reason."
         ),
     )
-    def playbook_propose(
+    def skill_propose(
         source: str,
-        playbook_yaml: str,
+        skill_markdown: str,
         rationale: str = "",
     ) -> dict[str, Any]:
-        return run_playbook_propose(
-            source=source, playbook_yaml=playbook_yaml, rationale=rationale
+        return run_skill_propose(
+            source=source, skill_markdown=skill_markdown, rationale=rationale
         ).to_dict()
 
     @server.tool(

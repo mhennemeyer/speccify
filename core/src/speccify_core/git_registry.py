@@ -29,8 +29,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from urllib.parse import urlparse
 
-from speccify_core.playbook import ASSET_DIR, PLAYBOOK_FILENAME
 from speccify_core.registry import Bundle, LibraryError, Version
+from speccify_core.skill import ASSET_DIRS, SKILL_FILENAME
 
 DEFAULT_GIT_CACHE_DIR = Path.home() / ".cache" / "speccify" / "git"
 DEFAULT_TIMEOUT = 60.0
@@ -65,8 +65,8 @@ class GitRef:
         return f"{self.path}/" if self.path else ""
 
     @property
-    def playbook_path(self) -> str:
-        return f"{self.bundle_prefix}{PLAYBOOK_FILENAME}"
+    def skill_path(self) -> str:
+        return f"{self.bundle_prefix}{SKILL_FILENAME}"
 
     @property
     def tag_prefix(self) -> str:
@@ -273,26 +273,28 @@ class GitLibrary:
 
         files: dict[str, bytes] = {}
         try:
-            files[PLAYBOOK_FILENAME] = self._cache.run_bytes(
-                ["cat-file", "blob", f"{tag}:{ref.playbook_path}"], cwd=repo
+            files[SKILL_FILENAME] = self._cache.run_bytes(
+                ["cat-file", "blob", f"{tag}:{ref.skill_path}"], cwd=repo
             )
         except GitLibraryError as exc:
             raise GitLibraryError(
-                f"{playbook_id}: '{ref.playbook_path}' is missing at tag '{tag}'."
+                f"{playbook_id}: '{ref.skill_path}' is missing at tag '{tag}'."
             ) from exc
 
-        # Assets are optional; an empty tree simply lists nothing.
-        listing = self._run(
-            ["ls-tree", "-r", "--name-only", tag, f"{ref.bundle_prefix}{ASSET_DIR}/"],
-            cwd=repo,
-        )
-        for line in listing.splitlines():
-            path = line.strip()
-            if not path:
-                continue
-            files[path[len(ref.bundle_prefix) :]] = self._cache.run_bytes(
-                ["cat-file", "blob", f"{tag}:{path}"], cwd=repo
+        # Bundled directories are optional; an empty tree simply lists nothing.
+        # The spec names three conventions, and a skill may use any or none.
+        for directory in ASSET_DIRS:
+            listing = self._run(
+                ["ls-tree", "-r", "--name-only", tag, f"{ref.bundle_prefix}{directory}/"],
+                cwd=repo,
             )
+            for line in listing.splitlines():
+                path = line.strip()
+                if not path:
+                    continue
+                files[path[len(ref.bundle_prefix) :]] = self._cache.run_bytes(
+                    ["cat-file", "blob", f"{tag}:{path}"], cwd=repo
+                )
 
         return Bundle(
             source_id=playbook_id,

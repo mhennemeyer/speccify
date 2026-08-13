@@ -1,16 +1,14 @@
-"""speccify-core — playbooks, sources, resolver and lockfile.
+"""speccify-core — skills, sources, resolver and lockfile.
 
-A playbook captures a complex, recurring workflow for coding agents: ordered
-steps, the sources it was researched from, reusable assets, and the pitfalls you
-would otherwise hit twice. This package parses playbooks, resolves them from
-local or git sources, and pins them reproducibly.
+A skill is a directory with a `SKILL.md`, in the Agent Skills format, so it
+works wherever agents already look for skills. What this package adds is
+everything the specification leaves open: where a skill came from, whether it
+is still true, which version you have, and what it builds on.
 """
 
 from speccify_core.check import (
     Finding,
     check_links,
-    check_playbook,
-    check_source_age,
 )
 from speccify_core.git_registry import (
     DEFAULT_GIT_CACHE_DIR,
@@ -39,28 +37,10 @@ from speccify_core.manifest import (
     ManifestError,
     ProjectManifest,
 )
-from speccify_core.playbook import (
-    ASSET_DIR,
-    DEFAULT_PLAYBOOK_SCHEMA_PATH,
-    PLAYBOOK_FILENAME,
-    STALE_SOURCE_DAYS,
-    Acceptance,
-    AppliesTo,
-    Issue,
-    Playbook,
-    PlaybookError,
-    Source,
-    Step,
-    parse_playbook,
-    schema_issues,
-    validate_playbook,
-)
 from speccify_core.registry import (
     Bundle,
     Library,
     LibraryError,
-    LocalLibrary,
-    LocalRegistry,
     MultiLibrary,
     MultiRegistry,
     Registry,
@@ -93,21 +73,15 @@ from speccify_core.spec_index import (
 __version__ = "0.0.0"
 
 __all__ = [
-    "ASSET_DIR",
-    "Acceptance",
-    "AppliesTo",
     "Bundle",
     "CURRENT_LOCKFILE_SCHEMA_VERSION",
     "CURRENT_MANIFEST_SCHEMA_VERSION",
     "DEFAULT_GIT_CACHE_DIR",
     "Finding",
     "check_links",
-    "check_playbook",
-    "check_source_age",
     "DEFAULT_LIBRARY_PATH",
     "DEFAULT_LOCKFILE_SCHEMA_PATH",
     "DEFAULT_MANIFEST_SCHEMA_PATH",
-    "DEFAULT_PLAYBOOK_SCHEMA_PATH",
     "GitLibrary",
     "GitLibraryError",
     "GitRef",
@@ -117,11 +91,8 @@ __all__ = [
     "INDEX_ENTRY_DIR",
     "INDEX_ENTRY_SCHEMA_PATH",
     "IndexEntry",
-    "Issue",
     "Library",
     "LibraryError",
-    "LocalLibrary",
-    "LocalRegistry",
     "LockEntry",
     "Lockfile",
     "LockfileError",
@@ -129,9 +100,6 @@ __all__ = [
     "ManifestError",
     "MultiLibrary",
     "MultiRegistry",
-    "PLAYBOOK_FILENAME",
-    "Playbook",
-    "PlaybookError",
     "ProjectManifest",
     "Range",
     "RangeConflictError",
@@ -141,10 +109,7 @@ __all__ = [
     "ResolvedGraph",
     "Resolver",
     "ResolverError",
-    "STALE_SOURCE_DAYS",
-    "Source",
     "SpecIndexError",
-    "Step",
     "Version",
     "VersionNotFoundError",
     "__version__",
@@ -155,10 +120,7 @@ __all__ = [
     "load_indexes",
     "parse_git_ref",
     "parse_index_entry",
-    "parse_playbook",
     "parse_uses_entry",
-    "schema_issues",
     "search_index",
     "split_id",
-    "validate_playbook",
 ]
