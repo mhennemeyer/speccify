@@ -15,6 +15,8 @@ from speccify_core import (
     ProjectManifest,
     Version,
 )
+from speccify_core.skill import SKILL_FILENAME
+from speccify_core.skill_library import LocalSkillLibrary
 
 MANIFEST_FILENAME = "speccify.yaml"
 LOCKFILE_FILENAME = "speccify.lock"
@@ -27,14 +29,21 @@ def git_cache_dir() -> Path:
 
 
 def build_libraries(library_path: Path, *, offline: bool = False) -> list[Library]:
-    """Local playbook library plus git sources.
+    """Local skill library plus git sources.
 
     Each library answers only for the ids it serves, so the order does not
     matter and local-only projects behave exactly as before.
+
+    Which local library depends on what is actually in the directory. The
+    `playbook.yaml` branch is a migration leftover and goes away with the last
+    one in the tree.
     """
     libraries: list[Library] = []
     if library_path.is_dir():
-        libraries.append(LocalLibrary(library_path))
+        if any(library_path.rglob(SKILL_FILENAME)):
+            libraries.append(LocalSkillLibrary(library_path))
+        else:
+            libraries.append(LocalLibrary(library_path))
     libraries.append(GitLibrary(cache_dir=git_cache_dir(), offline=offline))
     return libraries
 

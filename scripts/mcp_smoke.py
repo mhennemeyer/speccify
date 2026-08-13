@@ -38,9 +38,16 @@ EXPECTED_TOOLS = {
 
 
 def _prepare_project(tmp: Path) -> Path:
-    """A throwaway project with its own copy of the playbook library."""
+    """A throwaway project with its own copy of the playbook library.
+
+    The library path is stated rather than defaulted: the default moved to
+    `./skills` with the format, while the MCP tools still read playbooks until
+    they are ported.
+    """
     shutil.copytree(PLAYBOOKS, tmp / "playbooks")
-    (tmp / "speccify.yaml").write_text("schema_version: 1\n", encoding="utf-8")
+    (tmp / "speccify.yaml").write_text(
+        "schema_version: 1\nlibrary:\n  path: ./playbooks\n", encoding="utf-8"
+    )
     return tmp
 
 

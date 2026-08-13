@@ -82,8 +82,10 @@ def test_pull_materialises_bundles_including_assets(project: Path) -> None:
         app, ["pull", "--project", str(project), "--library", str(LIBRARY), "--out", str(out)]
     )
     assert result.exit_code == 0, result.output
-    assert (out / "speccify" / "macos-notarize-tauri" / "playbook.yaml").is_file()
-    assert (out / "speccify" / "macos-notarize-tauri" / "assets" / "verify-signatures.sh").is_file()
+    # Flat by name, not `<scope>/<name>`: `<skills-root>/<name>/SKILL.md` is
+    # what an agent looks up, and pull writes where it will be found.
+    assert (out / "macos-notarize-tauri" / "playbook.yaml").is_file()
+    assert (out / "macos-notarize-tauri" / "assets" / "verify-signatures.sh").is_file()
 
 
 def test_show_prints_steps_and_pitfalls(project: Path) -> None:
@@ -210,3 +212,31 @@ def test_lint_and_check_accept_the_shipped_skills() -> None:
     check = runner.invoke(app, ["check", str(skills)])
     assert check.exit_code == 0, check.output
     assert "0 error(s)" in check.output
+
+
+def test_the_local_loop_works_on_skills(tmp_path: Path) -> None:
+    """init -> add -> lock -> pull -> verify, against `skills/`.
+
+    This is M1 in one test: a project declares a skill, the child it builds on
+    is resolved transitively, and both land where Claude Code looks for them —
+    flat, by name, with assets.
+    """
+    skills = REPO_ROOT / "skills"
+    assert runner.invoke(app, ["init", "--project", str(tmp_path)]).exit_code == 0
+
+    added = runner.invoke(app, ["add", MAIN, "--project", str(tmp_path), "--library", str(skills)])
+    assert added.exit_code == 0, added.output
+
+    out = tmp_path / ".claude" / "skills"
+    pulled = runner.invoke(
+        app, ["pull", "--project", str(tmp_path), "--library", str(skills), "--out", str(out)]
+    )
+    assert pulled.exit_code == 0, pulled.output
+
+    # The parent and the child it delegates to, both by bare name.
+    assert (out / "macos-notarize-tauri" / "SKILL.md").is_file()
+    assert (out / "apple-developer-id-cert" / "SKILL.md").is_file()
+    assert (out / "macos-notarize-tauri" / "assets" / "verify-signatures.sh").is_file()
+
+    verified = runner.invoke(app, ["verify", "--project", str(tmp_path), "--library", str(skills)])
+    assert verified.exit_code == 0, verified.output

@@ -1,7 +1,12 @@
-"""`speccify pull`: materialise the locked bundles into a directory.
+"""`speccify pull`: materialise the locked skills where the agent finds them.
 
-Agents usually read playbooks over MCP, but having them on disk makes them
-greppable, diffable and readable offline — assets included.
+Default target is `.claude/skills/`, because that is where Claude Code looks.
+Once a skill lands there it works — no MCP server, no Speccify process, nothing
+else running. That is the whole point of storing skills in their own format.
+
+The layout there is **flat**: `<out>/<name>/SKILL.md`. `name` is the lookup key,
+so two skills of the same name from different scopes cannot both be installed;
+that collision is reported rather than silently resolved by whoever writes last.
 """
 
 from __future__ import annotations
@@ -13,7 +18,7 @@ from speccify_core import Lockfile, LockfileError, RegistryError, Version, bundl
 
 from speccify_cli.commands._context import ProjectContext, fetch_bundle
 
-DEFAULT_OUT_DIR = "./speccify_playbooks"
+DEFAULT_OUT_DIR = "./.claude/skills"
 
 
 def run_pull(
@@ -23,13 +28,14 @@ def run_pull(
     library_override: Path | None = None,
     offline: bool = False,
 ) -> list[Path]:
-    """Write every locked bundle to `<out_dir>/<scope>/<name>/`; returns the files written."""
+    """Write every locked skill to `<out_dir>/<name>/`; returns the files written."""
     context = ProjectContext.load(project_dir, library_override=library_override, offline=offline)
     if not context.lockfile_path.is_file():
         raise LockfileError(f"No lockfile in {project_dir}. Run `speccify lock` first.")
     lockfile = Lockfile.load(context.lockfile_path)
 
     written: list[Path] = []
+    taken: dict[str, str] = {}
     for entry in lockfile.entries:
         bundle = fetch_bundle(context.libraries, entry.id, Version.parse(entry.version))
         actual = bundle_sha256(bundle.files)
@@ -38,7 +44,16 @@ def run_pull(
                 f"{entry.id}@{entry.version}: bundle hash differs from the lockfile "
                 f"({actual} != {entry.bundle_sha256}). Someone moved a tag."
             )
-        target = out_dir / bundle.declared_id.lstrip("@")
+        # Flat by name — `.claude/skills/<name>/SKILL.md` is what gets looked up.
+        name = bundle.declared_id.rsplit("/", 1)[-1]
+        if name in taken and taken[name] != bundle.declared_id:
+            raise RegistryError(
+                f"Two skills would install as '{name}': {taken[name]} and "
+                f"{bundle.declared_id}. Skill names are the lookup key and have to be "
+                f"unique — rename one, or drop one from the manifest."
+            )
+        taken[name] = bundle.declared_id
+        target = out_dir / name
         for relative, data in sorted(bundle.files.items()):
             path = target / relative
             path.parent.mkdir(parents=True, exist_ok=True)
@@ -52,16 +67,16 @@ def pull_command(
         Path("."), "--project", "-p", help="Project directory (default: current directory)."
     ),
     out: Path = typer.Option(  # noqa: B008
-        Path(DEFAULT_OUT_DIR), "--out", help="Where to materialise the bundles."
+        Path(DEFAULT_OUT_DIR), "--out", help="Where to materialise the skills."
     ),
     library: Path | None = typer.Option(  # noqa: B008
-        None, "--library", help="Local playbook library (default: from the manifest)."
+        None, "--library", help="Local skill library (default: from the manifest)."
     ),
     offline: bool = typer.Option(
         False, "--offline/--no-offline", help="Only read cached git sources, never the network."
     ),
 ) -> None:
-    """Materialise the locked playbooks (including assets) into a directory."""
+    """Materialise the locked skills (with assets) where the agent finds them."""
     try:
         written = run_pull(project_dir, out, library_override=library, offline=offline)
     except (LockfileError, RegistryError, FileNotFoundError) as exc:

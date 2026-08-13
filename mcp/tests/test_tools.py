@@ -21,9 +21,16 @@ MAIN = "@speccify/macos-notarize-tauri"
 
 @pytest.fixture
 def project(tmp_path: Path) -> Path:
-    """A project with its own copy of the playbook library."""
+    """A project with its own copy of the playbook library.
+
+    The library path is stated rather than defaulted: the default moved to
+    `./skills` with the format, and these tests still exercise the playbook
+    branch until the MCP tools are ported too.
+    """
     shutil.copytree(REPO_ROOT / "playbooks", tmp_path / "playbooks")
-    (tmp_path / "speccify.yaml").write_text("schema_version: 1\n", encoding="utf-8")
+    (tmp_path / "speccify.yaml").write_text(
+        "schema_version: 1\nlibrary:\n  path: ./playbooks\n", encoding="utf-8"
+    )
     return tmp_path
 
 
@@ -60,7 +67,8 @@ def test_unknown_reference_is_structured(project: Path) -> None:
 
 def test_lock_pull_verify_round_trip(project: Path) -> None:
     (project / "speccify.yaml").write_text(
-        f"schema_version: 1\ndependencies:\n  '{MAIN}': ^1.0\n", encoding="utf-8"
+        f"schema_version: 1\nlibrary:\n  path: ./playbooks\ndependencies:\n  '{MAIN}': ^1.0\n",
+        encoding="utf-8",
     )
     locked = run_lock(project)
     assert locked.ok, locked.message
@@ -76,7 +84,8 @@ def test_lock_pull_verify_round_trip(project: Path) -> None:
 
 def test_verify_reports_drift_as_a_result(project: Path) -> None:
     (project / "speccify.yaml").write_text(
-        f"schema_version: 1\ndependencies:\n  '{MAIN}': ^1.0\n", encoding="utf-8"
+        f"schema_version: 1\nlibrary:\n  path: ./playbooks\ndependencies:\n  '{MAIN}': ^1.0\n",
+        encoding="utf-8",
     )
     run_lock(project)
     playbook = (

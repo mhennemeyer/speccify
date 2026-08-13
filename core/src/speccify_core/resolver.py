@@ -12,7 +12,6 @@ from collections import deque
 from dataclasses import dataclass, field
 
 from speccify_core.manifest import ProjectManifest
-from speccify_core.playbook import parse_playbook
 from speccify_core.registry import Bundle, Library, LibraryError, Version, bundle_sha256
 
 _RANGE_PATTERN = re.compile(
@@ -216,12 +215,11 @@ class Resolver:
 
 
 def _uses_of(bundle: Bundle) -> list[str]:
-    """References to other playbooks, read from the bundle's steps."""
+    """What this bundle builds on. The bundle knows its own format."""
     try:
-        playbook = parse_playbook(bundle.parsed())
+        return list(bundle.uses)
     except Exception as exc:  # noqa: BLE001 - surfaced as a resolver error
         raise ResolverError(f"{bundle.source_id}@{bundle.version}: {exc}") from exc
-    return list(playbook.uses)
 
 
 __all__ = [

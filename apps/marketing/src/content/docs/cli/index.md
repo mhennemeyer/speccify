@@ -15,7 +15,7 @@ hat eine eigene Referenzseite:
 | [`speccify init`](/cli/init/) | Create a speccify.yaml for a project that consumes playbooks. |
 | [`speccify lint`](/cli/lint/) | Validate skills against the Agent Skills specification. |
 | [`speccify lock`](/cli/lock/) | Resolve dependencies and write speccify.lock. |
-| [`speccify pull`](/cli/pull/) | Materialise the locked playbooks (including assets) into a directory. |
+| [`speccify pull`](/cli/pull/) | Materialise the locked skills (with assets) where the agent finds them. |
 | [`speccify search`](/cli/search/) | Search playbooks in the configured discovery indexes. |
 | [`speccify show`](/cli/show/) | Print a playbook, or a single step of it. |
 | [`speccify verify`](/cli/verify/) | Check that the lockfile still matches the manifest and the actual bundles. |

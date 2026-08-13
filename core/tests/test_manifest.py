@@ -31,7 +31,7 @@ def test_load_reads_dependencies_and_library(tmp_path: Path) -> None:
 
 def test_library_path_defaults_next_to_the_manifest(tmp_path: Path) -> None:
     manifest = ProjectManifest.load(_write(tmp_path, {"schema_version": 1}))
-    assert manifest.resolved_library_path() == (tmp_path / "playbooks").resolve()
+    assert manifest.resolved_library_path() == (tmp_path / "skills").resolve()
 
 
 def test_round_trip_is_stable(tmp_path: Path) -> None:

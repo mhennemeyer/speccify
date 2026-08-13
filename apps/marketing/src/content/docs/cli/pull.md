@@ -1,11 +1,11 @@
 ---
 title: "speccify pull"
-description: "Materialise the locked playbooks (including assets) into a directory."
+description: "Materialise the locked skills (with assets) where the agent finds them."
 ---
 
 <!-- AUTOGENERIERT via scripts/gen_cli_docs.py aus `speccify --help` — nicht von Hand editieren. -->
 
-Materialise the locked playbooks (including assets) into a directory.
+Materialise the locked skills (with assets) where the agent finds them.
 
 ## Usage
 
@@ -18,6 +18,6 @@ speccify pull [OPTIONS]
 | Option | Beschreibung |
 | --- | --- |
 | `--project`, `-p` | Project directory (default: current directory). |
-| `--out` | Where to materialise the bundles. |
-| `--library` | Local playbook library (default: from the manifest). |
+| `--out` | Where to materialise the skills. |
+| `--library` | Local skill library (default: from the manifest). |
 | `--offline`, `--no-offline` | Only read cached git sources, never the network. |

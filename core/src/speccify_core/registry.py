@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Protocol, runtime_checkable
 
 from speccify_core.playbook import ASSET_DIR, PLAYBOOK_FILENAME
+from speccify_core.skill import SKILL_FILENAME, Skill, parse_skill
 
 _SCOPED_ID_PATTERN = re.compile(r"^@([a-z0-9][a-z0-9-]*)/([a-z0-9][a-z0-9-]*)$")
 _SEMVER_PATTERN = re.compile(r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$")
@@ -80,9 +81,33 @@ class Bundle:
         return yaml.safe_load(self.playbook_bytes.decode("utf-8")) or {}
 
     @property
+    def is_skill(self) -> bool:
+        """A bundle is a skill when it carries a `SKILL.md`."""
+        return SKILL_FILENAME in self.files
+
+    def skill(self) -> Skill:
+        return parse_skill(self.files[SKILL_FILENAME].decode("utf-8"))
+
+    @property
     def declared_id(self) -> str:
-        """The id written inside the playbook; falls back to the source id."""
+        """The id written inside the bundle; falls back to the source id."""
+        if self.is_skill:
+            return self.skill().qualified_id or self.source_id
         return str(self.parsed().get("id", "")) or self.source_id
+
+    @property
+    def uses(self) -> tuple[str, ...]:
+        """What this bundle builds on — the one thing the resolver needs from it.
+
+        A skill declares it in `metadata.speccify.uses`, a playbook in
+        `steps[].uses`. Keeping both readings here means the resolver never has
+        to know which format it is looking at.
+        """
+        if self.is_skill:
+            return self.skill().uses
+        from speccify_core.playbook import parse_playbook
+
+        return tuple(parse_playbook(self.parsed()).uses)
 
     @property
     def asset_paths(self) -> tuple[str, ...]:
