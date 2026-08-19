@@ -147,6 +147,9 @@ ENGINE_SOURCES=(
   core/src cli/src mcp/src apps/web/backend/src
   apps/composer/src apps/composer/index.html apps/composer/package.json
   uv.lock
+  # Die Skill-Bibliothek liegt mit im Payload — ein geänderter Skill muss den
+  # Neubau auslösen, sonst zeigt die App die alte Kopie.
+  skills
 )
 if [[ "$SKIP_ENGINE" -eq 1 ]]; then
   step "Engine-Payload"

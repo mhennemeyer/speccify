@@ -49,7 +49,7 @@ jobs:
 
       - name: speccify lint + check the shipped skills
         run: |
-          uv run speccify lint skills/ playbooks/
+          uv run speccify lint skills/
           uv run speccify check skills/
 
       - name: speccify end-to-end smoke (init + add + lock + verify + pull + show)
@@ -57,12 +57,12 @@ jobs:
           set -euo pipefail
           WORK="$(mktemp -d)"
           BIN="${{ github.workspace }}/.venv/bin/speccify"
-          LIB="${{ github.workspace }}/playbooks"
+          LIB="${{ github.workspace }}/skills"
           "$BIN" init --project "$WORK"
           "$BIN" add @speccify/macos-notarize-tauri --project "$WORK" --library "$LIB"
           "$BIN" verify --project "$WORK" --library "$LIB"
           "$BIN" pull --project "$WORK" --library "$LIB" --out "$WORK/out"
-          test -f "$WORK/out/speccify/macos-notarize-tauri/assets/verify-signatures.sh"
+          test -f "$WORK/out/macos-notarize-tauri/assets/verify-signatures.sh"
           "$BIN" show @speccify/macos-notarize-tauri --project "$WORK" --library "$LIB" --json > /dev/null
 
       - name: speccify-mcp smoke (stdio, offline)

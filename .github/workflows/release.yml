@@ -8,7 +8,7 @@ name: Release desktop app
 #   1. sidecars  — the Rust MCP binaries plus a pinned `uv`, named per target
 #                  triple (scripts/build_sidecars.sh, which calls fetch_uv.sh)
 #   2. payload   — the Python engine as wheels, the built viewer and the
-#                  reference playbooks (scripts/build_engine_payload.sh)
+#                  reference skills (scripts/build_engine_payload.sh)
 #   3. bundle    — `tauri build`
 #
 # Signing and the updater are OPTIONAL and driven entirely by secrets. With
@@ -128,7 +128,7 @@ jobs:
       - name: Build sidecars (MCP binaries + pinned uv)
         run: ./scripts/build_sidecars.sh
 
-      - name: Build engine payload (wheels + viewer + playbooks)
+      - name: Build engine payload (wheels + viewer + skills)
         run: ./scripts/build_engine_payload.sh
 
       # The updater refuses to be half-wired: artifacts are only produced when

@@ -317,6 +317,6 @@ mod tests {
             );
         }
         assert!(dir.join("composer").join("index.html").is_file());
-        assert!(dir.join("playbooks").is_dir());
+        assert!(dir.join("skills").is_dir());
     }
 }

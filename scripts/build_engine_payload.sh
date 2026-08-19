@@ -11,7 +11,7 @@
 #                                   inkl. Hashes — aus uv.lock, reproduzierbar)
 #   resources/engine/payload.json   Metadaten + Hash (Marker für Re-Install)
 #   resources/composer/             gebaute Viewer-SPA (Backend serviert /ui)
-#   resources/playbooks/            Referenz-Playbooks (Bibliothek der App)
+#   resources/skills/               Referenz-Skills (Bibliothek der App)
 #
 # Beim ersten Start baut die App daraus eine venv unter
 # ~/Library/Application Support/io.speccify.desktop/engine/venv (engine.rs).
@@ -59,14 +59,14 @@ if [[ ! -f "$REPO_ROOT/apps/composer/dist/index.html" ]]; then
   echo "Viewer-SPA fehlt (apps/composer/dist) — ohne --skip-composer laufen lassen." >&2
   exit 1
 fi
-rm -rf "$RES/composer" "$RES/playbooks"
+rm -rf "$RES/composer" "$RES/skills"
 cp -R "$REPO_ROOT/apps/composer/dist" "$RES/composer"
-cp -R "$REPO_ROOT/playbooks" "$RES/playbooks"
+cp -R "$REPO_ROOT/skills" "$RES/skills"
 
 # Hash über alle Payload-Dateien: die App vergleicht ihn mit dem Marker der
 # installierten venv und installiert nach einem App-Update neu.
 PAYLOAD_HASH="$(
-  find "$ENGINE" "$RES/composer" "$RES/playbooks" \
+  find "$ENGINE" "$RES/composer" "$RES/skills" \
     -type f ! -name payload.json | LC_ALL=C sort |
     xargs shasum -a 256 | shasum -a 256 | awk '{print $1}'
 )"

@@ -225,7 +225,7 @@ fn engine_launch(app: &AppHandle) -> Result<BackendLaunch, String> {
             ),
             (
                 "SPECCIFY_LIBRARY_PATH".into(),
-                resources.join("playbooks").display().to_string(),
+                resources.join("skills").display().to_string(),
             ),
             (
                 "SPECCIFY_PROJECT_ROOT".into(),
