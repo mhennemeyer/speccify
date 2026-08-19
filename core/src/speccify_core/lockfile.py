@@ -17,7 +17,7 @@ import yaml
 from jsonschema import Draft202012Validator
 
 DEFAULT_LOCKFILE_SCHEMA_PATH: Path = (
-    Path(__file__).resolve().parents[3] / "schema" / "lockfile.schema.json"
+    Path(__file__).resolve().parent / "schemas" / "lockfile.schema.json"
 )
 CURRENT_LOCKFILE_SCHEMA_VERSION: int = 1
 

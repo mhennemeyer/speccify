@@ -36,7 +36,7 @@ from speccify_core.git_registry import (
 
 INDEX_ENTRY_DIR = "entries"
 INDEX_ENTRY_SCHEMA_PATH: Path = (
-    Path(__file__).resolve().parents[3] / "schema" / "index-entry.schema.json"
+    Path(__file__).resolve().parent / "schemas" / "index-entry.schema.json"
 )
 
 

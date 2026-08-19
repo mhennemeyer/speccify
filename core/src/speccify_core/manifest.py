@@ -15,7 +15,7 @@ import yaml
 from jsonschema import Draft202012Validator
 
 DEFAULT_MANIFEST_SCHEMA_PATH: Path = (
-    Path(__file__).resolve().parents[3] / "schema" / "manifest.schema.json"
+    Path(__file__).resolve().parent / "schemas" / "manifest.schema.json"
 )
 DEFAULT_LIBRARY_PATH: str = "./skills"
 MANIFEST_FILENAME = "speccify.yaml"

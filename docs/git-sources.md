@@ -103,7 +103,7 @@ license: MIT
 
 One file per entry is deliberate: a pull request touches exactly one file,
 there are no merge conflicts in a growing list, and CI validates each entry on
-its own (schema: [`schema/index-entry.schema.json`](../schema/index-entry.schema.json)).
+its own (schema: [`core/src/speccify_core/schemas/index-entry.schema.json`](../core/src/speccify_core/schemas/index-entry.schema.json)).
 
 The index says **only where a playbook lives** — never which versions exist.
 Versions are tags and therefore always current, which means an index cannot go
@@ -147,5 +147,5 @@ with `not_local` and says so.
 ## Cross-references
 
 - Playbook format: [`playbooks.md`](./playbooks.md)
-- Lockfile format: [`schema/lockfile.schema.json`](../schema/lockfile.schema.json)
+- Lockfile format: [`core/src/speccify_core/schemas/lockfile.schema.json`](../core/src/speccify_core/schemas/lockfile.schema.json)
 - Local walkthrough: [`local-dev-e2e.md`](./local-dev-e2e.md)
