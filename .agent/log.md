@@ -1,5 +1,40 @@
 # Log: Speccify
 
+## 2026-08-21 (T3 — Evaluate: `speccify tool check`)
+- **`core/src/speccify_core/tool_check.py`**: Konformitätsläufer nach D7.
+  Je Beispiel: Input als JSON auf stdin, stdout muss JSON sein und den
+  erwarteten Output **abdecken** (Zusatzfelder erlaubt, fehlende/abweichende
+  nicht; Listen längengleich, elementweise; `true` ≠ `1`), gegen das
+  `outputs`-Schema validieren; bei `ok: true` Exit 0, bei `ok: false` ist der
+  Exit-Code egal (beide Lesarten von D7 sind ehrlich). Crash → stderr ist das
+  Detail; Timeout ist ein Fehler, kein Hänger. Start direkt wenn ausführbar,
+  sonst Interpreter nach Endung (`.sh .py .js .ts .rb .pl .ps1`). cwd = Tool-
+  Verzeichnis, damit `fixtures/…` neben der Implementierung liegen.
+  Vorab-Stati: `not-implemented`, `not-applicable` (`platforms` passt nicht),
+  `no-examples`, `missing-requirement` (`requires` nicht auf PATH), `invalid-spec`.
+- **CLI `speccify tool check [NAMES] --platform --timeout --json`** (Typer-
+  Subapp `tool`): schreibt den Status in `expansions.yaml` — alle Beispiele
+  grün → `verified` + `checked: <Datum>`, sonst zurück auf `implemented`.
+  Exit 1 bei Fehlschlag. `expand` setzt `verified` zurück, wenn sich der
+  Spec-Hash geändert hat (der alte Vertrag zählt nicht für den neuen).
+- **MCP `tool_check`** (13 Tools), Smoke erweitert. `gen_cli_docs.py` löst
+  Typer-Gruppen auf (`tool check` → `cli/tool-check.md`).
+- **Speccify-Skill v0.2.0**: Execute/Evaluate ausgeschrieben — mechanische
+  Schicht (`tool check`), fachliche Schicht (Verify-Zeilen am Artefakt, nicht
+  aus dem Gedächtnis), **Iterationsregel** (Gegenbeweise suchen; keine ⇒ `ok`;
+  gefunden ⇒ Adaptation → Schritt 2, Execution → Schritt 3; drei Iterationen
+  ohne Fortschritt ⇒ Skill ist falsch, Schritt 5), **Spur-Format** für `log.md`
+  (`### Datum · Skill Version · iteration N · ok|open|abandoned`, dann tools/
+  tried/found/fixed). Zwei neue Pitfalls.
+- **Dogfooding-Befund**: der Versionssprung des Speccify-Skills auf 0.2.0
+  brach `^0.1` in `speccify.yaml` — `lock` hat es korrekt verweigert;
+  Constraint auf `^0.2`, `lock`+`expand` → `.agent/skills/speccify` updated,
+  `## In this project` blieb. `tool check` im Repo: 3× `not-implemented`
+  (Implementierungen sind Aufgabe von M2).
+- **Verifikation**: 215 Pytest (+20: 14 Läufer, 5 CLI, 1 MCP), mypy 39
+  Dateien, ruff check+format, MCP-Smoke, CLI-Doku regeneriert, `check skills/
+  --links` 11/11, `verify` grün.
+
 ## 2026-08-21 (T2 — Expand nach .agent/)
 - **Symlink-Probe** in der laufenden Claude-Code-Session: `.claude/skills`
   entfernt, `.agent/skills` angelegt, Symlink gesetzt → alle zehn Skills sofort

@@ -1,6 +1,6 @@
 ---
 lifecycle: active
-status: Bauen — T1 und T2 geliefert 2026-08-21; nächstes Ziel T3 (Evaluate — `speccify tool check`, Spur).
+status: Bauen — T1, T2 und T3 geliefert 2026-08-21; nächstes Ziel M2 (Testlauf).
 sessionId: skills-und-tools
 ---
 # Plan: Speccify als Skill- und Tool-Manager
@@ -340,7 +340,21 @@ Code findet die Skills über `.claude/skills`; `verify` kennt Upstream-Drift.
    unter `.claude/skills/` — sie ziehen nach `.agent/skills/` um.
 7. Der Speccify-Skill bekommt die Expand-Anleitung.
 
-### T3 — Evaluate
+### T3 — Evaluate ✅ (2026-08-21)
+
+**Geliefert:** `tool_check.py` (Läufer nach D7: stdin/stdout-JSON, Timeout,
+Abdeckungsvergleich mit Toleranz für Zusatzfelder, Schema-Prüfung des
+Outputs, Exit 0 nur bei `ok: true` verlangt, Interpreter nach Endung,
+cwd = Tool-Verzeichnis für Fixtures), `speccify tool check` (Typer-Gruppe
+`tool`; Status `verified` + Datum bzw. zurück auf `implemented` in
+`expansions.yaml`; `expand` nimmt `verified` weg, wenn der Spec-Hash sich
+ändert), MCP `tool_check` (13 Tools), Speccify-Skill v0.2.0 mit Execute,
+Evaluate, Iterationsregel und Spur-Format.
+**Entscheid zur Aufrufkonvention:** Bei `ok: false` im erwarteten Output wird
+der Exit-Code nicht geprüft — „0 = es lief" und „0 = ok" sind beide ehrlich,
+und der Vertrag soll Implementierer nicht an dieser Stelle zwingen.
+**Gelernt:** Der Versionssprung des Speccify-Skills brach `^0.1` im eigenen
+Manifest — der Resolver hat recht; Skill-Versionen sind echte Versionen.
 
 **Fertig heißt:** `speccify tool check` läuft die Beispiele gegen die
 Implementierung dieser Plattform; der Dreischritt ist im Speccify-Skill

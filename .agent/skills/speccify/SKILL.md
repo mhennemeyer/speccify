@@ -62,36 +62,77 @@ Commit `.agent/` — the expanded skill and its tools are project knowledge.
 ## 3 — Execute
 
 Follow `.agent/skills/<name>/SKILL.md` step by step. Call the tools you
-implemented the way the skill describes. Note in the project log which skill
-and which iteration you are on — when something goes wrong later, that line
-is what says where to look.
+implemented the way the skill describes — directly, as executables; there is
+no intermediary. Before the first step, open the trace (see below) with
+iteration 1. When a step's `**Verify:**` line does not hold, do not push on:
+note it in the trace and go to step 4 now — a later step would only bury it.
 
 **Verify:** Each step's own `**Verify:**` line holds before you move to the next.
 
 ## 4 — Evaluate: try to prove it went wrong
 
-Do not ask "did it work?" — ask "how would I know if it had not?" and go look:
+Do not ask "did it work?" — ask "how would I know if it had not?" and go look.
+Two layers, mechanical first:
+
+```sh
+speccify tool check              # every tool; or: speccify tool check <name>
+```
+
+It feeds each tool its `## Examples` on stdin and compares stdout with the
+expected output (extra fields are fine, missing or different ones are not;
+`ok: true` must come with exit 0; the output must satisfy the `outputs`
+schema). All examples pass → the tool is `verified` for this platform in
+`.agent/speccify/expansions.yaml`, and `speccify verify` stops mentioning it.
+A mismatch is a bug in your implementation, not in the example. Examples
+run inside `.agent/tools/<name>/`, so fixtures they name live there.
+
+Then the part no runner can do — the *result of the skill*:
 
 - Re-run every `**Verify:**` line of the skill against the actual result, not
   against your memory of having done the step.
-- Feed each tool the inputs from its `## Examples` and compare the outputs
-  with the expected ones; a mismatch is a bug in your implementation, not in
-  the example.
 - Look for the failure the skill warns about in its pitfalls, and for the one
   it does not mention but your project makes likely.
+- Check what the skill promised at the end (its acceptance, its last Verify)
+  from outside: open the artefact, run the command a stranger would run.
 
-Found nothing after genuinely trying: done. Found something: decide whether
-the *adaptation* was wrong (back to step 2 — fix the project section or the
-tool) or the *execution* was (back to step 3), fix it, and evaluate again.
+**The iteration rule.** Found nothing after genuinely trying: done — close
+the trace with `ok`. Found something: decide what was wrong —
 
-**Verify:** You can name what you tried to break and what happened.
+- the *adaptation*: a placeholder, the project section, a tool → back to
+  step 2, fix it, re-run `speccify tool check`;
+- the *execution*: a step skipped or done against its Verify → back to step 3;
+
+— add an iteration to the trace, and evaluate again. Three iterations without
+progress means the skill itself is wrong: stop and say so (step 5).
+
+**Verify:** You can name what you tried to break and what happened, and the trace says so.
+
+### The trace
+
+One entry per skill use in the project log (`.agent/log.md` if the project
+has one, otherwise the place the project keeps its history), appended, never
+rewritten:
+
+```markdown
+### 2026-08-21 · macos-notarize-tauri 1.0.0 · iteration 2 · ok
+- tools: verify-signatures verified (macos.sh, 3/3)
+- tried: re-ran `spctl --assess` on the stapled .dmg; opened it from a fresh user account
+- found: iteration 1 — helper binary signed after the bundle, notarization rejected it
+- fixed: adaptation — `## In this project` now names the sidecar order
+```
+
+Date, skill and version (from `expansions.yaml`), iteration number, verdict
+(`ok` | `open` | `abandoned`). Then what the tools said, what you tried, what
+you found, and whether the fix was adaptation or execution. When something
+goes wrong a month later, that entry is what says where to look.
 
 ## 5 — Give back what was general
 
 If the evaluation taught you something that is true for everyone, not just
 for this project, it belongs upstream: in the skill's source repository, as
-a step, a pitfall, or a sharper example in a tool spec. Project-specific
-knowledge stays in `## In this project`.
+a step, a pitfall, or a sharper example in a tool spec — an example that
+would have caught your bug is the best gift. Project-specific knowledge
+stays in `## In this project`.
 
 ## Pitfalls
 
@@ -101,6 +142,9 @@ knowledge stays in `## In this project`.
   travel.
 - Implementing a tool as a function inside your own code instead of as an
   executable: then nothing can check it against the examples.
+- Calling a tool verified because its examples pass while the skill's own
+  Verify lines were never re-run — `tool check` proves the tool, not the result.
+- Evaluating from memory ("I did that step") instead of from the artefact.
 
 ## In this project
 

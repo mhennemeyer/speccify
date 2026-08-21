@@ -144,16 +144,31 @@ def render_index_mdx(commands: dict[str, click.Command]) -> str:
     ]
     for name in sorted(commands):
         description = _table_escape(_short_description(commands[name]))
-        lines.append(f"| [`speccify {name}`](/cli/{name}/) | {description} |")
+        lines.append(f"| [`speccify {name}`](/cli/{_slug(name)}/) | {description} |")
     return "\n".join(lines).rstrip("\n") + "\n"
 
 
 def _collect_commands() -> dict[str, click.Command]:
-    """Liefert die Top-Level-Commands der Typer-App als Click-Commands."""
+    """Liefert die Commands der Typer-App als Click-Commands, Gruppen aufgelöst.
+
+    Eine Gruppe wie `speccify tool` erscheint nicht selbst, sondern als ihre
+    Unterbefehle (`tool check` → Seite `tool-check.md`).
+    """
 
     cli = typer.main.get_command(app)
     assert isinstance(cli, click.Group)
-    return dict(cli.commands)
+    commands: dict[str, click.Command] = {}
+    for name, command in cli.commands.items():
+        if isinstance(command, click.Group):
+            for sub_name, sub_command in command.commands.items():
+                commands[f"{name} {sub_name}"] = sub_command
+        else:
+            commands[name] = command
+    return commands
+
+
+def _slug(name: str) -> str:
+    return name.replace(" ", "-")
 
 
 def _iter_targets() -> list[tuple[Path, str]]:
@@ -164,7 +179,9 @@ def _iter_targets() -> list[tuple[Path, str]]:
         (_CLI_DOCS_DIR / "index.md", render_index_mdx(commands)),
     ]
     for name in sorted(commands):
-        targets.append((_CLI_DOCS_DIR / f"{name}.md", render_command_mdx(name, commands[name])))
+        targets.append(
+            (_CLI_DOCS_DIR / f"{_slug(name)}.md", render_command_mdx(name, commands[name]))
+        )
     return targets
 
 

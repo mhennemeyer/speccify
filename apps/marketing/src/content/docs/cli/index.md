@@ -20,4 +20,5 @@ hat eine eigene Referenzseite:
 | [`speccify pull`](/cli/pull/) | Materialise the locked skills untouched, as upstream has them (default: the cache). |
 | [`speccify search`](/cli/search/) | Search playbooks in the configured discovery indexes. |
 | [`speccify show`](/cli/show/) | Print a skill: what it is, what it builds on, and how old its sources are. |
+| [`speccify tool check`](/cli/tool-check/) | Run each tool spec's examples against the implementation for this platform. |
 | [`speccify verify`](/cli/verify/) | Check that the lockfile still matches the manifest and the actual bundles. |

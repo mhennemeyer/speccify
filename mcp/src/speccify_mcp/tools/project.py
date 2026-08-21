@@ -1,4 +1,4 @@
-"""Project-level tools: lock, pull, verify — thin adapters over the CLI."""
+"""Project-level tools: lock, pull, expand, verify, tool_check — thin adapters over the CLI."""
 
 from __future__ import annotations
 
@@ -144,3 +144,48 @@ def run_verify(
     except (LockfileError, FileNotFoundError) as exc:
         return ProjectResult(ok=False, code="verify_failed", message=str(exc))
     return ProjectResult(ok=not problems, problems=problems)
+
+
+@dataclass(frozen=True)
+class ToolCheckResult:
+    ok: bool
+    platform: str = ""
+    tools: list[dict[str, Any]] = field(default_factory=list)
+    code: str = ""
+    message: str = ""
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "ok": self.ok,
+            "platform": self.platform,
+            "tools": list(self.tools),
+            "code": self.code,
+            "message": self.message,
+        }
+
+
+def run_tool_check(
+    project_root: Path,
+    *,
+    names: list[str] | None = None,
+    platform: str | None = None,
+    timeout: float | None = None,
+) -> ToolCheckResult:
+    """Run each tool spec's examples against this platform's implementation."""
+    from speccify_cli.commands.tool import run_tool_check as cli_tool_check
+    from speccify_core.tool_check import DEFAULT_TIMEOUT
+
+    try:
+        report = cli_tool_check(
+            project_root,
+            names or None,
+            platform=platform,
+            timeout=DEFAULT_TIMEOUT if timeout is None else timeout,
+        )
+    except (FileNotFoundError, ValueError) as exc:
+        return ToolCheckResult(ok=False, code="tool_check_failed", message=str(exc))
+    return ToolCheckResult(
+        ok=report.ok,
+        platform=report.platform,
+        tools=[r.to_dict() for r in report.results],
+    )

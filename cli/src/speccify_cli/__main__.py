@@ -14,6 +14,7 @@ from speccify_cli.commands.lock import lock_command
 from speccify_cli.commands.pull import pull_command
 from speccify_cli.commands.search import search_command
 from speccify_cli.commands.show import show_command
+from speccify_cli.commands.tool import tool_app
 from speccify_cli.commands.verify import verify_command
 
 app = typer.Typer(
@@ -34,6 +35,7 @@ app.command("verify")(verify_command)
 app.command("show")(show_command)
 app.command("lint")(lint_command)
 app.command("check")(check_command)
+app.add_typer(tool_app, name="tool")
 
 
 @app.callback()

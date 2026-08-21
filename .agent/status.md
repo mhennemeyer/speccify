@@ -20,11 +20,14 @@
   `.claude/skills` verweist nur. Expand = Normalisierung (`uses` aufgelöst, Metadaten
   abgestreift, nur ergänzt). Kein Exec-MCP.
   Meilensteine T1 (Format) → T2 (Expand) → T3 (Evaluate) → **M2 Testlauf**.
-  **T1 + T2 geliefert (2026-08-21)**: Tool-Specs (`tool.py`, `tool_get`), `speccify
+  **T1 + T2 + T3 geliefert (2026-08-21)**: Tool-Specs (`tool.py`, `tool_get`), `speccify
   expand`/`link`, `.agent/skills/` (expandiert, committet) + `.agent/tools/` +
-  `expansions.yaml`, `.claude/skills` als Symlink, Speccify-Skill mit dem Dreischritt,
-  MCP 12 Tools. **Nächstes Ziel: T3** — `speccify tool check` (Beispiele gegen
-  `<platform>.<ext>`), Status `implemented → verified`, Spur im Log; danach **M2**.
+  `expansions.yaml`, `.claude/skills` als Symlink, **`speccify tool check`**
+  (Beispiele gegen `<platform>.<ext>`, Status `implemented → verified`), Speccify-Skill
+  v0.2.0 mit vollständigem Dreischritt, Iterationsregel und Spur-Format, MCP 13 Tools.
+  **Nächstes Ziel: M2** — ein altes Projekt mit Skills und Speccify neu bauen; jeder
+  Skill durchläuft Expand/Execute/Evaluate. Die drei Tools im Repo haben noch keine
+  Implementierung (`tool check` → `not-implemented`); das ist M2-Arbeit.
 - **M1 geliefert (2026-08-13)** nach [`plans/archive/skills-als-format.md`](./plans/archive/skills-als-format.md):
   `SKILL.md` ist das Format, zehn Skills in `skills/`, `pull` nach
   `.claude/skills/`, `check`/`lint`, MCP auf zehn Tools, Viewer/Backend auf

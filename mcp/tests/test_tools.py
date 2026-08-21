@@ -173,3 +173,35 @@ def test_an_agent_can_find_and_read_a_skill_over_mcp(project: Path) -> None:
         project, reference=chosen["id"], path="tools/verify-signatures/reference.sh"
     )
     assert asset.ok and "codesign" in (asset.content or "")
+
+
+def test_tool_check_reports_per_example_as_a_result(project: Path) -> None:
+    from speccify_mcp.tools import run_expand, run_tool_check
+
+    (project / "speccify.yaml").write_text(
+        f"schema_version: 1\ndependencies:\n  '{MAIN}': ^1.0\n", encoding="utf-8"
+    )
+    assert run_lock(project).ok
+    assert run_expand(project, platform="macos").ok
+
+    nothing = run_tool_check(project, platform="macos")
+    assert nothing.ok
+    assert nothing.tools[0]["status"] == "not-implemented"
+
+    tool_dir = project / ".agent" / "tools" / "verify-signatures"
+    (tool_dir / "TOOL.md").write_text(
+        (tool_dir / "TOOL.md").read_text().replace("requires: codesign\n", "")
+    )
+    (tool_dir / "macos.py").write_text(
+        'import json, sys\nprint(json.dumps({"ok": True, "checked": [], "offenders": []}))\n'
+    )
+    result = run_tool_check(project, names=["verify-signatures"], platform="macos")
+    assert not result.ok
+    tool = result.tools[0]
+    assert tool["status"] == "failed"
+    assert tool["cases"][0]["title"] == "every binary signed by the expected identity"
+    assert "$.checked: expected 3 item(s), got 0" in tool["cases"][0]["detail"]
+
+    missing = run_tool_check(project, names=["nope"])
+    assert not missing.ok
+    assert missing.code == "tool_check_failed"

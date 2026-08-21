@@ -24,6 +24,7 @@ from .tools import (
     run_skill_get,
     run_skill_list,
     run_skill_propose,
+    run_tool_check,
     run_tool_get,
     run_verify,
     run_viewer_selection,
@@ -289,6 +290,28 @@ def build_server(config: ServerConfig) -> FastMCP:
             config.project_root,
             library_path=Path(library_path) if library_path else None,
             offline=offline,
+        ).to_dict()
+
+    @server.tool(
+        name="tool_check",
+        description=(
+            "Run each tool spec's `## Examples` against the implementation for this "
+            "platform under .agent/tools/<name>/<platform>.<ext> — JSON in on stdin, "
+            "JSON out on stdout. A tool whose examples all pass is recorded as "
+            "`verified` in .agent/speccify/expansions.yaml; a failing one goes back "
+            "to `implemented`. Returns `{ok, platform, tools: [{name, status, cases}]}` "
+            "with the expected and actual output per failing example. This is the "
+            "mechanical half of Evaluate; mirrors `speccify tool check`. Omit `names` "
+            "to check every tool."
+        ),
+    )
+    def tool_check(
+        names: list[str] | None = None,
+        platform: str | None = None,
+        timeout: float | None = None,
+    ) -> dict[str, Any]:
+        return run_tool_check(
+            config.project_root, names=names, platform=platform, timeout=timeout
         ).to_dict()
 
     _register_resources(server, config)

@@ -334,3 +334,157 @@ def test_verify_reports_upstream_drift_against_the_expansion(tmp_path: Path) -> 
     assert verified.exit_code == 1
     assert "changed since it was expanded" in verified.output
     assert "speccify expand" in verified.output
+
+
+FAKE_VERIFY_SIGNATURES = """import json, sys
+data = json.load(sys.stdin)
+bundle = data["bundle"]
+if bundle == "fixtures/Signed.app":
+    out = {"ok": True, "checked": [".", "Contents/MacOS/Signed", "Contents/MacOS/helper"],
+           "offenders": []}
+elif bundle == "fixtures/Broken.app":
+    out = {"ok": False, "checked": [".", "Contents/MacOS/Broken", "Contents/MacOS/helper"],
+           "offenders": [{"path": "Contents/MacOS/helper",
+                          "reason": "code object is not signed at all"}]}
+else:
+    out = {"ok": False, "checked": [".", "Contents/MacOS/AdHoc"],
+           "offenders": [{"path": ".",
+                          "reason": "signed by 'adhoc', expected 'Developer ID Application'"}]}
+print(json.dumps(out))
+sys.exit(0 if out["ok"] else 1)
+"""
+
+
+def _expanded_project(tmp_path: Path) -> Path:
+    runner.invoke(app, ["init", "--project", str(tmp_path)])
+    _add(tmp_path)
+    args = ["expand", "--project", str(tmp_path), "--library", str(LIBRARY), "--platform", "macos"]
+    assert runner.invoke(app, args).exit_code == 0
+    return tmp_path
+
+
+def _record(project: Path) -> dict:
+    return yaml.safe_load((project / ".agent" / "speccify" / "expansions.yaml").read_text())
+
+
+def test_tool_check_without_implementations_runs_nothing(tmp_path: Path) -> None:
+    project = _expanded_project(tmp_path)
+    result = runner.invoke(app, ["tool", "check", "--project", str(project), "--platform", "macos"])
+    assert result.exit_code == 0, result.output
+    assert "verify-signatures  not-implemented" in result.output
+    assert "0 verified, 0 failed, 1 not run" in result.output
+
+
+def test_tool_check_verifies_an_implementation_and_records_it(tmp_path: Path) -> None:
+    """implemented -> verified: the examples pass, the record says so, verify is quiet."""
+    project = _expanded_project(tmp_path)
+    tool_dir = project / ".agent" / "tools" / "verify-signatures"
+    (tool_dir / "macos.py").write_text(FAKE_VERIFY_SIGNATURES)
+    # `codesign` is in `requires`; it is a macOS binary, which the runner insists on.
+    (tool_dir / "TOOL.md").write_text(
+        (tool_dir / "TOOL.md").read_text().replace("requires: codesign\n", "")
+    )
+
+    result = runner.invoke(app, ["tool", "check", "--project", str(project), "--platform", "macos"])
+    assert result.exit_code == 0, result.output
+    assert "ok   verify-signatures  3 example(s) pass (macos.py) -> verified for macos" in (
+        result.output
+    )
+    macos = _record(project)["tools"]["verify-signatures"]["platforms"]["macos"]
+    assert macos["status"] == "verified"
+    assert macos["file"] == "macos.py"
+    assert macos["checked"]
+
+    verified = runner.invoke(app, ["verify", "--project", str(project), "--library", str(LIBRARY)])
+    assert verified.exit_code == 0, verified.output
+    assert "not yet checked" not in verified.output
+    assert "no implementation" not in verified.output
+
+
+def test_tool_check_failure_names_the_example_and_demotes_the_tool(tmp_path: Path) -> None:
+    project = _expanded_project(tmp_path)
+    tool_dir = project / ".agent" / "tools" / "verify-signatures"
+    (tool_dir / "TOOL.md").write_text(
+        (tool_dir / "TOOL.md").read_text().replace("requires: codesign\n", "")
+    )
+    (tool_dir / "macos.py").write_text(FAKE_VERIFY_SIGNATURES)
+    args = ["tool", "check", "--project", str(project), "--platform", "macos"]
+    assert runner.invoke(app, args).exit_code == 0
+
+    # The implementation regresses: it stops reporting the helper.
+    (tool_dir / "macos.py").write_text(
+        FAKE_VERIFY_SIGNATURES.replace(
+            '"offenders": [{"path": "Contents/MacOS/helper"',
+            '"offenders": [{"path": "Contents/MacOS/other"',
+        )
+    )
+    result = runner.invoke(app, args)
+    assert result.exit_code == 1
+    assert "x    verify-signatures  1 of 3 example(s) fail" in result.output
+    assert "'one unsigned sidecar': $.offenders[0].path: expected" in result.output
+    assert _record(project)["tools"]["verify-signatures"]["platforms"]["macos"]["status"] == (
+        "implemented"
+    )
+
+    as_json = runner.invoke(app, [*args, "--json"])
+    payload = json.loads(as_json.output)
+    assert payload["ok"] is False
+    failing = [c for c in payload["tools"][0]["cases"] if c["status"] == "failed"]
+    assert failing[0]["actual"]["offenders"][0]["path"] == "Contents/MacOS/other"
+
+
+def test_tool_check_names_an_unknown_tool(tmp_path: Path) -> None:
+    project = _expanded_project(tmp_path)
+    result = runner.invoke(app, ["tool", "check", "nope", "--project", str(project)])
+    assert result.exit_code == 1
+    assert ".agent/tools/nope/TOOL.md" in result.output
+
+
+def test_a_changed_spec_takes_verified_away(tmp_path: Path) -> None:
+    """Re-expand after upstream changed the contract: the old verification counts for nothing."""
+    import shutil
+
+    library = tmp_path / "library"
+
+    shutil.copytree(LIBRARY, library)
+    project = tmp_path / "project"
+    project.mkdir()
+    runner.invoke(app, ["init", "--project", str(project)])
+    assert _add_from(project, library).exit_code == 0
+    args = ["expand", "--project", str(project), "--library", str(library), "--platform", "macos"]
+    assert runner.invoke(app, args).exit_code == 0
+    tool_dir = project / ".agent" / "tools" / "verify-signatures"
+    (tool_dir / "macos.py").write_text(FAKE_VERIFY_SIGNATURES)
+    (tool_dir / "TOOL.md").write_text(
+        (tool_dir / "TOOL.md").read_text().replace("requires: codesign\n", "")
+    )
+    checked = runner.invoke(
+        app, ["tool", "check", "--project", str(project), "--platform", "macos"]
+    )
+    assert checked.exit_code == 0, checked.output
+    assert _record(project)["tools"]["verify-signatures"]["platforms"]["macos"]["status"] == (
+        "verified"
+    )
+
+    spec = library / "macos-notarize-tauri" / "tools" / "verify-signatures" / "TOOL.md"
+    spec.write_text(
+        spec.read_text()
+        + '\n### a fourth case\ninput: {"bundle": "x"}\n'
+        + 'output: {"ok": false, "checked": [], "offenders": []}\n'
+    )
+    assert (
+        runner.invoke(app, ["lock", "--project", str(project), "--library", str(library)]).exit_code
+        == 0
+    )
+    again = runner.invoke(app, args)
+    assert again.exit_code == 0, again.output
+    macos = _record(project)["tools"]["verify-signatures"]["platforms"]["macos"]
+    assert macos["status"] == "implemented"
+    assert "checked" not in macos
+    assert (tool_dir / "macos.py").read_text() == FAKE_VERIFY_SIGNATURES
+
+
+def _add_from(project: Path, library: Path, reference: str = MAIN):
+    return runner.invoke(
+        app, ["add", reference, "--project", str(project), "--library", str(library)]
+    )

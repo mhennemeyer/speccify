@@ -37,6 +37,7 @@ from speccify_core.expansion import (
     EXPANSIONS_FILENAME,
     IMPLEMENTED,
     SKILLS_DIR,
+    VERIFIED,
     Expansions,
     SkillRecord,
     ToolRecord,
@@ -186,6 +187,16 @@ def run_expand(
                 target.write_bytes(data)
             known = tools.get(tool_name)
             platforms = dict(known.platforms) if known else {}
+            spec_sha = sha256_text(spec_bytes)
+            if known and known.spec_sha256 != spec_sha:
+                # The contract changed; what was verified against the old one is not
+                # verified against this one.
+                platforms = {
+                    p: ({**info, "status": IMPLEMENTED} if info.get("status") == VERIFIED else info)
+                    for p, info in platforms.items()
+                }
+                for info in platforms.values():
+                    info.pop("checked", None)
             implementation = implementation_for(tool_dir, platform)
             if implementation is not None and platform not in platforms:
                 platforms[platform] = {"status": IMPLEMENTED, "file": implementation.name}
@@ -193,7 +204,7 @@ def run_expand(
                 to_implement.append(tool_name)
             from_skills = tuple(sorted({*(known.from_skills if known else ()), skill.name}))
             tools[tool_name] = ToolRecord(
-                from_skills=from_skills, spec_sha256=sha256_text(spec_bytes), platforms=platforms
+                from_skills=from_skills, spec_sha256=spec_sha, platforms=platforms
             )
 
         stamp = (today or date.today()).isoformat()
@@ -262,7 +273,7 @@ def expansion_status(
         tool_dir = root / TOOLS_DIR / name
         if implementation_for(tool_dir, platform) is None:
             status.tools_to_implement.append(name)
-        elif tool.status(platform) != "verified":
+        elif tool.status(platform) != VERIFIED:
             status.tools_to_verify.append(name)
     return status
 

@@ -7,8 +7,9 @@ import gen_cli_docs as gen
 
 def test_collect_commands_contains_core_subcommands() -> None:
     commands = gen._collect_commands()
-    for name in ("lint", "lock", "pull", "verify", "add", "init"):
+    for name in ("lint", "lock", "pull", "verify", "add", "init", "tool check"):
         assert name in commands
+    assert "tool" not in commands  # Gruppen erscheinen nur über ihre Unterbefehle
 
 
 def test_render_command_mdx_is_deterministic() -> None:
@@ -34,7 +35,7 @@ def test_render_index_lists_all_commands() -> None:
     commands = gen._collect_commands()
     index = gen.render_index_mdx(commands)
     for name in commands:
-        assert f"](/cli/{name}/)" in index
+        assert f"](/cli/{gen._slug(name)}/)" in index
 
 
 def test_check_is_green_after_write() -> None:

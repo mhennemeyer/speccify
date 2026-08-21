@@ -33,9 +33,9 @@ playbooks:
   resolved_via: local
   bundle_sha256: sha256:bce17fa754a9ac3ae35a9c9622bb5c134a7791c8c15bd7999659b6b880a40b6a
 - id: '@speccify/speccify'
-  version: 0.1.0
+  version: 0.2.0
   resolved_via: local
-  bundle_sha256: sha256:e5bfc7915157d7fbdc6b79aa89608beb9f6626b4bfbf7e584791592402db9c2a
+  bundle_sha256: sha256:a757115f6e45d97f33e223830413fde4edcd00d611ba9c4a8f4f07b8f5fe3304
 - id: '@speccify/storekit-sandbox-testing'
   version: 1.0.0
   resolved_via: local
