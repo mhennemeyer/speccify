@@ -4,10 +4,29 @@
 - **Typ:** Code
 - **Phase:** **Neuausrichtung auf Workflow-Playbooks abgeschlossen (2026-08-06)** — W1–W5 geliefert: Rückbau des Codegen-Zweigs, Playbook-Schema (Neustart bei `schema_version: 1`), Playbooks als Bundles, `speccify check` gegen Verrottung, read-only Viewer mit Workflow-Diagramm, Kontext-Brücke zum Agenten (`viewer_selection` / `playbook_propose`), Außendarstellung komplett auf Playbooks und Englisch. Offen nur noch BO-Aktionen (Repo öffentlich, Index säen, Doku-Site deployen, IAP-Playbook gegenlesen). Plan archiviert: [`plans/archive/neuausrichtung-workflow-playbooks.md`](./plans/archive/neuausrichtung-workflow-playbooks.md). Branch: `feat/oss-pivot`. Historie der Komponenten-Ära (P1–P6.1) in [`plans/archive/pivot-open-source-git-composer.md`](./plans/archive/pivot-open-source-git-composer.md).
 - **Priorität:** Hoch (aktiver Umbau)
-- **Zuletzt aktualisiert:** 2026-08-07
+- **Zuletzt aktualisiert:** 2026-08-21
 
 ## Nächste Schritte
-- **AKTIVER PLAN: [`plans/skills-als-format.md`](./plans/skills-als-format.md)**
+- **AKTIVER PLAN: [`plans/skills-und-tools.md`](./plans/skills-und-tools.md)**
+  (Definition, 2026-08-20). Speccify wird **Skill- und Tool-Manager**: Skills
+  definieren **Tool-Specs** (`tools/<name>/TOOL.md` — Inputs/Outputs als JSON
+  Schema, Effekte, Anforderungen, **Beispiele als Vertrag**), die der Agent vor
+  Ort ausprogrammiert statt fertige Skripte zu teilen (Python-Version,
+  macOS/Linux/Windows waren die Hürde). Benutzung in drei ggf. iterativen
+  Phasen **Expand → Execute → Evaluate**, getragen vom mitgelieferten
+  Speccify-Skill; Speccify liefert `expand`, `tool check`, den
+  Expansions-Nachweis. **`.agent/` ist das Zuhause** (BO 2026-08-21): `.agent/skills/` normale,
+  expandierte Skills, `.agent/tools/` Implementierungen je Plattform, alles committet;
+  `.claude/skills` verweist nur. Expand = Normalisierung (`uses` aufgelöst, Metadaten
+  abgestreift, nur ergänzt). Kein Exec-MCP.
+  Meilensteine T1 (Format) → T2 (Expand) → T3 (Evaluate) → **M2 Testlauf**.
+  Keine offenen BO-Fragen mehr; **T1 kann starten.**
+- **M1 geliefert (2026-08-13)** nach [`plans/archive/skills-als-format.md`](./plans/archive/skills-als-format.md):
+  `SKILL.md` ist das Format, zehn Skills in `skills/`, `pull` nach
+  `.claude/skills/`, `check`/`lint`, MCP auf zehn Tools, Viewer/Backend auf
+  Skills. Die Produktdefinition dort (ein Nutzer, drei Orte, W-A–W-H, D1–D6)
+  gilt weiter. Außendarstellung (README, docs, Website) erzählt noch Playbooks.
+- **Vorheriger Planstand (2026-08-11)**: [`plans/archive/skills-als-format.md`](./plans/archive/skills-als-format.md)
   (Produktdefinition, 2026-08-11). **Playbook heisst jetzt Skill** — der Begriff
   war artifiziell fuer etwas, das im Kern ein Agent Skill mit Metadaten ist. Das
   Besondere ist Organisation, Lookup, Kombination.

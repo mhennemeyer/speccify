@@ -1,6 +1,6 @@
 ---
-lifecycle: active
-status: Bauen 2026-08-13 — M1 (lokaler Kreislauf) ist das Ziel; Ablauf-Definition geparkt, wird aus dem Neubau echter Projekte gelernt.
+lifecycle: superseded
+status: Produktdefinition gilt weiter; M1 geliefert 2026-08-13. Fortgeführt durch skills-und-tools.md (2026-08-20) — Tool-Specs und Expand/Execute/Evaluate vor M2.
 sessionId: skills-als-format
 ---
 # Plan: Speccify — Skills organisieren, finden, kombinieren
@@ -8,7 +8,8 @@ sessionId: skills-als-format
 > **Status**: 📋 Produktdefinition (2026-08-11). Erst definieren, dann bauen — auf
 > ausdrücklichen Wunsch des BO, nachdem drei Neuausrichtungen in einer Woche
 > gezeigt haben, dass Richtungswechsel billiger sind als Klarheit.
-> **Ersetzt**: [`archive/neuausrichtung-workflow-playbooks.md`](./archive/neuausrichtung-workflow-playbooks.md)
+> **Fortgeführt durch**: [`../skills-und-tools.md`](../skills-und-tools.md) (2026-08-20).
+> **Ersetzt**: [`neuausrichtung-workflow-playbooks.md`](./neuausrichtung-workflow-playbooks.md)
 > **Auslöser (BO, 2026-08-07/08)**: „Playbooks ist zwar ein netter Name, aber
 > ziemlich artifiziell, wenn es ehrlicherweise einfach ein Skill mit ein paar
 > Metadaten ist." — und: „Das Tool muss nicht revolutionär sein sondern vor

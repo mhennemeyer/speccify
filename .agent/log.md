@@ -1,5 +1,31 @@
 # Log: Speccify
 
+## 2026-08-21 (Plan: BO-Entscheide eingearbeitet)
+- **`.agent/` ist das Zuhause** (D8): `.agent/skills/` = normale, expandierte
+  Skills; `.agent/tools/` = Implementierungen je Plattform, alle committet;
+  `.claude/skills` verweist nur (Symlink, Probe in T2). Herkunft in
+  `.agent/speccify/expansions.yaml`, Upstream-Cache gitignored.
+- **Expand = Normalisierung**: `uses`-Baum wird zu mehreren normalen Skills,
+  `speccify.*` wird abgestreift, Projektspezifisches nur ergänzt (D12).
+- JSON Schema für Inputs/Outputs bestätigt (D10); Exec-MCP raus (D13) — er
+  ist für gesandboxte Clients, der Agent im Terminal ruft Tools direkt auf.
+- Pristin/expandiert-Unterscheidung aus dem ersten Entwurf entfällt.
+
+## 2026-08-20 (Plan: Skills und Tools — Dreischritt vor dem Testlauf)
+- **Neuer aktiver Plan** [`plans/skills-und-tools.md`](./plans/skills-und-tools.md);
+  `skills-als-format.md` archiviert (`lifecycle: superseded`), Produktdefinition
+  gilt weiter.
+- **BO-Auslöser**: Teilen fertiger Tools scheitert an Plattform/Version.
+  Antwort: **Tool-Specs** im Skill (`tools/<name>/TOOL.md`), Agent
+  programmiert vor Ort aus. Benutzung als **Expand → Execute → Evaluate**,
+  iterativ; Choreografie im Speccify-Skill, nicht im Code (D11).
+- **Entscheidungsvorschläge D7–D11**: stdin/stdout-JSON als einzige
+  vorgeschriebene Form; expandierte Skills werden committet, pristine nicht;
+  Tools liegen im Skill; Beispiele sind der Vertrag.
+- **Reihenfolge**: T1 → T2 → T3 → M2. M2 (Neubau eines alten Projekts) bleibt
+  der erste echte Testlauf, jetzt mit Dreischritt.
+- Kein Code geändert. `status.md` und `agent.md` auf den neuen Plan gezogen.
+
 ## 2026-05-18 (Phase 1c Step 6 — Wrap-up + Master-Plan-Sync)
 - **Step 6 abgeschlossen, Phase 1c damit fertig.** Reine Doku-/Plan-
   Synchronisation, kein Code-Change am Server.
