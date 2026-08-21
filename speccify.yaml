@@ -1,0 +1,13 @@
+schema_version: 1
+dependencies:
+  '@speccify/apple-developer-id-cert': ^1.0
+  '@speccify/fastlane-mac-app-store': ^1.0
+  '@speccify/iap-trial-then-unlock': ^1.0
+  '@speccify/icloud-container-mac-ios': ^1.0
+  '@speccify/libgit2-static-macos-app': ^1.0
+  '@speccify/macos-notarize-tauri': ^1.0
+  '@speccify/mcp-client-streamable-http': ^1.0
+  '@speccify/sandboxed-mac-app-local-exec': ^1.0
+  '@speccify/speccify': ^0.1
+  '@speccify/storekit-sandbox-testing': ^1.0
+  '@speccify/storekit2-subscription-paywall': ^1.0

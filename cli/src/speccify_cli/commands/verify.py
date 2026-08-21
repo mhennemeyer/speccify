@@ -16,6 +16,7 @@ from speccify_core import (
 )
 
 from speccify_cli.commands._context import ProjectContext, fetch_bundle
+from speccify_cli.commands.expand import ExpansionStatus, expansion_status
 
 
 def run_verify(
@@ -25,16 +26,30 @@ def run_verify(
     offline: bool = False,
 ) -> list[str]:
     """Compare manifest, lockfile and the actual bundles; returns problems."""
+    problems, _ = run_verify_with_status(
+        project_dir, library_override=library_override, offline=offline
+    )
+    return problems
+
+
+def run_verify_with_status(
+    project_dir: Path,
+    *,
+    library_override: Path | None = None,
+    offline: bool = False,
+) -> tuple[list[str], ExpansionStatus]:
+    """Problems with the lock, plus how the expanded skills under .agent/ relate to it."""
     problems: list[str] = []
+    hashes: dict[str, str] = {}
     context = ProjectContext.load(project_dir, library_override=library_override, offline=offline)
     if not context.lockfile_path.is_file():
-        return [f"No lockfile in {project_dir}. Run `speccify lock` first."]
+        return [f"No lockfile in {project_dir}. Run `speccify lock` first."], ExpansionStatus()
     lockfile = Lockfile.load(context.lockfile_path)
 
     try:
         graph = Resolver(context.libraries).resolve(context.manifest)
     except (ResolverError, RegistryError) as exc:
-        return [str(exc)]
+        return [str(exc)], ExpansionStatus()
 
     resolved = {r.playbook_id: r for r in graph.resolutions}
     locked = {e.id: e for e in lockfile.entries}
@@ -57,6 +72,7 @@ def run_verify(
             problems.append(str(exc))
             continue
         actual = bundle_sha256(bundle.files)
+        hashes[playbook_id] = actual
         if actual != entry.bundle_sha256:
             problems.append(
                 f"{playbook_id}@{entry.version}: bundle hash drift — "
@@ -68,7 +84,10 @@ def run_verify(
                 f"{entry.source_commit[:12]}, actual {(bundle.source_commit or '?')[:12]}. "
                 f"A tag was moved."
             )
-    return problems
+    status = expansion_status(project_dir, locked_hashes=hashes)
+    problems.extend(status.drift)
+    problems.extend(status.missing)
+    return problems, status
 
 
 def verify_command(
@@ -84,7 +103,9 @@ def verify_command(
 ) -> None:
     """Check that the lockfile still matches the manifest and the actual bundles."""
     try:
-        problems = run_verify(project_dir, library_override=library, offline=offline)
+        problems, status = run_verify_with_status(
+            project_dir, library_override=library, offline=offline
+        )
     except (LockfileError, FileNotFoundError) as exc:
         typer.echo(f"x speccify verify failed: {exc}", err=True)
         raise typer.Exit(code=1) from exc
@@ -95,3 +116,7 @@ def verify_command(
         typer.echo(f"\n{len(problems)} problem(s).", err=True)
         raise typer.Exit(code=1)
     typer.echo("ok lockfile, manifest and bundles agree.")
+    for tool in status.tools_to_implement:
+        typer.echo(f"   tool '{tool}' has no implementation for this platform yet.")
+    for tool in status.tools_to_verify:
+        typer.echo(f"   tool '{tool}' is implemented but not yet checked against its examples.")

@@ -1,0 +1,7 @@
+[
+  { "pattern": "npm test", "permanent": true },
+  { "pattern": "npm run build", "permanent": true },
+  { "pattern": "cargo test", "permanent": true },
+  { "pattern": "swift test", "permanent": true },
+  { "pattern": "./scripts/release.sh", "permanent": false }
+]

@@ -17,7 +17,7 @@ from .library import (
     run_skill_list,
     run_tool_get,
 )
-from .project import ProjectResult, run_lock, run_pull, run_verify
+from .project import ExpandResult, ProjectResult, run_expand, run_lock, run_pull, run_verify
 from .search import SearchResult, run_search
 from .viewer import (
     ProposalResult,
@@ -31,7 +31,9 @@ __all__ = [
     "CheckResult",
     "LibraryResult",
     "PlaybookResult",
+    "ExpandResult",
     "ProjectResult",
+    "run_expand",
     "ProposalResult",
     "SearchResult",
     "ViewerResult",

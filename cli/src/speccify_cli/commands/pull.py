@@ -1,8 +1,10 @@
-"""`speccify pull`: materialise the locked skills where the agent finds them.
+"""`speccify pull`: materialise the locked skills as they are upstream.
 
-Default target is `.claude/skills/`, because that is where Claude Code looks.
-Once a skill lands there it works — no MCP server, no Speccify process, nothing
-else running. That is the whole point of storing skills in their own format.
+Default target is the cache `.agent/speccify/cache/` (gitignored). What the
+agent reads is not this but `.agent/skills/`, which `speccify expand` derives
+from the same bundles — resolved, normalised, project-specific. `pull` remains
+for the moment you want the untouched upstream next to it: to diff, to read
+what changed, or to drop a skill somewhere throwaway.
 
 The layout there is **flat**: `<out>/<name>/SKILL.md`. `name` is the lookup key,
 so two skills of the same name from different scopes cannot both be installed;
@@ -18,7 +20,7 @@ from speccify_core import Lockfile, LockfileError, RegistryError, Version, bundl
 
 from speccify_cli.commands._context import ProjectContext, fetch_bundle
 
-DEFAULT_OUT_DIR = "./.claude/skills"
+DEFAULT_OUT_DIR = "./.agent/speccify/cache"
 
 
 def run_pull(
@@ -76,7 +78,7 @@ def pull_command(
         False, "--offline/--no-offline", help="Only read cached git sources, never the network."
     ),
 ) -> None:
-    """Materialise the locked skills (with assets) where the agent finds them."""
+    """Materialise the locked skills untouched, as upstream has them (default: the cache)."""
     try:
         written = run_pull(project_dir, out, library_override=library, offline=offline)
     except (LockfileError, RegistryError, FileNotFoundError) as exc:

@@ -70,6 +70,66 @@ def run_pull(
     return ProjectResult(ok=True, files=[str(path) for path in written])
 
 
+@dataclass(frozen=True)
+class ExpandResult:
+    ok: bool
+    platform: str = ""
+    skills: list[dict[str, Any]] = field(default_factory=list)
+    tools_to_implement: list[str] = field(default_factory=list)
+    code: str = ""
+    message: str = ""
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "ok": self.ok,
+            "platform": self.platform,
+            "skills": list(self.skills),
+            "tools_to_implement": list(self.tools_to_implement),
+            "code": self.code,
+            "message": self.message,
+        }
+
+
+def run_expand(
+    project_root: Path,
+    *,
+    references: list[str] | None = None,
+    library_path: Path | None = None,
+    offline: bool = False,
+    platform: str | None = None,
+) -> ExpandResult:
+    """Make normal, project-specific skills under `.agent/` and say what is left to do."""
+    from speccify_cli.commands.expand import run_expand as cli_expand
+    from speccify_core import LibraryError, LockfileError
+
+    try:
+        report = cli_expand(
+            project_root,
+            references or None,
+            library_override=library_path,
+            offline=offline,
+            platform=platform,
+        )
+    except (LockfileError, LibraryError, FileNotFoundError, ValueError) as exc:
+        return ExpandResult(ok=False, code="expand_failed", message=str(exc))
+    return ExpandResult(
+        ok=True,
+        platform=report.platform,
+        skills=[
+            {
+                "name": o.name,
+                "action": o.action,
+                "path": f".agent/skills/{o.name}",
+                "used_by": o.via,
+                "placeholders": list(o.placeholders),
+                "tools_to_implement": list(o.tools_to_implement),
+            }
+            for o in report.outcomes
+        ],
+        tools_to_implement=report.tools_to_implement,
+    )
+
+
 def run_verify(
     project_root: Path,
     *,

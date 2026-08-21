@@ -36,6 +36,12 @@ def test_init_writes_a_minimal_manifest(project: Path) -> None:
     assert manifest == {"schema_version": 1}
 
 
+def test_init_ignores_the_cache_and_links_the_agent(project: Path) -> None:
+    assert ".agent/speccify/cache/" in (project / ".gitignore").read_text().splitlines()
+    assert (project / ".claude" / "skills").is_symlink()
+    assert (project / ".agent" / "skills").is_dir()
+
+
 def test_add_pins_the_playbook_and_its_child(project: Path) -> None:
     result = _add(project)
     assert result.exit_code == 0, result.output
@@ -221,3 +227,110 @@ def test_the_local_loop_works_on_skills(tmp_path: Path) -> None:
 
     verified = runner.invoke(app, ["verify", "--project", str(tmp_path), "--library", str(skills)])
     assert verified.exit_code == 0, verified.output
+
+
+def test_expand_makes_normal_skills_under_agent(tmp_path: Path) -> None:
+    """add -> lock -> expand -> link -> verify: the skill arrives as plain Markdown.
+
+    Under `.agent/skills/` nothing Speccify-specific is left; the child it
+    builds on is a sibling; the tool spec is project-wide under `.agent/tools/`
+    and the agent is told to implement it for this platform.
+    """
+    skills = REPO_ROOT / "skills"
+    assert runner.invoke(app, ["init", "--project", str(tmp_path)]).exit_code == 0
+    assert _add(tmp_path).exit_code == 0
+
+    expanded = runner.invoke(
+        app,
+        ["expand", "--project", str(tmp_path), "--library", str(skills), "--platform", "macos"],
+    )
+    assert expanded.exit_code == 0, expanded.output
+    assert "created   .agent/skills/macos-notarize-tauri" in expanded.output
+    assert "created   .agent/skills/apple-developer-id-cert (used by macos-notarize-tauri)" in (
+        expanded.output
+    )
+    assert ".agent/tools/verify-signatures/macos.<ext>" in expanded.output
+
+    skill = (tmp_path / ".agent" / "skills" / "macos-notarize-tauri" / "SKILL.md").read_text()
+    assert "speccify." not in skill.split("---")[1], "metadata is stripped"
+    assert "[apple-developer-id-cert](../apple-developer-id-cert/SKILL.md)" in skill
+    assert "## In this project" in skill
+    assert not (tmp_path / ".agent" / "skills" / "macos-notarize-tauri" / "tools").exists()
+    assert (tmp_path / ".agent" / "tools" / "verify-signatures" / "TOOL.md").is_file()
+    assert (tmp_path / ".agent" / "tools" / "verify-signatures" / "reference.sh").is_file()
+
+    record = yaml.safe_load((tmp_path / ".agent" / "speccify" / "expansions.yaml").read_text())
+    assert record["skills"]["macos-notarize-tauri"]["requested"] is True
+    assert record["skills"]["apple-developer-id-cert"]["requested"] is False
+    assert record["tools"]["verify-signatures"]["from"] == ["macos-notarize-tauri"]
+
+    linked = runner.invoke(app, ["link", "--project", str(tmp_path)])
+    assert linked.exit_code == 0, linked.output
+    link = tmp_path / ".claude" / "skills"
+    assert link.is_symlink()
+    assert (link / "macos-notarize-tauri" / "SKILL.md").is_file()
+
+    verified = runner.invoke(app, ["verify", "--project", str(tmp_path), "--library", str(skills)])
+    assert verified.exit_code == 0, verified.output
+    assert "verify-signatures' has no implementation" in verified.output
+
+
+def test_expand_is_idempotent_and_keeps_implementations(tmp_path: Path) -> None:
+    skills = REPO_ROOT / "skills"
+    runner.invoke(app, ["init", "--project", str(tmp_path)])
+    _add(tmp_path)
+    args = ["expand", "--project", str(tmp_path), "--library", str(skills), "--platform", "macos"]
+    assert runner.invoke(app, args).exit_code == 0
+
+    tool_dir = tmp_path / ".agent" / "tools" / "verify-signatures"
+    (tool_dir / "macos.sh").write_text("#!/bin/sh\necho mine\n")
+    skill_file = tmp_path / ".agent" / "skills" / "macos-notarize-tauri" / "SKILL.md"
+    skill_file.write_text(
+        skill_file.read_text().replace(
+            "## In this project\n", "## In this project\n\n- Team: ABC123\n"
+        )
+    )
+
+    again = runner.invoke(app, args)
+    assert again.exit_code == 0, again.output
+    assert "unchanged .agent/skills/macos-notarize-tauri" in again.output
+    assert "Tools to implement" not in again.output
+    assert (tool_dir / "macos.sh").read_text() == "#!/bin/sh\necho mine\n"
+    assert "- Team: ABC123" in skill_file.read_text()
+    record = yaml.safe_load((tmp_path / ".agent" / "speccify" / "expansions.yaml").read_text())
+    assert record["tools"]["verify-signatures"]["platforms"]["macos"]["status"] == "implemented"
+
+
+def test_verify_reports_upstream_drift_against_the_expansion(tmp_path: Path) -> None:
+    """Upstream changed after expand: verify says so and names the fix."""
+    import shutil
+
+    library = tmp_path / "library"
+    shutil.copytree(REPO_ROOT / "skills", library)
+    project = tmp_path / "project"
+    runner.invoke(app, ["init", "--project", str(project)])
+    assert (
+        runner.invoke(
+            app, ["add", MAIN, "--project", str(project), "--library", str(library)]
+        ).exit_code
+        == 0
+    )
+    assert (
+        runner.invoke(
+            app, ["expand", "--project", str(project), "--library", str(library)]
+        ).exit_code
+        == 0
+    )
+
+    # Upstream moves on (same version, new content) and the lock is refreshed.
+    skill = library / "macos-notarize-tauri" / "SKILL.md"
+    skill.write_text(skill.read_text() + "\n## 6 — New upstream step\n\nDo more.\n")
+    assert (
+        runner.invoke(app, ["lock", "--project", str(project), "--library", str(library)]).exit_code
+        == 0
+    )
+
+    verified = runner.invoke(app, ["verify", "--project", str(project), "--library", str(library)])
+    assert verified.exit_code == 1
+    assert "changed since it was expanded" in verified.output
+    assert "speccify expand" in verified.output

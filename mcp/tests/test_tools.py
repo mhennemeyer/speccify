@@ -76,6 +76,21 @@ def test_lock_pull_verify_round_trip(project: Path) -> None:
     assert verified.ok, verified.problems
 
 
+def test_expand_returns_the_to_do_list(project: Path) -> None:
+    from speccify_mcp.tools import run_expand
+
+    (project / "speccify.yaml").write_text(
+        f"schema_version: 1\ndependencies:\n  '{MAIN}': ^1.0\n", encoding="utf-8"
+    )
+    assert run_lock(project).ok
+    result = run_expand(project, platform="macos")
+    assert result.ok, result.message
+    names = {s["name"]: s for s in result.skills}
+    assert names["apple-developer-id-cert"]["used_by"] == "macos-notarize-tauri"
+    assert result.tools_to_implement == ["verify-signatures"]
+    assert (project / ".agent" / "skills" / "macos-notarize-tauri" / "SKILL.md").is_file()
+
+
 def test_verify_reports_drift_as_a_result(project: Path) -> None:
     (project / "speccify.yaml").write_text(
         f"schema_version: 1\ndependencies:\n  '{MAIN}': ^1.0\n",

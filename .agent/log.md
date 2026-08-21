@@ -1,5 +1,31 @@
 # Log: Speccify
 
+## 2026-08-21 (T2 — Expand nach .agent/)
+- **Symlink-Probe** in der laufenden Claude-Code-Session: `.claude/skills`
+  entfernt, `.agent/skills` angelegt, Symlink gesetzt → alle zehn Skills sofort
+  wieder gelistet. `speccify link` verlinkt also, kopiert nicht.
+- **`expansion.py`**: `expand_skill` (rein) streift `speccify.*`, biegt
+  `](tools/` auf `](../../tools/` um, hängt `## In this project` an und trägt
+  eine vorhandene Sektion unverändert weiter; `Expansions` (YAML-Nachweis mit
+  Skill-Herkunft/Hash/Datum und Tool-Status je Plattform);
+  `implementation_for` findet `<platform>.<ext>`.
+- **CLI**: `expand` (Queue über den uses-Baum aus dem Lockfile; unchanged/
+  updated/created; Assets wandern mit, `tools/` wird projektweit; Aufgabenliste
+  mit Platzhaltern und Tools), `link`, `init` (+ `.gitignore`-Zeile + Link),
+  `pull` → `.agent/speccify/cache`, `verify` + `expansion_status`.
+- **MCP**: `expand` (12 Tools), `pull`-Default auf den Cache. Smoke angepasst.
+- **`check`** kennt die Projektform (`.agent/skills/<name>`): Links auf
+  Geschwister/`../../tools/` sind dort kein Befund; sonst weiterhin Fehler.
+- **Speccify-Skill** `skills/speccify/SKILL.md` (v0.1.0): Suchen → Expand →
+  Execute → Evaluate → Zurückgeben, mit Verify-Zeilen und Pitfalls.
+- **Dogfooding**: `speccify.yaml` + `speccify.lock` im Repo-Root (elf Skills),
+  `.agent/skills/` expandiert und committet, `.agent/tools/` mit drei Specs,
+  `.claude/skills` Symlink im Git. iCloud hat während der Arbeit dreimal
+  `reference 2.sh` erzeugt (gelöscht; ein Lock mit Konfliktkopie ergab Drift).
+- **Verifikation**: 195 Pytest (+13), mypy 37 Dateien, ruff, `check skills/`
+  11/11 und `.agent/skills` 11/11 sauber, `verify` grün, CLI-Doku regeneriert
+  (expand/link), Marketing-Build 23 Seiten, CI-Smoke um expand erweitert.
+
 ## 2026-08-21 (T1 — Tool-Spec-Format)
 - **`core/src/speccify_core/tool.py`**: `TOOL.md` = Frontmatter (`name`,
   `description`, `inputs`/`outputs` als JSON Schema, `effects`, `requires`,

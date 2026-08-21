@@ -15,6 +15,7 @@ from typing import Any
 from mcp.server.fastmcp import FastMCP
 
 from .tools import (
+    run_expand,
     run_lock,
     run_pull,
     run_search,
@@ -228,14 +229,14 @@ def build_server(config: ServerConfig) -> FastMCP:
     @server.tool(
         name="pull",
         description=(
-            "Materialise the locked playbook bundles (including assets) into a "
-            "directory, verifying each bundle hash against the lockfile. Useful "
-            "when you want the files on disk rather than through this server. "
-            "Mirrors `speccify pull`."
+            "Materialise the locked skill bundles untouched (upstream form, with "
+            "assets and tool specs) into a directory, verifying each bundle hash "
+            "against the lockfile. For diffing or reading upstream as-is; what the "
+            "agent should use comes from `expand`. Mirrors `speccify pull`."
         ),
     )
     def pull(
-        out_dir: str = "./speccify_playbooks",
+        out_dir: str = "./.agent/speccify/cache",
         library_path: str | None = None,
         offline: bool = False,
     ) -> dict[str, Any]:
@@ -244,6 +245,34 @@ def build_server(config: ServerConfig) -> FastMCP:
             out_dir=Path(out_dir),
             library_path=Path(library_path) if library_path else None,
             offline=offline,
+        ).to_dict()
+
+    @server.tool(
+        name="expand",
+        description=(
+            "Turn the locked skills into normal, project-specific skills under "
+            ".agent/skills/ (what this agent reads via .claude/skills) and put "
+            "their tool specs under .agent/tools/. Resolves what each skill builds "
+            "on, strips Speccify metadata, keeps the `## In this project` section "
+            "across re-runs. Returns `{ok, platform, skills, tools_to_implement}` "
+            "— the to-do list: placeholders to fill in per skill, and tools that "
+            "need an implementation for this platform (`<platform>.<ext>` beside "
+            "the TOOL.md, JSON in on stdin, JSON out on stdout). Mirrors "
+            "`speccify expand`; omit `references` to expand every manifest dependency."
+        ),
+    )
+    def expand(
+        references: list[str] | None = None,
+        library_path: str | None = None,
+        offline: bool = False,
+        platform: str | None = None,
+    ) -> dict[str, Any]:
+        return run_expand(
+            config.project_root,
+            references=references,
+            library_path=Path(library_path) if library_path else None,
+            offline=offline,
+            platform=platform,
         ).to_dict()
 
     @server.tool(

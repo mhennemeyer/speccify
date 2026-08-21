@@ -52,7 +52,7 @@ jobs:
           uv run speccify lint skills/
           uv run speccify check skills/
 
-      - name: speccify end-to-end smoke (init + add + lock + verify + pull + show)
+      - name: speccify end-to-end smoke (init + add + lock + verify + pull + expand + show)
         run: |
           set -euo pipefail
           WORK="$(mktemp -d)"
@@ -63,6 +63,11 @@ jobs:
           "$BIN" verify --project "$WORK" --library "$LIB"
           "$BIN" pull --project "$WORK" --library "$LIB" --out "$WORK/out"
           test -f "$WORK/out/macos-notarize-tauri/tools/verify-signatures/reference.sh"
+          "$BIN" expand --project "$WORK" --library "$LIB" --platform linux
+          test -f "$WORK/.agent/skills/macos-notarize-tauri/SKILL.md"
+          test -f "$WORK/.agent/tools/verify-signatures/TOOL.md"
+          test -L "$WORK/.claude/skills"
+          "$BIN" check "$WORK/.agent/skills"
           "$BIN" show @speccify/macos-notarize-tauri --project "$WORK" --library "$LIB" --json > /dev/null
 
       - name: speccify-mcp smoke (stdio, offline)

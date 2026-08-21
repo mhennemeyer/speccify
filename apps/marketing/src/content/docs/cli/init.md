@@ -1,11 +1,11 @@
 ---
 title: "speccify init"
-description: "Create a speccify.yaml for a project that consumes playbooks."
+description: "Create speccify.yaml, ignore the cache and link .claude/skills to .agent/skills."
 ---
 
 <!-- AUTOGENERIERT via scripts/gen_cli_docs.py aus `speccify --help` — nicht von Hand editieren. -->
 
-Create a speccify.yaml for a project that consumes playbooks.
+Create speccify.yaml, ignore the cache and link .claude/skills to .agent/skills.
 
 ## Usage
 

@@ -1,6 +1,6 @@
 ---
 lifecycle: active
-status: Bauen — T1 (Tool-Spec-Format) geliefert 2026-08-21; nächstes Ziel T2 (Expand nach .agent/).
+status: Bauen — T1 und T2 geliefert 2026-08-21; nächstes Ziel T3 (Evaluate — `speccify tool check`, Spur).
 sessionId: skills-und-tools
 ---
 # Plan: Speccify als Skill- und Tool-Manager
@@ -302,7 +302,25 @@ sind zu Specs geworden.
 5. MCP: `skill_get` liefert Tools mit; `tool_get` einzeln. Viewer zeigt Tools
    als Abschnitt — klein, nur Lesen.
 
-### T2 — Expand
+### T2 — Expand ✅ (2026-08-21)
+
+**Geliefert:** Symlink-Probe positiv (Claude Code listet die Skills hinter
+`.claude/skills → ../.agent/skills` sofort). `expansion.py` (reine
+Normalisierung + `expansions.yaml`), `speccify expand` (uses-Baum, Metadaten
+abgestreift, `## In this project` bleibt bei Re-Expand, Tools projektweit,
+Implementierungen `<platform>.<ext>` werden nie überschrieben), `speccify link`,
+`init` legt Ignore-Zeile und Link an, `pull` zielt auf den Cache, `verify`
+meldet Upstream-Drift gegen die Expansion und Tool-Status je Plattform, MCP
+`expand` (12 Tools). Der **Speccify-Skill** (`skills/speccify`) beschreibt
+alle drei Phasen. Dogfooding: dieses Repo hat `speccify.yaml` mit elf Skills,
+`.agent/skills/` (expandiert, committet), `.agent/tools/` mit drei Specs ohne
+Implementierung, `.claude/skills` als Symlink im Git.
+**Entscheid zur offenen Frage 2:** Implementierungsdatei = `<platform>.<ext>`
+(`macos.sh`, `windows.ps1`, `linux.py`); Stamm ist die Plattform, Endung frei.
+**Gelernt:** Ein Skill in `.agent/skills/` darf auf Geschwister und
+`../../tools/` verweisen — `check` erkennt die Projektform am Pfad und meldet
+das nicht; außerhalb bleibt es ein Fehler (der Link würde nicht reisen).
+Placeholder-Heuristik: `<wort>` ohne schließendes `</wort>`, plus `YOUR_*`/`TODO`.
 
 **Fertig heißt:** `speccify expand <skill>` erzeugt normale Skills unter
 `.agent/skills/`, Tool-Gerüste unter `.agent/tools/`, den Nachweis; Claude
@@ -372,9 +390,4 @@ wegwerfbar.
 
 ## Offene Fragen
 
-Keine blockierenden. Zwei kleine, die T2 selbst beantwortet:
-
-1. Folgt Claude Code dem Symlink `.claude/skills → ../.agent/skills`?
-2. Heißt die Plattform-Datei `macos.sh` / `windows.ps1` / `linux.sh` — oder
-   reicht ein `run`-Einstieg je Plattform-Ordner? Entscheidet, was der
-   Konformitätsläufer einfach finden kann.
+Keine. Die beiden aus T2 sind beantwortet (Symlink: ja; Datei: `<platform>.<ext>`).

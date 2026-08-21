@@ -25,6 +25,7 @@ from pathlib import Path
 from typing import Any
 
 from speccify_core.check import Finding
+from speccify_core.expansion import AGENT_DIR, SKILLS_DIR
 from speccify_core.skill import (
     ASSET_DIRS,
     BODY_MAX_LINES,
@@ -177,12 +178,33 @@ def _check_best_practice(
             target = match.group("target").split("#", 1)[0].strip()
             if not target or target in bundle_files:
                 continue
+            if directory is not None and (directory / target).exists():
+                # An expanded skill links to its siblings and to `.agent/tools/`.
+                # That is its normal shape — under `.agent/skills/` it is not a
+                # finding. Anywhere else it is a skill about to be published
+                # with a link that will not travel.
+                if _is_expanded(directory):
+                    continue
+                findings.append(
+                    Finding(
+                        "warning",
+                        "$",
+                        f"references '{target}' outside the skill directory. It resolves "
+                        f"here, but would not travel if this skill were published.",
+                    )
+                )
+                continue
             findings.append(
                 Finding("error", "$", f"references '{target}', which is not in the skill directory")
             )
 
     findings.extend(_check_reference_depth(skill, directory=directory))
     return findings
+
+
+def _is_expanded(directory: Path) -> bool:
+    """`.agent/skills/<name>` — the project form, where links to siblings are by design."""
+    return directory.parent.name == SKILLS_DIR and directory.parent.parent.name == AGENT_DIR
 
 
 def _check_reference_depth(skill: Skill, *, directory: Path | None) -> list[Finding]:

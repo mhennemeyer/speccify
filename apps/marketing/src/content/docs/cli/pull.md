@@ -1,11 +1,11 @@
 ---
 title: "speccify pull"
-description: "Materialise the locked skills (with assets) where the agent finds them."
+description: "Materialise the locked skills untouched, as upstream has them (default: the cache)."
 ---
 
 <!-- AUTOGENERIERT via scripts/gen_cli_docs.py aus `speccify --help` — nicht von Hand editieren. -->
 
-Materialise the locked skills (with assets) where the agent finds them.
+Materialise the locked skills untouched, as upstream has them (default: the cache).
 
 ## Usage
 
