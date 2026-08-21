@@ -15,6 +15,7 @@ from .library import (
     run_skill_check,
     run_skill_get,
     run_skill_list,
+    run_tool_get,
 )
 from .project import ProjectResult, run_lock, run_pull, run_verify
 from .search import SearchResult, run_search
@@ -36,6 +37,7 @@ __all__ = [
     "ViewerResult",
     "run_lock",
     "run_skill_asset",
+    "run_tool_get",
     "run_skill_check",
     "run_skill_get",
     "run_skill_list",

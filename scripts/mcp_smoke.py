@@ -29,6 +29,7 @@ EXPECTED_TOOLS = {
     "skill_check",
     "skill_get",
     "skill_list",
+    "tool_get",
     "pull",
     "search",
     "verify",

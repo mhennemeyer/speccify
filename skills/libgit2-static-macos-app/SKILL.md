@@ -304,3 +304,8 @@ have to answer.
 - [App Store Review Guidelines — 2.5.2 and 2.4.5(iv)](https://developer.apple.com/app-store/review/guidelines/) — retrieved 2026-08-06
   Self-contained apps; no downloading, installing or executing code; Mac App Store may not install standalone apps or additional code.
 - [Apple Developer — App Sandbox](https://developer.apple.com/documentation/security/app-sandbox) — retrieved 2026-08-06
+
+## Tools
+
+- [build-libgit2](tools/build-libgit2/TOOL.md) — the contract; `reference.sh` beside it is one
+  implementation for macOS. Write your own where that one does not run.

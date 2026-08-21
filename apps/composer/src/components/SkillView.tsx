@@ -124,6 +124,30 @@ export function SkillView({ skill, selection, fileContent, onSelect, onOpenChild
         </section>
       ) : null}
 
+      {skill.tools.length > 0 ? (
+        <section className="card">
+          <h3>Tools</h3>
+          <p className="muted">
+            Specified, not shipped — the agent writes each one for the machine it runs on and
+            checks it against the examples.
+          </p>
+          {skill.tools.map((tool) => (
+            <button
+              key={tool.name}
+              className={`chip${tool.examples === 0 ? " stale" : ""}${
+                isSelected(selection, "file", tool.path) ? " selected" : ""
+              }`}
+              title={tool.effects ?? tool.description}
+              onClick={() => onSelect({ kind: "file", path: tool.path })}
+            >
+              {tool.name}
+              {tool.platforms.length > 0 ? ` [${tool.platforms.join(", ")}]` : ""} —{" "}
+              {tool.examples} example{tool.examples === 1 ? "" : "s"}
+            </button>
+          ))}
+        </section>
+      ) : null}
+
       {skill.files.length > 0 ? (
         <section className="card">
           <h3>Bundled files</h3>

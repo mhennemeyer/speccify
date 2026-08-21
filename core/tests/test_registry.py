@@ -20,8 +20,15 @@ def test_bundle_carries_playbook_and_assets() -> None:
     bundle = LocalSkillLibrary(FIXTURES).fetch(
         "@speccify/macos-notarize-tauri", Version.parse("1.0.0")
     )
-    assert set(bundle.files) == {"SKILL.md", "assets/verify-signatures.sh"}
-    assert bundle.asset_paths == ("assets/verify-signatures.sh",)
+    assert set(bundle.files) == {
+        "SKILL.md",
+        "tools/verify-signatures/TOOL.md",
+        "tools/verify-signatures/reference.sh",
+    }
+    assert bundle.asset_paths == (
+        "tools/verify-signatures/TOOL.md",
+        "tools/verify-signatures/reference.sh",
+    )
     assert bundle.declared_id == "@speccify/macos-notarize-tauri"
 
 

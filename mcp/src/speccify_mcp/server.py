@@ -23,6 +23,7 @@ from .tools import (
     run_skill_get,
     run_skill_list,
     run_skill_propose,
+    run_tool_get,
     run_verify,
     run_viewer_selection,
 )
@@ -98,6 +99,33 @@ def build_server(config: ServerConfig) -> FastMCP:
             config.project_root,
             reference=reference,
             path=path,
+            library_path=Path(library_path) if library_path else None,
+            offline=offline,
+        ).to_dict()
+
+    @server.tool(
+        name="tool_get",
+        description=(
+            "Read one tool spec of a skill: input and output JSON Schema, effects, "
+            "what must be installed, the examples that form the contract, and the "
+            "files shipped beside it (a reference implementation, fixtures). Skills "
+            "specify tools instead of shipping scripts, because scripts break on the "
+            "next machine; read this, then write the implementation for the platform "
+            "you are on and check it against the examples. `tool` is the name listed "
+            "under `tools` in `skill_get`. Returns `{ok, tool}`; unknown names report "
+            "`code=not_found` with what is available."
+        ),
+    )
+    def tool_get(
+        reference: str,
+        tool: str,
+        library_path: str | None = None,
+        offline: bool = False,
+    ) -> dict[str, Any]:
+        return run_tool_get(
+            config.project_root,
+            reference=reference,
+            tool=tool,
             library_path=Path(library_path) if library_path else None,
             offline=offline,
         ).to_dict()

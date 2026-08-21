@@ -30,7 +30,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from speccify_core.registry import Bundle, LibraryError, Version
-from speccify_core.skill import ASSET_DIRS, SKILL_FILENAME
+from speccify_core.skill import BUNDLE_DIRS, SKILL_FILENAME
 
 DEFAULT_GIT_CACHE_DIR = Path.home() / ".cache" / "speccify" / "git"
 DEFAULT_TIMEOUT = 60.0
@@ -282,8 +282,9 @@ class GitLibrary:
             ) from exc
 
         # Bundled directories are optional; an empty tree simply lists nothing.
-        # The spec names three conventions, and a skill may use any or none.
-        for directory in ASSET_DIRS:
+        # The spec names three conventions, Speccify adds `tools/`; a skill
+        # may use any or none.
+        for directory in BUNDLE_DIRS:
             listing = self._run(
                 ["ls-tree", "-r", "--name-only", tag, f"{ref.bundle_prefix}{directory}/"],
                 cwd=repo,

@@ -106,6 +106,60 @@ def run_skill_get(
 
 
 @dataclass(frozen=True)
+class ToolResult:
+    ok: bool
+    tool: dict[str, Any] = field(default_factory=dict)
+    code: str = ""
+    message: str = ""
+
+    def to_dict(self) -> dict[str, Any]:
+        return {"ok": self.ok, "tool": dict(self.tool), "code": self.code, "message": self.message}
+
+
+def run_tool_get(
+    project_root: Path,
+    *,
+    reference: str,
+    tool: str,
+    library_path: Path | None = None,
+    offline: bool = False,
+) -> ToolResult:
+    """The full contract of one tool spec — schemas, effects, examples, body.
+
+    This is what an agent reads before it writes the implementation for the
+    machine it is on. The spec travels; the script would not have.
+    """
+    from speccify_cli.commands._context import ProjectContext, fetch_bundle, list_versions
+    from speccify_cli.commands.show import tool_as_dict
+    from speccify_core import LibraryError, parse_uses_entry
+    from speccify_core.skill_check import tools_from_bundle
+    from speccify_core.tool import Tool
+
+    try:
+        context = ProjectContext.load(project_root, library_override=library_path, offline=offline)
+        skill_id, _ = parse_uses_entry(reference)
+        versions = list_versions(context.libraries, skill_id)
+        if not versions:
+            raise LibraryError(f"'{skill_id}' is not available.")
+        bundle = fetch_bundle(context.libraries, skill_id, versions[-1])
+        specs = tools_from_bundle(bundle.files)
+        spec = specs.get(tool)
+        if not isinstance(spec, Tool):
+            available = ", ".join(sorted(specs)) or "none"
+            raise LibraryError(f"'{skill_id}' has no tool '{tool}'. Available: {available}.")
+    except (LibraryError, FileNotFoundError, ValueError) as exc:
+        return ToolResult(ok=False, code="not_found", message=str(exc))
+
+    prefix = f"tools/{tool}/"
+    files = sorted(
+        path[len(prefix) :]
+        for path in bundle.files
+        if path.startswith(prefix) and path != f"{prefix}TOOL.md"
+    )
+    return ToolResult(ok=True, tool=tool_as_dict(spec, files=files))
+
+
+@dataclass(frozen=True)
 class AssetResult:
     ok: bool
     path: str = ""

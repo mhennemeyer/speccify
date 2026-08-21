@@ -27,6 +27,19 @@ export interface SkillSummary {
   steps: number;
 }
 
+/** A tool spec shipped with a skill: the contract, not an implementation. */
+export interface ToolSpec {
+  name: string;
+  description: string;
+  effects: string | null;
+  platforms: string[];
+  requires: string[];
+  /** Number of contract examples — zero means the spec cannot be checked. */
+  examples: number;
+  /** Bundle-relative path of the TOOL.md, so it opens like any bundled file. */
+  path: string;
+}
+
 export interface SkillDetail {
   id: string;
   name: string;
@@ -45,6 +58,7 @@ export interface SkillDetail {
   steps: SkillStep[];
   sources: SourceRef[];
   files: string[];
+  tools: ToolSpec[];
   /** The raw SKILL.md, so a proposal can be diffed against it. */
   raw: string;
 }

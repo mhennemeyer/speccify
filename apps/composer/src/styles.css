@@ -158,6 +158,7 @@ ul.plain { list-style: none; padding: 0; }
 .markdown ul, .markdown ol { padding-left: 20px; }
 
 /* Ageing sources. */
+.card .muted { margin: 0 0 8px; color: var(--muted); font-size: 13px; }
 .chip.stale { border-color: #f59e0b; background: #fef3c7; }
 .stale-note { color: #b45309; font-size: 13px; }
 

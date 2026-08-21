@@ -20,7 +20,10 @@
   `.claude/skills` verweist nur. Expand = Normalisierung (`uses` aufgelöst, Metadaten
   abgestreift, nur ergänzt). Kein Exec-MCP.
   Meilensteine T1 (Format) → T2 (Expand) → T3 (Evaluate) → **M2 Testlauf**.
-  Keine offenen BO-Fragen mehr; **T1 kann starten.**
+  **T1 geliefert (2026-08-21)**: `tool.py`, Tool-Befunde in `check`/`lint`, drei Specs
+  im Repo, `tool_get` im MCP (11 Tools), Viewer-Tools-Karte. **Nächstes Ziel: T2**
+  (Symlink-Probe, Cache-`pull`, `expansions.yaml`, `speccify expand`, Umzug nach
+  `.agent/skills/`).
 - **M1 geliefert (2026-08-13)** nach [`plans/archive/skills-als-format.md`](./plans/archive/skills-als-format.md):
   `SKILL.md` ist das Format, zehn Skills in `skills/`, `pull` nach
   `.claude/skills/`, `check`/`lint`, MCP auf zehn Tools, Viewer/Backend auf

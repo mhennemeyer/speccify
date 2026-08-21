@@ -17,8 +17,9 @@ from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel, Field
 from speccify_core import LibraryError, Version, parse_uses_entry
 from speccify_core.skill import parse_skill
-from speccify_core.skill_check import check_skill
+from speccify_core.skill_check import check_skill, tools_from_bundle
 from speccify_core.skill_library import LocalSkillLibrary
+from speccify_core.tool import Tool
 
 router = APIRouter(prefix="/api/v1", tags=["playbooks"])
 
@@ -52,6 +53,21 @@ def _detail(bundle) -> dict[str, Any]:
             {"title": s.title, "url": s.url, "retrieved": s.retrieved} for s in skill.sources
         ],
         "files": sorted(path for path in bundle.files if path != "SKILL.md"),
+        # Tool specs — the contracts an agent implements on its own machine.
+        # Shallow: the spec itself is a bundled file and opens as one.
+        "tools": [
+            {
+                "name": tool.name,
+                "description": tool.description,
+                "effects": tool.effects,
+                "platforms": list(tool.platforms),
+                "requires": list(tool.requires),
+                "examples": len(tool.examples),
+                "path": f"tools/{name}/TOOL.md",
+            }
+            for name, tool in tools_from_bundle(bundle.files).items()
+            if isinstance(tool, Tool)
+        ],
         # The raw file, for the proposal diff.
         "raw": bundle.files["SKILL.md"].decode("utf-8"),
     }

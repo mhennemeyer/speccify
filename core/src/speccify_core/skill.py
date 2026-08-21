@@ -29,6 +29,9 @@ import yaml
 
 SKILL_FILENAME = "SKILL.md"
 ASSET_DIRS = ("assets", "scripts", "references")
+# Everything a bundle may carry beside SKILL.md: the spec's three conventions
+# plus Speccify's `tools/` (see `tool.py`).
+BUNDLE_DIRS = (*ASSET_DIRS, "tools")
 
 # Speccify's own keys inside the spec's `metadata` map.
 META_PREFIX = "speccify."
@@ -37,6 +40,7 @@ META_PREFIX = "speccify."
 _RESERVED_SECTIONS = frozenset(
     {
         "sources",
+        "tools",
         "pitfalls",
         "prerequisites",
         "acceptance",
@@ -296,7 +300,7 @@ def _scalar(value: Any) -> str:
     return str(value)
 
 
-def _sections(body: str) -> list[tuple[str, str]]:
+def sections(body: str) -> list[tuple[str, str]]:
     """Split the body into `(heading, content)` pairs at `##` level."""
     matches = list(_HEADING_RE.finditer(body))
     sections: list[tuple[str, str]] = []
@@ -308,7 +312,7 @@ def _sections(body: str) -> list[tuple[str, str]]:
 
 def _parse_steps(body: str) -> list[Step]:
     steps: list[Step] = []
-    for title, content in _sections(body):
+    for title, content in sections(body):
         if title.strip().lower() in _RESERVED_SECTIONS:
             continue
         number: int | None = None
@@ -335,7 +339,7 @@ def _parse_sources(body: str) -> list[Source]:
     The convention is `- [Title](url) — retrieved YYYY-MM-DD`. A source without
     a date parses; the missing date is reported by `check`, not here.
     """
-    for title, content in _sections(body):
+    for title, content in sections(body):
         if title.strip().lower() == "sources":
             return [
                 Source(
@@ -350,6 +354,7 @@ def _parse_sources(body: str) -> list[Source]:
 
 __all__ = [
     "ASSET_DIRS",
+    "BUNDLE_DIRS",
     "BODY_MAX_LINES",
     "DESCRIPTION_MAX",
     "Issue",
@@ -361,5 +366,6 @@ __all__ = [
     "Source",
     "Step",
     "parse_skill",
+    "sections",
     "validate_skill",
 ]

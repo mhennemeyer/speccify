@@ -62,7 +62,7 @@ jobs:
           "$BIN" add @speccify/macos-notarize-tauri --project "$WORK" --library "$LIB"
           "$BIN" verify --project "$WORK" --library "$LIB"
           "$BIN" pull --project "$WORK" --library "$LIB" --out "$WORK/out"
-          test -f "$WORK/out/macos-notarize-tauri/assets/verify-signatures.sh"
+          test -f "$WORK/out/macos-notarize-tauri/tools/verify-signatures/reference.sh"
           "$BIN" show @speccify/macos-notarize-tauri --project "$WORK" --library "$LIB" --json > /dev/null
 
       - name: speccify-mcp smoke (stdio, offline)

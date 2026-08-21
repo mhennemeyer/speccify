@@ -225,3 +225,8 @@ purpose is executing shell commands.
   Servers MUST validate Origin; local servers SHOULD bind to 127.0.0.1 rather than 0.0.0.0.
 - [MCP specification 2025-03-26 — Lifecycle (serverInfo in the initialize result)](https://modelcontextprotocol.io/specification/2025-03-26/basic/lifecycle) — retrieved 2026-08-06
 - [HTML Standard — Server-sent events](https://html.spec.whatwg.org/multipage/server-sent-events.html) — retrieved 2026-08-06
+
+## Tools
+
+- [verify-stream](tools/verify-stream/TOOL.md) — the contract; `reference.sh` beside it is one
+  implementation for macOS. Write your own where that one does not run.

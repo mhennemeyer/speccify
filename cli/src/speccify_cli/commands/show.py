@@ -16,6 +16,8 @@ from pathlib import Path
 
 import typer
 from speccify_core import RegistryError, parse_uses_entry
+from speccify_core.skill_check import tools_from_bundle
+from speccify_core.tool import Tool
 
 from speccify_cli.commands._context import ProjectContext, fetch_bundle, list_versions
 
@@ -62,6 +64,39 @@ def run_show(
             for source in skill.sources
         ],
         "files": sorted(path for path in bundle.files if path != "SKILL.md"),
+        # Tool specs: shallow here, like the skill list — `tool_get` has the rest.
+        "tools": [
+            {
+                "name": tool.name,
+                "description": tool.description,
+                "platforms": list(tool.platforms),
+                "requires": list(tool.requires),
+                "runtime": list(tool.runtime),
+                "examples": len(tool.examples),
+            }
+            for tool in tools_from_bundle(bundle.files).values()
+            if isinstance(tool, Tool)
+        ],
+    }
+
+
+def tool_as_dict(tool: Tool, *, files: list[str]) -> dict:
+    """The whole contract of one tool — what an agent implements against."""
+    return {
+        "name": tool.name,
+        "description": tool.description,
+        "inputs": tool.inputs,
+        "outputs": tool.outputs,
+        "effects": tool.effects,
+        "requires": list(tool.requires),
+        "runtime": list(tool.runtime),
+        "platforms": list(tool.platforms),
+        "body": tool.body,
+        "examples": [
+            {"title": e.title, "input": e.input, "output": e.output} for e in tool.examples
+        ],
+        # Reference implementations and fixtures that ship beside the spec.
+        "files": files,
     }
 
 
@@ -111,5 +146,10 @@ def show_command(
         typer.echo(f"\n{len(data['sources'])} source(s):")
         for source in data["sources"]:
             typer.echo(f"  {source['title']} ({source['retrieved'] or 'no date'})")
+    if data["tools"]:
+        typer.echo(f"\n{len(data['tools'])} tool spec(s):")
+        for tool in data["tools"]:
+            where = f" [{', '.join(tool['platforms'])}]" if tool["platforms"] else ""
+            typer.echo(f"  {tool['name']}{where} — {tool['examples']} example(s)")
     if data["files"]:
         typer.echo(f"\nfiles: {', '.join(data['files'])}")

@@ -71,7 +71,7 @@ test("open a skill, walk its steps, select a source and a file", async ({ page }
   });
 
   await test.step("a bundled file shows its content", async () => {
-    await page.locator(".chip").filter({ hasText: "verify-signatures.sh" }).first().click();
+    await page.locator(".chip").filter({ hasText: "reference.sh" }).first().click();
     await expect(page.locator(".asset-view pre")).toContainText("codesign --verify");
   });
 

@@ -118,3 +118,8 @@ spctl --assess --type open --context context:primary-signature -v "<App>.dmg"
 - [Notarizing macOS software before distribution](https://developer.apple.com/documentation/security/notarizing-macos-software-before-distribution) — retrieved 2026-08-06
 - [Customizing the notarization workflow](https://developer.apple.com/documentation/security/customizing-the-notarization-workflow) — retrieved 2026-08-06
   Stapling and the spctl assessment.
+
+## Tools
+
+- [verify-signatures](tools/verify-signatures/TOOL.md) — the contract; `reference.sh` beside it is one
+  implementation for macOS. Write your own where that one does not run.

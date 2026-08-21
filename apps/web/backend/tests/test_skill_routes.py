@@ -41,6 +41,11 @@ def test_get_skill_leads_with_the_markdown(client: TestClient) -> None:
     assert body["sources"][0]["url"].startswith("https://")
     # The raw file, so the proposal panel can diff against it.
     assert body["raw"].startswith("---")
+    # Tool specs are listed shallow and open as bundled files.
+    (tool,) = body["tools"]
+    assert tool["name"] == "verify-signatures"
+    assert tool["examples"] == 3
+    assert tool["path"] in body["files"]
 
 
 def test_unknown_skill_is_404(client: TestClient) -> None:
@@ -52,7 +57,7 @@ def test_unknown_skill_is_404(client: TestClient) -> None:
 def test_bundled_file_is_readable(client: TestClient) -> None:
     response = client.get(
         "/api/v1/skill/file",
-        params={"source": MAIN, "path": "assets/verify-signatures.sh"},
+        params={"source": MAIN, "path": "tools/verify-signatures/reference.sh"},
     )
     assert response.status_code == 200, response.text
     body = response.json()

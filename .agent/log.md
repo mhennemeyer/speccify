@@ -1,5 +1,29 @@
 # Log: Speccify
 
+## 2026-08-21 (T1 — Tool-Spec-Format)
+- **`core/src/speccify_core/tool.py`**: `TOOL.md` = Frontmatter (`name`,
+  `description`, `inputs`/`outputs` als JSON Schema, `effects`, `requires`,
+  `runtime`, `platforms`) + freier Body; `## Examples` mit `### Fall` und
+  `input:`/`output:`-JSON-Zeilen. `validate_tool` prüft Schema-Gültigkeit und
+  jedes Beispiel gegen beide Schemas — ein lügendes Beispiel ist ein Fehler.
+- **`skill_check`**: `load_tools`/`tools_from_bundle`/`check_tools`; Befunde
+  unter `tools/<name>/…`. Neu: Warnung für jedes Skript in `assets|scripts|
+  references` ohne gleichnamigen Spec — der Grund, warum es Specs gibt.
+  `tools` ist reservierte Sektion; `BUNDLE_DIRS` (= `ASSET_DIRS` + `tools`)
+  für Git-Quellen.
+- **Drei Specs**: `verify-signatures` (notarize), `verify-stream`
+  (sandboxed-exec), `build-libgit2`. Skripte nach `tools/<name>/reference.sh`
+  verschoben; jede `SKILL.md` hat einen `## Tools`-Abschnitt mit Link.
+- **Lesen**: `speccify show` + `skill_get` listen Tools flach; MCP `tool_get`
+  liefert den ganzen Vertrag (11 Tools jetzt); Viewer-Backend `tools`,
+  Viewer „Tools"-Karte (Chips öffnen die `TOOL.md` als Datei).
+- **Verifikation**: 182 Pytest (+16), mypy 34 Dateien, ruff check+format,
+  Playwright 1/1, `check`/`lint` 10/10 sauber, Viewer-Build, MCP-Smoke über
+  die 11 Tools. Pfad-Umstellung in CI, Backend-/CLI-Tests, E2E-Spec, Doku.
+- **Nicht getan**: `docs/playbooks.md`/Marketing erzählen weiter Playbooks
+  (bekanntes offenes Ende); markdownlint-Befund in `storekit2-…` ist alt und
+  außerhalb der Globs.
+
 ## 2026-08-21 (Plan: BO-Entscheide eingearbeitet)
 - **`.agent/` ist das Zuhause** (D8): `.agent/skills/` = normale, expandierte
   Skills; `.agent/tools/` = Implementierungen je Plattform, alle committet;

@@ -26,6 +26,7 @@ from typing import Any
 
 from speccify_core.check import Finding
 from speccify_core.skill import (
+    ASSET_DIRS,
     BODY_MAX_LINES,
     SKILL_FILENAME,
     STALE_SOURCE_DAYS,
@@ -34,6 +35,7 @@ from speccify_core.skill import (
     parse_skill,
     validate_skill,
 )
+from speccify_core.tool import TOOL_FILENAME, TOOLS_DIR, Tool, ToolError, parse_tool, validate_tool
 
 # A description has to answer "when", because that is all the agent sees before
 # deciding whether to load the skill.
@@ -46,6 +48,9 @@ _LOCAL_LINK_RE = re.compile(r"\[[^\]]*\]\((?!https?:|#|mailto:)(?P<target>[^)\s]
 _WINDOWS_PATH_RE = re.compile(r"\[[^\]]*\]\((?P<target>[^)\s]*\\[^)\s]*)\)")
 
 _UNKNOWN_AGE = "has no retrieval date, so nobody can tell whether it is still current"
+# A bundled file that is a program, not a document. Programs are what fails to
+# travel between machines — the reason tool specs exist.
+_SCRIPT_SUFFIXES = frozenset({".sh", ".bash", ".zsh", ".ps1", ".py", ".js", ".ts", ".rb"})
 
 
 def load_skill(directory: Path) -> tuple[Skill, set[str]]:
@@ -74,8 +79,13 @@ def check_skill(
     bundle_files: set[str] | None = None,
     today: date | None = None,
     stale_days: int = STALE_SOURCE_DAYS,
+    tools: dict[str, Tool | ToolError] | None = None,
 ) -> list[Finding]:
-    """Offline check: specification, best practice, source age."""
+    """Offline check: specification, best practice, source age, tool specs.
+
+    `tools` maps the directory name under `tools/` to the parsed spec — or to
+    the error that kept it from parsing. See `load_tools`.
+    """
     findings = [
         Finding("error", issue.path, issue.message)
         for issue in validate_skill(skill, bundle_files=bundle_files)
@@ -87,6 +97,8 @@ def check_skill(
 
     findings.extend(_check_best_practice(skill, directory=directory, bundle_files=bundle_files))
     findings.extend(check_source_age(skill, today=today or date.today(), stale_days=stale_days))
+    if tools is not None:
+        findings.extend(check_tools(tools, bundle_files=bundle_files))
     if skill.deprecated:
         findings.append(
             Finding(
@@ -210,6 +222,111 @@ def _check_reference_depth(skill: Skill, *, directory: Path | None) -> list[Find
     return findings
 
 
+def load_tools(directory: Path) -> dict[str, Tool | ToolError]:
+    """Every `tools/<name>/TOOL.md` of a skill, parsed — or the reason it did not parse."""
+    root = directory / TOOLS_DIR
+    if not root.is_dir():
+        return {}
+    found: dict[str, Tool | ToolError] = {}
+    for tool_dir in sorted(p for p in root.iterdir() if (p / TOOL_FILENAME).is_file()):
+        try:
+            text = (tool_dir / TOOL_FILENAME).read_text(encoding="utf-8")
+            found[tool_dir.name] = parse_tool(text)
+        except ToolError as exc:
+            found[tool_dir.name] = exc
+    return found
+
+
+def tools_from_bundle(files: dict[str, bytes]) -> dict[str, Tool | ToolError]:
+    """Same as `load_tools`, for a bundle already in memory."""
+    found: dict[str, Tool | ToolError] = {}
+    for path, data in sorted(files.items()):
+        parts = path.split("/")
+        if len(parts) == 3 and parts[0] == TOOLS_DIR and parts[2] == TOOL_FILENAME:
+            try:
+                found[parts[1]] = parse_tool(data.decode("utf-8"))
+            except (ToolError, UnicodeDecodeError) as exc:
+                found[parts[1]] = ToolError(str(exc))
+    return found
+
+
+def check_tools(
+    tools: dict[str, Tool | ToolError],
+    *,
+    bundle_files: set[str] | None = None,
+) -> list[Finding]:
+    """Tool specs: valid, and complete enough to be a contract.
+
+    The spec exists so that an agent on another machine can *write* the tool
+    and then *prove* it did so correctly. Both need the examples; the second
+    also needs to know what the tool is allowed to touch.
+    """
+    findings: list[Finding] = []
+    for dir_name, tool in tools.items():
+        prefix = f"{TOOLS_DIR}/{dir_name}"
+        if isinstance(tool, ToolError):
+            findings.append(Finding("error", prefix, str(tool)))
+            continue
+        issues = validate_tool(tool)
+        findings.extend(Finding("error", f"{prefix}/{i.path}", i.message) for i in issues)
+        if issues:
+            continue
+        if tool.name != dir_name:
+            findings.append(
+                Finding(
+                    "error",
+                    f"{prefix}/name",
+                    f"is '{tool.name}' but the directory is '{dir_name}' — they must match",
+                )
+            )
+        if not tool.examples:
+            findings.append(
+                Finding(
+                    "warning",
+                    f"{prefix}/$",
+                    "has no `## Examples`. The examples are the contract — without them "
+                    "nobody can check an implementation written on another machine.",
+                )
+            )
+        if not tool.effects:
+            findings.append(
+                Finding(
+                    "warning",
+                    f"{prefix}/effects",
+                    "is missing. Say what the tool reads, writes and runs — that is what "
+                    "a reviewer looks at before letting an agent implement it.",
+                )
+            )
+
+    if bundle_files is not None:
+        findings.extend(_check_unspecified_scripts(tools, bundle_files))
+    return findings
+
+
+def _check_unspecified_scripts(
+    tools: dict[str, Tool | ToolError], bundle_files: set[str]
+) -> list[Finding]:
+    """A shipped script with no spec is exactly the thing that does not travel."""
+    findings: list[Finding] = []
+    for path in sorted(bundle_files):
+        parts = path.split("/")
+        if len(parts) != 2 or parts[0] not in ASSET_DIRS:
+            continue
+        stem, suffix = Path(parts[1]).stem, Path(parts[1]).suffix
+        if suffix not in _SCRIPT_SUFFIXES or stem in tools:
+            continue
+        findings.append(
+            Finding(
+                "warning",
+                path,
+                f"is a script with no tool spec. Scripts break on the next machine "
+                f"(Python version, shell, paths); a spec in {TOOLS_DIR}/{stem}/{TOOL_FILENAME} "
+                f"lets the agent there write its own.",
+            )
+        )
+    return findings
+
+
 def check_source_age(
     skill: Skill,
     *,
@@ -264,7 +381,12 @@ def check_skill_directory(
         return [Finding("error", "$", str(exc))]
 
     findings = check_skill(
-        skill, directory=directory, bundle_files=files, today=today, stale_days=stale_days
+        skill,
+        directory=directory,
+        bundle_files=files,
+        today=today,
+        stale_days=stale_days,
+        tools=load_tools(directory),
     )
     if links and not any(f.is_error for f in findings):
         findings.extend(check_links(skill.sources, transport=transport))
@@ -275,6 +397,9 @@ __all__ = [
     "check_skill",
     "check_skill_directory",
     "check_source_age",
+    "check_tools",
     "find_skills",
     "load_skill",
+    "load_tools",
+    "tools_from_bundle",
 ]

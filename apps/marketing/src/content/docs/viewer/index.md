@@ -88,7 +88,7 @@ curl -s --get localhost:8000/api/v1/playbook \
   --data-urlencode 'source=@speccify/macos-notarize-tauri' | jq '.steps[].id'
 curl -s --get localhost:8000/api/v1/playbook/asset \
   --data-urlencode 'source=@speccify/macos-notarize-tauri' \
-  --data-urlencode 'path=assets/verify-signatures.sh' | jq -r '.content'
+  --data-urlencode 'path=tools/verify-signatures/reference.sh' | jq -r '.content'
 curl -s 'localhost:8000/api/v1/index?q=notarization' | jq '.hits[].source'
 ```
 

@@ -1,6 +1,6 @@
 ---
 lifecycle: active
-status: Definition 2026-08-21 — BO-Entscheide zu Ort (.agent/), Expand (Normalisierung), Schema, Ergänzen-statt-Umschreiben eingearbeitet; T1 kann starten.
+status: Bauen — T1 (Tool-Spec-Format) geliefert 2026-08-21; nächstes Ziel T2 (Expand nach .agent/).
 sessionId: skills-und-tools
 ---
 # Plan: Speccify als Skill- und Tool-Manager
@@ -273,7 +273,17 @@ ausführen soll; das ist kein Ziel dieses Plans.
 
 ## Meilensteine
 
-### T1 — Tool-Spec-Format
+### T1 — Tool-Spec-Format ✅ (2026-08-21)
+
+**Geliefert:** `tool.py` (Parser, JSON-Schema-Validierung, Beispiele gegen
+Schemas), `check`/`lint` mit Tool-Befunden (kein Spec → Warnung je Skript,
+keine Beispiele, kein `effects`, Verzeichnis ≠ Name), drei Specs im Repo
+(`verify-signatures`, `verify-stream`, `build-libgit2`; Skripte als
+`reference.sh`), `show`/`skill_get` mit flacher Tool-Liste, MCP `tool_get`,
+Viewer mit Tools-Abschnitt, Git-Quellen holen `tools/` mit.
+**Abweichung vom Plan:** Fastlane war kein Kandidat (Konfiguration, kein
+Werkzeug); stattdessen `build-libgit2`, weil der Hinweis „Skript ohne Spec"
+es sonst angemeckert hätte — Dogfooding hat die Wahl getroffen.
 
 **Fertig heißt:** `TOOL.md` lesen, schreiben, prüfen; zwei vorhandene Skripte
 sind zu Specs geworden.

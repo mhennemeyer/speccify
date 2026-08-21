@@ -85,7 +85,7 @@ def test_pull_materialises_bundles_including_assets(project: Path) -> None:
     # Flat by name, not `<scope>/<name>`: `<skills-root>/<name>/SKILL.md` is
     # what an agent looks up, and pull writes where it will be found.
     assert (out / "macos-notarize-tauri" / "SKILL.md").is_file()
-    assert (out / "macos-notarize-tauri" / "assets" / "verify-signatures.sh").is_file()
+    assert (out / "macos-notarize-tauri" / "tools" / "verify-signatures" / "reference.sh").is_file()
 
 
 def test_show_describes_a_skill_without_installing_it(tmp_path: Path) -> None:
@@ -217,7 +217,7 @@ def test_the_local_loop_works_on_skills(tmp_path: Path) -> None:
     # The parent and the child it delegates to, both by bare name.
     assert (out / "macos-notarize-tauri" / "SKILL.md").is_file()
     assert (out / "apple-developer-id-cert" / "SKILL.md").is_file()
-    assert (out / "macos-notarize-tauri" / "assets" / "verify-signatures.sh").is_file()
+    assert (out / "macos-notarize-tauri" / "tools" / "verify-signatures" / "reference.sh").is_file()
 
     verified = runner.invoke(app, ["verify", "--project", str(tmp_path), "--library", str(skills)])
     assert verified.exit_code == 0, verified.output

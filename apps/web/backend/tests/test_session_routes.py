@@ -52,7 +52,7 @@ def test_step_selection_comes_back_resolved(client: TestClient) -> None:
 def test_file_selection_carries_the_content(client: TestClient) -> None:
     client.put(
         "/api/v1/selection",
-        json={"source": MAIN, "kind": "file", "file_path": "assets/verify-signatures.sh"},
+        json={"source": MAIN, "kind": "file", "file_path": "tools/verify-signatures/reference.sh"},
     )
     selection = client.get("/api/v1/selection").json()["selection"]
     assert "codesign --verify" in selection["file"]["content"]

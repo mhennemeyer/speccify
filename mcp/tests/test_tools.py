@@ -47,7 +47,10 @@ def test_skill_get_carries_the_body_and_its_sources(project: Path) -> None:
     assert "hardened runtime" in skill["body"]
     assert [step["number"] for step in skill["steps"]] == [1, 2, 3, 4, 5]
     assert all(source["retrieved"] == "2026-08-06" for source in skill["sources"])
-    assert skill["files"] == ["assets/verify-signatures.sh"]
+    assert skill["files"] == [
+        "tools/verify-signatures/TOOL.md",
+        "tools/verify-signatures/reference.sh",
+    ]
 
 
 def test_unknown_reference_is_structured(project: Path) -> None:
@@ -67,7 +70,7 @@ def test_lock_pull_verify_round_trip(project: Path) -> None:
 
     pulled = run_pull(project, out_dir=Path("out"))
     assert pulled.ok, pulled.message
-    assert any("verify-signatures.sh" in path for path in pulled.files)
+    assert any("verify-signatures/reference.sh" in path for path in pulled.files)
 
     verified = run_verify(project)
     assert verified.ok, verified.problems
@@ -89,7 +92,7 @@ def test_verify_reports_drift_as_a_result(project: Path) -> None:
 def test_playbook_asset_returns_the_script(project: Path) -> None:
     from speccify_mcp.tools import run_skill_asset
 
-    result = run_skill_asset(project, reference=MAIN, path="assets/verify-signatures.sh")
+    result = run_skill_asset(project, reference=MAIN, path="tools/verify-signatures/reference.sh")
     assert result.ok, result.message
     assert result.encoding == "utf-8"
     assert "codesign --verify" in result.content
@@ -100,7 +103,27 @@ def test_playbook_asset_lists_what_is_available(project: Path) -> None:
 
     result = run_skill_asset(project, reference=MAIN, path="assets/nope")
     assert not result.ok
-    assert "verify-signatures.sh" in result.message
+    assert "reference.sh" in result.message
+
+
+def test_tool_get_returns_the_contract(project: Path) -> None:
+    """An agent implements against this — schemas, effects, examples — not against a script."""
+    from speccify_mcp.tools import run_tool_get
+
+    whole = run_skill_get(project, reference=MAIN)
+    assert [t["name"] for t in whole.playbook["tools"]] == ["verify-signatures"]
+    assert "inputs" not in whole.playbook["tools"][0], "skill_get stays shallow"
+
+    result = run_tool_get(project, reference=MAIN, tool="verify-signatures")
+    assert result.ok, result.message
+    tool = result.tool
+    assert tool["inputs"]["required"] == ["bundle"]
+    assert "codesign" in tool["requires"]
+    assert tool["examples"][0]["output"]["ok"] is True
+    assert tool["files"] == ["reference.sh"]
+
+    missing = run_tool_get(project, reference=MAIN, tool="nope")
+    assert not missing.ok and "verify-signatures" in missing.message
 
 
 def test_playbook_check_reports_health(project: Path) -> None:
@@ -131,5 +154,7 @@ def test_an_agent_can_find_and_read_a_skill_over_mcp(project: Path) -> None:
     resolved = run_skill_get(project, reference=child)
     assert resolved.ok, resolved.message
 
-    asset = run_skill_asset(project, reference=chosen["id"], path="assets/verify-signatures.sh")
+    asset = run_skill_asset(
+        project, reference=chosen["id"], path="tools/verify-signatures/reference.sh"
+    )
     assert asset.ok and "codesign" in (asset.content or "")
