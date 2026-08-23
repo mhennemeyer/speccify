@@ -1,6 +1,6 @@
 ---
 lifecycle: active
-status: Bauen — T1, T2 und T3 geliefert 2026-08-21; nächstes Ziel M2 (Testlauf).
+status: Bauen — T1, T2 und T3 geliefert 2026-08-21; T4 (MCP für Apps) 2026-08-23; nächstes Ziel M2 (Testlauf) = 4Notice, s. iKanbanAi-Plan `4notice-mit-ikanban-und-speccify.md`.
 sessionId: skills-und-tools
 ---
 # Plan: Speccify als Skill- und Tool-Manager
@@ -367,6 +367,30 @@ vollständig beschrieben; die Spur hat eine Form.
    — Konvention im Speccify-Skill, kein Code.
 4. Speccify-Skill: Execute- und Evaluate-Anleitung samt Iterationsregel
    („Gegenbeweise suchen; keine gefunden ⇒ fertig; gefunden ⇒ zurück zu …").
+
+### T4 — MCP für Apps: HTTP, Multi-Modus, Quelle einbinden ✅ (2026-08-23)
+
+**Auslöser:** iKanban AI (gesandboxt, kann keinen Prozess starten, spricht
+Streamable HTTP) soll im Skills-Tab ein Skills-Repo einbinden, durchsuchen und
+importieren — Plan drüben `4notice-mit-ikanban-und-speccify.md`, P1.
+**Geliefert:**
+* `speccify-mcp --transport streamable-http --port 8769 [--unbound]`:
+  JSON-Antworten, stateless, nur `127.0.0.1`. `--unbound` = **Multi-Modus**
+  wie beim `speccify-exec-mcp`: jedes projektbezogene Tool nimmt `project`
+  (absolute Wurzel); fehlt es → `{ok:false, code:"project_required"}`.
+  Ressourcen (`speccify://manifest`/`lockfile`) gibt es nur gebunden.
+* `source_list(source)`: alle Bundles eines Git-Repos aus den Tags
+  (`<pfad>/v<version>`), je mit Id für `add`, Versionen, `latest`, Name und
+  Description aus dem neuesten `SKILL.md` (`GitLibrary.list_bundles`).
+* `add(reference)`: Adapter über `speccify add` (Manifest + Lock).
+* `expand` nimmt den **Kurznamen** eines gelockten Skills (eindeutig, sonst
+  Fehler) — bisher nur die volle Id.
+* 15 Tools; Smoke und Tests angepasst.
+**Befunde aus dem ersten Skills-Repo (`speccify-first-test`, privat):**
+`speccify.uses` mit lokaler Id (`@speccify/x`) löst aus einer Git-Quelle
+nicht auf — im Repo durch `git+…#skills/x@^1.0` ersetzt; besser wäre, lokale
+Ids relativ zur selben Quelle aufzulösen (offen). MVS wählt die niedrigste
+passende Version — kaputte frühe Tags bleiben sonst die Wahl.
 
 ### M2 — Der Testlauf (unverändert, jetzt mit Dreischritt)
 

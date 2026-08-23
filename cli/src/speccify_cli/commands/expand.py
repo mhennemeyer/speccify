@@ -86,6 +86,30 @@ class ExpandReport:
         return seen
 
 
+def _resolve_reference(reference: str, locked: dict[str, object]) -> str:
+    """Volle Id zu einer Referenz — auch zum **Kurznamen** eines gelockten Skills.
+
+    `speccify expand macos-notarize-tauri` soll reichen, wenn das Lockfile
+    genau einen Skill dieses Namens kennt (`@scope/name` oder
+    `git+…#pfad/name`). Eine volle Id geht unverändert durch; ein
+    mehrdeutiger Kurzname ist ein Fehler, kein Raten.
+    """
+    if reference.startswith(("@", "git+")):
+        return parse_uses_entry(reference)[0]
+    matches = [sid for sid in locked if sid.rstrip("/").rsplit("/", 1)[-1] == reference]
+    if len(matches) == 1:
+        return matches[0]
+    if not matches:
+        raise RegistryError(
+            f"'{reference}' is not in the lockfile. Add it to speccify.yaml "
+            f"and run `speccify lock`."
+        )
+    raise RegistryError(
+        f"'{reference}' is ambiguous in the lockfile: {', '.join(sorted(matches))}. "
+        f"Use the full id."
+    )
+
+
 def run_expand(
     project_dir: Path,
     references: list[str] | None = None,
@@ -104,7 +128,7 @@ def run_expand(
     locked = {entry.id: entry for entry in lockfile.entries}
 
     requested = (
-        [parse_uses_entry(ref)[0] for ref in references]
+        [_resolve_reference(ref, locked) for ref in references]
         if references
         else list(context.manifest.dependencies)
     )

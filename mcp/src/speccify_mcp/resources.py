@@ -11,9 +11,15 @@ if TYPE_CHECKING:  # pragma: no cover - typing only
 
 
 def register_resources(server: FastMCP, config: ServerConfig) -> None:
+    # Ressourcen haben keine Argumente — im Multi-Modus (kein gebundenes
+    # Projekt) gibt es daher nichts, was sie zeigen könnten.
+    if config.project_root is None:
+        return
+
     @server.resource("speccify://manifest")
     def manifest() -> str:
         """The project's speccify.yaml."""
+        assert config.project_root is not None
         path = config.project_root / "speccify.yaml"
         if not path.is_file():
             return "# No speccify.yaml in this project. Run `speccify init`."
@@ -22,6 +28,7 @@ def register_resources(server: FastMCP, config: ServerConfig) -> None:
     @server.resource("speccify://lockfile")
     def lockfile() -> str:
         """The project's speccify.lock."""
+        assert config.project_root is not None
         path = config.project_root / "speccify.lock"
         if not path.is_file():
             return "# No speccify.lock yet. Run `speccify lock`."

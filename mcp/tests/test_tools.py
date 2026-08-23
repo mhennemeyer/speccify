@@ -205,3 +205,134 @@ def test_tool_check_reports_per_example_as_a_result(project: Path) -> None:
     missing = run_tool_check(project, names=["nope"])
     assert not missing.ok
     assert missing.code == "tool_check_failed"
+
+
+# --- Quellen einbinden: source_list → add → expand (P1 des 4Notice-Plans) --------
+
+
+def _git(repo: Path, *args: str) -> None:
+    import os
+    import subprocess
+
+    subprocess.run(
+        ["git", *args],
+        cwd=repo,
+        check=True,
+        capture_output=True,
+        env={
+            "PATH": os.environ.get("PATH", ""),
+            "GIT_AUTHOR_NAME": "Speccify Test",
+            "GIT_AUTHOR_EMAIL": "test@speccify.io",
+            "GIT_COMMITTER_NAME": "Speccify Test",
+            "GIT_COMMITTER_EMAIL": "test@speccify.io",
+            "GIT_CONFIG_GLOBAL": "/dev/null",
+            "GIT_CONFIG_SYSTEM": "/dev/null",
+        },
+    )
+
+
+@pytest.fixture
+def skills_repo(tmp_path: Path) -> str:
+    """Ein Skills-Repo wie `speccify-first-test`: Bundles unter skills/<name>/."""
+    repo = tmp_path / "first-test"
+    repo.mkdir()
+    _git(repo, "init", "--quiet", "--initial-branch", "main")
+    for name, version in (("notarize", "1.0.0"), ("cert", "1.0.0"), ("notarize", "1.0.1")):
+        target = repo / "skills" / name
+        target.mkdir(parents=True, exist_ok=True)
+        (target / "SKILL.md").write_text(
+            "---\n"
+            f"name: {name}\n"
+            f"description: {name} {version} — from a git source. Use when testing.\n"
+            "metadata:\n"
+            f'  speccify.version: "{version}"\n'
+            "  speccify.scope: test\n"
+            "---\n\n## 1 — Step\n\nDo it.\n",
+            encoding="utf-8",
+        )
+        _git(repo, "add", ".")
+        _git(repo, "commit", "--quiet", "-m", f"{name} {version}")
+        _git(repo, "tag", f"skills/{name}/v{version}")
+    return f"git+file://{repo}"
+
+
+def test_source_list_describes_a_repo(skills_repo: str, tmp_path: Path, monkeypatch) -> None:
+    from speccify_mcp.tools import run_source_list
+
+    monkeypatch.setenv("HOME", str(tmp_path))  # Git-Cache nicht im echten Home
+    result = run_source_list(skills_repo)
+    assert result.ok, result.message
+    by_path = {s["path"]: s for s in result.skills}
+    assert set(by_path) == {"skills/cert", "skills/notarize"}
+    assert by_path["skills/notarize"]["latest"] == "1.0.1"
+    assert by_path["skills/notarize"]["versions"] == ["1.0.0", "1.0.1"]
+    assert by_path["skills/notarize"]["id"] == f"{skills_repo}#skills/notarize"
+    assert by_path["skills/cert"]["name"] == "cert"
+
+
+def test_source_list_rejects_non_git() -> None:
+    from speccify_mcp.tools import run_source_list
+
+    result = run_source_list("@speccify/whatever")
+    assert not result.ok and result.code == "not_a_git_source"
+
+
+def test_add_from_a_git_source_then_expand(skills_repo: str, tmp_path: Path, monkeypatch) -> None:
+    from speccify_mcp.tools import run_add, run_expand
+
+    monkeypatch.setenv("HOME", str(tmp_path))
+    project = tmp_path / "project"
+    project.mkdir()
+    (project / "speccify.yaml").write_text("schema_version: 1\n", encoding="utf-8")
+    reference = f"{skills_repo}#skills/notarize"
+
+    added = run_add(project, reference=reference)
+    assert added.ok, added.message
+    assert added.range == "^1.0"
+    assert reference in (project / "speccify.yaml").read_text(encoding="utf-8")
+    assert (project / "speccify.lock").is_file()
+
+    expanded = run_expand(project, references=[reference], platform="macos")
+    assert expanded.ok, expanded.message
+    assert (project / ".agent" / "skills" / "notarize" / "SKILL.md").is_file()
+
+
+def test_add_reports_unknown_reference(tmp_path: Path) -> None:
+    from speccify_mcp.tools import run_add
+
+    project = tmp_path / "project"
+    project.mkdir()
+    (project / "speccify.yaml").write_text("schema_version: 1\n", encoding="utf-8")
+    result = run_add(project, reference="@nobody/nothing")
+    assert not result.ok and result.code == "add_failed"
+
+
+# --- Multi-Modus: ungebundener Server verlangt `project` -------------------------
+
+
+def test_unbound_server_requires_project(tmp_path: Path) -> None:
+    import asyncio
+
+    from speccify_mcp.server import ServerConfig, build_server
+
+    server = build_server(ServerConfig(project_root=None))
+
+    async def call(name: str, args: dict) -> dict:
+        result = await server.call_tool(name, args)
+        # FastMCP liefert (content, structured) oder nur content
+        structured = result[1] if isinstance(result, tuple) else None
+        if isinstance(structured, dict):
+            return structured
+        import json
+
+        return json.loads(result[0][0].text)
+
+    missing = asyncio.run(call("verify", {}))
+    assert not missing["ok"] and missing["code"] == "project_required"
+
+    bogus = asyncio.run(call("verify", {"project": "relative/path"}))
+    assert bogus["code"] == "project_not_found"
+
+    (tmp_path / "speccify.yaml").write_text("schema_version: 1\n", encoding="utf-8")
+    real = asyncio.run(call("skill_list", {"project": str(tmp_path)}))
+    assert "code" in real and real.get("code") != "project_required"

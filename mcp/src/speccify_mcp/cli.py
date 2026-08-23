@@ -37,6 +37,30 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
+        "--transport",
+        choices=("stdio", "streamable-http"),
+        default="stdio",
+        help=(
+            "stdio (default): one agent, one project. streamable-http: listen on "
+            "127.0.0.1:<port> for apps that cannot spawn a process (sandboxed "
+            "clients); JSON responses, stateless."
+        ),
+    )
+    parser.add_argument(
+        "--port",
+        type=int,
+        default=int(os.environ.get("SPECCIFY_MCP_PORT", "8769")),
+        help="Port for --transport streamable-http (default: 8769).",
+    )
+    parser.add_argument(
+        "--unbound",
+        action="store_true",
+        help=(
+            "Serve any project: every project-bound tool takes a `project` "
+            "argument instead of a fixed root (multi mode, like speccify-exec-mcp)."
+        ),
+    )
+    parser.add_argument(
         "--log-level",
         choices=_LOG_LEVELS,
         default=os.environ.get("SPECCIFY_LOG_LEVEL", "INFO"),
@@ -73,12 +97,28 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     configure_logging(args.log_level)
 
-    project_root = resolve_project_root(args.project)
-    logging.getLogger("speccify_mcp").info(
-        "starting speccify-mcp on stdio (project_root=%s)", project_root
-    )
+    project_root = None if args.unbound else resolve_project_root(args.project)
+    log = logging.getLogger("speccify_mcp")
+    config = ServerConfig(project_root=project_root)
 
-    server = build_server(ServerConfig(project_root=project_root))
+    if args.transport == "streamable-http":
+        log.info(
+            "starting speccify-mcp on http://127.0.0.1:%d/mcp (%s)",
+            args.port,
+            f"project_root={project_root}" if project_root else "unbound, multi mode",
+        )
+        server = build_server(
+            config,
+            host="127.0.0.1",
+            port=args.port,
+            json_response=True,
+            stateless_http=True,
+        )
+        server.run(transport="streamable-http")
+        return 0
+
+    log.info("starting speccify-mcp on stdio (project_root=%s)", project_root)
+    server = build_server(config)
     server.run(transport="stdio")
     return 0
 

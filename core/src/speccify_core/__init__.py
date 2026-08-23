@@ -12,6 +12,7 @@ from speccify_core.check import (
 )
 from speccify_core.git_registry import (
     DEFAULT_GIT_CACHE_DIR,
+    BundleListing,
     GitLibrary,
     GitLibraryError,
     GitRef,
@@ -82,6 +83,7 @@ __all__ = [
     "DEFAULT_LIBRARY_PATH",
     "DEFAULT_LOCKFILE_SCHEMA_PATH",
     "DEFAULT_MANIFEST_SCHEMA_PATH",
+    "BundleListing",
     "GitLibrary",
     "GitLibraryError",
     "GitRef",

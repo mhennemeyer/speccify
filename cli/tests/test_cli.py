@@ -488,3 +488,24 @@ def _add_from(project: Path, library: Path, reference: str = MAIN):
     return runner.invoke(
         app, ["add", reference, "--project", str(project), "--library", str(library)]
     )
+
+
+def test_expand_accepts_the_short_name_of_a_locked_skill(tmp_path: Path) -> None:
+    """`speccify expand macos-notarize-tauri` reicht — das Lockfile kennt die Id."""
+    from speccify_cli.commands.expand import _resolve_reference
+
+    locked = {
+        "@speccify/macos-notarize-tauri": object(),
+        "git+https://example.test/kit#skills/cert": object(),
+    }
+    assert _resolve_reference("macos-notarize-tauri", locked) == "@speccify/macos-notarize-tauri"
+    assert _resolve_reference("cert", locked) == "git+https://example.test/kit#skills/cert"
+    assert (
+        _resolve_reference("git+https://example.test/kit#skills/cert@^1.0", locked)
+        == "git+https://example.test/kit#skills/cert"
+    )
+    with pytest.raises(Exception, match="not in the lockfile"):
+        _resolve_reference("nope", locked)
+    ambiguous = {**locked, "@other/cert": object()}
+    with pytest.raises(Exception, match="ambiguous"):
+        _resolve_reference("cert", ambiguous)

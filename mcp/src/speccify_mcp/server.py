@@ -15,6 +15,7 @@ from typing import Any
 from mcp.server.fastmcp import FastMCP
 
 from .tools import (
+    run_add,
     run_expand,
     run_lock,
     run_pull,
@@ -24,6 +25,7 @@ from .tools import (
     run_skill_get,
     run_skill_list,
     run_skill_propose,
+    run_source_list,
     run_tool_check,
     run_tool_get,
     run_verify,
@@ -36,13 +38,50 @@ logger = logging.getLogger(__name__)
 
 @dataclass(frozen=True)
 class ServerConfig:
-    """Where the server operates: the project whose manifest and library it reads."""
+    """Where the server operates.
 
-    project_root: Path
+    `project_root` gesetzt = **gebunden** (ein Projekt, wie bisher über
+    stdio). `None` = **multi**: jeder projektbezogene Aufruf bringt `project`
+    mit — so kann ein Server hinter einem Port mehrere Projektfenster einer
+    App bedienen (dasselbe Muster wie beim `speccify-exec-mcp`).
+    """
+
+    project_root: Path | None = None
+
+    @property
+    def bound(self) -> bool:
+        return self.project_root is not None
 
 
-def build_server(config: ServerConfig) -> FastMCP:
-    server = FastMCP(name=SERVER_NAME)
+_PROJECT_ARG_DOC = (
+    " `project`: absolute project root; required when the server runs unbound "
+    "(multi mode), ignored when it is bound to one project."
+)
+
+
+def _resolve_root(config: ServerConfig, project: str | None) -> Path | dict[str, Any]:
+    """Projektwurzel für einen Aufruf — oder ein strukturierter Fehler."""
+    if config.project_root is not None:
+        return config.project_root
+    if not project:
+        return {
+            "ok": False,
+            "code": "project_required",
+            "message": "Server runs unbound: pass `project` (absolute project root).",
+        }
+    root = Path(project).expanduser()
+    if not root.is_absolute() or not root.is_dir():
+        return {
+            "ok": False,
+            "code": "project_not_found",
+            "message": f"`project` must be an existing absolute directory, got '{project}'.",
+        }
+    return root.resolve()
+
+
+def build_server(config: ServerConfig, **fastmcp_settings: Any) -> FastMCP:
+    """Server mit allen Tools; `fastmcp_settings` (host, port, …) gehen an FastMCP."""
+    server = FastMCP(name=SERVER_NAME, **fastmcp_settings)
 
     @server.tool(
         name="skill_list",
@@ -52,9 +91,12 @@ def build_server(config: ServerConfig) -> FastMCP:
             "you do not know what exists. Returns `{ok, playbooks}`."
         ),
     )
-    def skill_list(library_path: str | None = None) -> dict[str, Any]:
+    def skill_list(library_path: str | None = None, project: str | None = None) -> dict[str, Any]:
+        root = _resolve_root(config, project)
+        if isinstance(root, dict):
+            return root
         return run_skill_list(
-            config.project_root,
+            root,
             library_path=Path(library_path) if library_path else None,
         ).to_dict()
 
@@ -73,9 +115,13 @@ def build_server(config: ServerConfig) -> FastMCP:
         reference: str,
         library_path: str | None = None,
         offline: bool = False,
+        project: str | None = None,
     ) -> dict[str, Any]:
+        root = _resolve_root(config, project)
+        if isinstance(root, dict):
+            return root
         return run_skill_get(
-            config.project_root,
+            root,
             reference=reference,
             library_path=Path(library_path) if library_path else None,
             offline=offline,
@@ -96,9 +142,13 @@ def build_server(config: ServerConfig) -> FastMCP:
         path: str,
         library_path: str | None = None,
         offline: bool = False,
+        project: str | None = None,
     ) -> dict[str, Any]:
+        root = _resolve_root(config, project)
+        if isinstance(root, dict):
+            return root
         return run_skill_asset(
-            config.project_root,
+            root,
             reference=reference,
             path=path,
             library_path=Path(library_path) if library_path else None,
@@ -123,9 +173,13 @@ def build_server(config: ServerConfig) -> FastMCP:
         tool: str,
         library_path: str | None = None,
         offline: bool = False,
+        project: str | None = None,
     ) -> dict[str, Any]:
+        root = _resolve_root(config, project)
+        if isinstance(root, dict):
+            return root
         return run_tool_get(
-            config.project_root,
+            root,
             reference=reference,
             tool=tool,
             library_path=Path(library_path) if library_path else None,
@@ -148,9 +202,13 @@ def build_server(config: ServerConfig) -> FastMCP:
         links: bool = False,
         library_path: str | None = None,
         offline: bool = False,
+        project: str | None = None,
     ) -> dict[str, Any]:
+        root = _resolve_root(config, project)
+        if isinstance(root, dict):
+            return root
         return run_skill_check(
-            config.project_root,
+            root,
             reference=reference,
             links=links,
             library_path=Path(library_path) if library_path else None,
@@ -171,9 +229,13 @@ def build_server(config: ServerConfig) -> FastMCP:
         query: str = "",
         index_sources: list[str] | None = None,
         offline: bool = False,
+        project: str | None = None,
     ) -> dict[str, Any]:
+        root = _resolve_root(config, project)
+        if isinstance(root, dict):
+            return root
         return run_search(
-            project_root=config.project_root,
+            project_root=root,
             query=query,
             index_sources=index_sources,
             offline=offline,
@@ -221,9 +283,12 @@ def build_server(config: ServerConfig) -> FastMCP:
             "`speccify lock`. Returns `{ok, entries}`."
         ),
     )
-    def lock(library_path: str | None = None) -> dict[str, Any]:
+    def lock(library_path: str | None = None, project: str | None = None) -> dict[str, Any]:
+        root = _resolve_root(config, project)
+        if isinstance(root, dict):
+            return root
         return run_lock(
-            config.project_root,
+            root,
             library_path=Path(library_path) if library_path else None,
         ).to_dict()
 
@@ -240,9 +305,13 @@ def build_server(config: ServerConfig) -> FastMCP:
         out_dir: str = "./.agent/speccify/cache",
         library_path: str | None = None,
         offline: bool = False,
+        project: str | None = None,
     ) -> dict[str, Any]:
+        root = _resolve_root(config, project)
+        if isinstance(root, dict):
+            return root
         return run_pull(
-            config.project_root,
+            root,
             out_dir=Path(out_dir),
             library_path=Path(library_path) if library_path else None,
             offline=offline,
@@ -267,9 +336,13 @@ def build_server(config: ServerConfig) -> FastMCP:
         library_path: str | None = None,
         offline: bool = False,
         platform: str | None = None,
+        project: str | None = None,
     ) -> dict[str, Any]:
+        root = _resolve_root(config, project)
+        if isinstance(root, dict):
+            return root
         return run_expand(
-            config.project_root,
+            root,
             references=references,
             library_path=Path(library_path) if library_path else None,
             offline=offline,
@@ -285,11 +358,54 @@ def build_server(config: ServerConfig) -> FastMCP:
             "`speccify verify`."
         ),
     )
-    def verify(library_path: str | None = None, offline: bool = False) -> dict[str, Any]:
+    def verify(
+        library_path: str | None = None, offline: bool = False, project: str | None = None
+    ) -> dict[str, Any]:
+        root = _resolve_root(config, project)
+        if isinstance(root, dict):
+            return root
         return run_verify(
-            config.project_root,
+            root,
             library_path=Path(library_path) if library_path else None,
             offline=offline,
+        ).to_dict()
+
+    @server.tool(
+        name="source_list",
+        description=(
+            "List every skill a git repository offers, read from its tags "
+            "(`<path>/v<version>`): id to put into `add`, path, versions, latest, "
+            "name and description from the newest SKILL.md. This is how an app "
+            '"connects a source" — no manifest change, nothing written. '
+            "`source` is 'git+<url>'. Returns `{ok, source, skills}`."
+        ),
+    )
+    def source_list(source: str, offline: bool = False) -> dict[str, Any]:
+        return run_source_list(source, offline=offline).to_dict()
+
+    @server.tool(
+        name="add",
+        description=(
+            "Add a skill dependency to the project manifest and re-lock — the "
+            "import step after `source_list`. `reference` is a skill id "
+            "('@scope/name'), a git source ('git+<url>#<path>'), optionally with "
+            "'@<version>'; without a version the newest one is taken and written "
+            "as a caret range. Mirrors `speccify add`. Returns `{ok, reference, "
+            "range}`; follow with `expand`." + _PROJECT_ARG_DOC
+        ),
+    )
+    def add(
+        reference: str,
+        library_path: str | None = None,
+        project: str | None = None,
+    ) -> dict[str, Any]:
+        root = _resolve_root(config, project)
+        if isinstance(root, dict):
+            return root
+        return run_add(
+            root,
+            reference=reference,
+            library_path=Path(library_path) if library_path else None,
         ).to_dict()
 
     @server.tool(
@@ -309,10 +425,12 @@ def build_server(config: ServerConfig) -> FastMCP:
         names: list[str] | None = None,
         platform: str | None = None,
         timeout: float | None = None,
+        project: str | None = None,
     ) -> dict[str, Any]:
-        return run_tool_check(
-            config.project_root, names=names, platform=platform, timeout=timeout
-        ).to_dict()
+        root = _resolve_root(config, project)
+        if isinstance(root, dict):
+            return root
+        return run_tool_check(root, names=names, platform=platform, timeout=timeout).to_dict()
 
     _register_resources(server, config)
     return server

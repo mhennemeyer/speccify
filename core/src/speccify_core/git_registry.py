@@ -30,7 +30,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from speccify_core.registry import Bundle, LibraryError, Version
-from speccify_core.skill import BUNDLE_DIRS, SKILL_FILENAME
+from speccify_core.skill import BUNDLE_DIRS, SKILL_FILENAME, SkillError, parse_skill
 
 DEFAULT_GIT_CACHE_DIR = Path.home() / ".cache" / "speccify" / "git"
 DEFAULT_TIMEOUT = 60.0
@@ -38,6 +38,8 @@ DEFAULT_TIMEOUT = 60.0
 _GIT_REF_PATTERN = re.compile(r"^git\+(?P<url>[^\s#]+?)(?:#(?P<path>[^\s#]+))?$")
 _ALLOWED_SCHEMES = ("https", "file")
 _SEMVER_TAG = re.compile(r"^v(?P<version>\d+\.\d+\.\d+)$")
+# Jeder Tag `<pfad>/v1.2.3` bzw. `v1.2.3` benennt ein Bundle im Repo.
+_ANY_BUNDLE_TAG = re.compile(r"^(?:(?P<path>.+)/)?v(?P<version>\d+\.\d+\.\d+)$")
 
 
 class GitLibraryError(LibraryError):
@@ -197,6 +199,31 @@ class GitRepoCache:
         return repo
 
 
+@dataclass(frozen=True)
+class BundleListing:
+    """Ein Bundle, das ein Repo laut seinen Tags anbietet — für „Was gibt es hier?"."""
+
+    playbook_id: str
+    path: str
+    versions: tuple[Version, ...]
+    name: str | None
+    description: str | None
+
+    @property
+    def latest(self) -> Version:
+        return self.versions[-1]
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "id": self.playbook_id,
+            "path": self.path,
+            "versions": [str(v) for v in self.versions],
+            "latest": str(self.latest),
+            "name": self.name,
+            "description": self.description,
+        }
+
+
 class GitLibrary:
     """`Library` implementation backed by git tags.
 
@@ -257,6 +284,55 @@ class GitLibrary:
             if version is not None:
                 versions.append(version)
         return sorted(set(versions))
+
+    def list_bundles(self, source: str) -> list[BundleListing]:
+        """Alle Bundles eines Repos, abgelesen aus den Tags (`<pfad>/v<version>`).
+
+        `source` ist `git+<url>` — ein Pfad dahinter wird ignoriert, gefragt
+        ist das ganze Repo. Zu jedem Bundle kommen `name` und `description`
+        aus dem `SKILL.md` der neuesten Version; fehlt die Datei am Tag,
+        bleibt das Bundle trotzdem gelistet (mit `None`), damit ein kaputter
+        Tag die Liste nicht versteckt.
+        """
+        ref = parse_git_ref(source)
+        root = GitRef(url=ref.url)
+        repo = self._repo(root)
+        found: dict[str, set[Version]] = {}
+        for tag in self._run(["tag", "--list"], cwd=repo).splitlines():
+            match = _ANY_BUNDLE_TAG.match(tag.strip())
+            if match is None:
+                continue
+            found.setdefault(match.group("path") or "", set()).add(
+                Version.parse(match.group("version"))
+            )
+        listings: list[BundleListing] = []
+        for path in sorted(found):
+            bundle_ref = GitRef(url=ref.url, path=path)
+            versions = tuple(sorted(found[path]))
+            name = description = None
+            try:
+                text = self._cache.run_bytes(
+                    [
+                        "cat-file",
+                        "blob",
+                        f"{bundle_ref.tag_for(versions[-1])}:{bundle_ref.skill_path}",
+                    ],
+                    cwd=repo,
+                ).decode("utf-8", "replace")
+                skill = parse_skill(text)
+                name, description = skill.name, skill.description
+            except (GitLibraryError, SkillError):
+                pass
+            listings.append(
+                BundleListing(
+                    playbook_id=bundle_ref.playbook_id,
+                    path=path,
+                    versions=versions,
+                    name=name,
+                    description=description,
+                )
+            )
+        return listings
 
     def fetch(self, playbook_id: str, version: Version) -> Bundle:
         """Read the whole bundle at the matching tag — no working tree involved."""

@@ -28,6 +28,7 @@ from .project import (
     run_verify,
 )
 from .search import SearchResult, run_search
+from .source import AddResult, SourceResult, run_add, run_source_list
 from .viewer import (
     ProposalResult,
     ViewerResult,
@@ -36,6 +37,10 @@ from .viewer import (
 )
 
 __all__ = [
+    "AddResult",
+    "SourceResult",
+    "run_add",
+    "run_source_list",
     "AssetResult",
     "CheckResult",
     "LibraryResult",

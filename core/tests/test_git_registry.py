@@ -215,3 +215,32 @@ def test_offline_without_cache_fails_with_a_hint(single_playbook_repo: str, tmp_
 
 def test_via_is_the_stable_git_marker(tmp_path: Path) -> None:
     assert GitLibrary(cache_dir=tmp_path).via == "git"
+
+
+# --- Bundles eines Repos auflisten (für „Quelle einbinden" in der App) -----------
+
+
+def test_list_bundles_reads_every_tagged_bundle(multi_playbook_repo: str, tmp_path: Path) -> None:
+    registry = GitLibrary(cache_dir=tmp_path / "cache")
+    listings = registry.list_bundles(multi_playbook_repo)
+    assert [b.path for b in listings] == ["playbooks/button", "playbooks/text-input"]
+    button = listings[0]
+    assert button.playbook_id == f"{multi_playbook_repo}#playbooks/button"
+    assert [str(v) for v in button.versions] == ["0.1.0", "0.3.0"]
+    assert str(button.latest) == "0.3.0"
+    assert button.name == "button"
+    assert button.description is not None and button.description.startswith("button")
+    assert listings[1].to_dict()["latest"] == "1.4.2"
+
+
+def test_list_bundles_ignores_path_in_source(multi_playbook_repo: str, tmp_path: Path) -> None:
+    registry = GitLibrary(cache_dir=tmp_path / "cache")
+    assert len(registry.list_bundles(f"{multi_playbook_repo}#playbooks/button")) == 2
+
+
+def test_list_bundles_root_bundle(single_playbook_repo: str, tmp_path: Path) -> None:
+    registry = GitLibrary(cache_dir=tmp_path / "cache")
+    (only,) = registry.list_bundles(single_playbook_repo)
+    assert only.path == ""
+    assert only.playbook_id == single_playbook_repo
+    assert [str(v) for v in only.versions] == ["0.1.0", "0.2.0"]
