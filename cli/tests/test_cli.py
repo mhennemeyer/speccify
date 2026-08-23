@@ -509,3 +509,30 @@ def test_expand_accepts_the_short_name_of_a_locked_skill(tmp_path: Path) -> None
     ambiguous = {**locked, "@other/cert": object()}
     with pytest.raises(Exception, match="ambiguous"):
         _resolve_reference("cert", ambiguous)
+
+
+def test_tool_check_records_project_own_tools(tmp_path: Path) -> None:
+    """Ein Tool, das nicht aus `expand` kam, bekommt trotzdem seinen Status im Nachweis."""
+    from speccify_cli.commands.tool import run_tool_check
+    from speccify_core.expansion import Expansions
+
+    tool_dir = tmp_path / ".agent" / "tools" / "upper"
+    tool_dir.mkdir(parents=True)
+    (tool_dir / "TOOL.md").write_text(
+        "---\nname: upper\ndescription: Uppercases.\n"
+        "inputs: {type: object, properties: {t: {type: string}}}\n"
+        "outputs: {type: object, properties: {ok: {type: boolean}, t: {type: string}}}\n"
+        '---\n\n## Examples\n\n### a\ninput: {"t": "a"}\noutput: {"ok": true, "t": "A"}\n',
+        encoding="utf-8",
+    )
+    (tool_dir / "macos.py").write_text(
+        "import json,sys\nd=json.load(sys.stdin)\n"
+        "print(json.dumps({'ok': True, 't': d['t'].upper()}))\n",
+        encoding="utf-8",
+    )
+    (tool_dir / "linux.py").write_text((tool_dir / "macos.py").read_text(), encoding="utf-8")
+    report = run_tool_check(tmp_path, ["upper"])
+    assert report.ok
+    record = Expansions.load(tmp_path / ".agent" / "speccify" / "expansions.yaml")
+    assert record.tools["upper"].from_skills == ()
+    assert record.tools["upper"].status(report.platform) == "verified"

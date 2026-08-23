@@ -25,6 +25,7 @@ from speccify_core.expansion import (
     Expansions,
     ToolRecord,
     current_platform,
+    sha256_text,
 )
 from speccify_core.tool import TOOL_FILENAME, TOOLS_DIR
 from speccify_core.tool_check import (
@@ -109,9 +110,15 @@ def run_tool_check(
     for name in selected:
         result = check_tool(tools_root / name, platform=platform, timeout=timeout)
         report.results.append(result)
-        known = tools.get(name)
-        if known is None or result.status in (NOT_APPLICABLE, NOT_IMPLEMENTED):
+        if result.status in (NOT_APPLICABLE, NOT_IMPLEMENTED):
             continue
+        known = tools.get(name)
+        if known is None:
+            # Projekteigenes Tool (nicht aus `expand`): trotzdem aufzeichnen —
+            # eine App will den Status sehen, und W-B (zurückgeben) braucht den
+            # Spec-Hash. Herkunft bleibt leer, das unterscheidet es.
+            spec_bytes = (tools_root / name / TOOL_FILENAME).read_bytes()
+            known = ToolRecord(from_skills=(), spec_sha256=sha256_text(spec_bytes), platforms={})
         platforms = dict(known.platforms)
         entry = {"file": result.implementation or ""}
         if result.verified:
