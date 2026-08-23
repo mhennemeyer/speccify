@@ -204,6 +204,103 @@ def check_tool(
     return ToolCheckResult(name, platform, status, implementation=implementation.name, cases=cases)
 
 
+@dataclass(frozen=True)
+class ToolRunResult:
+    """Ein einzelner Lauf mit freier Eingabe (D7): was die App im Tools-Tab zeigt."""
+
+    name: str
+    platform: str
+    ok: bool
+    output: Any = None
+    exit_code: int | None = None
+    stderr: str = ""
+    detail: str = ""
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "name": self.name,
+            "platform": self.platform,
+            "ok": self.ok,
+            "output": self.output,
+            "exit_code": self.exit_code,
+            "stderr": self.stderr,
+            "detail": self.detail,
+        }
+
+
+def run_tool(
+    tool_dir: Path,
+    input_value: Any,
+    *,
+    platform: str | None = None,
+    timeout: float = DEFAULT_TIMEOUT,
+    env: dict[str, str] | None = None,
+) -> ToolRunResult:
+    """Startet `tool_dir/<platform>.<ext>` nach D7 mit `input_value` auf stdin.
+
+    Kein Vergleich mit Beispielen — das ist `check_tool`. Hier geht es um
+    den Knopf „Ausführen" in einer App: JSON rein, JSON raus, oder eine
+    Erklärung, warum nicht.
+    """
+    platform = platform or current_platform()
+    name = tool_dir.name
+    implementation = implementation_for(tool_dir, platform)
+    if implementation is None:
+        return ToolRunResult(
+            name, platform, False, detail=f"no {platform}.<ext> beside {TOOL_FILENAME}"
+        )
+    command = launch_command(implementation)
+    if command is None:
+        return ToolRunResult(
+            name,
+            platform,
+            False,
+            detail=f"no interpreter for {implementation.name} on this machine",
+        )
+    try:
+        completed = subprocess.run(
+            command,
+            input=json.dumps(input_value),
+            capture_output=True,
+            text=True,
+            cwd=tool_dir,
+            timeout=timeout,
+            env={**os.environ, **(env or {})},
+            check=False,
+        )
+    except subprocess.TimeoutExpired:
+        return ToolRunResult(name, platform, False, detail=f"timed out after {timeout:g}s")
+    except OSError as exc:
+        return ToolRunResult(name, platform, False, detail=f"could not start: {exc}")
+    stderr = completed.stderr.strip()
+    stdout = completed.stdout.strip()
+    if not stdout:
+        return ToolRunResult(
+            name,
+            platform,
+            False,
+            exit_code=completed.returncode,
+            stderr=stderr,
+            detail=f"no output on stdout (exit {completed.returncode})",
+        )
+    try:
+        output = json.loads(stdout)
+    except json.JSONDecodeError as exc:
+        return ToolRunResult(
+            name,
+            platform,
+            False,
+            output=stdout,
+            exit_code=completed.returncode,
+            stderr=stderr,
+            detail=f"stdout is not JSON ({exc.msg})",
+        )
+    ok = completed.returncode == 0 and not (isinstance(output, dict) and output.get("ok") is False)
+    return ToolRunResult(
+        name, platform, ok, output=output, exit_code=completed.returncode, stderr=stderr
+    )
+
+
 def launch_command(implementation: Path) -> list[str] | None:
     """How to start the implementation: directly if executable, else via its interpreter."""
     path = str(implementation.resolve())

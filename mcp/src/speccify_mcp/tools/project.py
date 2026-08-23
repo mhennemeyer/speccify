@@ -189,3 +189,54 @@ def run_tool_check(
         platform=report.platform,
         tools=[r.to_dict() for r in report.results],
     )
+
+
+@dataclass(frozen=True)
+class ToolRunOutcome:
+    ok: bool
+    result: dict[str, Any] = field(default_factory=dict)
+    code: str = ""
+    message: str = ""
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "ok": self.ok,
+            "result": dict(self.result),
+            "code": self.code,
+            "message": self.message,
+        }
+
+
+def run_tool_run(
+    project_root: Path,
+    *,
+    name: str,
+    input_value: Any,
+    platform: str | None = None,
+    timeout: float | None = None,
+) -> ToolRunOutcome:
+    """Ein Tool mit freier Eingabe starten (D7) — der Knopf „Ausführen" einer App."""
+    from speccify_cli.commands.expand import agent_root
+    from speccify_core.tool_check import DEFAULT_TIMEOUT, run_tool
+
+    if not name or "/" in name or name.startswith("."):
+        return ToolRunOutcome(ok=False, code="bad_name", message=f"'{name}' is not a tool name.")
+    tool_dir = agent_root(project_root) / "tools" / name
+    if not (tool_dir / "TOOL.md").is_file():
+        return ToolRunOutcome(
+            ok=False, code="not_found", message=f"No tool '{name}' under .agent/tools/."
+        )
+    outcome = run_tool(
+        tool_dir,
+        input_value,
+        platform=platform,
+        timeout=DEFAULT_TIMEOUT if timeout is None else timeout,
+    )
+    # `ok` des Ergebnisses = der Lauf hat JSON geliefert; ob das Tool selbst
+    # `ok: false` sagt, steht im `result` — das ist ein Befund, kein Fehler.
+    return ToolRunOutcome(
+        ok=outcome.output is not None or outcome.ok,
+        result=outcome.to_dict(),
+        code="" if outcome.output is not None else "run_failed",
+        message=outcome.detail,
+    )

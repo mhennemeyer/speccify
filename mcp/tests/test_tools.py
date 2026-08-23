@@ -336,3 +336,39 @@ def test_unbound_server_requires_project(tmp_path: Path) -> None:
     (tmp_path / "speccify.yaml").write_text("schema_version: 1\n", encoding="utf-8")
     real = asyncio.run(call("skill_list", {"project": str(tmp_path)}))
     assert "code" in real and real.get("code") != "project_required"
+
+
+# --- tool_run: ein Tool mit freier Eingabe (D7) ---------------------------------
+
+
+def test_tool_run_feeds_stdin_and_returns_json(tmp_path: Path) -> None:
+    from speccify_mcp.tools import run_tool_run
+
+    tool_dir = tmp_path / ".agent" / "tools" / "echo-upper"
+    tool_dir.mkdir(parents=True)
+    (tool_dir / "TOOL.md").write_text(
+        "---\nname: echo-upper\ndescription: Uppercases `text`.\n"
+        "inputs: {type: object, properties: {text: {type: string}}}\n"
+        "outputs: {type: object, properties: {ok: {type: boolean}, text: {type: string}}}\n"
+        '---\n\n## Examples\n\n### a\ninput: {"text": "a"}\noutput: {"ok": true, "text": "A"}\n',
+        encoding="utf-8",
+    )
+    (tool_dir / "macos.py").write_text(
+        "import json,sys\nd=json.load(sys.stdin)\n"
+        "print(json.dumps({'ok': True, 'text': d['text'].upper()}))\n",
+        encoding="utf-8",
+    )
+    (tool_dir / "linux.py").write_text((tool_dir / "macos.py").read_text(), encoding="utf-8")
+
+    result = run_tool_run(tmp_path, name="echo-upper", input_value={"text": "hi"})
+    assert result.ok, result.message
+    assert result.result["output"] == {"ok": True, "text": "HI"}
+    assert result.result["exit_code"] == 0
+
+    missing = run_tool_run(tmp_path, name="echo-upper", input_value={}, platform="windows")
+    assert not missing.ok and missing.code == "run_failed"
+    assert "windows" in missing.message
+
+    unknown = run_tool_run(tmp_path, name="nope", input_value={})
+    assert unknown.code == "not_found"
+    assert run_tool_run(tmp_path, name="../x", input_value={}).code == "bad_name"

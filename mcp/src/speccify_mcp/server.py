@@ -28,6 +28,7 @@ from .tools import (
     run_source_list,
     run_tool_check,
     run_tool_get,
+    run_tool_run,
     run_verify,
     run_viewer_selection,
 )
@@ -431,6 +432,31 @@ def build_server(config: ServerConfig, **fastmcp_settings: Any) -> FastMCP:
         if isinstance(root, dict):
             return root
         return run_tool_check(root, names=names, platform=platform, timeout=timeout).to_dict()
+
+    @server.tool(
+        name="tool_run",
+        description=(
+            "Run one tool under .agent/tools/<name>/ with a free input (D7: the "
+            "JSON `input` goes to stdin, the JSON on stdout comes back as "
+            "`result.output`). For trying a tool by hand — `tool_check` is the "
+            "one that judges it against the examples. Returns `{ok, result: "
+            "{output, exit_code, stderr, detail}}`; `ok: false` with `code` "
+            "when nothing ran or stdout was not JSON." + _PROJECT_ARG_DOC
+        ),
+    )
+    def tool_run(
+        name: str,
+        input: dict[str, Any] | list[Any] | str | float | bool | None = None,
+        platform: str | None = None,
+        timeout: float | None = None,
+        project: str | None = None,
+    ) -> dict[str, Any]:
+        root = _resolve_root(config, project)
+        if isinstance(root, dict):
+            return root
+        return run_tool_run(
+            root, name=name, input_value=input, platform=platform, timeout=timeout
+        ).to_dict()
 
     _register_resources(server, config)
     return server

@@ -23,6 +23,7 @@ SKILLS = REPO_ROOT / "skills"
 REFERENCE = "@speccify/macos-notarize-tauri"
 
 EXPECTED_TOOLS = {
+    "tool_run",
     "add",
     "source_list",
     "expand",

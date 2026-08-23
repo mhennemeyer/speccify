@@ -21,10 +21,12 @@ from .project import (
     ExpandResult,
     ProjectResult,
     ToolCheckResult,
+    ToolRunOutcome,
     run_expand,
     run_lock,
     run_pull,
     run_tool_check,
+    run_tool_run,
     run_verify,
 )
 from .search import SearchResult, run_search
@@ -37,6 +39,8 @@ from .viewer import (
 )
 
 __all__ = [
+    "ToolRunOutcome",
+    "run_tool_run",
     "AddResult",
     "SourceResult",
     "run_add",
