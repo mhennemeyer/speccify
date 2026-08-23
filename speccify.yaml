@@ -8,6 +8,6 @@ dependencies:
   '@speccify/macos-notarize-tauri': ^1.0
   '@speccify/mcp-client-streamable-http': ^1.0
   '@speccify/sandboxed-mac-app-local-exec': ^1.0
-  '@speccify/speccify': ^0.2
+  '@speccify/speccify': ^0.3
   '@speccify/storekit-sandbox-testing': ^1.0
   '@speccify/storekit2-subscription-paywall': ^1.0

@@ -9,7 +9,7 @@ description: Bring a skill from a Speccify library into this project and use it
 license: MIT
 compatibility: Requires the `speccify` CLI on PATH and a project with speccify.yaml
 metadata:
-  speccify.version: 0.2.0
+  speccify.version: 0.3.0
   speccify.scope: speccify
 ---
 
@@ -113,9 +113,10 @@ progress means the skill itself is wrong: stop and say so (step 5).
 
 ### The trace
 
-One entry per skill use in the project log (`.agent/log.md` if the project
-has one, otherwise the place the project keeps its history), appended, never
-rewritten:
+One entry per skill use in the place the project keeps its history —
+`.agent/log.md` if the project has one; on an iKanban AI board the history of
+the ticket you are working (`agent_run` line naming skill and tool) —
+appended, never rewritten:
 
 ```markdown
 ### 2026-08-21 · macos-notarize-tauri 1.0.0 · iteration 2 · ok
@@ -137,6 +138,36 @@ for this project, it belongs upstream: in the skill's source repository, as
 a step, a pitfall, or a sharper example in a tool spec — an example that
 would have caught your bug is the best gift. Project-specific knowledge
 stays in `## In this project`.
+
+### A skill born in this project
+
+Sometimes the recurring thing was never in a library: you did it three times
+here, with tools you wrote. Then the skill goes upstream whole — the reverse
+of expand. Do it by hand, it is a reading exercise, not a build step:
+
+1. **Generalise the text.** Copy `.agent/skills/<name>/SKILL.md` into the
+   library repository as `skills/<name>/SKILL.md`. Replace every value that
+   belongs to this project (bundle id, paths, identities, ports) with a
+   placeholder `<like-this>`; drop `## In this project`. Add
+   `metadata.speccify.version: 1.0.0` and, if the skill builds on another
+   library skill, `speccify.uses` with that skill's git id.
+2. **Ship contracts, not scripts.** For each tool the skill uses, copy
+   `.agent/tools/<tool>/TOOL.md` to `skills/<name>/tools/<tool>/TOOL.md`.
+   Defaults in the spec must be generic too (`Info.plist`, not
+   `Resources/Info.plist` of this app). Your implementation may travel as
+   `reference.<ext>` beside it — a hint, never the contract. Fixtures the
+   examples need go beside them.
+3. **Prove it reads.** `speccify check` in the library repository must be
+   green; then try the skill from a throwaway folder: `speccify add
+   git+<repo>#skills/<name>`, `expand`, implement the tools from the
+   reference, `tool check`. If that round trip needs knowledge that is only
+   in your head, it goes into the skill.
+4. **Tag.** `git tag skills/<name>/v1.0.0`, push the tag. Tags are final:
+   a broken tag is fixed by a new version, not by moving the tag (the
+   resolver picks the lowest version that satisfies a range).
+5. Back in the project, record the origin so drift shows up later:
+   `speccify add git+<repo>#skills/<name>` and `expand` once more — your
+   `## In this project` section survives.
 
 ## Pitfalls
 
