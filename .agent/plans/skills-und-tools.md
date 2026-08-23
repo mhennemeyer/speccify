@@ -392,6 +392,25 @@ nicht auf — im Repo durch `git+…#skills/x@^1.0` ersetzt; besser wäre, lokal
 Ids relativ zur selben Quelle aufzulösen (offen). MVS wählt die niedrigste
 passende Version — kaputte frühe Tags bleiben sonst die Wahl.
 
+**Befunde aus dem zweiten Skills-Repo (`speccify-gamedev`, 2026-08-23, drei
+Skills mit zwei Tools, Round-Trip über `git+file://` grün):**
+1. `requires:` wird als Binary auf PATH geprüft — „playwright chromium"
+   (npm-Paket + Browser-Download) lässt `tool check` mit
+   `missing-requirement` aussteigen. Es fehlt eine Form für
+   Nicht-Binary-Voraussetzungen (npm-Paket, Python-Modul, Download), oder
+   `requires` sollte nur Binaries meinen und das Übrige in `compatibility`.
+2. Der Platzhalter-Regex `<[a-z]…>` trifft Code-Beispiele im Skill-Body
+   (`uid="uid://<unique>"`, `<file>.uid`) — `expand` meldet „fill in", obwohl
+   nichts auszufüllen ist. Vorschlag: Code-Fences vom Scan ausnehmen.
+3. `uv sync` im Checkout + `uv run speccify` → `ModuleNotFoundError:
+   speccify_cli` (Editable-`.pth` greift nicht; schon in T4 notiert, weiter
+   offen). Workaround bleibt `PYTHONPATH=cli/src:core/src:mcp/src`.
+4. Positiv: `add git+file:///lokaler/pfad#skills/x` funktioniert — erlaubt
+   den Round-Trip-Nachweis vor dem Push, ohne Remote.
+5. Arbeitsregel, bestätigt: Beispiele in `TOOL.md` erst schreiben, nachdem
+   die Referenz einmal lief — ein geratenes Godot-Fehlertext-Beispiel war
+   falsch, `tool check` hat es sofort gezeigt (D10 wirkt).
+
 ### M2 — Der Testlauf (unverändert, jetzt mit Dreischritt)
 
 Ein altes Projekt mit Skills und Speccify neu bauen — **jeder Skill durchläuft
