@@ -3,15 +3,17 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import AskBoPanel, { type AskBoInteraction } from "./components/AskBoPanel";
 import TerminalPanel from "./components/TerminalPanel";
-import ComposerView from "./views/ComposerView";
 import LibraryView from "./views/LibraryView";
+import ProjectsView from "./views/ProjectsView";
 import EnvironmentView from "./views/EnvironmentView";
 import ServersView from "./views/ServersView";
 import SettingsView from "./views/SettingsView";
 import KnowledgebasesView from "./views/KnowledgebasesView";
 
 const SECTIONS = [
-  { id: "composer", label: "Composer", view: <ComposerView /> },
+  // Projekte statt Composer (Plan projektfenster.md, D18; Rückbau des
+  // Composer-Codes folgt in P3).
+  { id: "projects", label: "Projekte", view: <ProjectsView /> },
   { id: "library", label: "Bibliothek", view: <LibraryView /> },
   { id: "knowledgebases", label: "Knowledgebases", view: <KnowledgebasesView /> },
   { id: "environment", label: "Umgebung", view: <EnvironmentView /> },
@@ -22,7 +24,7 @@ const SECTIONS = [
 type SectionId = (typeof SECTIONS)[number]["id"];
 
 export default function App() {
-  const [active, setActive] = useState<SectionId>("composer");
+  const [active, setActive] = useState<SectionId>("projects");
   const [sidebarVisible, setSidebarVisible] = useState(false);
   // Terminal erst beim ersten Öffnen über den Toggle mounten (sonst liefe
   // der Autostart-Command schon beim App-Start); danach gemountet lassen —

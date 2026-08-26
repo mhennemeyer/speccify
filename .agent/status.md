@@ -7,6 +7,17 @@
 - **Zuletzt aktualisiert:** 2026-08-21
 
 ## Nächste Schritte
+- **ZWEITER AKTIVER PLAN (parallel, BO-Ausnahme von der Ein-Plan-Regel):
+  [`plans/projektfenster.md`](./plans/projektfenster.md)** (2026-08-26).
+  Projekte in eigenen Fenstern (links Pläne/Skills/Tools/MCPs/Agent, Mitte
+  Inhalt, rechts Agent-Terminal im Projekt-cwd); **Hauptziel Windows**.
+  D14–D18: nativ in Rust lesen + per Agent handeln, eigene SPA je Fenster,
+  PTY windowsfähig, `speccify link` mit Junction/Kopie, **Composer entfällt**
+  (Rückbau P3). **P1 geliefert (2026-08-26)**: Projektfenster-Gerüst mit
+  Pläne-/Skills-Tab (lesend), Projekte-Tab statt Composer-Tab, Terminal mit
+  cwd=Projekt und Agent-Kommando pro Projekt (Default `claude`, F3), E2E am
+  eigenen Repo verifiziert. **Nächster Schritt: P2 Windows-Durchstich**
+  (zuerst Parallels = Windows-ARM, x86-Notebook kommt als Referenz).
 - **AKTIVER PLAN: [`plans/skills-und-tools.md`](./plans/skills-und-tools.md)**
   (Definition, 2026-08-20). Speccify wird **Skill- und Tool-Manager**: Skills
   definieren **Tool-Specs** (`tools/<name>/TOOL.md` — Inputs/Outputs als JSON

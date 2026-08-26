@@ -1,6 +1,6 @@
 ---
 lifecycle: active
-status: Bauen — D14–D18 entschieden, F1–F4 vom BO beantwortet (2026-08-26); nächster Schritt P1. Läuft parallel zu `skills-und-tools.md` (M2 bleibt dort das nächste Ziel; BO-Ausnahme von der Ein-Plan-Regel).
+status: Bauen — P1 geliefert 2026-08-26 (Projektfenster-Gerüst, E2E am eigenen Repo verifiziert); nächster Schritt P2 (Windows-Durchstich, zuerst Parallels). Läuft parallel zu `skills-und-tools.md` (M2 bleibt dort das nächste Ziel; BO-Ausnahme von der Ein-Plan-Regel).
 sessionId: projektfenster
 ---
 # Plan: Projektfenster — Pläne, Skills, Tools im Projekt verwalten (auch auf Windows)
@@ -134,7 +134,25 @@ UX gegen iKanban), dann **sofort** der Windows-Durchstich — er ist das
 Hauptziel und das einzige echte Risiko; die Tabs auszubauen ist danach
 planbare Arbeit auf beiden Plattformen zugleich.
 
-### P1 — Projektfenster-Gerüst (macOS)
+### P1 — Projektfenster-Gerüst (macOS) ✅ (2026-08-26)
+
+**Geliefert:** `project_cmd.rs` (Fenster-Registry Label→Wurzel,
+`project_open`/`project_current`/`project_recent`/`project_plans`/
+`project_skills`/`project_read_file`; Frontmatter/`expansions.yaml` via
+`serde_yaml`; Traversal-Guard), `terminal_open` mit optionalem
+`cwd`/`autostart` (Dashboard unverändert), Capability `project-*`,
+`ProjectShell` (`main.tsx` erkennt den Fenstertyp am Label — synchron,
+kein Flackern), Pläne-/Skills-Tab (Master-Detail, react-markdown,
+Herkunfts-Banner), Projekte-Tab statt Composer-Tab, Recent-Liste in
+eigener Datei `~/.speccify/recent-projects.json` (bewusst NICHT in
+AppSettings — die SettingsView schreibt das ganze Objekt zurück und
+hätte das Feld bei jedem Save geleert), Agent-Kommando pro Projekt in
+localStorage (F3). E2E am eigenen Repo per AX-Scripting verifiziert:
+Fenster öffnet, 2 aktive Pläne + Archiv (31), elf Skills mit Herkunft,
+Terminal startet in der Projektwurzel und tippt den Autostart vor.
+**Gelernt:** AX-`click` fokussiert WKWebView-Inputs nicht (`set focused`
+schon); `keystroke` erzeugt echte Events, die React sieht — AX-`set value`
+wäre an React vorbeigegangen.
 
 **Fertig heißt:** „Projekt öffnen" im Dashboard öffnet ein Fenster mit
 Drei-Bereiche-Layout; Pläne- und Skills-Tab zeigen echte Daten (lesend);

@@ -55,8 +55,10 @@ fn login_shell() -> String {
     std::env::var("SHELL").unwrap_or_else(|_| "/bin/zsh".into())
 }
 
-/// Öffnet ein Terminal im Working Dir (Settings) und tippt den
-/// Autostart-Command vor. → Startverzeichnis (für die UI-Anzeige).
+/// Öffnet ein Terminal und tippt den Autostart-Command vor. Ohne `cwd`/
+/// `autostart` gelten die App-Settings (Dashboard); das Projektfenster
+/// übergibt beides selbst (Plan projektfenster.md, P1: cwd = Projektwurzel,
+/// Agent-Kommando pro Projekt). → Startverzeichnis (für die UI-Anzeige).
 #[tauri::command]
 pub fn terminal_open(
     app: AppHandle,
@@ -64,12 +66,24 @@ pub fn terminal_open(
     id: String,
     cols: u16,
     rows: u16,
+    cwd: Option<String>,
+    autostart: Option<String>,
 ) -> Result<String, String> {
     let app_settings = settings::get_settings()?;
-    let raw_dir = app_settings
-        .working_dir
-        .ok_or("Kein Working Dir gesetzt — zuerst im Settings-Tab wählen.")?;
-    let cwd = settings::resolve_working_dir(&raw_dir)?;
+    let cwd = match cwd {
+        Some(dir) => settings::resolve_working_dir(&dir)?,
+        None => {
+            let raw_dir = app_settings
+                .working_dir
+                .ok_or("Kein Working Dir gesetzt — zuerst im Settings-Tab wählen.")?;
+            settings::resolve_working_dir(&raw_dir)?
+        }
+    };
+    // None = Settings-Default; Some("") = bewusst reine Shell.
+    let autostart = autostart
+        .unwrap_or(app_settings.terminal_autostart_command)
+        .trim()
+        .to_string();
 
     let pty = native_pty_system()
         .openpty(PtySize {
@@ -103,7 +117,6 @@ pub fn terminal_open(
 
     // Autostart-Command vortippen (die tty-Eingabe puffert, bis die Shell
     // liest). Leer = reines Terminal.
-    let autostart = app_settings.terminal_autostart_command.trim().to_string();
     if !autostart.is_empty() {
         let _ = writer.write_all(format!("{autostart}\r").as_bytes());
     }

@@ -16,7 +16,17 @@ interface TermOut {
   data: string;
 }
 
-export default function TerminalPanel({ visible }: { visible: boolean }) {
+// Ohne `cwd`/`autostart` gelten die App-Settings (Dashboard); das
+// Projektfenster übergibt beides (cwd = Projektwurzel, Agent-Kommando).
+export default function TerminalPanel({
+  visible,
+  cwd: cwdProp,
+  autostart,
+}: {
+  visible: boolean;
+  cwd?: string;
+  autostart?: string;
+}) {
   const containerRef = useRef<HTMLDivElement>(null);
   const terminalRef = useRef<Terminal | null>(null);
   const fitRef = useRef<FitAddon | null>(null);
@@ -84,6 +94,8 @@ export default function TerminalPanel({ visible }: { visible: boolean }) {
           id,
           cols: terminal.cols,
           rows: terminal.rows,
+          cwd: cwdProp,
+          autostart,
         });
         if (!disposed) setCwd(startedIn);
       } catch (error) {

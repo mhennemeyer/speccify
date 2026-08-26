@@ -1,5 +1,31 @@
 # Log: Speccify
 
+## 2026-08-26 (Projektfenster P1 — Gerüst, Pläne-/Skills-Tab, Terminal im Projekt)
+- **Neuer Plan [`plans/projektfenster.md`](./plans/projektfenster.md)**
+  (parallel zu `skills-und-tools.md`, BO-Ausnahme): Projekte in eigenen
+  Fenstern verwalten, Hauptziel Windows (iKanbanAi ist Swift/macOS-only).
+  D14–D18 mit BO entschieden; **Composer entfällt** (D18, Rückbau in P3).
+- **P1 geliefert**: `apps/desktop/src-tauri/src/project_cmd.rs` — Fenster je
+  Projekt (`WebviewWindow`, Label `project-<hash>`, Registry Label→Wurzel,
+  `project_current` statt URL-Zustand), Bestände nativ gelesen (D14):
+  `.agent/plans/` + `archive/` (Frontmatter via `serde_yaml`),
+  `.agent/skills/` + Herkunft aus `expansions.yaml`, `project_read_file` mit
+  Traversal-Guard, Recent-Liste in `~/.speccify/recent-projects.json`
+  (nicht in AppSettings — SettingsView-Roundtrip hätte sie geleert).
+  `terminal_open` nimmt optional `cwd`/`autostart`; `ProjectShell` mit
+  Drei-Bereiche-Layout, Pläne-/Skills-Tab (react-markdown), Tools/MCPs/
+  Agent als P3-Platzhalter; Dashboard: Projekte-Tab ersetzt Composer-Tab.
+  Capability-Fenster `["main", "project-*"]`.
+- **Verifiziert**: cargo test 22 ok (4 neue), clippy/fmt clean, tsc + Vite
+  grün; E2E per `tauri dev` + AX-Scripting (osascript) am eigenen Repo —
+  Fenster öffnet, 2 aktive Pläne + Archiv (31), elf Skills mit
+  Herkunfts-Banner, Terminal startet in der Projektwurzel, Autostart wird
+  vorgetippt, Recent-Liste + Wiederöffnen + localStorage-Persistenz geprüft.
+- **Gelernt**: AX-`click` fokussiert WKWebView-Inputs nicht — `set focused`
+  + `keystroke` (echte Events, React sieht sie); AX-`set value` ginge an
+  React vorbei. Fixture-Verzeichnisse in Rust-Tests je Test benennen
+  (parallele Ausführung, gleiche PID).
+
 ## 2026-08-21 (T3 — Evaluate: `speccify tool check`)
 - **`core/src/speccify_core/tool_check.py`**: Konformitätsläufer nach D7.
   Je Beispiel: Input als JSON auf stdin, stdout muss JSON sein und den

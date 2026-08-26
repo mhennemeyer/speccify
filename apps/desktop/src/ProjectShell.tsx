@@ -1,0 +1,167 @@
+// Projektfenster (Plan projektfenster.md, P1): drei Bereiche — links die
+// Bestände (Pläne, Skills, Tools, MCPs, Agent), Mitte der Inhalt des Tabs,
+// rechts das Agent-Terminal im Projekt-cwd. Die Wurzel kommt über
+// `project_current` (Fenster-Label → Registry, D15).
+
+import { useEffect, useState } from "react";
+import { invoke } from "@tauri-apps/api/core";
+import TerminalPanel from "./components/TerminalPanel";
+import { ErrorBox, Spinner } from "./components/ui";
+import PlansTab from "./views/project/PlansTab";
+import SkillsTab from "./views/project/SkillsTab";
+
+const TABS = [
+  { id: "plans", label: "Pläne" },
+  { id: "skills", label: "Skills" },
+  { id: "tools", label: "Tools" },
+  { id: "mcps", label: "MCPs" },
+  { id: "agent", label: "Agent" },
+] as const;
+
+type TabId = (typeof TABS)[number]["id"];
+
+function ComingInP3({ what }: { what: string }) {
+  return (
+    <p className="text-sm text-slate-500">
+      {what} kommt in P3 (Plan <code>projektfenster.md</code>) — bis dahin macht
+    das der Agent im Terminal rechts.
+    </p>
+  );
+}
+
+/** Agent-Kommando pro Projekt (F3: `claude` als Default, `codex` oder frei
+ *  wählbar). localStorage reicht für P1 — es ist eine UI-Präferenz. */
+function agentCommandKey(project: string) {
+  return `speccify.project.agentCommand:${project}`;
+}
+
+export default function ProjectShell() {
+  const [project, setProject] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [active, setActive] = useState<TabId>("plans");
+  const [agentCommand, setAgentCommand] = useState("claude");
+  const [terminalStarted, setTerminalStarted] = useState(false);
+
+  useEffect(() => {
+    void invoke<string | null>("project_current")
+      .then((root) => {
+        if (!root) {
+          setError("Dieses Fenster kennt kein Projekt (project_current leer).");
+          return;
+        }
+        setProject(root);
+        try {
+          const stored = localStorage.getItem(agentCommandKey(root));
+          if (stored !== null) setAgentCommand(stored);
+        } catch {
+          // localStorage nicht verfügbar — Default bleibt.
+        }
+      })
+      .catch((e) => setError(String(e)));
+  }, []);
+
+  const updateAgentCommand = (value: string) => {
+    setAgentCommand(value);
+    if (project) {
+      try {
+        localStorage.setItem(agentCommandKey(project), value);
+      } catch {
+        // dito
+      }
+    }
+  };
+
+  if (error) {
+    return (
+      <div className="p-6">
+        <ErrorBox message={error} />
+      </div>
+    );
+  }
+  if (!project) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-slate-50">
+        <Spinner large />
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex h-screen bg-slate-50 text-slate-900">
+      <nav className="flex w-40 shrink-0 flex-col border-r border-slate-200 bg-white p-3">
+        <h1
+          className="mb-1 truncate px-2 text-sm font-bold text-slate-700"
+          title={project}
+        >
+          {project.split("/").pop() || project}
+        </h1>
+        <p className="mb-4 truncate px-2 font-mono text-[10px] text-slate-400" title={project}>
+          {project}
+        </p>
+        {TABS.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActive(tab.id)}
+            className={`mb-1 rounded px-3 py-2 text-left text-sm ${
+              active === tab.id
+                ? "bg-slate-800 text-white"
+                : "text-slate-700 hover:bg-slate-100"
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </nav>
+
+      <main className="flex min-w-0 flex-1 flex-col overflow-hidden p-5">
+        {/* Tabs bleiben gemountet (nur versteckt): Wechsel sofortig, Fetch-State erhalten. */}
+        <div className={active === "plans" ? "min-h-0 flex-1" : "hidden"}>
+          <PlansTab project={project} />
+        </div>
+        <div className={active === "skills" ? "min-h-0 flex-1" : "hidden"}>
+          <SkillsTab project={project} />
+        </div>
+        <div className={active === "tools" ? "" : "hidden"}>
+          <ComingInP3 what="Der Tools-Tab (Specs + Status je Plattform)" />
+        </div>
+        <div className={active === "mcps" ? "" : "hidden"}>
+          <ComingInP3 what="Der MCPs-Tab (.mcp.json + Allowlist)" />
+        </div>
+        <div className={active === "agent" ? "" : "hidden"}>
+          <ComingInP3 what="Der Agent-Tab (CLAUDE.md/AGENTS.md)" />
+        </div>
+      </main>
+
+      <aside className="flex w-[480px] shrink-0 flex-col border-l border-slate-700 bg-slate-900">
+        {terminalStarted ? (
+          <TerminalPanel visible cwd={project} autostart={agentCommand} />
+        ) : (
+          <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6">
+            <label className="w-full max-w-xs">
+              <span className="mb-1 block text-xs font-medium text-slate-400">
+                Agent-Kommando (leer = nur Shell)
+              </span>
+              <input
+                value={agentCommand}
+                onChange={(event) => updateAgentCommand(event.target.value)}
+                placeholder="claude"
+                spellCheck={false}
+                className="w-full rounded border border-slate-600 bg-slate-800 px-3 py-2 font-mono text-sm text-slate-100"
+              />
+            </label>
+            <button
+              onClick={() => setTerminalStarted(true)}
+              className="rounded bg-slate-700 px-4 py-2 text-sm text-slate-200 hover:bg-slate-600"
+            >
+              Agent-Terminal starten
+            </button>
+            <p className="max-w-xs text-center text-xs text-slate-500">
+              Startet im Projektverzeichnis — der Agent findet Skills und Pläne
+              über <code>.claude/</code> und <code>.agent/</code> selbst.
+            </p>
+          </div>
+        )}
+      </aside>
+    </div>
+  );
+}

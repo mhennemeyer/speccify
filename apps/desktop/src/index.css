@@ -1,1 +1,91 @@
 @import "tailwindcss";
+
+/* Markdown-Anzeige (Pläne, SKILL.md) — kompaktes Dokument-Layout ohne
+   Typography-Plugin. */
+.markdown-body {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--color-slate-800);
+}
+.markdown-body h1 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 1.25rem 0 0.5rem;
+}
+.markdown-body h2 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: 1.25rem 0 0.4rem;
+  border-bottom: 1px solid var(--color-slate-200);
+  padding-bottom: 0.2rem;
+}
+.markdown-body h3 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 1rem 0 0.3rem;
+}
+.markdown-body p,
+.markdown-body ul,
+.markdown-body ol,
+.markdown-body table,
+.markdown-body blockquote,
+.markdown-body pre {
+  margin: 0 0 0.6rem;
+}
+.markdown-body ul {
+  list-style: disc;
+  padding-left: 1.25rem;
+}
+.markdown-body ol {
+  list-style: decimal;
+  padding-left: 1.25rem;
+}
+.markdown-body a {
+  color: var(--color-blue-700);
+  text-decoration: underline;
+}
+.markdown-body blockquote {
+  border-left: 3px solid var(--color-slate-300);
+  padding-left: 0.75rem;
+  color: var(--color-slate-600);
+}
+.markdown-body code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.8rem;
+  background: var(--color-slate-100);
+  border-radius: 0.25rem;
+  padding: 0.1rem 0.3rem;
+}
+.markdown-body pre {
+  background: var(--color-slate-900);
+  color: var(--color-slate-100);
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  overflow-x: auto;
+}
+.markdown-body pre code {
+  background: transparent;
+  color: inherit;
+  padding: 0;
+}
+.markdown-body table {
+  border-collapse: collapse;
+  display: block;
+  overflow-x: auto;
+}
+.markdown-body th,
+.markdown-body td {
+  border: 1px solid var(--color-slate-300);
+  padding: 0.3rem 0.6rem;
+  text-align: left;
+  vertical-align: top;
+}
+.markdown-body th {
+  background: var(--color-slate-100);
+  font-weight: 600;
+}
+.markdown-body hr {
+  border: 0;
+  border-top: 1px solid var(--color-slate-200);
+  margin: 1rem 0;
+}

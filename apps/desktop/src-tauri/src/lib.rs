@@ -11,6 +11,7 @@ use tauri::{AppHandle, Emitter, Manager, State};
 
 mod desktop_ui;
 mod engine;
+mod project_cmd;
 mod settings;
 mod sidecar;
 mod system_cmd;
@@ -398,6 +399,7 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .manage(Supervisor(Mutex::new(HashMap::new())))
+        .manage(project_cmd::ProjectWindows::default())
         .manage(terminal::Terminals::default())
         .manage(ask_bo)
         .setup(move |app| {
@@ -421,6 +423,12 @@ pub fn run() {
             spawn_process,
             kill_process,
             open_composer,
+            project_cmd::project_open,
+            project_cmd::project_current,
+            project_cmd::project_recent,
+            project_cmd::project_plans,
+            project_cmd::project_skills,
+            project_cmd::project_read_file,
             settings::get_settings,
             settings::save_settings,
             settings::briefing_status,
