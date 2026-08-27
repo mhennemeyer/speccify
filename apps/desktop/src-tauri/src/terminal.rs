@@ -3,7 +3,9 @@
 //! Dir aus den Settings. Output geht als `term-out`-Events ans Frontend
 //! (xterm.js), Input über `terminal_write`. Beim Öffnen wird der
 //! Autostart-Command aus den Settings in die Shell getippt (T0.5).
-//! macOS/Linux; Windows ist bewusst zurückgestellt.
+//! macOS/Linux: Login-Shell aus `$SHELL`; Windows (D16, Plan
+//! projektfenster.md): ConPTY via portable-pty, `pwsh` wenn auf dem PATH,
+//! sonst `powershell.exe` — und kein `-l` (das ist ein Unix-Login-Flag).
 
 use std::collections::HashMap;
 use std::io::{Read, Write};
@@ -51,8 +53,23 @@ struct TermExit {
     id: String,
 }
 
+#[cfg(not(windows))]
 fn login_shell() -> String {
     std::env::var("SHELL").unwrap_or_else(|_| "/bin/zsh".into())
+}
+
+#[cfg(windows)]
+fn login_shell() -> String {
+    let on_path = |name: &str| {
+        std::env::var_os("PATH")
+            .map(|path| std::env::split_paths(&path).any(|dir| dir.join(name).is_file()))
+            .unwrap_or(false)
+    };
+    if on_path("pwsh.exe") {
+        "pwsh.exe".into()
+    } else {
+        "powershell.exe".into()
+    }
 }
 
 /// Öffnet ein Terminal und tippt den Autostart-Command vor. Ohne `cwd`/
@@ -96,6 +113,7 @@ pub fn terminal_open(
 
     let shell = login_shell();
     let mut command = CommandBuilder::new(&shell);
+    #[cfg(not(windows))]
     command.arg("-l"); // Login-Shell: PATH/Profile des Users
     command.cwd(&cwd);
     command.env("TERM", "xterm-256color");

@@ -36,8 +36,7 @@ fn resolve_project_root(raw: &str) -> Result<PathBuf, String> {
         return Err("Kein Projektpfad angegeben.".into());
     }
     let path = if let Some(rest) = trimmed.strip_prefix("~/") {
-        let home = std::env::var("HOME").map_err(|_| "HOME ist nicht gesetzt.".to_string())?;
-        PathBuf::from(home).join(rest)
+        crate::settings::home_dir()?.join(rest)
     } else {
         PathBuf::from(trimmed)
     };
@@ -53,8 +52,7 @@ fn resolve_project_root(raw: &str) -> Result<PathBuf, String> {
 // Settings-Objekt zurück — ein Feld dort würde bei jedem Save geleert.
 
 fn recent_path() -> Result<PathBuf, String> {
-    let home = std::env::var("HOME").map_err(|_| "HOME ist nicht gesetzt.".to_string())?;
-    Ok(PathBuf::from(home)
+    Ok(crate::settings::home_dir()?
         .join(".speccify")
         .join("recent-projects.json"))
 }

@@ -24,9 +24,16 @@ impl Default for AppSettings {
     }
 }
 
+/// Home-Verzeichnis plattformneutral (Windows kennt kein `HOME`).
+pub(crate) fn home_dir() -> Result<PathBuf, String> {
+    std::env::var("HOME")
+        .or_else(|_| std::env::var("USERPROFILE"))
+        .map(PathBuf::from)
+        .map_err(|_| "Weder HOME noch USERPROFILE ist gesetzt.".to_string())
+}
+
 fn settings_path() -> Result<PathBuf, String> {
-    let home = std::env::var("HOME").map_err(|_| "HOME ist nicht gesetzt.".to_string())?;
-    Ok(PathBuf::from(home).join(".speccify").join("settings.json"))
+    Ok(home_dir()?.join(".speccify").join("settings.json"))
 }
 
 #[tauri::command]
@@ -90,8 +97,7 @@ pub(crate) fn resolve_working_dir(raw: &str) -> Result<PathBuf, String> {
         return Err("Kein Working Dir gesetzt (Settings).".into());
     }
     let path = if let Some(rest) = trimmed.strip_prefix("~/") {
-        let home = std::env::var("HOME").map_err(|_| "HOME ist nicht gesetzt.".to_string())?;
-        PathBuf::from(home).join(rest)
+        home_dir()?.join(rest)
     } else {
         PathBuf::from(trimmed)
     };

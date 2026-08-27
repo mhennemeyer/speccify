@@ -1,0 +1,70 @@
+[
+  {
+    "pattern": "dotnet build",
+    "permanent": true
+  },
+  {
+    "pattern": "dotnet test",
+    "permanent": true
+  },
+  {
+    "pattern": "dotnet run",
+    "permanent": true
+  },
+  {
+    "pattern": "dotnet --info",
+    "permanent": true
+  },
+  {
+    "pattern": "dotnet --version",
+    "permanent": true
+  },
+  {
+    "pattern": "cmd",
+    "permanent": true
+  },
+  {
+    "pattern": "powershell",
+    "permanent": true
+  },
+  {
+    "pattern": "git",
+    "permanent": true
+  },
+  {
+    "pattern": "winget",
+    "permanent": true
+  },
+  {
+    "pattern": "cargo",
+    "permanent": true
+  },
+  {
+    "pattern": "rustup",
+    "permanent": true
+  },
+  {
+    "pattern": "rustc --version",
+    "permanent": true
+  },
+  {
+    "pattern": "node --version",
+    "permanent": true
+  },
+  {
+    "pattern": "npm",
+    "permanent": true
+  },
+  {
+    "pattern": "pnpm",
+    "permanent": true
+  },
+  {
+    "pattern": "corepack",
+    "permanent": true
+  },
+  {
+    "pattern": "where",
+    "permanent": true
+  }
+]
