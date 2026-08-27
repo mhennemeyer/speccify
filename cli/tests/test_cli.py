@@ -42,6 +42,26 @@ def test_init_ignores_the_cache_and_links_the_agent(project: Path) -> None:
     assert (project / ".agent" / "skills").is_dir()
 
 
+def test_link_replaces_gits_symlink_husk(project: Path) -> None:
+    # Git ohne Symlink-Support (Windows-Default) checkt `.claude/skills` als
+    # Textdatei mit dem Zielpfad aus — link muss sie erkennen und ersetzen.
+    link = project / ".claude" / "skills"
+    link.unlink()
+    link.write_text("../.agent/skills", encoding="utf-8")
+    result = runner.invoke(app, ["link", "--project", str(project)])
+    assert result.exit_code == 0, result.output
+    assert link.is_symlink() or link.is_dir()
+
+
+def test_link_refuses_a_foreign_file(project: Path) -> None:
+    link = project / ".claude" / "skills"
+    link.unlink()
+    link.write_text("hier stand mal was anderes", encoding="utf-8")
+    result = runner.invoke(app, ["link", "--project", str(project)])
+    assert result.exit_code == 1
+    assert "is a file" in result.output
+
+
 def test_add_pins_the_playbook_and_its_child(project: Path) -> None:
     result = _add(project)
     assert result.exit_code == 0, result.output
