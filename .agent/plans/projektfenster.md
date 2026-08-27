@@ -1,6 +1,6 @@
 ---
 lifecycle: active
-status: Bauen — P1 geliefert 2026-08-26; P2-Kern geliefert 2026-08-27 (App läuft in der Parallels-VM auf Windows 11 ARM64: Projektfenster, Tabs, ConPTY-Terminal — E2E über den parallels-MCP + WebView2-CDP verifiziert). Offen aus P2: CI-Job (x64), D17 Junction, Claude-Code-Installation in der VM. Nächster Schritt P3. Läuft parallel zu `skills-und-tools.md` (BO-Ausnahme von der Ein-Plan-Regel).
+status: Bauen — P1 geliefert 2026-08-26; P2 geliefert 2026-08-27 (App läuft in der Parallels-VM auf Windows 11 ARM64; D17 Junction verifiziert, CI-Job windows-latest angelegt, ENTRYPOINT-Rätsel geklärt/gefixt, VM-Tests 21/22, Claude Code installiert und im Projektfenster-Terminal am Login-Prompt — Login macht der BO). Nächster Schritt P3. Läuft parallel zu `skills-und-tools.md` (BO-Ausnahme von der Ein-Plan-Regel).
 sessionId: projektfenster
 ---
 # Plan: Projektfenster — Pläne, Skills, Tools im Projekt verwalten (auch auf Windows)
@@ -170,7 +170,7 @@ das Terminal rechts startet in der Projektwurzel.
 4. Dogfooding: **dieses Repo** als Projekt öffnen — es hat Pläne, elf
    Skills, drei Tool-Specs.
 
-### P2 — Windows-Durchstich (Kern ✅ 2026-08-27)
+### P2 — Windows-Durchstich (✅ 2026-08-27 — Rest: claude-Login durch den BO, x86-Referenz)
 
 **Geliefert (in der Parallels-VM, Windows 11 ARM64, komplett ferngesteuert
 über den parallels-MCP vom Mac aus):** Toolchain in der VM (VS Build Tools
@@ -189,14 +189,47 @@ blockiert auf Windows beim Fenster-Bau den Main-Thread (wry#583), das
 Fenster blieb auf about:blank; Verbatim-Präfix `\\?\` von `canonicalize`
 abstreifen. Diagnose lief über WebView2-CDP (`:9222`), Sichtnachweis über
 `prlctl capture`.
-**Gelernt:** `cargo test`-Binaries brauchen VC-Redist (STATUS_ENTRYPOINT_
-NOT_FOUND war eine früher fehlende `vcruntime140.dll` — Redist zuerst
-prüfen); `prlctl exec` läuft als SYSTEM — interaktive Prozesse gehen über
-`schtasks /ru <user> /it`; laufende Exe sperrt den Rebuild (`taskkill`
+**Gelernt:** `prlctl exec` läuft als SYSTEM — interaktive Prozesse gehen
+über `schtasks /ru <user> /it`; laufende Exe sperrt den Rebuild (`taskkill`
 zuerst); in cmd niemals `%ERRORLEVEL%` in derselben Zeile prüfen.
-**Offen aus P2:** CI-Job `windows-latest` (x64), D17 (Junction in
-`speccify link`), `claude` in der VM installieren (dann der Skill-Test aus
-„Fertig heißt"), x86-Referenz wenn das Notebook da ist.
+
+**Nachtrag 2026-08-27 (P2-Restpunkte):**
+* **STATUS_ENTRYPOINT_NOT_FOUND geklärt** — es war nie VC-Redist: Tauri
+  importiert `TaskDialogIndirect`, das nur comctl32 **v6** exportiert; v6
+  lädt der Loader nur mit Common-Controls-Manifest. tauri-build hängt das
+  Manifest per `rustc-link-arg-bins` nur an die App-Exe — Test-Exen
+  starteten deshalb gar nicht. Fix: `/DELAYLOAD:comctl32.dll` in build.rs
+  (`50c0272`, erst `07e296f`); ein Manifest per `rustc-link-arg-tests`
+  scheiterte, weil das nur Integrationstests abdeckt, nicht Lib-Unittests.
+* **D17 ✅** — `speccify link` ersetzt Gits Symlink-Hülse (Textdatei aus
+  Checkout ohne Symlink-Recht) und fällt ohne Symlink-Privileg auf eine
+  **Junction** zurück (`9b0b71f`). In der VM als normaler Benutzer
+  verifiziert: `<JUNCTION> skills → C:\work\speccify\.agent\skills`, alle
+  elf Skills dahinter sichtbar.
+* **CI-Job `desktop-windows`** (windows-latest, x64): pnpm-Build, Sidecars
+  + resources-Platzhalter selbst herstellen (beides gitignored, sonst
+  scheitert schon `cargo check` an tauri_build), `cargo test` (`90336b3`).
+  Läuft beim nächsten Push.
+* **Drei weitere Windows-Bugs** aus dem ersten echten Testlauf (`50c0272`):
+  PATH-Auflösung fand `git.exe`/`claude.cmd` nicht (PATHEXT-Suche in
+  `sidecar::find_in_dir`, auch für den Doctor); Backslash-Pfade galten
+  nicht als explizit; Traversal-Guard ließ `/etc/passwd` durch (auf
+  Windows laufwerkslos ⇒ nicht `is_absolute`, jetzt `has_root`).
+  VM-Testlauf danach: **grün bis auf den PTY-Test** — ConPTY liefert im
+  cargo-test-Harness nichts (als SYSTEM wie als interaktiver Benutzer
+  reproduziert), obwohl dasselbe Muster im App-Terminal nachweislich
+  läuft; der Test ist auf Windows `ignore` mit Begründung (`2b46458`),
+  D16 bleibt über den E2E-Nachweis abgedeckt.
+* **Claude Code 2.1.247 in der VM installiert** und im Projektfenster-
+  Terminal gestartet (per CDP getippt): Onboarding läuft, steht am
+  **Login-Prompt** — den Login kann nur der BO machen. Stolperstein
+  fürs Produkt: PowerShell blockt das npm-Shim `claude.ps1`
+  (ExecutionPolicy); `claude.cmd` startet ohne Policy-Änderung → der
+  Terminal-Autostart sollte auf Windows `claude.cmd` bevorzugen (P3).
+
+**Offen aus P2:** `claude`-Login in der VM (BO) + danach der Skill-Test
+aus „Fertig heißt"; CI-Lauf beim nächsten Push beobachten; x86-Referenz
+wenn das Notebook da ist.
 
 **Fertig heißt:** Das P1-Fenster läuft unter Windows — App startet, Projekt
 öffnet, Tabs zeigen Daten, im Terminal läuft `claude` und findet die Skills

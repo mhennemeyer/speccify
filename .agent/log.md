@@ -1,5 +1,48 @@
 # Log: Speccify
 
+## 2026-08-27, später (Projektfenster P2 fertig — Junction, CI, ENTRYPOINT geklärt, Claude Code am Login)
+- **D17 ✅** `speccify link` (`9b0b71f`): erkennt Gits Symlink-Hülse (Checkout
+  ohne Symlink-Recht = Textdatei mit Zielpfad) und ersetzt sie; ohne
+  Symlink-Privileg **Junction-Fallback** (`_winapi.CreateJunction`, Ziel
+  absolut). In der VM als normaler Benutzer verifiziert: `<JUNCTION>
+  .claude\skills → C:\work\speccify\.agent\skills`, elf Skills sichtbar.
+  Merker: ein von SYSTEM angelegter `.venv` blockiert den Benutzer —
+  `uv sync`/`uv run` im Benutzerkontext laufen lassen.
+- **CI-Job `desktop-windows`** (`90336b3`, windows-latest/x64): pnpm-Build,
+  Sidecars aus dem Workspace bauen + `uv` vom Runner kopieren +
+  resources-Platzhalter (beides gitignored; ohne sie scheitert schon
+  `cargo check` am tauri-build-Skript — lokal nachgestellt). Dann
+  `cargo test -p speccify-desktop`. Erster Lauf beim nächsten Push.
+- **STATUS_ENTRYPOINT_NOT_FOUND war NIE VC-Redist** (Log von gestern
+  korrigiert): dumpbin zeigte den Import `TaskDialogIndirect` — den
+  exportiert nur comctl32 **v6**, und v6 kommt nur mit Common-Controls-
+  Manifest. tauri-build embedded das Manifest nur in bin-Targets
+  (`rustc-link-arg-bins`); Test-Exen starteten deshalb nicht. Erster
+  Versuch `rustc-link-arg-tests` + Manifest (`a798b65`) scheiterte:
+  cargo akzeptiert das nur mit Integrations-Test-Target und es deckt
+  Lib-Unittests nicht ab. Lösung **`/DELAYLOAD:comctl32.dll`**
+  (`50c0272` bzw. `07e296f`) — Tests rufen nie Dialoge, die App löst mit
+  ihrem Manifest v6 wie bisher.
+- Damit liefen die Tests erstmals wirklich auf Windows — **drei echte
+  Bugs** (`50c0272`): PATH-Suche ohne PATHEXT (`git.exe` unauffindbar —
+  betrifft Sidecar-Auflösung UND Doctor; jetzt `sidecar::find_in_dir`
+  mit .exe/.cmd/.bat/.com), Backslash-Pfade nicht als explizit erkannt,
+  Traversal-Guard ohne `has_root` (`/etc/passwd` ist auf Windows nicht
+  `is_absolute`). Danach 21/22 grün (SYSTEM-Kontext).
+- **PTY-Test**: hing (blockierendes `read` ohne wirksame Deadline) →
+  Reader-Thread + `recv_timeout` (`966f932`, plus `drop(slave)` nach dem
+  Spawn wie im echten `terminal_open`). ConPTY liefert im cargo-test-
+  Harness trotzdem nichts — als SYSTEM **und** als interaktiver Benutzer
+  (schtasks) reproduziert, während das App-Terminal mit demselben
+  Codepfad nachweislich läuft. Ursache offen; der Test ist auf Windows
+  jetzt `ignore` mit Begründung (`2b46458`), D16 bleibt E2E belegt.
+- **Claude Code 2.1.247 in der VM** (`npm i -g`): im Projektfenster-
+  Terminal per CDP gestartet — PowerShell blockt das npm-Shim
+  `claude.ps1` (ExecutionPolicy), **`claude.cmd` startet** → Onboarding
+  bis zum **Login-Prompt** (Screenshot). Login macht der BO; danach der
+  „Fertig heißt"-Skill-Test. P3-Merker: Autostart auf Windows sollte
+  `claude.cmd` bevorzugen.
+
 ## 2026-08-27 (Projektfenster P2 — die App läuft auf Windows)
 - **Durchstich komplett in der Parallels-VM (Windows 11 ARM64), ohne die VM
   je anzufassen**: alles über den `speccify-parallels-mcp` (:8766, Allowlist
