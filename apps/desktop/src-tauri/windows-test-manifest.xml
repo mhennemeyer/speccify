@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!-- Common-Controls v6 fuer cargo-test-Binaries (build.rs): Tauri importiert
+     TaskDialogIndirect, das nur comctl32 v6 exportiert. Die App-Exe bekommt
+     ihr Manifest von tauri-build — Test-Exen sonst nicht, und der Loader
+     bricht mit STATUS_ENTRYPOINT_NOT_FOUND ab (Plan projektfenster.md, P2). -->
+<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
+  <dependency>
+    <dependentAssembly>
+      <assemblyIdentity
+        type="win32"
+        name="Microsoft.Windows.Common-Controls"
+        version="6.0.0.0"
+        processorArchitecture="*"
+        publicKeyToken="6595b64144ccf1df"
+        language="*"
+      />
+    </dependentAssembly>
+  </dependency>
+</assembly>
