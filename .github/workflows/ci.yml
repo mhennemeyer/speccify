@@ -200,6 +200,66 @@ jobs:
       - name: Test
         run: cargo test --workspace --exclude speccify-desktop
 
+  # Windows-Referenz für den Projektfenster-Plan (projektfenster.md, P2):
+  # ohne eigene Windows-Maschine im Alltag ist dieser Job das Netz gegen
+  # Regressionen wie #[cfg(windows)]-Pfade, HOME/USERPROFILE und Verbatim-
+  # Pfade. x64 deckt zusätzlich die Nicht-ARM-Seite ab (VM ist ARM64).
+  desktop-windows:
+    name: apps/desktop windows (typecheck + build + cargo test)
+    runs-on: windows-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.3
+          run_install: false
+
+      - name: Install dependencies (frozen lockfile, workspace root)
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck + build (Tauri app frontend)
+        run: pnpm --filter speccify-desktop build
+
+      - name: Install pinned toolchain
+        run: rustup show
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install uv (Sidecar-Quelle)
+        uses: astral-sh/setup-uv@v3
+
+      # tauri_build::build() verlangt die externalBin- und resources-Einträge
+      # aus tauri.conf.json schon bei cargo check/test — beide Ordner sind
+      # gitignored (scripts/build_sidecars.sh füllt sie lokal), also hier
+      # selbst herstellen: MCPs bauen, uv vom Runner nehmen, resources-Glob
+      # mit einem Platzhalter füttern (echte Payload ist Bundling, nicht CI).
+      - name: Build sidecars (debug)
+        shell: pwsh
+        run: |
+          cargo build -p speccify-exec-mcp -p speccify-discovery-mcp -p speccify-parallels-mcp
+          $triple = (rustc -vV | Select-String '^host: (.+)$').Matches.Groups[1].Value
+          $bin = "apps/desktop/src-tauri/binaries"
+          New-Item -ItemType Directory -Force $bin | Out-Null
+          foreach ($name in "speccify-exec-mcp", "speccify-discovery-mcp", "speccify-parallels-mcp") {
+            Copy-Item "target/debug/$name.exe" "$bin/$name-$triple.exe"
+          }
+          Copy-Item (Get-Command uv).Source "$bin/uv-$triple.exe"
+          New-Item -ItemType Directory -Force "apps/desktop/src-tauri/resources" | Out-Null
+          Set-Content "apps/desktop/src-tauri/resources/ci-placeholder.txt" "CI: erfuellt nur den resources-Glob."
+
+      - name: Cargo test (speccify-desktop, windows)
+        run: cargo test -p speccify-desktop
+
   desktop-frontend:
     name: apps/desktop frontend (typecheck + build)
     runs-on: ubuntu-latest
