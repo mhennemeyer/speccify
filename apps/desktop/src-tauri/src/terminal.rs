@@ -241,6 +241,9 @@ mod tests {
         command.cwd(std::env::temp_dir());
         command.env("TERM", "xterm-256color");
         let mut child = pty.slave.spawn_command(command).unwrap();
+        // Slave nach dem Spawn schließen wie in terminal_open (dort fällt er
+        // beim Return aus dem Scope) — auf ConPTY kommt sonst kein Output an.
+        drop(pty.slave);
 
         let mut writer = pty.master.take_writer().unwrap();
         writer.write_all(b"echo pty-smoke-ok; exit\r").unwrap();
