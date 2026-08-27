@@ -94,11 +94,13 @@ pub fn project_recent() -> Vec<String> {
 
 /// Öffnet das Projektfenster (oder fokussiert das vorhandene). Lädt die
 /// eigene SPA; die erkennt am Fenster-Label den Projektmodus und holt die
-/// Wurzel über `project_current` (D15).
+/// Wurzel über `project_current` (D15). **async**, weil ein synchroner
+/// Command auf Windows beim Fenster-Bau den Main-Thread blockiert
+/// (wry#583) — das Fenster blieb dort auf about:blank.
 #[tauri::command]
-pub fn project_open(
+pub async fn project_open(
     app: AppHandle,
-    state: State<ProjectWindows>,
+    state: State<'_, ProjectWindows>,
     path: String,
 ) -> Result<String, String> {
     let root = resolve_project_root(&path)?;
