@@ -93,7 +93,7 @@ export default function ProjectShell() {
           className="mb-1 truncate px-2 text-sm font-bold text-slate-700"
           title={project}
         >
-          {project.split("/").pop() || project}
+          {project.split(/[\\/]/).pop() || project}
         </h1>
         <p className="mb-4 truncate px-2 font-mono text-[10px] text-slate-400" title={project}>
           {project}

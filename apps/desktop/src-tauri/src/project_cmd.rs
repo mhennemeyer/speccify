@@ -43,8 +43,23 @@ fn resolve_project_root(raw: &str) -> Result<PathBuf, String> {
     if !path.is_dir() {
         return Err(format!("Kein Verzeichnis: {}", path.display()));
     }
-    path.canonicalize()
-        .map_err(|e| format!("{}: {e}", path.display()))
+    let canonical = path
+        .canonicalize()
+        .map_err(|e| format!("{}: {e}", path.display()))?;
+    Ok(strip_verbatim(canonical))
+}
+
+/// Windows-`canonicalize` liefert Verbatim-Pfade (`\\?\C:\…`) — fürs UI und
+/// als cwd-String unbrauchbar. Präfix abstreifen; anderswo ein No-op.
+fn strip_verbatim(path: PathBuf) -> PathBuf {
+    let text = path.to_string_lossy();
+    if let Some(rest) = text.strip_prefix(r"\\?\UNC\") {
+        return PathBuf::from(format!(r"\\{rest}"));
+    }
+    if let Some(rest) = text.strip_prefix(r"\\?\") {
+        return PathBuf::from(rest.to_string());
+    }
+    path
 }
 
 // --- Zuletzt geöffnete Projekte ---------------------------------------------
