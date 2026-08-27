@@ -245,21 +245,30 @@ mod tests {
         let mut writer = pty.master.take_writer().unwrap();
         writer.write_all(b"echo pty-smoke-ok; exit\r").unwrap();
 
+        // Lesen im eigenen Thread: `read` blockiert, und wenn die Shell im
+        // PTY gar nichts liefert (z. B. Session 0 ohne Interaktivität), würde
+        // eine Deadline in der Leseschleife nie geprüft — der Test hinge.
         let mut reader = pty.master.try_clone_reader().unwrap();
-        let mut collected = String::new();
-        let mut buffer = [0u8; 4096];
-        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(15);
-        while std::time::Instant::now() < deadline {
-            match reader.read(&mut buffer) {
-                Ok(0) | Err(_) => break,
-                Ok(count) => {
-                    collected.push_str(&String::from_utf8_lossy(&buffer[..count]));
-                    if collected.contains("pty-smoke-ok") {
-                        break;
+        let (sender, receiver) = std::sync::mpsc::channel();
+        std::thread::spawn(move || {
+            let mut collected = String::new();
+            let mut buffer = [0u8; 4096];
+            loop {
+                match reader.read(&mut buffer) {
+                    Ok(0) | Err(_) => break,
+                    Ok(count) => {
+                        collected.push_str(&String::from_utf8_lossy(&buffer[..count]));
+                        if collected.contains("pty-smoke-ok") {
+                            break;
+                        }
                     }
                 }
             }
-        }
+            let _ = sender.send(collected);
+        });
+        let collected = receiver
+            .recv_timeout(std::time::Duration::from_secs(20))
+            .unwrap_or_default();
         let _ = child.kill();
         assert!(
             collected.contains("pty-smoke-ok"),

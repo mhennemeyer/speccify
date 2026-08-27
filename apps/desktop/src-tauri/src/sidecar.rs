@@ -37,7 +37,7 @@ pub fn resolve_in(
     bundle_dir: Option<&Path>,
     path_dirs: &[PathBuf],
 ) -> (Option<PathBuf>, BinarySource) {
-    if command.contains('/') {
+    if command.contains('/') || (cfg!(windows) && command.contains('\\')) {
         let explicit = PathBuf::from(command);
         return if explicit.is_file() {
             (Some(explicit), BinarySource::Explicit)
@@ -46,18 +46,34 @@ pub fn resolve_in(
         };
     }
     if let Some(dir) = bundle_dir {
-        let candidate = dir.join(command);
-        if candidate.is_file() {
+        if let Some(candidate) = find_in_dir(dir, command) {
             return (Some(candidate), BinarySource::Bundled);
         }
     }
     for dir in path_dirs {
-        let candidate = dir.join(command);
-        if candidate.is_file() {
+        if let Some(candidate) = find_in_dir(dir, command) {
             return (Some(candidate), BinarySource::Path);
         }
     }
     (None, BinarySource::Missing)
+}
+
+/// `dir/command`, auf Windows zusätzlich mit den üblichen PATHEXT-Endungen —
+/// dort heißt `git` auf der Platte `git.exe`, `claude` womöglich `claude.cmd`.
+pub(crate) fn find_in_dir(dir: &Path, command: &str) -> Option<PathBuf> {
+    let exact = dir.join(command);
+    if exact.is_file() {
+        return Some(exact);
+    }
+    if cfg!(windows) && Path::new(command).extension().is_none() {
+        for ext in [".exe", ".cmd", ".bat", ".com"] {
+            let candidate = dir.join(format!("{command}{ext}"));
+            if candidate.is_file() {
+                return Some(candidate);
+            }
+        }
+    }
+    None
 }
 
 /// Verzeichnis neben dem laufenden App-Binary (dort landen die Sidecars).

@@ -109,10 +109,10 @@ fn find_all(binary: &str) -> Vec<PathBuf> {
     let mut resolved_seen = HashSet::new();
     let mut found = Vec::new();
     for dir in search_dirs() {
-        let candidate = dir.join(binary);
-        if !candidate.is_file() {
+        // Windows: `git` liegt als `git.exe` auf der Platte (PATHEXT).
+        let Some(candidate) = crate::sidecar::find_in_dir(&dir, binary) else {
             continue;
-        }
+        };
         let resolved = candidate
             .canonicalize()
             .unwrap_or_else(|_| candidate.clone());

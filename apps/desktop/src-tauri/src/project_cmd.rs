@@ -375,7 +375,10 @@ pub fn project_skills(project: String) -> Result<Vec<SkillEntry>, String> {
 pub fn project_read_file(project: String, file: String) -> Result<String, String> {
     let root = resolve_project_root(&project)?;
     let relative = Path::new(&file);
+    // has_root fängt Windows-Sonderfälle wie `/etc/passwd` oder `\x` —
+    // dort laufwerkslos und damit NICHT is_absolute, aber trotzdem raus.
     let escapes = relative.is_absolute()
+        || relative.has_root()
         || relative
             .components()
             .any(|component| matches!(component, Component::ParentDir | Component::Prefix(_)));
