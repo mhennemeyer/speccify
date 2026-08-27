@@ -1,5 +1,35 @@
 # Log: Speccify
 
+## 2026-08-27 (Projektfenster P2 — die App läuft auf Windows)
+- **Durchstich komplett in der Parallels-VM (Windows 11 ARM64), ohne die VM
+  je anzufassen**: alles über den `speccify-parallels-mcp` (:8766, Allowlist
+  erweitert: cmd/powershell/git/cargo/rustup/npm/pnpm/winget/where — BO hat
+  die Freigabe pauschal erteilt), Diagnose über WebView2-CDP (:9222,
+  `node`-Skripte in der VM), Sichtnachweis über `prlctl capture`,
+  interaktive Starts über `schtasks /ru mhennemeyer /it` (prlctl exec läuft
+  als SYSTEM; `--current-user` hängt).
+- **Toolchain**: VS Build Tools (VCTools+ARM64+SDK) nach `C:\BuildTools`,
+  LLVM 20 (woa64) für `ring`s clang-Zwang, pnpm 10, uv 0.12.0 ARM64 als
+  Sidecar, VC-Redist ARM64 (Test-Binaries starteten sonst mit
+  STATUS_ENTRYPOINT_NOT_FOUND). Git/Node/Rust (aarch64-msvc) waren schon da.
+- **Drei echte Windows-Bugs gefunden und gefixt**: (1) `66fb7e6`
+  Shell-Wahl `pwsh`/`powershell.exe` + `-l` nur auf Unix, `home_dir()` mit
+  USERPROFILE-Fallback; (2) `25d000a` **`project_open` muss async sein** —
+  synchroner Command blockiert auf Windows den Main-Thread beim
+  Webview-Bau (wry#583), das Projektfenster blieb auf about:blank;
+  (3) `ae0b75e` `\\?\`-Verbatim-Präfix von `canonicalize` abstreifen
+  (Titel, Recent-Liste, Terminal-cwd).
+- **Endzustand verifiziert**: Projektfenster auf Windows mit Pläne-Tab
+  (2 aktive + Archiv 31), Skills-Tab (elf Skills), **Agent-Terminal =
+  PowerShell über ConPTY, cwd `C:\work\speccify`, Autostart vorgetippt**
+  (`whoami` → `mhennemeyer`). Screenshot im Termin; `cargo test` in der VM
+  grün. Offen: CI (x64), D17 Junction, `claude` in der VM.
+- **Arbeitsnotizen**: Repo-Klon vom Home-Share braucht
+  `git config --global --add safe.directory '\\Mac\Home\...'`;
+  `\\Mac\Home` zeigt nur Desktop/Documents/Downloads (Skript-Austausch über
+  `~/Desktop/Work/vm-scripts/`); Rebuild erst nach `taskkill` (Exe-Lock);
+  `%ERRORLEVEL%` nie in derselben cmd-Zeile.
+
 ## 2026-08-26 (Projektfenster P1 — Gerüst, Pläne-/Skills-Tab, Terminal im Projekt)
 - **Neuer Plan [`plans/projektfenster.md`](./plans/projektfenster.md)**
   (parallel zu `skills-und-tools.md`, BO-Ausnahme): Projekte in eigenen

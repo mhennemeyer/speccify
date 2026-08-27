@@ -1,6 +1,6 @@
 ---
 lifecycle: active
-status: Bauen — P1 geliefert 2026-08-26 (Projektfenster-Gerüst, E2E am eigenen Repo verifiziert); nächster Schritt P2 (Windows-Durchstich, zuerst Parallels). Läuft parallel zu `skills-und-tools.md` (M2 bleibt dort das nächste Ziel; BO-Ausnahme von der Ein-Plan-Regel).
+status: Bauen — P1 geliefert 2026-08-26; P2-Kern geliefert 2026-08-27 (App läuft in der Parallels-VM auf Windows 11 ARM64: Projektfenster, Tabs, ConPTY-Terminal — E2E über den parallels-MCP + WebView2-CDP verifiziert). Offen aus P2: CI-Job (x64), D17 Junction, Claude-Code-Installation in der VM. Nächster Schritt P3. Läuft parallel zu `skills-und-tools.md` (BO-Ausnahme von der Ein-Plan-Regel).
 sessionId: projektfenster
 ---
 # Plan: Projektfenster — Pläne, Skills, Tools im Projekt verwalten (auch auf Windows)
@@ -170,7 +170,33 @@ das Terminal rechts startet in der Projektwurzel.
 4. Dogfooding: **dieses Repo** als Projekt öffnen — es hat Pläne, elf
    Skills, drei Tool-Specs.
 
-### P2 — Windows-Durchstich
+### P2 — Windows-Durchstich (Kern ✅ 2026-08-27)
+
+**Geliefert (in der Parallels-VM, Windows 11 ARM64, komplett ferngesteuert
+über den parallels-MCP vom Mac aus):** Toolchain in der VM (VS Build Tools
+VCTools+ARM64+SDK nach `C:\BuildTools`, LLVM/clang für `ring`, pnpm 10,
+VC-Redist; Git/Node/Rust waren da), Repo-Klon vom Home-Share nach
+`C:\work\speccify` (safe.directory-Ausnahme für den UNC-Pfad nötig),
+tsc+Vite grün, `cargo build -p speccify-desktop` grün (Sidecars + `uv.exe`
+nach `binaries/`, `resources/`-Platzhalter — Engine-Payload bewusst nicht),
+`cargo test` grün. App läuft; Projektfenster öffnet, Pläne-/Skills-Tab
+zeigen echte Daten, **Terminal = PowerShell über ConPTY, cwd =
+`C:\work\speccify`, Autostart vorgetippt** (D16 verifiziert per `whoami`).
+**Drei Windows-Fixes daraus** (Commits `66fb7e6`, `25d000a`, `ae0b75e`):
+`login_shell()` für Windows + `-l` nur auf Unix; `home_dir()` mit
+USERPROFILE-Fallback; **`project_open` async** — ein synchroner Command
+blockiert auf Windows beim Fenster-Bau den Main-Thread (wry#583), das
+Fenster blieb auf about:blank; Verbatim-Präfix `\\?\` von `canonicalize`
+abstreifen. Diagnose lief über WebView2-CDP (`:9222`), Sichtnachweis über
+`prlctl capture`.
+**Gelernt:** `cargo test`-Binaries brauchen VC-Redist (STATUS_ENTRYPOINT_
+NOT_FOUND war eine früher fehlende `vcruntime140.dll` — Redist zuerst
+prüfen); `prlctl exec` läuft als SYSTEM — interaktive Prozesse gehen über
+`schtasks /ru <user> /it`; laufende Exe sperrt den Rebuild (`taskkill`
+zuerst); in cmd niemals `%ERRORLEVEL%` in derselben Zeile prüfen.
+**Offen aus P2:** CI-Job `windows-latest` (x64), D17 (Junction in
+`speccify link`), `claude` in der VM installieren (dann der Skill-Test aus
+„Fertig heißt"), x86-Referenz wenn das Notebook da ist.
 
 **Fertig heißt:** Das P1-Fenster läuft unter Windows — App startet, Projekt
 öffnet, Tabs zeigen Daten, im Terminal läuft `claude` und findet die Skills
