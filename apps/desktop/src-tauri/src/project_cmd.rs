@@ -369,14 +369,11 @@ pub fn project_skills(project: String) -> Result<Vec<SkillEntry>, String> {
         .collect())
 }
 
-/// Eine Datei unterhalb der Projektwurzel lesen (Pläne, SKILL.md, …).
-/// Relative Pfade ohne `..` — mehr braucht die Anzeige nicht.
-#[tauri::command]
-pub fn project_read_file(project: String, file: String) -> Result<String, String> {
-    let root = resolve_project_root(&project)?;
-    let relative = Path::new(&file);
-    // has_root fängt Windows-Sonderfälle wie `/etc/passwd` oder `\x` —
-    // dort laufwerkslos und damit NICHT is_absolute, aber trotzdem raus.
+/// Traversal-Guard für read **und** write: nur relative Pfade ohne `..`,
+/// ohne Wurzel (has_root fängt Windows-Sonderfälle wie `/etc/passwd` —
+/// dort laufwerkslos und damit NICHT is_absolute) und ohne Laufwerkspräfix.
+fn safe_project_path(root: &Path, file: &str) -> Result<PathBuf, String> {
+    let relative = Path::new(file);
     let escapes = relative.is_absolute()
         || relative.has_root()
         || relative
@@ -385,8 +382,390 @@ pub fn project_read_file(project: String, file: String) -> Result<String, String
     if escapes {
         return Err(format!("Pfad zeigt aus dem Projekt heraus: {file}"));
     }
-    let path = root.join(relative);
+    Ok(root.join(relative))
+}
+
+/// Eine Datei unterhalb der Projektwurzel lesen (Pläne, SKILL.md, …).
+#[tauri::command]
+pub fn project_read_file(project: String, file: String) -> Result<String, String> {
+    let root = resolve_project_root(&project)?;
+    let path = safe_project_path(&root, &file)?;
     std::fs::read_to_string(&path).map_err(|e| format!("{}: {e}", path.display()))
+}
+
+/// Eine Datei unterhalb der Projektwurzel schreiben (D20: Plan-Editor).
+/// Legt keine Verzeichnisse an — der Zielordner muss existieren.
+#[tauri::command]
+pub fn project_write_file(project: String, file: String, content: String) -> Result<(), String> {
+    let root = resolve_project_root(&project)?;
+    let path = safe_project_path(&root, &file)?;
+    std::fs::write(&path, content).map_err(|e| format!("{}: {e}", path.display()))
+}
+
+// --- Board (D19: iKanbanAI-Format) -------------------------------------------
+// `.agent/board/<id>.md`: flaches Frontmatter (`key: value`, kein
+// verschachteltes YAML) zwischen `---`-Zeilen, danach der Markdown-Body.
+// Zusatzfelder bleiben byte-stabil erhalten — beim Verschieben wird darum
+// NUR die `station:`-Zeile umgeschrieben.
+
+pub const BOARD_STATIONS: [&str; 3] = ["Backlog", "Doing", "Done"];
+
+#[derive(Serialize)]
+pub struct TicketEntry {
+    /// Relativ zur Projektwurzel (Schlüssel für `project_board_move`).
+    file: String,
+    id: String,
+    title: String,
+    station: String,
+    assignee: Option<String>,
+    created: Option<String>,
+    ready: bool,
+    needs_human: bool,
+    /// Backlog-Sortierung (iKanban R5a): `order` → `created` → `id`.
+    order: Option<i64>,
+    body: String,
+}
+
+/// Flaches Frontmatter: Zeilen zwischen erster und zweiter `---`-Zeile,
+/// jede als `key: value` (erste `:`-Trennung). Kein YAML-Parser — die
+/// iKanban-Dateien sind flach, und wir wollen sie byte-stabil lassen.
+fn parse_flat_frontmatter(text: &str) -> Option<(Vec<(String, String)>, &str)> {
+    let mut lines = text.split_inclusive('\n');
+    if lines.next()?.trim_end() != "---" {
+        return None;
+    }
+    let mut fields = Vec::new();
+    let mut consumed = text.find('\n')? + 1;
+    for line in lines {
+        if line.trim_end() == "---" {
+            let body = &text[consumed + line.len()..];
+            return Some((fields, body.strip_prefix('\n').unwrap_or(body)));
+        }
+        if let Some((key, value)) = line.split_once(':') {
+            fields.push((key.trim().to_string(), value.trim().to_string()));
+        }
+        consumed += line.len();
+    }
+    None
+}
+
+fn flat_lookup<'a>(fields: &'a [(String, String)], key: &str) -> Option<&'a str> {
+    fields
+        .iter()
+        .find(|(k, _)| k.eq_ignore_ascii_case(key))
+        .map(|(_, v)| v.as_str())
+}
+
+fn flat_truthy(fields: &[(String, String)], key: &str) -> bool {
+    matches!(
+        flat_lookup(fields, key)
+            .map(str::to_ascii_lowercase)
+            .as_deref(),
+        Some("true" | "yes" | "1")
+    )
+}
+
+/// Tickets aus `.agent/board/`. Fehlender Ordner ⇒ leere Liste; die
+/// Spalten-Sortierung (Backlog: order → created → id) macht das Frontend.
+#[tauri::command]
+pub fn project_board(project: String) -> Result<Vec<TicketEntry>, String> {
+    let root = resolve_project_root(&project)?;
+    let board_dir = root.join(".agent/board");
+    let Ok(entries) = std::fs::read_dir(&board_dir) else {
+        return Ok(Vec::new());
+    };
+    let mut paths: Vec<PathBuf> = entries
+        .filter_map(Result::ok)
+        .map(|entry| entry.path())
+        .filter(|path| path.extension().is_some_and(|ext| ext == "md"))
+        .collect();
+    paths.sort();
+    let mut tickets = Vec::new();
+    for path in paths {
+        let Ok(text) = std::fs::read_to_string(&path) else {
+            continue;
+        };
+        let Some((fields, body)) = parse_flat_frontmatter(&text) else {
+            continue;
+        };
+        let stem = path
+            .file_stem()
+            .map(|stem| stem.to_string_lossy().into_owned())
+            .unwrap_or_default();
+        let Some(station) = flat_lookup(&fields, "station") else {
+            continue;
+        };
+        tickets.push(TicketEntry {
+            file: path
+                .strip_prefix(&root)
+                .unwrap_or(&path)
+                .to_string_lossy()
+                .into_owned(),
+            id: flat_lookup(&fields, "id").unwrap_or(&stem).to_string(),
+            title: flat_lookup(&fields, "title").unwrap_or(&stem).to_string(),
+            station: station.to_string(),
+            assignee: flat_lookup(&fields, "assignee").map(str::to_string),
+            created: flat_lookup(&fields, "created").map(str::to_string),
+            ready: flat_truthy(&fields, "ready"),
+            needs_human: flat_truthy(&fields, "needs_human"),
+            order: flat_lookup(&fields, "order").and_then(|raw| raw.parse().ok()),
+            body: body.to_string(),
+        });
+    }
+    Ok(tickets)
+}
+
+/// Verschiebt ein Ticket in eine andere Station: ersetzt **nur** die
+/// `station:`-Zeile im Frontmatter, alles andere bleibt byte-stabil —
+/// iKanbanAI beobachtet das Verzeichnis und zieht live nach.
+#[tauri::command]
+pub fn project_board_move(project: String, file: String, station: String) -> Result<(), String> {
+    if !BOARD_STATIONS.contains(&station.as_str()) {
+        return Err(format!("Unbekannte Station: {station}"));
+    }
+    let root = resolve_project_root(&project)?;
+    let path = safe_project_path(&root, &file)?;
+    if !path.starts_with(root.join(".agent/board")) {
+        return Err(format!("Kein Board-Ticket: {file}"));
+    }
+    let text = std::fs::read_to_string(&path).map_err(|e| format!("{}: {e}", path.display()))?;
+    let mut in_frontmatter = false;
+    let mut replaced = false;
+    let mut out = String::with_capacity(text.len());
+    for line in text.split_inclusive('\n') {
+        if line.trim_end() == "---" {
+            in_frontmatter = !in_frontmatter;
+            out.push_str(line);
+            continue;
+        }
+        if in_frontmatter && !replaced {
+            if let Some((key, _)) = line.split_once(':') {
+                if key.trim().eq_ignore_ascii_case("station") {
+                    let ending = if line.ends_with("\r\n") {
+                        "\r\n"
+                    } else if line.ends_with('\n') {
+                        "\n"
+                    } else {
+                        ""
+                    };
+                    out.push_str(&format!("station: {station}{ending}"));
+                    replaced = true;
+                    continue;
+                }
+            }
+        }
+        out.push_str(line);
+    }
+    if !replaced {
+        return Err(format!("Keine station:-Zeile im Frontmatter: {file}"));
+    }
+    std::fs::write(&path, out).map_err(|e| format!("{}: {e}", path.display()))
+}
+
+// --- Tools (P3: TOOL.md + Status je Plattform) --------------------------------
+
+#[derive(Serialize)]
+pub struct ToolPlatform {
+    name: String,
+    status: Option<String>,
+    checked: Option<String>,
+}
+
+#[derive(Serialize)]
+pub struct ToolEntry {
+    name: String,
+    /// TOOL.md relativ zur Projektwurzel (für `project_read_file`).
+    file: String,
+    description: Option<String>,
+    /// Aus welchen Skills der Spec stammt (`expansions.yaml`, tools.<n>.from).
+    from: Vec<String>,
+    platforms: Vec<ToolPlatform>,
+    /// Dateien im Tool-Ordner außer TOOL.md (Implementierungen, Referenzen).
+    files: Vec<String>,
+}
+
+fn expansion_tools(root: &Path) -> HashMap<String, (Vec<String>, Vec<ToolPlatform>)> {
+    let Ok(text) = std::fs::read_to_string(root.join(".agent/speccify/expansions.yaml")) else {
+        return HashMap::new();
+    };
+    let Ok(value) = serde_yaml::from_str::<serde_yaml::Value>(&text) else {
+        return HashMap::new();
+    };
+    let Some(tools) = value.get("tools").and_then(|tools| tools.as_mapping()) else {
+        return HashMap::new();
+    };
+    tools
+        .iter()
+        .filter_map(|(name, entry)| {
+            let name = name.as_str()?.to_string();
+            let from = entry
+                .get("from")
+                .and_then(|from| from.as_sequence())
+                .map(|from| {
+                    from.iter()
+                        .filter_map(|skill| skill.as_str().map(str::to_string))
+                        .collect()
+                })
+                .unwrap_or_default();
+            let platforms = entry
+                .get("platforms")
+                .and_then(|platforms| platforms.as_mapping())
+                .map(|platforms| {
+                    platforms
+                        .iter()
+                        .filter_map(|(platform, details)| {
+                            let platform = platform.as_str()?.to_string();
+                            // Je nach Stand String (`implemented`) oder
+                            // Mapping (`{status, checked}`).
+                            let (status, checked) = match details {
+                                serde_yaml::Value::String(status) => (Some(status.clone()), None),
+                                other => (
+                                    other
+                                        .get("status")
+                                        .and_then(|s| s.as_str())
+                                        .map(str::to_string),
+                                    other
+                                        .get("checked")
+                                        .and_then(|c| c.as_str())
+                                        .map(str::to_string),
+                                ),
+                            };
+                            Some(ToolPlatform {
+                                name: platform,
+                                status,
+                                checked,
+                            })
+                        })
+                        .collect()
+                })
+                .unwrap_or_default();
+            Some((name, (from, platforms)))
+        })
+        .collect()
+}
+
+/// Tools aus `.agent/tools/` mit Status je Plattform aus `expansions.yaml`.
+#[tauri::command]
+pub fn project_tools(project: String) -> Result<Vec<ToolEntry>, String> {
+    let root = resolve_project_root(&project)?;
+    let mut origins = expansion_tools(&root);
+    let tools_dir = root.join(".agent/tools");
+    let Ok(entries) = std::fs::read_dir(&tools_dir) else {
+        return Ok(Vec::new());
+    };
+    let mut dirs: Vec<PathBuf> = entries
+        .filter_map(Result::ok)
+        .map(|entry| entry.path())
+        .filter(|path| path.join("TOOL.md").is_file())
+        .collect();
+    dirs.sort();
+    Ok(dirs
+        .into_iter()
+        .map(|dir| {
+            let name = dir
+                .file_name()
+                .map(|name| name.to_string_lossy().into_owned())
+                .unwrap_or_default();
+            let tool_md = dir.join("TOOL.md");
+            let frontmatter = std::fs::read_to_string(&tool_md)
+                .ok()
+                .and_then(|text| split_frontmatter(&text).0);
+            let mut files: Vec<String> = std::fs::read_dir(&dir)
+                .map(|entries| {
+                    entries
+                        .filter_map(Result::ok)
+                        .map(|entry| entry.file_name().to_string_lossy().into_owned())
+                        .filter(|file| file != "TOOL.md")
+                        .collect()
+                })
+                .unwrap_or_default();
+            files.sort();
+            let (from, platforms) = origins.remove(&name).unwrap_or_default();
+            ToolEntry {
+                file: tool_md
+                    .strip_prefix(&root)
+                    .unwrap_or(&tool_md)
+                    .to_string_lossy()
+                    .into_owned(),
+                description: frontmatter_str(&frontmatter, "description"),
+                from,
+                platforms,
+                files,
+                name,
+            }
+        })
+        .collect())
+}
+
+/// Die Plattform, auf der die App gerade läuft — der Tools-Tab zeigt damit
+/// „fehlt auf dieser Plattform" an (Sprache von `expansions.yaml`).
+#[tauri::command]
+pub fn project_platform() -> &'static str {
+    if cfg!(windows) {
+        "windows"
+    } else if cfg!(target_os = "macos") {
+        "macos"
+    } else {
+        "linux"
+    }
+}
+
+// --- MCPs (F2: .mcp.json + Allowlist) -----------------------------------------
+
+#[derive(Serialize)]
+pub struct McpInfo {
+    /// `mcpServers` aus `.mcp.json` (roh — die UI zeigt Name + Details).
+    servers: serde_json::Value,
+    /// `permissions.allow` aus `.claude/settings.json`.
+    allow: Vec<String>,
+    /// `permissions.allow` aus `.claude/settings.local.json`.
+    allow_local: Vec<String>,
+}
+
+fn permissions_allow(path: &Path) -> Vec<String> {
+    std::fs::read_to_string(path)
+        .ok()
+        .and_then(|text| serde_json::from_str::<serde_json::Value>(&text).ok())
+        .and_then(|value| {
+            value
+                .get("permissions")?
+                .get("allow")?
+                .as_array()
+                .map(|allow| {
+                    allow
+                        .iter()
+                        .filter_map(|entry| entry.as_str().map(str::to_string))
+                        .collect()
+                })
+        })
+        .unwrap_or_default()
+}
+
+/// Projektbezogene MCP-Server und Claude-Allowlist (lesend, F2).
+#[tauri::command]
+pub fn project_mcps(project: String) -> Result<McpInfo, String> {
+    let root = resolve_project_root(&project)?;
+    let servers = std::fs::read_to_string(root.join(".mcp.json"))
+        .ok()
+        .and_then(|text| serde_json::from_str::<serde_json::Value>(&text).ok())
+        .and_then(|value| value.get("mcpServers").cloned())
+        .unwrap_or(serde_json::Value::Null);
+    Ok(McpInfo {
+        servers,
+        allow: permissions_allow(&root.join(".claude/settings.json")),
+        allow_local: permissions_allow(&root.join(".claude/settings.local.json")),
+    })
+}
+
+/// Welche Agent-Konfigurationsdateien es im Projekt gibt (Agent-Tab).
+#[tauri::command]
+pub fn project_agent_files(project: String) -> Result<Vec<String>, String> {
+    let root = resolve_project_root(&project)?;
+    Ok(["CLAUDE.md", "AGENTS.md", ".agent/AGENT.md"]
+        .into_iter()
+        .filter(|candidate| root.join(candidate).is_file())
+        .map(str::to_string)
+        .collect())
 }
 
 #[cfg(test)]
@@ -480,6 +859,100 @@ mod tests {
         let (broken, body) = split_frontmatter("---\n[kein: yaml\n---\n# B\n");
         assert!(broken.is_none());
         assert_eq!(body, "# B\n");
+    }
+
+    #[test]
+    fn board_reads_tickets_and_moves_byte_stable() {
+        let dir = project_fixture("board");
+        std::fs::create_dir_all(dir.join(".agent/board")).unwrap();
+        // Zusatzfelder + CRLF-fremde Details bewusst dabei: move darf NUR
+        // die station-Zeile anfassen (D19, byte-stabiler Rest).
+        let ticket = "---\nid: t-1\ntitle: Fenster testen\nstation: Backlog\ncreated: 2026-08-28T06:00:00Z\norder: 2\nready: true\ncustom: bleibt  erhalten\n---\n\n# Fenster testen\n\nBody bleibt unangetastet.\n";
+        std::fs::write(dir.join(".agent/board/t-1.md"), ticket).unwrap();
+        std::fs::write(
+            dir.join(".agent/board/t-2.md"),
+            "---\ntitle: Ohne id\nstation: Done\n---\nFertig.\n",
+        )
+        .unwrap();
+        let project = dir.to_string_lossy().into_owned();
+
+        let tickets = project_board(project.clone()).unwrap();
+        assert_eq!(tickets.len(), 2);
+        let first = &tickets[0];
+        assert_eq!(first.id, "t-1");
+        assert_eq!(first.title, "Fenster testen");
+        assert_eq!(first.station, "Backlog");
+        assert_eq!(first.order, Some(2));
+        assert!(first.ready);
+        assert!(!first.needs_human);
+        assert!(first.body.contains("Body bleibt"));
+        // Ohne id-Feld zählt der Dateistamm.
+        assert_eq!(tickets[1].id, "t-2");
+
+        project_board_move(project.clone(), first.file.clone(), "Doing".into()).unwrap();
+        let moved = std::fs::read_to_string(dir.join(".agent/board/t-1.md")).unwrap();
+        assert_eq!(moved, ticket.replace("station: Backlog", "station: Doing"));
+
+        let unknown = project_board_move(project, "t-1.md".into(), "Doing".into()).unwrap_err();
+        assert!(unknown.contains("Kein Board-Ticket"));
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn write_file_honors_the_traversal_guard() {
+        let dir = project_fixture("write");
+        let project = dir.to_string_lossy().into_owned();
+        project_write_file(
+            project.clone(),
+            ".agent/plans/aktuell.md".into(),
+            "---\nlifecycle: active\n---\n# Neu\n".into(),
+        )
+        .unwrap();
+        assert!(std::fs::read_to_string(dir.join(".agent/plans/aktuell.md"))
+            .unwrap()
+            .contains("# Neu"));
+        for evil in ["../raus.md", "/etc/passwd"] {
+            let error = project_write_file(project.clone(), evil.into(), "x".into()).unwrap_err();
+            assert!(error.contains("aus dem Projekt heraus"), "{evil} → {error}");
+        }
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn tools_carry_platform_status_from_expansions() {
+        let dir = project_fixture("tools");
+        std::fs::create_dir_all(dir.join(".agent/tools/verify-something")).unwrap();
+        std::fs::write(
+            dir.join(".agent/tools/verify-something/TOOL.md"),
+            "---\nname: verify-something\ndescription: Prueft etwas.\n---\n# Spec\n",
+        )
+        .unwrap();
+        std::fs::write(
+            dir.join(".agent/tools/verify-something/macos.sh"),
+            "#!/bin/sh\n",
+        )
+        .unwrap();
+        std::fs::write(
+            dir.join(".agent/speccify/expansions.yaml"),
+            "schema_version: 1\nskills: {}\ntools:\n  verify-something:\n    from:\n    - alpha\n    platforms:\n      macos:\n        status: verified\n        checked: '2026-08-28'\n",
+        )
+        .unwrap();
+        let project = dir.to_string_lossy().into_owned();
+
+        let tools = project_tools(project).unwrap();
+        assert_eq!(tools.len(), 1);
+        let tool = &tools[0];
+        assert_eq!(tool.name, "verify-something");
+        assert_eq!(tool.description.as_deref(), Some("Prueft etwas."));
+        assert_eq!(tool.from, vec!["alpha".to_string()]);
+        assert_eq!(tool.files, vec!["macos.sh".to_string()]);
+        assert_eq!(tool.platforms.len(), 1);
+        assert_eq!(tool.platforms[0].name, "macos");
+        assert_eq!(tool.platforms[0].status.as_deref(), Some("verified"));
+        assert_eq!(tool.platforms[0].checked.as_deref(), Some("2026-08-28"));
+
+        let _ = std::fs::remove_dir_all(&dir);
     }
 
     /// Ein Projekt, das noch kein `.agent/` hat, ist kein Fehler — die Tabs
