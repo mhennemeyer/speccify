@@ -1,6 +1,6 @@
 ---
 lifecycle: active
-status: Bauen — P1 geliefert 2026-08-26; P2 geliefert 2026-08-27 (App läuft in der Parallels-VM auf Windows 11 ARM64; D17 Junction verifiziert, CI-Job windows-latest angelegt, ENTRYPOINT-Rätsel geklärt/gefixt, VM-Tests 21/22, Claude Code installiert und im Projektfenster-Terminal am Login-Prompt — Login macht der BO). Nächster Schritt P3. Läuft parallel zu `skills-und-tools.md` (BO-Ausnahme von der Ein-Plan-Regel).
+status: Bauen — P1 geliefert 2026-08-26; P2 geliefert 2026-08-27, „Fertig heißt" bestanden 2026-08-28 (claude läuft eingeloggt im Projektfenster-Terminal auf Windows und listet alle elf Projekt-Skills hinter der Junction). Nächster Schritt P3 (Tabs + Composer-Rückbau); offen nur noch CI-Erstlauf beim nächsten Push und die x86-Referenz. Läuft parallel zu `skills-und-tools.md` (BO-Ausnahme von der Ein-Plan-Regel).
 sessionId: projektfenster
 ---
 # Plan: Projektfenster — Pläne, Skills, Tools im Projekt verwalten (auch auf Windows)
@@ -227,8 +227,15 @@ zuerst); in cmd niemals `%ERRORLEVEL%` in derselben Zeile prüfen.
   (ExecutionPolicy); `claude.cmd` startet ohne Policy-Änderung → der
   Terminal-Autostart sollte auf Windows `claude.cmd` bevorzugen (P3).
 
-**Offen aus P2:** `claude`-Login in der VM (BO) + danach der Skill-Test
-aus „Fertig heißt"; CI-Lauf beim nächsten Push beobachten; x86-Referenz
+**„Fertig heißt" erfüllt (2026-08-28):** BO hat claude in der VM
+eingeloggt (Claude Max, Opus 5); auf die Frage nach den Projekt-Skills
+listet claude im Projektfenster-Terminal **alle elf Skills hinter der
+Junction** (apple-developer-id-cert … storekit2-subscription-paywall,
+inkl. speccify) — der komplette Satz aus „App startet, Projekt öffnet,
+Tabs zeigen Daten, im Terminal läuft claude und findet die Skills" ist
+damit wörtlich eingelöst.
+
+**Offen aus P2:** CI-Lauf beim nächsten Push beobachten; x86-Referenz
 wenn das Notebook da ist.
 
 **Fertig heißt:** Das P1-Fenster läuft unter Windows — App startet, Projekt

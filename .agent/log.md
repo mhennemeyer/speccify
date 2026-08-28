@@ -1,5 +1,15 @@
 # Log: Speccify
 
+## 2026-08-28 (Projektfenster P2 — „Fertig heißt" bestanden)
+- BO hat claude in der VM autorisiert (Claude Max, Opus 5). Frage per CDP
+  in die laufende Session im Projektfenster-Terminal getippt: „Welche
+  Skills stehen dir in diesem Projekt zur Verfügung?" → claude listet
+  **alle elf Projekt-Skills hinter der Junction** (apple-developer-id-cert
+  … storekit2-subscription-paywall, inkl. speccify), dazu seine eigenen
+  gebündelten Skills. Der P2-Zielsatz — App startet, Projekt öffnet, Tabs
+  zeigen Daten, im Terminal läuft claude und findet die Skills — ist damit
+  wörtlich eingelöst. P2 zu; weiter mit P3.
+
 ## 2026-08-27, später (Projektfenster P2 fertig — Junction, CI, ENTRYPOINT geklärt, Claude Code am Login)
 - **D17 ✅** `speccify link` (`9b0b71f`): erkennt Gits Symlink-Hülse (Checkout
   ohne Symlink-Recht = Textdatei mit Zielpfad) und ersetzt sie; ohne
