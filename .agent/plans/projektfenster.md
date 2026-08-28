@@ -1,6 +1,6 @@
 ---
 lifecycle: active
-status: Bauen — P1 geliefert 2026-08-26; P2 geliefert 2026-08-27, „Fertig heißt" bestanden 2026-08-28 (claude läuft eingeloggt im Projektfenster-Terminal auf Windows und listet alle elf Projekt-Skills hinter der Junction). P3 in Arbeit (BO-Erweiterung 2026-08-28: Board-Tab im iKanbanAI-Format D19, Plan-Editor D20); offen aus P2 nur CI-Erstlauf beim nächsten Push und die x86-Referenz. Läuft parallel zu `skills-und-tools.md` (BO-Ausnahme von der Ein-Plan-Regel).
+status: Bauen — P1 geliefert 2026-08-26; P2 geliefert 2026-08-27, „Fertig heißt" bestanden 2026-08-28 (claude läuft eingeloggt im Projektfenster-Terminal auf Windows und listet alle elf Projekt-Skills hinter der Junction). P3-Kern geliefert 2026-08-28: Board-Tab (D19, iKanbanAI-Format, Verschieben byte-stabil), Plan-Editor (D20), Tools-/MCPs-/Agent-Tab, Composer-Rückbau (D18) — auf macOS E2E und auf Windows in der VM verifiziert. Offen: CI-Erstlauf beim nächsten Push, x86-Referenz. Läuft parallel zu `skills-und-tools.md` (BO-Ausnahme von der Ein-Plan-Regel).
 sessionId: projektfenster
 ---
 # Plan: Projektfenster — Pläne, Skills, Tools im Projekt verwalten (auch auf Windows)
@@ -279,7 +279,22 @@ derselbe — nur nichts aus dem Parallels-Erfolg über x64-Installer schließen.
    — das Dashboard darf auf Windows vorerst nackt sein; nur das
    Projektfenster muss stehen.
 
-### P3 — Tabs vervollständigen (erweitert 2026-08-28: Board + Plan-Editor)
+### P3 — Tabs vervollständigen (Kern ✅ 2026-08-28)
+
+**Geliefert:** Board-Tab (D19: `.agent/board/*.md` nativ gelesen, eigener
+Flat-Parser, Verschieben ersetzt nur die `station:`-Zeile — auf macOS E2E
+belegt, Datei diff-gleich bis auf die Zeile), Plan-Editor (D20:
+lifecycle/status als Formular + Body-Editor, `project_write_file` mit
+geteiltem Traversal-Guard, unbekannte Frontmatter-Zeilen bleiben
+wörtlich), Tools-Tab (Status je Plattform, „Fehlt auf dieser Plattform
+(windows)“ in der VM gezeigt), MCPs-Tab (Server + Allowlist aus
+settings.json und settings.local.json), Agent-Tab (CLAUDE.md/AGENTS.md/
+.agent/AGENT.md + Agent-Kommando; Windows-Default `claude.cmd`),
+**Composer-Rückbau komplett** (apps/composer, open_composer samt
+Backend-Spawn-Helfern, /ui-Mount + composer_dist, CI-Jobs composer/
+composer-e2e, Payload- und Skript-Anteile, Doku). Verifikation: 228
+Pytest, 25 Rust-Desktop-Tests (7 project_cmd auch in der VM), Frontend-
+Build, E2E-Fixture-Projekt auf macOS, Tab-Check per CDP auf Windows.
 
 **Fertig heißt:** Tools-, MCPs- und Agent-Tab zeigen ihre Bestände; der
 Tools-Tab macht Plattform-Lücken sichtbar; das **Board** (D19) zeigt die

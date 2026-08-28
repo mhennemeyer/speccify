@@ -1,5 +1,41 @@
 # Log: Speccify
 
+## 2026-08-28, später (Projektfenster P3 — Board, Plan-Editor, alle Tabs, Composer-Rückbau)
+- **BO-Erweiterung + Entscheide**: Board im Projektfenster (D19, Format:
+  **iKanbanAI lesen** — das liegt ohnehin im Projekt: `.agent/board/<id>.md`,
+  flaches Frontmatter, Stationen Backlog/Doing/Done, Backlog-Sortierung
+  `order → created → id`); Pläne **editierbar** (D20, strukturiert + Body).
+  Format aus dem iKanbanAi-Quelltext gelesen (Tickets/TicketStore.swift,
+  nur lesend).
+- **Board-Tab (D19)**: Rust `project_board` (eigener Flat-Parser, kein
+  serde_yaml — byte-Stabilität) + `project_board_move` (ersetzt NUR die
+  `station:`-Zeile; Guard: nur `.agent/board/`, nur bekannte Stationen).
+  Frontend drei Spalten, Karten mit `ready`/`braucht BO`-Badges,
+  Ticket-Detail als Markdown, Verschieben per Pfeil-Knopf. E2E auf macOS:
+  Ticket verschoben, Datei diff-gleich bis auf die station-Zeile —
+  iKanbanAI zieht per DirectoryWatcher live nach.
+- **Plan-Editor (D20)**: `project_write_file` (gleicher Traversal-Guard wie
+  read, geteilt in `safe_project_path`), Formular lifecycle/status +
+  Body-Editor; unbekannte Frontmatter-Zeilen bleiben wörtlich erhalten.
+  E2E: Status ersetzt, Body ergänzt, Frontmatter intakt.
+- **Tools-/MCPs-/Agent-Tab**: `project_tools` (TOOL.md + `tools:`-Sektion
+  aus expansions.yaml, Status je Plattform, „fehlt auf dieser Plattform"
+  prominent + `project_platform`), `project_mcps` (`.mcp.json` +
+  `permissions.allow` aus settings.json **und** settings.local.json),
+  `project_agent_files` (CLAUDE.md/AGENTS.md/.agent/AGENT.md) + Agent-
+  Kommando-Feld im Agent-Tab. Windows-Default des Agent-Kommandos jetzt
+  **`claude.cmd`** (P2-Befund ExecutionPolicy).
+- **Composer-Rückbau (D18)**: `apps/composer/` + ComposerView gelöscht;
+  lib.rs ohne open_composer/BackendLaunch/free_port/wait_for_port;
+  Web-Backend ohne `/ui`-Mount und `composer_dist`; ci.yml ohne
+  `composer`/`composer-e2e`-Jobs; build_engine_payload.sh packt nur noch
+  Engine + Skills; dev.sh/dev-up.sh/release.yml/Doku bereinigt;
+  pnpm-workspace ohne apps/composer. Nebenfund: neuere mypy-Version
+  moniert dict-Invarianz in `_resolve_reference` → `Mapping` (`fbd0dc2`).
+- **Verifikation**: 228 Pytest, 25 Rust-Desktop-Tests, Frontend-Build,
+  ruff + mypy clean; E2E am Fixture-Projekt auf macOS (alle sechs Tabs,
+  Board-Move, Editor-Save per AX-Automation). Windows-Check läuft.
+
 ## 2026-08-28 (Projektfenster P2 — „Fertig heißt" bestanden)
 - BO hat claude in der VM autorisiert (Claude Max, Opus 5). Frage per CDP
   in die laufende Session im Projektfenster-Terminal getippt: „Welche

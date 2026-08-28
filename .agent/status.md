@@ -9,15 +9,18 @@
 ## Nächste Schritte
 - **ZWEITER AKTIVER PLAN (parallel, BO-Ausnahme von der Ein-Plan-Regel):
   [`plans/projektfenster.md`](./plans/projektfenster.md)** (2026-08-26).
-  Projekte in eigenen Fenstern (links Pläne/Skills/Tools/MCPs/Agent, Mitte
-  Inhalt, rechts Agent-Terminal im Projekt-cwd); **Hauptziel Windows**.
-  D14–D18: nativ in Rust lesen + per Agent handeln, eigene SPA je Fenster,
-  PTY windowsfähig, `speccify link` mit Junction/Kopie, **Composer entfällt**
-  (Rückbau P3). **P1 geliefert (2026-08-26)**: Projektfenster-Gerüst mit
-  Pläne-/Skills-Tab (lesend), Projekte-Tab statt Composer-Tab, Terminal mit
-  cwd=Projekt und Agent-Kommando pro Projekt (Default `claude`, F3), E2E am
-  eigenen Repo verifiziert. **Nächster Schritt: P2 Windows-Durchstich**
-  (zuerst Parallels = Windows-ARM, x86-Notebook kommt als Referenz).
+  Projekte in eigenen Fenstern (links Board/Pläne/Skills/Tools/MCPs/Agent,
+  Mitte Inhalt, rechts Agent-Terminal im Projekt-cwd); **Hauptziel Windows**.
+  **P1 geliefert (2026-08-26)**, **P2 geliefert + abgenommen (2026-08-27/28)**:
+  App läuft in der Parallels-VM (Windows 11 ARM64), D17-Junction verifiziert,
+  CI-Job `desktop-windows`, `claude` läuft eingeloggt im Projektfenster-
+  Terminal und findet alle elf Skills hinter der Junction. **P3-Kern
+  geliefert (2026-08-28)**: Board-Tab im iKanbanAI-Format (D19,
+  `.agent/board/*.md`, Verschieben byte-stabil), Plan-Editor (D20,
+  strukturiert + Body via `project_write_file`), Tools-/MCPs-/Agent-Tab,
+  **Composer-Rückbau (D18)** komplett (apps/composer, open_composer,
+  /ui-Mount, Payload-/CI-Anteile). Offen: Windows-Check von P3, CI-Erstlauf
+  beim nächsten Push, x86-Referenz wenn das Notebook da ist.
 - **AKTIVER PLAN: [`plans/skills-und-tools.md`](./plans/skills-und-tools.md)**
   (Definition, 2026-08-20). Speccify wird **Skill- und Tool-Manager**: Skills
   definieren **Tool-Specs** (`tools/<name>/TOOL.md` — Inputs/Outputs als JSON
