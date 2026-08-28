@@ -1,6 +1,6 @@
 ---
 lifecycle: active
-status: Bauen — P1 geliefert 2026-08-26; P2 geliefert 2026-08-27, „Fertig heißt" bestanden 2026-08-28 (claude läuft eingeloggt im Projektfenster-Terminal auf Windows und listet alle elf Projekt-Skills hinter der Junction). Nächster Schritt P3 (Tabs + Composer-Rückbau); offen nur noch CI-Erstlauf beim nächsten Push und die x86-Referenz. Läuft parallel zu `skills-und-tools.md` (BO-Ausnahme von der Ein-Plan-Regel).
+status: Bauen — P1 geliefert 2026-08-26; P2 geliefert 2026-08-27, „Fertig heißt" bestanden 2026-08-28 (claude läuft eingeloggt im Projektfenster-Terminal auf Windows und listet alle elf Projekt-Skills hinter der Junction). P3 in Arbeit (BO-Erweiterung 2026-08-28: Board-Tab im iKanbanAI-Format D19, Plan-Editor D20); offen aus P2 nur CI-Erstlauf beim nächsten Push und die x86-Referenz. Läuft parallel zu `skills-und-tools.md` (BO-Ausnahme von der Ein-Plan-Regel).
 sessionId: projektfenster
 ---
 # Plan: Projektfenster — Pläne, Skills, Tools im Projekt verwalten (auch auf Windows)
@@ -126,6 +126,24 @@ Was schon da ist und was der Plan nur verbinden muss:
   Web-Backend, Payload-/CI-Anteile) ist eigener Aufräumschritt in P3 —
   nicht nebenbei, damit P1/P2 klein bleiben. Damit fällt auch die alte
   Rahmenbedingung „Composer muss agent-bedienbar bleiben" weg.
+* **D19 — Board-Tab im iKanbanAI-Format** (BO, 2026-08-28: „Wir wollen
+  auch das Board hier abbilden", Format-Entscheid: iKanbanAI-Format
+  lesen). iKanbanAI legt das Board ohnehin **im Projekt** ab:
+  `.agent/board/<id>.md`, flaches Frontmatter (`key: value`, kein
+  verschachteltes YAML) mit `id`/`title`/`station`/`assignee`/`created`
+  (ISO8601 UTC); Zusatzfelder (`order`, `ready`, `needs_human`, …)
+  bleiben **byte-stabil** erhalten. Stationen fix: `Backlog`, `Doing`
+  (Anzeige „In Progress"), `Done`. Sortierung: Backlog `order` (fehlend
+  = ans Ende) → `created` → `id`; Doing/Done nach `created`. Speccify
+  liest nativ in Rust (D14) und schreibt beim Verschieben **nur die
+  `station:`-Zeile** um (byte-stabiler Rest) — iKanbanAI beobachtet das
+  Verzeichnis und zieht live nach; beide Apps zeigen dasselbe Board.
+* **D20 — Pläne editierbar: strukturiert + Body** (BO, 2026-08-28
+  „Ist gewünscht!", Form-Entscheid): Frontmatter-Felder (lifecycle,
+  status, …) als Formular, darunter der Markdown-Body als Editor;
+  Speichern über einen neuen Command `project_write_file` mit demselben
+  Traversal-Guard wie `project_read_file` (nur unterhalb der
+  Projektwurzel, kein `..`/absolut/`has_root`).
 
 ## Meilensteine
 
@@ -261,30 +279,42 @@ derselbe — nur nichts aus dem Parallels-Erfolg über x64-Installer schließen.
    — das Dashboard darf auf Windows vorerst nackt sein; nur das
    Projektfenster muss stehen.
 
-### P3 — Tabs vervollständigen
+### P3 — Tabs vervollständigen (erweitert 2026-08-28: Board + Plan-Editor)
 
 **Fertig heißt:** Tools-, MCPs- und Agent-Tab zeigen ihre Bestände; der
-Tools-Tab macht Plattform-Lücken sichtbar.
+Tools-Tab macht Plattform-Lücken sichtbar; das **Board** (D19) zeigt die
+iKanbanAI-Tickets und kann sie verschieben; Pläne sind **editierbar**
+(D20) und die Änderung landet auf der Platte.
 
-1. Tools-Tab: TOOL.md-Ansicht, Status je Plattform aus `expansions.yaml`,
+1. **Board-Tab (D19, BO-Erweiterung):** `.agent/board/*.md` nativ lesen,
+   drei Spalten mit iKanban-Sortierung, Ticket-Detail (Body als
+   Markdown), Verschieben zwischen Stationen (nur `station:`-Zeile
+   umschreiben). `ready`/`needs_human` als Badges.
+2. **Plan-Editor (D20, BO-Erweiterung):** im Pläne-Tab bearbeiten —
+   Frontmatter-Felder als Formular + Body-Editor, Speichern via
+   `project_write_file` (Guard wie read).
+3. Tools-Tab: TOOL.md-Ansicht, Status je Plattform aus `expansions.yaml`,
    „fehlt auf dieser Plattform" prominent (die Brücke zum Terminal:
    der Agent implementiert, `tool check` verifiziert).
-2. MCPs-Tab: `.mcp.json` **und** `permissions.allow` aus
+4. MCPs-Tab: `.mcp.json` **und** `permissions.allow` aus
    `.claude/settings.json` (F2) — zunächst lesend, Bearbeiten nach Bedarf.
-3. Agent-Tab: `CLAUDE.md`/`AGENTS.md` anzeigen; Agent-Kommando-Wahl
+5. Agent-Tab: `CLAUDE.md`/`AGENTS.md` anzeigen; Agent-Kommando-Wahl
    (`claude`/`codex`/frei) pro Projekt, falls nicht schon in P1 nötig.
-4. **Composer-Rückbau (D18):** `apps/composer`, `open_composer`/
+   Windows-Merker: Autostart `claude` → `claude.cmd` bevorzugen
+   (ExecutionPolicy blockt das ps1-Shim, P2-Befund).
+6. **Composer-Rückbau (D18):** `apps/composer`, `open_composer`/
    Fenster-Code, `/ui`-Mount im Web-Backend, Payload-/CI-Anteile,
    Doku-Verweise.
-5. Feinschliff aus dem P1/P2-Gebrauch (was der eigene Gebrauch verlangt,
+7. Feinschliff aus dem P1/P2-Gebrauch (was der eigene Gebrauch verlangt,
    gewinnt gegen diese Liste).
 
 ### P4 — Nach Bedarf (bewusst offen)
 
 Kandidaten, erst nach Gebrauchsevidenz aus P1–P3: Aktionen in der UI
 (expand anstoßen = Prompt ins Terminal tippen statt eigener Code-Pfad),
-Plan-Board statt Liste (iKanban-Anleihe), ask_bo im Projektfenster,
-Windows-Distribution (Installer, Signierung).
+Ticket-Anlegen/-Editieren im Board (P3 liest + verschiebt nur),
+Board-Live-Watcher (P3 lädt bei Tab-Wechsel/Refresh), ask_bo im
+Projektfenster, Windows-Distribution (Installer, Signierung).
 
 ## Offene Fragen
 
