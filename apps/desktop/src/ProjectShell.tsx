@@ -7,10 +7,15 @@ import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import TerminalPanel from "./components/TerminalPanel";
 import { ErrorBox, Spinner } from "./components/ui";
+import AgentTab from "./views/project/AgentTab";
+import BoardTab from "./views/project/BoardTab";
+import McpsTab from "./views/project/McpsTab";
 import PlansTab from "./views/project/PlansTab";
 import SkillsTab from "./views/project/SkillsTab";
+import ToolsTab from "./views/project/ToolsTab";
 
 const TABS = [
+  { id: "board", label: "Board" },
   { id: "plans", label: "Pläne" },
   { id: "skills", label: "Skills" },
   { id: "tools", label: "Tools" },
@@ -20,26 +25,23 @@ const TABS = [
 
 type TabId = (typeof TABS)[number]["id"];
 
-function ComingInP3({ what }: { what: string }) {
-  return (
-    <p className="text-sm text-slate-500">
-      {what} kommt in P3 (Plan <code>projektfenster.md</code>) — bis dahin macht
-    das der Agent im Terminal rechts.
-    </p>
-  );
-}
-
 /** Agent-Kommando pro Projekt (F3: `claude` als Default, `codex` oder frei
  *  wählbar). localStorage reicht für P1 — es ist eine UI-Präferenz. */
 function agentCommandKey(project: string) {
   return `speccify.project.agentCommand:${project}`;
 }
 
+/** Windows-Default `claude.cmd`: PowerShell verweigert das npm-Shim
+ *  `claude.ps1` per ExecutionPolicy (P2-Befund) — das cmd-Shim läuft immer. */
+const DEFAULT_AGENT_COMMAND = navigator.userAgent.includes("Windows")
+  ? "claude.cmd"
+  : "claude";
+
 export default function ProjectShell() {
   const [project, setProject] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [active, setActive] = useState<TabId>("plans");
-  const [agentCommand, setAgentCommand] = useState("claude");
+  const [agentCommand, setAgentCommand] = useState(DEFAULT_AGENT_COMMAND);
   const [terminalStarted, setTerminalStarted] = useState(false);
 
   useEffect(() => {
@@ -115,20 +117,27 @@ export default function ProjectShell() {
 
       <main className="flex min-w-0 flex-1 flex-col overflow-hidden p-5">
         {/* Tabs bleiben gemountet (nur versteckt): Wechsel sofortig, Fetch-State erhalten. */}
+        <div className={active === "board" ? "min-h-0 flex-1" : "hidden"}>
+          <BoardTab project={project} />
+        </div>
         <div className={active === "plans" ? "min-h-0 flex-1" : "hidden"}>
           <PlansTab project={project} />
         </div>
         <div className={active === "skills" ? "min-h-0 flex-1" : "hidden"}>
           <SkillsTab project={project} />
         </div>
-        <div className={active === "tools" ? "" : "hidden"}>
-          <ComingInP3 what="Der Tools-Tab (Specs + Status je Plattform)" />
+        <div className={active === "tools" ? "min-h-0 flex-1" : "hidden"}>
+          <ToolsTab project={project} />
         </div>
-        <div className={active === "mcps" ? "" : "hidden"}>
-          <ComingInP3 what="Der MCPs-Tab (.mcp.json + Allowlist)" />
+        <div className={active === "mcps" ? "min-h-0 flex-1" : "hidden"}>
+          <McpsTab project={project} />
         </div>
-        <div className={active === "agent" ? "" : "hidden"}>
-          <ComingInP3 what="Der Agent-Tab (CLAUDE.md/AGENTS.md)" />
+        <div className={active === "agent" ? "min-h-0 flex-1" : "hidden"}>
+          <AgentTab
+            project={project}
+            agentCommand={agentCommand}
+            onAgentCommand={updateAgentCommand}
+          />
         </div>
       </main>
 
