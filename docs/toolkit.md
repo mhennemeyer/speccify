@@ -36,7 +36,7 @@ Alle Server binden ausschließlich `127.0.0.1`.
   (Einzelauswahl), `multi_select` (Checkboxen), `form` (Fragenliste;
   leere Eingabe ⇒ empfohlener Wert). Der Call blockiert bis zur Antwort
   in der App-Sidebar; nach Timeout (Default 300 s) bleibt die Frage offen
-  und wird per `ask_bo_result` abgeholt. Schema 1:1 wie iKanbanAis
+  und wird per `ask_bo_result` abgeholt. Speccify definiert das Schema; Client-Apps wie iKanbanAi implementieren
   `ChatInteraction`.
 
 ## Binaries bauen/installieren
@@ -91,7 +91,7 @@ Neue Manifeste: Bibliothek-Tab („+ Neues Manifest"), Discovery-Tool
 ## Aktionen
 
 Benannte CLI-Befehle als Daten (`schema/actions.schema.json`,
-wire-kompatibel zu iKanbanAi): pro Projekt `.agent/actions.json`, global
+Speccify definiert das Format, Clients wie iKanbanAi lesen es): pro Projekt `.agent/actions.json`, global
 `~/.speccify/actions.json`. Agents schlagen per `actions_propose` vor
 (unbestätigt), ausgeführt wird über `run_action` des Exec-MCP —
 Sicherheitsmodell ist die Token-Präfix-Allowlist

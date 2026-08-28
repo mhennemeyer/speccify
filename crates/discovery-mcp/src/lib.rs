@@ -3,7 +3,7 @@
 //! Tools/Aktionen. Erster externer Client: iKanbanAi.
 //!
 //! Tools: `mcp_list`, `tools_list`, `actions_propose`, `scaffold`.
-//! Aktionen-Format: `schema/actions.schema.json` (iKanbanAi-kompatibel).
+//! Aktionen-Format: `schema/actions.schema.json` — Speccify definiert es, Clients implementieren es.
 
 use std::path::{Path, PathBuf};
 

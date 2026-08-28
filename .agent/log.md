@@ -1,5 +1,21 @@
 # Log: Speccify
 
+## 2026-08-28, abends (Projektfenster — BO-Findings nach P3-Gebrauch)
+- Sieben Findings eingearbeitet (Plan: D21–D24 + neuer P4-Zuschnitt):
+  Work-Repo pro Projekt überschreibbar (D21, Kundenprojekte mit eigenem
+  Skill-Repo), Terminal rechts/unten (D22, **umgesetzt**: Toggle im
+  Terminal-Kopf, pro Projekt gemerkt, kein Remount dank ResizeObserver),
+  Agent-Config im Dashboard editierbar (D23; codex geprüft:
+  `~/.codex/config.toml`, projektseitig `.codex/config.toml`, AGENTS.md),
+  Skill-Quellen pro Projekt + Skill-Browser mit Ordner-Organisation und
+  Import via expand (D24 → P4-Kern), Windows-Zielbild nativ ohne
+  Parallels (P4-Notiz).
+- **Rollen-Klarstellung** (BO): Speccify **definiert** Board-/Aktions-/
+  ask_bo-Formate, iKanbanAI ist (unter anderem) ein **Client**. Alle
+  iKanbanAI-Referenzen aus Produkt-Texten gedreht bzw. entfernt
+  (BoardTab, project_cmd, AskBoPanel, desktop_ui, discovery-mcp,
+  docs/toolkit.md); D19 heißt jetzt „Speccify-Board-Format".
+
 ## 2026-08-28, später (Projektfenster P3 — Board, Plan-Editor, alle Tabs, Composer-Rückbau)
 - **BO-Erweiterung + Entscheide**: Board im Projektfenster (D19, Format:
   **iKanbanAI lesen** — das liegt ohnehin im Projekt: `.agent/board/<id>.md`,

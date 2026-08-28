@@ -1,6 +1,6 @@
 ---
 lifecycle: active
-status: Bauen — P1 geliefert 2026-08-26; P2 geliefert 2026-08-27, „Fertig heißt" bestanden 2026-08-28 (claude läuft eingeloggt im Projektfenster-Terminal auf Windows und listet alle elf Projekt-Skills hinter der Junction). P3-Kern geliefert 2026-08-28: Board-Tab (D19, iKanbanAI-Format, Verschieben byte-stabil), Plan-Editor (D20), Tools-/MCPs-/Agent-Tab, Composer-Rückbau (D18) — auf macOS E2E und auf Windows in der VM verifiziert. Offen: CI-Erstlauf beim nächsten Push, x86-Referenz. Läuft parallel zu `skills-und-tools.md` (BO-Ausnahme von der Ein-Plan-Regel).
+status: Bauen — P1 geliefert 2026-08-26; P2 geliefert 2026-08-27, „Fertig heißt" bestanden 2026-08-28 (claude läuft eingeloggt im Projektfenster-Terminal auf Windows und listet alle elf Projekt-Skills hinter der Junction). P3-Kern geliefert 2026-08-28: Board-Tab (D19, iKanbanAI-Format, Verschieben byte-stabil), Plan-Editor (D20), Tools-/MCPs-/Agent-Tab, Composer-Rückbau (D18) — auf macOS E2E und auf Windows in der VM verifiziert. BO-Findings 2026-08-28 eingearbeitet (D21–D24, P4 = Skill-Quellen/Projekt-Settings/Agent-Config; iKanbanAI-Referenzen aus dem Produkt entfernt — Speccify definiert, Clients folgen; Terminal rechts/unten umgesetzt). Offen: CI-Erstlauf beim nächsten Push, x86-Referenz. Läuft parallel zu `skills-und-tools.md` (BO-Ausnahme von der Ein-Plan-Regel).
 sessionId: projektfenster
 ---
 # Plan: Projektfenster — Pläne, Skills, Tools im Projekt verwalten (auch auf Windows)
@@ -126,9 +126,11 @@ Was schon da ist und was der Plan nur verbinden muss:
   Web-Backend, Payload-/CI-Anteile) ist eigener Aufräumschritt in P3 —
   nicht nebenbei, damit P1/P2 klein bleiben. Damit fällt auch die alte
   Rahmenbedingung „Composer muss agent-bedienbar bleiben" weg.
-* **D19 — Board-Tab im iKanbanAI-Format** (BO, 2026-08-28: „Wir wollen
-  auch das Board hier abbilden", Format-Entscheid: iKanbanAI-Format
-  lesen). iKanbanAI legt das Board ohnehin **im Projekt** ab:
+* **D19 — Board-Tab (Speccify-Board-Format)** (BO, 2026-08-28: „Wir
+  wollen auch das Board hier abbilden"). Das Format lebt **im Projekt**
+  und wird von **Speccify definiert** — Client-Apps (u. a. iKanbanAI)
+  lesen und schreiben dasselbe Verzeichnis (Rollen-Klarstellung, BO-
+  Finding 2026-08-28: keine iKanbanAI-Referenzen im Produkt):
   `.agent/board/<id>.md`, flaches Frontmatter (`key: value`, kein
   verschachteltes YAML) mit `id`/`title`/`station`/`assignee`/`created`
   (ISO8601 UTC); Zusatzfelder (`order`, `ready`, `needs_human`, …)
@@ -136,14 +138,42 @@ Was schon da ist und was der Plan nur verbinden muss:
   (Anzeige „In Progress"), `Done`. Sortierung: Backlog `order` (fehlend
   = ans Ende) → `created` → `id`; Doing/Done nach `created`. Speccify
   liest nativ in Rust (D14) und schreibt beim Verschieben **nur die
-  `station:`-Zeile** um (byte-stabiler Rest) — iKanbanAI beobachtet das
-  Verzeichnis und zieht live nach; beide Apps zeigen dasselbe Board.
+  `station:`-Zeile** um (byte-stabiler Rest) — Clients, die das
+  Verzeichnis beobachten, ziehen live nach; alle zeigen dasselbe Board.
 * **D20 — Pläne editierbar: strukturiert + Body** (BO, 2026-08-28
   „Ist gewünscht!", Form-Entscheid): Frontmatter-Felder (lifecycle,
   status, …) als Formular, darunter der Markdown-Body als Editor;
   Speichern über einen neuen Command `project_write_file` mit demselben
   Traversal-Guard wie `project_read_file` (nur unterhalb der
   Projektwurzel, kein `..`/absolut/`has_root`).
+* **D21 — Work-Repo pro Projekt überschreibbar** (BO-Finding
+  2026-08-28): Das Repo, in dem eigene Skills/Tools definiert werden
+  (die Skill-Quelle fürs Expandieren), hat als Default das Dashboard-
+  Setting; **Projekt-Settings** können ein anderes Dir/Repo wählen —
+  Kundenprojekte bringen ihr eigenes Skill-Repo mit. Ablage der
+  Projekt-Settings: klein anfangen (app-seitig je Projektpfad, wie
+  Agent-Kommando), committbare Variante (`.agent/speccify/…`) erst,
+  wenn der Gebrauch sie verlangt.
+* **D22 — Terminal-Position wählbar** (BO-Finding 2026-08-28): das
+  Agent-Terminal rechts **oder** unten, pro Projekt gemerkt. ✅ umgesetzt
+  2026-08-28 (Toggle im Terminal-Kopf, localStorage, kein Remount — der
+  ResizeObserver im TerminalPanel fittet nach).
+* **D23 — Agent-Config im Dashboard editierbar** (BO-Finding
+  2026-08-28): die globale Konfiguration des Agenten im Dashboard
+  anzeigen/bearbeiten. claude: `~/.claude/settings.json` + globale
+  `~/.claude/CLAUDE.md`. codex (geprüft 2026-08-28): global
+  `~/.codex/config.toml`, projektseitig `.codex/config.toml`,
+  Instruktionen `AGENTS.md` — passt ins selbe Editor-Muster
+  (Datei-Liste je Agent + Editor mit Guard auf die erwarteten Pfade).
+* **D24 — Skill-Quellen pro Projekt + Skill-Browser** (BO-Findings
+  2026-08-28): pro Projekt **eine oder mehrere Skill-Quellen** (Repos,
+  in denen Skills definiert werden), durchsuchbar, Import = `expand`.
+  Liegen Skills **verschachtelt in Ordnern**, ist die Ordnerstruktur
+  die Organisation im Browser **und** wandert als Quelle-Angabe in den
+  expandierten Skill (Herkunft in `expansions.yaml`). Baut auf dem
+  MCP-Source-Kanal (`source_list`/`add`, T4 im Plan skills-und-tools)
+  und `speccify add/expand --library` auf; D21 ist der Spezialfall
+  „eine Default-Quelle". → Kern von P4.
 
 ## Meilensteine
 
@@ -323,13 +353,25 @@ iKanbanAI-Tickets und kann sie verschieben; Pläne sind **editierbar**
 7. Feinschliff aus dem P1/P2-Gebrauch (was der eigene Gebrauch verlangt,
    gewinnt gegen diese Liste).
 
-### P4 — Nach Bedarf (bewusst offen)
+### P4 — Skill-Quellen, Projekt-Settings, Agent-Config (BO-Findings 2026-08-28)
 
-Kandidaten, erst nach Gebrauchsevidenz aus P1–P3: Aktionen in der UI
-(expand anstoßen = Prompt ins Terminal tippen statt eigener Code-Pfad),
-Ticket-Anlegen/-Editieren im Board (P3 liest + verschiebt nur),
-Board-Live-Watcher (P3 lädt bei Tab-Wechsel/Refresh), ask_bo im
-Projektfenster, Windows-Distribution (Installer, Signierung).
+**Fertig heißt:** Ein Projekt kann seine Skill-Quellen wählen (Default =
+Dashboard-Setting, D21), sie im **Skill-Browser** durchsuchen (Ordner =
+Organisation, D24) und Skills von dort importieren (expand, Herkunft
+inkl. Quell-Pfad in `expansions.yaml`); die Agent-Config ist im
+Dashboard editierbar (D23, claude + codex).
+
+1. Projekt-Settings mit Library-/Work-Repo-Override (D21).
+2. Skill-Quellen-Verwaltung pro Projekt + Skill-Browser mit
+   Ordner-Organisation + Import über expand (D24) — CLI/Core-Anteil
+   (Quell-Pfad in der Herkunft) gehört zu skills-und-tools.md.
+3. Agent-Config-Editor im Dashboard (D23).
+4. Weiter nach Gebrauch: Ticket-Anlegen/-Editieren im Board,
+   Board-Live-Watcher, Aktionen in der UI (expand anstoßen = Prompt ins
+   Terminal), ask_bo im Projektfenster, Windows-Distribution
+   (Installer, Signierung — **auf echtem Windows ohne Parallels**,
+   BO-Finding 2026-08-28: Parallels war nur unsere Fernsteuer-Umgebung,
+   Zielbild ist der native Windows-Rechner).
 
 ## Offene Fragen
 

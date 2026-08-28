@@ -1,6 +1,7 @@
-// Board-Tab (Plan projektfenster.md, D19): das iKanbanAI-Board aus
-// `.agent/board/*.md` — drei Spalten, iKanban-Sortierung, Verschieben
-// schreibt nur die station:-Zeile um. Beide Apps zeigen dasselbe Board.
+// Board-Tab (Plan projektfenster.md, D19): das Projekt-Board aus
+// `.agent/board/*.md` — Speccifys Board-Format, drei Spalten, kanonische
+// Sortierung; Verschieben schreibt nur die station:-Zeile um, damit
+// andere Clients desselben Verzeichnisses live nachziehen.
 
 import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
@@ -27,7 +28,7 @@ const STATION_LABELS: Record<string, string> = {
   Done: "Done",
 };
 
-/** iKanban R5a: Backlog `order` (fehlend = ans Ende) → `created` → `id`. */
+/** Backlog: `order` (fehlend = ans Ende) → `created` → `id`. */
 function backlogCompare(a: TicketEntry, b: TicketEntry) {
   const orderA = a.order ?? Number.MAX_SAFE_INTEGER;
   const orderB = b.order ?? Number.MAX_SAFE_INTEGER;
@@ -149,8 +150,8 @@ export default function BoardTab({ project }: { project: string }) {
     <LoadingBoundary loading={loading} error={error} label="Board lesen…">
       {tickets.length === 0 ? (
         <p className="text-sm text-slate-500">
-          Kein Board unter <code>.agent/board/</code> — iKanbanAI (oder der Agent) legt
-          Tickets dort als Markdown-Dateien an.
+          Kein Board unter <code>.agent/board/</code> — Tickets sind
+          Markdown-Dateien, die der Agent (oder eine Client-App) dort anlegt.
         </p>
       ) : (
         <div className="flex h-full min-h-0 flex-col">

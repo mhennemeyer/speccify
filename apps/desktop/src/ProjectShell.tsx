@@ -37,12 +37,20 @@ const DEFAULT_AGENT_COMMAND = navigator.userAgent.includes("Windows")
   ? "claude.cmd"
   : "claude";
 
+/** Terminal-Position pro Projekt (BO-Finding 2026-08-28: rechts ODER unten). */
+type TerminalPosition = "right" | "bottom";
+
+function terminalPositionKey(project: string) {
+  return `speccify.project.terminalPosition:${project}`;
+}
+
 export default function ProjectShell() {
   const [project, setProject] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [active, setActive] = useState<TabId>("plans");
   const [agentCommand, setAgentCommand] = useState(DEFAULT_AGENT_COMMAND);
   const [terminalStarted, setTerminalStarted] = useState(false);
+  const [terminalPosition, setTerminalPosition] = useState<TerminalPosition>("right");
 
   useEffect(() => {
     void invoke<string | null>("project_current")
@@ -55,12 +63,27 @@ export default function ProjectShell() {
         try {
           const stored = localStorage.getItem(agentCommandKey(root));
           if (stored !== null) setAgentCommand(stored);
+          if (localStorage.getItem(terminalPositionKey(root)) === "bottom") {
+            setTerminalPosition("bottom");
+          }
         } catch {
           // localStorage nicht verfügbar — Default bleibt.
         }
       })
       .catch((e) => setError(String(e)));
   }, []);
+
+  const toggleTerminalPosition = () => {
+    const next: TerminalPosition = terminalPosition === "right" ? "bottom" : "right";
+    setTerminalPosition(next);
+    if (project) {
+      try {
+        localStorage.setItem(terminalPositionKey(project), next);
+      } catch {
+        // dito
+      }
+    }
+  };
 
   const updateAgentCommand = (value: string) => {
     setAgentCommand(value);
@@ -115,7 +138,12 @@ export default function ProjectShell() {
         ))}
       </nav>
 
-      <main className="flex min-w-0 flex-1 flex-col overflow-hidden p-5">
+      <div
+        className={`flex min-h-0 min-w-0 flex-1 ${
+          terminalPosition === "right" ? "flex-row" : "flex-col"
+        }`}
+      >
+      <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-5">
         {/* Tabs bleiben gemountet (nur versteckt): Wechsel sofortig, Fetch-State erhalten. */}
         <div className={active === "board" ? "min-h-0 flex-1" : "hidden"}>
           <BoardTab project={project} />
@@ -141,7 +169,24 @@ export default function ProjectShell() {
         </div>
       </main>
 
-      <aside className="flex w-[480px] shrink-0 flex-col border-l border-slate-700 bg-slate-900">
+      <aside
+        className={`flex shrink-0 flex-col border-slate-700 bg-slate-900 ${
+          terminalPosition === "right" ? "w-[480px] border-l" : "h-[320px] border-t"
+        }`}
+      >
+        <div className="flex justify-end px-2 pt-1">
+          <button
+            onClick={toggleTerminalPosition}
+            title={
+              terminalPosition === "right"
+                ? "Terminal nach unten legen"
+                : "Terminal nach rechts legen"
+            }
+            className="rounded px-2 py-0.5 text-xs text-slate-500 hover:bg-slate-800 hover:text-slate-300"
+          >
+            {terminalPosition === "right" ? "⬓ unten" : "⬔ rechts"}
+          </button>
+        </div>
         {terminalStarted ? (
           <TerminalPanel visible cwd={project} autostart={agentCommand} />
         ) : (
@@ -171,6 +216,7 @@ export default function ProjectShell() {
           </div>
         )}
       </aside>
+      </div>
     </div>
   );
 }

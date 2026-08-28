@@ -1,7 +1,7 @@
 //! desktop-ui-MCP (Plan toolkit-discovery-terminal.md, T7/D4): App-gehosteter
 //! MCP-Server (127.0.0.1:8768) mit dem Tool `ask_bo` — der Agent stellt eine
 //! Frage mit UI-Element (buttons / multi_select / form, Schema 1:1 wie die
-//! produktive iKanbanAi-`ChatInteraction`), die Sidebar rendert sie, der BO
+//! produktive `ChatInteraction`-Vorlage), die Sidebar rendert sie, der BO
 //! klickt, die Antwort geht als Tool-Result zurück. Der Call BLOCKIERT bis
 //! zur Antwort oder bis zum Timeout; danach lässt sich die Antwort über
 //! `ask_bo_result` nachholen („später beantworten", T0.6).

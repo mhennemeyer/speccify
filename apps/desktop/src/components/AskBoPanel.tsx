@@ -1,7 +1,7 @@
 // ask_bo-Interaktionen (T7): rendert die vom Agent gestellten Fragen —
 // buttons (Einzelauswahl), multi_select (Checkboxen + OK), form
 // (Fragenliste; leere Eingabe ⇒ Empfehlung gilt). Beantwortete Elemente
-// frieren ein (iKanbanAi-Semantik).
+// frieren ein.
 //
 // Tastatur (BO-Finding): die neueste offene Frage bekommt den Fokus.
 // buttons: ←/→ (oder ↑/↓) bewegt die Auswahl (Start = erste Option =
@@ -76,7 +76,7 @@ function InteractionCard({
     onAnswer(
       interaction.id,
       [],
-      // Leere Eingabe ⇒ Empfehlung gilt (iKanbanAi-Semantik).
+      // Leere Eingabe ⇒ Empfehlung gilt.
       values.map((value, index) =>
         value.trim() === "" ? (interaction.fields[index]?.recommended ?? "") : value,
       ),
@@ -230,7 +230,7 @@ function InteractionCard({
                   if (event.key !== "Enter") return;
                   event.preventDefault();
                   // Enter: nächstes Feld fokussieren, am Ende senden
-                  // (leere Felder = Empfehlung, iKanbanAi-Return-Semantik).
+                  // (leere Felder = Empfehlung, Return-Semantik).
                   const next = document.querySelector<HTMLInputElement>(
                     `[data-askbo-field="${interaction.id}-${index + 1}"]`,
                   );

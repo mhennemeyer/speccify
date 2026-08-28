@@ -402,11 +402,12 @@ pub fn project_write_file(project: String, file: String, content: String) -> Res
     std::fs::write(&path, content).map_err(|e| format!("{}: {e}", path.display()))
 }
 
-// --- Board (D19: iKanbanAI-Format) -------------------------------------------
+// --- Board (D19: Speccify-Board-Format) ---------------------------------------
 // `.agent/board/<id>.md`: flaches Frontmatter (`key: value`, kein
 // verschachteltes YAML) zwischen `---`-Zeilen, danach der Markdown-Body.
-// Zusatzfelder bleiben byte-stabil erhalten — beim Verschieben wird darum
-// NUR die `station:`-Zeile umgeschrieben.
+// Das Format definiert Speccify; andere Apps sind Clients desselben
+// Verzeichnisses. Zusatzfelder bleiben byte-stabil erhalten — beim
+// Verschieben wird darum NUR die `station:`-Zeile umgeschrieben.
 
 pub const BOARD_STATIONS: [&str; 3] = ["Backlog", "Doing", "Done"];
 
@@ -421,14 +422,14 @@ pub struct TicketEntry {
     created: Option<String>,
     ready: bool,
     needs_human: bool,
-    /// Backlog-Sortierung (iKanban R5a): `order` → `created` → `id`.
+    /// Backlog-Sortierung: `order` → `created` → `id`.
     order: Option<i64>,
     body: String,
 }
 
 /// Flaches Frontmatter: Zeilen zwischen erster und zweiter `---`-Zeile,
 /// jede als `key: value` (erste `:`-Trennung). Kein YAML-Parser — die
-/// iKanban-Dateien sind flach, und wir wollen sie byte-stabil lassen.
+/// Ticket-Dateien sind flach, und wir wollen sie byte-stabil lassen.
 fn parse_flat_frontmatter(text: &str) -> Option<(Vec<(String, String)>, &str)> {
     let mut lines = text.split_inclusive('\n');
     if lines.next()?.trim_end() != "---" {
@@ -517,7 +518,7 @@ pub fn project_board(project: String) -> Result<Vec<TicketEntry>, String> {
 
 /// Verschiebt ein Ticket in eine andere Station: ersetzt **nur** die
 /// `station:`-Zeile im Frontmatter, alles andere bleibt byte-stabil —
-/// iKanbanAI beobachtet das Verzeichnis und zieht live nach.
+/// Clients, die das Verzeichnis beobachten, ziehen so live nach.
 #[tauri::command]
 pub fn project_board_move(project: String, file: String, station: String) -> Result<(), String> {
     if !BOARD_STATIONS.contains(&station.as_str()) {
