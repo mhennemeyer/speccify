@@ -10,7 +10,7 @@
 //! Ein Marker (`installed.json`) hält den Payload-Hash fest: nach einem
 //! App-Update mit neuem Payload wird neu installiert.
 //!
-//! Repo-Modus bleibt Vorrang (D3): wer im Composer ein Repo mit `.venv`
+//! Repo-Modus bleibt Vorrang (D3): wer ein Repo mit `.venv`
 //! angibt, arbeitet weiter gegen den Quellstand.
 
 use std::{
@@ -316,7 +316,6 @@ mod tests {
                 "Wheel aus payload.json fehlt: {wheel}"
             );
         }
-        assert!(dir.join("composer").join("index.html").is_file());
         assert!(dir.join("skills").is_dir());
     }
 }

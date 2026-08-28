@@ -159,7 +159,7 @@ ersten Start per `uv` eine venv im Benutzerverzeichnis (siehe
 - Was dabei entsteht, ist nicht quarantänebehaftet (uv lädt es nicht per
   Browser), Gatekeeper prüft es also nicht.
 - Beim ersten Release auf einem fremden Mac trotzdem explizit testen:
-  Umgebungs-Tab → „Engine installieren" → Composer öffnen.
+  Umgebungs-Tab → „Engine installieren" (der Composer ist zurückgebaut, Plan projektfenster.md D18).
 
 `uv` selbst liegt seit R5.2.7 als vierter Sidecar im Bundle und wird
 mitsigniert — ein systemweit installiertes `uv` ist keine Voraussetzung mehr.

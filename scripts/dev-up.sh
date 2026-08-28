@@ -36,7 +36,6 @@ for arg in "$@"; do
 done
 
 BACKEND_PORT=8000
-COMPOSER_PORT=5173
 MARKETING_PORT=4321
 
 PIDS=()
@@ -82,10 +81,6 @@ if [[ "$RUN_FRONTENDS" -eq 1 ]]; then
   echo "→ pnpm install (Workspace) …"
   pnpm install 2>&1 | prefix pnpm
 
-  # Viewer (Vite-SPA, proxied /api → Backend).
-  ( trap - EXIT INT TERM; pnpm run composer:dev 2>&1 | prefix composer ) &
-  PIDS+=($!)
-
   # Marketing/Doku (Astro).
   ( trap - EXIT INT TERM; pnpm run marketing:dev 2>&1 | prefix marketing ) &
   PIDS+=($!)
@@ -100,7 +95,6 @@ cat <<EOF
 EOF
 if [[ "$RUN_FRONTENDS" -eq 1 ]]; then
 cat <<EOF
-    Viewer                    : http://localhost:${COMPOSER_PORT}
     Marketing/Doku            : http://localhost:${MARKETING_PORT}
 EOF
 fi

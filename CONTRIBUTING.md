@@ -36,7 +36,6 @@ walkthrough.
 | `schema/` | JSON schemas (playbook, manifest, lockfile, index entry) |
 | `playbooks/` | Reference playbooks |
 | `apps/web/` | HTTP backend (FastAPI) |
-| `apps/composer/` | The playbook viewer (React + Vite) |
 | `apps/marketing/` | Landing page + docs site (Astro Starlight) |
 
 Roadmap: [`.agent/plans/`](./.agent/plans/) — exactly one plan is active at a time.

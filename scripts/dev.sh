@@ -8,7 +8,7 @@
 #   1. Werkzeuge prüfen (uv, pnpm, cargo) — mit Installations-Hinweis
 #   2. Abhängigkeiten laden (pnpm install, uv sync + macOS-Venv-Hygiene)
 #   3. Sidecars bauen (exec/discovery/parallels-mcp → src-tauri/binaries/)
-#   4. Engine-Payload bauen (Wheels + Requirements + Composer-SPA + Fixtures)
+#   4. Engine-Payload bauen (Wheels + Requirements + Fixtures)
 #      — nur wenn er fehlt oder Quellen neuer sind als der Payload
 #   5. App starten (tauri dev; mit --release stattdessen .app bauen + öffnen)
 #
@@ -19,7 +19,7 @@
 #   ./scripts/dev.sh --no-start     # nur vorbereiten, nicht starten
 #   ./scripts/dev.sh --skip-engine  # Python-Engine-Payload auslassen (schneller)
 #
-# Für das Web-System (Backend/Composer/Playground/Marketing) ist dev-up.sh
+# Für das Web-System (Backend/Playground/Marketing) ist dev-up.sh
 # zuständig — dieses Skript kümmert sich um die Desktop-App.
 
 set -euo pipefail
@@ -145,7 +145,6 @@ fi
 
 ENGINE_SOURCES=(
   core/src cli/src mcp/src apps/web/backend/src
-  apps/composer/src apps/composer/index.html apps/composer/package.json
   uv.lock
   # Die Skill-Bibliothek liegt mit im Payload — ein geänderter Skill muss den
   # Neubau auslösen, sonst zeigt die App die alte Kopie.
@@ -155,7 +154,7 @@ if [[ "$SKIP_ENGINE" -eq 1 ]]; then
   step "Engine-Payload"
   skip "übersprungen (--skip-engine)"
 elif [[ "$REFRESH" -eq 1 ]] || is_stale "$PAYLOAD" "${ENGINE_SOURCES[@]}"; then
-  step "Engine-Payload bauen (Wheels + Requirements + Composer-SPA)"
+  step "Engine-Payload bauen (Wheels + Requirements)"
   ./scripts/build_engine_payload.sh
 else
   step "Engine-Payload"

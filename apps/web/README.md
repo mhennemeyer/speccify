@@ -1,8 +1,8 @@
 # Speccify web backend
 
 The HTTP face of `speccify-core`: the same playbook engine the CLI and the MCP
-server use, exposed over FastAPI. The viewer (`apps/composer/`) is its only
-frontend.
+server use, exposed over FastAPI. Seit dem Composer-Rückbau (Plan projektfenster.md,
+D18) ist es eine reine API ohne mitgeliefertes Frontend.
 
 Everything runs in-process against `speccify-core` — there is no database, no
 auth and no persistence beyond the playbook library on disk.

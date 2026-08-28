@@ -30,8 +30,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     app.add_middleware(
         CORSMiddleware,
-        # 3000: Next.js-Playground · 5173: Composer (Vite-Dev-Server) ·
-        # tauri://localhost: spätere Tauri-2-Shell des Composers.
+        # 3000: Next.js-Playground · 5173: lokale Vite-Dev-Server ·
+        # tauri://localhost: Tauri-Shells.
         allow_origins=[
             "http://localhost:3000",
             "http://localhost:5173",
@@ -48,15 +48,5 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(skills_route.router)
     app.include_router(session_route.router)
     app.include_router(index_route.router)
-
-    # Composer-SPA (gebautes apps/composer/dist) same-origin unter /ui —
-    # das Composer-Fenster der Desktop-App lädt http://127.0.0.1:<port>/ui/
-    # und spricht die API relativ (kein CORS, keine zweite Origin).
-    # Fehlt der Build, bleibt /ui einfach weg (API unverändert nutzbar).
-    composer_dist = app.state.settings.composer_dist
-    if composer_dist.is_dir():
-        from fastapi.staticfiles import StaticFiles
-
-        app.mount("/ui", StaticFiles(directory=composer_dist, html=True), name="composer-ui")
 
     return app

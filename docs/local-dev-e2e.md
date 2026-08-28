@@ -107,9 +107,8 @@ out. Details in [`git-sources.md`](./git-sources.md).
 
 ## Troubleshooting
 
-- **Vite only listens on `::1` here.** Playwright waits on `127.0.0.1`, so the
-  composer's `playwright.config.ts` starts the dev server with
-  `--host 127.0.0.1`. If you start it by hand, do the same.
+- **Vite only listens on `::1` here.** Playwright waits on `127.0.0.1` — start
+  Vite dev servers with `--host 127.0.0.1` when a test drives them.
 - **`uv run` re-syncs and re-hides editable `.pth` files** under macOS
   quarantine. `dev-up.sh` runs the hygiene script once and then sets
   `UV_NO_SYNC=1`; when running commands by hand, export

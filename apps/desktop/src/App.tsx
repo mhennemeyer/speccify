@@ -11,8 +11,7 @@ import SettingsView from "./views/SettingsView";
 import KnowledgebasesView from "./views/KnowledgebasesView";
 
 const SECTIONS = [
-  // Projekte statt Composer (Plan projektfenster.md, D18; Rückbau des
-  // Composer-Codes folgt in P3).
+  // Projekte statt Composer (Plan projektfenster.md, D18 — Composer in P3 zurückgebaut).
   { id: "projects", label: "Projekte", view: <ProjectsView /> },
   { id: "library", label: "Bibliothek", view: <LibraryView /> },
   { id: "knowledgebases", label: "Knowledgebases", view: <KnowledgebasesView /> },

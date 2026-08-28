@@ -198,7 +198,7 @@ function EngineCard({
     <article className={`mb-3 rounded-lg border p-4 ${state.tone}`}>
       <div className="flex items-baseline justify-between">
         <h3 className="font-medium text-slate-900">
-          {state.icon} Python-Engine (Spec-Engine + Composer-Backend)
+          {state.icon} Python-Engine (Spec-Engine)
         </h3>
         <span className="text-sm text-slate-500">{state.text}</span>
       </div>
