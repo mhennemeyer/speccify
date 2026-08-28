@@ -19,6 +19,7 @@ this platform, which placeholders the upstream author left to fill in.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path
@@ -86,7 +87,7 @@ class ExpandReport:
         return seen
 
 
-def _resolve_reference(reference: str, locked: dict[str, object]) -> str:
+def _resolve_reference(reference: str, locked: Mapping[str, object]) -> str:
     """Volle Id zu einer Referenz — auch zum **Kurznamen** eines gelockten Skills.
 
     `speccify expand macos-notarize-tauri` soll reichen, wenn das Lockfile
