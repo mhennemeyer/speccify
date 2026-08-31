@@ -1,5 +1,23 @@
 # Log: Speccify
 
+## 2026-08-31, spät nachts (P5 committet + Windows-verifiziert)
+- Commit-Erlaubnis vom BO („committe gern selbst in diesem Projekt") in
+  agent.md verankert; Stand in drei bauende Commits geschnitten:
+  `eaf2188` (D25 agent-agnostisch, isoliert gebaut), `3bbceda` (P5
+  W1–W6), `617e4ab` (Doku), dazu `3b80919` (Windows-Pfadtrenner im
+  activate-Rückgabewert — einziger Windows-Befund der Tests).
+- **Windows-Verifikation in der VM**: 38/38 Rust-Tests; UI-Durchstich am
+  frischen Fixture C:\work\wtest — Workflow-Banner → „Einrichten" →
+  Banner weg; auf der Platte: `.claude/skills` und `.agents/skills` als
+  **Junction** (App lief als Benutzer ⇒ mklink-/J-Fallback griff),
+  Ticket-Skills + Policy-Block v1 vorhanden, Board rendert.
+- Stolpersteine der VM (bekanntes Muster, gelöst): von SYSTEM angelegte
+  node_modules blockieren den Benutzer-Vite (EPERM) → als Benutzer neu
+  installiert; findstr-Quoting verschluckte einen cargo build — die
+  laufende Exe war alt („Command not found" beim neuen Command war das
+  Symptom, nicht die Ursache).
+
+
 ## 2026-08-31, Nacht (P5/W6 — Plan-Lifecycle, Board-Split, Prompt-Kopieren)
 - `plan_cmd.rs`: activate mit Ein-Aktiver-Invariante (bisheriger active →
   onHold; Archiv bleibt; nutzt den byte-stabilen Frontmatter-Updater aus
