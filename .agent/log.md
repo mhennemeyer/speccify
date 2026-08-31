@@ -1,5 +1,150 @@
 # Log: Speccify
 
+## 2026-08-31, Nacht (P5/W6 — Plan-Lifecycle, Board-Split, Prompt-Kopieren)
+- `plan_cmd.rs`: activate mit Ein-Aktiver-Invariante (bisheriger active →
+  onHold; Archiv bleibt; nutzt den byte-stabilen Frontmatter-Updater aus
+  board_cmd), Eskalation als Zeile ODER Block gelesen (PlanEntry trägt
+  `escalation`), `clear_escalation` entfernt exakt diese Zeilen.
+- UI: Lifecycle-Badges inkl. onHold/research, „Aktivieren"-Knopf,
+  rotes Eskalations-Banner mit „Auflösen"; **Aktiver Plan aufklappbar
+  über dem Board** (Kern-Geste Plan+Board gleichzeitig, live);
+  „Als Prompt kopieren" auf Plan und Ticket (`lib/prompt.ts`,
+  Zaunlänge gegen Backticks, Tauri-Clipboard).
+- E2E: Aktivieren parkte den vorher aktiven Plan (Datei-Beweis), Banner
+  → Auflösen → Zeile weg, pbpaste zeigt den gebauten Prompt.
+- Verifikation: 39 Rust-Tests, tsc + Vite-Build, fmt. Unkommittet.
+
+
+## 2026-08-31, noch später (P5/W5 — Aktionen)
+- `actions_cmd.rs`: actions.json-CRUD (command = Id, unbekannte Felder
+  tolerant), confirm = Aktion + permanenter Allowlist-Eintrag + pending-
+  Aufräumen in einem Schritt (D27, „ein Approval genügt"); Ausführung
+  nativ (D28): shell-words-argv, Spawn im Projekt-cwd, Zeilen-Events,
+  Stop killt, Drop räumt. Kein Exec-MCP-Umweg — der bleibt für
+  gesandboxte Clients.
+- Aktionen-Tab: Sektionen Bestätigt/Vorschläge/Neu, Input-Formulare mit
+  {name}-Substitution (file/folder über den Tauri-Dialog), Live-Output
+  mit Autoscroll + Kappung + Fortschrittserkennung, Chart-Zeilen werden
+  live als SVG gerendert (line/bar, Legende; nie Output verlieren).
+  toolui:/parallels als „folgt"-Badges (W7/Bedarf).
+- E2E: Pending-Eintrag per Klick bestätigt → actions.json + allowlist
+  (permanent) + pending-Datei weg; Demo-Skript lief mit [n/3]-
+  Fortschritt, zweiserigem Chart und exit 0 · 3s im Panel.
+- Verifikation: 37 Rust-Tests, tsc + Vite-Build, fmt. Unkommittet.
+
+
+## 2026-08-31, spät (P5/W4 — Q&A, „braucht mich", Notifications)
+- Q&A-Protokoll (D27) in board_cmd: tolerantes Parsen (·/-/| als
+  Trenner, Marker optional), kanonisches Antworten (`### A<n> · bo ·
+  <ts>`, keine Doppelantwort, Nummern nie wiederverwendet),
+  `open_question` rückt auf die älteste offene Frage; `needs_human`
+  bleibt getrennt (iKanban-Finding: Antwort darf die Abnahme-Markierung
+  nicht löschen). App-Antworten loggen History.
+- UI: Fragen-Sektion oben im Ticket-Detail (orange, Antwortfeld,
+  Answered klappbar; `## Questions` aus der Body-Anzeige gefiltert —
+  war doppelt), „?"-Badge, „braucht mich"-Filter (nicht persistiert).
+- Watcher: neue offene Fragen ⇒ System-Notification (Plugin
+  tauri-plugin-notification + Capability) mit still primendem ersten
+  Lauf und Dedupe `<ticket>|Q<n>`, tab-unabhängig; zusätzlich
+  `open-question`-Event ans Fenster.
+- E2E: Frage von außen ⇒ „?"-Badge binnen 4 s; Antwort per UI ⇒
+  kanonischer Block, open_question weg, History-Zeile. **Nicht
+  verifiziert:** sichtbare macOS-Notification (Banner-Moment verpasst,
+  Dev-App fragt beim ersten Mal um Erlaubnis) — im Gebrauch prüfen.
+- Beobachtung: parallel laufen weitere Speccify-Agent-Sessions (Codex)
+  beim BO — Working Tree kann sich neben mir ändern.
+- Verifikation: 35 Rust-Tests, tsc + Vite-Build, fmt. Unkommittet.
+
+
+## 2026-08-31, abends (P5/W3 — Ticket-Lifecycle, History, KPIs)
+- `board_cmd.rs`: create/save/delete/history/kpis. Kernstück ist das
+  **byte-stabile Frontmatter-Update** (bekannte Zeilen ersetzen/ergänzen/
+  entfernen, unbekannte — agentgeschriebene — bleiben in Reihenfolge);
+  App-Aktionen loggen History (`actor: user`), auch project_board_move.
+  KPIs nur aus `agent_run`-Zeilen, effektiver Input = in + cache_read +
+  cache_write (iKanban-Befund gegen „mehr out als in"). `time` 0.3 für
+  RFC-3339-Timestamps.
+- Board-UI: „+ Ticket" + Editor-Sheet, Drag&Drop zwischen Spalten,
+  Done-Gruppierung nach `plan` (klappbar), KPI-Chip + Läufe-Panel,
+  History im Detail (Icons je event_type, gedeckelt). Aktualisieren-
+  Knopf entfernt — W2 macht das Board live.
+- E2E: KPI-Chip zeigt claudes echten W1-Lauf (↑30.0k ↓1.5k · 2m);
+  Edit-Sheet per UI gespeichert ⇒ ready: true byte-stabil + History.
+  Befund fürs Testwerkzeug: AX-keystroke erreicht React-Inputs im
+  WKWebView-Modal nicht zuverlässig — Klick-Pfade (Checkbox/Buttons)
+  funktionieren; Tipp-Pfade sind über Rust-Tests abgedeckt.
+- Verifikation: 34 Rust-Tests, tsc + Vite-Build, fmt. Unkommittet.
+
+
+## 2026-08-31, noch später (P5/W2 — Watcher + Live-Board)
+- `project_watch.rs`: 2-s-Fingerprint-Poll je Projektfenster (Pfad+mtime+
+  Größe, rekursiv je Bereich), `project-changed`-Event mit Bereichsliste,
+  erster Lauf primt still (iKanban-Befund gegen den Meldungsschwall),
+  Thread endet mit dem Fenster. Entscheid: **Poll-only** — In-place-
+  Schreiben erzeugt keine Verzeichnis-Events, der Poll ist ohnehin
+  Pflicht; die notify-Dependency gespart, Events blieben reine
+  Latenz-Optimierung.
+- Frontend: ProjectShell startet den Watch und verteilt Versions-Zähler
+  je Bereich; Board/Pläne/Skills/Tools/MCPs/Agent-Tab und der
+  Workflow-Banner laden live nach. Schutz: der Plan-Editor wird während
+  des Editierens nie überschrieben.
+- E2E: Board offen, von außen ein Ticket angelegt und eine station-Zeile
+  geändert ⇒ beides binnen ~4 s sichtbar, ohne Klick (per AX belegt).
+- Verifikation: 32 Rust-Tests, tsc + Vite-Build, fmt. Unkommittet.
+
+
+## 2026-08-31, später (P5/W1 — Policy, Setup, Settings-Store geliefert)
+- `workflow_setup.rs`: Policy-als-Text (D26) umgesetzt — Workflow-Block v1
+  wird per Marker-Merge in `.agent/agent.md` eingesetzt (Bestand bleibt
+  Byte für Byte; Update ersetzt nur den Block). `project_workflow_status`
+  meldet missing/outdated/current samt pending-Liste; `install` legt
+  Scaffold (`.agent/{board,plans,skills}`), Ticket-Skills
+  (`/ticket-next`, `/ticket-ask` — verweisen auf agent.md statt Regeln zu
+  doppeln), Host-Pointer (nur wenn fehlend; vorhandene Dateien ohne
+  Verweis werden gemeldet, nie angefasst) und Skill-Links beider Hosts an
+  (Windows-Fallback mklink /J). Settings-Store `.agent/settings.json`
+  (D21/D27): Punkt-Notation, unbekannte Schlüssel überleben, null löscht,
+  leeres Wurzelobjekt löscht die Datei. UI: Workflow-Banner im
+  Projektfenster (bewusst Knopf, nicht automatisch).
+- **E2E mit echtem Agenten:** Fixture-Projekt, Setup per Banner-Klick,
+  dann `claude -p --permission-mode acceptEdits` mit dem Auftrag, dem
+  Board-Workflow wörtlich zu folgen → zwei Tickets aus dem aktiven Plan
+  (order 1/2, `plan:`, ticket_created), genau eines abgearbeitet
+  (station_changed Backlog→Doing→Done, agent_run mit tokens_in/out/
+  cache_*/duration_ms, Fortschritt im Body, Werk-Datei `notes/farben.md`),
+  zweites blieb im Backlog. Der W1-Zielsatz ist damit wörtlich belegt.
+- Verifikation: 31 Rust-Desktop-Tests, tsc + Vite-Build, clippy, fmt.
+  Nicht committet (agent.md-Regel) — Commit auf Zuruf.
+
+
+## 2026-08-31 (Projektfenster — agent-agnostisch geprüft; P5 Workflow-Parität geplant)
+- **Agent-agnostischer Stand (D25, aus der Codex-Session, unkommittet)
+  geprüft und für claude abgenommen**: CLAUDE.md → `@.agent/agent.md`
+  funktioniert, `.claude/skills`-Link + `.mcp.json`/`settings.json`
+  bleiben Claude-Wahrheiten, Briefings überschreiben nie. Verifikation:
+  230 Pytest, 27 Rust-Tests, Frontend-Build, ruff, mypy — alles grün.
+  Zwei Korrekturen: Arbeitsregel „apply_patch" hostneutral formuliert
+  (Codex: apply_patch; Claude Code: Edit/Write); Merker: agent.md
+  verbietet jetzt ungefragtes Committen — gilt ab sofort auch für mich.
+  Kleiner Restpunkt: `project_agent_files` listet `AGENTS.override.md`
+  (keine Standard-Konvention beider Hosts; harmlos, nur Anzeige).
+- **BO-Auftrag: iKanbanAI zurückstellen, Agent-/Workflow-Features in
+  Speccify einbauen (alles außer Git/IDE)** → Plan um **P5** erweitert
+  (D26–D29, Meilensteine W1–W7), P5 zieht vor den P4-Rest, D21 wandert
+  nach W1. Grundlage: Quelltext-Analyse von iKanbanAi (nur gelesen).
+  Kernbefund: iKanbanAI ist selbst agent-native — kein Orchestrator-Code
+  mehr, Policy ist versionierter Text (`.agent/AGENT.md` v13), die App
+  beobachtet nur Dateien (DirectoryWatcher + 2-s-Fingerprint-Poll, weil
+  In-place-Schreiben kein Event erzeugt); Exec-MCP ist nur die
+  Sandbox-Krücke — Tauri spawnt direkt (D28). Formate, die wir 1:1
+  kanonisieren (D27): History-JSONL je Ticket (agent_run mit Token-
+  Feldern; effektiver Input inkl. Cache), Q&A-Protokoll (`## Questions`,
+  `open_question`, needs_human getrennt), `.agent/actions.json`
+  (+ exec-allowlist/pending, wire-kompatibel zu unserem exec-mcp),
+  `.agent/settings.json` (erfüllt D21). Ausgeschlossen (D29): Git, IDE,
+  On-Device-Summaries (Apple-only), `.agent/chats/` (Altlast).
+
+
 ## 2026-08-28, abends (Projektfenster — BO-Findings nach P3-Gebrauch)
 - Sieben Findings eingearbeitet (Plan: D21–D24 + neuer P4-Zuschnitt):
   Work-Repo pro Projekt überschreibbar (D21, Kundenprojekte mit eigenem

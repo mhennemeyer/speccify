@@ -1,6 +1,6 @@
 ---
 lifecycle: active
-status: Bauen — P1 geliefert 2026-08-26; P2 geliefert 2026-08-27, „Fertig heißt" bestanden 2026-08-28 (claude läuft eingeloggt im Projektfenster-Terminal auf Windows und listet alle elf Projekt-Skills hinter der Junction). P3-Kern geliefert 2026-08-28: Board-Tab (D19, iKanbanAI-Format, Verschieben byte-stabil), Plan-Editor (D20), Tools-/MCPs-/Agent-Tab, Composer-Rückbau (D18) — auf macOS E2E und auf Windows in der VM verifiziert. BO-Findings 2026-08-28 eingearbeitet (D21–D24, P4 = Skill-Quellen/Projekt-Settings/Agent-Config; iKanbanAI-Referenzen aus dem Produkt entfernt — Speccify definiert, Clients folgen; Terminal rechts/unten umgesetzt). Offen: CI-Erstlauf beim nächsten Push, x86-Referenz. Läuft parallel zu `skills-und-tools.md` (BO-Ausnahme von der Ein-Plan-Regel).
+status: Bauen — P1–P3 geliefert und auf macOS/Windows verifiziert. D25 geliefert 2026-08-29: gemeinsamer Agent-Host-Vertrag, Claude- und Codex-Skill-Links, native MCP-Dateien, Terminal-Presets und Repository-Dogfooding. Neu 2026-08-31: **P5 Agent-/Workflow-Parität** (BO stellt iKanbanAI zurück; alles außer Git/IDE kommt nach Speccify — D26–D29, W1–W7, P5 zieht vor den P4-Rest). **W1–W6 geliefert 2026-08-31** — der P5-Kern steht: Policy, Live-Watcher, Ticket-Lifecycle+History+KPIs, Q&A+Notifications, Aktionen, Plan-Lifecycle mit Board-Split. Offen: W7-Feinschliff nach Gebrauch. Offen: CI-Erstlauf beim nächsten Push, x86-Referenz. Läuft parallel zu `skills-und-tools.md` (BO-Ausnahme von der Ein-Plan-Regel).
 sessionId: projektfenster
 ---
 # Plan: Projektfenster — Pläne, Skills, Tools im Projekt verwalten (auch auf Windows)
@@ -45,16 +45,16 @@ Was schon da ist und was der Plan nur verbinden muss:
     expandiert und committet; Herkunft in `.agent/speccify/expansions.yaml`.
   * Tools: `.agent/tools/<name>/TOOL.md` + `<platform>.<ext>`; Status je
     Plattform (`implemented`/`verified`) in `expansions.yaml`.
-  * MCPs: `.mcp.json` (dieselbe Wahrheit wie im iKanban-MCP-Tab).
-  * Agent-Config: `CLAUDE.md`, `AGENTS.md`, ggf. `.agent/AGENT.md`.
+  * MCPs: `.mcp.json` für Claude und `.codex/config.toml` für Codex.
+  * Agent-Config: `CLAUDE.md`, `AGENTS.md`, ggf. `.agent/agent.md`.
 * **iKanban AI als Vorbild, nicht als Abhängigkeit**: Der dortige Schnitt
   (Skills-Tab, Tools-Tab, MCP-Tab, Agent-Terminal, Board) ist die validierte
   UX — aber iKanban ist Swift/macOS. Das Projektfenster übernimmt den
   Schnitt in der Tauri-App, die auf Windows baut.
-* **Wissen des Agenten**: kommt aus dem Projekt selbst (`CLAUDE.md`,
-  `.claude/skills → .agent/skills`), nicht aus der App. Das Terminal muss
-  nur im richtigen cwd starten — den Rest erledigt die bestehende
-  Skills-Mechanik.
+* **Wissen des Agenten**: kommt aus dem Projekt selbst. `.agent/agent.md`
+  und `.agent/skills/` sind kanonisch; `CLAUDE.md`/`.claude/skills` und
+  `AGENTS.md`/`.agents/skills` sind Host-Adapter. Das Terminal muss nur im
+  richtigen cwd starten.
 
 ## Das Fenster
 
@@ -78,10 +78,9 @@ Was schon da ist und was der Plan nur verbinden muss:
   Status **je Plattform**: fehlt / `implemented` / `verified` (+ Datum).
   Genau hier zeigt sich der Windows-Wert: „`macos.sh` verified,
   `windows.ps1` fehlt" ist die Aufgabenliste für den Agenten rechts.
-* **MCPs**: Server aus `.mcp.json` **und** die Permission-Allowlist aus
-  `.claude/settings.json` (`permissions.allow`) — beides projektbezogen
-  (F2, BO 2026-08-26). Globale MCPs verwaltet weiterhin das Dashboard
-  (Server-Tab); der Tab hier zeigt nur, was *dieses Projekt* betrifft.
+* **MCPs**: Server aus `.mcp.json` (Claude) und `.codex/config.toml`
+  (Codex), dazu die Claude-Permission-Allowlist aus
+  `.claude/settings.json`. Globale MCPs verwaltet weiterhin das Dashboard.
 * **Agent** (ggf.): `CLAUDE.md`/`AGENTS.md` anzeigen; mehr erst nach Bedarf.
 * **Rechts**: die bestehende Terminal-Seitenleiste, aber **pro Fenster** mit
   cwd = Projektwurzel und projektbezogenem **Agent-Kommando**: Default
@@ -114,7 +113,8 @@ Was schon da ist und was der Plan nur verbinden muss:
   `pwsh` wenn vorhanden, sonst `powershell.exe`; `COMSPEC` als letzter
   Fallback). Terminals werden pro Fenster-Id geführt (die `HashMap` in
   `Terminals` kann das schon).
-* **D17 — `speccify link` kennt Windows.** `.claude/skills → .agent/skills`
+* **D17 — `speccify link` kennt Windows.** `.claude/skills` und
+  `.agents/skills` zeigen auf `.agent/skills`
   wird auf Windows eine **Directory Junction** (braucht keine Adminrechte);
   schlägt das fehl: Kopie + `verify`-Abgleich (der Fallback war in T2
   ohnehin vorgesehen). Das ist ein kleiner CLI-Beitrag dieses Plans zum
@@ -174,6 +174,14 @@ Was schon da ist und was der Plan nur verbinden muss:
   MCP-Source-Kanal (`source_list`/`add`, T4 im Plan skills-und-tools)
   und `speccify add/expand --library` auf; D21 ist der Spezialfall
   „eine Default-Quelle". → Kern von P4.
+* **D25 — Agent-Host-Vertrag statt Claude-Sonderfall** (2026-08-29):
+  `.agent/agent.md` und `.agent/skills/` sind die einzigen Wahrheiten.
+  `speccify init/link` richtet Claude (`.claude/skills`) und Codex
+  (`.agents/skills`) ein, auf Windows jeweils per Junction-Fallback.
+  Einweisungen erzeugen Pointer für `CLAUDE.md` und `AGENTS.md`; MCPs bleiben
+  im nativen Host-Format (`.mcp.json` bzw. `.codex/config.toml`). Der
+  Projekt-MCP-Tab zeigt beide, das Terminal bietet Host-Presets, ein freies
+  Kommando bleibt möglich. Weitere Hosts ergänzen nur die Adaptertabelle.
 
 ## Meilensteine
 
@@ -319,7 +327,7 @@ geteiltem Traversal-Guard, unbekannte Frontmatter-Zeilen bleiben
 wörtlich), Tools-Tab (Status je Plattform, „Fehlt auf dieser Plattform
 (windows)“ in der VM gezeigt), MCPs-Tab (Server + Allowlist aus
 settings.json und settings.local.json), Agent-Tab (CLAUDE.md/AGENTS.md/
-.agent/AGENT.md + Agent-Kommando; Windows-Default `claude.cmd`),
+.agent/agent.md + Agent-Kommando; Windows-Default `claude.cmd`),
 **Composer-Rückbau komplett** (apps/composer, open_composer samt
 Backend-Spawn-Helfern, /ui-Mount + composer_dist, CI-Jobs composer/
 composer-e2e, Payload- und Skript-Anteile, Doku). Verifikation: 228
@@ -355,6 +363,12 @@ iKanbanAI-Tickets und kann sie verschieben; Pläne sind **editierbar**
 
 ### P4 — Skill-Quellen, Projekt-Settings, Agent-Config (BO-Findings 2026-08-28)
 
+> **Reihenfolge (2026-08-31):** P5 (Workflow-Parität) zieht vor den
+> P4-Rest — der BO stellt iKanbanAI zurück und arbeitet täglich in
+> Speccify; das tägliche Werkzeug braucht zuerst den Workflow. D21
+> (Projekt-Settings) wandert nach P5-W1, weil `.agent/settings.json`
+> dort ohnehin gebraucht wird.
+
 **Fertig heißt:** Ein Projekt kann seine Skill-Quellen wählen (Default =
 Dashboard-Setting, D21), sie im **Skill-Browser** durchsuchen (Ordner =
 Organisation, D24) und Skills von dort importieren (expand, Herkunft
@@ -372,6 +386,226 @@ Dashboard editierbar (D23, claude + codex).
    (Installer, Signierung — **auf echtem Windows ohne Parallels**,
    BO-Finding 2026-08-28: Parallels war nur unsere Fernsteuer-Umgebung,
    Zielbild ist der native Windows-Rechner).
+
+
+### P5 — Agent- und Workflow-Parität (BO-Auftrag 2026-08-31)
+
+> **Auslöser (BO):** „Wir wollen iKanbanAI vorerst zurückstellen und die
+> Agent- und Workflow-Features hier mit einbauen. Speccify soll alles
+> können, was iKanbanAI kann — außer Git- und IDE-Features."
+
+**Kernbefund der Quelltext-Analyse (2026-08-31):** iKanbanAI ist selbst
+längst agent-native. Der frühere Orchestrator (PO-/Developer-Agenten,
+Team-Chat, In-Process-LLM) wurde dort entfernt; heute gilt: **die Policy
+ist Text** (`.agent/AGENT.md`, versioniert, v13), der Agent arbeitet im
+Terminal, die App **beobachtet nur Dateien** und schreibt selbst History
+für eigene Aktionen. Die einzige „Ausführung" läuft über den lokalen
+Exec-MCP — eine Krücke der App-Store-Sandbox. Speccify (Tauri) darf
+direkt spawnen. Parität heißt also überwiegend: **Dateiformate + Watcher
++ UI**, nicht „einen Orchestrator bauen".
+
+#### Entscheide (Fortsetzung)
+
+* **D26 — Agent-native, Policy als Text.** Kein Orchestrator-Code in P5.
+  Speccify erzeugt und versioniert den Workflow-Policy-Text im Projekt
+  (Board-Regeln: aus dem aktiven Plan Tickets schneiden, oberstes
+  Backlog-Ticket nach `order`, **WIP = 1** in Doing, zu Großes splitten,
+  Q&A-Protokoll, „History schreibst du selbst"). Die frühere
+  Orchestrator-Blaupause (decide(snapshot): `needs_human` **vor**
+  `ready` prüfen; WIP>1 ⇒ eskalieren; Ping-Pong ≥ 3 aus der History;
+  Idle-Watchdog 120 s) ist dokumentiert und kommt erst nach
+  Gebrauchsevidenz als Code (P6-Kandidat).
+* **D27 — Die Formate werden Speccify-Formate.** Wir übernehmen die
+  Dateiformate 1:1 und kanonisieren sie bei uns (Speccify definiert,
+  iKanbanAI bleibt kompatibler Client — Rollen wie in D19):
+  - History: `.agent/board/history/<ticket-id>/index.jsonl`, append-only,
+    Events `ticket_created|ticket_edited|station_changed|agent_run`,
+    `actor: user|system|agent:<name>`; nur `agent_run` trägt
+    `tokens_in/out/cache_read/cache_write`, `duration_ms`. Effektiver
+    Input = in + cache_read + cache_write (sonst „mehr out als in").
+  - Q&A: `## Questions` im Ticket-Body, `### Q<n> · open · <ts>` /
+    `### A<n> · bo · <ts>`, Frontmatter `open_question: Q<n>` (immer die
+    älteste offene); tolerant lesen, kanonisch schreiben; `needs_human`
+    bleibt getrennt (Antwort darf die Abnahme-Markierung nicht löschen).
+  - Aktionen: `.agent/actions.json` (name, command = Id, description,
+    source agent|bo, confirmed, toolbar, shortcut, inputs mit kinds
+    text/number/file/folder/choice/color, target local|parallels;
+    `{name}`-Platzhalter; argv ohne Shell; `toolui:<kind> <paramsJSON>`).
+  - Freigaben: `.agent/exec-allowlist.json` + `.agent/exec-pending.json`
+    (wire-kompatibel — unser exec-mcp nutzt sie heute schon).
+  - Projekt-Settings: `.agent/settings.json` (Punkt-Notation, unbekannte
+    Schlüssel überleben, keine Secrets) — erfüllt zugleich D21.
+* **D28 — Ausführung nativ.** Aktionen startet die App als eigenen
+  Prozess (Supervisor/portable-pty vorhanden); Live-Output gestreamt,
+  Stop = Prozess killen, Puffer „Ende behalten" (~200k, Render 40k),
+  Fortschrittsmarker `[3/20]` in den letzten Zeilen. Der exec-MCP bleibt
+  für gesandboxte Clients — die eigene App braucht ihn nicht (dieselbe
+  Haltung wie D14).
+* **D29 — Ausgeschlossen:** Git (InProcessGit/GitUI), IDE/Editor
+  (Tree, Editor-Tabs, Symbol-Index, Emacs-Keymap), On-Device-Summaries
+  (Apple Foundation Models, macOS-26-only — auf Windows nicht
+  verfügbar; Plan-Zusammenfassungen macht bei uns der Agent),
+  `.agent/chats/` (Altlast der entfernten Laufzeit, kein Code liest sie).
+
+#### Meilensteine
+
+**W1 — Policy, Setup, Projekt-Settings. ✅ 2026-08-31**
+Geliefert: `workflow_setup.rs` — versionierter Policy-Block (v1,
+`<!-- speccify:workflow:begin/end -->`-Marker-Merge, fremder Inhalt bleibt
+Byte für Byte), `project_workflow_status/install` (Zustände
+missing/outdated/current + pending-Liste; Host-Dateien ohne Verweis werden
+nur gemeldet, nie angefasst; angepasste Skills bleiben unberührt),
+Ticket-Skills `/ticket-next`+`/ticket-ask`, Scaffold, Skill-Links für
+beide Hosts (Windows: symlink→mklink-/J-Fallback), Settings-Store
+`project_settings_get/set` (Punkt-Notation, unbekannte Schlüssel
+überleben, null löscht, leere Datei verschwindet) und der
+Workflow-Banner im Projektfenster. **„Fertig heißt" bestanden:** im
+Fixture per Banner-Klick eingerichtet; `claude -p` hat daraufhin den
+aktiven Plan in zwei Backlog-Tickets geschnitten (order, plan:,
+ticket_created-History) und genau eines protokollgerecht abgearbeitet
+(Doing→Done, station_changed + agent_run mit Token-Feldern,
+Fortschrittsnotiz, Werk-Datei angelegt) — ohne dass die App steuert.
+Verifikation: 31 Rust-Tests, Typecheck/Build, clippy, E2E.
+
+*Ursprünglicher Zuschnitt:* Versionierter Workflow-
+Abschnitt in `.agent/agent.md` (Marker-Merge `speccify:begin/end`,
+fremder Inhalt bleibt; Zustände missing/outdated/current mit Banner —
+bewusst Knopf, nicht automatisch), Host-Pointer wie gehabt (D25),
+Skills `/ticket-next` und `/ticket-ask` als mitgelieferte Griffe,
+`.agent/settings.json`-Store (D21/D27). Scaffold `ensure` für
+`.agent/{board,plans}`.
+**Fertig heißt:** Ein frisches Projekt bekommt per Klick die komplette
+Einweisung; claude schneidet daraufhin aus dem aktiven Plan Tickets und
+arbeitet das oberste ab — ohne dass die App etwas steuert.
+
+**W2 — Watcher-Basisdienst + Live-Board. ✅ 2026-08-31**
+Geliefert: `project_watch.rs` — ein Thread je Projektfenster, alle 2 s
+Fingerprint (Pfad+mtime+Größe) je Bereich (board/plans/skills/tools/
+actions/settings/agent/mcps), Änderung ⇒ `project-changed`-Event mit
+Bereichsliste; erster Lauf primt still, Thread stirbt mit dem Fenster.
+**Bewusst Poll-only statt notify-Events**: In-place-Schreiben erzeugt
+ohnehin keine Verzeichnis-Events, der Poll ist der notwendige
+Mechanismus — Events wären nur Latenz-Optimierung und kämen bei Bedarf
+dazu. Frontend: alle Tabs + Workflow-Banner laden bei ihrem Bereich
+nach (Plan-Editor ist geschützt: kein Reload mitten ins Editieren).
+E2E: Ticket von außen angelegt + station geändert ⇒ Board zeigt beides
+binnen ~4 s ohne jeden Klick.
+
+*Ursprünglicher Zuschnitt:* Ein Dienst je Projektfenster:
+Verzeichnis-Events (notify) **plus 2-s-Fingerprint-Poll** (Name+mtime+
+Größe — Agenten schreiben in place, das erzeugt kein Event). Board,
+Pläne, Aktionen laden live statt per „Aktualisieren"-Knopf.
+KPI-/Parse-Arbeit off-main mit mtime-Cache.
+
+**W3 — Ticket-Lifecycle voll + History + KPIs. ✅ 2026-08-31**
+Geliefert: `board_cmd.rs` — `project_ticket_create` (Id = Titel-Slug +
+Hex-Suffix, atomar), `project_ticket_save` (Editor-Sheet in einem Rutsch;
+byte-stabiles Frontmatter-Update: bekannte Zeilen ersetzt/ergänzt/
+entfernt, unbekannte bleiben in Reihenfolge), `project_ticket_delete`
+(Guard auf .agent/board), `project_ticket_history` (tolerant, korrupte
+Zeilen übersprungen, neueste zuerst), `project_board_kpis` (nur
+agent_run; effektiver Input = in + cache_read + cache_write); App-
+Aktionen (create/save/move) loggen History mit `actor: user`. UI:
+„+ Ticket" + Editor-Sheet (Titel/Station/order/ready/braucht BO/plan/
+Body, Löschen mit Rückfrage), Drag&Drop zwischen Spalten, Done-Spalte
+nach `plan` gruppiert (klappbar), KPI-Chip mit aufklappbarer
+Läufe-Liste, History im Ticket-Detail (gedeckelt 100). E2E: KPI-Chip
+zeigt claudes echten Lauf aus W1 („1 Lauf · ↑30.0k ↓1.5k · 2m");
+Edit-Sheet über die UI gespeichert ⇒ `ready: true` byte-stabil in der
+Datei + `ticket_edited`-History. (AX-Tippen in Modal-Felder ist als
+Testwerkzeug unzuverlässig — die Commands sind Rust-getestet, DnD
+probiert der BO mit echter Maus.)
+
+*Ursprünglicher Zuschnitt:* Anlegen/Editieren/
+Löschen (Editor-Sheet), `ready`/`needs_human`/`order`/`plan`/`model`,
+Body-Append ohne Frontmatter-Anfassen, Id = Titel-Slug + 4-Zeichen-
+Suffix, atomar schreiben; App-Aktionen loggen History (`actor: user`).
+Drag&Drop zwischen Spalten, Done-Gruppierung nach `plan` (klappbar).
+KPI-Kopfzeile („n Läufe · ↑… ↓…", effektiver Input!) + Aktivitätsliste
+aus `agent_run`-Events; History im Ticket-Detail (gedeckelt, ~200).
+
+**W4 — Q&A + „braucht mich" + Notifications. ✅ 2026-08-31**
+Geliefert: Q&A-Protokoll in Rust (`parse_questions` tolerant — Trenner
+·/-/|, Marker optional, mehrzeilige Texte; `project_ticket_answer`
+schreibt kanonisch `### A<n> · bo · <ts>`, verweigert Doppelantworten,
+rückt `open_question` auf die nächste älteste offene Frage oder
+entfernt die Zeile — Frontmatter byte-stabil, `needs_human` bleibt
+unberührt), `open_question` im Board-Eintrag, Fragen-Sektion im
+Ticket-Detail ganz oben (orange, Antwortfeld, „Answered (n)" klappbar;
+Questions aus der Body-Anzeige gefiltert), Karten-Badge „?",
+Board-Filter „braucht mich" (`open_question` ∨ `needs_human`, bewusst
+nicht persistiert). Watcher meldet **neue** offene Fragen als
+System-Notification (tauri-plugin-notification; erster Lauf primt
+still, Dedupe `<ticket>|Q<n>`, unabhängig vom aktiven Tab) + Event
+`open-question`. E2E: Frage von außen ins Doing-Ticket ⇒ Badge live,
+Antwort über die UI ⇒ kanonischer A-Block + `open_question` entfernt +
+History „Frage Q1 beantwortet". Offen: die sichtbare Zustellung der
+macOS-Notification (Dev-App + Berechtigungsprompt) im Gebrauch prüfen.
+
+*Ursprünglicher Zuschnitt:* Fragen-Sektion im
+Ticket-Detail ganz oben (Antwortfeld, „Answered (n)" klappbar),
+Board-Filter „braucht mich" (`open_question` ∨ `needs_human`),
+OpenQuestionWatch-Semantik (erster Durchlauf primt still; nur die
+älteste Frage je Ticket; Dedupe `<ticket>|Q<n>`), System-Notification
+über das Tauri-Notification-Plugin, projektweit unabhängig vom Tab.
+
+**W5 — Aktionen. ✅ 2026-08-31**
+Geliefert: `actions_cmd.rs` — `.agent/actions.json` lesen/anlegen/ändern/
+löschen (command = Id; tolerant: unbekannte Input-Kinds bleiben erhalten),
+`project_action_confirm` = **ein** Klick macht aus einem Vorschlag oder
+Pending-Eintrag eine bestätigte Aktion **plus** permanenten Allowlist-
+Eintrag (wire-kompatibel zum exec-MCP) und räumt exec-pending auf.
+Ausführung nativ (D28): argv ohne Shell (shell-words), Spawn im
+Projekt-cwd mit angereichertem PATH, stdout+stderr zeilenweise als
+`action-output`-Events, `action-exit` mit Code/Dauer, Stop killt,
+Registry räumt beim App-Ende. UI: Aktionen-Tab (Bestätigte/Vorschläge/
+Neu), Input-Formulare (text/number/choice/file/folder via Dialog/color;
+`{name}`-Substitution), Live-Output-Panel (Autoscroll, Kappung 2000
+Zeilen, Fortschritt `[3/20]` aus den letzten Zeilen), **Chart-Renderer**
+(`{"kind":"chart",…}`-Zeile → SVG live, line + bar, Legende; Pflicht
+strikt, Optionales tolerant, Rückfall auf Text). `toolui:`- und
+Parallels-Aktionen erscheinen mit „folgt"-Badge (Panel-Registry und
+vm_exec nach Bedarf, W7). E2E: Pending „ls -la notes" per Klick
+bestätigt (Aktion + Allowlist permanent + pending-Datei weg); Demo-Lauf
+mit Fortschritt, Chart (2 Serien) und exit 0 im Live-Panel.
+
+*Ursprünglicher Zuschnitt:* Aktionen-Tab (bestätigte/Vorschläge/manuell,
+Reset), Ausführung nativ (D28) mit Live-Output-Fenster, Stop,
+Fortschrittsring, Chart-Renderer (`{"kind":"chart",…}`-Zeile → Diagramm,
+live; Pflichtfelder streng, Optionales tolerant, nie Output verlieren),
+Pending-Import (abgelehnter Agent-Befehl → unbestätigte Aktion;
+Bestätigen = confirmed + permanente Allowlist), Shortcuts/Toolbar.
+`toolui:`-Panels als Registry (chart zuerst; sqlite nach Bedarf).
+
+**W6 — Plan-Lifecycle + Komfort. ✅ 2026-08-31**
+Geliefert: `plan_cmd.rs` — `project_plan_activate` mit der Invariante
+**höchstens ein aktiver Plan** (bisheriger active → onHold, nur
+Frontmatter, Archiv unangetastet; Achtung: im Speccify-Repo selbst gilt
+die BO-Ausnahme zweier aktiver Pläne — dort einfach nicht klicken),
+`escalation:`-Frontmatter (einzeilig oder Block, `reason` zählt) im
+Plan-Eintrag + rotes Banner mit „Auflösen" (`clear_escalation` entfernt
+nur diese Zeilen), Lifecycle-Badges (active/onHold/done/draft/research).
+**Kern-Geste:** Das Board zeigt den aktiven Plan aufklappbar über den
+Spalten (live über den Watcher) — Plan und Board gleichzeitig sichtbar.
+„Als Prompt kopieren" auf Plan und Ticket (Pfad-Referenz + Markdown-
+Zaun, Zaunlänge gegen Backticks im Inhalt). E2E: Aktivieren parkte den
+bisherigen Plan nachweislich (Dateien), Banner erschien und „Auflösen"
+entfernte die Zeile, die Zwischenablage trug den fertigen Prompt.
+
+*Ursprünglicher Zuschnitt:* Lifecycle `draft|active|onHold|done|
+research` mit Invariante **genau ein active** (activate ⇒ bisheriger
+auf onHold), `escalation:`-Frontmatter + rotes Banner + „Auflösen";
+Plan und Board **gleichzeitig sichtbar** (Split in der Mitte — die
+Kern-Geste); „Als Prompt kopieren" für Ticket/Plan-Ausschnitt
+(Markdown mit `Pfad:Zeile`-Referenz); Plan-Tabs nach Bedarf.
+
+**W7 — Feinschliff nach Gebrauch.** Kandidaten: projektweite Auswahl
+(Board ↔ Inspector), Onboarding-Seiten, Aktivitäts-Center in der
+Titelleiste (in-memory, cap 500), Orchestrator-Code (D26-Blaupause),
+Detached-Fenster für Pläne/Aktionen.
+
+**Nicht in P5:** alles aus D29; Discovery-/Speccify-MCP-Anbindung der
+iKanbanAI-Seite (wird obsolet — Speccify ist das Produkt selbst).
 
 ## Offene Fragen
 
