@@ -5,20 +5,25 @@
 
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 import TerminalPanel from "./components/TerminalPanel";
 import { ErrorBox, Spinner } from "./components/ui";
+import { AGENT_PRESETS, DEFAULT_AGENT_COMMAND } from "./lib/agents";
+import ActionsTab from "./views/project/ActionsTab";
 import AgentTab from "./views/project/AgentTab";
 import BoardTab from "./views/project/BoardTab";
 import McpsTab from "./views/project/McpsTab";
 import PlansTab from "./views/project/PlansTab";
 import SkillsTab from "./views/project/SkillsTab";
 import ToolsTab from "./views/project/ToolsTab";
+import WorkflowBanner from "./views/project/WorkflowBanner";
 
 const TABS = [
   { id: "board", label: "Board" },
   { id: "plans", label: "Pläne" },
   { id: "skills", label: "Skills" },
   { id: "tools", label: "Tools" },
+  { id: "actions", label: "Aktionen" },
   { id: "mcps", label: "MCPs" },
   { id: "agent", label: "Agent" },
 ] as const;
@@ -30,12 +35,6 @@ type TabId = (typeof TABS)[number]["id"];
 function agentCommandKey(project: string) {
   return `speccify.project.agentCommand:${project}`;
 }
-
-/** Windows-Default `claude.cmd`: PowerShell verweigert das npm-Shim
- *  `claude.ps1` per ExecutionPolicy (P2-Befund) — das cmd-Shim läuft immer. */
-const DEFAULT_AGENT_COMMAND = navigator.userAgent.includes("Windows")
-  ? "claude.cmd"
-  : "claude";
 
 /** Terminal-Position pro Projekt (BO-Finding 2026-08-28: rechts ODER unten). */
 type TerminalPosition = "right" | "bottom";
@@ -72,6 +71,25 @@ export default function ProjectShell() {
       })
       .catch((e) => setError(String(e)));
   }, []);
+
+  // W2: Watcher-Basisdienst — der Rust-Poll meldet geänderte Bereiche,
+  // die Tabs laden dann nach (statt „Aktualisieren"-Knopf).
+  const [refresh, setRefresh] = useState<Record<string, number>>({});
+  useEffect(() => {
+    if (!project) return;
+    void invoke("project_watch_start", { project });
+    const unlisten = listen<{ areas: string[] }>("project-changed", (event) => {
+      setRefresh((previous) => {
+        const next = { ...previous };
+        for (const area of event.payload.areas) next[area] = (next[area] ?? 0) + 1;
+        return next;
+      });
+    });
+    return () => {
+      void unlisten.then((dispose) => dispose());
+      void invoke("project_watch_stop");
+    };
+  }, [project]);
 
   const toggleTerminalPosition = () => {
     const next: TerminalPosition = terminalPosition === "right" ? "bottom" : "right";
@@ -144,25 +162,30 @@ export default function ProjectShell() {
         }`}
       >
       <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-5">
+        <WorkflowBanner project={project} />
         {/* Tabs bleiben gemountet (nur versteckt): Wechsel sofortig, Fetch-State erhalten. */}
         <div className={active === "board" ? "min-h-0 flex-1" : "hidden"}>
-          <BoardTab project={project} />
+          <BoardTab project={project} refresh={refresh.board} planRefresh={refresh.plans} />
         </div>
         <div className={active === "plans" ? "min-h-0 flex-1" : "hidden"}>
-          <PlansTab project={project} />
+          <PlansTab project={project} refresh={refresh.plans} />
         </div>
         <div className={active === "skills" ? "min-h-0 flex-1" : "hidden"}>
-          <SkillsTab project={project} />
+          <SkillsTab project={project} refresh={refresh.skills} />
         </div>
         <div className={active === "tools" ? "min-h-0 flex-1" : "hidden"}>
-          <ToolsTab project={project} />
+          <ToolsTab project={project} refresh={refresh.tools} />
+        </div>
+        <div className={active === "actions" ? "min-h-0 flex-1" : "hidden"}>
+          <ActionsTab project={project} refresh={refresh.actions} />
         </div>
         <div className={active === "mcps" ? "min-h-0 flex-1" : "hidden"}>
-          <McpsTab project={project} />
+          <McpsTab project={project} refresh={refresh.mcps} />
         </div>
         <div className={active === "agent" ? "min-h-0 flex-1" : "hidden"}>
           <AgentTab
             project={project}
+            refresh={refresh.agent}
             agentCommand={agentCommand}
             onAgentCommand={updateAgentCommand}
           />
@@ -202,6 +225,22 @@ export default function ProjectShell() {
                 spellCheck={false}
                 className="w-full rounded border border-slate-600 bg-slate-800 px-3 py-2 font-mono text-sm text-slate-100"
               />
+              <span className="mt-2 flex flex-wrap gap-1.5">
+                {AGENT_PRESETS.map((preset) => (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    onClick={() => updateAgentCommand(preset.command)}
+                    className={`rounded px-2 py-1 text-xs ${
+                      agentCommand === preset.command
+                        ? "bg-slate-600 text-white"
+                        : "bg-slate-800 text-slate-400 hover:text-slate-200"
+                    }`}
+                  >
+                    {preset.label}
+                  </button>
+                ))}
+              </span>
             </label>
             <button
               onClick={() => setTerminalStarted(true)}
@@ -210,8 +249,8 @@ export default function ProjectShell() {
               Agent-Terminal starten
             </button>
             <p className="max-w-xs text-center text-xs text-slate-500">
-              Startet im Projektverzeichnis — der Agent findet Skills und Pläne
-              über <code>.claude/</code> und <code>.agent/</code> selbst.
+              Startet im Projektverzeichnis — Skills leben unter{" "}
+              <code>.agent/skills</code> und werden für den gewählten Host verlinkt.
             </p>
           </div>
         )}

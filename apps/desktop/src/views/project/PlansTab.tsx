@@ -4,9 +4,10 @@
 // Editor, gespeichert über project_write_file. Unbekannte Frontmatter-
 // Zeilen bleiben unangetastet.
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import Markdown, { stripFrontmatter } from "../../components/Markdown";
+import { copyPrompt } from "../../lib/prompt";
 import { LoadingBoundary, useAsync } from "../../components/ui";
 
 export interface PlanEntry {
@@ -14,6 +15,7 @@ export interface PlanEntry {
   title: string;
   lifecycle: string | null;
   status: string | null;
+  escalation: string | null;
   archived: boolean;
 }
 
@@ -73,7 +75,11 @@ function LifecycleBadge({ lifecycle }: { lifecycle: string | null }) {
       ? "bg-emerald-100 text-emerald-800"
       : lifecycle === "done"
         ? "bg-slate-200 text-slate-600"
-        : "bg-amber-100 text-amber-800";
+        : lifecycle === "onHold"
+          ? "bg-sky-100 text-sky-800"
+          : lifecycle === "research"
+            ? "bg-violet-100 text-violet-800"
+            : "bg-amber-100 text-amber-800";
   return (
     <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${tone}`}>
       {lifecycle}
@@ -191,7 +197,7 @@ function PlanEditor({
   );
 }
 
-export default function PlansTab({ project }: { project: string }) {
+export default function PlansTab({ project, refresh }: { project: string; refresh?: number }) {
   const list = useAsync(
     () => invoke<PlanEntry[]>("project_plans", { project }),
     `plans:${project}`,
@@ -205,6 +211,15 @@ export default function PlansTab({ project }: { project: string }) {
         : Promise.resolve(""),
     `plan-body:${project}:${selected ?? ""}`,
   );
+
+  useEffect(() => {
+    // Live-Reload — aber nie mitten ins Editieren hinein.
+    if (refresh && !editing) {
+      void list.reload();
+      void body.reload();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refresh]);
 
   const plans = list.data ?? [];
   const active = plans.filter((plan) => !plan.archived);
@@ -253,6 +268,28 @@ export default function PlansTab({ project }: { project: string }) {
                 />
               ) : (
                 <div className="min-h-0 flex-1 overflow-y-auto">
+                  {selectedPlan.escalation ? (
+                    <div className="mb-3 flex items-center justify-between gap-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2">
+                      <p className="text-xs text-red-800">
+                        <span className="font-semibold">Eskalation:</span>{" "}
+                        {selectedPlan.escalation}
+                      </p>
+                      <button
+                        onClick={() =>
+                          void invoke("project_plan_resolve_escalation", {
+                            project,
+                            file: selectedPlan.file,
+                          }).then(() => {
+                            void list.reload();
+                            void body.reload();
+                          })
+                        }
+                        className="shrink-0 rounded bg-red-600 px-3 py-1 text-xs font-medium text-white hover:bg-red-700"
+                      >
+                        Auflösen
+                      </button>
+                    </div>
+                  ) : null}
                   <div className="mb-3 flex items-start justify-between gap-3">
                     {selectedPlan.status ? (
                       <p className="rounded bg-slate-100 px-3 py-2 text-xs text-slate-600">
@@ -261,13 +298,38 @@ export default function PlansTab({ project }: { project: string }) {
                     ) : (
                       <span />
                     )}
-                    <button
-                      onClick={() => setEditing(true)}
-                      disabled={body.loading || body.data === null}
-                      className="shrink-0 rounded border border-slate-300 px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-100 disabled:opacity-40"
-                    >
-                      Bearbeiten
-                    </button>
+                    <div className="flex shrink-0 gap-2">
+                      {!selectedPlan.archived && selectedPlan.lifecycle !== "active" ? (
+                        <button
+                          onClick={() =>
+                            void invoke("project_plan_activate", {
+                              project,
+                              file: selectedPlan.file,
+                            }).then(() => void list.reload())
+                          }
+                          className="rounded bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-700"
+                        >
+                          Aktivieren
+                        </button>
+                      ) : null}
+                      <button
+                        onClick={() =>
+                          void copyPrompt(selectedPlan.file, body.data ?? "")
+                        }
+                        disabled={body.data === null}
+                        className="rounded border border-slate-300 px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-100 disabled:opacity-40"
+                        title="Pfad + Inhalt als Markdown-Prompt in die Zwischenablage"
+                      >
+                        Als Prompt kopieren
+                      </button>
+                      <button
+                        onClick={() => setEditing(true)}
+                        disabled={body.loading || body.data === null}
+                        className="rounded border border-slate-300 px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-100 disabled:opacity-40"
+                      >
+                        Bearbeiten
+                      </button>
+                    </div>
                   </div>
                   <LoadingBoundary loading={body.loading} error={body.error} label="Plan lesen…">
                     <Markdown text={stripFrontmatter(body.data ?? "")} />

@@ -30,7 +30,7 @@ fn window_label(root: &Path) -> String {
 }
 
 /// Pfad aus der UI → existierende, kanonische Projektwurzel.
-fn resolve_project_root(raw: &str) -> Result<PathBuf, String> {
+pub(crate) fn resolve_project_root(raw: &str) -> Result<PathBuf, String> {
     let trimmed = raw.trim();
     if trimmed.is_empty() {
         return Err("Kein Projektpfad angegeben.".into());
@@ -217,6 +217,8 @@ pub struct PlanEntry {
     title: String,
     lifecycle: Option<String>,
     status: Option<String>,
+    /// `escalation:` — einzeilig oder Block (`reason` zählt). Rotes Banner.
+    escalation: Option<String>,
     archived: bool,
 }
 
@@ -248,6 +250,16 @@ fn plans_in(dir: &Path, root: &Path, archived: bool, out: &mut Vec<PlanEntry>) {
             title: first_heading(body).unwrap_or(fallback),
             lifecycle: frontmatter_str(&frontmatter, "lifecycle"),
             status: frontmatter_str(&frontmatter, "status"),
+            escalation: frontmatter
+                .as_ref()
+                .and_then(|value| value.get("escalation"))
+                .and_then(|entry| match entry {
+                    serde_yaml::Value::String(text) => Some(text.clone()),
+                    other => other
+                        .get("reason")
+                        .and_then(|reason| reason.as_str())
+                        .map(str::to_string),
+                }),
             archived,
         });
     }
@@ -372,7 +384,7 @@ pub fn project_skills(project: String) -> Result<Vec<SkillEntry>, String> {
 /// Traversal-Guard für read **und** write: nur relative Pfade ohne `..`,
 /// ohne Wurzel (has_root fängt Windows-Sonderfälle wie `/etc/passwd` —
 /// dort laufwerkslos und damit NICHT is_absolute) und ohne Laufwerkspräfix.
-fn safe_project_path(root: &Path, file: &str) -> Result<PathBuf, String> {
+pub(crate) fn safe_project_path(root: &Path, file: &str) -> Result<PathBuf, String> {
     let relative = Path::new(file);
     let escapes = relative.is_absolute()
         || relative.has_root()
@@ -424,13 +436,17 @@ pub struct TicketEntry {
     needs_human: bool,
     /// Backlog-Sortierung: `order` → `created` → `id`.
     order: Option<i64>,
+    /// Beim Schneiden gesetzt — treibt die Done-Gruppierung.
+    plan: Option<String>,
+    /// `open_question: Q<n>` — älteste offene Rückfrage an den Menschen.
+    open_question: Option<String>,
     body: String,
 }
 
 /// Flaches Frontmatter: Zeilen zwischen erster und zweiter `---`-Zeile,
 /// jede als `key: value` (erste `:`-Trennung). Kein YAML-Parser — die
 /// Ticket-Dateien sind flach, und wir wollen sie byte-stabil lassen.
-fn parse_flat_frontmatter(text: &str) -> Option<(Vec<(String, String)>, &str)> {
+pub(crate) fn parse_flat_frontmatter(text: &str) -> Option<(Vec<(String, String)>, &str)> {
     let mut lines = text.split_inclusive('\n');
     if lines.next()?.trim_end() != "---" {
         return None;
@@ -450,7 +466,7 @@ fn parse_flat_frontmatter(text: &str) -> Option<(Vec<(String, String)>, &str)> {
     None
 }
 
-fn flat_lookup<'a>(fields: &'a [(String, String)], key: &str) -> Option<&'a str> {
+pub(crate) fn flat_lookup<'a>(fields: &'a [(String, String)], key: &str) -> Option<&'a str> {
     fields
         .iter()
         .find(|(k, _)| k.eq_ignore_ascii_case(key))
@@ -510,6 +526,8 @@ pub fn project_board(project: String) -> Result<Vec<TicketEntry>, String> {
             ready: flat_truthy(&fields, "ready"),
             needs_human: flat_truthy(&fields, "needs_human"),
             order: flat_lookup(&fields, "order").and_then(|raw| raw.parse().ok()),
+            plan: flat_lookup(&fields, "plan").map(str::to_string),
+            open_question: flat_lookup(&fields, "open_question").map(str::to_string),
             body: body.to_string(),
         });
     }
@@ -560,7 +578,30 @@ pub fn project_board_move(project: String, file: String, station: String) -> Res
     if !replaced {
         return Err(format!("Keine station:-Zeile im Frontmatter: {file}"));
     }
-    std::fs::write(&path, out).map_err(|e| format!("{}: {e}", path.display()))
+    let old_station = text
+        .lines()
+        .find_map(|line| line.strip_prefix("station:"))
+        .map(str::trim)
+        .unwrap_or("")
+        .to_string();
+    let ticket_id = text
+        .lines()
+        .find_map(|line| line.strip_prefix("id:"))
+        .map(str::trim)
+        .map(str::to_string)
+        .unwrap_or_else(|| {
+            path.file_stem()
+                .map(|stem| stem.to_string_lossy().into_owned())
+                .unwrap_or_default()
+        });
+    std::fs::write(&path, out).map_err(|e| format!("{}: {e}", path.display()))?;
+    crate::board_cmd::log_user_event(
+        &root,
+        &ticket_id,
+        "station_changed",
+        format!("{old_station} -> {station}"),
+    );
+    Ok(())
 }
 
 // --- Tools (P3: TOOL.md + Status je Plattform) --------------------------------
@@ -711,16 +752,18 @@ pub fn project_platform() -> &'static str {
     }
 }
 
-// --- MCPs (F2: .mcp.json + Allowlist) -----------------------------------------
+// --- MCPs (hosteigene Projektdateien + Claude-Allowlist) ----------------------
 
 #[derive(Serialize)]
 pub struct McpInfo {
-    /// `mcpServers` aus `.mcp.json` (roh — die UI zeigt Name + Details).
-    servers: serde_json::Value,
+    /// `mcpServers` aus Claudes `.mcp.json`.
+    claude_servers: serde_json::Value,
+    /// `mcp_servers` aus Codex' `.codex/config.toml`.
+    codex_servers: serde_json::Value,
     /// `permissions.allow` aus `.claude/settings.json`.
-    allow: Vec<String>,
+    claude_allow: Vec<String>,
     /// `permissions.allow` aus `.claude/settings.local.json`.
-    allow_local: Vec<String>,
+    claude_allow_local: Vec<String>,
 }
 
 fn permissions_allow(path: &Path) -> Vec<String> {
@@ -742,19 +785,29 @@ fn permissions_allow(path: &Path) -> Vec<String> {
         .unwrap_or_default()
 }
 
-/// Projektbezogene MCP-Server und Claude-Allowlist (lesend, F2).
+fn codex_mcp_servers(path: &Path) -> serde_json::Value {
+    std::fs::read_to_string(path)
+        .ok()
+        .and_then(|text| toml::from_str::<toml::Value>(&text).ok())
+        .and_then(|value| value.get("mcp_servers").cloned())
+        .and_then(|servers| serde_json::to_value(servers).ok())
+        .unwrap_or(serde_json::Value::Null)
+}
+
+/// Projektbezogene MCP-Server beider Hosts und Claude-Allowlist (lesend).
 #[tauri::command]
 pub fn project_mcps(project: String) -> Result<McpInfo, String> {
     let root = resolve_project_root(&project)?;
-    let servers = std::fs::read_to_string(root.join(".mcp.json"))
+    let claude_servers = std::fs::read_to_string(root.join(".mcp.json"))
         .ok()
         .and_then(|text| serde_json::from_str::<serde_json::Value>(&text).ok())
         .and_then(|value| value.get("mcpServers").cloned())
         .unwrap_or(serde_json::Value::Null);
     Ok(McpInfo {
-        servers,
-        allow: permissions_allow(&root.join(".claude/settings.json")),
-        allow_local: permissions_allow(&root.join(".claude/settings.local.json")),
+        claude_servers,
+        codex_servers: codex_mcp_servers(&root.join(".codex/config.toml")),
+        claude_allow: permissions_allow(&root.join(".claude/settings.json")),
+        claude_allow_local: permissions_allow(&root.join(".claude/settings.local.json")),
     })
 }
 
@@ -762,11 +815,16 @@ pub fn project_mcps(project: String) -> Result<McpInfo, String> {
 #[tauri::command]
 pub fn project_agent_files(project: String) -> Result<Vec<String>, String> {
     let root = resolve_project_root(&project)?;
-    Ok(["CLAUDE.md", "AGENTS.md", ".agent/AGENT.md"]
-        .into_iter()
-        .filter(|candidate| root.join(candidate).is_file())
-        .map(str::to_string)
-        .collect())
+    Ok([
+        "CLAUDE.md",
+        "AGENTS.override.md",
+        "AGENTS.md",
+        ".agent/agent.md",
+    ]
+    .into_iter()
+    .filter(|candidate| root.join(candidate).is_file())
+    .map(str::to_string)
+    .collect())
 }
 
 #[cfg(test)]
@@ -952,6 +1010,43 @@ mod tests {
         assert_eq!(tool.platforms[0].name, "macos");
         assert_eq!(tool.platforms[0].status.as_deref(), Some("verified"));
         assert_eq!(tool.platforms[0].checked.as_deref(), Some("2026-08-28"));
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn mcps_are_read_from_claude_and_codex_project_files() {
+        let dir = project_fixture("mcps");
+        std::fs::create_dir_all(dir.join(".codex")).unwrap();
+        std::fs::create_dir_all(dir.join(".claude")).unwrap();
+        std::fs::write(
+            dir.join(".mcp.json"),
+            r#"{"mcpServers":{"claude-server":{"type":"http","url":"http://127.0.0.1:1"}}}"#,
+        )
+        .unwrap();
+        std::fs::write(
+            dir.join(".codex/config.toml"),
+            "[mcp_servers.codex-server]\nurl = \"http://127.0.0.1:2\"\n",
+        )
+        .unwrap();
+        std::fs::write(
+            dir.join(".claude/settings.json"),
+            r#"{"permissions":{"allow":["mcp__claude-server__read"]}}"#,
+        )
+        .unwrap();
+
+        let info = project_mcps(dir.to_string_lossy().into_owned()).unwrap();
+
+        assert_eq!(
+            info.claude_servers["claude-server"]["url"],
+            "http://127.0.0.1:1"
+        );
+        assert_eq!(
+            info.codex_servers["codex-server"]["url"],
+            "http://127.0.0.1:2"
+        );
+        assert_eq!(info.claude_allow, vec!["mcp__claude-server__read"]);
+        assert!(info.claude_allow_local.is_empty());
 
         let _ = std::fs::remove_dir_all(&dir);
     }

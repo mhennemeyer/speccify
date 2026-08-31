@@ -1,7 +1,7 @@
 // Skills-Tab (Plan projektfenster.md, P1): normale, expandierte Skills aus
 // .agent/skills/ (D8) mit Herkunft aus expansions.yaml. Lesend.
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import Markdown, { stripFrontmatter } from "../../components/Markdown";
 import { LoadingBoundary, useAsync } from "../../components/ui";
@@ -18,8 +18,8 @@ export interface SkillEntry {
   } | null;
 }
 
-export default function SkillsTab({ project }: { project: string }) {
-  const { data, loading, error } = useAsync(
+export default function SkillsTab({ project, refresh }: { project: string; refresh?: number }) {
+  const { data, loading, error, reload } = useAsync(
     () => invoke<SkillEntry[]>("project_skills", { project }),
     `skills:${project}`,
   );
@@ -33,6 +33,14 @@ export default function SkillsTab({ project }: { project: string }) {
         : Promise.resolve(""),
     `skill-body:${project}:${skill?.file ?? ""}`,
   );
+
+  useEffect(() => {
+    if (refresh) {
+      void reload();
+      void body.reload();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refresh]);
 
   return (
     <LoadingBoundary loading={loading} error={error} label="Skills lesen…">

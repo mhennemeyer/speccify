@@ -3,7 +3,7 @@
 // Plattform" ist prominent — sie ist die Aufgabenliste für den Agenten
 // im Terminal rechts (expand implementiert, `tool check` verifiziert).
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import Markdown, { stripFrontmatter } from "../../components/Markdown";
 import { LoadingBoundary, useAsync } from "../../components/ui";
@@ -29,7 +29,7 @@ function statusTone(status: string | null | undefined) {
   return "bg-slate-200 text-slate-600";
 }
 
-export default function ToolsTab({ project }: { project: string }) {
+export default function ToolsTab({ project, refresh }: { project: string; refresh?: number }) {
   const list = useAsync(
     () => invoke<ToolEntry[]>("project_tools", { project }),
     `tools:${project}`,
@@ -43,6 +43,14 @@ export default function ToolsTab({ project }: { project: string }) {
         : Promise.resolve(""),
     `tool-spec:${project}:${selected ?? ""}`,
   );
+
+  useEffect(() => {
+    if (refresh) {
+      void list.reload();
+      void spec.reload();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refresh]);
 
   const tools = list.data ?? [];
   const here = platform.data ?? "";

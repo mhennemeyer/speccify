@@ -3,17 +3,20 @@
 // oder frei — nichts fest verdrahten). Das Kommando greift beim nächsten
 // „Agent-Terminal starten" bzw. „Neu starten".
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import Markdown, { stripFrontmatter } from "../../components/Markdown";
 import { LoadingBoundary, useAsync } from "../../components/ui";
+import { AGENT_PRESETS } from "../../lib/agents";
 
 export default function AgentTab({
   project,
+  refresh,
   agentCommand,
   onAgentCommand,
 }: {
   project: string;
+  refresh?: number;
   agentCommand: string;
   onAgentCommand: (value: string) => void;
 }) {
@@ -32,6 +35,14 @@ export default function AgentTab({
     `agent-body:${project}:${current ?? ""}`,
   );
 
+  useEffect(() => {
+    if (refresh) {
+      void files.reload();
+      void body.reload();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refresh]);
+
   return (
     <div className="flex h-full min-h-0 flex-col gap-4">
       <div className="max-w-md">
@@ -44,6 +55,22 @@ export default function AgentTab({
           spellCheck={false}
           className="w-full rounded border border-slate-300 px-3 py-1.5 font-mono text-sm"
         />
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {AGENT_PRESETS.map((preset) => (
+            <button
+              key={preset.id}
+              type="button"
+              onClick={() => onAgentCommand(preset.command)}
+              className={`rounded border px-2 py-1 text-xs ${
+                agentCommand === preset.command
+                  ? "border-slate-700 bg-slate-700 text-white"
+                  : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+              }`}
+            >
+              {preset.label}
+            </button>
+          ))}
+        </div>
       </div>
       <LoadingBoundary loading={files.loading} error={files.error} label="Agent-Dateien suchen…">
         {available.length === 0 ? (

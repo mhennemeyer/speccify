@@ -2,7 +2,10 @@
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
   "description": "Capability for the main window and project windows",
-  "windows": ["main", "project-*"],
+  "windows": [
+    "main",
+    "project-*"
+  ],
   "permissions": [
     "core:default",
     "clipboard-manager:allow-read-text",
@@ -12,7 +15,12 @@
     "updater:default",
     {
       "identifier": "opener:allow-open-path",
-      "allow": [{ "path": "$HOME/Knowledgebase/**" }]
-    }
+      "allow": [
+        {
+          "path": "$HOME/Knowledgebase/**"
+        }
+      ]
+    },
+    "notification:default"
   ]
 }

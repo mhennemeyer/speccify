@@ -9,14 +9,19 @@ use std::{
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager, State};
 
+mod actions_cmd;
+mod board_cmd;
 mod desktop_ui;
 mod engine;
+mod plan_cmd;
 mod project_cmd;
+mod project_watch;
 mod settings;
 mod sidecar;
 mod system_cmd;
 mod terminal;
 mod toolbox_cmd;
+mod workflow_setup;
 
 /// Laufende Kind-Prozesse des Spike-Supervisors. Drop killt alle Kinder,
 /// damit beim App-Quit nichts weiterläuft.
@@ -190,10 +195,13 @@ pub fn run() {
             }
         }))
         .plugin(tauri_plugin_clipboard_manager::init())
+        .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .manage(Supervisor(Mutex::new(HashMap::new())))
         .manage(project_cmd::ProjectWindows::default())
+        .manage(project_watch::ProjectWatchers::default())
+        .manage(actions_cmd::ActionRuns::default())
         .manage(terminal::Terminals::default())
         .manage(ask_bo)
         .setup(move |app| {
@@ -229,6 +237,27 @@ pub fn run() {
             project_cmd::project_platform,
             project_cmd::project_mcps,
             project_cmd::project_agent_files,
+            workflow_setup::project_workflow_status,
+            workflow_setup::project_workflow_install,
+            workflow_setup::project_settings_get,
+            workflow_setup::project_settings_set,
+            actions_cmd::project_actions,
+            actions_cmd::project_action_upsert,
+            actions_cmd::project_action_delete,
+            actions_cmd::project_action_confirm,
+            actions_cmd::project_action_run,
+            actions_cmd::project_action_stop,
+            board_cmd::project_ticket_create,
+            board_cmd::project_ticket_save,
+            board_cmd::project_ticket_delete,
+            board_cmd::project_ticket_history,
+            board_cmd::project_board_kpis,
+            board_cmd::project_ticket_questions,
+            board_cmd::project_ticket_answer,
+            plan_cmd::project_plan_activate,
+            plan_cmd::project_plan_resolve_escalation,
+            project_watch::project_watch_start,
+            project_watch::project_watch_stop,
             settings::get_settings,
             settings::save_settings,
             settings::briefing_status,
