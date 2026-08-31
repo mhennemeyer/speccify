@@ -1,9 +1,6 @@
-//! App-Settings (`~/.speccify/settings.json`) + Agent-Einweisungs-Dateien
-//! im Working Dir (Plan toolkit-discovery-terminal.md, T1).
-//!
-//! Entscheidungen T0: genau EIN Working Dir global; der Terminal-Agent
-//! (Claude Code) wird über `terminal_autostart_command` konfiguriert;
-//! Anlegen von Einweisungs-Dateien überschreibt NIEMALS Bestehendes.
+//! App-Settings (`~/.speccify/settings.json`) + hostneutrale Agent-Einweisung
+//! im Working Dir. Agent-spezifische Dateien sind kleine Adapter auf
+//! `.agent/`; bestehende Dateien werden niemals überschrieben.
 
 use std::path::PathBuf;
 
@@ -19,7 +16,11 @@ impl Default for AppSettings {
     fn default() -> Self {
         Self {
             working_dir: None,
-            terminal_autostart_command: "claude".into(),
+            terminal_autostart_command: if cfg!(windows) {
+                "claude.cmd".into()
+            } else {
+                "claude".into()
+            },
         }
     }
 }
@@ -68,14 +69,29 @@ struct BriefingTemplate {
 
 const BRIEFINGS: &[BriefingTemplate] = &[
     BriefingTemplate {
+        id: "agent-source",
+        relative_path: ".agent/agent.md",
+        content: include_str!("../templates/agent-briefing.md"),
+    },
+    BriefingTemplate {
         id: "claude-md",
         relative_path: "CLAUDE.md",
         content: include_str!("../templates/CLAUDE.md"),
     },
     BriefingTemplate {
+        id: "agents-md",
+        relative_path: "AGENTS.md",
+        content: include_str!("../templates/AGENTS.md"),
+    },
+    BriefingTemplate {
         id: "mcp-json",
         relative_path: ".mcp.json",
         content: include_str!("../templates/mcp.json"),
+    },
+    BriefingTemplate {
+        id: "codex-config",
+        relative_path: ".codex/config.toml",
+        content: include_str!("../templates/codex-config.toml"),
     },
     BriefingTemplate {
         id: "claude-settings",
@@ -184,5 +200,14 @@ mod tests {
                     .unwrap_or_else(|e| panic!("{} invalide: {e}", template.relative_path));
             }
         }
+    }
+
+    #[test]
+    fn codex_template_is_valid_toml() {
+        let template = BRIEFINGS
+            .iter()
+            .find(|template| template.id == "codex-config")
+            .unwrap();
+        toml::from_str::<toml::Value>(template.content).unwrap();
     }
 }

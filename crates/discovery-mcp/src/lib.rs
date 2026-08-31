@@ -216,7 +216,7 @@ impl ToolServer for DiscoveryMcp {
         vec![
             json!({
                 "name": "mcp_list",
-                "description": "List all known MCP servers (toolbox manifests) with run spec, live status and a ready-to-use client_config snippet for .mcp.json.",
+                "description": "List all known MCP servers (toolbox manifests) with run spec, live status and a host-neutral client_config value.",
                 "inputSchema": {"type": "object", "properties": {}},
             }),
             json!({

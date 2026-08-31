@@ -27,8 +27,7 @@ Alle Server binden ausschließlich `127.0.0.1`.
   28/28): [`exec-mcp-contract.md`](./exec-mcp-contract.md). Erster
   externer Client: iKanbanAi.
 - **Discovery** ist der Einstiegspunkt für Agents: `mcp_list` liefert
-  jeden Server inkl. `client_config`-Fragment (direkt in `.mcp.json`
-  einhängbar) und Laufzeitstatus; `tools_list` liefert Toolbox-Tools und
+  jeden Server inkl. Client-Config und Laufzeitstatus; `tools_list` liefert Toolbox-Tools und
   die Aktionslisten (global + Projekt); `actions_propose` legt
   Agent-Vorschläge an (`source=agent`, `confirmed=false`, Dedup nach
   `command`); `scaffold` erzeugt neue Toolbox-Manifeste.
@@ -100,9 +99,10 @@ Sicherheitsmodell ist die Token-Präfix-Allowlist
 ## Desktop-App als Cockpit
 
 - **Settings**: EIN globales Working Dir (`~/.speccify/settings.json`),
-  Terminal-Autostart-Command, Agent-Einweisungs-Dateien per Klick
-  (`CLAUDE.md`, `.mcp.json` mit allen Servern, `.claude/settings.json`
-  — niemals überschreibend).
+  Terminal-Autostart-Command mit Claude-/Codex-/Shell-Presets und
+  Agent-Einweisungs-Dateien per Klick. `.agent/agent.md` ist kanonisch;
+  `CLAUDE.md` und `AGENTS.md` verweisen darauf. MCP-Konfiguration wird nativ
+  als `.mcp.json` und `.codex/config.toml` angeboten — niemals überschreibend.
 - **Bibliothek**: alle Toolbox-Manifeste (builtin/global/working dir) mit
   Requirements-Badges + Scaffold.
 - **Server**: Toolbox-MCPs mit Laufzeitstatus (Port-Probe), Start/Stop
@@ -112,14 +112,14 @@ Sicherheitsmodell ist die Token-Präfix-Allowlist
   MCP-Client stdio-Server ohne den PATH der App startet.
 - **Umgebung**: Doctor-Checks, Python-Versionen via uv — und die
   **mitgelieferte Python-Engine** (siehe unten).
-- **⌨ Terminal**: echtes PTY (Login-Shell) im Working Dir; der
-  Autostart-Command (Default `claude`) wird vorgetippt. ⌘C kopiert die
+- **⌨ Terminal**: echtes PTY (Login-Shell) im Working Dir; der frei wählbare
+  Autostart-Command wird vorgetippt. ⌘C kopiert die
   Selektion, ⌘V fügt ein.
 - **ask_bo-Sidebar**: Fragen erscheinen automatisch (auch nach Reload —
   die UI synct offene Fragen aktiv); Tastatur: Pfeile/Enter/Ziffern,
   Space bei Checkboxen, Enter springt im Formular weiter.
 
-Windows ist bewusst zurückgestellt (Terminal/PTY zuerst macOS/Linux).
+Projektfenster und Terminal sind auf macOS und Windows verifiziert.
 
 ## Python-Engine der App (ohne Repo)
 
@@ -155,11 +155,11 @@ Daraus bedienen sich:
 - **speccify-mcp** — das Manifest `uv run speccify-mcp` wird auf
   `<venv>/bin/speccify-mcp` abgebildet, sobald die Engine steht.
 
-## Typischer Flow (Claude Code im Working Dir)
+## Typischer Flow (Claude oder Codex im Working Dir)
 
 1. Settings → Working Dir wählen, Einweisungs-Dateien anlegen.
-2. ⌨ Terminal öffnen → `claude` startet mit `.mcp.json`
-   (discovery/exec/desktop-ui/playwright).
+2. ⌨ Terminal öffnen → Claude oder Codex starten. Claude liest `.mcp.json`,
+   Codex `.codex/config.toml`; beide sehen dieselben Skills aus `.agent/skills`.
 3. Agent orientiert sich über Discovery (`mcp_list`/`tools_list`),
    führt Befehle über Exec aus (Allowlist!), stellt Entscheidungsfragen
    über `ask_bo`, schlägt wiederkehrende Befehle per `actions_propose`

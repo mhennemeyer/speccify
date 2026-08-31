@@ -13,8 +13,8 @@ hat eine eigene Referenzseite:
 | [`speccify add`](/cli/add/) | Add a playbook dependency and update the lockfile. |
 | [`speccify check`](/cli/check/) | Check whether skills are still current: source age, dead links, best practice. |
 | [`speccify expand`](/cli/expand/) | Turn locked skills into normal, project-specific skills under .agent/. |
-| [`speccify init`](/cli/init/) | Create speccify.yaml, ignore the cache and link .claude/skills to .agent/skills. |
-| [`speccify link`](/cli/link/) | Point the agent's skills directory (.claude/skills) at .agent/skills. |
+| [`speccify init`](/cli/init/) | Create the manifest and link Claude/Codex skill dirs to .agent/skills. |
+| [`speccify link`](/cli/link/) | Point agent skill directories at the canonical .agent/skills directory. |
 | [`speccify lint`](/cli/lint/) | Validate skills against the Agent Skills specification. |
 | [`speccify lock`](/cli/lock/) | Resolve dependencies and write speccify.lock. |
 | [`speccify pull`](/cli/pull/) | Materialise the locked skills untouched, as upstream has them (default: the cache). |

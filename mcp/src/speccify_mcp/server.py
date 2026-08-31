@@ -322,7 +322,7 @@ def build_server(config: ServerConfig, **fastmcp_settings: Any) -> FastMCP:
         name="expand",
         description=(
             "Turn the locked skills into normal, project-specific skills under "
-            ".agent/skills/ (what this agent reads via .claude/skills) and put "
+            ".agent/skills/ (read via the active host's skills adapter) and put "
             "their tool specs under .agent/tools/. Resolves what each skill builds "
             "on, strips Speccify metadata, keeps the `## In this project` section "
             "across re-runs. Returns `{ok, platform, skills, tools_to_implement}` "

@@ -221,7 +221,8 @@ export default function ServersView() {
                   <div className="mt-3">
                     <div className="mb-1 flex items-center justify-between">
                       <span className="text-xs text-slate-500">
-                        Snippet für <code>.mcp.json</code> (Claude Code) u. a. MCP-Clients
+                        Hostneutrale MCP-Client-Daten (JSON-Ansicht); Claude nutzt{" "}
+                        <code>.mcp.json</code>, Codex <code>.codex/config.toml</code>
                       </span>
                       <button
                         onClick={() => void copyConfig(server)}

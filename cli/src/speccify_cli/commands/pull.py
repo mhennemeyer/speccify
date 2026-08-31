@@ -46,7 +46,7 @@ def run_pull(
                 f"{entry.id}@{entry.version}: bundle hash differs from the lockfile "
                 f"({actual} != {entry.bundle_sha256}). Someone moved a tag."
             )
-        # Flat by name — `.claude/skills/<name>/SKILL.md` is what gets looked up.
+        # Flat by name — host adapters look up `<name>/SKILL.md` by this key.
         name = bundle.declared_id.rsplit("/", 1)[-1]
         if name in taken and taken[name] != bundle.declared_id:
             raise RegistryError(

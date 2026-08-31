@@ -53,7 +53,7 @@ def test_unknown_version_names_what_is_available() -> None:
 
 
 def test_a_bare_name_resolves_too() -> None:
-    """`name` is the lookup key — `.claude/skills/<name>/` is where agents look.
+    """`name` is the lookup key — host skill directories look up `<name>/`.
 
     The scope lives in the file, not in the path, so both forms find the same
     directory. Requiring a scope here would mean an agent could not ask for a

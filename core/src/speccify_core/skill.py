@@ -2,8 +2,9 @@
 
 A skill is a directory with a `SKILL.md` at its root — the Agent Skills format
 (<https://agentskills.io/specification>). Speccify stores skills in exactly
-that format rather than its own, so a skill works in Claude Code the moment it
-lands in `.claude/skills/`, with or without any of this tooling running.
+that format rather than its own. A skill works in any compatible host once it
+lands in that host's skills directory (Speccify links Claude and Codex to the
+canonical `.agent/skills/`), with or without any of this tooling running.
 
 What Speccify adds lives in the `metadata` map, which the specification
 provides for exactly this purpose ("Clients can use this to store additional

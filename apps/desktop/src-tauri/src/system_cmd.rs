@@ -21,7 +21,7 @@ struct DoctorCheckDef {
 }
 
 /// Prüf-Liste (aus dotagent übernommen, bereinigt: pipx/dotagent raus,
-/// Claude Code rein — das ist unser Terminal-Agent).
+/// beide unterstützten Terminal-Agents rein).
 const CHECKS: &[DoctorCheckDef] = &[
     DoctorCheckDef {
         name: "Python",
@@ -57,6 +57,11 @@ const CHECKS: &[DoctorCheckDef] = &[
         name: "Claude Code",
         binary: "claude",
         hint: "npm install -g @anthropic-ai/claude-code",
+    },
+    DoctorCheckDef {
+        name: "OpenAI Codex",
+        binary: "codex",
+        hint: "npm install -g @openai/codex",
     },
     DoctorCheckDef {
         name: ".NET SDK",

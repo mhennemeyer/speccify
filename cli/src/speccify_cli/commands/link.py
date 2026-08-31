@@ -1,9 +1,9 @@
 """`speccify link`: point an agent's skills directory at `.agent/skills/`.
 
 Skills live agent-neutrally under `.agent/`; the agent-specific dot folders
-only refer to them. Claude Code follows a symlink at `.claude/skills`
-(verified 2026-08-21), so a link is all it takes — one place to edit, every
-agent sees the same thing.
+only refer to them. Claude Code reads `.claude/skills`, Codex reads
+`.agents/skills`, and both follow linked skill directories. One source plus
+small host adapters keeps the project independent of the active agent.
 
 Windows (D17, plan projektfenster.md): creating a symlink needs Developer
 Mode or admin rights, so when `symlink_to` is denied we fall back to a
@@ -24,7 +24,10 @@ from speccify_core.expansion import SKILLS_DIR
 from speccify_cli.commands.expand import AGENT_DIR
 
 # Where each agent looks for project skills, relative to the project.
-AGENT_SKILL_DIRS = {"claude": Path(".claude") / "skills"}
+AGENT_SKILL_DIRS = {
+    "claude": Path(".claude") / "skills",
+    "codex": Path(".agents") / "skills",
+}
 
 
 def _is_junction(path: Path) -> bool:
@@ -97,20 +100,27 @@ def run_link(project_dir: Path, agent: str = "claude") -> Path:
     return link
 
 
+def run_links(project_dir: Path, agent: str = "all") -> list[Path]:
+    """Link one host or every known host; returns links in stable name order."""
+    agents = sorted(AGENT_SKILL_DIRS) if agent == "all" else [agent]
+    return [run_link(project_dir, selected) for selected in agents]
+
+
 def link_command(
     project_dir: Path = typer.Option(  # noqa: B008
         Path("."), "--project", "-p", help="Project directory (default: current directory)."
     ),
-    agent: str = typer.Option("claude", "--agent", help="Which agent's skills directory to link."),
+    agent: str = typer.Option("all", "--agent", help="claude, codex, or all (default: all)."),
 ) -> None:
-    """Point the agent's skills directory (.claude/skills) at .agent/skills."""
+    """Point agent skill directories at the canonical .agent/skills directory."""
     try:
-        link = run_link(project_dir, agent)
+        links = run_links(project_dir, agent)
     except (FileExistsError, ValueError, OSError) as exc:
         typer.echo(f"x speccify link failed: {exc}", err=True)
         raise typer.Exit(code=1) from exc
-    try:
-        shown = os.readlink(link)
-    except OSError:
-        shown = str(link.resolve())
-    typer.echo(f"ok {link} -> {shown}")
+    for link in links:
+        try:
+            shown = os.readlink(link)
+        except OSError:
+            shown = str(link.resolve())
+        typer.echo(f"ok {link} -> {shown}")

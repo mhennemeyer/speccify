@@ -1,7 +1,7 @@
 # Speccify Desktop (Tauri 2)
 
-Desktop-Cockpit für Speccify: Composer-Fenster, Toolbox, MCP-Server,
-Agent-Terminal, ask_bo. Ursprünglich aus dotagent `app/dashboard`
+Desktop-Cockpit für Speccify: Projektfenster, Skill-/Tool-Bestände,
+dateibasiertes Board, MCP-Server, Agent-Terminal und ask_bo. Ursprünglich aus dotagent `app/dashboard`
 übernommen (Commit `2949d1d`) — **seit R3 komplett ohne dotagent**:
 alle Daten kommen aus nativen Rust-Commands bzw. den Speccify-MCPs.
 Pläne: [`desktop-app-und-composer.md`](../../.agent/plans/archive/desktop-app-und-composer.md),
@@ -18,9 +18,10 @@ Pläne: [`desktop-app-und-composer.md`](../../.agent/plans/archive/desktop-app-u
     Rust-seitig (MCP-Server im Server-Tab, `speccify-web-backend` je
     Composer-Fenster), streamen Logs als `proc-log`-Events und killen alle
     Kinder beim App-Quit.
-*   **Views:** Composer (Fenster öffnen), Bibliothek (Toolbox), Server
-    (MCPs Start/Stop + Client-Config), Umgebung (Doctor + Python),
-    Knowledgebases, Settings; rechte Sidebar: ask_bo-Fragen + Terminal.
+*   **Views:** Projekte (jeweils Board/Pläne/Skills/Tools/MCPs/Agent),
+    Bibliothek (Toolbox), Server (MCPs Start/Stop + Client-Config), Umgebung
+    (Doctor + Python), Knowledgebases und Settings; Terminal für Claude,
+    Codex oder ein freies Kommando.
 
 ## Entwicklung
 

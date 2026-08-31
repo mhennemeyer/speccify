@@ -1,7 +1,8 @@
 """`speccify show`: read a skill without installing it.
 
-Once a skill is in `.claude/skills/` the agent reads it from disk — that is the
-whole point of storing skills in their own format. This command is for the
+Once a skill is in `.agent/skills/`, the active host reads it through its small
+adapter (`.claude/skills` or `.agents/skills`) — that is the whole point of
+storing skills in their own format. This command is for the
 moment *before* that: what is in this thing, and do I want it?
 
 So the payload leads with the body. The inferred structure (steps, sources)

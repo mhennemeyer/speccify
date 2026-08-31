@@ -1,11 +1,11 @@
 ---
 title: "speccify link"
-description: "Point the agent's skills directory (.claude/skills) at .agent/skills."
+description: "Point agent skill directories at the canonical .agent/skills directory."
 ---
 
 <!-- AUTOGENERIERT via scripts/gen_cli_docs.py aus `speccify --help` — nicht von Hand editieren. -->
 
-Point the agent's skills directory (.claude/skills) at .agent/skills.
+Point agent skill directories at the canonical .agent/skills directory.
 
 ## Usage
 
@@ -18,4 +18,4 @@ speccify link [OPTIONS]
 | Option | Beschreibung |
 | --- | --- |
 | `--project`, `-p` | Project directory (default: current directory). |
-| `--agent` | Which agent's skills directory to link. |
+| `--agent` | claude, codex, or all (default: all). |

@@ -1,0 +1,4 @@
+[mcp_servers.speccify]
+command = "uv"
+args = ["run", "speccify-mcp", "--project", "."]
+cwd = "."

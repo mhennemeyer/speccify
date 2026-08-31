@@ -269,8 +269,8 @@ pub fn probe_port(port: u16) -> bool {
     .is_ok()
 }
 
-/// Fertiges `.mcp.json`-Fragment für einen Manifest-Eintrag (http → URL,
-/// sonst command/args für stdio).
+/// Hostneutrale Client-Konfiguration für einen Manifest-Eintrag (http → URL,
+/// sonst command/args für stdio), die Clients in ihr natives Format übertragen.
 pub fn client_config(manifest: &Manifest) -> Option<serde_json::Value> {
     let run = manifest.run.as_ref()?;
     if run.transport == "http" {

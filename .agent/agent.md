@@ -1,123 +1,69 @@
-Sprache: Deutsch
-Ansprache: Du (nicht Sie)
+# Speccify project guidance
 
-In diesem Ordner befinden sich
-    * Anweisungen für den AI-Agent
-    * und Möglichkeiten zur Ablage von Informationen für den AI-Agent.
+Sprache mit dem Nutzer: Deutsch, Ansprache „Du“. Produkttexte und öffentliche
+Dokumentation sind Englisch, sofern der jeweilige Bestand nichts anderes
+vorgibt.
 
-### Globale Regeln (via Symlink aus `~/.agent/`)
-Die folgenden Dateien sind Symlinks auf `~/.agent/` und gelten projektübergreifend:
-* `rules.md` – Coding-Standards, Architektur, Workflow, Commit-Strategie
-* `functional.md` – FP-Regeln für Code-Generierung
+## Produkt
 
-### Pläne: Ablage & Lebenszyklus
-Jeder Plan in `.agent/plans/` trägt dieses Frontmatter (Schema wie iKanbanAi):
+Speccify ist ein agentenagnostischer Skill- und Tool-Manager für macOS und
+Windows. Wiederverwendbares Wissen wird als `SKILL.md` über Git geteilt.
+Plattformabhängige Werkzeuge werden nicht als fertige Skripte vorausgesetzt,
+sondern durch `TOOL.md` spezifiziert und im Zielprojekt für die jeweilige
+Plattform implementiert und geprüft.
 
-```yaml
----
-lifecycle: active | draft | done
-status: eine Zeile — wo der Plan steht, was noch offen ist
-sessionId: <dateiname-ohne-endung>
----
-```
+Die aktuelle Richtung steht in `.agent/plans/skills-und-tools.md`; das
+plattformübergreifende Projektfenster steht in `.agent/plans/projektfenster.md`.
+Beide sind auf ausdrücklichen BO-Entscheid parallel aktiv.
 
-* **Genau ein Plan ist `active`** — der, an dem gerade gearbeitet wird. Wird
-  ein anderer aktiv, geht der bisherige vorher auf `done` oder `draft`.
-* `done` ⇒ Datei nach `.agent/plans/archive/` verschieben und Verweise
-  nachziehen. Im Top-Level liegen nur der aktive Plan und `draft`-Entwürfe.
-* „Offen sind nur noch BO-Aktionen" zählt als `done`: die offenen Punkte
-  gehören in die `status:`-Zeile und nach `status.md` — nicht in einen Plan,
-  der ewig aktiv bleibt.
+## Kanonische Projektstruktur
 
-## Vision
+- `.agent/skills/<name>/SKILL.md`: normale, projektspezifische Skills.
+- `.agent/tools/<name>/TOOL.md`: Tool-Vertrag; Implementierungen daneben als
+  `<platform>.<ext>`.
+- `.agent/speccify/expansions.yaml`: Herkunft, Hashes und Prüfstatus.
+- `.agent/plans/`: aktive Pläne und Entwürfe; Fertiges unter `archive/`.
+- `.agent/board/`: optionale, dateibasierte Tickets.
+- `.agent/actions.json`: benannte Projektaktionen.
 
-> *„npm für Spezifikationen statt für Code — Komponenten beschreiben, nicht implementieren. Der AI-Agent ist der Compiler in das Ziel-Framework."*
+Agent-spezifische Ordner sind nur Adapter: `.claude/skills` und
+`.agents/skills` zeigen beide auf `.agent/skills`. Bearbeite Skills immer an
+der kanonischen Stelle.
 
-Speccify ist eine **vollständig quelloffene** Spec-First-Plattform für sprach- und framework-unabhängige Komponenten-Spezifikationen. Eine `speccify.yaml`-Spec beschreibt Verhalten, Inputs/Outputs, Akzeptanzkriterien und visuelle Referenzen — und ein AI-Agent generiert daraus deterministisch Code für SwiftUI, React, Angular, Jetpack Compose oder andere Targets. Specs werden über Git-Repos geteilt (kein zentrales Registry, kein Pro-Plan/Marketplace).
+## Architektur
 
-**Seit der Neuausrichtung (2026-08-06)** ist die Roadmap-Quelle der Wahrheit: [`.agent/plans/skills-und-tools.md`](./plans/skills-und-tools.md) (Vorgänger: [`plans/archive/skills-als-format.md`](./plans/archive/skills-als-format.md)) — eine Spec ist ein **Playbook für einen komplexen, wiederkehrenden Workflow** (Schritte, Quellen, Assets, Fallstricke), gerichtet an Agents, die sich das Wissen sonst neu erarbeiten müssten. Der Composer ist Viewer + kontextsensitiver Chat (kein Edit-Modus); Git-Quellen, Discovery, MCP/Server und Desktop-App bleiben. Der Codegen-Zweig ist zurückgebaut (Archiv-Branch `archive/pre-playbook-pivot`); W1–W5 sind geliefert, offen sind nur noch BO-Aktionen aus `docs/launch.md`.
+- `core/`: Python-Domänenlogik für Skills, Quellen, Lockfiles, Expansion und
+  Tool-Prüfung.
+- `cli/`: dünner Typer-Adapter über den Core.
+- `mcp/`: dünner MCP-Adapter über denselben Core.
+- `crates/`: Rust-MCPs für Exec, Discovery, Parallels und Toolbox.
+- `apps/desktop/`: React/Tauri-2-App für macOS und Windows.
+- `apps/marketing/`: öffentliche Website und Dokumentation.
 
-Vorgeschichte: der abgeschlossene OSS-Pivot [`archive/pivot-open-source-git-composer.md`](./plans/archive/pivot-open-source-git-composer.md) (P1–P6.1) und der alte Master-Plan [`speccify-plan.md`](./plans/archive/speccify-plan.md) — beide nur noch als Kontext, nicht mehr als Richtung.
+CLI, MCP und Desktop dürfen keine parallelen Domänenmodelle erfinden. Neue
+Funktionalität gehört zuerst in den Core oder in einen klaren, nativen
+Desktop-Vertrag; Adapter bleiben klein.
 
-## Aktuelle Phase
+## Arbeitsregeln
 
-**P3 Verfeinerung Runde 1 geliefert (2026-07-24).** Auf dem MVP-Stand darunter: (1) **Visuelles Slot-Befüllen** — Canvas rendert pro Kind-Slot eine klickbare Slot-Zone (Einfüge-Ziel-Toggle; „+ als Kind" fügt dann dort ein), Tree ist rekursiv (`findTreeNode`/`detachNode`/`moveNodeToSlot` in `doc.ts`), Inspector-Knoten-Panel hat „Platzierung"-Select (Top-Level ↔ Slots, Zyklen-Guard), Entfernen räumt den ganzen Teilbaum inkl. uses/wiring/map_to. (2) **Undo/Redo** — Snapshot-History über `{doc, children}`, Tipp-Bursts (<800 ms) koalesziert, ⌘Z/⇧⌘Z (native Text-Undo in Feldern bleibt), Topbar-Buttons. (3) **Playwright-UI-Smoke** — `apps/composer/e2e/` (`@playwright/test@1.44.0` wie Visual-Regression-Pin): `start-backend.sh` fährt FastAPI auf :8788 gegen eine **Wegwerf-Kopie** der registry-fixtures, Vite auf :5199 mit `COMPOSER_PROXY_TARGET`; 3 Tests (Voll-Flow inkl. UI-Wiring + Speichern + YAML-Round-Trip, Undo/Redo, Slot-Befüllen). CI-Job `apps/composer ui smoke (playwright)` (uv + pnpm + Browser-Cache); lokal `pnpm run composer:e2e`. **Verifikation: 3/3 Playwright grün (6,2 s), Composer-Typecheck + Build grün, 420 Pytest grün (Python unverändert).** **Nächster Schritt: Rumprobieren; verbleibende Kandidaten: Mock-Bundle-Rendering, Drag & Drop, `kind: app`-Routen (P4).**
+- Bestehende Nutzeränderungen nicht überschreiben oder zurücksetzen.
+- Für Textänderungen die Editier-Werkzeuge des jeweiligen Hosts verwenden
+  (Codex: `apply_patch`; Claude Code: Edit/Write) — keine sed/awk-Umbauten.
+- Python: `uv run pytest`, `uv run ruff check .`, `uv run ruff format --check .`.
+- Desktop-Frontend: `pnpm --filter speccify-desktop typecheck`.
+- Desktop-Rust: `cargo test -p speccify-desktop` und `cargo fmt --check`.
+- Gezielte Tests zuerst, breitere Checks nach erfolgreichem Kernpfad.
+- Keine Secrets in `.mcp.json`, `.codex/config.toml`, `.agent/settings.json`
+  oder andere getrackte Projektdateien schreiben.
+- Committen ist in diesem Repo ausdrücklich erlaubt (BO, 2026-08-31:
+  „committe gern selbst in diesem Projekt") — in sich abgeschlossene
+  Conventional Commits mit Verifikationsstand. **Pushen** nur auf
+  ausdrückliche Anforderung.
 
-**P3 Composer-MVP geliefert (2026-07-24).** Neuer pnpm-Member `apps/composer/` — Vite-React-SPA (statisch exportierbar, `base: "./"`, **Tauri-2-fähig**; Backend nur über HTTP, `VITE_API_BASE` für spätere Sidecar-Shell, CORS inkl. `tauri://localhost`). UI: Palette (Registry-Specs, „+ als Kind"/„öffnen"), Canvas (Knoten als **interpretierte Mocks** aus dem API-Contract-JSON — kein TSX-Compiler im Browser; Event-Chips feuern die Wiring-Simulation mit `mock_react`-identischer Semantik), Inspector (typisierte Prop-Editoren, Verdrahtungs-Formular mit contract-getriebenen Dropdowns, eigene Events/Props inkl. `map_to`, Spec-Meta), YAML-Panel (Round-Trip: editierbar + „übernehmen"), Event-Log. Backend-API (P3): `GET /api/v1/specs/{scope}/{name}` (Detail + Contract-JSON + aufgelöste Kind-Contracts), `POST /api/v1/validate` (Schema + Kompositions-Typprüfung, Issues statt 4xx), `POST /api/v1/specs` (Save in Registry → rekursive Komposition: Gespeichertes ist sofort Palette-Baustein). Core: `resolve_composition_children` aus mock_react nach `composition.py` promoted. **Agent-Bedienbarkeit bewiesen**: `apps/web/backend/tests/test_composer_agent_flow.py` komponiert eine neue Composite komplett headless (Palette → Contracts → validieren → speichern → mocken). CI: Job `apps/composer build (vite spa)`; `dev-up.sh` startet Composer auf :5173. Doku: `docs/composer.md`. **Verifikation: 420 Pytest grün, Composer-Typecheck + Build grün (Vite, 265 kB), ruff clean.** **Nächster Schritt: Rumprobieren + Verfeinerung** (offen: visuelles Slot-Befüllen, Playwright-UI-Smoke, Undo/Redo, `kind: app`-Routen → P4).
+## Skills und Tools
 
-**P2 Kern abgeschlossen (2026-07-24) — API-Vertrag, Komposition & Mock-Generator.** Spec-Schema v1 ersetzt v0 **hart** (User-Entscheidung „Start bei Null", kein Migrationspfad): Pflichtfeld `schema_version: 1`, formaler `api:`-Block (props/outputs/events/slots/fixtures), `composition:` (uses/tree/wiring, Wiring-Key `when:` — `on` ist YAML-1.1-Boolean-Falle) mit Typprüfung gegen Kind-APIs (`core/src/speccify_core/{api,composition}.py`). Resolver zählt `composition.uses` als Dependencies. 7 Referenz-Specs auf v1 (neu: `@org/text-input` Leaf + `@org/search-bar` erste Composite). LLM-Adapter lesen `api:` (PROMPT_VERSION 0.2.0); Replay-Cache **mechanisch re-keyed** (18 Einträge, Responses byte-identisch — kein Bedrock-Recording). **Mock-Codegen React** (`codegen/mock_react.py`, Template-Pin `p2-mock-react v0.1.0`, kein LLM): Leaf-Mocks (typisierte Props, Event-Chips, Slots), Composite-Mocks (Kind-Baum + Verdrahtung: `set`→State, `emit`→Callback, `map_to`-Forwarding), Logic-Mocks fixture-basiert (D1, sonst `mock_unavailable`). Drei Wege, byte-identisch: CLI `speccify mock`, MCP-Tool `mock` (7 Tools), Web `POST /api/v1/mock` (Composer-Palette-Vorbau). Doku: `docs/component-api-and-mocks.md`. **Stage 4 (voller API-Conformance-Harness) bewusst hinter P3 vertagt** — tsc-Typecheck der Mock-Closure läuft als `@conformance`-Test. **Verifikation: 411 Pytest grün, Mock-tsc-Conformance grün, MCP-Smoke OK, ruff clean, CLI-Doku-Drift-Check grün (8 Command-Seiten).** **Nächster Schritt: P3 — Visueller Composer**, mit zwei harten Rahmenbedingungen (User): agent-bedienbar (alle UI-Aktionen als HTTP-API, Zustand = Spec-Dateien) und Tauri-2-fähig (Vite-SPA statisch exportierbar, Backend hinter HTTP-Grenze). **Achtung macOS-Venv:** Quarantäne versteckt `.pth`-Dateien aggressiv re-kurrierend; robuster Session-Workaround: `export PYTHONPATH="$PWD/core/src:$PWD/cli/src:$PWD/mcp/src:$PWD/apps/web/backend/src"` vor `uv run`.
-
-**OSS-Pivot P1 abgeschlossen (2026-07-23) — Open-Source-Fundament & Entrümpelung.** Registry-Rückbau: `registry/` (Django-Backend, 134 Tests), CLI `login`/`whoami`/`publish`/`yank` + `_credentials`, MCP-Tools `publish`/`yank` (8→6) entfernt — Stand davor auf Archiv-Branch `archive/pre-oss-pivot-registry`. `example-commercial-specs/` gelöscht. Der 75-Pfad-Cross-Consistency-Sweep ist als **60-Pfad-Sweep (Local/CLI/MCP/Web)** nach `apps/web/backend/tests/test_cross_consistency_sweep.py` portiert (Remote-Pfad kehrt mit `GitRegistry` in P5 zurück). `RemoteRegistry` in `core/` bleibt vorerst (MockTransport-Tests, wird in P5 durch `GitRegistry` ersetzt/ergänzt). CI: `registry-backend`-Job entfernt; `dev-up.sh`/`local-dev-e2e.md` ohne Registry; CLI-Referenz regeneriert (7 Command-Seiten); OSS-Hygiene (`CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, Issue-Templates). **Verifikation: 372 Root-Pytest grün (357 + 15 Sweep-Zellen), ruff check/format clean, beide Drift-Checks grün, MCP-Smoke + example-project-E2E offline grün.** **Nächster Schritt: P2 umsetzen** — aktiver Phasen-Plan [`phase-p2-api-composition-mocks.md`](./plans/archive/phase-p2-api-composition-mocks.md) (API-Vertrag, Komposition & Mock-Generator; Entscheidungen D1–D6 per User-Delegation getroffen, Stages 1–6 definiert; Phase-7-Plan archiviert, S4 reitet in P2-Stage-1 mit), danach P3 visueller Composer.
-
-**Phase 6 abgeschlossen (2026-06-15) — Landingpage + Doku-Site (`apps/marketing/`) produktiv.** Stages 1–7 geliefert: pnpm-Member `apps/marketing/` (Astro Starlight + Tailwind nur für Landing, Pagefind, Plausible-Env-Guard); `scripts/sync_docs_to_site.py` spiegelt `docs/{conformance,visual-regression,workspaces}.md` deterministisch als Starlight-MDX (Frontmatter aus H1/erstem Paragraph, relative Links → Site-URLs, `--write`/`--check`); `scripts/gen_cli_docs.py` generiert die CLI-Reference (Index + 11 Command-Seiten) via Click-Introspektion (`typer.main.get_command`, terminal-unabhängig, `--check`); volle Tailwind-Landing (`index.astro` + `MarketingLayout.astro`: Hero/Problem-Lösung/Demo/Targets/How-it-works/CTA + Footer), `try-it.astro` mit Playground-Iframe (`PUBLIC_PLAYGROUND_URL`) + Fallback, Legal-Platzhalter `/legal/{imprint,privacy}`; CI-Workflow `.github/workflows/docs.yml` (Drift-`--check` ×2 → `pytest tests/` → `pnpm build` → `lychee` → `markdownlint`, Pfad-Filter, `ci.yml` unberührt); `docs/deploy.md` (Vercel-Setup + Env-Tabelle) + README-Update; neue Pytest-Suite `tests/` (`testpaths` erweitert). **Verifikation: 357 Root-Pytest Default (+11 ggü. 346) + 134 Registry-Pytest = 491 Tests grün; beide Drift-Checks exit-0; `pnpm --filter speccify-marketing build` grün (26 Seiten).** **Tag-Vorschlag an User: `v0.11.0-phase-6`** (selbst nicht gesetzt, vgl. `rules.md`). **Nächster Schritt: Phase 7 (Visual-Regression-Vertiefung) nach User-Tag.**
-
-**Phase 5c abgeschlossen (2026-05-29) — Visual-Regression-Skeleton produktiv.** Stage 0 hat 8 Open Questions vom User geklärt (Playwright + pixelmatch, React + Angular im Skeleton, 1 Referenz-PNG, 10 % Default-Tolerance, eigener CI-Workflow, kein `--update-snapshots`-Pytest-Flag im Skeleton, kein Schema-Bump für `screenshots[].tolerance` — beide vertagt auf Folge-Phase, Tag `v0.10.0-phase-5c`). Stages 1–4 geliefert: `VisualRegressionBackend` + `VisualDiffDriver`-Protocol + `VisualDiffResult`-Dataclass in `core/src/speccify_core/conformance_visual.py` (393 LOC); `PlaywrightPixelmatchDriver` für React + Angular via headless Chromium + Node-`pixelmatch`+`pngjs` (gepinnt: `playwright@1.44.0`, `pixelmatch@5.3.0`, `pngjs@7.0.0`); Pytest-Marker `visual_regression` in `pyproject.toml` mit Default-Exclude (`addopts = -m "not conformance and not visual_regression"`); Unit-Tests via Fake-Driver in `core/tests/test_conformance_visual.py` (13 Tests, decken Factory/Protocol/Tolerance/Toolchain-Missing/Reference-Missing-Pfade); E2E-Test `test_visual_regression_button_react` mit Skip-Strategie für fehlendes Chromium-Install; CI-Workflow `.github/workflows/visual-regression.yml` (Ubuntu, Node 20, Playwright-Browser-Cache, Path-Filter, Nightly-Cron `17 4 * * *`); `docs/visual-regression.md` (146 LOC) + Cross-Link + Scope-Tabelle in `docs/conformance.md` + README-Update; Plan archiviert nach `.agent/plans/archive/phase-5c-visual-regression-skeleton.md`. Referenz-PNG (`specs/screenshots/button-primary.png`) bleibt Maintainer-Hoheit — das Verzeichnis hat einen README mit Workflow; bis dahin skippt der E2E-Test sauber. **Verifikation: 346 Root-Pytest Default + 134 Registry-Pytest = 480 Tests grün** (+14 ggü. Phase 5b = 466); ruff/format clean; 1 `visual_regression`-E2E korrekt deselected. **Tag-Vorschlag an User: `v0.10.0-phase-5c`** (selbst nicht gesetzt, vgl. `rules.md`). **Nächster Schritt: Phase-5d-Plan-Entwurf nach User-Tag** — Kandidaten: Volle Visual-Regression-Coverage (5 Specs × {react, angular} mit Referenz-PNG-Snapshots), echter Component-Mount-Renderer (statt `<pre>`-Sandbox), `--update-snapshots`-Pytest-Flag, Schema-Bump `screenshots[].tolerance`, SwiftUI-Visual-Regression via Xcode-UI-Tests.
-
-**Phase 5b abgeschlossen (2026-05-29) — alle Stages 0–6 Done.** Highlights: target-aware Replay-Cache-Recorder (`scripts/record_llm_cache.py`, Stage 1); Replay-Cache-Fixtures für `5 Specs × {angular, swiftui}` durch User committed (Stage 2); echte parametrisierte Build-Smokes über alle 5 Phase-0-Specs × {Angular, SwiftUI} in `core/tests/test_conformance_build_smoke.py` (Stage 3, 11 `@conformance`-Tests); voller 75-Pfad-Cross-Consistency-Sweep in `registry/tests/test_cross_consistency_sweep.py` — Matrix `5 Specs × 3 Targets × 5 Pfade (Local/Remote/CLI/MCP/Web)` byte-identisch (Stage 4, 15 Parametrisierungen). Stage 5: kein CI-YAML-Change nötig — Sweep läuft automatisch im bestehenden `registry-backend`-Job; README + `docs/conformance.md` aktualisiert. Stage 6: Plan archiviert nach `.agent/plans/archive/phase-5b-conformance-sweep.md`. **Verifikation: 332 Root-Pytest Default + 134 Registry-Pytest = 466 Tests grün + 11 `@conformance`-Tests; ruff/format clean.** **Tag-Vorschlag an User: `v0.9.0-phase-5b`** (selbst nicht gesetzt, vgl. `rules.md`). **Nächster Schritt: Phase-5c-Plan-Entwurf nach User-Tag** — Kandidaten: Visual-Regression-Skeleton, echtes `ng build`, Web-Backend Workspace-aware.
-
-
-**Phase 5a abgeschlossen (2026-05-27) — Conformance Build-Smoke produktiv für alle 3 Targets.** Stage 0 hat 10 Open Questions vom User mit "folge deinen Empfehlungen" geklärt (Toolchain-Pinning lokal, Conformance-Marker mit Default-Exclude, Speicherort in `core/`, `toolchain_missing` ≠ Failure). Stages 1–5 geliefert: `BuildSmokeBackend` + `ToolchainDriver`-Protocol in `core/src/speccify_core/conformance_build_smoke.py`; `ReactToolchainDriver` (`tsc --noEmit` mit gepinntem `typescript@5.4.5` + `@types/react@18.2.79` via `npm install` + lokales `node_modules/.bin/tsc`); `AngularToolchainDriver` analog mit `@angular/core@17.3.0` + `experimentalDecorators=true`; `SwiftUIToolchainDriver` via `xcrun --sdk macosx swiftc -typecheck` (macOS-only, Linux skippt sauber). Replay-Cache-Blocker für SwiftUI/Angular umgangen durch synthetische Mini-Snippets im E2E-Test (Phase-5a-Scope = Driver-Pfad; Cross-Spec×Cache-Coverage bleibt Phase-5b-Scope). CI: separater Workflow `.github/workflows/conformance.yml` mit 3 Jobs (`conformance-react`/`-angular` auf Ubuntu+Node 20, `conformance-swiftui` auf macOS-latest); Trigger Path-Filter + Nightly-Cron `17 3 * * *` + `workflow_dispatch`. Default-CI (`ci.yml`) unverändert. `docs/conformance.md` (122 LOC) + README-Update + Plan-Archivierung. **Verifikation: 325 Root-Pytest (Default, `-m "not conformance"`) + 119 Registry-Pytest = 444 Tests gesamt grün; 3 `@conformance`-E2E-Tests passed in 6.17s lokal** (React/Angular/SwiftUI); ruff/format clean. **Tag-Vorschlag an User: `v0.8.0-phase-5a`** (selbst nicht gesetzt, vgl. `rules.md`). **Nächster Schritt: Phase-5b-Plan-Entwurf nach User-Tag** — Cache-Recording für SwiftUI/Angular, 75-Pfad-Cross-Consistency-Sweep, Visual-Regression, echtes `ng build`.
-
-**Phase 4 abgeschlossen (2026-05-27) — Cargo-Style Workspaces produktiv.** Stage 0 hat 10 Open Questions geklärt (Root-only Lockfile, sichtbares `<member>/speccify_generated/`, CWD-Detection für `add`, strikte MVS-Konflikt-Strategie, keine Cross-Member-Path-Deps, Hash-only Verify, MCP-`workspace_root`-Bridge, Web-Backend out-of-scope, kein Schema-Bump, `workspaces:`-Key-Heuristik). Stages 1–8 geliefert: `Workspace.lock(registry) -> Lockfile` in `core/`, CLI `lock`/`pull`/`add --member`/`verify` workspace-aware (Pull materialisiert pro Member nach `<member>/speccify_generated/<target>/`, Verify ist Hash-only ohne Re-Render), `add --member/-m` mit CWD-Detection + automatischem Root-Re-Lock, diagnostische `ResolverError`-UX (Member-Pfade + Ranges + verfügbare Versionen) per Snapshot-Test gepinnt, MCP-Write-Tools (`lock`/`pull`/`verify`) mit optionalem `workspace_root`-Parameter (delegieren an die CLI-`run_*`-Funktionen → Single-Source-of-Truth), `docs/workspaces.md` (193 LOC) + README-Quickstart, Plan archiviert. **Verifikation: 312 Root-Pytest + 119 Registry-Pytest = 431 Tests gesamt grün** (+19 ggü. Phase 3 = 293), ruff/format clean. **Tag-Vorschlag an User: `v0.7.0-phase-4`** (selbst nicht gesetzt, vgl. `rules.md`). **Nächster Schritt: Phase-5-Plan-Entwurf nach User-Tag** — Kandidaten aus Phase-3-Folge-Substages: Conformance-Backends Build-Smoke + Visual-Regression, voller 75-Pfad-Cross-Consistency-Sweep mit echtem Bedrock-Replay-Cache für SwiftUI/Angular + fehlende Phase-0-Specs.
-
-**Phase 3 abgeschlossen (2026-05-27) — Stages 0–8 Done.** Stage 7 hat den Registry-Pfad multi-target abgesichert: `registry/tests/test_remote_multi_target.py` (3 parametrisierte Tests) prüft pro `target ∈ {react, swiftui, angular}` byte-identische Outputs zwischen `LocalRegistry` und `RemoteRegistry` via `live_server`; React läuft gegen den eingecheckten LLM-Replay-Cache, SwiftUI/Angular gegen einen inline mit `ReplayCache.put()` + `make_cache_key()` befüllten `tmp_path`-Cache (analog Stage-6-Pattern). `RemoteRegistry` ist bereits in Phase 2 target-agnostisch implementiert — keine API-Änderungen nötig. Side-Quest: `core/pyproject.toml` `[tool.hatch.build.targets.wheel.force-include]` entfernt (force-include schattete den editable-Pfad), Templates werden jetzt über das normale `packages`-Setup mit eingebaut. **Verifikation: 293 Root-Pytest + 119 Registry-Pytest = 412 Tests gesamt grün** (+3 ggü. Stage 6), ruff/format clean. Stage 8 = Plan-Archivierung + AGENTS-/Status-Update; **Tag-Vorschlag an User: `v0.6.0-phase-3`** (selbst nicht gesetzt, vgl. `rules.md`). **Nächster Schritt: Phase-4-Plan-Entwurf nach User-Tag** (Phase-3-Folge-Substages bekannt: Workspace `pull`/`verify`/`add`-Iteration, Build-Smoke- + Visual-Regression-Conformance-Backends, voller 75-Pfad-Cross-Consistency-Sweep mit echtem Bedrock-Replay-Cache für SwiftUI/Angular + die fehlenden Phase-0-Specs).
-
-**Phase 2 abgeschlossen — Registry-MVP (`registry/`).** Django-5-Backend `speccify-registry` (uv-Workspace-Member) mit REST-API unter `/api/v1/registry/...` für **Publish/Fetch/Versions/Search/Yank/Whoami/Tokens/Device-Code**, Django-Templates-Web-UI (Auth-Flow + Browse-Ansichten), Auth-Stack (Bearer-Tokens argon2 + Token-Prefix-Lookup, TOTP-2FA via `django-otp`, Device-Code-Login `gh auth login`-Stil). **Lockfile-Schema v2** (`yank_status` + `signature`-Slot, v1-Kompat). **Resolver-Multi-Registry** (`Registry`-Protocol + neue `RemoteRegistry` mit httpx + File-Cache + Server-Hash-Verify; pro `@scope` registry-gebunden via `ScopeRegistryConflictError` als Dependency-Confusion-Schutz). CLI-Erweiterungen `speccify login`/`whoami`/`publish`/`yank`; MCP-Tools `publish` + `yank` (Tool-Count 6→8). **Cross-Consistency erweitert** auf den Registry-Pfad (`registry/tests/test_cross_consistency_registry.py`: `LocalRegistry` ↔ `RemoteRegistry` via `live_server` byte-identisch). **CI**-Job `registry backend (django + postgres)` neu mit Postgres-16-Service-Container; bestehende Jobs unverändert. **Verifikation: 220 Root-Pytest grün, 116 Registry-Pytest grün → 336 Tests gesamt**; ruff/format clean. **Tag-Vorschlag an User: `v0.5.0-phase-2`** (selbst nicht gesetzt, vgl. `rules.md`). **Nächster Schritt: Phase 3 (zweites + drittes Codegen-Target + Conformance-Runner + Workspaces) — Plan-Entwurf nach User-Tag.**
-
-Kein aktiver Plan in `.agent/plans/` (außer Master-Plan); Phase-5c-Plan archiviert: [`archive/phase-5c-visual-regression-skeleton.md`](./plans/archive/phase-5c-visual-regression-skeleton.md) (Tag-Vorschlag `v0.10.0-phase-5c`); Phase-5b-Plan archiviert: [`archive/phase-5b-conformance-sweep.md`](./plans/archive/phase-5b-conformance-sweep.md) (Tag-Vorschlag `v0.9.0-phase-5b`); Phase-5a-Plan archiviert: [`archive/phase-5a-conformance-backends.md`](./plans/archive/phase-5a-conformance-backends.md) (Tag-Vorschlag `v0.8.0-phase-5a`); Phase-4-Plan archiviert: [`archive/phase-4-workspaces.md`](./plans/archive/phase-4-workspaces.md) (Tag-Vorschlag `v0.7.0-phase-4`); Phase-3-Plan archiviert: [`archive/phase-3-codegen-targets.md`](./plans/archive/phase-3-codegen-targets.md) (Tag-Vorschlag `v0.6.0-phase-3`), [`archive/phase-2-registry-mvp.md`](./plans/archive/phase-2-registry-mvp.md) (Tag-Vorschlag `v0.5.0-phase-2`), [`archive/phase-1d-browser-playground.md`](./plans/archive/phase-1d-browser-playground.md) (Tag-Vorschlag `v0.4.0-phase-1d`), [`archive/phase-1c-mcp-server.md`](./plans/archive/phase-1c-mcp-server.md) (Tag-Vorschlag `v0.3.0-phase-1c`), [`archive/phase-1b-react-codegen.md`](./plans/archive/phase-1b-react-codegen.md) (Tag `v0.2.0-phase-1b`), [`archive/phase-1a-resolver-lockfile.md`](./plans/archive/phase-1a-resolver-lockfile.md) (Tag `v0.1.0-phase-1a`).
-
-Phase 0 abgeschlossen (Tag `v0.0.0-phase0`): Schema v0, `speccify lint`, 5 Referenz-Specs. Phase 1a-0 (Rebrand `flowcation` → `speccify`, Tag `v0.0.1-speccify-rebrand`) ebenfalls abgeschlossen. Archiviert: [`phase-0-spec-schema-spike.md`](./plans/archive/phase-0-spec-schema-spike.md), [`phase-0-wrap-up.md`](./plans/archive/phase-0-wrap-up.md), [`phase-1a0-rename-to-speccify.md`](./plans/archive/phase-1a0-rename-to-speccify.md).
-
-## Repo-Layout
-
-| Pfad | Zweck | Aktiv ab Phase |
-|---|---|---|
-| `.agent/plans/` | genau EIN aktiver Plan + Entwürfe; alles Fertige in `archive/` (s. u.) | laufend |
-| `core/` | `speccify-core` — geteilter Spec-Loader, Schema-Validator, Resolver, Codegen | 0 (Loader/Validator) / 1 (Rest) |
-| `cli/` | `speccify-cli` — `speccify lint`, später `init`/`add`/`pull`/`lock`/`verify`/`publish` | 0 (`lint`) / 1 (Rest) |
-| `mcp/` | `speccify-mcp` — MCP-Server für Coding-Agents | 1 |
-| `schema/` | JSON-Schema-Dateien (kein Python-Paket) | 0 |
-| `specs/` | Referenz-Specs als YAML | 0 |
-| `codegen/` | Target-Adapter (zuerst SwiftUI) | 1 |
-| `apps/web/` | Browser-Playground (FastAPI + Next.js); wird zum visuellen Composer ausgebaut | 1 / P3 |
-| `apps/marketing/` | Landingpage + Doku-Site (Astro Starlight) | 6 |
-| `docs/` | Architektur-/Format-Doku außerhalb der Plan-Dokumente | laufend |
-
-## Tooling
-
-- **Python 3.12+**
-- **`uv`** als Package-Manager (uv-Workspaces; `uv.lock` ist eingecheckt)
-- **`ruff`** als Linter/Formatter
-- **`mypy`** als Type-Checker (initial nicht strict)
-- **`pytest`** als Test-Runner
-
-Voraussetzung: `uv` muss installiert sein (`brew install uv` oder <https://docs.astral.sh/uv/>).
-
-### Quickstart
-
-```bash
-uv sync                    # Workspace + alle Sub-Pakete editable installieren
-uv run pytest              # Tests
-uv run ruff check .        # Lint
-uv run ruff format .       # Format
-```
-
-## Konventionen
-
-- **Commits**: [Conventional Commits](https://www.conventionalcommits.org/) — `feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, `test:`.
-- **Branches**: `main` ist Default; Feature-Branches `feat/<thema>`, Fixes `fix/<thema>`.
-- **Spec-Identität**: `spec://<name>@<semver>` oder `@scope/<name>@<semver>`.
-- **Manifest-Datei**: `speccify.yaml`.
-- **Lockfile**: `speccify.lock` (Hashes pflicht + Generator-Pin + Output-Hashes).
-- **CLI-Binary**: `speccify`.
-- **Lizenz**: MIT.
-- **EditorConfig**: 4-space Python, 2-space Rest, LF, final newline.
-
-## Hinweise für AI-Agents
-
-1. **Phasen-Disziplin**: Implementiere nichts außerhalb des aktuellen Phasen-Plans. Bei Scope-Änderungen zuerst den Master-Plan re-lesen und ggf. einen neuen Phasen-Plan vorschlagen.
-2. **Geparkte Bestandteile nicht antasten**: Tauri/Desktop ist on-hold. Federation bleibt nachgelagert; Marketplace ist mit dem OSS-Pivot **gestrichen**. Visuelles Tooling ist seit dem Pivot **nicht mehr geparkt** — der visuelle Composer ist Kern-Roadmap (P3), sein Fundament (API-Vertrag + Mocks) ist P2.
-3. **Determinismus zuerst**: Spec-First, Code-Second. Wenn eine Aufgabe in Code beschreibbar ist, gehört sie wahrscheinlich in eine Spec.
-4. **Resolver/Codegen wohnt in `core/`** — `cli/` und `mcp/` sind dünne Adapter darüber.
-5. **Bei Unklarheiten** zur Roadmap: Master-Plan + Phasen-Plan checken; nicht raten.
-6. **macOS-Tooling-Reibung**: `uv sync` triggert die Filesystem-Quarantäne und versteckt `.pth`-Dateien im venv. Ein Pytest-Session-Hook in `conftest.py` (Root + `registry/`) entversteckt sie automatisch via `scripts/_venv_hygiene.py`; manuell: `./scripts/fix-venv-hidden.sh` (mit `--deep` für versteckte Subdirs). Fehlende `.py`-Dateien (z. B. `django.contrib.admin.templatetags.admin_urls`) brauchen `uv sync --reinstall-package <name>`.
+Lies einen passenden Skill vollständig, bevor Du ihn benutzt. `TOOL.md` ist
+der Vertrag: Eingaben, Ausgaben, Effekte, Anforderungen und Beispiele müssen
+vor einer Implementierung verstanden sein. Prüfe Implementierungen mit
+`speccify tool check <name>`; ändere den Status in `expansions.yaml` nie von
+Hand. `speccify verify` prüft Lock-, Bundle-, Expansions- und Tool-Drift.

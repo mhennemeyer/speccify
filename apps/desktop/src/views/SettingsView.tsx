@@ -7,6 +7,7 @@ import { useCallback, useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 import { ActionButton, ErrorBox } from "../components/ui";
+import { AGENT_PRESETS } from "../lib/agents";
 
 interface AppSettings {
   working_dir: string | null;
@@ -113,6 +114,24 @@ export default function SettingsView() {
           className="w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm"
           spellCheck={false}
         />
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {AGENT_PRESETS.map((preset) => (
+            <button
+              key={preset.id}
+              type="button"
+              onClick={() =>
+                setSettings({ ...settings, terminal_autostart_command: preset.command })
+              }
+              className={`rounded border px-2 py-1 text-xs ${
+                settings.terminal_autostart_command === preset.command
+                  ? "border-slate-700 bg-slate-700 text-white"
+                  : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+              }`}
+            >
+              {preset.label}
+            </button>
+          ))}
+        </div>
       </section>
 
       <ActionButton

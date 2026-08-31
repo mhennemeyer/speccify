@@ -1,0 +1,12 @@
+[mcp_servers.speccify-discovery]
+url = "http://127.0.0.1:8767"
+
+[mcp_servers.speccify-exec]
+url = "http://127.0.0.1:8765"
+
+[mcp_servers.speccify-desktop-ui]
+url = "http://127.0.0.1:8768"
+
+[mcp_servers.playwright]
+command = "npx"
+args = ["@playwright/mcp@latest"]

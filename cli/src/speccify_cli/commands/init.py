@@ -13,7 +13,7 @@ from speccify_core import MANIFEST_FILENAME, ProjectManifest
 from speccify_core.expansion import AGENT_DIR
 
 from speccify_cli.commands.expand import SPECCIFY_DIR
-from speccify_cli.commands.link import run_link
+from speccify_cli.commands.link import run_links
 
 CACHE_IGNORE = f"{AGENT_DIR}/{SPECCIFY_DIR}/cache/"
 
@@ -26,7 +26,7 @@ def run_init(project_dir: Path) -> Path:
     project_dir.mkdir(parents=True, exist_ok=True)
     ProjectManifest().write(manifest_path)
     _ignore_cache(project_dir / ".gitignore")
-    run_link(project_dir)
+    run_links(project_dir)
     return manifest_path
 
 
@@ -47,7 +47,7 @@ def init_command(
         Path("."), "--project", "-p", help="Project directory (default: current directory)."
     ),
 ) -> None:
-    """Create speccify.yaml, ignore the cache and link .claude/skills to .agent/skills."""
+    """Create the manifest and link Claude/Codex skill dirs to .agent/skills."""
     try:
         path = run_init(project_dir)
     except (FileExistsError, OSError) as exc:

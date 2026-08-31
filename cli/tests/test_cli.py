@@ -36,9 +36,10 @@ def test_init_writes_a_minimal_manifest(project: Path) -> None:
     assert manifest == {"schema_version": 1}
 
 
-def test_init_ignores_the_cache_and_links_the_agent(project: Path) -> None:
+def test_init_ignores_the_cache_and_links_supported_agents(project: Path) -> None:
     assert ".agent/speccify/cache/" in (project / ".gitignore").read_text().splitlines()
     assert (project / ".claude" / "skills").is_symlink()
+    assert (project / ".agents" / "skills").is_symlink()
     assert (project / ".agent" / "skills").is_dir()
 
 
@@ -60,6 +61,25 @@ def test_link_refuses_a_foreign_file(project: Path) -> None:
     result = runner.invoke(app, ["link", "--project", str(project)])
     assert result.exit_code == 1
     assert "is a file" in result.output
+
+
+def test_link_can_target_only_codex(project: Path) -> None:
+    claude = project / ".claude" / "skills"
+    codex = project / ".agents" / "skills"
+    claude.unlink()
+    codex.unlink()
+
+    result = runner.invoke(app, ["link", "--project", str(project), "--agent", "codex"])
+
+    assert result.exit_code == 0, result.output
+    assert not claude.exists()
+    assert codex.is_symlink() or codex.is_dir()
+
+
+def test_link_rejects_unknown_agent(project: Path) -> None:
+    result = runner.invoke(app, ["link", "--project", str(project), "--agent", "unknown"])
+    assert result.exit_code == 1
+    assert "Known: claude, codex" in result.output
 
 
 def test_add_pins_the_playbook_and_its_child(project: Path) -> None:
@@ -286,9 +306,10 @@ def test_expand_makes_normal_skills_under_agent(tmp_path: Path) -> None:
 
     linked = runner.invoke(app, ["link", "--project", str(tmp_path)])
     assert linked.exit_code == 0, linked.output
-    link = tmp_path / ".claude" / "skills"
-    assert link.is_symlink()
-    assert (link / "macos-notarize-tauri" / "SKILL.md").is_file()
+    for host_dir in [".claude", ".agents"]:
+        link = tmp_path / host_dir / "skills"
+        assert link.is_symlink()
+        assert (link / "macos-notarize-tauri" / "SKILL.md").is_file()
 
     verified = runner.invoke(app, ["verify", "--project", str(tmp_path), "--library", str(skills)])
     assert verified.exit_code == 0, verified.output
