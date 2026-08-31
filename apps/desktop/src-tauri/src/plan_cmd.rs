@@ -54,7 +54,7 @@ pub fn project_plan_activate(project: String, file: String) -> Result<Vec<String
                     path.strip_prefix(&root)
                         .unwrap_or(&path)
                         .to_string_lossy()
-                        .into_owned(),
+                        .replace('\\', "/"), // Windows-Trenner normalisieren
                 );
             }
         }
