@@ -1,5 +1,17 @@
 # Log: Speccify
 
+## 2026-09-01, abends (release.yml — Windows-Installer aus CI)
+- Neuer Job `release-windows` (windows-latest, x64, `needs: release`):
+  Sidecars im Release-Profil per pwsh (build_sidecars.sh kennt keine
+  .exe-Endungen), Engine-Payload über das bash-Skript im Git-Bash,
+  `tauri-action` hängt NSIS-Setup-exe + MSI ans selbe Draft-Release.
+  Unsigniert (SmartScreen-Hinweis im Release-Text); Updater bleibt wie
+  auf macOS inert, bis Schlüssel existieren. Release-Text von der
+  Playbook- auf die aktuelle Produktbeschreibung gezogen.
+- Testweg ohne neuen Tag: workflow_dispatch mit einem existierenden Tag
+  (z. B. v0.2.0) baut nach und hängt an dessen Draft an.
+
+
 ## 2026-09-01, spät (dev.ps1 — Windows-Einstieg für Kollegen)
 - `scripts/dev.ps1` (Gegenstück zu dev.sh): Toolchain-Check mit
   winget-Hinweisen, pnpm install, MCP-Sidecars mit Triple-Suffix,

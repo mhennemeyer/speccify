@@ -190,9 +190,13 @@ jobs:
           tagName: ${{ github.event.inputs.tag || github.ref_name }}
           releaseName: "Speccify __VERSION__"
           releaseBody: |
-            Playbooks for complex, recurring workflows.
+            The agent-agnostic skill and tool manager — desktop app for
+            macOS and Windows.
 
-            **Apple Silicon, macOS 11 or newer.** Intel Macs are not covered yet.
+            **macOS: Apple Silicon, macOS 11 or newer.** Intel Macs are not
+            covered yet. **Windows: x64 installer (`*-setup.exe`)** — the
+            build is not code-signed, so SmartScreen warns on first launch
+            (More info → Run anyway).
 
             This build is not signed with an Apple Developer ID yet, so
             Gatekeeper will refuse it on first launch. Open it once with
@@ -207,5 +211,90 @@ jobs:
             internet connection once; everything after runs offline.
           # Draft on purpose: the last look at what reaches people is a
           # human opening the release page, not a green pipeline.
+          releaseDraft: true
+          prerelease: false
+
+  release-windows:
+    name: Windows (x64)
+    runs-on: windows-latest
+    timeout-minutes: 60
+    # Nach dem macOS-Job: der legt das Draft-Release an, dieser hier haengt
+    # nur Artefakte an — so gibt es kein Wettrennen ums Release-Objekt.
+    needs: release
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.tag || github.ref }}
+          fetch-depth: 0
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            crates
+            apps/desktop/src-tauri
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      - name: Set up Python (from .python-version)
+        run: uv python install
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # build_sidecars.sh kennt keine .exe-Endungen — auf Windows werden die
+      # Sidecars direkt hier gebaut und mit Triple-Suffix abgelegt (dasselbe
+      # Muster wie der desktop-windows-Job in ci.yml, nur im Release-Profil).
+      - name: Build sidecars (release)
+        shell: pwsh
+        run: |
+          cargo build --release -p speccify-exec-mcp -p speccify-discovery-mcp -p speccify-parallels-mcp
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+          $triple = (rustc -vV | Select-String '^host: (.+)$').Matches.Groups[1].Value
+          $bin = "apps/desktop/src-tauri/binaries"
+          New-Item -ItemType Directory -Force $bin | Out-Null
+          foreach ($name in "speccify-exec-mcp", "speccify-discovery-mcp", "speccify-parallels-mcp") {
+            Copy-Item "target/release/$name.exe" "$bin/$name-$triple.exe"
+          }
+          Copy-Item (Get-Command uv).Source "$bin/uv-$triple.exe"
+
+      # Das Payload-Skript ist plattformneutral (uv build/export, shasum) und
+      # laeuft im Git-Bash des Runners.
+      - name: Build engine payload (wheels + skills)
+        shell: bash
+        run: |
+          uv sync --all-packages
+          ./scripts/build_engine_payload.sh
+
+      # Kein Code-Signing und kein Updater auf Windows, solange dafuer keine
+      # Schluessel existieren — bewusst derselbe ehrliche Erststand wie beim
+      # unsignierten macOS-Build.
+      - name: Build and attach to release
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectPath: apps/desktop
+          tagName: ${{ github.event.inputs.tag || github.ref_name }}
+          releaseName: "Speccify __VERSION__"
           releaseDraft: true
           prerelease: false

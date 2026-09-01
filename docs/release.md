@@ -1,5 +1,11 @@
 # Release: Speccify.app für macOS
 
+> **Windows:** Der Job `release-windows` in `release.yml` baut auf demselben
+> Tag einen x64-NSIS-Installer (`*-setup.exe`) plus MSI und hängt beide an
+> dasselbe Draft-Release an. Unsigniert — SmartScreen warnt beim ersten
+> Start. Sidecars entstehen im Workflow selbst (pwsh, Release-Profil);
+> das Engine-Payload-Skript läuft im Git-Bash des Runners.
+
 Speccify wird **außerhalb des App Store** verteilt (Plan
 [`r5-distribution.md`](../.agent/plans/archive/r5-distribution.md), D5): Download über
 GitHub-Releases statt Store, ohne Sandbox — der Exec-MCP und der
