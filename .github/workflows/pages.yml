@@ -75,7 +75,13 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # PUBLIC_RELEASE_SIGNED is a repository *variable* (not a secret): set it
+      # to "true" once the releases are actually signed and notarized, and the
+      # download page drops its Gatekeeper/SmartScreen warning boxes. Unset or
+      # anything else means the honest default: warn.
       - name: Build
+        env:
+          PUBLIC_RELEASE_SIGNED: ${{ vars.PUBLIC_RELEASE_SIGNED }}
         run: pnpm --filter speccify-marketing build
 
       - name: Upload artifact

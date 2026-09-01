@@ -285,9 +285,61 @@ jobs:
           uv sync --all-packages
           ./scripts/build_engine_payload.sh
 
-      # Kein Code-Signing und kein Updater auf Windows, solange dafuer keine
-      # Schluessel existieren — bewusst derselbe ehrliche Erststand wie beim
-      # unsignierten macOS-Build.
+      # Windows-Signing laeuft ueber Azure Trusted Signing und ist — wie beim
+      # macOS-Job — rein secrets-getrieben: ohne die sechs AZURE_*-Secrets
+      # bleibt der Build unsigniert und SmartScreen warnt (der ehrliche
+      # Erststand). Mit Secrets bekommt tauri.conf.json ein `signCommand`,
+      # das jede Binary (Exe, Sidecars, NSIS/MSI) beim Bundlen signiert.
+      # Welche Secrets das sind und wie sie entstehen: docs/release.md.
+      - name: Detect signing credentials
+        id: caps
+        shell: bash
+        env:
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          AZURE_TS_ENDPOINT: ${{ secrets.AZURE_TS_ENDPOINT }}
+          AZURE_TS_ACCOUNT: ${{ secrets.AZURE_TS_ACCOUNT }}
+          AZURE_TS_PROFILE: ${{ secrets.AZURE_TS_PROFILE }}
+        run: |
+          missing=""
+          for name in AZURE_TENANT_ID AZURE_CLIENT_ID AZURE_CLIENT_SECRET \
+                      AZURE_TS_ENDPOINT AZURE_TS_ACCOUNT AZURE_TS_PROFILE; do
+            eval "value=\${$name:-}"
+            [ -n "$value" ] || missing="$missing $name"
+          done
+          if [ -z "$missing" ]; then
+            echo "signing=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "signing=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::No Azure Trusted Signing secrets (missing:$missing) — building unsigned, SmartScreen will warn."
+          fi
+
+      # `signCommand` ersetzt %1 durch den Pfad der zu signierenden Datei.
+      # trusted-signing-cli holt sich die Azure-Credentials aus der Umgebung
+      # (AZURE_TENANT_ID/CLIENT_ID/CLIENT_SECRET) — die werden unten nur
+      # dann in GITHUB_ENV gestellt, wenn sie wirklich etwas tragen
+      # (dieselbe Lektion wie beim macOS-Job: Praesenz schaltet, nicht Inhalt).
+      - name: Enable Windows signing (Azure Trusted Signing)
+        if: steps.caps.outputs.signing == 'true'
+        shell: bash
+        env:
+          CONF: apps/desktop/src-tauri/tauri.conf.json
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          AZURE_TS_ENDPOINT: ${{ secrets.AZURE_TS_ENDPOINT }}
+          AZURE_TS_ACCOUNT: ${{ secrets.AZURE_TS_ACCOUNT }}
+          AZURE_TS_PROFILE: ${{ secrets.AZURE_TS_PROFILE }}
+        run: |
+          cargo install trusted-signing-cli --locked
+          python3 -c 'import json, os; p = os.environ["CONF"]; c = json.load(open(p)); c.setdefault("bundle", {}).setdefault("windows", {})["signCommand"] = "trusted-signing-cli -e {} -a {} -c {} %1".format(os.environ["AZURE_TS_ENDPOINT"], os.environ["AZURE_TS_ACCOUNT"], os.environ["AZURE_TS_PROFILE"]); json.dump(c, open(p, "w"), indent=2)'
+          for name in AZURE_TENANT_ID AZURE_CLIENT_ID AZURE_CLIENT_SECRET; do
+            eval "value=\${$name:-}"
+            printf '%s<<__SPECCIFY_EOF__\n%s\n__SPECCIFY_EOF__\n' "$name" "$value" >> "$GITHUB_ENV"
+          done
+          echo "Windows signing enabled (Azure Trusted Signing)"
+
       - name: Build and attach to release
         uses: tauri-apps/tauri-action@v0
         env:

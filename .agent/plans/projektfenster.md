@@ -1,6 +1,6 @@
 ---
 lifecycle: active
-status: Bauen — P1–P3 geliefert und auf macOS/Windows verifiziert. D25 geliefert 2026-08-29: gemeinsamer Agent-Host-Vertrag, Claude- und Codex-Skill-Links, native MCP-Dateien, Terminal-Presets und Repository-Dogfooding. P4-Kern geliefert 2026-09-01 (Skill-Browser D24, Projekt-Quellen D21, Agents-Editor D23). Neu 2026-09-01: **P6 Website + integrierte Hilfe** — P6a-Kern + P6b geliefert (Site auf 83 Seiten EN/DE, Landing+README neu; integrierte Hilfe in Dashboard und Projektfenster). Offen: Screenshots, Tutorial-Stubs, DE-Landing, Push/Deploy. Zuvor 2026-08-31: **P5 Agent-/Workflow-Parität** (BO stellt iKanbanAI zurück; alles außer Git/IDE kommt nach Speccify — D26–D29, W1–W7, P5 zieht vor den P4-Rest). **W1–W6 geliefert 2026-08-31, auf macOS UND Windows verifiziert** (VM: 38/38 Rust-Tests; Setup per Banner-Klick legt Junctions über den mklink-Fallback an, Policy-Block v1 sitzt, Board rendert). Committet (eaf2188 D25, 3bbceda P5, 3b80919 Windows-Pfadfix). Offen: W7-Feinschliff nach Gebrauch, Push/CI-Erstlauf. Offen: CI-Erstlauf beim nächsten Push, x86-Referenz. Läuft parallel zu `skills-und-tools.md` (BO-Ausnahme von der Ein-Plan-Regel).
+status: Bauen — P1–P3 geliefert und auf macOS/Windows verifiziert. D25 geliefert 2026-08-29: gemeinsamer Agent-Host-Vertrag, Claude- und Codex-Skill-Links, native MCP-Dateien, Terminal-Presets und Repository-Dogfooding. P4-Kern geliefert 2026-09-01 (Skill-Browser D24, Projekt-Quellen D21, Agents-Editor D23). Neu 2026-09-01: **P6 Website + integrierte Hilfe** — P6a (inkl. Screenshots, Download-Seite macOS+Windows, DE-Landing — 85 Seiten) + P6b geliefert; **P6c Signierung vorbereitet** (Windows-Job signiert secrets-getrieben via Azure Trusted Signing, BO-Aktionsliste in docs/release.md, PUBLIC_RELEASE_SIGNED erreicht jetzt den Pages-Build). Offen: Tutorial-Stubs, BO legt Secrets an, Push/Deploy/Release-Erstlauf. Zuvor 2026-08-31: **P5 Agent-/Workflow-Parität** (BO stellt iKanbanAI zurück; alles außer Git/IDE kommt nach Speccify — D26–D29, W1–W7, P5 zieht vor den P4-Rest). **W1–W6 geliefert 2026-08-31, auf macOS UND Windows verifiziert** (VM: 38/38 Rust-Tests; Setup per Banner-Klick legt Junctions über den mklink-Fallback an, Policy-Block v1 sitzt, Board rendert). Committet (eaf2188 D25, 3bbceda P5, 3b80919 Windows-Pfadfix). Offen: W7-Feinschliff nach Gebrauch, Push/CI-Erstlauf. Offen: CI-Erstlauf beim nächsten Push, x86-Referenz. Läuft parallel zu `skills-und-tools.md` (BO-Ausnahme von der Ein-Plan-Regel).
 sessionId: projektfenster
 ---
 # Plan: Projektfenster — Pläne, Skills, Tools im Projekt verwalten (auch auf Windows)
@@ -670,10 +670,28 @@ implementation" — Tool-Contract-Ausschnitt, Expand/Execute/Evaluate/
 Board, App-Sektion), README neu auf die aktuelle Geschichte,
 Playbook-/Viewer-Altseiten samt Sync-Mappings entfernt (Quell-Dokus
 als docs/archive-*.md). Build: **83 Seiten** (vorher 21), keine toten
-internen Verweise auf gelöschte Sektionen. **Offen in P6a:**
-Screenshots (Platzhalter-Notes überall), Tutorial-Stubs
-(`submission`, `fastlane-and-asc` — brauchen BO-Material), DE-Landing,
-eigene `app/plans`-Seite, Feinschliff nach BO-Lektüre.
+internen Verweise auf gelöschte Sektionen.
+
+**P6a-Rest ✅ 2026-09-01 (42c975c):** 5 App-Screenshots aus der
+laufenden App am W1-Fixture (Fixture mit offener Frage, exec-pending
+und Herkunft präpariert), alle 12 Platzhalter EN+DE ersetzt;
+Download-Seite auf macOS+Windows (SmartScreen-Box, dev.ps1-Selbstbau);
+deutsche Landing unter `/de/`. Build 85 Seiten. **Offen in P6a:**
+Tutorial-Stubs (`submission`, `fastlane-and-asc` — brauchen
+BO-Material), eigene `app/plans`-Seite, Feinschliff nach BO-Lektüre.
+
+**P6c Signierung (vorbereitet 2026-09-01):** beide Release-Jobs sind
+rein secrets-getrieben scharf zu schalten — macOS war fertig
+(APPLE_*-Secrets), **Windows jetzt auch**: `release-windows` prüft auf
+sechs `AZURE_*`-Secrets und signiert dann Exe, Sidecars und Installer
+über Azure Trusted Signing (`trusted-signing-cli` als `signCommand`);
+ohne Secrets weiter unsigniert. `pages.yml` reicht
+`PUBLIC_RELEASE_SIGNED` jetzt wirklich in den Site-Build (war
+verdrahtet, kam aber nie an). Die komplette BO-Aktionsliste — welche
+Secrets, wie erzeugen, `gh secret set`-Kommandos, Empfehlung Azure
+Trusted Signing über OV-Zertifikat — steht in `docs/release.md`
+(„Signierung scharf schalten"). Secrets/Schlüssel erzeugt der BO
+selbst; danach `PUBLIC_RELEASE_SIGNED=true` und der Release-Body-Text.
 
 **Zuschnitt (Vorschlag):**
 1. **P6a Website:** `speccify/`- und `fundamentals/`-Sektionen nach

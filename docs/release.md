@@ -2,9 +2,11 @@
 
 > **Windows:** Der Job `release-windows` in `release.yml` baut auf demselben
 > Tag einen x64-NSIS-Installer (`*-setup.exe`) plus MSI und hängt beide an
-> dasselbe Draft-Release an. Unsigniert — SmartScreen warnt beim ersten
-> Start. Sidecars entstehen im Workflow selbst (pwsh, Release-Profil);
-> das Engine-Payload-Skript läuft im Git-Bash des Runners.
+> dasselbe Draft-Release an. Ohne Azure-Secrets unsigniert — SmartScreen
+> warnt beim ersten Start; mit den sechs `AZURE_*`-Secrets signiert der Job
+> über Azure Trusted Signing (siehe Aktionsliste unten). Sidecars entstehen
+> im Workflow selbst (pwsh, Release-Profil); das Engine-Payload-Skript läuft
+> im Git-Bash des Runners.
 
 Speccify wird **außerhalb des App Store** verteilt (Plan
 [`r5-distribution.md`](../.agent/plans/archive/r5-distribution.md), D5): Download über
@@ -29,6 +31,99 @@ Secrets was freischalten, steht im Kopf des Workflows.
 
 Das lokale Skript unten bleibt für Tests und für den Fall, dass man ohne CI
 ausliefern will.
+
+## Signierung scharf schalten — die Aktionsliste
+
+Beide Release-Jobs sind fertig verdrahtet; es fehlen nur die Schlüssel.
+Alle Secrets/Variablen entstehen **außerhalb des Repos** und werden mit
+`gh secret set <NAME>` bzw. `gh variable set <NAME>` hinterlegt (oder im
+GitHub-UI unter *Settings → Secrets and variables → Actions*). Kein Wert
+gehört jemals in eine getrackte Datei.
+
+### macOS (Gatekeeper): 4 Schritte
+
+1. **Apple Developer Program** beitreten (99 $/Jahr,
+   [developer.apple.com](https://developer.apple.com/programs/)).
+2. **Developer-ID-Zertifikat** erzeugen (Portal → Certificates →
+   *Developer ID Application*), in den Login-Keychain importieren, dann als
+   `.p12` exportieren (Schlüsselbund → Zertifikat + privater Schlüssel →
+   Exportieren, Passwort vergeben) und hinterlegen:
+
+   ```bash
+   base64 -i DeveloperID.p12 | gh secret set APPLE_CERTIFICATE
+   gh secret set APPLE_CERTIFICATE_PASSWORD        # das Export-Passwort
+   security find-identity -v -p codesigning        # → den vollen String:
+   gh secret set APPLE_SIGNING_IDENTITY            # "Developer ID Application: Name (TEAMID)"
+   ```
+
+3. **Notarisierungs-Zugang**: auf [appleid.apple.com](https://appleid.apple.com)
+   ein app-spezifisches Passwort erzeugen, dann:
+
+   ```bash
+   gh secret set APPLE_ID          # die Apple-ID-Mailadresse
+   gh secret set APPLE_PASSWORD    # das app-spezifische Passwort
+   gh secret set APPLE_TEAM_ID     # die TEAMID aus der Klammer der Identity
+   ```
+
+4. **Updater-Schlüssel** (optional, schaltet Auto-Updates frei):
+
+   ```bash
+   pnpm --filter speccify-desktop tauri signer generate -w ~/.speccify/updater.key
+   gh secret set TAURI_SIGNING_PRIVATE_KEY < ~/.speccify/updater.key
+   gh secret set TAURI_SIGNING_PRIVATE_KEY_PASSWORD   # falls beim Generieren gesetzt
+   gh variable set TAURI_UPDATER_PUBKEY --body "<der ausgegebene Public Key>"
+   ```
+
+   Den Public Key zusätzlich in `tauri.conf.json` unter
+   `plugins.updater.pubkey` eintragen (siehe [Updater](#updater) unten) —
+   das ist der einzige Wert, der ins Repo gehört, er ist öffentlich.
+
+### Windows (SmartScreen): Azure Trusted Signing — 3 Schritte
+
+**Empfehlung: [Azure Trusted Signing](https://azure.microsoft.com/products/trusted-signing)**
+(Basic ~10 $/Monat). Gründe: kein Zertifikats-Handling (kurzlebige
+Zertifikate, automatisch rotiert), kein Hardware-Token — klassische
+OV-Zertifikate müssen seit 2023 auf Token/HSM liegen und sind aus CI heraus
+kaum nutzbar —, Microsoft-eigene Root, und SmartScreen-Reputation baut sich
+deutlich schneller auf. Die Alternative (Certum „Open Source Code Signing",
+~70 €/Jahr + Kartenleser) lohnt nur, wenn kein Azure-Konto infrage kommt.
+Seit 2024 können auch Einzelpersonen (nicht nur Firmen) validiert werden.
+
+1. **Azure einrichten**: Azure-Konto → Ressource *Trusted Signing Account*
+   anlegen (Region merken, z. B. `weu`) → *Identity Validation* durchlaufen
+   (Einzelperson oder Organisation) → *Certificate Profile* vom Typ
+   *Public Trust* anlegen.
+2. **Service Principal für CI**: Microsoft Entra → *App registration*
+   anlegen, ein Client-Secret erzeugen, und der App auf dem Trusted-Signing-
+   Konto die Rolle **Trusted Signing Certificate Profile Signer** geben.
+3. **Secrets hinterlegen** — genau die sechs, auf die `release.yml` prüft:
+
+   ```bash
+   gh secret set AZURE_TENANT_ID       # Entra: Directory (tenant) ID
+   gh secret set AZURE_CLIENT_ID       # App registration: Application (client) ID
+   gh secret set AZURE_CLIENT_SECRET   # das erzeugte Client-Secret
+   gh secret set AZURE_TS_ENDPOINT     # z. B. https://weu.codesigning.azure.net
+   gh secret set AZURE_TS_ACCOUNT      # Name des Trusted-Signing-Accounts
+   gh secret set AZURE_TS_PROFILE      # Name des Certificate Profile
+   ```
+
+Der `release-windows`-Job signiert dann Exe, Sidecars und die Installer
+(NSIS + MSI) über `trusted-signing-cli`; ohne die Secrets baut er weiter
+unsigniert.
+
+### Danach
+
+- **Website umschalten**: `gh variable set PUBLIC_RELEASE_SIGNED --body true`
+  — die Download-Seite lässt die Gatekeeper/SmartScreen-Warnboxen weg
+  (greift beim nächsten Pages-Deploy).
+- **Release-Text**: Der Release-Body in `release.yml` erklärt derzeit die
+  Warnungen unsignierter Builds — nach dem ersten signierten Release die
+  Absätze dort entfernen (und im Draft-Release vor dem Veröffentlichen
+  gegenlesen, das bleibt ohnehin der letzte menschliche Blick).
+- **Endtest**: je ein Artefakt auf einer fremden Maschine per Browser laden
+  und starten — macOS ohne Gatekeeper-Dialog, Windows ohne SmartScreen-Blau.
+  (SmartScreen kann trotz gültiger Signatur anfangs noch warnen, bis
+  Reputation da ist — mit Trusted Signing typisch Tage, nicht Monate.)
 
 ---
 
@@ -269,9 +364,8 @@ Ablauf pro Release: bauen → `.app.tar.gz` und `.dmg` hochladen →
 Umgebungs-Tab → „Nach Updates suchen"; nach dem Einspielen muss Speccify
 einmal neu gestartet werden.
 
-## Noch offen (R5.5)
+## Noch offen
 
-- **Download-Seite** in `apps/marketing` mit dem dmg-Link.
 - **Intel/Universal**: gebaut wird derzeit nur `aarch64`. Für Intel-Macs
   bräuchte es einen Universal-Build (`--target universal-apple-darwin`) inkl.
   Sidecars für beide Architekturen.
