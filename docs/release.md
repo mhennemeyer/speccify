@@ -42,6 +42,13 @@ gehört jemals in eine getrackte Datei.
 
 ### macOS (Gatekeeper): 4 Schritte
 
+> **Stand 2026-09-01:** Schritt 1 und der Erzeugen-Teil von Schritt 2
+> entfallen — das Developer-Konto existiert (Team `9MQUMBML8C`, dasselbe
+> wie bei iKanban), und ein gültiges Zertifikat
+> `Developer ID Application: Matthias Hennemeyer (9MQUMBML8C)` liegt
+> bereits im Login-Keychain dieses Macs. Es bleibt: exportieren (2b),
+> App-Passwort (3), optional Updater (4).
+
 1. **Apple Developer Program** beitreten (99 $/Jahr,
    [developer.apple.com](https://developer.apple.com/programs/)).
 2. **Developer-ID-Zertifikat** erzeugen (Portal → Certificates →
@@ -110,6 +117,22 @@ Seit 2024 können auch Einzelpersonen (nicht nur Firmen) validiert werden.
 Der `release-windows`-Job signiert dann Exe, Sidecars und die Installer
 (NSIS + MSI) über `trusted-signing-cli`; ohne die Secrets baut er weiter
 unsigniert.
+
+**Das Azure-Setup muss nicht vom Repo-Inhaber kommen.** Die Pipeline kennt
+keinen Tenant — sie liest nur die sechs Secrets. Ein Teammitglied mit
+bestehendem Azure-Zugang kann Schritt 1–2 in seinem Tenant erledigen und
+die Werte übergeben (oder als Repo-Admin selbst setzen). Zwei Dinge dabei
+bewusst entscheiden:
+
+- **Der Publisher-Name kommt aus der Identity Validation.** Windows zeigt
+  als „Verifizierter Herausgeber" den validierten Namen — bei
+  Org-Validation also die Firma des Teammitglieds, nicht „Speccify". Das
+  muss der Name sein, der dauerhaft unter der App stehen soll: ein
+  späterer Wechsel der Identität heißt neues Zertifikat und
+  SmartScreen-Reputation von vorn.
+- **Kosten und Kontrolle** laufen über dessen Azure-Subscription; für die
+  Rollenzuweisung (*Trusted Signing Certificate Profile Signer* an die App
+  Registration) braucht es dort Owner-/User-Access-Admin-Rechte.
 
 ### Danach
 
