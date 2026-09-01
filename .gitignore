@@ -84,3 +84,6 @@ apps/composer/playwright-report/
 # `.claude/skills` is a symlink to `.agent/skills` (speccify link) and is committed.
 # The upstream cache is not: `speccify expand` derives everything from the lockfile.
 .agent/speccify/cache/
+
+# Private Schluessel/Zertifikate niemals ins Repo (Export liegt in ~/.speccify/)
+*.p12
