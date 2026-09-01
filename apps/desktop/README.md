@@ -82,8 +82,13 @@ greift der PATH-Fallback. `binaries/` ist gitignored.
 
 Einmalig die Toolchain installieren (jeweils `winget install …`):
 `Rustlang.Rustup`, `OpenJS.NodeJS.LTS`, `LLVM.LLVM` (clang ist Pflicht für
-`ring`), `astral-sh.uv`, `Microsoft.VisualStudio.2022.BuildTools` mit der
-Workload „Desktopentwicklung mit C++" (inkl. Windows SDK) — dann
+`ring`), `astral-sh.uv`, `Microsoft.VisualStudio.2022.BuildTools` **mit** der
+C++-Workload — die nackte winget-Installation lässt `link.exe` weg:
+
+```powershell
+winget install Microsoft.VisualStudio.2022.BuildTools --override "--quiet --wait --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended"
+```
+ — dann
 `corepack enable` für pnpm. Danach reicht:
 
 ```powershell
