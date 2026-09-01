@@ -11,9 +11,7 @@ each with its origin from `expansions.yaml`. The tools tab does the
 same for the [tools](/fundamentals/tools/) under `.agent/tools/` —
 the same files the agent reads, rendered for you.
 
-:::note[Screenshot]
-*Placeholder: skills tab with the release-checks skill and its tools.*
-:::
+![The skills tab: an expanded skill with its provenance](../../../assets/app/skills.png)
 
 ## One source of truth, many agents
 

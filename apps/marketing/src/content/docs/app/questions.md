@@ -49,9 +49,7 @@ block directly in the ticket file, or just in the next chat; the
 agent's next run records it, clears the flag, and continues. Settled
 questions fold away under a collapsible **Answered (n)** section.
 
-:::note[Screenshot]
-*Placeholder: a waiting ticket with an open question in the board.*
-:::
+![An open question at the top of the ticket detail, with the answer field](../../../assets/app/question.png)
 
 The effect, months later: every "why is it like this?" has a
 findable, timestamped answer sitting in the ticket that made the

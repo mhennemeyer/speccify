@@ -7,9 +7,9 @@
 // and a download page that hides that produces "the app is damaged" reports.
 import MarketingLayout from "../layouts/MarketingLayout.astro";
 
-const title = "Download Speccify for macOS";
+const title = "Download Speccify";
 const description =
-  "The Speccify desktop app: playbook viewer, MCP servers and agent terminal in one signed app — no repository, no toolchain.";
+  "The Speccify desktop app for macOS and Windows: board, plans, skills, tool contracts, project actions and an agent terminal — one window per project.";
 
 const repo = "https://github.com/mhennemeyer/speccify";
 // Resolves to the newest published release; no rebuild of this page needed.
@@ -19,20 +19,20 @@ const isSigned = import.meta.env.PUBLIC_RELEASE_SIGNED === "true";
 
 const features = [
   {
-    name: "Playbook viewer",
-    body: "The workflow as a diagram, steps as rendered markdown, every source with its age.",
+    name: "Board, plans, history",
+    body: "File-based tickets your agent works one at a time — with the active plan above the board and an auditable history per ticket.",
   },
   {
-    name: "MCP servers included",
-    body: "Exec, Discovery, Parallels and the playbook engine ship with the app — your coding agents find them through a ready-made .mcp.json.",
+    name: "Skills & tool contracts",
+    body: "Expanded skills with provenance, tool contracts with per-platform verification status, and a source browser that imports via speccify expand.",
+  },
+  {
+    name: "Project actions",
+    body: "Named commands from .agent/actions.json, run natively with live output, progress and charts — agent proposals approved with one click.",
   },
   {
     name: "Agent terminal",
-    body: "A real PTY in your working directory. The agent reads what you select in the viewer, so questions resolve against what is on screen.",
-  },
-  {
-    name: "Questions in the UI",
-    body: "Agents ask real questions through ask_bo — buttons, multi-select and forms instead of guessing.",
+    body: "A real PTY in the project directory. Claude Code and Codex are equal presets; questions the agent leaves in tickets surface as notifications.",
   },
 ];
 ---
@@ -41,7 +41,7 @@ const features = [
   <main class="mx-auto max-w-5xl px-6 py-12">
     <section class="flex flex-col items-center gap-5 py-8 text-center">
       <p class="text-sm font-semibold uppercase tracking-widest text-sky-400">
-        Desktop app for macOS
+        Desktop app for macOS and Windows
       </p>
       <h1 class="max-w-3xl text-4xl font-bold tracking-tight">
         Speccify on your machine
@@ -59,7 +59,8 @@ const features = [
           Download the latest release
         </a>
         <p class="text-sm text-slate-400">
-          Apple Silicon · macOS 11 or newer{isSigned ? " · signed and notarized" : ""}
+          macOS: Apple Silicon, macOS 11+ (<code>.dmg</code>) · Windows: x64
+          (<code>*-setup.exe</code>){isSigned ? " · signed and notarized" : ""}
         </p>
       </div>
 
@@ -87,14 +88,36 @@ const features = [
         )
       }
 
+      {
+        !isSigned && (
+          <div class="w-full rounded-xl border border-amber-500/40 bg-amber-500/5 p-6 text-left">
+            <p class="text-lg font-semibold text-amber-200">
+              Windows: SmartScreen warns on first launch
+            </p>
+            <p class="mt-2 text-slate-300">
+              The installer is not code-signed yet, so SmartScreen shows
+              "Windows protected your PC" the first time. Click
+              <strong> More info → Run anyway</strong> — or build it yourself
+              below; the release is produced from this repository by a public
+              workflow, so the result is identical.
+            </p>
+          </div>
+        )
+      }
+
       <div class="w-full rounded-xl border border-slate-800 bg-slate-900/50 p-6 text-left">
         <p class="text-lg font-semibold text-slate-200">Or build it yourself</p>
         <p class="mt-2 text-slate-400">
           Two steps — the script fetches dependencies, builds the app and starts
           it:
         </p>
-        <pre class="mt-4 overflow-x-auto rounded-lg border border-slate-800 bg-slate-950 p-4 text-sm text-slate-200"><code>git clone https://github.com/mhennemeyer/speccify
-cd speccify && ./scripts/dev.sh --release</code></pre>
+        <pre class="mt-4 overflow-x-auto rounded-lg border border-slate-800 bg-slate-950 p-4 text-sm text-slate-200"><code># macOS
+git clone https://github.com/mhennemeyer/speccify
+cd speccify && ./scripts/dev.sh --release
+
+# Windows (PowerShell)
+git clone https://github.com/mhennemeyer/speccify
+cd speccify; powershell -ExecutionPolicy Bypass -File scripts\dev.ps1</code></pre>
         <p class="mt-4 text-sm text-slate-400">
           Prerequisites:
           <code class="rounded bg-slate-800 px-1.5 py-0.5">uv</code>,
@@ -130,8 +153,8 @@ cd speccify && ./scripts/dev.sh --release</code></pre>
           or in a system Python installation.
         </p>
         <p class="mt-4 text-slate-400">
-          Windows and Intel Macs are not covered yet — the app is currently
-          built for Apple Silicon.
+          Intel Macs are not covered yet — the macOS build targets Apple
+          Silicon.
         </p>
       </div>
     </section>

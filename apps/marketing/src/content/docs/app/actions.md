@@ -45,9 +45,7 @@ up in the actions tab as a **suggestion**. **Confirm** turns it into
 an action *and* a permanent allowlist entry — a rejected command you
 approve once becomes a button you can press.
 
-:::note[Screenshot]
-*Placeholder: actions tab with a suggested command awaiting confirmation.*
-:::
+![The actions tab: a runnable action and an agent proposal awaiting approval](../../../assets/app/actions.png)
 
 One rule spans all these files: **no secrets in the repository.**
 Tokens live in the keychain or arrive as environment references like

@@ -51,9 +51,7 @@ im nächsten Chat; der nächste Lauf des Agenten trägt es nach, löscht
 das Flag und macht weiter. Erledigte Fragen klappen unter
 **Answered (n)** zusammen.
 
-:::note[Screenshot]
-*Platzhalter: ein wartendes Ticket mit offener Frage auf dem Board.*
-:::
+![Eine offene Frage oben im Ticket-Detail, mit Antwortfeld](../../../../assets/app/question.png)
 
 Der Effekt, Monate später: Jedes „warum ist das so?" hat eine
 auffindbare Antwort mit Zeitstempel — im Ticket, das die Entscheidung

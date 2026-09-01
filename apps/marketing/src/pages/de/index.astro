@@ -1,0 +1,207 @@
+---
+// Landing page: hero, problem/solution, a real tool contract, how it works,
+// the app, CTA. Header and footer live in MarketingLayout.
+import MarketingLayout from "../../layouts/MarketingLayout.astro";
+
+const title = "Speccify — teile den Vertrag, nicht die Implementierung";
+const description =
+  "Der agentenagnostische Skill- und Tool-Manager: wiederverwendbare Skills über Git, Tool-Verträge, die Dein Agent pro Projekt implementiert und verifiziert, und eine Desktop-App für den ganzen Workflow — Pläne, Tickets, Board — auf macOS und Windows.";
+
+const problems = [
+  "Was Du mühsam gelernt hast, lebt in einem Projekt. Das nächste startet bei null — und der Agent auch.",
+  "Fertige Skripte brechen auf der nächsten Maschine: anderes Python, anderes OS, ein Pfad, den es nur bei Dir gab.",
+  "Agent-Workflows driften — jedes Projekt erfindet neu, wie geplant, geschnitten und der Mensch eingebunden wird.",
+];
+
+const solutions = [
+  "Skills sind schlichte SKILL.md-Dateien, geteilt über Git wie Go-Module — kein Konto, keine Registry. speccify expand kopiert sie dorthin, wo jeder Agent sie findet.",
+  "Tools reisen als Verträge, nicht als Skripte: TOOL.md definiert Eingaben, Ausgaben, Effekte und Beispiele. Dein Agent implementiert sie für diese Maschine — speccify tool check beweist, dass es funktioniert.",
+  "Ein dateibasierter Workflow — Pläne, Tickets, Fragen, History —, dem jeder Agent folgen kann und den die Speccify-App sichtbar macht. Claude Code und Codex sind gleich zu Hause.",
+];
+
+const useCases = [
+  { name: "Plattform-Rituale", note: "Notarisierung, Entitlements, Store-Review" },
+  { name: "Payments & Auth", note: "Trials, Abos, OAuth-Flows" },
+  { name: "Team-Workflows", note: "Pläne, Tickets, Review-Schleifen für Agenten" },
+  { name: "Kundenprojekte", note: "Jedes mit eigenem Skill-Repo und Quellen" },
+];
+
+const steps = [
+  {
+    title: "1 · Expand",
+    body: "speccify expand kopiert einen Skill samt Tool-Verträgen nach .agent/ — normalisiert, versioniert, Herkunft festgehalten. Jeder Agent liest dieselben Dateien.",
+  },
+  {
+    title: "2 · Execute",
+    body: "Dein Agent implementiert jeden Tool-Vertrag für diese Maschine und Plattform. Keine fragilen geteilten Skripte — der Vertrag reist, die Implementierung ist lokal.",
+  },
+  {
+    title: "3 · Evaluate",
+    body: "speccify tool check prüft die Implementierung gegen die Beispiele des Vertrags. verified wird ein Tool nur durch bestandene Beispiele — nie von Hand.",
+  },
+  {
+    title: "4 · Board arbeiten",
+    body: "Die App macht aus dem aktiven Plan Tickets, der Agent arbeitet sie einzeln ab, fragt, wenn er muss, und schreibt nachvollziehbare History.",
+  },
+];
+
+const demo = `$ speccify expand macos-notarize-tauri --library ~/work/skills
+✓ .agent/skills/macos-notarize-tauri/SKILL.md
+✓ .agent/tools/verify-signatures/TOOL.md   (contract, no implementation yet)
+
+# agent implements .agent/tools/verify-signatures/macos.sh …
+
+$ speccify tool check verify-signatures
+✓ example 1  clean bundle          → ok: true
+✓ example 2  unsigned sidecar      → ok: false, names the offender
+verified  verify-signatures (macos)`;
+
+const contract = `# TOOL.md — the contract an agent implements per project
+name: verify-signatures
+description: Verifies the code signature of a macOS .app bundle and of
+  every executable inside Contents/MacOS — the sidecars notarization
+  rejects without the build ever saying so.
+inputs:
+  type: object
+  required: [bundle]
+effects: [reads-filesystem]
+# examples below are the acceptance test for any implementation`;
+---
+
+<MarketingLayout title={title} description={description}>
+  <main class="mx-auto max-w-5xl px-6">
+    <!-- Hero -->
+    <section class="flex flex-col items-center gap-6 py-20 text-center">
+      <p class="text-sm font-semibold uppercase tracking-widest text-sky-400">
+        Der agentenagnostische Skill- &amp; Tool-Manager
+      </p>
+      <h1 class="max-w-3xl text-4xl font-bold tracking-tight sm:text-6xl">
+        Teile den Vertrag, nicht die Implementierung.
+      </h1>
+      <p class="max-w-2xl text-lg text-slate-300">
+        <strong class="text-slate-100">Skills</strong> tragen, was Du gelernt
+        hast — über Git geteilt, in jedes Projekt expandiert.
+        <strong class="text-slate-100">Tool-Verträge</strong> sagen, was ein
+        Tool können muss; Dein Agent implementiert sie für diese Maschine, und
+        <code class="text-sky-300">speccify tool check</code> beweist es. Die
+        <strong class="text-slate-100">Speccify-App</strong> fährt den ganzen
+        Workflow — Pläne, Tickets, Board, Fragen — auf macOS und Windows, mit
+        Claude Code oder Codex im Terminal.
+      </p>
+      <div class="flex flex-wrap items-center justify-center gap-4">
+        <a
+          href="/de/tutorial/intro/"
+          class="rounded-md bg-sky-500 px-5 py-2.5 font-medium text-white transition hover:bg-sky-400"
+        >
+          Tutorial: von null in den App Store
+        </a>
+        <a
+          href="/download/"
+          class="rounded-md border border-slate-700 px-5 py-2.5 font-medium text-slate-200 transition hover:border-slate-500"
+        >
+          App herunterladen
+        </a>
+        <a
+          href="https://github.com/mhennemeyer/speccify"
+          class="rounded-md border border-slate-700 px-5 py-2.5 font-medium text-slate-200 transition hover:border-slate-500"
+        >
+          GitHub
+        </a>
+      </div>
+    </section>
+
+    <!-- Problem / solution -->
+    <section class="grid gap-8 py-12 md:grid-cols-2">
+      <div class="rounded-xl border border-slate-800 bg-slate-900/50 p-6">
+        <h2 class="mb-4 text-lg font-semibold text-rose-300">Das Problem</h2>
+        <ul class="space-y-3 text-slate-300">
+          {problems.map((item) => <li>· {item}</li>)}
+        </ul>
+      </div>
+      <div class="rounded-xl border border-slate-800 bg-slate-900/50 p-6">
+        <h2 class="mb-4 text-lg font-semibold text-emerald-300">Die Idee</h2>
+        <ul class="space-y-3 text-slate-300">
+          {solutions.map((item) => <li>· {item}</li>)}
+        </ul>
+      </div>
+    </section>
+
+    <!-- What a contract looks like -->
+    <section class="py-12">
+      <h2 class="mb-2 text-center text-2xl font-bold">
+        So sieht ein Tool-Vertrag aus
+      </h2>
+      <p class="mx-auto mb-6 max-w-2xl text-center text-slate-400">
+        Aus dem Notarisierungs-Skill dieses Repositories. Der Vertrag nennt
+        Eingaben, Ausgaben, Effekte — und seine Beispiele sind der
+        Abnahmetest jeder Implementierung.
+      </p>
+      <pre class="overflow-x-auto rounded-xl border border-slate-800 bg-black/60 p-6 text-sm text-sky-200"><code>{contract}</code></pre>
+    </section>
+
+    <!-- Worth writing down -->
+    <section class="py-12">
+      <h2 class="mb-2 text-center text-2xl font-bold">Was sich lohnt</h2>
+      <p class="mx-auto mb-6 max-w-2xl text-center text-slate-400">
+        Der Maßstab ist nicht, wie groß eine Aufgabe ist, sondern:
+        <em class="text-slate-300">hätte ich das im nächsten Projekt wieder
+        herausfinden müssen?</em>
+      </p>
+      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {
+          useCases.map((useCase) => (
+            <div class="rounded-xl border border-slate-800 bg-slate-900/50 p-6 text-center">
+              <p class="text-lg font-semibold text-emerald-300">{useCase.name}</p>
+              <p class="mt-2 text-sm text-slate-400">{useCase.note}</p>
+            </div>
+          ))
+        }
+      </div>
+    </section>
+
+    <!-- Demo snippet -->
+    <section class="py-12">
+      <h2 class="mb-4 text-center text-2xl font-bold">
+        Expandieren, implementieren, verifizieren
+      </h2>
+      <pre class="overflow-x-auto rounded-xl border border-slate-800 bg-black/60 p-6 text-sm text-emerald-200"><code>{demo}</code></pre>
+    </section>
+
+    <!-- How it works -->
+    <section class="py-12">
+      <h2 class="mb-6 text-center text-2xl font-bold">So funktioniert es</h2>
+      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {
+          steps.map((step) => (
+            <div class="rounded-xl border border-slate-800 bg-slate-900/50 p-6">
+              <p class="text-sm font-semibold uppercase tracking-widest text-sky-400">
+                {step.title}
+              </p>
+              <p class="mt-3 text-slate-300">{step.body}</p>
+            </div>
+          ))
+        }
+      </div>
+    </section>
+
+    <!-- The app -->
+    <section class="flex flex-col items-center gap-5 py-16 text-center">
+      <h2 class="text-2xl font-bold">Ein Fenster pro Projekt, ein Agent darin</h2>
+      <p class="max-w-xl text-slate-300">
+        Die Speccify-App öffnet jedes Projekt in einem eigenen Fenster: das
+        Board mit Deinen Tickets, der aktive Plan darüber, Skills und
+        Tool-Verträge mit Prüfstatus, Projekt-Aktionen mit Live-Ausgabe — und
+        ein Agent-Terminal, das das Projekt schon kennt. Die App beobachtet
+        Dateien; der Agent macht die Arbeit. Alles Gezeigte sind schlichte
+        Dateien unter <code class="text-sky-300">.agent/</code> — es
+        funktioniert mit jedem Agenten und überlebt ohne die App.
+      </p>
+      <a
+        href="/de/app/overview/"
+        class="rounded-md bg-sky-500 px-6 py-3 font-medium text-white transition hover:bg-sky-400"
+      >
+        Die App ansehen
+      </a>
+    </section>
+  </main>
+</MarketingLayout>

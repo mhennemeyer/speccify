@@ -18,10 +18,7 @@ das nächste anfängt), und **Stationen werden nie erfunden** — ein
 Ticket ist in einer dieser drei, oder die App zeigt einen
 Fehlerbanner.
 
-:::note[Screenshot]
-*Platzhalter: Board mit einem Ticket in In Progress und einem
-needs-human-Badge.*
-:::
+![Das Board: Spalten, KPI-Zeile, der aktive Plan aufklappbar darüber](../../../../assets/app/overview.png)
 
 ## Ein Ticket ist eine Datei
 
@@ -92,6 +89,4 @@ Die KPI-Zeile des Boards rechnet sich aus den `agent_run`-Events —
 Läufe und effektiver Input — so bleiben die Kosten der Arbeit neben
 der Arbeit sichtbar.
 
-:::note[Screenshot]
-*Platzhalter: Ticket-Detail mit History-Zeitleiste.*
-:::
+![Ein Ticket-Detail unter dem Board: Beschreibung und History](../../../../assets/app/ticket-detail.png)

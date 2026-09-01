@@ -17,9 +17,7 @@ Two invariants keep it honest: **only one ticket is in
 starting the next), and **stations are never invented** — a ticket is
 in one of these three, or the app shows an error banner.
 
-:::note[Screenshot]
-*Placeholder: board with one ticket in In Progress and a needs-human badge.*
-:::
+![The board: columns, KPI line, the active plan collapsed above](../../../assets/app/overview.png)
 
 ## A ticket is a file
 
@@ -86,6 +84,4 @@ transcript. The board's KPI row is computed from the `agent_run`
 events — runs and effective input — so the cost of the work stays
 visible next to the work.
 
-:::note[Screenshot]
-*Placeholder: ticket detail with its history timeline.*
-:::
+![A ticket detail under the board: body and history timeline](../../../assets/app/ticket-detail.png)

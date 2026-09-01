@@ -11,10 +11,7 @@ mit seiner Herkunft aus `expansions.yaml`. Der Tools-Tab tut dasselbe
 für die [Tools](/de/fundamentals/tools/) unter `.agent/tools/` —
 dieselben Dateien, die der Agent liest, für dich gerendert.
 
-:::note[Screenshot]
-*Platzhalter: Skills-Tab mit dem release-checks-Skill und seinen
-Tools.*
-:::
+![Der Skills-Tab: ein expandierter Skill mit seiner Herkunft](../../../../assets/app/skills.png)
 
 ## Eine Quelle der Wahrheit, viele Agenten
 

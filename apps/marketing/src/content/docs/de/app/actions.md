@@ -48,10 +48,7 @@ geparkt und erscheint im Aktionen-Tab als **Vorschlag**.
 Allowlist-Eintrag — ein abgelehntes Kommando, das du einmal
 genehmigst, wird zum Knopf, den du drücken kannst.
 
-:::note[Screenshot]
-*Platzhalter: Aktionen-Tab mit einem vorgeschlagenen Kommando zur
-Bestätigung.*
-:::
+![Der Aktionen-Tab: eine ausführbare Aktion und ein Agenten-Vorschlag](../../../../assets/app/actions.png)
 
 Eine Regel spannt sich über all diese Dateien: **keine Secrets im
 Repository.** Tokens leben im Schlüsselbund oder kommen als

@@ -13,9 +13,7 @@ skills and tools, the project actions. Nothing lives only in the
 app — every ticket, plan, and setting is a plain file under
 `.agent/`, committed with your code.
 
-:::note[Screenshot]
-*Placeholder: a project window with the board tab open.*
-:::
+![A project window: board with the active plan above it, agent terminal on the right](../../../assets/app/overview.png)
 
 ## The division of labor
 
