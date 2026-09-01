@@ -3,6 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import AskBoPanel, { type AskBoInteraction } from "./components/AskBoPanel";
 import TerminalPanel from "./components/TerminalPanel";
+import AgentsView from "./views/AgentsView";
 import LibraryView from "./views/LibraryView";
 import ProjectsView from "./views/ProjectsView";
 import EnvironmentView from "./views/EnvironmentView";
@@ -17,6 +18,7 @@ const SECTIONS = [
   { id: "knowledgebases", label: "Knowledgebases", view: <KnowledgebasesView /> },
   { id: "environment", label: "Umgebung", view: <EnvironmentView /> },
   { id: "servers", label: "Server", view: <ServersView /> },
+  { id: "agents", label: "Agents", view: <AgentsView /> },
   { id: "settings", label: "Settings", view: <SettingsView /> },
 ] as const;
 

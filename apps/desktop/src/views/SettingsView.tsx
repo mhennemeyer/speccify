@@ -12,6 +12,7 @@ import { AGENT_PRESETS } from "../lib/agents";
 interface AppSettings {
   working_dir: string | null;
   terminal_autostart_command: string;
+  skill_library: string | null;
 }
 
 interface BriefingStatus {
@@ -92,6 +93,37 @@ export default function SettingsView() {
               const picked = await open({ directory: true, title: "Working Dir wählen" });
               if (typeof picked === "string") {
                 await save({ ...settings, working_dir: picked });
+              }
+            }}
+            className="shrink-0 rounded border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 hover:bg-slate-100"
+          >
+            Auswählen…
+          </button>
+        </div>
+      </section>
+
+      <section>
+        <h3 className="mb-2 text-sm font-semibold text-slate-700">Skill-Quelle (Default)</h3>
+        <p className="mb-2 text-sm text-slate-600">
+          Das Work-Repo, in dem eigene Skills und Tools definiert werden.
+          Projekte können in ihren Einstellungen eigene Quellen setzen
+          (Kundenprojekte mit eigenem Skill-Repo).
+        </p>
+        <div className="flex gap-2">
+          <input
+            value={settings.skill_library ?? ""}
+            onChange={(e) =>
+              setSettings({ ...settings, skill_library: e.target.value || null })
+            }
+            placeholder="~/Desktop/Work/speccify/skills"
+            className="w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm"
+            spellCheck={false}
+          />
+          <button
+            onClick={async () => {
+              const picked = await open({ directory: true, title: "Skill-Quelle wählen" });
+              if (typeof picked === "string") {
+                await save({ ...settings, skill_library: picked });
               }
             }}
             className="shrink-0 rounded border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 hover:bg-slate-100"

@@ -1,6 +1,6 @@
 ---
 lifecycle: active
-status: Bauen — P1–P3 geliefert und auf macOS/Windows verifiziert. D25 geliefert 2026-08-29: gemeinsamer Agent-Host-Vertrag, Claude- und Codex-Skill-Links, native MCP-Dateien, Terminal-Presets und Repository-Dogfooding. Neu 2026-08-31: **P5 Agent-/Workflow-Parität** (BO stellt iKanbanAI zurück; alles außer Git/IDE kommt nach Speccify — D26–D29, W1–W7, P5 zieht vor den P4-Rest). **W1–W6 geliefert 2026-08-31, auf macOS UND Windows verifiziert** (VM: 38/38 Rust-Tests; Setup per Banner-Klick legt Junctions über den mklink-Fallback an, Policy-Block v1 sitzt, Board rendert). Committet (eaf2188 D25, 3bbceda P5, 3b80919 Windows-Pfadfix). Offen: W7-Feinschliff nach Gebrauch, Push/CI-Erstlauf. Offen: CI-Erstlauf beim nächsten Push, x86-Referenz. Läuft parallel zu `skills-und-tools.md` (BO-Ausnahme von der Ein-Plan-Regel).
+status: Bauen — P1–P3 geliefert und auf macOS/Windows verifiziert. D25 geliefert 2026-08-29: gemeinsamer Agent-Host-Vertrag, Claude- und Codex-Skill-Links, native MCP-Dateien, Terminal-Presets und Repository-Dogfooding. P4-Kern geliefert 2026-09-01 (Skill-Browser D24, Projekt-Quellen D21, Agents-Editor D23). Neu 2026-09-01: **P6 Website + integrierte Hilfe** (BO-Auftrag, Erhebung im Plan). Zuvor 2026-08-31: **P5 Agent-/Workflow-Parität** (BO stellt iKanbanAI zurück; alles außer Git/IDE kommt nach Speccify — D26–D29, W1–W7, P5 zieht vor den P4-Rest). **W1–W6 geliefert 2026-08-31, auf macOS UND Windows verifiziert** (VM: 38/38 Rust-Tests; Setup per Banner-Klick legt Junctions über den mklink-Fallback an, Policy-Block v1 sitzt, Board rendert). Committet (eaf2188 D25, 3bbceda P5, 3b80919 Windows-Pfadfix). Offen: W7-Feinschliff nach Gebrauch, Push/CI-Erstlauf. Offen: CI-Erstlauf beim nächsten Push, x86-Referenz. Läuft parallel zu `skills-und-tools.md` (BO-Ausnahme von der Ein-Plan-Regel).
 sessionId: projektfenster
 ---
 # Plan: Projektfenster — Pläne, Skills, Tools im Projekt verwalten (auch auf Windows)
@@ -361,7 +361,29 @@ iKanbanAI-Tickets und kann sie verschieben; Pläne sind **editierbar**
 7. Feinschliff aus dem P1/P2-Gebrauch (was der eigene Gebrauch verlangt,
    gewinnt gegen diese Liste).
 
-### P4 — Skill-Quellen, Projekt-Settings, Agent-Config (BO-Findings 2026-08-28)
+### P4 — Skill-Quellen, Projekt-Settings, Agent-Config (✅ Kern 2026-09-01)
+
+**Geliefert:** D21 — Dashboard-Setting `skill_library` (Default-Quelle)
++ Projekt-Quellen in `.agent/settings.json` → `speccify.sources`
+(Settings-Store aus W1). D24 — **Skill-Browser** im Skills-Tab
+(„Quellen durchsuchen"): Quelle wählbar (Default + Projekt-Quellen,
++ Quelle über den Verzeichnis-Dialog, entfernen), rekursive Suche nach
+`SKILL.md` (Rauschen wie node_modules/.git übersprungen), **Ordner-
+struktur = Kategorien** (klappbar), Vorschau; **Import = Kommando ins
+Agent-Terminal getippt** (`speccify add @scope/name --library … &&
+speccify expand …`, Id aus `metadata.speccify.scope`; ohne scope klare
+Meldung) — D14-Haltung: die App liest, der Agent handelt. D23 —
+Dashboard-Bereich **Agents**: Whitelist-Editor für
+`~/.claude/settings.json`, globale `~/.claude/CLAUDE.md`,
+`~/.codex/config.toml`, `~/.codex/AGENTS.md` (read/write nur über Ids,
+fehlende Dateien entstehen beim Speichern). E2E: Browser mit
+Kategorien/Vorschau/Import-Notice belegt; der Terminal-Type-Kanal
+(CustomEvent → terminal_write) ist implementiert, der visuelle
+Terminal-Beweis steht aus (im Test lief dort gerade claudes
+Trust-Prompt). Offen aus D24 (drüben in skills-und-tools): Quell-Pfad
+in die Herkunft (`expansions.yaml`) beim Expand.
+
+*Ursprünglicher Zuschnitt:*
 
 > **Reihenfolge (2026-08-31):** P5 (Workflow-Parität) zieht vor den
 > P4-Rest — der BO stellt iKanbanAI zurück und arbeitet täglich in
@@ -606,6 +628,54 @@ Detached-Fenster für Pläne/Aktionen.
 
 **Nicht in P5:** alles aus D29; Discovery-/Speccify-MCP-Anbindung der
 iKanbanAI-Seite (wird obsolet — Speccify ist das Produkt selbst).
+
+
+### P6 — Website-Neuaufbau + integrierte Hilfe (BO-Auftrag 2026-09-01)
+
+> **BO:** Website überarbeiten, Inhalte von AgentFundamentals übernehmen
+> und ausbauen (agent-fundamentals wird zurückgestellt); dazu eine
+> integrierte Hilfe/Anleitung wie in Toyota/tec-e2e.
+
+**Erhebung (2026-09-01, Quelltexte gelesen):**
+
+*AgentFundamentals* (`~/Desktop/Work/AgentFundamentals`) ist eine
+fertige, live deployte Astro-7/Starlight-Site — **derselbe Stack wie
+`apps/marketing`** —, zweisprachig EN/DE (je Seite beide Sprachen),
+~20 200 Wörter in 50 Dateien, redigiert und aus echten Projekten belegt.
+Vier Sektionen: `tutorial/` (11 Seiten, 4Notice-Durchlauf; 1 Stub
+„submission", 1 „in progress" fastlane), `fundamentals/` (.agent-Ordner,
+Skills, Tools, MCPs — der konzeptionelle Unterbau), `speccify/`
+(5 Seiten: overview/expand/execute/evaluate/walkthrough — direkt unsere
+Produkt-Doku), `ikanban-ai/` (5 Seiten — beim Übernehmen auf das
+Speccify-Projektfenster umschreiben; passt zur Rollen-Umkehr aus D19).
+Screenshots fehlen durchgängig (Platzhalter-Notes).
+
+*tec-e2e-Hilfe* (`~/Desktop/Work/Toyota/tec-e2e`): ein **Hilfe-Tab, der
+die Markdown-Dateien des Repos direkt rendert** — kein Doku-Build, keine
+zweite Kopie. Bausteine: Rust-Registry (`docs.rs`: feste Slug-Liste mit
+Titel/Beschreibung/Pfad; `list_docs` filtert auf existierende Dateien,
+`read_doc` nur über Slugs), `HilfeView` (Master-Detail, react-markdown +
+remark-gfm, Quellpfad über dem Text, erstes Dokument auto-geöffnet),
+drei Redaktions-Tests (Slugs eindeutig, keine Pfad-Ausbrüche,
+Beschreibungen > 20 Zeichen). Kernstück ist eine eigens geschriebene
+Anleitung (`docs/app-bedienen.md`).
+
+**Zuschnitt (Vorschlag):**
+1. **P6a Website:** `speccify/`- und `fundamentals/`-Sektionen nach
+   `apps/marketing` übernehmen (EN+DE), Landing auf die neue Geschichte
+   ziehen, `ikanban-ai/`-Seiten als Projektfenster-Guide umschreiben,
+   Tutorial als eigene Sektion mitnehmen und die zwei Lücken schließen;
+   Screenshots aus der echten App nachschießen. Die alte
+   Playbook-Erzählung (bekanntes offenes Ende) fällt dabei mit weg.
+2. **P6b Integrierte Hilfe:** Hilfe-Tab nach tec-e2e-Muster in Dashboard
+   **und** Projektfenster (Rust-Slug-Registry über unsere Repo-Doku +
+   eine neue `docs/app-bedienen.md`-artige Anleitung; Markdown.tsx
+   existiert). Redaktions-Tests wie im Vorbild.
+
+**Fertig heißt:** speccify.io erzählt die Skill-/Tool-/Workflow-
+Geschichte (statt Playbooks) mit den AgentFundamentals-Inhalten, und in
+der App beantwortet ein Hilfe-Tab „wie bediene ich das?" ohne externe
+Doku.
 
 ## Offene Fragen
 

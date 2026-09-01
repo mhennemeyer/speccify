@@ -28,6 +28,18 @@ export default function TerminalPanel({
   autostart?: string;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // W6/D24: „ins Terminal tippen" von anderen Tabs (z. B. Skill-Import).
+  useEffect(() => {
+    const handler = (event: Event) => {
+      const data = (event as CustomEvent<string>).detail;
+      if (idRef.current && data) {
+        void invoke("terminal_write", { id: idRef.current, data });
+      }
+    };
+    window.addEventListener("speccify:type-command", handler);
+    return () => window.removeEventListener("speccify:type-command", handler);
+  }, []);
   const terminalRef = useRef<Terminal | null>(null);
   const fitRef = useRef<FitAddon | null>(null);
   const idRef = useRef<string>("");

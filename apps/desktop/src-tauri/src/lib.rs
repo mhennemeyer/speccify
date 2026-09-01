@@ -10,6 +10,7 @@ use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager, State};
 
 mod actions_cmd;
+mod agent_config;
 mod board_cmd;
 mod desktop_ui;
 mod engine;
@@ -18,6 +19,7 @@ mod project_cmd;
 mod project_watch;
 mod settings;
 mod sidecar;
+mod skill_sources;
 mod system_cmd;
 mod terminal;
 mod toolbox_cmd;
@@ -254,6 +256,13 @@ pub fn run() {
             board_cmd::project_board_kpis,
             board_cmd::project_ticket_questions,
             board_cmd::project_ticket_answer,
+            agent_config::agent_config_list,
+            agent_config::agent_config_read,
+            agent_config::agent_config_write,
+            skill_sources::project_skill_sources,
+            skill_sources::source_browse,
+            skill_sources::source_skill_read,
+            skill_sources::source_validate,
             plan_cmd::project_plan_activate,
             plan_cmd::project_plan_resolve_escalation,
             project_watch::project_watch_start,

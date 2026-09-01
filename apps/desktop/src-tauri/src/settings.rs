@@ -10,12 +10,17 @@ use serde::{Deserialize, Serialize};
 pub struct AppSettings {
     pub working_dir: Option<String>,
     pub terminal_autostart_command: String,
+    /// Default-Skill-Quelle (Work-Repo) — Projekte können sie überschreiben
+    /// (Plan projektfenster.md, D21).
+    #[serde(default)]
+    pub skill_library: Option<String>,
 }
 
 impl Default for AppSettings {
     fn default() -> Self {
         Self {
             working_dir: None,
+            skill_library: None,
             terminal_autostart_command: if cfg!(windows) {
                 "claude.cmd".into()
             } else {

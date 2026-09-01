@@ -1,5 +1,32 @@
 # Log: Speccify
 
+## 2026-09-01 (P4-Kern — Skill-Browser, Projekt-Quellen, Agents-Editor; P6 angelegt)
+- **D24 Skill-Browser**: `skill_sources.rs` — Quellen auflösen
+  (~-Expansion), rekursive SKILL.md-Suche (Tiefe 6, Rauschen
+  übersprungen), Ordnerstruktur als Kategorie, Id `@scope/name` aus
+  `metadata.speccify.scope`; Skills-Tab mit Modus „Quellen durchsuchen"
+  (Quelle wählen/hinzufügen/entfernen — Projekt-Quellen in
+  `.agent/settings.json` → `speccify.sources`, Default aus neuem
+  Dashboard-Setting `skill_library`, D21), Vorschau, **Import tippt
+  `speccify add … && speccify expand …` ins Agent-Terminal**
+  (CustomEvent → terminal_write; D14: die App liest, der Agent handelt).
+- **D23 Agents-Editor**: `agent_config.rs` mit Datei-Whitelist je Host
+  (claude settings.json + globale CLAUDE.md; codex config.toml +
+  AGENTS.md), Dashboard-Sektion „Agents" mit Master-Detail-Editor;
+  fehlende Dateien entstehen erst beim Speichern.
+- E2E am Fixture: Browser zeigt Kategorien (backend, mobil/ios) aus der
+  verschachtelten Kunden-Quelle + die flache skills/-Quelle, Vorschau +
+  Import-Notice belegt. **Nicht visuell belegt:** das getippte Kommando
+  im Terminal — dort lief claudes Trust-Prompt; der Kanal selbst ist
+  `terminal_write` (produktiv im Einsatz). BO prüft im Gebrauch.
+- **P6 im Plan angelegt** (BO-Auftrag: Website mit AgentFundamentals-
+  Inhalten + integrierte Hilfe wie tec-e2e) samt Quelltext-Erhebung:
+  AgentFundamentals = stack-gleiche Starlight-Site, zweisprachig,
+  ~20k Wörter, hohe Reife; tec-e2e-Hilfe = Hilfe-Tab rendert
+  Repo-Markdown über eine Rust-Slug-Registry. Zuschnitt P6a/P6b im Plan.
+- Verifikation: 41 Rust-Tests, tsc + Vite-Build, fmt, clippy.
+
+
 ## 2026-08-31, spät nachts (P5 committet + Windows-verifiziert)
 - Commit-Erlaubnis vom BO („committe gern selbst in diesem Projekt") in
   agent.md verankert; Stand in drei bauende Commits geschnitten:
