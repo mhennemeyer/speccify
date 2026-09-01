@@ -77,3 +77,19 @@ werden nach
 Laufzeit gilt **mitgeliefert > PATH** (`src-tauri/src/sidecar.rs`); im
 `tauri dev`-Betrieb liegen keine Sidecars neben dem Debug-Binary, dort
 greift der PATH-Fallback. `binaries/` ist gitignored.
+
+## Windows
+
+Einmalig die Toolchain installieren (jeweils `winget install …`):
+`Rustlang.Rustup`, `OpenJS.NodeJS.LTS`, `LLVM.LLVM` (clang ist Pflicht für
+`ring`), `astral-sh.uv`, `Microsoft.VisualStudio.2022.BuildTools` mit der
+Workload „Desktopentwicklung mit C++" (inkl. Windows SDK) — dann
+`corepack enable` für pnpm. Danach reicht:
+
+```powershell
+git clone https://github.com/mhennemeyer/speccify && cd speccify
+powershell -ExecutionPolicy Bypass -File scripts/dev.ps1
+```
+
+Das Skript prüft die Werkzeuge, baut die MCP-Sidecars mit Triple-Suffix,
+füllt `resources/` mit den Referenz-Skills und startet `tauri dev`.
