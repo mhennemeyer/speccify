@@ -1,70 +1,71 @@
 ---
-// Landing page: hero, problem/solution, a real playbook excerpt, how it works,
-// CTA. Header and footer live in MarketingLayout.
+// Landing page: hero, problem/solution, a real tool contract, how it works,
+// the app, CTA. Header and footer live in MarketingLayout.
 import MarketingLayout from "../layouts/MarketingLayout.astro";
 
-const title = "Speccify — Playbooks for work you have done before";
+const title = "Speccify — share the contract, not the implementation";
 const description =
-  "A playbook captures a complex, recurring workflow: the ordered steps, the sources they came from, the assets they need, and the pitfalls you only find out about once. Written for coding agents, shared over Git.";
+  "The agent-agnostic skill and tool manager: reusable skills shared over Git, tool contracts your agent implements and verifies per project, and a desktop app that runs the whole workflow — plans, tickets, board — on macOS and Windows.";
 
 const problems = [
-  "The same intricate task — notarizing an app, wiring up a trial purchase, a migration — is researched from scratch every time it comes up.",
-  "What you learned the hard way ends up in a scratch file, a closed ticket, or nowhere. It is not there the next time.",
-  "Agents are good at writing the code and bad at knowing the fine print: which order, which flag, which step Apple silently requires.",
+  "What you learned the hard way lives in one project. The next project starts from zero, and so does the agent.",
+  "Ready-made scripts break on the next machine: a different Python, a different OS, a path that only existed on yours.",
+  "Agent workflows drift — every project invents its own way to plan, slice work, and keep the human in the loop.",
 ];
 
 const solutions = [
-  "One versioned playbook holds the steps, the sources each one came from, and the assets it needs — the whole workflow, not a summary of it.",
-  "speccify check reports how old every source is and whether its URL still resolves. Instructions that quietly went stale are worse than none.",
-  "Agents read playbooks directly over MCP — find one, read a step, fetch an asset. No copy-paste from a wiki.",
+  "Skills are plain SKILL.md files, shared over Git like Go modules — no account, no registry. speccify expand copies them into the project where every agent finds them.",
+  "Tools ship as contracts, not scripts: TOOL.md defines inputs, outputs, effects, and examples. Your agent implements it for this machine — speccify tool check proves it works.",
+  "One file-based workflow — plans, tickets, questions, history — that any agent can follow and the Speccify app makes visible. Claude Code and Codex are equally at home.",
 ];
 
 const useCases = [
   { name: "Platform rituals", note: "Notarization, entitlements, store review" },
   { name: "Payments & auth", note: "Trials, subscriptions, OAuth flows" },
-  { name: "Migrations", note: "Version bumps with an order that matters" },
-  { name: "Release & ops", note: "Signing, rollout, rollback" },
+  { name: "Team workflows", note: "Plans, tickets, review loops for agents" },
+  { name: "Client projects", note: "Each with its own skill repo and sources" },
 ];
 
 const steps = [
   {
-    title: "1 · Write it once",
-    body: "The second time you do something, write it down: steps, the sources you actually read, the assets you needed.",
+    title: "1 · Expand",
+    body: "speccify expand copies a skill and its tool contracts into .agent/ — normalized, versioned, provenance recorded. Every agent reads the same files.",
   },
   {
-    title: "2 · Tag it",
-    body: "Publishing is git tag and git push. The repository URL is the identity, tags are the versions. No account, no registry.",
+    title: "2 · Execute",
+    body: "Your agent implements each tool contract for this machine and this platform. No fragile shared scripts — the contract travels, the implementation is local.",
   },
   {
-    title: "3 · Pin it",
-    body: "speccify.lock pins each playbook by a hash over its whole bundle and, for git sources, by commit. What you used still says the same thing.",
+    title: "3 · Evaluate",
+    body: "speccify tool check runs the contract's examples against the implementation. Status becomes verified only when the examples pass — never by hand.",
   },
   {
-    title: "4 · Hand it to an agent",
-    body: "Over MCP the agent reads the steps and assets itself — and speccify check tells you when a source has gone stale.",
+    title: "4 · Work the board",
+    body: "The app turns the active plan into tickets, the agent works them one at a time, asks when it must, and writes history you can audit.",
   },
 ];
 
-const demo = `$ speccify search notarization
-Notarize a Tauri app for macOS  [macos, tauri]
-  git+https://github.com/speccify/playbooks#macos-notarize-tauri
+const demo = `$ speccify expand macos-notarize-tauri --library ~/work/skills
+✓ .agent/skills/macos-notarize-tauri/SKILL.md
+✓ .agent/tools/verify-signatures/TOOL.md   (contract, no implementation yet)
 
-$ speccify add git+https://github.com/speccify/playbooks#macos-notarize-tauri
-✓ resolved  v1.0.0 → commit 9f1c0b1
-✓ pinned    speccify.lock
+# agent implements .agent/tools/verify-signatures/macos.sh …
 
-$ speccify check playbooks/ --links
-warning  $.sources[2]  last retrieved 214 days ago — re-read it`;
+$ speccify tool check verify-signatures
+✓ example 1  clean bundle          → ok: true
+✓ example 2  unsigned sidecar      → ok: false, names the offender
+verified  verify-signatures (macos)`;
 
-const playbook = `steps:
-  - id: trial_storage
-    title: Store the start date where deleting the app cannot reach
-    detail: |
-      UserDefaults survives a backup but not a delete; the Keychain
-      survives a delete but not a new device. Write to both, read
-      the union, earliest start wins.
-    sources: [review_guidelines]
-    verify: Deleting and reinstalling does not reset the days left.`;
+const contract = `# TOOL.md — the contract an agent implements per project
+name: verify-signatures
+description: Verifies the code signature of a macOS .app bundle and of
+  every executable inside Contents/MacOS — the sidecars notarization
+  rejects without the build ever saying so.
+inputs:
+  type: object
+  required: [bundle]
+effects: [reads-filesystem]
+# examples below are the acceptance test for any implementation`;
 ---
 
 <MarketingLayout title={title} description={description}>
@@ -72,31 +73,33 @@ const playbook = `steps:
     <!-- Hero -->
     <section class="flex flex-col items-center gap-6 py-20 text-center">
       <p class="text-sm font-semibold uppercase tracking-widest text-sky-400">
-        Playbooks for coding agents
+        The agent-agnostic skill &amp; tool manager
       </p>
       <h1 class="max-w-3xl text-4xl font-bold tracking-tight sm:text-6xl">
-        You have done this before. Write it down once.
+        Share the contract, not the implementation.
       </h1>
       <p class="max-w-2xl text-lg text-slate-300">
-        A <strong class="text-slate-100">playbook</strong> captures a complex,
-        recurring workflow — the ordered steps, the sources they came from, the
-        assets they need, and the pitfalls you only find out about once. It is
-        written for coding agents, versioned, pinned by hash, and checked for
-        rot. Shared like Go modules over Git — no account, no central registry,
-        all MIT.
+        <strong class="text-slate-100">Skills</strong> carry what you learned —
+        shared over Git, expanded into every project.
+        <strong class="text-slate-100">Tool contracts</strong> say what a tool
+        must do; your agent implements them for this machine and
+        <code class="text-sky-300">speccify tool check</code> proves they work.
+        And the <strong class="text-slate-100">Speccify app</strong> runs the
+        whole workflow — plans, tickets, board, questions — on macOS and
+        Windows, with Claude Code or Codex in the terminal.
       </p>
       <div class="flex flex-wrap items-center justify-center gap-4">
         <a
-          href="/getting-started/installation/"
+          href="/tutorial/intro/"
           class="rounded-md bg-sky-500 px-5 py-2.5 font-medium text-white transition hover:bg-sky-400"
         >
-          Quickstart
+          Tutorial: zero to App Store
         </a>
         <a
           href="/download/"
           class="rounded-md border border-slate-700 px-5 py-2.5 font-medium text-slate-200 transition hover:border-slate-500"
         >
-          Mac app
+          Download the app
         </a>
         <a
           href="https://github.com/mhennemeyer/speccify"
@@ -123,22 +126,25 @@ const playbook = `steps:
       </div>
     </section>
 
-    <!-- What a playbook looks like -->
+    <!-- What a contract looks like -->
     <section class="py-12">
-      <h2 class="mb-2 text-center text-2xl font-bold">What a step looks like</h2>
+      <h2 class="mb-2 text-center text-2xl font-bold">
+        What a tool contract looks like
+      </h2>
       <p class="mx-auto mb-6 max-w-2xl text-center text-slate-400">
-        From the in-app-purchase playbook in this repository. A step says what
-        to do, what it was learned from, and how you know it worked.
+        From the notarization skill in this repository. The contract names
+        inputs, outputs, effects — and its examples are the acceptance test for
+        any implementation.
       </p>
-      <pre class="overflow-x-auto rounded-xl border border-slate-800 bg-black/60 p-6 text-sm text-sky-200"><code>{playbook}</code></pre>
+      <pre class="overflow-x-auto rounded-xl border border-slate-800 bg-black/60 p-6 text-sm text-sky-200"><code>{contract}</code></pre>
     </section>
 
     <!-- Worth writing down -->
     <section class="py-12">
-      <h2 class="mb-2 text-center text-2xl font-bold">Worth writing down</h2>
+      <h2 class="mb-2 text-center text-2xl font-bold">Worth capturing</h2>
       <p class="mx-auto mb-6 max-w-2xl text-center text-slate-400">
         The test is not how big a task is. It is: <em class="text-slate-300"
-          >would I have had to look this up again the second time?</em
+          >would I have had to figure this out again in the next project?</em
         >
       </p>
       <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -155,7 +161,9 @@ const playbook = `steps:
 
     <!-- Demo snippet -->
     <section class="py-12">
-      <h2 class="mb-4 text-center text-2xl font-bold">Find it, pin it, check it</h2>
+      <h2 class="mb-4 text-center text-2xl font-bold">
+        Expand it, implement it, verify it
+      </h2>
       <pre class="overflow-x-auto rounded-xl border border-slate-800 bg-black/60 p-6 text-sm text-emerald-200"><code>{demo}</code></pre>
     </section>
 
@@ -176,21 +184,23 @@ const playbook = `steps:
       </div>
     </section>
 
-    <!-- Viewer -->
+    <!-- The app -->
     <section class="flex flex-col items-center gap-5 py-16 text-center">
-      <h2 class="text-2xl font-bold">Read it with an agent beside you</h2>
+      <h2 class="text-2xl font-bold">One window per project, an agent inside</h2>
       <p class="max-w-xl text-slate-300">
-        The viewer shows the workflow as a diagram, the steps as rendered
-        markdown, every source with its age. There is no edit mode: you select
-        a step and ask the agent next to it, which reads that selection through
-        MCP. When the answer belongs in the playbook, it proposes the change
-        and you see a diff. Nothing is written until you click Apply.
+        The Speccify app opens every project in its own window: the board with
+        your tickets, the active plan above it, skills and tool contracts with
+        their verification status, project actions with live output — and an
+        agent terminal that already knows the project. The app watches files;
+        the agent does the work. Everything it shows is plain files in
+        <code class="text-sky-300">.agent/</code>, so it works with any agent
+        and survives without the app.
       </p>
       <a
-        href="/getting-started/installation/"
+        href="/app/overview/"
         class="rounded-md bg-sky-500 px-6 py-3 font-medium text-white transition hover:bg-sky-400"
       >
-        Get started
+        Tour the app
       </a>
     </section>
   </main>

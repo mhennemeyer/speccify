@@ -32,7 +32,12 @@ export default defineConfig({
     starlight({
       title: "Speccify",
       description:
-        "Playbooks for complex, recurring workflows — written for coding agents, shared over Git.",
+        "The agent-agnostic skill and tool manager: reusable skills shared over Git, tool contracts implemented per project, and a desktop app that runs the whole workflow on macOS and Windows.",
+      defaultLocale: "root",
+      locales: {
+        root: { label: "English", lang: "en" },
+        de: { label: "Deutsch", lang: "de" },
+      },
       // Without this, Starlight asks for /favicon.svg on every docs page and
       // the site ships a 404 the marketing pages do not have.
       favicon: "/logo.svg",
@@ -46,16 +51,23 @@ export default defineConfig({
       ],
       sidebar: [
         {
-          label: "Getting Started",
-          items: [{ autogenerate: { directory: "getting-started" } }],
+          label: "Tutorial: Zero to App Store",
+          translations: { de: "Tutorial: Von null in den App Store" },
+          items: [{ autogenerate: { directory: "tutorial" } }],
         },
         {
-          label: "Concepts",
-          items: [{ autogenerate: { directory: "concepts" } }],
+          label: "Fundamentals",
+          translations: { de: "Grundlagen" },
+          items: [{ autogenerate: { directory: "fundamentals" } }],
         },
         {
-          label: "Viewer",
-          items: [{ autogenerate: { directory: "viewer" } }],
+          label: "Speccify",
+          items: [{ autogenerate: { directory: "speccify" } }],
+        },
+        {
+          label: "The app",
+          translations: { de: "Die App" },
+          items: [{ autogenerate: { directory: "app" } }],
         },
         {
           label: "Git sources & discovery",

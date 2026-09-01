@@ -1,5 +1,26 @@
 # Log: Speccify
 
+## 2026-09-01, mittags (P6a-Kern — Website auf die neue Geschichte)
+- AgentFundamentals-Inhalte übernommen (tutorial/fundamentals/speccify
+  EN+DE; ikanban-ai → app/ und von einem Subagenten nach striktem
+  Feature-Mapping auf die Speccify-App umgeschrieben — ein Befund von
+  ihm korrigiert: die geratene `ready`-Semantik; richtig ist
+  „Agenten-Anteil fertig, wartet in In Progress auf den Menschen").
+- astro.config: Locales root=en+de, neue Sidebar (Tutorial /
+  Fundamentals / Speccify / The app / Git sources / CLI / MCP);
+  getting-started-, concepts- und viewer-Sektionen entfernt.
+- Landing neu (Hero „Share the contract, not the implementation",
+  TOOL.md-Ausschnitt, Expand/Execute/Evaluate/Board, App-Sektion),
+  README komplett neu (Playbook-Story raus, faktisch aktuell:
+  skills/, skill_*-Tools, App-Beschreibung), sync_docs_to_site ohne
+  playbooks/viewer-Mappings (Quell-Dokus → docs/archive-*.md),
+  tote Links in Layout/Download/docs-README umgebogen.
+- Build 83 Seiten (vorher 21); dist ohne Verweise auf gelöschte
+  Sektionen; sync --check + tests/ grün. lychee/markdownlint laufen
+  im CI (docs.yml) beim Push.
+- Offen: Screenshots, Tutorial-Stubs (submission/fastlane), DE-Landing.
+
+
 ## 2026-09-01 (P4-Kern — Skill-Browser, Projekt-Quellen, Agents-Editor; P6 angelegt)
 - **D24 Skill-Browser**: `skill_sources.rs` — Quellen auflösen
   (~-Expansion), rekursive SKILL.md-Suche (Tiefe 6, Rauschen

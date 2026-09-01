@@ -41,9 +41,10 @@ class DocMapping:
 
 # Single Source of Truth für Quelle → Ziel → URL.
 DOC_MAPPINGS: tuple[DocMapping, ...] = (
-    DocMapping("playbooks.md", "concepts/playbooks.md", "/concepts/playbooks/"),
+    # playbooks.md und viewer.md sind mit der Playbook-/Composer-Ära gegangen
+    # (Plan projektfenster.md, P6a) — die Site erzählt jetzt die
+    # Skills/Tools/App-Geschichte aus eigenen Quellen.
     DocMapping("git-sources.md", "git-sources/index.md", "/git-sources/"),
-    DocMapping("viewer.md", "viewer/index.md", "/viewer/"),
 )
 
 # Basename → Site-URL für das Umschreiben relativer Markdown-Links.

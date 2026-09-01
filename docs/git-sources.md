@@ -146,6 +146,5 @@ with `not_local` and says so.
 
 ## Cross-references
 
-- Playbook format: [`playbooks.md`](./playbooks.md)
 - Lockfile format: [`core/src/speccify_core/schemas/lockfile.schema.json`](../core/src/speccify_core/schemas/lockfile.schema.json)
 - Local walkthrough: [`local-dev-e2e.md`](./local-dev-e2e.md)

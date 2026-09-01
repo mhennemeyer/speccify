@@ -18,11 +18,12 @@ def test_render_mdx_frontmatter_and_banner() -> None:
 
 
 def test_render_mdx_rewrites_relative_links() -> None:
-    markdown = "# Playbooks\n\nSee [git](./git-sources.md) and [viewer](./viewer.md#selection).\n"
+    markdown = "# Skills\n\nSee [git](./git-sources.md) and [repo](./toolkit.md#exec).\n"
     rendered = sync.render_mdx(markdown)
 
     assert "](/git-sources/)" in rendered
-    assert "](/viewer/#selection)" in rendered
+    # Nicht gemappte Repo-Dokus zeigen auf den GitHub-Blob statt ins Leere.
+    assert "blob/main/docs/toolkit.md#exec" in rendered
     assert "./visual-regression.md" not in rendered.split("---", 2)[-1]
 
 

@@ -9,8 +9,6 @@ never there.
 
 | File | Page |
 |---|---|
-| [`playbooks.md`](./playbooks.md) | the format: fields, the three axes, `check` |
-| [`viewer.md`](./viewer.md) | the viewer and the agent beside it |
 | [`git-sources.md`](./git-sources.md) | git sources, pinning, discovery indexes |
 
 ## Repository only

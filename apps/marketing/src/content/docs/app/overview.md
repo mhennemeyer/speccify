@@ -1,0 +1,66 @@
+---
+title: Overview
+description: A desktop app that renders the files your agent works with — board, plans, skills, and actions, one window per project.
+sidebar:
+  order: 1
+---
+
+**The Speccify app** is a desktop app (macOS and Windows) for running
+a project *with* a terminal agent. The agent (Claude Code, Codex, or
+any other) does its work in the repository; the app renders that same
+repository for you, the owner: the kanban board, the plans, the
+skills and tools, the project actions. Nothing lives only in the
+app — every ticket, plan, and setting is a plain file under
+`.agent/`, committed with your code.
+
+:::note[Screenshot]
+*Placeholder: a project window with the board tab open.*
+:::
+
+## The division of labor
+
+- **You** decide what gets built, answer the agent's questions, and
+  review the results — from the app.
+- **The agent** slices plans into tickets, works them one at a time,
+  and writes down what it did — from the terminal.
+- **The repository** is the single shared state. The app picks up
+  file changes on its own: when the agent moves a ticket, your board
+  moves; when you answer a question in a ticket, the agent's next run
+  sees it.
+
+The contract between the two sides is `.agent/agent.md` — read by
+every agent; files like `CLAUDE.md` and `AGENTS.md` just point to it,
+so any agent product lands in the same workflow. The first time you
+open a project, a workflow banner offers **Set up**: it writes the
+versioned workflow block into `.agent/agent.md`, creates the
+`/ticket-next` and `/ticket-ask` skills and the `.agent/board` and
+`.agent/plans` folders, and links `.claude/skills` and
+`.agents/skills` to `.agent/skills` (a junction on Windows) — so
+both hosts see the same skills.
+
+## Dashboard and project windows
+
+The app starts on a **dashboard** — your projects, plus the shared
+pieces: library, environment, servers, agents, settings. Each project
+opens in its **own window** with the tabs **Board, Plans, Skills,
+Tools, Actions, MCPs, Agent** and an agent terminal on the right or
+at the bottom (switchable). Claude Code and Codex are equal presets
+for that terminal — nothing in the workflow is specific to either.
+
+- **[The board](/app/board/)** — tickets in `Backlog`,
+  `In Progress`, `Done`; per-ticket history; badges for tickets that
+  wait on you.
+- **Plans** — the markdown plans under `.agent/plans/`, as list,
+  rendered markdown, or editor. Lifecycle `draft` / `active` /
+  `onHold` / `done` / `research`, with exactly one `active` at a
+  time — activating a plan parks the previous one on hold. An
+  `escalation:` in a plan's frontmatter shows a red banner with
+  **Resolve**.
+- **[Skills & tools](/app/skills-tab/)** — what the agent can
+  do here, including skills expanded from
+  [Speccify sources](/speccify/overview/).
+- **[Actions](/app/actions/)** — project commands the app runs
+  itself, with live output.
+
+Start with [the board](/app/board/) — it is where a normal day
+happens.

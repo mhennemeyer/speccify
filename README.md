@@ -1,116 +1,91 @@
 # Speccify
 
-> Playbooks for complex, recurring workflows — written for coding agents,
-> shared over Git.
+> The agent-agnostic skill and tool manager — share the contract, not the
+> implementation.
 
-A **playbook** captures a piece of work you have done before and would have to
-research again: the ordered steps, the sources they came from, the assets they
-need, and the pitfalls you only find out about once.
+**Skills** carry what you learned the hard way: plain `SKILL.md` files,
+shared over Git like Go modules — no account, no central registry.
+`speccify expand` copies them into a project where every coding agent finds
+them. **Tools** ship as contracts, not scripts: a `TOOL.md` defines inputs,
+outputs, effects and examples, your agent implements it for the machine at
+hand, and `speccify tool check` proves the implementation against the
+contract's examples. The **Speccify desktop app** (macOS and Windows) runs
+the whole workflow on top: plans, tickets, a live board, project actions —
+with Claude Code or Codex in the built-in terminal.
 
-```yaml
-steps:
-  - id: trial_storage
-    title: Store the start date where deleting the app cannot reach
-    detail: |
-      UserDefaults survives a backup but not a delete; the Keychain survives a
-      delete but not a new device; iCloud spans devices but needs an account.
-      Write to two, read the union, earliest start wins.
-    sources: [review_guidelines]
-    verify: Deleting and reinstalling does not reset the remaining days.
-```
+## Why
 
-The test for whether something deserves a playbook is not its size:
+- What you learned in one project is not there in the next — and neither is
+  the agent's knowledge.
+- Ready-made scripts break on the next machine: another Python, another OS,
+  a path that only existed on yours. The contract travels; the
+  implementation is local.
+- Agent workflows drift. Speccify keeps one file-based workflow —
+  `.agent/plans/`, `.agent/board/`, questions, history — that any agent can
+  follow and the app makes visible.
 
-> **Would I have had to look this up again the second time?**
+## The three steps
 
-If yes, write it down once. If a good agent gets it right from a one-line
-instruction, it belongs *inside* a playbook as a step — not as one.
-
-## Why this and not a folder of notes
-
-Notes rot silently. Playbooks are versioned, pinned and checkable:
-
-- **`speccify check`** reports how old every source is and whether its URL
-  still resolves. Stale instructions are worse than none, so ageing is a fact
-  in the tool, not a feeling.
-- **`speccify.lock`** pins each playbook by a hash over its whole bundle and,
-  for git sources, by commit. A playbook you used three months ago still says
-  the same thing today — or `verify` tells you it does not.
-- **Agents read them directly** over MCP: find, read a step, fetch an asset,
-  check freshness. No copy-paste from a wiki.
+1. **Expand** — `speccify expand <skill>` copies the skill and its tool
+   contracts into `.agent/`, normalized and versioned, provenance recorded
+   in `.agent/speccify/expansions.yaml`.
+2. **Execute** — the agent implements each `TOOL.md` for this platform
+   (`macos.sh`, `windows.ps1`, …) right in the project.
+3. **Evaluate** — `speccify tool check <tool>` runs the contract's examples
+   against the implementation. Only passing examples make a tool
+   `verified` — never a hand edit.
 
 ## Quickstart
 
 ```bash
 uv sync --all-packages
-pnpm install --frozen-lockfile
 
-uv run speccify lint playbooks/          # the reference playbooks in this repo
-uv run speccify check playbooks/ --links # are their sources still alive?
-./scripts/dev-up.sh                      # viewer on :5173, backend on :8000
+uv run speccify lint skills/            # the reference skills in this repo
+uv run speccify init --project ~/work/app
+uv run speccify add @speccify/macos-notarize-tauri --project ~/work/app --library skills
+uv run speccify expand macos-notarize-tauri --project ~/work/app --library skills
+uv run speccify tool check verify-signatures --project ~/work/app
 ```
 
-In a project that consumes playbooks:
+`speccify init` links `.claude/skills` and `.agents/skills` to the canonical
+`.agent/skills`, so Claude Code and Codex read the same files. On Windows the
+links are directory junctions — no admin rights needed.
 
-```bash
-uv run speccify init
-uv run speccify search notarization
-uv run speccify add git+https://github.com/acme/notarize-playbook
-uv run speccify show @acme/notarize --step staple
-```
+## The app
 
-## The three ways in
+Every project opens in its own window: the board (file-based tickets in
+`.agent/board/`, one in progress at a time, history and token counts from
+the agent's own `agent_run` log lines), the active plan above it, skills and
+tool contracts with their per-platform verification status, project actions
+with live output and charts, and an agent terminal that already knows the
+project. The app watches files; the agent does the work. Everything shown is
+plain files, so it works with any agent and survives without the app.
 
-Everything exists as CLI, as MCP tool and over HTTP — the same core, so the
-answers cannot drift.
+## Repository layout
 
-| | |
+| Path | Purpose |
 |---|---|
-| **CLI** | `init`, `search`, `add`, `lock`, `pull`, `verify`, `show`, `lint`, `check` |
-| **MCP** | `playbook_list/_get/_step/_asset/_check`, `search`, `lock`, `pull`, `verify`, plus `viewer_selection` and `playbook_propose` |
-| **HTTP** | `/playbooks`, `/playbook`, `/playbook/asset`, `/index`, `/validate`, `/selection`, `/proposal` |
-
-## The viewer
-
-`./scripts/dev-up.sh` opens a read-only viewer: the workflow as a diagram, the
-steps with rendered markdown, sources with their age, assets inline.
-
-There is no edit mode. You select a step and ask the agent beside you — it
-reads that selection through `viewer_selection`, so "why is this necessary?"
-resolves against what is on screen. When the answer belongs in the playbook,
-the agent proposes the change and you see a diff with an Apply button. Nothing
-is written until you click it.
-
-## Sharing
-
-Like Go modules: the repository URL is the identity, tags are the versions,
-publishing is `git tag` + `git push`. No account, no central registry.
-
-```yaml
-dependencies:
-  "git+https://github.com/acme/notarize-playbook": "^1.0"
-```
-
-Discovery works through **index repositories** — one file per playbook repo,
-extendable by pull request ([`index/README.md`](./index/README.md)).
+| `core/` | Python domain logic: skills, sources, lockfiles, expansion, tool checks |
+| `cli/` | `speccify` — thin Typer adapter over `core/` |
+| `mcp/` | MCP server for coding agents — same core, `skill_*`/`tool_*`/`source_*` tools |
+| `crates/` | Rust MCPs: exec, discovery, parallels; shared toolbox |
+| `apps/desktop/` | The Tauri 2 desktop app (macOS + Windows) |
+| `apps/marketing/` | Website + docs (Astro Starlight) — <https://speccify.io> |
+| `skills/` | Reference skills, each a directory with `SKILL.md` and tool contracts |
+| `schema/` | JSON schemas (skill metadata, manifest, lockfile, index entry) |
 
 ## Documentation
 
-- [`docs/playbooks.md`](./docs/playbooks.md) — the format, the fields and why each exists
-- [`docs/viewer.md`](./docs/viewer.md) — the viewer and the agent beside it
-- [`docs/git-sources.md`](./docs/git-sources.md) — git sources, pinning, discovery
-- [`docs/launch.md`](./docs/launch.md) — what is left before this goes public
+- <https://speccify.io> — tutorial (zero to App Store), fundamentals,
+  the Speccify workflow, and a tour of the app
+- [`docs/git-sources.md`](./docs/git-sources.md) — sharing skills over Git,
+  discovery via index repositories
+- [`docs/toolkit.md`](./docs/toolkit.md) — the local MCP servers the app can
+  expose (exec, discovery, owner questions)
+- [`.agent/plans/`](./.agent/plans/) — the living roadmap; the repo is built
+  with its own workflow (plans, board, skills), so the best documentation of
+  how Speccify works is how this repository works
 
-Reference playbooks live in [`playbooks/`](./playbooks/): notarizing a Tauri
-app, getting a Developer ID certificate, shipping a trial-then-unlock in-app
-purchase, and testing StoreKit.
+## License
 
-## Status
-
-The project pivoted on 2026-08-06 from component specs to workflow playbooks:
-coding agents got good enough that describing a button is no longer worth
-doing, while the knowledge around a *task* — the order, the fine print, the
-dead ends — is exactly what they still lack. What carried over is the part
-that was always the point: version pinning, hashes and checkable sources.
-
-MIT licensed. No hosted service, no account, no telemetry.
+MIT.
