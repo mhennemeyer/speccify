@@ -11,7 +11,7 @@
 #   winget install astral-sh.uv               # uv (Sidecar + Python-Teil)
 #   corepack enable && corepack prepare pnpm@10 --activate
 #   VS Build Tools MIT der C++-Workload (die nackte Installation reicht
-#   nicht — ohne Workload fehlt link.exe):
+#   nicht - ohne Workload fehlt link.exe):
 #   winget install Microsoft.VisualStudio.2022.BuildTools --override "--quiet --wait --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended"
 
 $ErrorActionPreference = "Stop"
@@ -38,7 +38,7 @@ $llvm = "C:\Program Files\LLVM\bin"
 if (Test-Path "$llvm\clang.exe") { $env:PATH = "$llvm;$env:PATH" }
 Need clang  "LLVM installieren: winget install LLVM.LLVM"
 
-# MSVC-Linker: rustc findet link.exe ueber vswhere — aber nur, wenn die
+# MSVC-Linker: rustc findet link.exe ueber vswhere - aber nur, wenn die
 # C++-Workload wirklich installiert ist (die nackten Build Tools ohne
 # Workload sind die haeufigste Falle: `error: linker link.exe not found`).
 $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
