@@ -14,6 +14,7 @@ mod agent_config;
 mod board_cmd;
 mod desktop_ui;
 mod engine;
+mod help_docs;
 mod plan_cmd;
 mod project_cmd;
 mod project_watch;
@@ -256,6 +257,8 @@ pub fn run() {
             board_cmd::project_board_kpis,
             board_cmd::project_ticket_questions,
             board_cmd::project_ticket_answer,
+            help_docs::help_docs,
+            help_docs::help_doc,
             agent_config::agent_config_list,
             agent_config::agent_config_read,
             agent_config::agent_config_write,

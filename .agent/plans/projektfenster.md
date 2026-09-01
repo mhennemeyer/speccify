@@ -1,6 +1,6 @@
 ---
 lifecycle: active
-status: Bauen — P1–P3 geliefert und auf macOS/Windows verifiziert. D25 geliefert 2026-08-29: gemeinsamer Agent-Host-Vertrag, Claude- und Codex-Skill-Links, native MCP-Dateien, Terminal-Presets und Repository-Dogfooding. P4-Kern geliefert 2026-09-01 (Skill-Browser D24, Projekt-Quellen D21, Agents-Editor D23). Neu 2026-09-01: **P6 Website + integrierte Hilfe** — P6a-Kern geliefert (Site auf 83 Seiten, EN/DE, Landing+README neu); P6b als Nächstes. Zuvor 2026-08-31: **P5 Agent-/Workflow-Parität** (BO stellt iKanbanAI zurück; alles außer Git/IDE kommt nach Speccify — D26–D29, W1–W7, P5 zieht vor den P4-Rest). **W1–W6 geliefert 2026-08-31, auf macOS UND Windows verifiziert** (VM: 38/38 Rust-Tests; Setup per Banner-Klick legt Junctions über den mklink-Fallback an, Policy-Block v1 sitzt, Board rendert). Committet (eaf2188 D25, 3bbceda P5, 3b80919 Windows-Pfadfix). Offen: W7-Feinschliff nach Gebrauch, Push/CI-Erstlauf. Offen: CI-Erstlauf beim nächsten Push, x86-Referenz. Läuft parallel zu `skills-und-tools.md` (BO-Ausnahme von der Ein-Plan-Regel).
+status: Bauen — P1–P3 geliefert und auf macOS/Windows verifiziert. D25 geliefert 2026-08-29: gemeinsamer Agent-Host-Vertrag, Claude- und Codex-Skill-Links, native MCP-Dateien, Terminal-Presets und Repository-Dogfooding. P4-Kern geliefert 2026-09-01 (Skill-Browser D24, Projekt-Quellen D21, Agents-Editor D23). Neu 2026-09-01: **P6 Website + integrierte Hilfe** — P6a-Kern + P6b geliefert (Site auf 83 Seiten EN/DE, Landing+README neu; integrierte Hilfe in Dashboard und Projektfenster). Offen: Screenshots, Tutorial-Stubs, DE-Landing, Push/Deploy. Zuvor 2026-08-31: **P5 Agent-/Workflow-Parität** (BO stellt iKanbanAI zurück; alles außer Git/IDE kommt nach Speccify — D26–D29, W1–W7, P5 zieht vor den P4-Rest). **W1–W6 geliefert 2026-08-31, auf macOS UND Windows verifiziert** (VM: 38/38 Rust-Tests; Setup per Banner-Klick legt Junctions über den mklink-Fallback an, Policy-Block v1 sitzt, Board rendert). Committet (eaf2188 D25, 3bbceda P5, 3b80919 Windows-Pfadfix). Offen: W7-Feinschliff nach Gebrauch, Push/CI-Erstlauf. Offen: CI-Erstlauf beim nächsten Push, x86-Referenz. Läuft parallel zu `skills-und-tools.md` (BO-Ausnahme von der Ein-Plan-Regel).
 sessionId: projektfenster
 ---
 # Plan: Projektfenster — Pläne, Skills, Tools im Projekt verwalten (auch auf Windows)
@@ -682,7 +682,17 @@ eigene `app/plans`-Seite, Feinschliff nach BO-Lektüre.
    Tutorial als eigene Sektion mitnehmen und die zwei Lücken schließen;
    Screenshots aus der echten App nachschießen. Die alte
    Playbook-Erzählung (bekanntes offenes Ende) fällt dabei mit weg.
-2. **P6b Integrierte Hilfe:** Hilfe-Tab nach tec-e2e-Muster in Dashboard
+2. **P6b Integrierte Hilfe: ✅ 2026-09-01.** `help_docs.rs` — feste
+   Slug-Registry, Inhalte **einkompiliert** (die verteilte App hat kein
+   Repo neben sich; der angezeigte Quellpfad sagt trotzdem, welche Datei
+   man ändert), Redaktions-Test nach tec-e2e-Vorbild (Slugs eindeutig,
+   Beschreibungen > 20 Zeichen, Pfade bleiben im Repo). Fünf Dokumente:
+   neue Anleitung `docs/app-bedienen.md` (der schnelle Weg, die Tabs,
+   Fragen, Troubleshooting), Workflow-Policy, README, git-sources,
+   toolkit. `HelpView` (Master-Detail, erstes Dokument auto-offen) als
+   Dashboard-Sektion „Hilfe" UND Projektfenster-Tab „Hilfe".
+
+   *Ursprünglicher Zuschnitt:* Hilfe-Tab nach tec-e2e-Muster in Dashboard
    **und** Projektfenster (Rust-Slug-Registry über unsere Repo-Doku +
    eine neue `docs/app-bedienen.md`-artige Anleitung; Markdown.tsx
    existiert). Redaktions-Tests wie im Vorbild.

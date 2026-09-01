@@ -1,5 +1,21 @@
 # Log: Speccify
 
+## 2026-09-01, nachmittags (P6b — integrierte Hilfe)
+- `help_docs.rs` nach tec-e2e-Vorbild, mit einer bewussten Abweichung:
+  Inhalte per include_str! **einkompiliert** statt zur Laufzeit aus dem
+  Repo gelesen — die verteilte App hat kein Repo neben sich; der
+  Quellpfad wird trotzdem über dem Text angezeigt („wer ändern will,
+  weiß welche Datei"). Redaktions-Test wie im Vorbild.
+- Neue Anleitung `docs/app-bedienen.md` (deutsch wie die App-UI):
+  der schnelle Weg, alle Tabs, Fragen beantworten, Dashboard,
+  Troubleshooting. Dazu in der Hilfe: Workflow-Policy, README,
+  git-sources, toolkit.
+- `HelpView` als Dashboard-Sektion „Hilfe" und als Projektfenster-Tab.
+- Sichttest übersprungen (BO arbeitete aktiv am Bildschirm) — Registry-
+  Test + Build decken den Pfad; BO klickt selbst.
+- Verifikation: 43 Rust-Tests, tsc + Vite-Build, fmt.
+
+
 ## 2026-09-01, mittags (P6a-Kern — Website auf die neue Geschichte)
 - AgentFundamentals-Inhalte übernommen (tutorial/fundamentals/speccify
   EN+DE; ikanban-ai → app/ und von einem Subagenten nach striktem

@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import TerminalPanel from "./components/TerminalPanel";
+import HelpView from "./views/HelpView";
 import { ErrorBox, Spinner } from "./components/ui";
 import { AGENT_PRESETS, DEFAULT_AGENT_COMMAND } from "./lib/agents";
 import ActionsTab from "./views/project/ActionsTab";
@@ -26,6 +27,7 @@ const TABS = [
   { id: "actions", label: "Aktionen" },
   { id: "mcps", label: "MCPs" },
   { id: "agent", label: "Agent" },
+  { id: "help", label: "Hilfe" },
 ] as const;
 
 type TabId = (typeof TABS)[number]["id"];
@@ -181,6 +183,9 @@ export default function ProjectShell() {
         </div>
         <div className={active === "mcps" ? "min-h-0 flex-1" : "hidden"}>
           <McpsTab project={project} refresh={refresh.mcps} />
+        </div>
+        <div className={active === "help" ? "min-h-0 flex-1" : "hidden"}>
+          <HelpView />
         </div>
         <div className={active === "agent" ? "min-h-0 flex-1" : "hidden"}>
           <AgentTab

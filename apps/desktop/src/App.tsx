@@ -4,6 +4,7 @@ import { listen } from "@tauri-apps/api/event";
 import AskBoPanel, { type AskBoInteraction } from "./components/AskBoPanel";
 import TerminalPanel from "./components/TerminalPanel";
 import AgentsView from "./views/AgentsView";
+import HelpView from "./views/HelpView";
 import LibraryView from "./views/LibraryView";
 import ProjectsView from "./views/ProjectsView";
 import EnvironmentView from "./views/EnvironmentView";
@@ -20,6 +21,7 @@ const SECTIONS = [
   { id: "servers", label: "Server", view: <ServersView /> },
   { id: "agents", label: "Agents", view: <AgentsView /> },
   { id: "settings", label: "Settings", view: <SettingsView /> },
+  { id: "help", label: "Hilfe", view: <HelpView /> },
 ] as const;
 
 type SectionId = (typeof SECTIONS)[number]["id"];
