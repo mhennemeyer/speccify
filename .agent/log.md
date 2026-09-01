@@ -1,5 +1,16 @@
 # Log: Speccify
 
+## 2026-09-01, spät (dev.ps1 — Windows-Einstieg für Kollegen)
+- `scripts/dev.ps1` (Gegenstück zu dev.sh): Toolchain-Check mit
+  winget-Hinweisen, pnpm install, MCP-Sidecars mit Triple-Suffix,
+  resources mit Referenz-Skills, `tauri dev`. In der VM als Benutzer
+  End-to-End getestet (App-Prozess lief). Zwei Befunde: Windows
+  PowerShell 5.1 parst ps1 ohne BOM als ANSI → Datei ist jetzt reines
+  ASCII mit UTF-8-BOM; Port-1420-Kollision im Test war der alte
+  Vite-Task der VM, kein Skriptfehler. Windows-Sektion in
+  apps/desktop/README.md. BO hat main gepusht — origin ist aktuell.
+
+
 ## 2026-09-01, nachmittags (P6b — integrierte Hilfe)
 - `help_docs.rs` nach tec-e2e-Vorbild, mit einer bewussten Abweichung:
   Inhalte per include_str! **einkompiliert** statt zur Laufzeit aus dem
