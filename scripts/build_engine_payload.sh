@@ -46,10 +46,12 @@ cp -R "$REPO_ROOT/skills" "$RES/skills"
 
 # Hash über alle Payload-Dateien: die App vergleicht ihn mit dem Marker der
 # installierten venv und installiert nach einem App-Update neu.
+# `shasum` fehlt im Git-Bash des Windows-Runners; dort heißt es `sha256sum`.
+if command -v shasum >/dev/null 2>&1; then SHA=(shasum -a 256); else SHA=(sha256sum); fi
 PAYLOAD_HASH="$(
   find "$ENGINE" "$RES/skills" \
     -type f ! -name payload.json | LC_ALL=C sort |
-    xargs shasum -a 256 | shasum -a 256 | awk '{print $1}'
+    xargs "${SHA[@]}" | "${SHA[@]}" | awk '{print $1}'
 )"
 PYTHON_VERSION="$(awk -F'"' '/^requires-python/{print $2}' "$REPO_ROOT/pyproject.toml" | tr -d '>=')"
 
