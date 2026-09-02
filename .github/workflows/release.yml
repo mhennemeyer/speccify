@@ -193,18 +193,11 @@ jobs:
             The agent-agnostic skill and tool manager — desktop app for
             macOS and Windows.
 
-            **macOS: Apple Silicon, macOS 11 or newer.** Intel Macs are not
+            **macOS: Apple Silicon, macOS 11 or newer** — signed and
+            notarized, opens without a Gatekeeper prompt. Intel Macs are not
             covered yet. **Windows: x64 installer (`*-setup.exe`)** — the
-            build is not code-signed, so SmartScreen warns on first launch
-            (More info → Run anyway).
-
-            This build is not signed with an Apple Developer ID yet, so
-            Gatekeeper will refuse it on first launch. Open it once with
-            right-click → Open, or run:
-
-            ```
-            xattr -dr com.apple.quarantine /Applications/Speccify.app
-            ```
+            build is not code-signed yet, so SmartScreen warns on first
+            launch (More info → Run anyway).
 
             On first launch the app builds its Python environment from the
             bundled payload — one click in the Environment tab. That needs an

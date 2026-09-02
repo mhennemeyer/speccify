@@ -693,6 +693,21 @@ Trusted Signing über OV-Zertifikat — steht in `docs/release.md`
 („Signierung scharf schalten"). Secrets/Schlüssel erzeugt der BO
 selbst; danach `PUBLIC_RELEASE_SIGNED=true` und der Release-Body-Text.
 
+**P6c macOS ✅ 2026-09-02:** Erster signierter+notarisierter Release
+(v0.3.0, Draft) — verifiziert am per Browser-Quarantäne simulierten
+Download: `spctl accepted, source=Notarized Developer ID`, Ticket
+gestapelt, alle 5 Binaries (App + 4 Sidecars inkl. re-signiertem uv)
+einzeln geprüft. Stolpersteine dokumentiert für die Nachwelt:
+GNU-base64 im PATH kennt `-i` nicht; Passwort muss zur *richtigen*
+p12 gehören (Developer ID, nicht Apple Development); Zertifikat lag im
+System-, der Schlüssel im Anmelde-Schlüsselbund (Zertifikat per
+`security import` in die Anmeldung kopiert, dann Export möglich).
+Windows-Job grün nach shasum→sha256sum-Fix (e98c855) und
+Tag-Umsetzen; Draft trägt dmg + setup.exe + msi + app.tar.gz.
+**Offen:** BO published den Draft; `PUBLIC_RELEASE_SIGNED` bleibt
+false, bis auch Windows signiert (das Flag schaltet beide Warnboxen);
+Azure-Setup (BO oder Teammitglied — Publisher-Name bedenken).
+
 **Zuschnitt (Vorschlag):**
 1. **P6a Website:** `speccify/`- und `fundamentals/`-Sektionen nach
    `apps/marketing` übernehmen (EN+DE), Landing auf die neue Geschichte
