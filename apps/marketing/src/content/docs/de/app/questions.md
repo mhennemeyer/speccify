@@ -2,7 +2,7 @@
 title: Fragen & Antworten
 description: Das Protokoll, das einen Agenten am Raten hindert — und jede Entscheidung die Konversation überleben lässt.
 sidebar:
-  order: 3
+  order: 4
 ---
 
 Manche Entscheidungen gehören dir allein: Umfang, Geld, Geschmack,

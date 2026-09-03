@@ -2,7 +2,7 @@
 title: Skills, tools & sources
 description: What your agent can do here — browsable in the app, importable from Speccify sources.
 sidebar:
-  order: 5
+  order: 6
 ---
 
 The skills tab shows what the agent knows how to do in *this*

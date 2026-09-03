@@ -2,7 +2,7 @@
 title: Skills, Tools & Quellen
 description: Was dein Agent hier kann — in der App durchsuchbar, importierbar aus Speccify-Quellen.
 sidebar:
-  order: 5
+  order: 6
 ---
 
 Der Skills-Tab zeigt, was der Agent in *diesem* Projekt zu tun weiß:

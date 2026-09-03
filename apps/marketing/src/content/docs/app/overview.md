@@ -40,20 +40,19 @@ both hosts see the same skills.
 
 The app starts on a **dashboard** — your projects, plus the shared
 pieces: library, environment, servers, agents, settings. Each project
-opens in its **own window** with the tabs **Board, Plans, Skills,
-Tools, Actions, MCPs, Agent** and an agent terminal on the right or
+opens in its **own window** with the tabs **Board, Playbooks, Plans,
+Skills, Tools, Actions, MCPs, Agent, Help** and an agent terminal on the right or
 at the bottom (switchable). Claude Code and Codex are equal presets
 for that terminal — nothing in the workflow is specific to either.
 
 - **[The board](/app/board/)** — tickets in `Backlog`,
   `In Progress`, `Done`; per-ticket history; badges for tickets that
   wait on you.
-- **Plans** — the markdown plans under `.agent/plans/`, as list,
-  rendered markdown, or editor. Lifecycle `draft` / `active` /
-  `onHold` / `done` / `research`, with exactly one `active` at a
-  time — activating a plan parks the previous one on hold. An
-  `escalation:` in a plan's frontmatter shows a red banner with
-  **Resolve**.
+- **[Plans & playbooks](/app/plans/)** — the markdown plans under
+  `.agent/plans/`, with exactly one `active` at a time, an escalation
+  banner when the agent needs you, and **Copy as prompt**; next to
+  them the playbooks under `.agent/playbooks/` — standing procedures
+  such as a release, which are reused rather than worked off.
 - **[Skills & tools](/app/skills-tab/)** — what the agent can
   do here, including skills expanded from
   [Speccify sources](/speccify/overview/).

@@ -692,9 +692,14 @@ internen Verweise auf gelöschte Sektionen.
 laufenden App am W1-Fixture (Fixture mit offener Frage, exec-pending
 und Herkunft präpariert), alle 12 Platzhalter EN+DE ersetzt;
 Download-Seite auf macOS+Windows (SmartScreen-Box, dev.ps1-Selbstbau);
-deutsche Landing unter `/de/`. Build 85 Seiten. **Offen in P6a:**
-Tutorial-Stubs (`submission`, `fastlane-and-asc` — brauchen
-BO-Material), eigene `app/plans`-Seite, Feinschliff nach BO-Lektüre.
+deutsche Landing unter `/de/`. Build 85 Seiten. **`app/plans`-Seite ✅
+2026-09-03** („Plans & playbooks", EN+DE, Build 88 Seiten): Lifecycle
+mit Ein-Aktiver-Invariante, Aktivieren/Archivieren, Eskalations-Block,
+„Als Prompt kopieren", Playbooks (D30) und die Abgrenzung
+Skill/Playbook/Plan; Overview-Seiten und integrierte Hilfe auf die
+echte Tab-Reihenfolge (Playbooks vor Plänen) gezogen. **Offen in
+P6a:** Tutorial-Stubs (`submission`, `fastlane-and-asc` — brauchen
+BO-Material), Feinschliff nach BO-Lektüre.
 
 **P6c Signierung (vorbereitet 2026-09-01):** beide Release-Jobs sind
 rein secrets-getrieben scharf zu schalten — macOS war fertig

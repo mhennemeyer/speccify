@@ -41,7 +41,8 @@ Windows als Junction) — beide Hosts sehen dieselben Skills.
 Die App startet auf einem **Dashboard** — deine Projekte, dazu das
 Geteilte: Bibliothek, Umgebung, Server, Agents, Settings. Jedes
 Projekt öffnet sich in einem **eigenen Fenster** mit den Tabs
-**Board, Pläne, Skills, Tools, Aktionen, MCPs, Agent** und einem
+**Board, Playbooks, Pläne, Skills, Tools, Aktionen, MCPs, Agent,
+Hilfe** und einem
 Agent-Terminal rechts oder unten (umschaltbar). Claude Code und
 Codex sind dort gleichberechtigte Presets — nichts im Workflow ist
 auf einen von beiden festgelegt.
@@ -49,12 +50,12 @@ auf einen von beiden festgelegt.
 - **[Das Board](/de/app/board/)** — Tickets in `Backlog`,
   `In Progress`, `Done`; History je Ticket; Badges für Tickets, die
   auf dich warten.
-- **Pläne** — die Markdown-Pläne unter `.agent/plans/`, als Liste,
-  gerendertes Markdown oder Editor. Lifecycle `draft` / `active` /
-  `onHold` / `done` / `research`, mit genau einem `active` — einen
-  Plan aktivieren parkt den vorherigen auf `onHold`. Ein
-  `escalation:` im Frontmatter eines Plans zeigt einen roten Banner
-  mit **Auflösen**.
+- **[Pläne & Playbooks](/de/app/plans/)** — die Markdown-Pläne
+  unter `.agent/plans/`, mit genau einem `active`, einem
+  Eskalations-Banner, wenn der Agent dich braucht, und **Als Prompt
+  kopieren**; daneben die Playbooks unter `.agent/playbooks/` —
+  stehende Anleitungen wie ein Release, die wiederverwendet statt
+  abgearbeitet werden.
 - **[Skills & Tools](/de/app/skills-tab/)** — was der Agent
   hier kann, einschließlich Skills aus
   [Speccify-Quellen](/de/speccify/overview/).

@@ -2,7 +2,7 @@
 title: Aktionen
 description: Projekt-Kommandos aus der App — nativ ausgeführt, mit Live-Ausgabe, allowlisted für den Agenten.
 sidebar:
-  order: 4
+  order: 5
 ---
 
 Bauen, testen, starten — die wiederkehrenden Kommandos eines

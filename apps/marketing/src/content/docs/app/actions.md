@@ -2,7 +2,7 @@
 title: Actions
 description: Project commands you run from the app — executed natively, with live output, allowlisted for the agent.
 sidebar:
-  order: 4
+  order: 5
 ---
 
 Building, testing, launching — a project's recurring commands are

@@ -2,7 +2,7 @@
 title: Questions & answers
 description: The protocol that stops an agent from guessing — and makes every decision survive the conversation.
 sidebar:
-  order: 3
+  order: 4
 ---
 
 Some decisions are yours alone: scope, money, taste, anything
