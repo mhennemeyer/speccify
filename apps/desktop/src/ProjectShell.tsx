@@ -15,6 +15,7 @@ import AgentTab from "./views/project/AgentTab";
 import BoardTab from "./views/project/BoardTab";
 import McpsTab from "./views/project/McpsTab";
 import PlansTab from "./views/project/PlansTab";
+import PlaybooksTab from "./views/project/PlaybooksTab";
 import SkillsTab from "./views/project/SkillsTab";
 import ToolsTab from "./views/project/ToolsTab";
 import WorkflowBanner from "./views/project/WorkflowBanner";
@@ -22,6 +23,7 @@ import WorkflowBanner from "./views/project/WorkflowBanner";
 const TABS = [
   { id: "board", label: "Board" },
   { id: "plans", label: "Pläne" },
+  { id: "playbooks", label: "Playbooks" },
   { id: "skills", label: "Skills" },
   { id: "tools", label: "Tools" },
   { id: "actions", label: "Aktionen" },
@@ -171,6 +173,9 @@ export default function ProjectShell() {
         </div>
         <div className={active === "plans" ? "min-h-0 flex-1" : "hidden"}>
           <PlansTab project={project} refresh={refresh.plans} />
+        </div>
+        <div className={active === "playbooks" ? "min-h-0 flex-1" : "hidden"}>
+          <PlaybooksTab project={project} refresh={refresh.playbooks} />
         </div>
         <div className={active === "skills" ? "min-h-0 flex-1" : "hidden"}>
           <SkillsTab project={project} refresh={refresh.skills} />

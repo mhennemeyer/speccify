@@ -1,6 +1,6 @@
 ---
 lifecycle: active
-status: Bauen — P1–P3 geliefert und auf macOS/Windows verifiziert. D25 geliefert 2026-08-29: gemeinsamer Agent-Host-Vertrag, Claude- und Codex-Skill-Links, native MCP-Dateien, Terminal-Presets und Repository-Dogfooding. P4-Kern geliefert 2026-09-01 (Skill-Browser D24, Projekt-Quellen D21, Agents-Editor D23). Neu 2026-09-01: **P6 Website + integrierte Hilfe** — P6a (inkl. Screenshots, Download-Seite macOS+Windows, DE-Landing — 85 Seiten) + P6b geliefert; **P6c Signierung vorbereitet** (Windows-Job signiert secrets-getrieben via Azure Trusted Signing, BO-Aktionsliste in docs/release.md, PUBLIC_RELEASE_SIGNED erreicht jetzt den Pages-Build). Offen: Tutorial-Stubs, BO legt Secrets an, Push/Deploy/Release-Erstlauf. Zuvor 2026-08-31: **P5 Agent-/Workflow-Parität** (BO stellt iKanbanAI zurück; alles außer Git/IDE kommt nach Speccify — D26–D29, W1–W7, P5 zieht vor den P4-Rest). **W1–W6 geliefert 2026-08-31, auf macOS UND Windows verifiziert** (VM: 38/38 Rust-Tests; Setup per Banner-Klick legt Junctions über den mklink-Fallback an, Policy-Block v1 sitzt, Board rendert). Committet (eaf2188 D25, 3bbceda P5, 3b80919 Windows-Pfadfix). Offen: W7-Feinschliff nach Gebrauch, Push/CI-Erstlauf. Offen: CI-Erstlauf beim nächsten Push, x86-Referenz. Läuft parallel zu `skills-und-tools.md` (BO-Ausnahme von der Ein-Plan-Regel).
+status: Bauen — P1–P3 geliefert und auf macOS/Windows verifiziert. D25 geliefert 2026-08-29: gemeinsamer Agent-Host-Vertrag, Claude- und Codex-Skill-Links, native MCP-Dateien, Terminal-Presets und Repository-Dogfooding. P4-Kern geliefert 2026-09-01 (Skill-Browser D24, Projekt-Quellen D21, Agents-Editor D23). Neu 2026-09-01: **P6 Website + integrierte Hilfe** — P6a (inkl. Screenshots, Download-Seite macOS+Windows, DE-Landing — 85 Seiten) + P6b geliefert; **P6c Signierung vorbereitet** (Windows-Job signiert secrets-getrieben via Azure Trusted Signing, BO-Aktionsliste in docs/release.md, PUBLIC_RELEASE_SIGNED erreicht jetzt den Pages-Build). 2026-09-02: **P6c macOS ✅** — v0.3.0 signiert+notarisiert als Draft (spctl: Notarized Developer ID), Website live mit neuer Download-Seite; offen: BO published den Draft, Azure-Setup für Windows-Signing. 2026-09-03: **D30 Playbooks geliefert** (`.agent/playbooks/` + Tab mit Editor). Offen: Tutorial-Stubs. Zuvor 2026-08-31: **P5 Agent-/Workflow-Parität** (BO stellt iKanbanAI zurück; alles außer Git/IDE kommt nach Speccify — D26–D29, W1–W7, P5 zieht vor den P4-Rest). **W1–W6 geliefert 2026-08-31, auf macOS UND Windows verifiziert** (VM: 38/38 Rust-Tests; Setup per Banner-Klick legt Junctions über den mklink-Fallback an, Policy-Block v1 sitzt, Board rendert). Committet (eaf2188 D25, 3bbceda P5, 3b80919 Windows-Pfadfix). Offen: W7-Feinschliff nach Gebrauch, Push/CI-Erstlauf. Offen: CI-Erstlauf beim nächsten Push, x86-Referenz. Läuft parallel zu `skills-und-tools.md` (BO-Ausnahme von der Ein-Plan-Regel).
 sessionId: projektfenster
 ---
 # Plan: Projektfenster — Pläne, Skills, Tools im Projekt verwalten (auch auf Windows)
@@ -468,6 +468,22 @@ direkt spawnen. Parität heißt also überwiegend: **Dateiformate + Watcher
   (Apple Foundation Models, macOS-26-only — auf Windows nicht
   verfügbar; Plan-Zusammenfassungen macht bei uns der Agent),
   `.agent/chats/` (Altlast der entfernten Laufzeit, kein Code liest sie).
+* **D30 — Playbooks (BO, 2026-09-03). ✅ geliefert 2026-09-03:**
+  stehende Anleitungen unter `.agent/playbooks/<name>.md` — im
+  Gegensatz zu Plänen ohne Lifecycle: ein Plan wird wie ein Projekt
+  abgearbeitet und ist dann fertig, ein Playbook (Release, Deploy,
+  Onboarding) bleibt und wird wiederverwendet. Format: optionales
+  flaches Frontmatter (`description:`) + Markdown; Titel = erste
+  `# `-Überschrift. Geliefert: `playbook_cmd.rs` (list/create/delete,
+  Slug mit Umlaut-Transliteration, Traversal-Guard; Inhalt über
+  `project_read_file`/`project_write_file`), Watcher-Bereich
+  `playbooks`, Tab „Playbooks" mit Liste/Ansicht/Editor
+  (description+Body, byte-stabil via assemblePlan), „+ Playbook",
+  Löschen mit Rückfrage, „Als Prompt kopieren" für den Agenten;
+  `.agent/agent.md`-Strukturliste + `docs/app-bedienen.md` (→ Hilfe-Tab)
+  ergänzt. 45/45 Desktop-Tests, Typecheck grün. Nicht das alte
+  Produkt-„Playbook" (das hieß nur so und wurde zu Skills) — hier sind
+  es Projekt-Runbooks.
 
 #### Meilensteine
 

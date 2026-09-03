@@ -35,6 +35,11 @@ Repository — wer etwas ändern will, ändert diese Datei.
   Text). **Aktivieren** macht einen Plan zum aktiven und parkt den
   bisherigen automatisch auf `onHold`. Ein rotes Banner bedeutet: Der
   Agent hat den Plan eskaliert — lesen, handeln, **Auflösen**.
+- **Playbooks** — stehende Anleitungen aus `.agent/playbooks/` (Release-
+  Ablauf, Deploy, Onboarding …). Anders als Pläne werden sie nicht
+  abgearbeitet und „fertig", sondern immer wieder benutzt. **+ Playbook**
+  legt eins an, der Editor pflegt Beschreibung und Text, **Als Prompt
+  kopieren** gibt den Ablauf dem Agenten ins Terminal.
 - **Skills** — die expandierten Skills des Projekts samt Herkunft. Der
   Modus **Quellen durchsuchen** zeigt Skill-Repos (Default aus den
   Dashboard-Settings, weitere pro Projekt): Ordner sind Kategorien,

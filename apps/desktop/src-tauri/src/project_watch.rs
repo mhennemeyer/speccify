@@ -60,6 +60,11 @@ const AREAS: &[Area] = &[
         files: &[],
     },
     Area {
+        name: "playbooks",
+        dirs: &[".agent/playbooks"],
+        files: &[],
+    },
+    Area {
         name: "skills",
         dirs: &[".agent/skills"],
         files: &[],

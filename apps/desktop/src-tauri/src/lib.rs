@@ -16,6 +16,7 @@ mod desktop_ui;
 mod engine;
 mod help_docs;
 mod plan_cmd;
+mod playbook_cmd;
 mod project_cmd;
 mod project_watch;
 mod settings;
@@ -268,6 +269,9 @@ pub fn run() {
             skill_sources::source_validate,
             plan_cmd::project_plan_activate,
             plan_cmd::project_plan_resolve_escalation,
+            playbook_cmd::project_playbooks,
+            playbook_cmd::project_playbook_create,
+            playbook_cmd::project_playbook_delete,
             project_watch::project_watch_start,
             project_watch::project_watch_stop,
             settings::get_settings,

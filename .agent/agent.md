@@ -23,6 +23,8 @@ Beide sind auf ausdrücklichen BO-Entscheid parallel aktiv.
   `<platform>.<ext>`.
 - `.agent/speccify/expansions.yaml`: Herkunft, Hashes und Prüfstatus.
 - `.agent/plans/`: aktive Pläne und Entwürfe; Fertiges unter `archive/`.
+- `.agent/playbooks/`: stehende Anleitungen (Release, Deploy, …) — anders
+  als Pläne werden sie nicht abgearbeitet, sondern wiederverwendet.
 - `.agent/board/`: optionale, dateibasierte Tickets.
 - `.agent/actions.json`: benannte Projektaktionen.
 
