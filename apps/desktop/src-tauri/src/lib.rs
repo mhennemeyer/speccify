@@ -268,6 +268,7 @@ pub fn run() {
             skill_sources::source_skill_read,
             skill_sources::source_validate,
             plan_cmd::project_plan_activate,
+            plan_cmd::project_plan_archive,
             plan_cmd::project_plan_resolve_escalation,
             playbook_cmd::project_playbooks,
             playbook_cmd::project_playbook_create,

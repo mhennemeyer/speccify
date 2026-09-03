@@ -67,6 +67,46 @@ pub fn project_plan_activate(project: String, file: String) -> Result<Vec<String
     Ok(parked)
 }
 
+/// Archiviert einen Plan: verschiebt ihn nach `.agent/plans/archive/` und
+/// setzt `lifecycle: done` — Fertiges liegt im Archiv (agent.md). Ein Plan
+/// ganz ohne Frontmatter wird nur verschoben. Rückgabe: der neue Pfad
+/// relativ zur Projektwurzel.
+#[tauri::command]
+pub fn project_plan_archive(project: String, file: String) -> Result<String, String> {
+    let root = resolve_project_root(&project)?;
+    let source = safe_project_path(&root, &file)?;
+    if !is_plan_file(&root, &source) {
+        return Err(format!("Kein Plan: {file}"));
+    }
+    let archive = plans_dir(&root).join("archive");
+    if source.starts_with(&archive) {
+        return Err("Liegt schon im Archiv.".into());
+    }
+    let name = source
+        .file_name()
+        .ok_or_else(|| "Kein Dateiname.".to_string())?
+        .to_owned();
+    let target = archive.join(&name);
+    if target.exists() {
+        return Err(format!(
+            "Gibt es schon im Archiv: {}",
+            name.to_string_lossy()
+        ));
+    }
+    let text =
+        std::fs::read_to_string(&source).map_err(|e| format!("{}: {e}", source.display()))?;
+    let updated = update_ticket_text(&text, &[("lifecycle", Some("done".into()))], None)
+        .unwrap_or_else(|_| text.clone());
+    std::fs::create_dir_all(&archive).map_err(|e| format!("{}: {e}", archive.display()))?;
+    std::fs::write(&target, updated).map_err(|e| format!("{}: {e}", target.display()))?;
+    std::fs::remove_file(&source).map_err(|e| format!("{}: {e}", source.display()))?;
+    Ok(target
+        .strip_prefix(&root)
+        .unwrap_or(&target)
+        .to_string_lossy()
+        .replace('\\', "/"))
+}
+
 /// Entfernt den `escalation:`-Eintrag — die einzelne Zeile oder den ganzen
 /// Block (Folgezeilen mit Einzug). Alles andere bleibt wörtlich.
 pub(crate) fn clear_escalation(text: &str) -> String {
@@ -159,6 +199,36 @@ mod tests {
         assert!(neu.contains("sessionId: neu"));
         let uralt = std::fs::read_to_string(dir.join(".agent/plans/archive/uralt.md")).unwrap();
         assert!(uralt.contains("lifecycle: active"));
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn archive_moves_the_plan_and_marks_it_done() {
+        let dir = fixture("archive");
+        let project = dir.to_string_lossy().into_owned();
+        std::fs::write(
+            dir.join(".agent/plans/fertig.md"),
+            "---\nlifecycle: active\nstatus: lief gut\n---\n# Fertig\n",
+        )
+        .unwrap();
+        std::fs::write(dir.join(".agent/plans/archive/fremd.md"), "# Fremd\n").unwrap();
+
+        let moved = project_plan_archive(project.clone(), ".agent/plans/fertig.md".into()).unwrap();
+        assert_eq!(moved, ".agent/plans/archive/fertig.md");
+        assert!(!dir.join(".agent/plans/fertig.md").exists());
+        let text = std::fs::read_to_string(dir.join(".agent/plans/archive/fertig.md")).unwrap();
+        assert!(text.contains("lifecycle: done"));
+        assert!(text.contains("status: lief gut")); // Rest unangetastet
+
+        // Schon archiviert bzw. Namenskollision ⇒ Fehler, nichts überschrieben.
+        assert!(project_plan_archive(project.clone(), moved).is_err());
+        std::fs::write(dir.join(".agent/plans/fremd.md"), "# Neu\n").unwrap();
+        assert!(project_plan_archive(project, ".agent/plans/fremd.md".into()).is_err());
+        assert_eq!(
+            std::fs::read_to_string(dir.join(".agent/plans/archive/fremd.md")).unwrap(),
+            "# Fremd\n"
+        );
 
         let _ = std::fs::remove_dir_all(&dir);
     }

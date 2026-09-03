@@ -312,6 +312,24 @@ export default function PlansTab({ project, refresh }: { project: string; refres
                           Aktivieren
                         </button>
                       ) : null}
+                      {!selectedPlan.archived ? (
+                        <button
+                          onClick={() =>
+                            void invoke<string>("project_plan_archive", {
+                              project,
+                              file: selectedPlan.file,
+                            }).then((moved) => {
+                              setSelected(moved);
+                              void list.reload();
+                              void body.reload();
+                            })
+                          }
+                          className="rounded border border-slate-300 px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-100"
+                          title="Nach .agent/plans/archive/ verschieben und lifecycle auf done setzen"
+                        >
+                          Archivieren
+                        </button>
+                      ) : null}
                       <button
                         onClick={() =>
                           void copyPrompt(selectedPlan.file, body.data ?? "")
