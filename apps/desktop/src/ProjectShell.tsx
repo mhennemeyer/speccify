@@ -22,8 +22,8 @@ import WorkflowBanner from "./views/project/WorkflowBanner";
 
 const TABS = [
   { id: "board", label: "Board" },
-  { id: "plans", label: "Pläne" },
   { id: "playbooks", label: "Playbooks" },
+  { id: "plans", label: "Pläne" },
   { id: "skills", label: "Skills" },
   { id: "tools", label: "Tools" },
   { id: "actions", label: "Aktionen" },
