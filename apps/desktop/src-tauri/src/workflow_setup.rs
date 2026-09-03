@@ -101,12 +101,33 @@ fn skills_link_present(root: &Path, host_dir: &str) -> bool {
     link.is_dir() || link.is_symlink()
 }
 
+/// Gits Symlink-Hülse: mit `core.symlinks=false` (Windows-Standard) checkt
+/// Git einen committeten Symlink als kleine Textdatei aus, deren Inhalt der
+/// Zielpfad ist. Die App darf sie ersetzen — sie *meint* den Link ja schon.
+/// Ohne diese Erkennung war der Einrichten-Knopf auf Windows wirkungslos:
+/// der Status meldete den Link als fehlend, Install sah `exists()` und
+/// ließ die Datei stehen (Kollegen-Fund, 2026-09-03).
+fn is_symlink_stub(link: &Path) -> bool {
+    if !link.is_file() {
+        return false;
+    }
+    match std::fs::read_to_string(link) {
+        Ok(content) => {
+            let content = content.trim();
+            content.len() < 260 && content.replace('\\', "/").ends_with(".agent/skills")
+        }
+        Err(_) => false,
+    }
+}
+
 /// `.claude/skills` bzw. `.agents/skills` → `../.agent/skills`. Konservativ:
-/// existiert dort irgendetwas, bleibt es unangetastet (`speccify link`
-/// repariert Sonderfälle wie Gits Symlink-Hülsen).
+/// existiert dort irgendetwas (außer einer Symlink-Hülse), bleibt es
+/// unangetastet.
 fn ensure_skills_link(root: &Path, host_dir: &str) -> Result<(), String> {
     let link = root.join(host_dir).join("skills");
-    if link.exists() || link.is_symlink() {
+    if is_symlink_stub(&link) {
+        std::fs::remove_file(&link).map_err(|e| format!("{}: {e}", link.display()))?;
+    } else if link.exists() || link.is_symlink() {
         return Ok(());
     }
     std::fs::create_dir_all(root.join(".agent/skills"))
@@ -358,6 +379,32 @@ mod tests {
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
         dir
+    }
+
+    #[test]
+    fn skills_link_stub_is_replaced_real_content_is_kept() {
+        let dir = fixture("stub");
+        std::fs::create_dir_all(dir.join(".agent/skills")).unwrap();
+        std::fs::create_dir_all(dir.join(".claude")).unwrap();
+        std::fs::create_dir_all(dir.join(".agents")).unwrap();
+
+        // Gits Symlink-Hülse (Windows-Checkout ohne core.symlinks).
+        std::fs::write(dir.join(".claude/skills"), "../.agent/skills").unwrap();
+        assert!(is_symlink_stub(&dir.join(".claude/skills")));
+        ensure_skills_link(&dir, ".claude").unwrap();
+        assert!(skills_link_present(&dir, ".claude"));
+        assert!(dir.join(".claude/skills").join("..").exists());
+
+        // Eine echte Datei mit anderem Inhalt bleibt unangetastet.
+        std::fs::write(dir.join(".agents/skills"), "hier stehen notizen").unwrap();
+        assert!(!is_symlink_stub(&dir.join(".agents/skills")));
+        ensure_skills_link(&dir, ".agents").unwrap();
+        assert_eq!(
+            std::fs::read_to_string(dir.join(".agents/skills")).unwrap(),
+            "hier stehen notizen"
+        );
+
+        let _ = std::fs::remove_dir_all(&dir);
     }
 
     #[test]
