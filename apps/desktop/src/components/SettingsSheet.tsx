@@ -22,15 +22,14 @@ export default function SettingsSheet({
   onClose: () => void;
 }) {
   return (
-    <div
-      className="fixed inset-0 z-40 flex items-start justify-center bg-slate-900/40 pt-20"
-      onClick={onClose}
-    >
+    // Popover unter dem Zahnrad, ohne Abdunkeln — ein dunkler Schleier
+    // liest sich wie ein Moduswechsel (BO-Finding 2026-09-04).
+    <div className="fixed inset-0 z-40" onClick={onClose}>
       <div
         role="dialog"
         aria-label="Einstellungen"
         onClick={(event) => event.stopPropagation()}
-        className="w-[440px] rounded-xl border border-slate-200 bg-white p-5 shadow-xl"
+        className="absolute right-2 top-9 w-[400px] rounded-xl border border-slate-200 bg-white p-5 shadow-xl"
       >
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-sm font-semibold text-slate-800">Einstellungen</h2>

@@ -38,9 +38,10 @@ in der Toolbar ein- und ausblenden. Ist der Inspektor zu, erscheint das
 Ticket-Detail wie früher unter dem Board. Breiten und Sichtbarkeiten
 merkt sich die App pro Projekt, auch über einen Neustart hinaus.
 
-Das Zahnrad rechts in der Toolbar öffnet die **Einstellungen**:
-Erscheinungsbild (System, Hell, Dunkel — gilt für alle Fenster, auch im
-Dashboard unter *Settings*), Terminal-Position und „Layout zurücksetzen".
+Sonne/Mond rechts in der Toolbar schaltet direkt zwischen Hell und
+Dunkel. Das Zahnrad daneben öffnet die **Einstellungen**: Erscheinungsbild
+(System, Hell, Dunkel — gilt für alle Fenster, auch im Dashboard unter
+*Settings*), Terminal-Position und „Layout zurücksetzen".
 
 ## Die Tabs im Projektfenster
 

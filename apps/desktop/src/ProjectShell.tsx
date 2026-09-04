@@ -13,8 +13,8 @@ import { listen } from "@tauri-apps/api/event";
 import SettingsSheet from "./components/SettingsSheet";
 import SplitHandle from "./components/SplitHandle";
 import TerminalPanel from "./components/TerminalPanel";
-import Toolbar, { GearIcon, PanelIcon, ToolbarButton } from "./components/Toolbar";
-import { useTheme } from "./lib/theme";
+import Toolbar, { GearIcon, MoonIcon, PanelIcon, SunIcon, ToolbarButton } from "./components/Toolbar";
+import { isDark, useTheme } from "./lib/theme";
 import HelpView from "./views/HelpView";
 import { ErrorBox, Spinner } from "./components/ui";
 import { AGENT_PRESETS, DEFAULT_AGENT_COMMAND } from "./lib/agents";
@@ -253,6 +253,12 @@ export default function ProjectShell() {
               <PanelIcon part="right" />
             </ToolbarButton>
             <span className="mx-1 h-4 w-px bg-slate-200" aria-hidden="true" />
+            <ToolbarButton
+              title={isDark(theme) ? "Hell schalten" : "Dunkel schalten"}
+              onClick={() => void setTheme(isDark(theme) ? "light" : "dark")}
+            >
+              {isDark(theme) ? <SunIcon /> : <MoonIcon />}
+            </ToolbarButton>
             <ToolbarButton
               title="Einstellungen"
               onClick={() => setSettingsOpen(true)}

@@ -19,9 +19,13 @@ export function normalizeTheme(value: unknown): ThemePref {
   return value === "light" || value === "dark" ? value : "system";
 }
 
+/** Was gerade tatsächlich gilt (bei `system` entscheidet das OS). */
+export function isDark(pref: ThemePref): boolean {
+  return pref === "dark" || (pref === "system" && media.matches);
+}
+
 export function applyTheme(pref: ThemePref): void {
-  const dark = pref === "dark" || (pref === "system" && media.matches);
-  document.documentElement.dataset.theme = dark ? "dark" : "light";
+  document.documentElement.dataset.theme = isDark(pref) ? "dark" : "light";
 }
 
 function cached(): ThemePref {

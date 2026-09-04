@@ -58,7 +58,7 @@ export function PanelIcon({ part }: { part: "nav" | "right" | "bottom" }) {
   );
 }
 
-export function GearIcon() {
+function Icon({ children }: { children: ReactNode }) {
   return (
     <svg
       width="16"
@@ -71,9 +71,35 @@ export function GearIcon() {
       strokeLinejoin="round"
       aria-hidden="true"
     >
-      <circle cx="8" cy="8" r="2.2" />
-      <path d="M8 1.8v1.7M8 12.5v1.7M1.8 8h1.7M12.5 8h1.7M3.6 3.6l1.2 1.2M11.2 11.2l1.2 1.2M3.6 12.4l1.2-1.2M11.2 4.8l1.2-1.2" />
+      {children}
     </svg>
+  );
+}
+
+/** Zahnrad — mit Zähnen, nicht mit Strahlen (sonst liest man eine Sonne). */
+export function GearIcon() {
+  return (
+    <Icon>
+      <path d="M6.9 1.8h2.2l.4 1.6a5 5 0 0 1 1.3.75l1.55-.55 1.1 1.9-1.2 1.1a5 5 0 0 1 0 1.5l1.2 1.1-1.1 1.9-1.55-.55a5 5 0 0 1-1.3.75l-.4 1.6H6.9l-.4-1.6a5 5 0 0 1-1.3-.75l-1.55.55-1.1-1.9 1.2-1.1a5 5 0 0 1 0-1.5l-1.2-1.1 1.1-1.9 1.55.55a5 5 0 0 1 1.3-.75z" />
+      <circle cx="8" cy="8" r="1.8" />
+    </Icon>
+  );
+}
+
+export function SunIcon() {
+  return (
+    <Icon>
+      <circle cx="8" cy="8" r="2.6" />
+      <path d="M8 1.5v1.6M8 12.9v1.6M1.5 8h1.6M12.9 8h1.6M3.4 3.4l1.1 1.1M11.5 11.5l1.1 1.1M3.4 12.6l1.1-1.1M11.5 4.5l1.1-1.1" />
+    </Icon>
+  );
+}
+
+export function MoonIcon() {
+  return (
+    <Icon>
+      <path d="M13.2 9.6A5.6 5.6 0 0 1 6.4 2.8a5.6 5.6 0 1 0 6.8 6.8z" />
+    </Icon>
   );
 }
 
