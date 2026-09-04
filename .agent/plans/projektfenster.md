@@ -664,7 +664,10 @@ Render-Endlosschleife aus → stabile Callbacks je Tab. Verifikation:
 Typecheck grün; Layout im Browser per Playwright gegen eine
 Tauri-Attrappe (`apps/desktop/dev/mock.html` am Vite-Dev-Server)
 durchgespielt — Griffe, Umdocken, Ein-/Ausblenden, Reload aus
-localStorage. **Offen (W7b):** Pläne/Playbooks/Skills nutzen den
+localStorage. **BO-Entscheid 2026-09-04: Terminal-Default unten** — der
+Inspektor-Fokus bei neuer Auswahl legt das nahe; rechts bleibt als
+Option (Default rightWidth 400, Migration nur noch für alte
+„rechts"-Wahl). **Offen (W7b):** Pläne/Playbooks/Skills nutzen den
 Inspektor noch nicht (ihre Listen könnten in den Navigator, die
 Metadaten in den Inspektor wandern); Tastaturkürzel für die Schalter;
 Prüfung in der echten App auf macOS und Windows durch den BO.

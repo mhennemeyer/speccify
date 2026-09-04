@@ -44,9 +44,9 @@ Projekt öffnet sich in einem **eigenen Fenster** mit den Tabs
 **Board, Playbooks, Pläne, Skills, Tools, Aktionen, MCPs, Agent,
 Hilfe** in einem Navigator links, dem Inhalt in der Mitte und einem
 **Inspektor** rechts, der das Ausgewählte zeigt (etwa ein Ticket mit
-seiner History). Das Agent-Terminal lebt wahlweise als Tab in dieser
-rechten Seitenleiste oder in einer höhenverstellbaren Leiste unten —
-pro Projekt Deine Wahl. Alle drei Bereiche lassen sich ziehen und
+seiner History). Das Agent-Terminal lebt in einer höhenverstellbaren
+Leiste unten oder — pro Projekt Deine Wahl — als Tab in dieser rechten
+Seitenleiste. Alle drei Bereiche lassen sich ziehen und
 über die Toolbar ausblenden, wie in Xcode. Claude Code und Codex sind
 dort gleichberechtigte Presets — nichts im Workflow ist auf einen von
 beiden festgelegt.

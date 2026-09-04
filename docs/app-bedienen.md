@@ -14,8 +14,8 @@ Repository — wer etwas ändern will, ändert diese Datei.
    `.agent/agent.md`, die Skills `/ticket-next` und `/ticket-ask`, die
    Ordner `.agent/board` und `.agent/plans` sowie die Skill-Links für
    Claude Code und Codex an. Bestehendes wird nie überschrieben.
-3. **Agent starten.** Im Tab *Terminal* der rechten Seitenleiste (oder in
-   der Leiste unten — umschaltbar) das Agent-Terminal starten. `Claude`, `Codex` oder ein freies Kommando; leer = nur Shell.
+3. **Agent starten.** In der Leiste unten (oder als Tab in der rechten
+   Seitenleiste — umschaltbar) das Agent-Terminal starten. `Claude`, `Codex` oder ein freies Kommando; leer = nur Shell.
 4. **Plan schreiben, Board arbeiten lassen.** Einen Plan unter *Pläne*
    anlegen oder editieren und auf **active** setzen. Dann dem Agenten im
    Terminal sagen: *„Folge dem Board-Workflow"* (oder `/ticket-next`).
@@ -27,9 +27,9 @@ Repository — wer etwas ändern will, ändert diese Datei.
 Das Fenster folgt dem Muster von Xcode: links der **Navigator** mit den
 Tabs, in der Mitte der Inhalt, rechts der **Inspektor**, der das gerade
 Ausgewählte zeigt — im Board das angeklickte Ticket mit Beschreibung,
-Fragen und History. Das **Agent-Terminal** lebt wahlweise als zweiter
-Tab in der rechten Seitenleiste oder in einer Leiste unten unter dem
-Inhalt; der Knopf *nach unten* / *nach rechts* im Terminal wechselt.
+Fragen und History. Das **Agent-Terminal** lebt in einer Leiste unten
+unter dem Inhalt; wer es lieber rechts hat, legt es mit dem Knopf *nach
+rechts* im Terminal als zweiten Tab in die rechte Seitenleiste.
 Alle drei Bereiche lassen sich am Rand ziehen (Doppelklick auf den Griff
 setzt die Standardbreite zurück) und über die drei Schalter rechts oben
 in der Toolbar ein- und ausblenden. Ist der Inspektor zu, erscheint das

@@ -44,9 +44,8 @@ opens in its **own window** with the tabs **Board, Playbooks, Plans,
 Skills, Tools, Actions, MCPs, Agent, Help** in a navigator on the
 left, the content in the middle, and an **inspector** on the right
 that shows the selected item (a ticket with its history, for
-instance). The agent terminal lives either as a tab in that right
-sidebar or in a resizable bar at the bottom — your choice, per
-project. All three areas can be resized by dragging and hidden with
+instance). The agent terminal lives in a resizable bar at the bottom,
+or — your choice, per project — as a tab in that right sidebar. All three areas can be resized by dragging and hidden with
 the toolbar toggles, the way Xcode does it. Claude Code and Codex are
 equal presets for the terminal — nothing in the workflow is specific
 to either.

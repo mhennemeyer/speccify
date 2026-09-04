@@ -24,15 +24,17 @@ export const LAYOUT_LIMITS = {
   bottom: [140, 800] as const,
 };
 
+// Default: Terminal unten (BO 2026-09-04) — so bleibt der Inspektor rechts
+// frei für die Auswahl und muss nicht mit dem Terminal um den Tab streiten.
 export const DEFAULT_LAYOUT: ProjectLayout = {
   navWidth: 176,
   navShown: true,
-  rightWidth: 480,
+  rightWidth: 400,
   rightShown: true,
-  rightTab: "terminal",
+  rightTab: "inspector",
   bottomHeight: 320,
   bottomShown: true,
-  terminalDock: "right",
+  terminalDock: "bottom",
 };
 
 /** Griffbreite der Splitter in px (Trefferfläche; sichtbar ist 1 px). */
@@ -59,9 +61,9 @@ export function loadLayout(project: string): ProjectLayout {
     if (stored) {
       const parsed = JSON.parse(stored) as Partial<ProjectLayout>;
       Object.assign(layout, parsed);
-    } else if (localStorage.getItem(legacyPositionKey(project)) === "bottom") {
-      layout.terminalDock = "bottom";
-      layout.rightTab = "inspector";
+    } else if (localStorage.getItem(legacyPositionKey(project)) === "right") {
+      layout.terminalDock = "right";
+      layout.rightTab = "terminal";
     }
   } catch {
     // localStorage nicht verfügbar oder kaputt — Default bleibt.
