@@ -13,7 +13,7 @@ die Skills und Tools, die Projekt-Aktionen. Nichts lebt nur in der
 App — jedes Ticket, jeder Plan, jede Einstellung ist eine einfache
 Datei unter `.agent/`, committet mit deinem Code.
 
-![Ein Projektfenster: Board mit aktivem Plan darüber, Agent-Terminal rechts](../../../../assets/app/overview.png)
+![Ein Projektfenster: Navigator mit Icon-Tabs links, Board mit aktivem Plan darüber, das gewählte Ticket im Inspektor rechts, Agent-Terminal unten](../../../../assets/app/overview.png)
 
 ## Die Arbeitsteilung
 

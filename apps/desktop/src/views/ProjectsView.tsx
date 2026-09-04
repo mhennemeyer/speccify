@@ -24,8 +24,9 @@ export default function ProjectsView() {
   return (
     <div className="max-w-xl space-y-4">
       <p className="text-sm text-slate-600">
-        Öffnet ein Projekt in einem eigenen Fenster: links Pläne, Skills, Tools
-        und MCPs des Projekts, rechts ein Agent-Terminal im Projektverzeichnis.
+        Öffnet ein Projekt in einem eigenen Fenster: links Board, Pläne, Skills
+        und Tools des Projekts, rechts der Inspektor, unten ein Agent-Terminal im
+        Projektverzeichnis.
       </p>
       <div>
         <label

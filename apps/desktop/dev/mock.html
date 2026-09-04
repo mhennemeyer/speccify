@@ -4,65 +4,117 @@
     <meta charset="UTF-8" />
     <title>Speccify — Layout-Attrappe</title>
     <script>
-      // Attrappe der Tauri-Brücke für eine Layout-Prüfung im Browser
-      // (nicht Teil des Produkts; wird nach der Prüfung gelöscht).
-      const project = "/Users/me/Projekte/demo";
+      // Attrappe der Tauri-Brücke für Layout-Prüfungen und Website-
+      // Screenshots im Browser (Playwright gegen den Vite-Dev-Server,
+      // http://localhost:1420/dev/mock.html). Kein Produktbestandteil.
+      // Die Daten spiegeln das W1-Fixture-Projekt der E2E-Läufe.
+      const project = "/private/tmp/claude-501/w1-projekt";
       const base = {
-        file: ".agent/board/site-scaffold.md",
-        id: "site-scaffold",
-        title: "Scaffold the site",
-        station: "Doing",
         assignee: null,
-        created: "2026-08-26T08:25:00Z",
+        created: "2026-08-31T09:00:00Z",
         ready: false,
         needs_human: false,
-        order: 1,
-        plan: "projektfenster",
+        order: null,
+        plan: "aufraeumen",
         open_question: null,
-        body: "## Scope\nSmall enough for one agent run.\n\n## Acceptance criteria\nDone when the site builds.",
       };
       const tickets = [
-        base,
-        { ...base, file: ".agent/board/second.md", id: "second", title: "Second ticket", station: "Backlog", order: 2, open_question: "Q1" },
-        { ...base, file: ".agent/board/done-1.md", id: "done-1", title: "Done thing", station: "Done" },
+        {
+          ...base,
+          file: ".agent/board/notizen-zahlen.md",
+          id: "notizen-zahlen",
+          title: "notes/zahlen.md mit Quadratzahlen 1–5 anlegen",
+          station: "Doing",
+          order: 1,
+          body: "## Scope\nEine Notiz `notes/zahlen.md` mit den Quadratzahlen 1–5 als Liste.\n\n## Akzeptanz\nDatei existiert, fünf Zeilen, Zahlen stimmen.",
+        },
+        {
+          ...base,
+          file: ".agent/board/live-test.md",
+          id: "live-test",
+          title: "Live-Reload Beweisticket",
+          station: "Doing",
+          order: 2,
+          open_question: "Q1",
+          body: "Vom Watcher entdeckt, nicht von einem Klick.",
+        },
+        {
+          ...base,
+          file: ".agent/board/notizen-ordner.md",
+          id: "notizen-ordner",
+          title: "Ordner notes/ anlegen",
+          station: "Done",
+          plan: "notizen",
+          body: "Erledigt.",
+        },
       ];
+      const questions = {
+        ".agent/board/live-test.md": [
+          {
+            number: 1,
+            open: true,
+            asked_at: "2026-08-31T11:40:00Z",
+            text: "Soll der Beweis-Text auf Deutsch oder Englisch erscheinen?",
+            answer: null,
+            answered_at: null,
+          },
+        ],
+      };
+      const history = {
+        ".agent/board/notizen-zahlen.md": [
+          { timestamp: "2026-08-31T11:52:10Z", ticket_id: "notizen-zahlen", event_type: "agent_run", actor: "agent", summary: "Skill notizen-anlegen ausgeführt", tokens_in: 30000, tokens_out: 1500 },
+          { timestamp: "2026-08-31T11:50:02Z", ticket_id: "notizen-zahlen", event_type: "station_changed", actor: "agent", summary: "Backlog -> In Progress" },
+          { timestamp: "2026-08-31T11:49:30Z", ticket_id: "notizen-zahlen", event_type: "ticket_created", actor: "agent", summary: "aus Plan aufraeumen geschnitten" },
+        ],
+        ".agent/board/live-test.md": [
+          { timestamp: "2026-08-31T11:52:00Z", ticket_id: "live-test", event_type: "ticket_edited", actor: "user", summary: "Im Editor gespeichert" },
+        ],
+      };
+      const files = {
+        ".agent/plans/aufraeumen.md": "---\nlifecycle: active\nstatus: läuft — Tickets geschnitten\n---\n# Plan: Aufräumen\n\nNotizen sortieren und Altes löschen.\n\n## Schritte\n\n1. `notes/` anlegen\n2. Zahlen-Notiz schreiben\n3. Alte Entwürfe löschen\n",
+        ".agent/plans/archive/notizen.md": "---\nlifecycle: done\n---\n# Notizen\n\nErster Durchlauf.\n",
+        ".agent/playbooks/release.md": "---\ndescription: Vom Tag zum veröffentlichten Release\n---\n# Release\n\n1. Version anheben, committen.\n2. Tag pushen — der Release-Workflow baut beide Plattformen.\n3. Entwurf prüfen, veröffentlichen.\n",
+        ".agent/skills/notizen-anlegen/SKILL.md": "---\nname: notizen-anlegen\ndescription: Legt eine Notiz mit Frontmatter unter notes/ an\n---\n# Notiz anlegen\n\nSchreibe eine Markdown-Datei unter `notes/<slug>.md` mit `title` und `created` im Frontmatter.\n\n## Vorgehen\n\n1. Slug aus dem Titel bilden.\n2. Frontmatter schreiben.\n3. Inhalt als Liste oder Absatz.\n\n## In this project\n\nNotizen liegen unter `notes/`, Datumsformat ISO.\n",
+        ".agent/skills/speccify/SKILL.md": "---\nname: speccify\n---\n# Speccify\n\nExpand → Execute → Evaluate.\n",
+        ".agent/tools/notiz-pruefen/TOOL.md": "---\nname: notiz-pruefen\n---\n# notiz-pruefen\n\nPrüft eine Notiz auf gültiges Frontmatter.\n\n## Inputs\n\n`path` (string)\n\n## Outputs\n\n`ok` (boolean)\n",
+        "CLAUDE.md": "# Speccify agent guidance\n\n@.agent/agent.md\n",
+        ".agent/agent.md": "# w1-projekt\n\nSprache Deutsch. Board-Workflow nach Speccify.\n",
+      };
       const responses = {
         project_current: () => project,
         project_watch_start: () => null,
         project_watch_stop: () => null,
         project_workflow_status: () => ({ state: "current", installed_version: 1, current_version: 1, pending: [] }),
         project_board: () => tickets,
-        project_board_kpis: () => ({ run_count: 3, tokens_in: 12000, tokens_out: 3000, duration_ms: 120000, recent: [] }),
-        project_ticket_history: () => [
-          { timestamp: "2026-09-03T09:05:30Z", ticket_id: "site-scaffold", event_type: "station_changed", actor: "agent", summary: "Backlog -> In Progress" },
-          { timestamp: "2026-09-03T08:55:00Z", ticket_id: "site-scaffold", event_type: "ticket_created", actor: "agent", summary: "angelegt" },
-        ],
-        project_ticket_questions: () => [],
+        project_board_kpis: () => ({ run_count: 1, tokens_in: 30000, tokens_out: 1500, duration_ms: 120000, recent: [] }),
+        project_ticket_history: ({ file }) => history[file] ?? [],
+        project_ticket_questions: ({ file }) => questions[file] ?? [],
+        project_ticket_answer: () => null,
         project_plans: () => [
-          { file: ".agent/plans/projektfenster.md", title: "Projektfenster", lifecycle: "active", status: "Bauen", escalation: null, archived: false },
+          { file: ".agent/plans/aufraeumen.md", title: "Plan: Aufräumen", lifecycle: "active", status: "läuft — Tickets geschnitten", escalation: null, archived: false },
+          { file: ".agent/plans/archive/notizen.md", title: "Notizen", lifecycle: "done", status: null, escalation: null, archived: true },
         ],
-        project_read_file: () => "---\nlifecycle: active\nstatus: Bauen\n---\n# Projektfenster\n\nEin Plan.\n",
+        project_read_file: ({ file }) => files[file] ?? `# ${file}\n\n(leer)\n`,
         project_playbooks: () => [
           { file: ".agent/playbooks/release.md", title: "Release", description: "Vom Tag zum veröffentlichten Release" },
-          { file: ".agent/playbooks/deploy.md", title: "Deploy", description: null },
         ],
         project_skills: () => [
-          { name: "speccify", file: ".agent/skills/speccify/SKILL.md", description: "Expand, execute, evaluate", origin: { source: "github.com/x/skills", version: "0.2.0", expanded: "2026-09-01", tools: [] } },
-          { name: "release-notes", file: ".agent/skills/release-notes/SKILL.md", description: null, origin: null },
+          { name: "notizen-anlegen", file: ".agent/skills/notizen-anlegen/SKILL.md", description: "Legt eine Notiz mit Frontmatter unter notes/ an", origin: { source: "/Users/me/Work/speccify/skills", version: "0.1.0", expanded: "2026-08-31", tools: ["notiz-pruefen"] } },
+          { name: "speccify", file: ".agent/skills/speccify/SKILL.md", description: "Expand, execute, evaluate", origin: { source: "/Users/me/Work/speccify/skills", version: "0.2.0", expanded: "2026-08-31", tools: [] } },
         ],
         project_tools: () => [
-          { name: "notarize", file: ".agent/tools/notarize/TOOL.md", description: "Notarize a dmg", from: ["speccify"], platforms: [{ name: "macos", status: "verified", checked: "2026-09-01" }, { name: "windows", status: null, checked: null }], files: ["macos.sh"] },
+          { name: "notiz-pruefen", file: ".agent/tools/notiz-pruefen/TOOL.md", description: "Prüft eine Notiz auf gültiges Frontmatter", from: ["notizen-anlegen"], platforms: [{ name: "macos", status: "verified", checked: "2026-08-31" }, { name: "windows", status: null, checked: null }], files: ["macos.sh"] },
         ],
         project_actions: () => ({
           actions: [
-            { name: "Tests", command: "uv run pytest", description: "Python-Tests", source: "actions.json", confirmed: true, target: "local" },
-            { name: "Typecheck", command: "pnpm typecheck", description: null, source: "actions.json", confirmed: true, target: "local" },
-            { name: "Lint", command: "uv run ruff check .", description: null, source: "agent", confirmed: false, target: "local" },
+            { name: "Notizen zählen", command: "ls notes", description: "Wie viele Notizen liegen da?", source: "actions.json", confirmed: true, target: "local" },
+            { name: "Tests", command: "uv run pytest", description: null, source: "actions.json", confirmed: true, target: "local" },
+            { name: "Notizen auflisten", command: "ls -la notes", description: null, source: "agent", confirmed: false, target: "local" },
           ],
           pending: [],
         }),
         project_agent_files: () => ["CLAUDE.md", ".agent/agent.md"],
-        project_skill_sources: () => ({ default: null, sources: [] }),
+        project_skill_sources: () => ({ default: "/Users/me/Work/speccify/skills", sources: [] }),
         project_platform: () => "macos",
         project_mcps: () => ({ claude_servers: {}, codex_servers: null, claude_allow: [], claude_allow_local: [] }),
         help_docs: () => [
@@ -70,12 +122,12 @@
           { slug: "toolkit", title: "Toolkit", description: "Werkzeuge", source_path: "docs/toolkit.md" },
         ],
         help_doc: () => "# Die App bedienen\n\nText.\n",
+        get_settings: () => ({ working_dir: null, terminal_autostart_command: "claude", skill_library: null, theme: "light" }),
+        save_settings: () => null,
         terminal_open: () => project,
         terminal_write: () => null,
         terminal_resize: () => null,
         terminal_kill: () => null,
-        get_settings: () => ({ working_dir: null, terminal_autostart_command: "claude", skill_library: null, theme: "system" }),
-        save_settings: () => null,
         "plugin:event|emit": () => null,
         "plugin:event|listen": () => 1,
         "plugin:event|unlisten": () => null,
@@ -96,7 +148,7 @@
           const fn = responses[cmd];
           console.log("[mock invoke]", cmd);
           if (!fn) return Promise.reject(`mock: unbekanntes Kommando ${cmd}`);
-          return Promise.resolve(fn(args));
+          return Promise.resolve(fn(args ?? {}));
         },
       };
     </script>

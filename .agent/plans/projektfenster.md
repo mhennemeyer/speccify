@@ -693,7 +693,13 @@ zurücksetzen). `components/Toolbar.tsx` mit drei Zonen — Mitte nimmt
 Knöpfe (Aktionen mit `toolbar: true`) und ein Aktivitäts-Fenster.
 Navigator-Default 300 px. Layout-Persistenz: localStorage der App
 (WebKit-/WebView2-Datenspeicher, überlebt Neustarts; Dev- und
-Release-Build haben getrennte Speicher). **Offen (W7d):** Metadaten und
+Release-Build haben getrennte Speicher). **Release v0.4.0 (2026-09-04,
+BO-Auftrag):** Version 0.4.0 in package.json/tauri.conf.json/Cargo.toml
+(Cargo.lock zog `tauri dev` selbst nach), die fünf Website-Screenshots
+neu im W7-Layout — aus `dev/mock.html` mit nachgebautem W1-Fixture per
+Playwright (1360×880 @2x, wie die alten Fensteraufnahmen), Tag gepusht →
+release.yml baut den v0.4.0-Draft, pages.yml deployt die Site. **Offen
+(W7d):** Metadaten und
 Aktionen von Plänen/Playbooks in den Inspektor; Toolbar-Knöpfe aus
 actions.json; Aktivitäts-Fenster; Tastaturkürzel; Prüfung in der echten
 App auf macOS und Windows durch den BO.
