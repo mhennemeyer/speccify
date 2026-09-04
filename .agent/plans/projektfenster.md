@@ -642,6 +642,33 @@ Kern-Geste); „Als Prompt kopieren" für Ticket/Plan-Ausschnitt
 Titelleiste (in-memory, cap 500), Orchestrator-Code (D26-Blaupause),
 Detached-Fenster für Pläne/Aktionen.
 
+**W7a ✅ 2026-09-04 — Xcode-/iKanban-Layout (BO-Auftrag).** Frage war,
+ob das Muster Navigator | Inhalt | Inspektor mit Terminal wahlweise
+rechts oder unten unter Tauri Probleme macht. Befund: keine — das
+Fenster ist ein einziges WebView, Splitter und Seitenleisten sind
+reines DOM; die einzige echte Falle ist der PTY: das Terminal muss beim
+Umdocken dasselbe React-Element bleiben, sonst stirbt die Shell. Lösung
+ist ein CSS-Grid in `ProjectShell.tsx`, in dem das Terminal nur seine
+Grid-Zelle wechselt (verifiziert: gleicher DOM-Knoten nach rechts →
+unten → rechts). Geliefert: `lib/layout.ts` (Layout-State, Limits,
+localStorage pro Projekt, Migration des alten `terminalPosition`),
+`components/SplitHandle.tsx` (Pointer-Capture, hält auch über dem
+xterm-Canvas; Doppelklick = Reset), `lib/inspector.tsx` (ein DOM-Slot
+pro Tab in der rechten Seitenleiste, Tabs portalen ihr Detail hinein
+und behalten ihren State; ohne Seitenleiste Fallback inline), Toolbar
+mit drei Xcode-Schaltern, rechte Seitenleiste mit Tabs Inspektor |
+Terminal. Erste Nutzung: das Ticket-Detail des Boards wohnt jetzt im
+Inspektor, eine neue Auswahl holt den Inspektor-Tab nach vorn. Gefunden
+und gefixt beim Prüfen: inline Ref-Callbacks für die Slots lösten eine
+Render-Endlosschleife aus → stabile Callbacks je Tab. Verifikation:
+Typecheck grün; Layout im Browser per Playwright gegen eine
+Tauri-Attrappe (`apps/desktop/dev/mock.html` am Vite-Dev-Server)
+durchgespielt — Griffe, Umdocken, Ein-/Ausblenden, Reload aus
+localStorage. **Offen (W7b):** Pläne/Playbooks/Skills nutzen den
+Inspektor noch nicht (ihre Listen könnten in den Navigator, die
+Metadaten in den Inspektor wandern); Tastaturkürzel für die Schalter;
+Prüfung in der echten App auf macOS und Windows durch den BO.
+
 **Nicht in P5:** alles aus D29; Discovery-/Speccify-MCP-Anbindung der
 iKanbanAI-Seite (wird obsolet — Speccify ist das Produkt selbst).
 

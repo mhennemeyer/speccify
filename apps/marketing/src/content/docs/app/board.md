@@ -59,8 +59,9 @@ work, commit, set it to `Done`. A ticket that turns out too big is
 
 In the app, the active plan sits collapsible **above the board**, so
 you always see what the tickets are sliced from. On the board itself:
-click a card to open the **ticket detail** below the board (body plus
-history), **Edit** opens the editor sheet, drag & drop moves tickets
+click a card to open the **ticket detail** in the inspector on the
+right (body plus history; below the board if the inspector is hidden),
+**Edit** opens the editor sheet, drag & drop moves tickets
 between columns, **+ Ticket** adds one, and the **needs me** filter
 shows only tickets waiting on you. The Done column is grouped by
 `plan`, so finished work stays legible across plans.
@@ -84,4 +85,4 @@ transcript. The board's KPI row is computed from the `agent_run`
 events — runs and effective input — so the cost of the work stays
 visible next to the work.
 
-![A ticket detail under the board: body and history timeline](../../../assets/app/ticket-detail.png)
+![A ticket detail: body and history timeline](../../../assets/app/ticket-detail.png)

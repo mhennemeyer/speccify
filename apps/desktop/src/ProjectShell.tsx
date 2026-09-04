@@ -1,15 +1,30 @@
-// Projektfenster (Plan projektfenster.md, P1): drei Bereiche — links die
-// Bestände (Pläne, Skills, Tools, MCPs, Agent), Mitte der Inhalt des Tabs,
-// rechts das Agent-Terminal im Projekt-cwd. Die Wurzel kommt über
-// `project_current` (Fenster-Label → Registry, D15).
+// Projektfenster (Plan projektfenster.md, P1 → W7-Layout): das Xcode-/
+// iKanban-Muster — Navigator links (Tabs), Inhalt in der Mitte, rechts der
+// Inspektor mit eigenen Tabs; das Agent-Terminal lebt wahlweise als Tab in
+// der rechten Seitenleiste oder als höhenverstellbare Bottom-Bar. Alles
+// ist ein CSS-Grid: das Terminal bleibt dasselbe React-Element und wechselt
+// nur seine Grid-Zelle — sonst würde der PTY beim Umdocken sterben.
+// Die Wurzel kommt über `project_current` (Fenster-Label → Registry, D15).
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
+import SplitHandle from "./components/SplitHandle";
 import TerminalPanel from "./components/TerminalPanel";
 import HelpView from "./views/HelpView";
 import { ErrorBox, Spinner } from "./components/ui";
 import { AGENT_PRESETS, DEFAULT_AGENT_COMMAND } from "./lib/agents";
+import { InspectorContext } from "./lib/inspector";
+import {
+  DEFAULT_LAYOUT,
+  HANDLE_SIZE,
+  LAYOUT_LIMITS,
+  clamp,
+  loadLayout,
+  saveLayout,
+  type ProjectLayout,
+} from "./lib/layout";
 import ActionsTab from "./views/project/ActionsTab";
 import AgentTab from "./views/project/AgentTab";
 import BoardTab from "./views/project/BoardTab";
@@ -40,11 +55,42 @@ function agentCommandKey(project: string) {
   return `speccify.project.agentCommand:${project}`;
 }
 
-/** Terminal-Position pro Projekt (BO-Finding 2026-08-28: rechts ODER unten). */
-type TerminalPosition = "right" | "bottom";
+/** Xcode-artige Umschalter für die drei Bereiche. */
+function PanelIcon({ part }: { part: "nav" | "right" | "bottom" }) {
+  return (
+    <svg width="16" height="14" viewBox="0 0 16 14" aria-hidden="true">
+      <rect x="0.5" y="0.5" width="15" height="13" rx="2" fill="none" stroke="currentColor" />
+      {part === "nav" ? <rect x="1" y="1" width="5" height="12" fill="currentColor" /> : null}
+      {part === "right" ? <rect x="10" y="1" width="5" height="12" fill="currentColor" /> : null}
+      {part === "bottom" ? <rect x="1" y="9" width="14" height="4" fill="currentColor" /> : null}
+    </svg>
+  );
+}
 
-function terminalPositionKey(project: string) {
-  return `speccify.project.terminalPosition:${project}`;
+function ToolbarToggle({
+  active,
+  title,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  title: string;
+  onClick: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={title}
+      aria-pressed={active}
+      className={`rounded px-1.5 py-1 ${
+        active ? "text-slate-800 hover:bg-slate-200" : "text-slate-400 hover:bg-slate-200 hover:text-slate-700"
+      }`}
+    >
+      {children}
+    </button>
+  );
 }
 
 export default function ProjectShell() {
@@ -53,7 +99,8 @@ export default function ProjectShell() {
   const [active, setActive] = useState<TabId>("plans");
   const [agentCommand, setAgentCommand] = useState(DEFAULT_AGENT_COMMAND);
   const [terminalStarted, setTerminalStarted] = useState(false);
-  const [terminalPosition, setTerminalPosition] = useState<TerminalPosition>("right");
+  const [layout, setLayout] = useState<ProjectLayout>(DEFAULT_LAYOUT);
+  const [slots, setSlots] = useState<Record<string, HTMLElement | null>>({});
 
   useEffect(() => {
     void invoke<string | null>("project_current")
@@ -63,12 +110,10 @@ export default function ProjectShell() {
           return;
         }
         setProject(root);
+        setLayout(loadLayout(root));
         try {
           const stored = localStorage.getItem(agentCommandKey(root));
           if (stored !== null) setAgentCommand(stored);
-          if (localStorage.getItem(terminalPositionKey(root)) === "bottom") {
-            setTerminalPosition("bottom");
-          }
         } catch {
           // localStorage nicht verfügbar — Default bleibt.
         }
@@ -95,17 +140,16 @@ export default function ProjectShell() {
     };
   }, [project]);
 
-  const toggleTerminalPosition = () => {
-    const next: TerminalPosition = terminalPosition === "right" ? "bottom" : "right";
-    setTerminalPosition(next);
-    if (project) {
-      try {
-        localStorage.setItem(terminalPositionKey(project), next);
-      } catch {
-        // dito
-      }
-    }
-  };
+  const updateLayout = useCallback(
+    (patch: Partial<ProjectLayout> | ((previous: ProjectLayout) => Partial<ProjectLayout>)) => {
+      setLayout((previous) => {
+        const next = { ...previous, ...(typeof patch === "function" ? patch(previous) : patch) };
+        if (project) saveLayout(project, next);
+        return next;
+      });
+    },
+    [project],
+  );
 
   const updateAgentCommand = (value: string) => {
     setAgentCommand(value);
@@ -117,6 +161,28 @@ export default function ProjectShell() {
       }
     }
   };
+
+  // Stabile Ref-Callbacks je Tab: ein inline erzeugter Ref würde bei jedem
+  // Render neu gesetzt (null → Element) und über setSlots eine Endlosschleife
+  // auslösen. So feuern sie nur bei Mount/Unmount des Slots.
+  const slotRefs = useMemo(() => {
+    const refs: Record<string, (element: HTMLElement | null) => void> = {};
+    for (const tab of TABS) {
+      refs[tab.id] = (element) =>
+        setSlots((previous) =>
+          previous[tab.id] === element ? previous : { ...previous, [tab.id]: element },
+        );
+    }
+    return refs;
+  }, []);
+
+  const inspectorApi = useMemo(
+    () => ({
+      slots,
+      reveal: () => updateLayout((previous) => (previous.rightShown ? { rightTab: "inspector" } : {})),
+    }),
+    [slots, updateLayout],
+  );
 
   if (error) {
     return (
@@ -133,139 +199,294 @@ export default function ProjectShell() {
     );
   }
 
+  const { navShown, rightShown, terminalDock } = layout;
+  const bottomVisible = terminalDock === "bottom" && layout.bottomShown;
+  const terminalVisible =
+    terminalDock === "right" ? rightShown && layout.rightTab === "terminal" : bottomVisible;
+  const inspectorVisible = rightShown && (terminalDock === "bottom" || layout.rightTab === "inspector");
+
+  // Spalten: Navigator | Griff | Inhalt | Griff | rechte Seitenleiste.
+  // Zeilen: Toolbar | Tabzeile rechts | Körper | Griff | Bottom-Bar.
+  const gridStyle: CSSProperties = {
+    display: "grid",
+    gridTemplateColumns: [
+      `${navShown ? layout.navWidth : 0}px`,
+      `${navShown ? HANDLE_SIZE : 0}px`,
+      "minmax(0, 1fr)",
+      `${rightShown ? HANDLE_SIZE : 0}px`,
+      `${rightShown ? layout.rightWidth : 0}px`,
+    ].join(" "),
+    gridTemplateRows: [
+      "auto",
+      "auto",
+      "minmax(0, 1fr)",
+      `${bottomVisible ? HANDLE_SIZE : 0}px`,
+      `${bottomVisible ? layout.bottomHeight : 0}px`,
+    ].join(" "),
+  };
+  const terminalCell: CSSProperties =
+    terminalDock === "right"
+      ? { gridColumn: 5, gridRow: "3 / -1" }
+      : { gridColumn: 3, gridRow: 5 };
+
+  const dockLabel = terminalDock === "right" ? "⬓ nach unten" : "⬔ nach rechts";
+  const toggleDock = () =>
+    updateLayout((previous) =>
+      previous.terminalDock === "right"
+        ? { terminalDock: "bottom", bottomShown: true, rightTab: "inspector" }
+        : { terminalDock: "right", rightShown: true, rightTab: "terminal" },
+    );
+
   return (
-    <div className="flex h-screen bg-slate-50 text-slate-900">
-      <nav className="flex w-40 shrink-0 flex-col border-r border-slate-200 bg-white p-3">
-        <h1
-          className="mb-1 truncate px-2 text-sm font-bold text-slate-700"
-          title={project}
+    <InspectorContext.Provider value={inspectorApi}>
+      <div className="h-screen bg-slate-50 text-slate-900" style={gridStyle}>
+        {/* Toolbar */}
+        <header
+          className="flex items-center gap-3 border-b border-slate-200 bg-white px-3 py-1"
+          style={{ gridColumn: "1 / -1", gridRow: 1 }}
         >
-          {project.split(/[\\/]/).pop() || project}
-        </h1>
-        <p className="mb-4 truncate px-2 font-mono text-[10px] text-slate-400" title={project}>
-          {project}
-        </p>
-        {TABS.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActive(tab.id)}
-            className={`mb-1 rounded px-3 py-2 text-left text-sm ${
-              active === tab.id
-                ? "bg-slate-800 text-white"
-                : "text-slate-700 hover:bg-slate-100"
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </nav>
-
-      <div
-        className={`flex min-h-0 min-w-0 flex-1 ${
-          terminalPosition === "right" ? "flex-row" : "flex-col"
-        }`}
-      >
-      <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-5">
-        <WorkflowBanner project={project} />
-        {/* Tabs bleiben gemountet (nur versteckt): Wechsel sofortig, Fetch-State erhalten. */}
-        <div className={active === "board" ? "min-h-0 flex-1" : "hidden"}>
-          <BoardTab project={project} refresh={refresh.board} planRefresh={refresh.plans} />
-        </div>
-        <div className={active === "plans" ? "min-h-0 flex-1" : "hidden"}>
-          <PlansTab project={project} refresh={refresh.plans} />
-        </div>
-        <div className={active === "playbooks" ? "min-h-0 flex-1" : "hidden"}>
-          <PlaybooksTab project={project} refresh={refresh.playbooks} />
-        </div>
-        <div className={active === "skills" ? "min-h-0 flex-1" : "hidden"}>
-          <SkillsTab project={project} refresh={refresh.skills} />
-        </div>
-        <div className={active === "tools" ? "min-h-0 flex-1" : "hidden"}>
-          <ToolsTab project={project} refresh={refresh.tools} />
-        </div>
-        <div className={active === "actions" ? "min-h-0 flex-1" : "hidden"}>
-          <ActionsTab project={project} refresh={refresh.actions} />
-        </div>
-        <div className={active === "mcps" ? "min-h-0 flex-1" : "hidden"}>
-          <McpsTab project={project} refresh={refresh.mcps} />
-        </div>
-        <div className={active === "help" ? "min-h-0 flex-1" : "hidden"}>
-          <HelpView />
-        </div>
-        <div className={active === "agent" ? "min-h-0 flex-1" : "hidden"}>
-          <AgentTab
-            project={project}
-            refresh={refresh.agent}
-            agentCommand={agentCommand}
-            onAgentCommand={updateAgentCommand}
-          />
-        </div>
-      </main>
-
-      <aside
-        className={`flex shrink-0 flex-col border-slate-700 bg-slate-900 ${
-          terminalPosition === "right" ? "w-[480px] border-l" : "h-[320px] border-t"
-        }`}
-      >
-        <div className="flex justify-end px-2 pt-1">
-          <button
-            onClick={toggleTerminalPosition}
-            title={
-              terminalPosition === "right"
-                ? "Terminal nach unten legen"
-                : "Terminal nach rechts legen"
-            }
-            className="rounded px-2 py-0.5 text-xs text-slate-500 hover:bg-slate-800 hover:text-slate-300"
-          >
-            {terminalPosition === "right" ? "⬓ unten" : "⬔ rechts"}
-          </button>
-        </div>
-        {terminalStarted ? (
-          <TerminalPanel visible cwd={project} autostart={agentCommand} />
-        ) : (
-          <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6">
-            <label className="w-full max-w-xs">
-              <span className="mb-1 block text-xs font-medium text-slate-400">
-                Agent-Kommando (leer = nur Shell)
-              </span>
-              <input
-                value={agentCommand}
-                onChange={(event) => updateAgentCommand(event.target.value)}
-                placeholder="claude"
-                spellCheck={false}
-                className="w-full rounded border border-slate-600 bg-slate-800 px-3 py-2 font-mono text-sm text-slate-100"
-              />
-              <span className="mt-2 flex flex-wrap gap-1.5">
-                {AGENT_PRESETS.map((preset) => (
-                  <button
-                    key={preset.id}
-                    type="button"
-                    onClick={() => updateAgentCommand(preset.command)}
-                    className={`rounded px-2 py-1 text-xs ${
-                      agentCommand === preset.command
-                        ? "bg-slate-600 text-white"
-                        : "bg-slate-800 text-slate-400 hover:text-slate-200"
-                    }`}
-                  >
-                    {preset.label}
-                  </button>
-                ))}
-              </span>
-            </label>
-            <button
-              onClick={() => setTerminalStarted(true)}
-              className="rounded bg-slate-700 px-4 py-2 text-sm text-slate-200 hover:bg-slate-600"
+          <h1 className="truncate text-sm font-bold text-slate-700" title={project}>
+            {project.split(/[\\/]/).pop() || project}
+          </h1>
+          <p className="min-w-0 flex-1 truncate font-mono text-[10px] text-slate-400" title={project}>
+            {project}
+          </p>
+          <div className="flex items-center gap-0.5">
+            <ToolbarToggle
+              active={navShown}
+              title={navShown ? "Navigator ausblenden" : "Navigator einblenden"}
+              onClick={() => updateLayout({ navShown: !navShown })}
             >
-              Agent-Terminal starten
-            </button>
-            <p className="max-w-xs text-center text-xs text-slate-500">
-              Startet im Projektverzeichnis — Skills leben unter{" "}
-              <code>.agent/skills</code> und werden für den gewählten Host verlinkt.
-            </p>
+              <PanelIcon part="nav" />
+            </ToolbarToggle>
+            <ToolbarToggle
+              active={bottomVisible}
+              title={
+                terminalDock === "bottom"
+                  ? bottomVisible
+                    ? "Terminal unten ausblenden"
+                    : "Terminal unten einblenden"
+                  : "Terminal nach unten legen"
+              }
+              onClick={() =>
+                terminalDock === "bottom"
+                  ? updateLayout({ bottomShown: !layout.bottomShown })
+                  : toggleDock()
+              }
+            >
+              <PanelIcon part="bottom" />
+            </ToolbarToggle>
+            <ToolbarToggle
+              active={rightShown}
+              title={rightShown ? "Inspektor ausblenden" : "Inspektor einblenden"}
+              onClick={() => updateLayout({ rightShown: !rightShown })}
+            >
+              <PanelIcon part="right" />
+            </ToolbarToggle>
           </div>
-        )}
-      </aside>
+        </header>
+
+        {/* Navigator */}
+        <nav
+          className={`${navShown ? "flex" : "hidden"} min-h-0 flex-col overflow-y-auto border-r border-slate-200 bg-white p-2`}
+          style={{ gridColumn: 1, gridRow: "2 / -1" }}
+        >
+          {TABS.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActive(tab.id)}
+              className={`mb-1 truncate rounded px-3 py-1.5 text-left text-sm ${
+                active === tab.id ? "bg-slate-800 text-white" : "text-slate-700 hover:bg-slate-100"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </nav>
+        {navShown ? (
+          <SplitHandle
+            axis="x"
+            size={layout.navWidth}
+            onResize={(next) => updateLayout({ navWidth: clamp(next, LAYOUT_LIMITS.nav) })}
+            onReset={() => updateLayout({ navWidth: DEFAULT_LAYOUT.navWidth })}
+            style={{ gridColumn: 2, gridRow: "2 / -1" }}
+          />
+        ) : null}
+
+        {/* Inhalt */}
+        <main
+          className="flex min-h-0 min-w-0 flex-col overflow-hidden p-5"
+          style={{ gridColumn: 3, gridRow: "2 / 4" }}
+        >
+          <WorkflowBanner project={project} />
+          {/* Tabs bleiben gemountet (nur versteckt): Wechsel sofortig, Fetch-State erhalten. */}
+          <div className={active === "board" ? "min-h-0 flex-1" : "hidden"}>
+            <BoardTab project={project} refresh={refresh.board} planRefresh={refresh.plans} />
+          </div>
+          <div className={active === "plans" ? "min-h-0 flex-1" : "hidden"}>
+            <PlansTab project={project} refresh={refresh.plans} />
+          </div>
+          <div className={active === "playbooks" ? "min-h-0 flex-1" : "hidden"}>
+            <PlaybooksTab project={project} refresh={refresh.playbooks} />
+          </div>
+          <div className={active === "skills" ? "min-h-0 flex-1" : "hidden"}>
+            <SkillsTab project={project} refresh={refresh.skills} />
+          </div>
+          <div className={active === "tools" ? "min-h-0 flex-1" : "hidden"}>
+            <ToolsTab project={project} refresh={refresh.tools} />
+          </div>
+          <div className={active === "actions" ? "min-h-0 flex-1" : "hidden"}>
+            <ActionsTab project={project} refresh={refresh.actions} />
+          </div>
+          <div className={active === "mcps" ? "min-h-0 flex-1" : "hidden"}>
+            <McpsTab project={project} refresh={refresh.mcps} />
+          </div>
+          <div className={active === "help" ? "min-h-0 flex-1" : "hidden"}>
+            <HelpView />
+          </div>
+          <div className={active === "agent" ? "min-h-0 flex-1" : "hidden"}>
+            <AgentTab
+              project={project}
+              refresh={refresh.agent}
+              agentCommand={agentCommand}
+              onAgentCommand={updateAgentCommand}
+            />
+          </div>
+        </main>
+
+        {/* Bottom-Bar-Griff (nur bei Terminal unten) */}
+        {bottomVisible ? (
+          <SplitHandle
+            axis="y"
+            size={layout.bottomHeight}
+            invert
+            onResize={(next) => updateLayout({ bottomHeight: clamp(next, LAYOUT_LIMITS.bottom) })}
+            onReset={() => updateLayout({ bottomHeight: DEFAULT_LAYOUT.bottomHeight })}
+            style={{ gridColumn: 3, gridRow: 4 }}
+          />
+        ) : null}
+
+        {/* Rechte Seitenleiste: Griff, Tabzeile, Inspektor */}
+        {rightShown ? (
+          <SplitHandle
+            axis="x"
+            size={layout.rightWidth}
+            invert
+            onResize={(next) => updateLayout({ rightWidth: clamp(next, LAYOUT_LIMITS.right) })}
+            onReset={() => updateLayout({ rightWidth: DEFAULT_LAYOUT.rightWidth })}
+            style={{ gridColumn: 4, gridRow: "2 / -1" }}
+          />
+        ) : null}
+        <div
+          className={`${rightShown ? "flex" : "hidden"} items-stretch border-b border-l border-slate-200 bg-white text-xs`}
+          style={{ gridColumn: 5, gridRow: 2 }}
+        >
+          {(terminalDock === "right"
+            ? ([
+                ["inspector", "Inspektor"],
+                ["terminal", "Terminal"],
+              ] as const)
+            : ([["inspector", "Inspektor"]] as const)
+          ).map(([id, label]) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => updateLayout({ rightTab: id })}
+              className={`px-3 py-1.5 font-medium ${
+                layout.rightTab === id || terminalDock === "bottom"
+                  ? "border-b-2 border-slate-800 text-slate-800"
+                  : "text-slate-400 hover:text-slate-700"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        <aside
+          className={`inspector-body ${inspectorVisible ? "flex" : "hidden"} min-h-0 flex-col overflow-y-auto border-l border-slate-200 bg-white`}
+          style={{ gridColumn: 5, gridRow: "3 / -1" }}
+        >
+          {/* Ein Slot pro Tab — nur der aktive ist sichtbar; die Tabs
+              portalen ihr Detail hinein (lib/inspector.tsx). */}
+          {rightShown
+            ? TABS.map((tab) => (
+                <div
+                  key={tab.id}
+                  ref={slotRefs[tab.id]}
+                  data-slot={tab.id}
+                  className={`${active === tab.id ? "flex" : "hidden"} min-h-0 flex-1 flex-col`}
+                />
+              ))
+            : null}
+          <p className="inspector-placeholder p-4 text-xs text-slate-400">
+            Nichts ausgewählt. Wähle ein Ticket im Board, um es hier zu sehen.
+          </p>
+        </aside>
+
+        {/* Agent-Terminal: ein Element, zwei mögliche Grid-Zellen */}
+        <section
+          className={`${terminalVisible ? "flex" : "hidden"} min-h-0 min-w-0 flex-col bg-slate-900 ${
+            terminalDock === "right" ? "border-l border-slate-700" : "border-t border-slate-700"
+          }`}
+          style={terminalCell}
+        >
+          <div className="flex justify-end px-2 pt-1">
+            <button
+              onClick={toggleDock}
+              title={
+                terminalDock === "right" ? "Terminal nach unten legen" : "Terminal nach rechts legen"
+              }
+              className="rounded px-2 py-0.5 text-xs text-slate-500 hover:bg-slate-800 hover:text-slate-300"
+            >
+              {dockLabel}
+            </button>
+          </div>
+          {terminalStarted ? (
+            <TerminalPanel visible={terminalVisible} cwd={project} autostart={agentCommand} />
+          ) : (
+            <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6">
+              <label className="w-full max-w-xs">
+                <span className="mb-1 block text-xs font-medium text-slate-400">
+                  Agent-Kommando (leer = nur Shell)
+                </span>
+                <input
+                  value={agentCommand}
+                  onChange={(event) => updateAgentCommand(event.target.value)}
+                  placeholder="claude"
+                  spellCheck={false}
+                  className="w-full rounded border border-slate-600 bg-slate-800 px-3 py-2 font-mono text-sm text-slate-100"
+                />
+                <span className="mt-2 flex flex-wrap gap-1.5">
+                  {AGENT_PRESETS.map((preset) => (
+                    <button
+                      key={preset.id}
+                      type="button"
+                      onClick={() => updateAgentCommand(preset.command)}
+                      className={`rounded px-2 py-1 text-xs ${
+                        agentCommand === preset.command
+                          ? "bg-slate-600 text-white"
+                          : "bg-slate-800 text-slate-400 hover:text-slate-200"
+                      }`}
+                    >
+                      {preset.label}
+                    </button>
+                  ))}
+                </span>
+              </label>
+              <button
+                onClick={() => setTerminalStarted(true)}
+                className="rounded bg-slate-700 px-4 py-2 text-sm text-slate-200 hover:bg-slate-600"
+              >
+                Agent-Terminal starten
+              </button>
+              <p className="max-w-xs text-center text-xs text-slate-500">
+                Startet im Projektverzeichnis — Skills leben unter{" "}
+                <code>.agent/skills</code> und werden für den gewählten Host verlinkt.
+              </p>
+            </div>
+          )}
+        </section>
       </div>
-    </div>
+    </InspectorContext.Provider>
   );
 }

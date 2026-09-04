@@ -9,6 +9,7 @@ import { invoke } from "@tauri-apps/api/core";
 import Markdown, { stripFrontmatter } from "../../components/Markdown";
 import { LoadingBoundary, useAsync } from "../../components/ui";
 import { copyPrompt } from "../../lib/prompt";
+import { InspectorPortal, useInspector } from "../../lib/inspector";
 import type { PlanEntry } from "./PlansTab";
 
 export interface TicketEntry {
@@ -417,6 +418,7 @@ function TicketDetail({
   busy,
   onEdit,
   onClose,
+  inInspector,
 }: {
   ticket: TicketEntry;
   history: HistoryEvent[];
@@ -425,10 +427,19 @@ function TicketDetail({
   busy: boolean;
   onEdit: () => void;
   onClose: () => void;
+  /** Im Inspektor (W7) füllt das Detail die Seitenleiste; inline ist es
+   *  ein Panel unter dem Board (Fallback ohne Seitenleiste). */
+  inInspector: boolean;
 }) {
   const shown = history.slice(0, 100);
   return (
-    <div className="mt-3 max-h-[45%] overflow-y-auto rounded-lg border border-slate-200 bg-white p-4">
+    <div
+      className={
+        inInspector
+          ? "min-h-0 flex-1 overflow-y-auto p-4"
+          : "mt-3 max-h-[45%] overflow-y-auto rounded-lg border border-slate-200 bg-white p-4"
+      }
+    >
       <div className="mb-2 flex items-center justify-between">
         <h3 className="text-sm font-semibold text-slate-800">
           {ticket.title}{" "}
@@ -539,7 +550,14 @@ export default function BoardTab({
     () => invoke<KpiSummary>("project_board_kpis", { project }),
     `board-kpis:${project}`,
   );
-  const [selected, setSelected] = useState<string | null>(null);
+  const [selected, setSelectedState] = useState<string | null>(null);
+  // W7: das Ticket-Detail wohnt im Inspektor; eine neue Auswahl holt den
+  // Inspektor-Tab nach vorn (ohne die Seitenleiste ungefragt zu öffnen).
+  const inspector = useInspector("board");
+  const setSelected = (file: string | null) => {
+    setSelectedState(file);
+    if (file) inspector.reveal();
+  };
   const [sheet, setSheet] = useState<SheetState | null>(null);
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -760,24 +778,27 @@ export default function BoardTab({
           })}
         </div>
         {selectedTicket ? (
-          <TicketDetail
-            ticket={selectedTicket}
-            history={history.data ?? []}
-            questions={questions.data ?? []}
-            onAnswer={(number, text) =>
-              void run(() =>
-                invoke("project_ticket_answer", {
-                  project,
-                  file: selectedTicket.file,
-                  number,
-                  text,
-                }),
-              )
-            }
-            busy={busy}
-            onEdit={() => setSheet(sheetFor(selectedTicket))}
-            onClose={() => setSelected(null)}
-          />
+          <InspectorPortal tab="board">
+            <TicketDetail
+              ticket={selectedTicket}
+              history={history.data ?? []}
+              questions={questions.data ?? []}
+              onAnswer={(number, text) =>
+                void run(() =>
+                  invoke("project_ticket_answer", {
+                    project,
+                    file: selectedTicket.file,
+                    number,
+                    text,
+                  }),
+                )
+              }
+              busy={busy}
+              onEdit={() => setSheet(sheetFor(selectedTicket))}
+              onClose={() => setSelected(null)}
+              inInspector={inspector.slot !== null}
+            />
+          </InspectorPortal>
         ) : null}
         {sheet ? (
           <TicketSheet

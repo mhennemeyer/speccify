@@ -89,3 +89,8 @@
   border-top: 1px solid var(--color-slate-200);
   margin: 1rem 0;
 }
+
+/* Inspektor (W7): Platzhalter nur, solange der sichtbare Slot leer ist. */
+.inspector-body:has([data-slot].flex:not(:empty)) .inspector-placeholder {
+  display: none;
+}

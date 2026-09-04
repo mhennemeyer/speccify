@@ -62,8 +62,9 @@ statt halbfertig liegengelassen.
 
 In der App liegt der aktive Plan aufklappbar **über dem Board** — du
 siehst immer, woraus die Tickets geschnitten sind. Auf dem Board
-selbst: Klick auf eine Karte öffnet das **Ticket-Detail** unter dem
-Board (Body plus History), **Bearbeiten** öffnet das Editor-Sheet,
+selbst: Klick auf eine Karte öffnet das **Ticket-Detail** im Inspektor
+rechts (Body plus History; unter dem Board, wenn der Inspektor zu ist),
+**Bearbeiten** öffnet das Editor-Sheet,
 Drag & Drop verschiebt Tickets zwischen Spalten, **+ Ticket** legt
 eines an, und der Filter **braucht mich** zeigt nur Tickets, die auf
 dich warten. Die Done-Spalte ist nach `plan` gruppiert, damit fertige
@@ -89,4 +90,4 @@ Die KPI-Zeile des Boards rechnet sich aus den `agent_run`-Events —
 Läufe und effektiver Input — so bleiben die Kosten der Arbeit neben
 der Arbeit sichtbar.
 
-![Ein Ticket-Detail unter dem Board: Beschreibung und History](../../../../assets/app/ticket-detail.png)
+![Ein Ticket-Detail: Beschreibung und History](../../../../assets/app/ticket-detail.png)

@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Speccify — Layout-Attrappe</title>
+    <script>
+      // Attrappe der Tauri-Brücke für eine Layout-Prüfung im Browser
+      // (nicht Teil des Produkts; wird nach der Prüfung gelöscht).
+      const project = "/Users/me/Projekte/demo";
+      const base = {
+        file: ".agent/board/site-scaffold.md",
+        id: "site-scaffold",
+        title: "Scaffold the site",
+        station: "Doing",
+        assignee: null,
+        created: "2026-08-26T08:25:00Z",
+        ready: false,
+        needs_human: false,
+        order: 1,
+        plan: "projektfenster",
+        open_question: null,
+        body: "## Scope\nSmall enough for one agent run.\n\n## Acceptance criteria\nDone when the site builds.",
+      };
+      const tickets = [
+        base,
+        { ...base, file: ".agent/board/second.md", id: "second", title: "Second ticket", station: "Backlog", order: 2, open_question: "Q1" },
+        { ...base, file: ".agent/board/done-1.md", id: "done-1", title: "Done thing", station: "Done" },
+      ];
+      const responses = {
+        project_current: () => project,
+        project_watch_start: () => null,
+        project_watch_stop: () => null,
+        project_workflow_status: () => ({ state: "current", installed_version: 1, current_version: 1, pending: [] }),
+        project_board: () => tickets,
+        project_board_kpis: () => ({ run_count: 3, tokens_in: 12000, tokens_out: 3000, duration_ms: 120000, recent: [] }),
+        project_ticket_history: () => [
+          { timestamp: "2026-09-03T09:05:30Z", ticket_id: "site-scaffold", event_type: "station_changed", actor: "agent", summary: "Backlog -> In Progress" },
+          { timestamp: "2026-09-03T08:55:00Z", ticket_id: "site-scaffold", event_type: "ticket_created", actor: "agent", summary: "angelegt" },
+        ],
+        project_ticket_questions: () => [],
+        project_plans: () => [
+          { file: ".agent/plans/projektfenster.md", title: "Projektfenster", lifecycle: "active", status: "Bauen", escalation: null, archived: false },
+        ],
+        project_read_file: () => "---\nlifecycle: active\nstatus: Bauen\n---\n# Projektfenster\n\nEin Plan.\n",
+        project_playbooks: () => [],
+        project_skills: () => [],
+        project_tools: () => [],
+        project_actions: () => [],
+        project_agent_files: () => [],
+        project_skill_sources: () => [],
+        project_platform: () => "macos",
+        help_docs: () => [],
+        terminal_open: () => project,
+        terminal_write: () => null,
+        terminal_resize: () => null,
+        terminal_kill: () => null,
+        "plugin:event|listen": () => 1,
+        "plugin:event|unlisten": () => null,
+      };
+      let callbackId = 0;
+      window.__TAURI_INTERNALS__ = {
+        metadata: {
+          currentWindow: { label: "project-mock" },
+          currentWebview: { label: "project-mock", windowLabel: "project-mock" },
+        },
+        transformCallback(callback) {
+          const id = ++callbackId;
+          window[`_${id}`] = callback;
+          return id;
+        },
+        convertFileSrc: (path) => path,
+        invoke(cmd, args) {
+          const fn = responses[cmd];
+          console.log("[mock invoke]", cmd);
+          if (!fn) return Promise.reject(`mock: unbekanntes Kommando ${cmd}`);
+          return Promise.resolve(fn(args));
+        },
+      };
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

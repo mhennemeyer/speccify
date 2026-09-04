@@ -41,9 +41,15 @@ both hosts see the same skills.
 The app starts on a **dashboard** — your projects, plus the shared
 pieces: library, environment, servers, agents, settings. Each project
 opens in its **own window** with the tabs **Board, Playbooks, Plans,
-Skills, Tools, Actions, MCPs, Agent, Help** and an agent terminal on the right or
-at the bottom (switchable). Claude Code and Codex are equal presets
-for that terminal — nothing in the workflow is specific to either.
+Skills, Tools, Actions, MCPs, Agent, Help** in a navigator on the
+left, the content in the middle, and an **inspector** on the right
+that shows the selected item (a ticket with its history, for
+instance). The agent terminal lives either as a tab in that right
+sidebar or in a resizable bar at the bottom — your choice, per
+project. All three areas can be resized by dragging and hidden with
+the toolbar toggles, the way Xcode does it. Claude Code and Codex are
+equal presets for the terminal — nothing in the workflow is specific
+to either.
 
 - **[The board](/app/board/)** — tickets in `Backlog`,
   `In Progress`, `Done`; per-ticket history; badges for tickets that

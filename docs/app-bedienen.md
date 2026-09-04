@@ -14,19 +14,33 @@ Repository — wer etwas ändern will, ändert diese Datei.
    `.agent/agent.md`, die Skills `/ticket-next` und `/ticket-ask`, die
    Ordner `.agent/board` und `.agent/plans` sowie die Skill-Links für
    Claude Code und Codex an. Bestehendes wird nie überschrieben.
-3. **Agent starten.** Rechts (oder unten — umschaltbar) das Agent-Terminal
-   starten. `Claude`, `Codex` oder ein freies Kommando; leer = nur Shell.
+3. **Agent starten.** Im Tab *Terminal* der rechten Seitenleiste (oder in
+   der Leiste unten — umschaltbar) das Agent-Terminal starten. `Claude`, `Codex` oder ein freies Kommando; leer = nur Shell.
 4. **Plan schreiben, Board arbeiten lassen.** Einen Plan unter *Pläne*
    anlegen oder editieren und auf **active** setzen. Dann dem Agenten im
    Terminal sagen: *„Folge dem Board-Workflow"* (oder `/ticket-next`).
    Er schneidet Tickets aus dem Plan und arbeitet sie einzeln ab — das
    Board zeigt alles live.
 
+## Der Aufbau des Projektfensters
+
+Das Fenster folgt dem Muster von Xcode: links der **Navigator** mit den
+Tabs, in der Mitte der Inhalt, rechts der **Inspektor**, der das gerade
+Ausgewählte zeigt — im Board das angeklickte Ticket mit Beschreibung,
+Fragen und History. Das **Agent-Terminal** lebt wahlweise als zweiter
+Tab in der rechten Seitenleiste oder in einer Leiste unten unter dem
+Inhalt; der Knopf *nach unten* / *nach rechts* im Terminal wechselt.
+Alle drei Bereiche lassen sich am Rand ziehen (Doppelklick auf den Griff
+setzt die Standardbreite zurück) und über die drei Schalter rechts oben
+in der Toolbar ein- und ausblenden. Ist der Inspektor zu, erscheint das
+Ticket-Detail wie früher unter dem Board. Breiten und Sichtbarkeiten
+merkt sich die App pro Projekt.
+
 ## Die Tabs im Projektfenster
 
 - **Board** — die Tickets aus `.agent/board/` in drei Spalten (Backlog,
   In Progress, Done). Karten lassen sich ziehen; ein Klick öffnet das
-  Ticket-Detail mit Beschreibung, Fragen und History. **+ Ticket** legt
+  Ticket-Detail mit Beschreibung, Fragen und History im Inspektor. **+ Ticket** legt
   neue an, *Bearbeiten* öffnet das Formular. Über dem Board ist der aktive
   Plan aufklappbar; die Kopfzeile zeigt Läufe und Token-Verbrauch des
   Agenten. Der Filter **braucht mich** blendet alles aus, was nicht auf
