@@ -10,6 +10,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import Markdown, { stripFrontmatter } from "../../components/Markdown";
 import { LoadingBoundary, useAsync } from "../../components/ui";
+import { NavigatorPortal } from "../../lib/panels";
 
 export interface SkillEntry {
   name: string;
@@ -127,6 +128,7 @@ function SourceBrowser({ project }: { project: string }) {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
+      <NavigatorPortal tab="skills" fallback={(children) => children}>
       <div className="mb-2 flex flex-wrap items-center gap-2">
         <select
           value={activeSource ?? ""}
@@ -134,7 +136,7 @@ function SourceBrowser({ project }: { project: string }) {
             setSource(event.target.value || null);
             setSelected(null);
           }}
-          className="max-w-md rounded border border-slate-300 px-2 py-1.5 font-mono text-xs"
+          className="w-full min-w-0 max-w-md rounded border border-slate-300 px-2 py-1.5 font-mono text-xs"
         >
           {all.length === 0 ? <option value="">— keine Quelle —</option> : null}
           {all.map((entry) => (
@@ -159,6 +161,7 @@ function SourceBrowser({ project }: { project: string }) {
           </button>
         ) : null}
       </div>
+      </NavigatorPortal>
       {notice ? (
         <p className="mb-2 rounded bg-sky-50 px-3 py-2 text-xs text-sky-800">{notice}</p>
       ) : null}
@@ -170,7 +173,7 @@ function SourceBrowser({ project }: { project: string }) {
         </p>
       ) : (
         <div className="flex min-h-0 flex-1 gap-4">
-          <div className="w-80 shrink-0 overflow-y-auto pr-1">
+          <NavigatorPortal tab="skills">
             <LoadingBoundary loading={skills.loading} error={skills.error} label="Quelle lesen…">
               {(skills.data ?? []).length === 0 ? (
                 <p className="text-sm text-slate-500">Keine Skills in dieser Quelle.</p>
@@ -209,7 +212,7 @@ function SourceBrowser({ project }: { project: string }) {
                 ))
               )}
             </LoadingBoundary>
-          </div>
+          </NavigatorPortal>
           <div className="min-w-0 flex-1 overflow-y-auto rounded-lg border border-slate-200 bg-white p-5">
             {selected ? (
               <>
@@ -273,6 +276,7 @@ export default function SkillsTab({ project, refresh }: { project: string; refre
 
   return (
     <div className="flex h-full min-h-0 flex-col">
+      <NavigatorPortal tab="skills" fallback={(children) => children}>
       <div className="mb-3 flex gap-1">
         {(
           [
@@ -293,6 +297,7 @@ export default function SkillsTab({ project, refresh }: { project: string; refre
           </button>
         ))}
       </div>
+      </NavigatorPortal>
       {mode === "browse" ? (
         <SourceBrowser project={project} />
       ) : (
@@ -305,7 +310,8 @@ export default function SkillsTab({ project, refresh }: { project: string; refre
             </p>
           ) : (
             <div className="flex h-full min-h-0 gap-4">
-              <ul className="w-72 shrink-0 space-y-1 overflow-y-auto pr-1">
+              <NavigatorPortal tab="skills">
+              <ul className="space-y-1">
                 {skills.map((entry) => (
                   <li key={entry.name}>
                     <button
@@ -330,6 +336,7 @@ export default function SkillsTab({ project, refresh }: { project: string; refre
                   </li>
                 ))}
               </ul>
+              </NavigatorPortal>
               <div className="min-w-0 flex-1 overflow-y-auto rounded-lg border border-slate-200 bg-white p-5">
                 {skill ? (
                   <>

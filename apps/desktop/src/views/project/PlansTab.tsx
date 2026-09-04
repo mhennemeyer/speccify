@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import Markdown, { stripFrontmatter } from "../../components/Markdown";
 import { copyPrompt } from "../../lib/prompt";
+import { NavigatorPortal } from "../../lib/panels";
 import { LoadingBoundary, useAsync } from "../../components/ui";
 
 export interface PlanEntry {
@@ -239,7 +240,7 @@ export default function PlansTab({ project, refresh }: { project: string; refres
         </p>
       ) : (
         <div className="flex h-full min-h-0 gap-4">
-          <div className="w-72 shrink-0 overflow-y-auto pr-1">
+          <NavigatorPortal tab="plans">
             <PlanList plans={active} selected={selected} onSelect={select} />
             {archived.length > 0 ? (
               <details className="mt-3">
@@ -251,7 +252,7 @@ export default function PlansTab({ project, refresh }: { project: string; refres
                 </div>
               </details>
             ) : null}
-          </div>
+          </NavigatorPortal>
           <div className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-lg border border-slate-200 bg-white p-5">
             {selectedPlan ? (
               editing ? (

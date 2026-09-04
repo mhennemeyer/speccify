@@ -41,10 +41,11 @@ both hosts see the same skills.
 The app starts on a **dashboard** — your projects, plus the shared
 pieces: library, environment, servers, agents, settings. Each project
 opens in its **own window** with the tabs **Board, Playbooks, Plans,
-Skills, Tools, Actions, MCPs, Agent, Help** in a navigator on the
-left, the content in the middle, and an **inspector** on the right
-that shows the selected item (a ticket with its history, for
-instance). The agent terminal lives in a resizable bar at the bottom,
+Skills, Tools, Actions, MCPs, Agent, Help** as an icon bar at the top
+of the left **navigator**, with the tab's list below it — plans,
+playbooks, skills, a plan filter on the board. The selected item fills
+the middle, and an **inspector** on the right shows its detail (a
+ticket with its history, for instance). The agent terminal lives in a resizable bar at the bottom,
 or — your choice, per project — as a tab in that right sidebar. All three areas can be resized by dragging and hidden with
 the toolbar toggles, the way Xcode does it. Claude Code and Codex are
 equal presets for the terminal — nothing in the workflow is specific

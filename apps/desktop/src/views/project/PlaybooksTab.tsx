@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import Markdown, { stripFrontmatter } from "../../components/Markdown";
 import { copyPrompt } from "../../lib/prompt";
+import { NavigatorPortal } from "../../lib/panels";
 import { LoadingBoundary, useAsync } from "../../components/ui";
 import { assemblePlan, splitPlan } from "./PlansTab";
 
@@ -190,7 +191,8 @@ export default function PlaybooksTab({
   return (
     <LoadingBoundary loading={list.loading} error={list.error} label="Playbooks lesen…">
       <div className="flex h-full min-h-0 gap-4">
-        <div className="w-72 shrink-0 space-y-1 overflow-y-auto pr-1">
+        <NavigatorPortal tab="playbooks">
+        <div className="space-y-1">
           {playbooks.map((entry) => (
             <button
               key={entry.file}
@@ -232,6 +234,7 @@ export default function PlaybooksTab({
             </p>
           ) : null}
         </div>
+        </NavigatorPortal>
         <div className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-lg border border-slate-200 bg-white p-5">
           {selectedPlaybook ? (
             editing ? (

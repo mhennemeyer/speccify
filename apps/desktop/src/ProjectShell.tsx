@@ -15,7 +15,8 @@ import TerminalPanel from "./components/TerminalPanel";
 import HelpView from "./views/HelpView";
 import { ErrorBox, Spinner } from "./components/ui";
 import { AGENT_PRESETS, DEFAULT_AGENT_COMMAND } from "./lib/agents";
-import { InspectorContext } from "./lib/inspector";
+import TabIcon from "./components/TabIcon";
+import { PanelsContext, type Slots } from "./lib/panels";
 import {
   DEFAULT_LAYOUT,
   HANDLE_SIZE,
@@ -100,7 +101,8 @@ export default function ProjectShell() {
   const [agentCommand, setAgentCommand] = useState(DEFAULT_AGENT_COMMAND);
   const [terminalStarted, setTerminalStarted] = useState(false);
   const [layout, setLayout] = useState<ProjectLayout>(DEFAULT_LAYOUT);
-  const [slots, setSlots] = useState<Record<string, HTMLElement | null>>({});
+  const [navSlots, setNavSlots] = useState<Slots>({});
+  const [inspectorSlots, setInspectorSlots] = useState<Slots>({});
 
   useEffect(() => {
     void invoke<string | null>("project_current")
@@ -165,23 +167,27 @@ export default function ProjectShell() {
   // Stabile Ref-Callbacks je Tab: ein inline erzeugter Ref würde bei jedem
   // Render neu gesetzt (null → Element) und über setSlots eine Endlosschleife
   // auslösen. So feuern sie nur bei Mount/Unmount des Slots.
-  const slotRefs = useMemo(() => {
-    const refs: Record<string, (element: HTMLElement | null) => void> = {};
-    for (const tab of TABS) {
-      refs[tab.id] = (element) =>
-        setSlots((previous) =>
-          previous[tab.id] === element ? previous : { ...previous, [tab.id]: element },
-        );
-    }
-    return refs;
+  const [navRefs, inspectorRefs] = useMemo(() => {
+    const make = (setter: typeof setNavSlots) => {
+      const refs: Record<string, (element: HTMLElement | null) => void> = {};
+      for (const tab of TABS) {
+        refs[tab.id] = (element) =>
+          setter((previous) =>
+            previous[tab.id] === element ? previous : { ...previous, [tab.id]: element },
+          );
+      }
+      return refs;
+    };
+    return [make(setNavSlots), make(setInspectorSlots)];
   }, []);
 
-  const inspectorApi = useMemo(
+  const panelsApi = useMemo(
     () => ({
-      slots,
+      navigator: navSlots,
+      inspector: inspectorSlots,
       reveal: () => updateLayout((previous) => (previous.rightShown ? { rightTab: "inspector" } : {})),
     }),
-    [slots, updateLayout],
+    [navSlots, inspectorSlots, updateLayout],
   );
 
   if (error) {
@@ -238,7 +244,7 @@ export default function ProjectShell() {
     );
 
   return (
-    <InspectorContext.Provider value={inspectorApi}>
+    <PanelsContext.Provider value={panelsApi}>
       <div className="h-screen bg-slate-50 text-slate-900" style={gridStyle}>
         {/* Toolbar */}
         <header
@@ -286,22 +292,54 @@ export default function ProjectShell() {
           </div>
         </header>
 
-        {/* Navigator */}
+        {/* Navigator: Icon-Tab-Leiste (iKanban SidebarTabBar) + Liste des Tabs */}
         <nav
-          className={`${navShown ? "flex" : "hidden"} min-h-0 flex-col overflow-y-auto border-r border-slate-200 bg-white p-2`}
+          className={`${navShown ? "flex" : "hidden"} min-h-0 flex-col border-r border-slate-200 bg-white`}
           style={{ gridColumn: 1, gridRow: "2 / -1" }}
         >
-          {TABS.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActive(tab.id)}
-              className={`mb-1 truncate rounded px-3 py-1.5 text-left text-sm ${
-                active === tab.id ? "bg-slate-800 text-white" : "text-slate-700 hover:bg-slate-100"
-              }`}
+          <div className="px-2 py-1.5">
+            <div
+              role="tablist"
+              className="flex gap-0.5 rounded-full bg-slate-100 p-0.5"
             >
-              {tab.label}
-            </button>
-          ))}
+              {TABS.map((tab) => (
+                <button
+                  key={tab.id}
+                  role="tab"
+                  aria-selected={active === tab.id}
+                  aria-label={tab.label}
+                  title={tab.label}
+                  onClick={() => setActive(tab.id)}
+                  className={`flex min-h-6 flex-1 items-center justify-center rounded-full ${
+                    active === tab.id
+                      ? "bg-slate-800 text-white"
+                      : "text-slate-500 hover:bg-slate-200 hover:text-slate-800"
+                  }`}
+                >
+                  <TabIcon id={tab.id} />
+                </button>
+              ))}
+            </div>
+          </div>
+          <h2 className="px-3 pb-1 text-xs font-semibold text-slate-500">
+            {TABS.find((tab) => tab.id === active)?.label}
+          </h2>
+          {/* Ein Listen-Slot pro Tab — die Tabs portalen ihre Liste hinein
+              (lib/panels.tsx); nur der aktive ist sichtbar. */}
+          <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-2">
+            {/* Slots nur bei sichtbarem Navigator — sonst rendern die Tabs
+                ihre Liste inline (Fallback). */}
+            {navShown
+              ? TABS.map((tab) => (
+                  <div
+                    key={tab.id}
+                    ref={navRefs[tab.id]}
+                    data-nav-slot={tab.id}
+                    className={active === tab.id ? "block" : "hidden"}
+                  />
+                ))
+              : null}
+          </div>
         </nav>
         {navShown ? (
           <SplitHandle
@@ -407,19 +445,20 @@ export default function ProjectShell() {
           style={{ gridColumn: 5, gridRow: "3 / -1" }}
         >
           {/* Ein Slot pro Tab — nur der aktive ist sichtbar; die Tabs
-              portalen ihr Detail hinein (lib/inspector.tsx). */}
+              portalen ihr Detail hinein (lib/panels.tsx). */}
           {rightShown
             ? TABS.map((tab) => (
                 <div
                   key={tab.id}
-                  ref={slotRefs[tab.id]}
+                  ref={inspectorRefs[tab.id]}
                   data-slot={tab.id}
                   className={`${active === tab.id ? "flex" : "hidden"} min-h-0 flex-1 flex-col`}
                 />
               ))
             : null}
           <p className="inspector-placeholder p-4 text-xs text-slate-400">
-            Nichts ausgewählt. Wähle ein Ticket im Board, um es hier zu sehen.
+            Nichts ausgewählt. Der Inspektor zeigt das Detail der Auswahl — im Board
+            das angeklickte Ticket.
           </p>
         </aside>
 
@@ -487,6 +526,6 @@ export default function ProjectShell() {
           )}
         </section>
       </div>
-    </InspectorContext.Provider>
+    </PanelsContext.Provider>
   );
 }

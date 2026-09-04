@@ -7,6 +7,7 @@ import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import Markdown from "../components/Markdown";
 import { LoadingBoundary, useAsync } from "../components/ui";
+import { NavigatorPortal } from "../lib/panels";
 
 interface HelpDocMeta {
   slug: string;
@@ -31,7 +32,8 @@ export default function HelpView() {
   return (
     <LoadingBoundary loading={list.loading} error={list.error} label="Hilfe laden…">
       <div className="flex h-full min-h-0 gap-4">
-        <nav className="w-72 shrink-0 space-y-1 overflow-y-auto pr-1">
+        <NavigatorPortal tab="help">
+        <nav className="space-y-1">
           {docs.map((doc) => (
             <button
               key={doc.slug}
@@ -53,6 +55,7 @@ export default function HelpView() {
             </button>
           ))}
         </nav>
+        </NavigatorPortal>
         <article className="min-w-0 flex-1 overflow-y-auto rounded-lg border border-slate-200 bg-white p-6">
           {current ? (
             <>

@@ -667,10 +667,20 @@ durchgespielt — Griffe, Umdocken, Ein-/Ausblenden, Reload aus
 localStorage. **BO-Entscheid 2026-09-04: Terminal-Default unten** — der
 Inspektor-Fokus bei neuer Auswahl legt das nahe; rechts bleibt als
 Option (Default rightWidth 400, Migration nur noch für alte
-„rechts"-Wahl). **Offen (W7b):** Pläne/Playbooks/Skills nutzen den
-Inspektor noch nicht (ihre Listen könnten in den Navigator, die
-Metadaten in den Inspektor wandern); Tastaturkürzel für die Schalter;
-Prüfung in der echten App auf macOS und Windows durch den BO.
+„rechts"-Wahl). **W7b ✅ 2026-09-04 — Navigator nach iKanban-Muster
+(BO):** oben eine Icon-Tab-Leiste (Kapsel, Tooltips, `TabIcon.tsx`
+ohne Icon-Bibliothek), darunter die Liste des Tabs. `lib/inspector.tsx`
+→ `lib/panels.tsx` mit Navigator- **und** Inspektor-Slots je Tab plus
+`NavigatorPortal`/`NavRow`; jeder Tab portalt seine Liste in den
+Navigator und behält seinen State (Pläne inkl. Archiv, Playbooks inkl.
+„+ Playbook", Skills mit Modus-Umschalter und Quellen-Auswahl, Tools,
+Hilfe-Dokumente, Agent-Dateien, Aktionen als Sprungliste, Board als
+Plan-Filter mit Zählern). Ohne Navigator fällt die Liste inline zurück
+(Slots werden nur bei sichtbarem Navigator gerendert — sonst landete
+die Liste unsichtbar im ausgeblendeten Slot; im Mock gefunden).
+Navigator-Default 260 px (200–420). **Offen (W7c):** Metadaten und
+Aktionen von Plänen/Playbooks in den Inspektor; Tastaturkürzel für die
+Schalter; Prüfung in der echten App auf macOS und Windows durch den BO.
 
 **Nicht in P5:** alles aus D29; Discovery-/Speccify-MCP-Anbindung der
 iKanbanAI-Seite (wird obsolet — Speccify ist das Produkt selbst).

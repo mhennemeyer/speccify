@@ -24,10 +24,12 @@ Repository — wer etwas ändern will, ändert diese Datei.
 
 ## Der Aufbau des Projektfensters
 
-Das Fenster folgt dem Muster von Xcode: links der **Navigator** mit den
-Tabs, in der Mitte der Inhalt, rechts der **Inspektor**, der das gerade
-Ausgewählte zeigt — im Board das angeklickte Ticket mit Beschreibung,
-Fragen und History. Das **Agent-Terminal** lebt in einer Leiste unten
+Das Fenster folgt dem Muster von Xcode: links der **Navigator** — oben
+eine Icon-Leiste mit den Tabs (der Tooltip nennt den Namen), darunter
+die Liste des aktiven Tabs: Pläne, Playbooks, Skills, Tools, Aktionen,
+Hilfe-Dokumente, im Board ein Filter nach Plan. In der Mitte der Inhalt
+des Ausgewählten, rechts der **Inspektor**, der das Detail zeigt — im
+Board das angeklickte Ticket mit Beschreibung, Fragen und History. Das **Agent-Terminal** lebt in einer Leiste unten
 unter dem Inhalt; wer es lieber rechts hat, legt es mit dem Knopf *nach
 rechts* im Terminal als zweiten Tab in die rechte Seitenleiste.
 Alle drei Bereiche lassen sich am Rand ziehen (Doppelklick auf den Griff

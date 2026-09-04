@@ -11,6 +11,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import { LoadingBoundary, useAsync } from "../../components/ui";
+import { NavigatorPortal, NavRow } from "../../lib/panels";
 
 interface ActionInput {
   name: string;
@@ -417,6 +418,29 @@ export default function ActionsTab({
   return (
     <LoadingBoundary loading={snapshot.loading} error={snapshot.error} label="Aktionen lesen…">
       <div className="max-w-3xl space-y-5 overflow-y-auto pr-1">
+        <NavigatorPortal tab="actions" fallback={() => null}>
+          <div className="space-y-0.5">
+            {confirmed.map((action) => (
+              <NavRow
+                key={action.command}
+                selected={false}
+                subtitle={action.command}
+                onClick={() =>
+                  document
+                    .querySelector(`[data-action="${CSS.escape(action.command)}"]`)
+                    ?.scrollIntoView({ block: "start", behavior: "smooth" })
+                }
+              >
+                {action.name}
+              </NavRow>
+            ))}
+            {proposals.length + pending.length > 0 ? (
+              <p className="px-2 pt-2 text-[11px] text-amber-700">
+                {proposals.length + pending.length} Vorschläge des Agenten — unten im Inhalt.
+              </p>
+            ) : null}
+          </div>
+        </NavigatorPortal>
         {error ? <p className="text-xs text-red-600">{error}</p> : null}
 
         <section>
@@ -433,7 +457,11 @@ export default function ActionsTab({
               {confirmed.map((action) => {
                 const run = runs[action.command];
                 return (
-                  <div key={action.command} className="rounded-lg border border-slate-200 bg-white p-3">
+                  <div
+                    key={action.command}
+                    data-action={action.command}
+                    className="rounded-lg border border-slate-200 bg-white p-3"
+                  >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <h3 className="text-sm font-semibold text-slate-800">{action.name}</h3>

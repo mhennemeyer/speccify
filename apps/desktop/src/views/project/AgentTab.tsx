@@ -8,6 +8,7 @@ import { invoke } from "@tauri-apps/api/core";
 import Markdown, { stripFrontmatter } from "../../components/Markdown";
 import { LoadingBoundary, useAsync } from "../../components/ui";
 import { AGENT_PRESETS } from "../../lib/agents";
+import { NavigatorPortal, NavRow } from "../../lib/panels";
 
 export default function AgentTab({
   project,
@@ -79,21 +80,16 @@ export default function AgentTab({
           </p>
         ) : (
           <div className="flex min-h-0 flex-1 flex-col">
-            <div className="mb-2 flex gap-1">
+            <NavigatorPortal
+              tab="agent"
+              fallback={(children) => <div className="mb-2 flex gap-1">{children}</div>}
+            >
               {available.map((file) => (
-                <button
-                  key={file}
-                  onClick={() => setSelected(file)}
-                  className={`rounded px-2.5 py-1 font-mono text-xs ${
-                    current === file
-                      ? "bg-slate-800 text-white"
-                      : "text-slate-600 hover:bg-slate-100"
-                  }`}
-                >
-                  {file}
-                </button>
+                <NavRow key={file} selected={current === file} onClick={() => setSelected(file)}>
+                  <span className="font-mono text-xs">{file}</span>
+                </NavRow>
               ))}
-            </div>
+            </NavigatorPortal>
             <div className="min-h-0 flex-1 overflow-y-auto rounded-lg border border-slate-200 bg-white p-5">
               <LoadingBoundary loading={body.loading} error={body.error} label="Datei lesen…">
                 <Markdown text={stripFrontmatter(body.data ?? "")} />

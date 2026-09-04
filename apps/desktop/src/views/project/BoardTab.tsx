@@ -9,7 +9,7 @@ import { invoke } from "@tauri-apps/api/core";
 import Markdown, { stripFrontmatter } from "../../components/Markdown";
 import { LoadingBoundary, useAsync } from "../../components/ui";
 import { copyPrompt } from "../../lib/prompt";
-import { InspectorPortal, useInspector } from "../../lib/inspector";
+import { InspectorPortal, NavigatorPortal, NavRow, useInspector } from "../../lib/panels";
 import type { PlanEntry } from "./PlansTab";
 
 export interface TicketEntry {
@@ -568,7 +568,14 @@ export default function BoardTab({
   const allTickets = data ?? [];
   const needsAttention = (ticket: TicketEntry) =>
     ticket.open_question !== null || ticket.needs_human;
-  const tickets = needsMe ? allTickets.filter(needsAttention) : allTickets;
+  // W7b: Plan-Filter im Navigator (iKanban: Listen in der Seitenleiste).
+  const [planFilter, setPlanFilter] = useState<string | null>(null);
+  const plansOnBoard = [...new Set(allTickets.map((ticket) => ticket.plan ?? ""))].sort();
+  const tickets = allTickets.filter(
+    (ticket) =>
+      (!needsMe || needsAttention(ticket)) &&
+      (planFilter === null || (ticket.plan ?? "") === planFilter),
+  );
   const selectedTicket = allTickets.find((ticket) => ticket.file === selected) ?? null;
   const questions = useAsync(
     () =>
@@ -666,6 +673,31 @@ export default function BoardTab({
   return (
     <LoadingBoundary loading={loading} error={error} label="Board lesen…">
       <div className="flex h-full min-h-0 flex-col">
+        <NavigatorPortal tab="board" fallback={() => null}>
+          <div className="space-y-0.5">
+            <NavRow
+              selected={planFilter === null}
+              onClick={() => setPlanFilter(null)}
+              trailing={<span className="font-mono text-[11px] opacity-70">{allTickets.length}</span>}
+            >
+              Alle Tickets
+            </NavRow>
+            {plansOnBoard.map((plan) => (
+              <NavRow
+                key={plan || "(ohne)"}
+                selected={planFilter === plan}
+                onClick={() => setPlanFilter(plan)}
+                trailing={
+                  <span className="font-mono text-[11px] opacity-70">
+                    {allTickets.filter((ticket) => (ticket.plan ?? "") === plan).length}
+                  </span>
+                }
+              >
+                {plan || "Ohne Plan"}
+              </NavRow>
+            ))}
+          </div>
+        </NavigatorPortal>
         <ActivePlanPanel project={project} planRefresh={planRefresh} />
         <div className="mb-2 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
