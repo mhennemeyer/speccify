@@ -7,11 +7,14 @@
 // Die Wurzel kommt über `project_current` (Fenster-Label → Registry, D15).
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { CSSProperties, ReactNode } from "react";
+import type { CSSProperties } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
+import SettingsSheet from "./components/SettingsSheet";
 import SplitHandle from "./components/SplitHandle";
 import TerminalPanel from "./components/TerminalPanel";
+import Toolbar, { GearIcon, PanelIcon, ToolbarButton } from "./components/Toolbar";
+import { useTheme } from "./lib/theme";
 import HelpView from "./views/HelpView";
 import { ErrorBox, Spinner } from "./components/ui";
 import { AGENT_PRESETS, DEFAULT_AGENT_COMMAND } from "./lib/agents";
@@ -56,44 +59,6 @@ function agentCommandKey(project: string) {
   return `speccify.project.agentCommand:${project}`;
 }
 
-/** Xcode-artige Umschalter für die drei Bereiche. */
-function PanelIcon({ part }: { part: "nav" | "right" | "bottom" }) {
-  return (
-    <svg width="16" height="14" viewBox="0 0 16 14" aria-hidden="true">
-      <rect x="0.5" y="0.5" width="15" height="13" rx="2" fill="none" stroke="currentColor" />
-      {part === "nav" ? <rect x="1" y="1" width="5" height="12" fill="currentColor" /> : null}
-      {part === "right" ? <rect x="10" y="1" width="5" height="12" fill="currentColor" /> : null}
-      {part === "bottom" ? <rect x="1" y="9" width="14" height="4" fill="currentColor" /> : null}
-    </svg>
-  );
-}
-
-function ToolbarToggle({
-  active,
-  title,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  title: string;
-  onClick: () => void;
-  children: ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      title={title}
-      aria-pressed={active}
-      className={`rounded px-1.5 py-1 ${
-        active ? "text-slate-800 hover:bg-slate-200" : "text-slate-400 hover:bg-slate-200 hover:text-slate-700"
-      }`}
-    >
-      {children}
-    </button>
-  );
-}
-
 export default function ProjectShell() {
   const [project, setProject] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -103,6 +68,8 @@ export default function ProjectShell() {
   const [layout, setLayout] = useState<ProjectLayout>(DEFAULT_LAYOUT);
   const [navSlots, setNavSlots] = useState<Slots>({});
   const [inspectorSlots, setInspectorSlots] = useState<Slots>({});
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [theme, setTheme] = useTheme();
 
   useEffect(() => {
     void invoke<string | null>("project_current")
@@ -246,26 +213,22 @@ export default function ProjectShell() {
   return (
     <PanelsContext.Provider value={panelsApi}>
       <div className="h-screen bg-slate-50 text-slate-900" style={gridStyle}>
-        {/* Toolbar */}
-        <header
-          className="flex items-center gap-3 border-b border-slate-200 bg-white px-3 py-1"
-          style={{ gridColumn: "1 / -1", gridRow: 1 }}
-        >
-          <h1 className="truncate text-sm font-bold text-slate-700" title={project}>
-            {project.split(/[\\/]/).pop() || project}
-          </h1>
-          <p className="min-w-0 flex-1 truncate font-mono text-[10px] text-slate-400" title={project}>
-            {project}
-          </p>
-          <div className="flex items-center gap-0.5">
-            <ToolbarToggle
+        {/* Toolbar (components/Toolbar.tsx) — Mitte für konfigurierbare Knöpfe
+            und ein Aktivitäts-Fenster vorbereitet (`items`), rechts die Schalter. */}
+        <div style={{ gridColumn: "1 / -1", gridRow: 1 }}>
+          <Toolbar
+            title={project.split(/[\\/]/).pop() || project}
+            subtitle={project}
+            trailing={
+              <>
+            <ToolbarButton
               active={navShown}
               title={navShown ? "Navigator ausblenden" : "Navigator einblenden"}
               onClick={() => updateLayout({ navShown: !navShown })}
             >
               <PanelIcon part="nav" />
-            </ToolbarToggle>
-            <ToolbarToggle
+            </ToolbarButton>
+            <ToolbarButton
               active={bottomVisible}
               title={
                 terminalDock === "bottom"
@@ -281,16 +244,26 @@ export default function ProjectShell() {
               }
             >
               <PanelIcon part="bottom" />
-            </ToolbarToggle>
-            <ToolbarToggle
+            </ToolbarButton>
+            <ToolbarButton
               active={rightShown}
               title={rightShown ? "Inspektor ausblenden" : "Inspektor einblenden"}
               onClick={() => updateLayout({ rightShown: !rightShown })}
             >
               <PanelIcon part="right" />
-            </ToolbarToggle>
-          </div>
-        </header>
+            </ToolbarButton>
+            <span className="mx-1 h-4 w-px bg-slate-200" aria-hidden="true" />
+            <ToolbarButton
+              title="Einstellungen"
+              onClick={() => setSettingsOpen(true)}
+              active={settingsOpen}
+            >
+              <GearIcon />
+            </ToolbarButton>
+              </>
+            }
+          />
+        </div>
 
         {/* Navigator: Icon-Tab-Leiste (iKanban SidebarTabBar) + Liste des Tabs */}
         <nav
@@ -464,7 +437,7 @@ export default function ProjectShell() {
 
         {/* Agent-Terminal: ein Element, zwei mögliche Grid-Zellen */}
         <section
-          className={`${terminalVisible ? "flex" : "hidden"} min-h-0 min-w-0 flex-col bg-slate-900 ${
+          className={`keep-dark ${terminalVisible ? "flex" : "hidden"} min-h-0 min-w-0 flex-col bg-slate-900 ${
             terminalDock === "right" ? "border-l border-slate-700" : "border-t border-slate-700"
           }`}
           style={terminalCell}
@@ -526,6 +499,22 @@ export default function ProjectShell() {
           )}
         </section>
       </div>
+      {settingsOpen ? (
+        <SettingsSheet
+          theme={theme}
+          onTheme={(next) => void setTheme(next)}
+          layout={layout}
+          onDock={(dock) =>
+            updateLayout(
+              dock === "bottom"
+                ? { terminalDock: "bottom", bottomShown: true, rightTab: "inspector" }
+                : { terminalDock: "right", rightShown: true, rightTab: "terminal" },
+            )
+          }
+          onResetLayout={() => updateLayout({ ...DEFAULT_LAYOUT })}
+          onClose={() => setSettingsOpen(false)}
+        />
+      ) : null}
     </PanelsContext.Provider>
   );
 }

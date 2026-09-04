@@ -27,7 +27,7 @@ export const LAYOUT_LIMITS = {
 // Default: Terminal unten (BO 2026-09-04) — so bleibt der Inspektor rechts
 // frei für die Auswahl und muss nicht mit dem Terminal um den Tab streiten.
 export const DEFAULT_LAYOUT: ProjectLayout = {
-  navWidth: 260,
+  navWidth: 300,
   navShown: true,
   rightWidth: 400,
   rightShown: true,

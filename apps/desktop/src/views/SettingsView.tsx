@@ -8,11 +8,14 @@ import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 import { ActionButton, ErrorBox } from "../components/ui";
 import { AGENT_PRESETS } from "../lib/agents";
+import { useTheme } from "../lib/theme";
+import ThemePicker from "../components/ThemePicker";
 
 interface AppSettings {
   working_dir: string | null;
   terminal_autostart_command: string;
   skill_library: string | null;
+  theme: string;
 }
 
 interface BriefingStatus {
@@ -26,6 +29,7 @@ export default function SettingsView() {
   const [briefings, setBriefings] = useState<BriefingStatus[]>([]);
   const [status, setStatus] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [theme, setTheme] = useTheme();
 
   const refreshBriefings = useCallback(async (workingDir: string | null) => {
     if (!workingDir) {
@@ -72,6 +76,15 @@ export default function SettingsView() {
 
   return (
     <div className="max-w-xl space-y-6">
+      <section>
+        <h3 className="mb-2 text-sm font-semibold text-slate-700">Erscheinungsbild</h3>
+        <p className="mb-2 text-sm text-slate-600">
+          Hell, dunkel oder wie das System — gilt für Dashboard und alle
+          Projektfenster.
+        </p>
+        <ThemePicker value={theme} onChange={(next) => void setTheme(next)} />
+      </section>
+
       <section>
         <h3 className="mb-2 text-sm font-semibold text-slate-700">Working Dir</h3>
         <p className="mb-2 text-sm text-slate-600">

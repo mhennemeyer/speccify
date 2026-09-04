@@ -678,9 +678,25 @@ Hilfe-Dokumente, Agent-Dateien, Aktionen als Sprungliste, Board als
 Plan-Filter mit Zählern). Ohne Navigator fällt die Liste inline zurück
 (Slots werden nur bei sichtbarem Navigator gerendert — sonst landete
 die Liste unsichtbar im ausgeblendeten Slot; im Mock gefunden).
-Navigator-Default 260 px (200–420). **Offen (W7c):** Metadaten und
-Aktionen von Plänen/Playbooks in den Inspektor; Tastaturkürzel für die
-Schalter; Prüfung in der echten App auf macOS und Windows durch den BO.
+Navigator-Default 260 px (200–420). **W7c ✅ 2026-09-04 — Settings,
+Dark Mode, Toolbar (BO):** Erscheinungsbild `system|light|dark` als
+Feld `theme` in `~/.speccify/settings.json` (Rust `AppSettings`, serde
+default), Frontend `lib/theme.ts` (Hook, localStorage-Kopie gegen
+Flackern, Tauri-Event `speccify:theme` an alle Fenster, matchMedia für
+System), Farben rein per CSS: `:root[data-theme="dark"]` spiegelt die
+Slate-Palette über die Tailwind-v4-Variablen — keine `dark:`-Varianten
+in den Views; `.keep-dark` hält das Terminal dunkel. `ThemePicker` im
+Dashboard-Settings und im neuen `SettingsSheet` des Projektfensters
+(Zahnrad in der Toolbar: Erscheinungsbild, Terminal-Position, Layout
+zurücksetzen). `components/Toolbar.tsx` mit drei Zonen — Mitte nimmt
+`items` (ToolbarItem: id/title/icon/onClick) für später konfigurierbare
+Knöpfe (Aktionen mit `toolbar: true`) und ein Aktivitäts-Fenster.
+Navigator-Default 300 px. Layout-Persistenz: localStorage der App
+(WebKit-/WebView2-Datenspeicher, überlebt Neustarts; Dev- und
+Release-Build haben getrennte Speicher). **Offen (W7d):** Metadaten und
+Aktionen von Plänen/Playbooks in den Inspektor; Toolbar-Knöpfe aus
+actions.json; Aktivitäts-Fenster; Tastaturkürzel; Prüfung in der echten
+App auf macOS und Windows durch den BO.
 
 **Nicht in P5:** alles aus D29; Discovery-/Speccify-MCP-Anbindung der
 iKanbanAI-Seite (wird obsolet — Speccify ist das Produkt selbst).

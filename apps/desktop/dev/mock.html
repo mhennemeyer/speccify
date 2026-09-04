@@ -74,6 +74,9 @@
         terminal_write: () => null,
         terminal_resize: () => null,
         terminal_kill: () => null,
+        get_settings: () => ({ working_dir: null, terminal_autostart_command: "claude", skill_library: null, theme: "system" }),
+        save_settings: () => null,
+        "plugin:event|emit": () => null,
         "plugin:event|listen": () => 1,
         "plugin:event|unlisten": () => null,
       };

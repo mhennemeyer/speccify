@@ -48,7 +48,9 @@ Das Ausgewählte füllt die Mitte, ein **Inspektor** rechts zeigt sein
 Detail (etwa ein Ticket mit seiner History). Das Agent-Terminal lebt in einer höhenverstellbaren
 Leiste unten oder — pro Projekt Deine Wahl — als Tab in dieser rechten
 Seitenleiste. Alle drei Bereiche lassen sich ziehen und
-über die Toolbar ausblenden, wie in Xcode. Claude Code und Codex sind
+über die Toolbar ausblenden, wie in Xcode; Größen merkt sich die App pro
+Projekt. Das Zahnrad in der Toolbar öffnet die Einstellungen — hell,
+dunkel oder wie das System, für alle Fenster. Claude Code und Codex sind
 dort gleichberechtigte Presets — nichts im Workflow ist auf einen von
 beiden festgelegt.
 

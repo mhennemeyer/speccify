@@ -14,6 +14,14 @@ pub struct AppSettings {
     /// (Plan projektfenster.md, D21).
     #[serde(default)]
     pub skill_library: Option<String>,
+    /// Erscheinungsbild aller Fenster: `system` | `light` | `dark`
+    /// (Plan projektfenster.md, W7c). Die Auswertung macht das Frontend.
+    #[serde(default = "default_theme")]
+    pub theme: String,
+}
+
+fn default_theme() -> String {
+    "system".into()
 }
 
 impl Default for AppSettings {
@@ -21,6 +29,7 @@ impl Default for AppSettings {
         Self {
             working_dir: None,
             skill_library: None,
+            theme: default_theme(),
             terminal_autostart_command: if cfg!(windows) {
                 "claude.cmd".into()
             } else {

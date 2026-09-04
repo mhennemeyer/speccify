@@ -47,7 +47,9 @@ playbooks, skills, a plan filter on the board. The selected item fills
 the middle, and an **inspector** on the right shows its detail (a
 ticket with its history, for instance). The agent terminal lives in a resizable bar at the bottom,
 or — your choice, per project — as a tab in that right sidebar. All three areas can be resized by dragging and hidden with
-the toolbar toggles, the way Xcode does it. Claude Code and Codex are
+the toolbar toggles, the way Xcode does it; sizes are remembered per
+project. The gear in the toolbar opens the settings — light, dark, or
+system appearance for all windows. Claude Code and Codex are
 equal presets for the terminal — nothing in the workflow is specific
 to either.
 

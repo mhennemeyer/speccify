@@ -3,6 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import AskBoPanel, { type AskBoInteraction } from "./components/AskBoPanel";
 import TerminalPanel from "./components/TerminalPanel";
+import { useTheme } from "./lib/theme";
 import AgentsView from "./views/AgentsView";
 import HelpView from "./views/HelpView";
 import LibraryView from "./views/LibraryView";
@@ -27,6 +28,7 @@ const SECTIONS = [
 type SectionId = (typeof SECTIONS)[number]["id"];
 
 export default function App() {
+  useTheme(); // Erscheinungsbild anwenden + auf Wechsel aus anderen Fenstern hören
   const [active, setActive] = useState<SectionId>("projects");
   const [sidebarVisible, setSidebarVisible] = useState(false);
   // Terminal erst beim ersten Öffnen über den Toggle mounten (sonst liefe
