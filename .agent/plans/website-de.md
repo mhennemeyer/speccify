@@ -1,6 +1,6 @@
 ---
-lifecycle: draft
-status: Entwurf — wartet auf BO-Entscheide D1–D6, dann S1
+lifecycle: onHold
+status: Zurückgestellt (BO, 2026-09-05) — „klingt komplizierter als gedacht"; Plan bleibt für später. Bei Wiederaufnahme zuerst D1–D6 entscheiden; die schnelle Variante A (Weiterleitung speccify.de → speccify.io/de/) ist jederzeit in einer Stunde machbar.
 ---
 # Plan: speccify.de — die Website auf Deutsch unter eigener Domain
 
