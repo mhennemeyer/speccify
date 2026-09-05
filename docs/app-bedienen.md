@@ -25,11 +25,29 @@ Repository — wer etwas ändern will, ändert diese Datei.
 ## Der Aufbau des Projektfensters
 
 Das Fenster folgt dem Muster von Xcode: links der **Navigator** — oben
-eine Icon-Leiste mit den Tabs (der Tooltip nennt den Namen), darunter
-die Liste des aktiven Tabs: Pläne, Playbooks, Skills, Tools, Aktionen,
-Hilfe-Dokumente, im Board ein Filter nach Plan. In der Mitte der Inhalt
-des Ausgewählten, rechts der **Inspektor**, der das Detail zeigt — im
-Board das angeklickte Ticket mit Beschreibung, Fragen und History. Das **Agent-Terminal** lebt in einer Leiste unten
+eine Icon-Leiste mit den vier Bereichen **Board**, **Orga** (Playbooks,
+Pläne, Skills), **Technik** (Tools, Aktionen, MCPs, Agent) und **Hilfe**;
+der Tooltip nennt den Namen. Hat ein Bereich mehrere Tabs, stehen sie
+als zweite Zeile darunter, und die App merkt sich je Bereich den zuletzt
+gewählten. Unter den Tabs die Liste des aktiven Tabs: Pläne, Playbooks,
+Skills, Tools, Aktionen, Hilfe-Dokumente, im Board ein Filter nach Plan.
+In der Mitte der Inhalt des Ausgewählten, rechts der **Inspektor**, der
+das Detail zeigt — im Board das angeklickte Ticket mit den Tabs
+*Übersicht* (Fragen und Beschreibung) und *Historie*.
+
+Die **Toolbar** oben trägt links den Projektnamen, in der Mitte die
+**Aktions-Knöpfe** (jede Aktion aus `.agent/actions.json` lässt sich im
+Aktionen-Tab mit *Toolbar* dorthin legen; ein Klick startet sie, mit
+Eingaben springt sie in den Aktionen-Tab) und die **Aktivitätsanzeige**:
+Was gerade läuft — eine Aktion, das Einrichten, ein Speichern — mit
+Laufzeit; ein Klick öffnet die Liste der letzten Aktivitäten. Rechts die
+Schalter für die Bereiche, Hell/Dunkel und die Einstellungen. Auf macOS
+ist die Toolbar zugleich die Titelleiste (die Ampel schwebt links darüber);
+das Fenster lässt sich an ihr ziehen.
+
+Offene Projektfenster merkt sich die App über einen Neustart: Was beim
+Beenden offen war, öffnet sich beim nächsten Start wieder. Ein bewusst
+geschlossenes Fenster (roter Knopf, Cmd-W) bleibt zu. Das **Agent-Terminal** lebt in einer Leiste unten
 unter dem Inhalt; wer es lieber rechts hat, legt es mit dem Knopf *nach
 rechts* im Terminal als zweiten Tab in die rechte Seitenleiste.
 Alle drei Bereiche lassen sich am Rand ziehen (Doppelklick auf den Griff

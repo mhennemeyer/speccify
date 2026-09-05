@@ -9,6 +9,7 @@ import { invoke } from "@tauri-apps/api/core";
 import Markdown, { stripFrontmatter } from "../../components/Markdown";
 import { copyPrompt } from "../../lib/prompt";
 import { NavigatorPortal } from "../../lib/panels";
+import { trackActivity } from "../../lib/activity";
 import { LoadingBoundary, useAsync } from "../../components/ui";
 import { assemblePlan, splitPlan } from "./PlansTab";
 
@@ -54,7 +55,9 @@ function PlaybookEditor({
     setError(null);
     try {
       const content = assemblePlan(original, { description }, body);
-      await invoke("project_write_file", { project, file, content });
+      await trackActivity("write", "Playbook speichern", () =>
+        invoke("project_write_file", { project, file, content }), file,
+      );
       onSaved();
     } catch (e) {
       setError(String(e));

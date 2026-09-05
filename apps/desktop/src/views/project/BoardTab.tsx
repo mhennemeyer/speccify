@@ -432,6 +432,11 @@ function TicketDetail({
   inInspector: boolean;
 }) {
   const shown = history.slice(0, 100);
+  // W7d: im Inspektor zwei Tabs — Übersicht (Fragen + Text) und Historie —
+  // statt einer langen Scroll-Seite.
+  const [tab, setTab] = useState<"overview" | "history">("overview");
+  const showOverview = !inInspector || tab === "overview";
+  const showHistory = !inInspector || tab === "history";
   return (
     <div
       className={
@@ -464,14 +469,45 @@ function TicketDetail({
           </button>
         </div>
       </div>
-      <QuestionsSection questions={questions} onAnswer={onAnswer} busy={busy} />
-      {stripQuestions(ticket.body) ? (
-        <Markdown text={stripQuestions(ticket.body)} />
-      ) : (
-        <p className="text-xs text-slate-400">Kein Beschreibungstext.</p>
-      )}
-      {shown.length > 0 ? (
-        <div className="mt-3 border-t border-slate-100 pt-2">
+      {inInspector ? (
+        <div role="tablist" className="mb-3 flex gap-1 border-b border-slate-200 text-xs">
+          {(
+            [
+              ["overview", "Übersicht"],
+              ["history", `Historie${history.length ? ` (${history.length})` : ""}`],
+            ] as const
+          ).map(([id, label]) => (
+            <button
+              key={id}
+              role="tab"
+              aria-selected={tab === id}
+              onClick={() => setTab(id)}
+              className={`-mb-px px-3 py-1.5 font-medium ${
+                tab === id
+                  ? "border-b-2 border-slate-800 text-slate-800"
+                  : "text-slate-400 hover:text-slate-700"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      ) : null}
+      {showOverview ? (
+        <>
+          <QuestionsSection questions={questions} onAnswer={onAnswer} busy={busy} />
+          {stripQuestions(ticket.body) ? (
+            <Markdown text={stripQuestions(ticket.body)} />
+          ) : (
+            <p className="text-xs text-slate-400">Kein Beschreibungstext.</p>
+          )}
+        </>
+      ) : null}
+      {showHistory && inInspector && shown.length === 0 ? (
+        <p className="text-xs text-slate-400">Noch keine History.</p>
+      ) : null}
+      {showHistory && shown.length > 0 ? (
+        <div className={inInspector ? "" : "mt-3 border-t border-slate-100 pt-2"}>
           <h4 className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
             History
           </h4>

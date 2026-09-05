@@ -9,6 +9,7 @@ import { invoke } from "@tauri-apps/api/core";
 import Markdown, { stripFrontmatter } from "../../components/Markdown";
 import { copyPrompt } from "../../lib/prompt";
 import { NavigatorPortal } from "../../lib/panels";
+import { trackActivity } from "../../lib/activity";
 import { LoadingBoundary, useAsync } from "../../components/ui";
 
 export interface PlanEntry {
@@ -144,7 +145,9 @@ function PlanEditor({
     setError(null);
     try {
       const content = assemblePlan(original, { lifecycle, status }, body);
-      await invoke("project_write_file", { project, file, content });
+      await trackActivity("write", "Plan speichern", () =>
+        invoke("project_write_file", { project, file, content }), file,
+      );
       onSaved();
     } catch (e) {
       setError(String(e));

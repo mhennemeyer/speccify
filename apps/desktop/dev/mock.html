@@ -61,12 +61,12 @@
         ],
       };
       const history = {
-        ".agent/board/notizen-zahlen.md": [
+        "notizen-zahlen": [
           { timestamp: "2026-08-31T11:52:10Z", ticket_id: "notizen-zahlen", event_type: "agent_run", actor: "agent", summary: "Skill notizen-anlegen ausgeführt", tokens_in: 30000, tokens_out: 1500 },
           { timestamp: "2026-08-31T11:50:02Z", ticket_id: "notizen-zahlen", event_type: "station_changed", actor: "agent", summary: "Backlog -> In Progress" },
           { timestamp: "2026-08-31T11:49:30Z", ticket_id: "notizen-zahlen", event_type: "ticket_created", actor: "agent", summary: "aus Plan aufraeumen geschnitten" },
         ],
-        ".agent/board/live-test.md": [
+        "live-test": [
           { timestamp: "2026-08-31T11:52:00Z", ticket_id: "live-test", event_type: "ticket_edited", actor: "user", summary: "Im Editor gespeichert" },
         ],
       };
@@ -87,7 +87,7 @@
         project_workflow_status: () => ({ state: "current", installed_version: 1, current_version: 1, pending: [] }),
         project_board: () => tickets,
         project_board_kpis: () => ({ run_count: 1, tokens_in: 30000, tokens_out: 1500, duration_ms: 120000, recent: [] }),
-        project_ticket_history: ({ file }) => history[file] ?? [],
+        project_ticket_history: ({ ticketId }) => history[ticketId] ?? [],
         project_ticket_questions: ({ file }) => questions[file] ?? [],
         project_ticket_answer: () => null,
         project_plans: () => [
@@ -108,11 +108,13 @@
         project_actions: () => ({
           actions: [
             { name: "Notizen zählen", command: "ls notes", description: "Wie viele Notizen liegen da?", source: "actions.json", confirmed: true, target: "local" },
-            { name: "Tests", command: "uv run pytest", description: null, source: "actions.json", confirmed: true, target: "local" },
+            { name: "Tests", command: "uv run pytest", description: null, source: "actions.json", confirmed: true, toolbar: true, target: "local" },
             { name: "Notizen auflisten", command: "ls -la notes", description: null, source: "agent", confirmed: false, target: "local" },
           ],
           pending: [],
         }),
+        project_action_run: () => null,
+        project_action_upsert: () => null,
         project_agent_files: () => ["CLAUDE.md", ".agent/agent.md"],
         project_skill_sources: () => ({ default: "/Users/me/Work/speccify/skills", sources: [] }),
         project_platform: () => "macos",

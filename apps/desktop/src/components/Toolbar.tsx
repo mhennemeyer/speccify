@@ -4,14 +4,25 @@
 // rechts feste Schalter (`trailing`: Bereiche, Einstellungen).
 
 import type { ReactNode } from "react";
+import { TRAFFIC_LIGHT_INSET } from "../lib/platform";
 
 export interface ToolbarItem {
   id: string;
   title: string;
   icon: ReactNode;
+  /** Kurzer Text neben dem Icon (Aktionen aus actions.json). */
+  label?: string;
   onClick: () => void;
   active?: boolean;
   disabled?: boolean;
+}
+
+export function PlayIcon() {
+  return (
+    <Icon>
+      <path d="M4.5 3v10l8-5z" />
+    </Icon>
+  );
 }
 
 export function ToolbarButton({
@@ -107,15 +118,24 @@ export default function Toolbar({
   title,
   subtitle,
   items = [],
+  center,
   trailing,
 }: {
   title: string;
   subtitle?: string;
   items?: ToolbarItem[];
+  /** Mitte, rechts neben den Knöpfen — die Aktivitätsanzeige. */
+  center?: ReactNode;
   trailing?: ReactNode;
 }) {
   return (
-    <header className="flex items-center gap-3 border-b border-slate-200 bg-white px-3 py-1">
+    // data-tauri-drag-region: die Toolbar ersetzt auf macOS die Titelleiste,
+    // also zieht man das Fenster an ihr (Kinder-Elemente bleiben klickbar).
+    <header
+      data-tauri-drag-region
+      className="flex items-center gap-3 border-b border-slate-200 bg-white px-3"
+      style={{ paddingLeft: 12 + TRAFFIC_LIGHT_INSET, minHeight: 38 }}
+    >
       <h1 className="truncate text-sm font-bold text-slate-700" title={subtitle}>
         {title}
       </h1>
@@ -125,7 +145,10 @@ export default function Toolbar({
         </p>
       ) : null}
       {/* Mitte: konfigurierbare Knöpfe */}
-      <div className="flex min-w-0 flex-1 items-center justify-center gap-0.5">
+      <div
+        data-tauri-drag-region
+        className="flex min-w-0 flex-1 items-center justify-center gap-0.5"
+      >
         {items.map((item) => (
           <ToolbarButton
             key={item.id}
@@ -134,9 +157,16 @@ export default function Toolbar({
             active={item.active}
             disabled={item.disabled}
           >
-            {item.icon}
+            <span className="flex items-center gap-1">
+              {item.icon}
+              {item.label ? <span className="text-[11px] font-medium">{item.label}</span> : null}
+            </span>
           </ToolbarButton>
         ))}
+        {items.length > 0 && center ? (
+          <span className="mx-2 h-4 w-px bg-slate-200" aria-hidden="true" />
+        ) : null}
+        {center}
       </div>
       <div className="flex items-center gap-0.5">{trailing}</div>
     </header>

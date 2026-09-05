@@ -223,6 +223,8 @@ pub fn run() {
                     eprintln!("desktop-ui-MCP: {error} (läuft die App doppelt?)");
                 }
             });
+            // W7d: beim letzten Quit offene Projektfenster wieder öffnen.
+            project_cmd::restore_open_windows(app.handle());
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![

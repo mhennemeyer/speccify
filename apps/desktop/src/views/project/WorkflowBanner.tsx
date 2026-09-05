@@ -5,6 +5,7 @@
 
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { trackActivity } from "../../lib/activity";
 import { useAsync } from "../../components/ui";
 
 interface WorkflowStatus {
@@ -36,7 +37,9 @@ export default function WorkflowBanner({ project, refresh }: { project: string; 
     setBusy(true);
     setError(null);
     try {
-      await invoke("project_workflow_install", { project });
+      await trackActivity("setup", "Workflow einrichten", () =>
+        invoke("project_workflow_install", { project }),
+      );
       await reload();
     } catch (e) {
       setError(String(e));

@@ -4,6 +4,7 @@ import { listen } from "@tauri-apps/api/event";
 import AskBoPanel, { type AskBoInteraction } from "./components/AskBoPanel";
 import TerminalPanel from "./components/TerminalPanel";
 import { useTheme } from "./lib/theme";
+import { isMac } from "./lib/platform";
 import AgentsView from "./views/AgentsView";
 import HelpView from "./views/HelpView";
 import LibraryView from "./views/LibraryView";
@@ -112,8 +113,15 @@ export default function App() {
 
   return (
     <div className="flex h-screen bg-slate-50 text-slate-900">
-      <nav className="flex w-48 flex-col border-r border-slate-200 bg-white p-3">
-        <h1 className="mb-4 px-2 text-sm font-bold tracking-wide text-slate-500">
+      <nav
+        className="flex w-48 flex-col border-r border-slate-200 bg-white p-3"
+        style={{ paddingTop: isMac ? 40 : 12 }}
+      >
+        {/* Auf macOS liegt die Ampel über dieser Ecke; die Kopfzeile ist Drag-Region. */}
+        <h1
+          data-tauri-drag-region
+          className="mb-4 px-2 text-sm font-bold tracking-wide text-slate-500"
+        >
           Speccify
         </h1>
         {SECTIONS.map((s) => (

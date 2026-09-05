@@ -698,11 +698,38 @@ BO-Auftrag):** Version 0.4.0 in package.json/tauri.conf.json/Cargo.toml
 (Cargo.lock zog `tauri dev` selbst nach), die fünf Website-Screenshots
 neu im W7-Layout — aus `dev/mock.html` mit nachgebautem W1-Fixture per
 Playwright (1360×880 @2x, wie die alten Fensteraufnahmen), Tag gepusht →
-release.yml baut den v0.4.0-Draft, pages.yml deployt die Site. **Offen
-(W7d):** Metadaten und
-Aktionen von Plänen/Playbooks in den Inspektor; Toolbar-Knöpfe aus
-actions.json; Aktivitäts-Fenster; Tastaturkürzel; Prüfung in der echten
-App auf macOS und Windows durch den BO.
+release.yml baut den v0.4.0-Draft, pages.yml deployt die Site — **v0.4.0
+veröffentlicht 2026-09-05** (Draft per `gh release edit --draft=false`,
+Web-UI scheiterte am Bot-Autor).
+
+**W7d ✅ 2026-09-05 (BO-Liste vom 2026-09-05):** (1) **Offene
+Projektfenster überleben den Neustart** — `open-windows.json` in
+`~/.speccify`, Eintrag beim Öffnen, Austrag nur bei `CloseRequested`
+(beim Quit kommt keins), `restore_open_windows` im Setup; `project_open`
+ruft die sync `open_project_window`. (2) **macOS-Titelleiste im Overlay**
+— `TitleBarStyle::Overlay` + `hidden_title` für Projektfenster (Builder)
+und Dashboard (tauri.conf.json), Toolbar/Dashboard-Kopf als
+`data-tauri-drag-region` mit 78 px Ampel-Abstand (`lib/platform.ts`),
+Capability `core:window:allow-start-dragging`; Windows unverändert. (3)
+**Inspektor-Tabs am Ticket**: Übersicht | Historie. (4) **Zwei
+Tab-Ebenen im Navigator**: Gruppen Board / **Orga** (Playbooks, Pläne,
+Skills — Arbeitsname, Kandidaten: Vorhaben, Wissen, Steuerung) / Technik
+(Tools, Aktionen, MCPs, Agent) / Hilfe als Icons, darunter die Tabs der
+Gruppe; zuletzt gewählter Tab je Gruppe wird gemerkt. (6)
+**Toolbar-Knöpfe aus actions.json**: `toolbar: true` (im Aktionen-Tab per
+*Toolbar*-Knopf setzbar) → Knopf in der Toolbar-Mitte, Klick löst
+`speccify:run-action` aus, die Lauf-Mechanik bleibt im ActionsTab; mit
+Eingaben springt der Klick in den Tab. (7) **Aktivitätsanzeige**:
+`lib/activity.ts` (In-memory-Store, `begin/end/track`, Deckel 200) +
+`ActivityView` in der Toolbar-Mitte (Spinner + Laufzeit, zuletzt
+Beendetes 8 s, Klick = Liste); Quellen: Aktionen (bis `action-exit`),
+Workflow einrichten, Plan/Playbook speichern. Verifikation: Playwright
+am Mock (Gruppenwechsel merkt Tab, Inspektor-Tabs schalten History,
+Toolbar-Knopf startet Aktion → Aktivität läuft), typecheck, cargo test
+47/47. (5) IDE-Recherche → eigener Plan `ide-im-projektfenster.md`.
+**Offen:** Prüfung der Overlay-Titelleiste in der echten App (macOS)
+durch den BO; Plan-/Playbook-Metadaten in den Inspektor; Tastaturkürzel;
+Aktivität aus dem Agenten (History `agent_run`) speisen; Orga umbenennen.
 
 **Nicht in P5:** alles aus D29; Discovery-/Speccify-MCP-Anbindung der
 iKanbanAI-Seite (wird obsolet — Speccify ist das Produkt selbst).

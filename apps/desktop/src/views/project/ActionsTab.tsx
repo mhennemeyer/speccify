@@ -12,6 +12,7 @@ import { listen } from "@tauri-apps/api/event";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import { LoadingBoundary, useAsync } from "../../components/ui";
 import { NavigatorPortal, NavRow } from "../../lib/panels";
+import { beginActivity, endActivity } from "../../lib/activity";
 
 interface ActionInput {
   name: string;
@@ -342,6 +343,15 @@ export default function ActionsTab({
       error: string | null;
     }>("action-exit", (event) => {
       const { run_id, exit_code, duration_ms, error } = event.payload;
+      const activity = activityIds.current[run_id];
+      if (activity) {
+        delete activityIds.current[run_id];
+        endActivity(
+          activity,
+          error || (exit_code !== null && exit_code !== 0) ? "error" : "ok",
+          error ?? (exit_code !== null && exit_code !== 0 ? `Exit ${exit_code}` : undefined),
+        );
+      }
       setRuns((previous) => {
         const run = previous[run_id];
         if (!run) return previous;
@@ -363,10 +373,14 @@ export default function ActionsTab({
     };
   }, []);
 
+  // W7d: Aktivitätsanzeige — run_id → Activity-Id, aufgelöst im exit-Event.
+  const activityIds = useRef<Record<string, string>>({});
+
   const start = async (action: ProjectAction) => {
     setError(null);
     const values = inputValues[action.command] ?? {};
     const commandLine = substitute(action.command, values);
+    activityIds.current[action.command] = beginActivity("action", action.name, commandLine);
     setRuns((previous) => ({
       ...previous,
       [action.command]: {
@@ -384,6 +398,11 @@ export default function ActionsTab({
         commandLine,
       });
     } catch (e) {
+      const activity = activityIds.current[action.command];
+      if (activity) {
+        delete activityIds.current[action.command];
+        endActivity(activity, "error", String(e));
+      }
       setRuns((previous) => ({
         ...previous,
         [action.command]: {
@@ -396,6 +415,21 @@ export default function ActionsTab({
       }));
     }
   };
+
+  // W7d: Toolbar-Knöpfe (ProjectShell) starten Aktionen über dieses Event —
+  // die Lauf-Mechanik (Events, Output, Stop) bleibt hier an einer Stelle.
+  const actionsRef = useRef<ProjectAction[]>([]);
+  actionsRef.current = snapshot.data?.actions ?? [];
+  useEffect(() => {
+    const handler = (event: Event) => {
+      const command = (event as CustomEvent<string>).detail;
+      const action = actionsRef.current.find((entry) => entry.command === command);
+      if (action && action.confirmed && runnable(action)) void start(action);
+    };
+    window.addEventListener("speccify:run-action", handler);
+    return () => window.removeEventListener("speccify:run-action", handler);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const mutate = async (call: () => Promise<unknown>) => {
     setError(null);
@@ -482,6 +516,31 @@ export default function ActionsTab({
                           <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[10px] text-slate-600">
                             App-Panel — folgt
                           </span>
+                        ) : null}
+                        {runnable(action) ? (
+                          <button
+                            onClick={() =>
+                              void mutate(() =>
+                                invoke("project_action_upsert", {
+                                  project,
+                                  action: { ...action, toolbar: !action.toolbar },
+                                }),
+                              )
+                            }
+                            title={
+                              action.toolbar
+                                ? "Aus der Toolbar nehmen"
+                                : "Als Knopf in die Toolbar legen"
+                            }
+                            aria-pressed={Boolean(action.toolbar)}
+                            className={`rounded border px-2 py-1 text-xs ${
+                              action.toolbar
+                                ? "border-slate-700 bg-slate-700 text-white"
+                                : "border-slate-300 text-slate-500 hover:bg-slate-100"
+                            }`}
+                          >
+                            Toolbar
+                          </button>
                         ) : null}
                         {runnable(action) ? (
                           <button

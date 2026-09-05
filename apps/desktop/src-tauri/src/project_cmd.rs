@@ -96,6 +96,69 @@ fn remember_recent(root: &Path) {
     }
 }
 
+// --- Offene Projektfenster (W7d: über den Neustart merken) ------------------
+// `open-windows.json`: welche Projektfenster beim letzten Quit offen waren.
+// Eintrag beim Öffnen, Austrag nur bei bewusstem Schließen (CloseRequested).
+
+fn open_windows_path() -> Result<PathBuf, String> {
+    Ok(crate::settings::home_dir()?
+        .join(".speccify")
+        .join("open-windows.json"))
+}
+
+fn load_open_windows() -> Vec<String> {
+    open_windows_path()
+        .ok()
+        .and_then(|path| std::fs::read_to_string(path).ok())
+        .and_then(|text| serde_json::from_str(&text).ok())
+        .unwrap_or_default()
+}
+
+fn save_open_windows(open: &[String]) {
+    if let Ok(path) = open_windows_path() {
+        if let Some(parent) = path.parent() {
+            let _ = std::fs::create_dir_all(parent);
+        }
+        if let Ok(json) = serde_json::to_string_pretty(open) {
+            let _ = std::fs::write(path, json + "\n");
+        }
+    }
+}
+
+fn remember_open(root: &Path) {
+    let entry = root.display().to_string();
+    let mut open = load_open_windows();
+    if !open.contains(&entry) {
+        open.push(entry);
+        save_open_windows(&open);
+    }
+}
+
+fn forget_open(root: &Path) {
+    let entry = root.display().to_string();
+    let mut open = load_open_windows();
+    let before = open.len();
+    open.retain(|known| known != &entry);
+    if open.len() != before {
+        save_open_windows(&open);
+    }
+}
+
+/// Beim App-Start: die beim letzten Quit offenen Projektfenster wieder
+/// öffnen (verschwundene Verzeichnisse fallen still weg).
+pub fn restore_open_windows(app: &AppHandle) {
+    let state: State<ProjectWindows> = app.state();
+    for entry in load_open_windows() {
+        if !Path::new(&entry).is_dir() {
+            forget_open(Path::new(&entry));
+            continue;
+        }
+        if let Err(error) = open_project_window(app, &state, &entry) {
+            eprintln!("Projektfenster {entry} nicht wiederhergestellt: {error}");
+        }
+    }
+}
+
 /// Zuletzt geöffnete Projekte, verschwundene Verzeichnisse ausgefiltert.
 #[tauri::command]
 pub fn project_recent() -> Vec<String> {
@@ -118,7 +181,17 @@ pub async fn project_open(
     state: State<'_, ProjectWindows>,
     path: String,
 ) -> Result<String, String> {
-    let root = resolve_project_root(&path)?;
+    open_project_window(&app, &state, &path)
+}
+
+/// Baut das Projektfenster — aus dem async Command und beim App-Start für
+/// die Wiederherstellung (W7d). Merkt das Fenster in `open-windows.json`.
+pub fn open_project_window(
+    app: &AppHandle,
+    state: &ProjectWindows,
+    path: &str,
+) -> Result<String, String> {
+    let root = resolve_project_root(path)?;
     let label = window_label(&root);
     if let Some(existing) = app.get_webview_window(&label) {
         let _ = existing.set_focus();
@@ -137,30 +210,43 @@ pub async fn project_open(
         .unwrap()
         .insert(label.clone(), root.display().to_string());
 
-    let window = tauri::WebviewWindowBuilder::new(
-        &app,
+    let builder = tauri::WebviewWindowBuilder::new(
+        app,
         label.clone(),
         tauri::WebviewUrl::App("index.html".into()),
     )
     .title(format!("{name} — Speccify"))
     .inner_size(1360.0, 880.0)
-    .min_inner_size(900.0, 600.0)
-    .build()
-    .map_err(|e| {
+    .min_inner_size(900.0, 600.0);
+    // macOS: Titelleiste transparent über dem Inhalt, die Ampel schwebt
+    // über der Toolbar — ein Fenster ohne sichtbaren Übergang (BO
+    // 2026-09-05). Die Toolbar lässt links Platz und ist Drag-Region.
+    #[cfg(target_os = "macos")]
+    let builder = builder
+        .title_bar_style(tauri::TitleBarStyle::Overlay)
+        .hidden_title(true);
+    let window = builder.build().map_err(|e| {
         state.0.lock().unwrap().remove(&label);
         format!("Fenster: {e}")
     })?;
 
     let app_for_close = app.clone();
     let label_for_close = label.clone();
-    window.on_window_event(move |event| {
-        if matches!(event, tauri::WindowEvent::Destroyed) {
+    let root_for_close = root.clone();
+    window.on_window_event(move |event| match event {
+        // Bewusst geschlossen (roter Knopf, Cmd-W): nicht wieder öffnen.
+        // Beim App-Quit kommt kein CloseRequested — die Fenster bleiben
+        // gemerkt und kommen beim nächsten Start zurück.
+        tauri::WindowEvent::CloseRequested { .. } => forget_open(&root_for_close),
+        tauri::WindowEvent::Destroyed => {
             let windows: State<ProjectWindows> = app_for_close.state();
             windows.0.lock().unwrap().remove(&label_for_close);
         }
+        _ => {}
     });
 
     remember_recent(&root);
+    remember_open(&root);
     Ok(root.display().to_string())
 }
 

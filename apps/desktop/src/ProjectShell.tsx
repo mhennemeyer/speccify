@@ -13,7 +13,16 @@ import { listen } from "@tauri-apps/api/event";
 import SettingsSheet from "./components/SettingsSheet";
 import SplitHandle from "./components/SplitHandle";
 import TerminalPanel from "./components/TerminalPanel";
-import Toolbar, { GearIcon, MoonIcon, PanelIcon, SunIcon, ToolbarButton } from "./components/Toolbar";
+import ActivityView from "./components/ActivityView";
+import Toolbar, {
+  GearIcon,
+  MoonIcon,
+  PanelIcon,
+  PlayIcon,
+  SunIcon,
+  ToolbarButton,
+  type ToolbarItem,
+} from "./components/Toolbar";
 import { isDark, useTheme } from "./lib/theme";
 import HelpView from "./views/HelpView";
 import { ErrorBox, Spinner } from "./components/ui";
@@ -53,6 +62,30 @@ const TABS = [
 
 type TabId = (typeof TABS)[number]["id"];
 
+/** Zwei Tab-Ebenen im Navigator (BO 2026-09-05, Vorbild iKanban): oben die
+ *  Gruppen als Icons, darunter die Tabs der Gruppe als Text. „Orga" ist ein
+ *  Arbeitsname — Kandidaten: Vorhaben, Wissen, Steuerung. */
+const GROUPS: ReadonlyArray<{ id: string; label: string; tabs: readonly TabId[] }> = [
+  { id: "board", label: "Board", tabs: ["board"] },
+  { id: "orga", label: "Orga", tabs: ["playbooks", "plans", "skills"] },
+  { id: "technik", label: "Technik", tabs: ["tools", "actions", "mcps", "agent"] },
+  { id: "help", label: "Hilfe", tabs: ["help"] },
+];
+
+function groupOf(tab: TabId) {
+  return GROUPS.find((group) => group.tabs.includes(tab)) ?? GROUPS[0];
+}
+
+/** Aktion aus actions.json, soweit die Toolbar sie braucht. */
+interface ToolbarAction {
+  name: string;
+  command: string;
+  confirmed: boolean;
+  toolbar?: boolean;
+  target: string;
+  inputs?: unknown[];
+}
+
 /** Agent-Kommando pro Projekt (F3: `claude` als Default, `codex` oder frei
  *  wählbar). localStorage reicht für P1 — es ist eine UI-Präferenz. */
 function agentCommandKey(project: string) {
@@ -70,6 +103,14 @@ export default function ProjectShell() {
   const [inspectorSlots, setInspectorSlots] = useState<Slots>({});
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [theme, setTheme] = useTheme();
+  // Zuletzt aktiver Tab je Gruppe — ein Gruppenwechsel kehrt dorthin zurück.
+  const [lastTab, setLastTab] = useState<Record<string, TabId>>({});
+  const activateTab = (tab: TabId) => {
+    setActive(tab);
+    setLastTab((previous) => ({ ...previous, [groupOf(tab).id]: tab }));
+  };
+  // W7d: Aktionen mit `toolbar: true` als Knöpfe in der Toolbar.
+  const [toolbarActions, setToolbarActions] = useState<ToolbarAction[]>([]);
 
   useEffect(() => {
     void invoke<string | null>("project_current")
@@ -108,6 +149,23 @@ export default function ProjectShell() {
       void invoke("project_watch_stop");
     };
   }, [project]);
+
+  useEffect(() => {
+    if (!project) return;
+    void invoke<{ actions: ToolbarAction[] }>("project_actions", { project })
+      .then((snapshot) =>
+        setToolbarActions(
+          snapshot.actions.filter(
+            (action) =>
+              action.toolbar &&
+              action.confirmed &&
+              action.target === "local" &&
+              !action.command.startsWith("toolui:"),
+          ),
+        ),
+      )
+      .catch(() => setToolbarActions([]));
+  }, [project, refresh.actions]);
 
   const updateLayout = useCallback(
     (patch: Partial<ProjectLayout> | ((previous: ProjectLayout) => Partial<ProjectLayout>)) => {
@@ -202,6 +260,22 @@ export default function ProjectShell() {
       ? { gridColumn: 5, gridRow: "3 / -1" }
       : { gridColumn: 3, gridRow: 5 };
 
+  const activeGroup = groupOf(active);
+  const toolbarItems: ToolbarItem[] = toolbarActions.map((action) => ({
+    id: action.command,
+    title: `${action.name} — ${action.command}`,
+    label: action.name,
+    icon: <PlayIcon />,
+    onClick: () => {
+      if (action.inputs && action.inputs.length > 0) {
+        // Mit Eingaben: im Aktionen-Tab ausfüllen und starten.
+        activateTab("actions");
+        return;
+      }
+      window.dispatchEvent(new CustomEvent("speccify:run-action", { detail: action.command }));
+    },
+  }));
+
   const dockLabel = terminalDock === "right" ? "⬓ nach unten" : "⬔ nach rechts";
   const toggleDock = () =>
     updateLayout((previous) =>
@@ -219,6 +293,8 @@ export default function ProjectShell() {
           <Toolbar
             title={project.split(/[\\/]/).pop() || project}
             subtitle={project}
+            items={toolbarItems}
+            center={<ActivityView />}
             trailing={
               <>
             <ToolbarButton
@@ -276,33 +352,60 @@ export default function ProjectShell() {
           className={`${navShown ? "flex" : "hidden"} min-h-0 flex-col border-r border-slate-200 bg-white`}
           style={{ gridColumn: 1, gridRow: "2 / -1" }}
         >
+          {/* Ebene 1: Gruppen als Icons */}
           <div className="px-2 py-1.5">
             <div
               role="tablist"
+              aria-label="Bereiche"
               className="flex gap-0.5 rounded-full bg-slate-100 p-0.5"
             >
-              {TABS.map((tab) => (
+              {GROUPS.map((group) => (
                 <button
-                  key={tab.id}
+                  key={group.id}
                   role="tab"
-                  aria-selected={active === tab.id}
-                  aria-label={tab.label}
-                  title={tab.label}
-                  onClick={() => setActive(tab.id)}
+                  aria-selected={activeGroup.id === group.id}
+                  aria-label={group.label}
+                  title={group.label}
+                  onClick={() => activateTab(lastTab[group.id] ?? group.tabs[0])}
                   className={`flex min-h-6 flex-1 items-center justify-center rounded-full ${
-                    active === tab.id
+                    activeGroup.id === group.id
                       ? "bg-slate-800 text-white"
                       : "text-slate-500 hover:bg-slate-200 hover:text-slate-800"
                   }`}
                 >
-                  <TabIcon id={tab.id} />
+                  <TabIcon id={group.id} />
                 </button>
               ))}
             </div>
           </div>
-          <h2 className="px-3 pb-1 text-xs font-semibold text-slate-500">
-            {TABS.find((tab) => tab.id === active)?.label}
-          </h2>
+          {/* Ebene 2: Tabs der Gruppe (nur wenn es mehr als einen gibt) */}
+          {activeGroup.tabs.length > 1 ? (
+            <div role="tablist" aria-label={activeGroup.label} className="flex gap-1 px-2 pb-1">
+              {activeGroup.tabs.map((id) => {
+                const tab = TABS.find((entry) => entry.id === id);
+                if (!tab) return null;
+                return (
+                  <button
+                    key={id}
+                    role="tab"
+                    aria-selected={active === id}
+                    onClick={() => activateTab(id)}
+                    className={`rounded px-2 py-1 text-xs font-medium ${
+                      active === id
+                        ? "bg-slate-200 text-slate-900"
+                        : "text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            <h2 className="px-3 pb-1 text-xs font-semibold text-slate-500">
+              {TABS.find((tab) => tab.id === active)?.label}
+            </h2>
+          )}
           {/* Ein Listen-Slot pro Tab — die Tabs portalen ihre Liste hinein
               (lib/panels.tsx); nur der aktive ist sichtbar. */}
           <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-2">

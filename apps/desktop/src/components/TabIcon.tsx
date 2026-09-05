@@ -30,6 +30,20 @@ const PATHS: Record<string, ReactElement> = {
       <path d="M12.5 11.5l.6 1.4 1.4.6-1.4.6-.6 1.4-.6-1.4-1.4-.6 1.4-.6z" />
     </>
   ),
+  // Gruppe „Orga" (Pläne, Playbooks, Skills): gestapelte Ebenen
+  orga: (
+    <>
+      <path d="M8 2.5l6 3-6 3-6-3z" />
+      <path d="M2 8.5l6 3 6-3" />
+      <path d="M2 11.5l6 3 6-3" />
+    </>
+  ),
+  // Gruppe „Technik" (Tools, Aktionen, MCPs, Agent)
+  technik: (
+    <>
+      <path d="M10.5 2.5a3 3 0 0 0-3.9 3.9L2.5 10.5l3 3 4.1-4.1a3 3 0 0 0 3.9-3.9l-2 2-2-2z" />
+    </>
+  ),
   tools: (
     <>
       <path d="M10.5 2.5a3 3 0 0 0-3.9 3.9L2.5 10.5l3 3 4.1-4.1a3 3 0 0 0 3.9-3.9l-2 2-2-2z" />
