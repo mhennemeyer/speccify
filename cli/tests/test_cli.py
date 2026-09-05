@@ -416,8 +416,15 @@ def test_tool_check_without_implementations_runs_nothing(tmp_path: Path) -> None
     assert "0 verified, 0 failed, 1 not run" in result.output
 
 
-def test_tool_check_verifies_an_implementation_and_records_it(tmp_path: Path) -> None:
+def test_tool_check_verifies_an_implementation_and_records_it(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """implemented -> verified: the examples pass, the record says so, verify is quiet."""
+    # `verify` judges implementations against the *current* platform; the test
+    # ships a macOS one, so pin the platform — otherwise the Linux CI runner
+    # reports "no implementation for this platform yet".
+    monkeypatch.setattr("speccify_cli.commands.expand.current_platform", lambda: "macos")
+    monkeypatch.setattr("speccify_core.tool_check.current_platform", lambda: "macos")
     project = _expanded_project(tmp_path)
     tool_dir = project / ".agent" / "tools" / "verify-signatures"
     (tool_dir / "macos.py").write_text(FAKE_VERIFY_SIGNATURES)
