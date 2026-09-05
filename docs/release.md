@@ -136,6 +136,16 @@ bewusst entscheiden:
 
 ### Danach
 
+- **Draft veröffentlichen — per CLI, nicht im Browser.** Der Draft stammt
+  vom Actions-Bot; „Publish release" in der Weboberfläche scheitert dann
+  mit *author does not have push access* (GitHub prüft den Autor des
+  Drafts, nicht den Klickenden). Stattdessen:
+
+  ```bash
+  gh release edit vX.Y.Z --draft=false
+  ```
+
+  Beim ersten Release (v0.4.0, 2026-09-05) so gelöst.
 - **Website umschalten**: `gh variable set PUBLIC_RELEASE_SIGNED --body true`
   — die Download-Seite lässt die Gatekeeper/SmartScreen-Warnboxen weg
   (greift beim nächsten Pages-Deploy).
