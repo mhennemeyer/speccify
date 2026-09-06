@@ -103,7 +103,18 @@ function DiffView({ text }: { text: string }) {
   );
 }
 
-export default function GitTab({ project, refresh }: { project: string; refresh?: number }) {
+export default function GitTab({
+  project,
+  refresh,
+  visible = true,
+}: {
+  project: string;
+  refresh?: number;
+  /** Tab ist zu sehen — dann Status beim Erscheinen und alle 4 s nachladen.
+   *  Der Watcher kennt nur die .agent-Bereiche, nicht den Arbeitsbaum
+   *  (BO-Finding 2026-09-06: geänderte Datei fehlte im Git-Tab). */
+  visible?: boolean;
+}) {
   const [status, setStatus] = useState<GitStatus | null>(null);
   const [log, setLog] = useState<GitCommit[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -145,6 +156,22 @@ export default function GitTab({ project, refresh }: { project: string; refresh?
   useEffect(() => {
     void load();
   }, [load, refresh]);
+
+  // Sichtbar: sofort und dann alle 4 s `git status` (billig, lokal) —
+  // so erscheinen Änderungen aus Editor, Agent-Terminal oder von außen.
+  useEffect(() => {
+    if (!visible) return;
+    void load();
+    const timer = setInterval(() => void load(), 4000);
+    return () => clearInterval(timer);
+  }, [visible, load]);
+
+  // Speichern im Dateien-Tab meldet sich direkt.
+  useEffect(() => {
+    const handler = () => void load();
+    window.addEventListener("speccify:worktree-changed", handler);
+    return () => window.removeEventListener("speccify:worktree-changed", handler);
+  }, [load]);
 
   // Diff der Auswahl nachladen (auch nach Watcher-Meldungen).
   useEffect(() => {

@@ -154,7 +154,12 @@ via Button, mit Nachricht oder durch den Agenten"):** Commit-Panel in den
 Inspektor (ohne Dateiauswahl), Knopf *Commit…* im Branch-Kopf fokussiert
 es, ⌘⏎ committet, *Alles committen* staged vorher, *Agent committen
 lassen* tippt den Auftrag per `speccify:type-command` ins Terminal
-(Enter dort bestätigt; kein Terminal → Hinweis). Bewusst nicht:
+(Enter dort bestätigt; kein Terminal → Hinweis). **BO-Finding
+2026-09-06 („geänderte Datei fehlte im Git-Tab"):** der Watcher kennt nur
+die `.agent`-Bereiche, nicht den Arbeitsbaum, und Tabs bleiben gemountet
+→ Git- und Dateien-Tab laden beim Sichtbarwerden neu, der Git-Tab fragt
+sichtbar alle 4 s `git status` (versteckt gar nicht), Speichern im Editor
+meldet `speccify:worktree-changed`. Bewusst nicht:
 Hunk-Staging, Branch-Wechsel, Merge-UI (I3/E4).
 
 ## Aufwand und Reihenfolge

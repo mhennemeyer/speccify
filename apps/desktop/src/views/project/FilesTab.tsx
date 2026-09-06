@@ -68,7 +68,16 @@ function FileIcon() {
   );
 }
 
-export default function FilesTab({ project, refresh }: { project: string; refresh?: number }) {
+export default function FilesTab({
+  project,
+  refresh,
+  visible = true,
+}: {
+  project: string;
+  refresh?: number;
+  /** Beim Sichtbarwerden offene Ordner neu lesen (neue Dateien von außen). */
+  visible?: boolean;
+}) {
   // Baum: Verzeichnis → Kinder; "" = Wurzel. Nur geladene Ordner sind offen.
   const [tree, setTree] = useState<Record<string, TreeEntry[]>>({});
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set([""]));
@@ -98,6 +107,12 @@ export default function FilesTab({ project, refresh }: { project: string; refres
   useEffect(() => {
     void loadDir("");
   }, [loadDir]);
+
+  useEffect(() => {
+    if (!visible) return;
+    for (const dir of expanded) void loadDir(dir);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible]);
 
   // Aus anderen Tabs (Git-Inspektor „Im Editor öffnen"): Datei öffnen und
   // die Elternordner im Baum aufklappen.
@@ -212,6 +227,7 @@ export default function FilesTab({ project, refresh }: { project: string; refres
       setOpen((previous) =>
         previous.map((entry) => (entry.path === path ? { ...entry, saved: content, error: null } : entry)),
       );
+      window.dispatchEvent(new CustomEvent("speccify:worktree-changed", { detail: path }));
     } catch (e) {
       setOpen((previous) =>
         previous.map((entry) => (entry.path === path ? { ...entry, error: String(e) } : entry)),

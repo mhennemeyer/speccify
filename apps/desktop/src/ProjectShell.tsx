@@ -537,12 +537,14 @@ export default function ProjectShell() {
             <FilesTab
               project={project}
               refresh={Object.values(refresh).reduce((sum, value) => sum + value, 0)}
+              visible={active === "files"}
             />
           </div>
           <div className={active === "git" ? "min-h-0 flex-1" : "hidden"}>
             <GitTab
               project={project}
               refresh={Object.values(refresh).reduce((sum, value) => sum + value, 0)}
+              visible={active === "git"}
             />
           </div>
           <div className={active === "plans" ? "min-h-0 flex-1" : "hidden"}>
