@@ -33,6 +33,8 @@ time = { version = "0.3", features = ["formatting"] }
 toml = "0.8"
 portable-pty = "0.9"
 wait-timeout = "0.2"
+# Projektbaum mit .gitignore-Regeln (IDE-Plan I1)
+ignore = "0.4"
 speccify-mcp-core = { path = "../../../crates/mcp-core" }
 speccify-toolbox = { path = "../../../crates/toolbox" }
 tauri-plugin-updater = "2.10.1"

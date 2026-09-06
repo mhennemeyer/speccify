@@ -43,6 +43,7 @@ import {
 import ActionsTab from "./views/project/ActionsTab";
 import AgentTab from "./views/project/AgentTab";
 import BoardTab from "./views/project/BoardTab";
+import FilesTab from "./views/project/FilesTab";
 import McpsTab from "./views/project/McpsTab";
 import PlansTab from "./views/project/PlansTab";
 import PlaybooksTab from "./views/project/PlaybooksTab";
@@ -52,6 +53,7 @@ import WorkflowBanner from "./views/project/WorkflowBanner";
 
 const TABS = [
   { id: "board", label: "Board" },
+  { id: "files", label: "Dateien" },
   { id: "playbooks", label: "Playbooks" },
   { id: "plans", label: "Pläne" },
   { id: "skills", label: "Skills" },
@@ -69,6 +71,7 @@ type TabId = (typeof TABS)[number]["id"];
  *  Arbeitsname — Kandidaten: Vorhaben, Wissen, Steuerung. */
 const GROUPS: ReadonlyArray<{ id: string; label: string; tabs: readonly TabId[] }> = [
   { id: "board", label: "Board", tabs: ["board"] },
+  { id: "dateien", label: "Dateien", tabs: ["files"] },
   { id: "orga", label: "Orga", tabs: ["playbooks", "plans", "skills"] },
   { id: "technik", label: "Technik", tabs: ["tools", "actions", "mcps", "agent"] },
   { id: "help", label: "Hilfe", tabs: ["help"] },
@@ -228,7 +231,7 @@ export default function ProjectShell() {
   );
 
   // Tastaturkürzel wie in Xcode: Cmd/Ctrl+0 Navigator, Cmd/Ctrl+Alt+0
-  // Inspektor, Cmd/Ctrl+Shift+Y Terminal unten, Cmd/Ctrl+1…4 Bereiche.
+  // Inspektor, Cmd/Ctrl+Shift+Y Terminal unten, Cmd/Ctrl+1…5 Bereiche.
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
       const mod = isMac ? event.metaKey : event.ctrlKey;
@@ -249,7 +252,7 @@ export default function ProjectShell() {
             ? { bottomShown: !previous.bottomShown }
             : { terminalDock: "bottom", bottomShown: true, rightTab: "inspector" },
         );
-      } else if (!typing && !event.altKey && !event.shiftKey && /^[1-4]$/.test(event.key)) {
+      } else if (!typing && !event.altKey && !event.shiftKey && /^[1-5]$/.test(event.key)) {
         const group = GROUPS[Number(event.key) - 1];
         if (group) {
           event.preventDefault();
@@ -526,6 +529,13 @@ export default function ProjectShell() {
           {/* Tabs bleiben gemountet (nur versteckt): Wechsel sofortig, Fetch-State erhalten. */}
           <div className={active === "board" ? "min-h-0 flex-1" : "hidden"}>
             <BoardTab project={project} refresh={refresh.board} planRefresh={refresh.plans} />
+          </div>
+          <div className={active === "files" ? "min-h-0 flex-1" : "hidden"}>
+            {/* Der Baum reagiert auf jede Watcher-Meldung (Summe aller Bereiche). */}
+            <FilesTab
+              project={project}
+              refresh={Object.values(refresh).reduce((sum, value) => sum + value, 0)}
+            />
           </div>
           <div className={active === "plans" ? "min-h-0 flex-1" : "hidden"}>
             <PlansTab project={project} refresh={refresh.plans} />

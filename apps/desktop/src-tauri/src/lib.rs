@@ -14,6 +14,7 @@ mod agent_config;
 mod board_cmd;
 mod desktop_ui;
 mod engine;
+mod files_cmd;
 mod help_docs;
 mod plan_cmd;
 mod playbook_cmd;
@@ -236,6 +237,8 @@ pub fn run() {
             project_cmd::project_plans,
             project_cmd::project_skills,
             project_cmd::project_read_file,
+            files_cmd::project_tree,
+            files_cmd::project_file_info,
             project_cmd::project_write_file,
             project_cmd::project_board,
             project_cmd::project_board_move,

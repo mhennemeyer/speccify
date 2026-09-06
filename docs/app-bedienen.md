@@ -25,8 +25,9 @@ Repository — wer etwas ändern will, ändert diese Datei.
 ## Der Aufbau des Projektfensters
 
 Das Fenster folgt dem Muster von Xcode: links der **Navigator** — oben
-eine Icon-Leiste mit den vier Bereichen **Board**, **Orga** (Playbooks,
-Pläne, Skills), **Technik** (Tools, Aktionen, MCPs, Agent) und **Hilfe**;
+eine Icon-Leiste mit den fünf Bereichen **Board**, **Dateien**, **Orga**
+(Playbooks, Pläne, Skills), **Technik** (Tools, Aktionen, MCPs, Agent) und
+**Hilfe**;
 der Tooltip nennt den Namen. Hat ein Bereich mehrere Tabs, stehen sie
 als zweite Zeile darunter, und die App merkt sich je Bereich den zuletzt
 gewählten. Unter den Tabs die Liste des aktiven Tabs: Pläne, Playbooks,
@@ -49,7 +50,7 @@ Was gerade läuft — eine Aktion, das Einrichten, ein Speichern, das
 Agent-Terminal, solange Ausgabe fließt — mit Laufzeit; abgeschlossene
 Agent-Läufe aus der Ticket-History erscheinen mit Ticket und Tokens.
 Ein Klick öffnet die Liste der letzten Aktivitäten. Tastaturkürzel wie
-in Xcode: ⌘0 Navigator, ⌥⌘0 Inspektor, ⇧⌘Y Terminal unten, ⌘1 bis ⌘4
+in Xcode: ⌘0 Navigator, ⌥⌘0 Inspektor, ⇧⌘Y Terminal unten, ⌘1 bis ⌘5
 die Bereiche (Windows: Strg statt ⌘). Rechts die
 Schalter für die Bereiche, Hell/Dunkel und die Einstellungen. Auf macOS
 ist die Toolbar zugleich die Titelleiste (die Ampel schwebt links darüber);
@@ -80,6 +81,15 @@ Dunkel. Das Zahnrad daneben öffnet die **Einstellungen**: Erscheinungsbild
   Plan aufklappbar; die Kopfzeile zeigt Läufe und Token-Verbrauch des
   Agenten. Der Filter **braucht mich** blendet alles aus, was nicht auf
   Dich wartet.
+- **Dateien** — der Projektbaum im Navigator (`.gitignore` gilt, `.git`
+  bleibt zu; Ordner laden beim Aufklappen, oben ein Namensfilter). Ein
+  Klick öffnet die Datei als Tab über einem Code-Editor (CodeMirror:
+  Syntaxfarben für Markdown, TypeScript, Python, Rust, JSON, YAML, HTML,
+  CSS; Suche mit Cmd/Ctrl-F). **Cmd/Ctrl-S speichert**, ein Punkt am Tab
+  zeigt Ungespeichertes. Der Inspektor nennt Größe, Zeilen, Änderungsdatum
+  und Cursorzeile und bietet *Speichern*, *Verwerfen*, *Als Prompt
+  kopieren* (mit `Pfad:Zeile`) und *Pfad kopieren*. Ändert der Agent eine
+  offene, ungeänderte Datei, lädt sie nach.
 - **Playbooks** — stehende Anleitungen aus `.agent/playbooks/` (Release-
   Ablauf, Deploy, Onboarding …). Anders als Pläne werden sie nicht
   abgearbeitet und „fertig", sondern immer wieder benutzt. **+ Playbook**

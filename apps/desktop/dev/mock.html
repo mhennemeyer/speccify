@@ -98,6 +98,21 @@
           { file: ".agent/plans/archive/notizen.md", title: "Notizen", lifecycle: "done", status: null, escalation: null, archived: true },
         ]),
         project_read_file: ({ file }) => files[file] ?? `# ${file}\n\n(leer)\n`,
+        project_write_file: () => null,
+        project_tree: ({ dir }) => {
+          const all = Object.keys(files).concat(["notes/zahlen.md", "src/main.py", "README.md"]);
+          const prefix = dir ? dir + "/" : "";
+          const seen = new Map();
+          for (const f of all) {
+            if (!f.startsWith(prefix)) continue;
+            const rest = f.slice(prefix.length);
+            const head = rest.split("/")[0];
+            const isDir = rest.includes("/");
+            if (!seen.has(head)) seen.set(head, { name: head, path: prefix + head, is_dir: isDir, size: isDir ? 0 : (files[f] ?? "x").length });
+          }
+          return orEmpty([...seen.values()].sort((a, b) => Number(b.is_dir) - Number(a.is_dir) || a.name.localeCompare(b.name)));
+        },
+        project_file_info: ({ file }) => ({ path: file, size: (files[file] ?? "").length, modified: "2026-09-06T10:00:00Z", lines: (files[file] ?? "").split("\n").length, binary: false }),
         project_playbooks: () => orEmpty([
           { file: ".agent/playbooks/release.md", title: "Release", description: "Vom Tag zum veröffentlichten Release" },
         ]),

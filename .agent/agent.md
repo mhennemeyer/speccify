@@ -59,8 +59,10 @@ Desktop-Vertrag; Adapter bleiben klein.
   oder andere getrackte Projektdateien schreiben.
 - Committen ist in diesem Repo ausdrücklich erlaubt (BO, 2026-08-31:
   „committe gern selbst in diesem Projekt") — in sich abgeschlossene
-  Conventional Commits mit Verifikationsstand. **Pushen** nur auf
-  ausdrückliche Anforderung.
+  Conventional Commits mit Verifikationsstand. **Pushen** ebenfalls
+  erlaubt (BO, 2026-09-06: „Mach commits und push gern selbst") — nach
+  grünem Verifikationsstand; ein Push auf `main` deployt die Website
+  (pages.yml), Tags lösen den Release-Workflow aus und bleiben BO-Zuruf.
 
 ## Skills und Tools
 

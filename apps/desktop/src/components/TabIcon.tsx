@@ -30,6 +30,12 @@ const PATHS: Record<string, ReactElement> = {
       <path d="M12.5 11.5l.6 1.4 1.4.6-1.4.6-.6 1.4-.6-1.4-1.4-.6 1.4-.6z" />
     </>
   ),
+  // Gruppe „Dateien" (IDE-Plan I1): Ordner
+  dateien: (
+    <>
+      <path d="M2 4.5A1.5 1.5 0 0 1 3.5 3h3l1.5 1.5h4.5A1.5 1.5 0 0 1 14 6v6.5a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 12.5z" />
+    </>
+  ),
   // Gruppe „Orga" (Pläne, Playbooks, Skills): gestapelte Ebenen
   orga: (
     <>

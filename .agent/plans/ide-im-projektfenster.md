@@ -1,6 +1,6 @@
 ---
-lifecycle: draft
-status: Recherche 2026-09-05 abgeschlossen — Vorschlag steht, wartet auf BO-Entscheide E1–E5
+lifecycle: active
+status: Bauen — I1 (Dateibaum + Editor) seit 2026-09-06; Entscheide E1–E5 nach BO-Delegation getroffen (siehe unten)
 ---
 # Plan: IDE-Bausteine im Projektfenster
 
@@ -87,7 +87,20 @@ Hunk-Staging, Datei-History im Inspektor, Blame am Rand, Projektsuche in
 Inhalten (`ripgrep` via Rust-Crate `grep`), Springen aus Terminal-Ausgaben
 (`pfad:zeile`) in den Editor, Zuletzt-geöffnet je Projekt, Tastaturkürzel.
 
-## Entscheidungen für den BO
+## Entscheidungen
+
+> **BO (2026-09-06):** „git library kannst du selbst entscheiden. Welche
+> besser passt." → Entscheide E1–E5 wie empfohlen getroffen:
+
+* **E1 System-`git`.** Ausschlag: Credentials (osxkeychain, Windows
+  Credential Manager, SSH-Agent) funktionieren ohne eigenes Zutun; kein
+  TLS-/OpenSSL-Vendoring im Windows-Build; `git` ist bei jedem Nutzer
+  von Speccify installiert (Skill-Quellen laufen ohnehin über Git). Preis:
+  Ausgabe-Parsing, gelöst über die `-z`/`--porcelain=v2`-Formate.
+* **E2 CodeMirror 6**, **E3 Editor + Git + Aktionen** (kein LSP),
+  **E4 Konflikte nur anzeigen**, **E5 eigene Navigator-Gruppe „Dateien"**.
+
+## Entscheidungen (ursprüngliche Fragen)
 
 * **E1 — Git-Anbindung:** System-`git` (Empfehlung) oder `git2`-Crate
   (libgit2 statisch; unabhängig von installiertem Git, aber TLS- und
@@ -100,6 +113,24 @@ Inhalten (`ripgrep` via Rust-Crate `grep`), Springen aus Terminal-Ausgaben
 * **E4 — Merge-Konflikte:** nur anzeigen (Empfehlung) oder 3-Wege-UI.
 * **E5 — Wo im Fenster:** eigene Navigator-Gruppe „Dateien" (Empfehlung)
   oder Dateien in „Technik".
+
+## Stand
+
+**I1 ✅ 2026-09-06 — Dateien: Baum + Editor.** Rust `files_cmd.rs`:
+`project_tree(dir)` lazy je Ordner über das `ignore`-Crate (.gitignore,
+.git/info/exclude, `.git` immer zu, Ordner zuerst), `project_file_info`
+(Größe, Änderungsdatum RFC 3339, Zeilen bis 5 MB, Binär-Erkennung per
+NUL im Kopf); Tests für Baum und Info. Frontend: Navigator-Gruppe
+**Dateien** (⌘2, die Bereiche rücken auf ⌘1–5), `FilesTab.tsx` (Baum mit
+Filter, Tabs offener Dateien mit Dirty-Punkt, Schließen fragt bei
+Ungespeichertem, Watcher lädt offene Ordner und ungeänderte Dateien
+nach), `CodeEditor.tsx` auf CodeMirror 6 (`basicSetup`, Sprache nach
+Endung für md/ts/tsx/js/py/rs/json/yaml/html/css, `oneDark` folgt
+`data-theme` per MutationObserver, `Mod-s` speichert, Tab rückt ein),
+Inspektor mit Größe/Zeilen/Datum/Zustand/Cursor und Speichern,
+Verwerfen, Als Prompt kopieren (`Pfad:Zeile`), Pfad kopieren. Speichern
+läuft als Aktivität. Bewusst nicht: Anlegen/Umbenennen/Löschen von
+Dateien (I3), Binärdateien nur als Hinweis.
 
 ## Aufwand und Reihenfolge
 
