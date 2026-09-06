@@ -96,8 +96,12 @@ Dunkel. Das Zahnrad daneben öffnet die **Einstellungen**: Erscheinungsbild
   *Änderungen*; **+** und **−** an der Zeile (oder *alle +*/*alle −*)
   stagen und entstagen. Ein Klick auf eine Datei zeigt ihren Diff in der
   Mitte, der Inspektor den Zustand mit *Stagen*, *Im Editor öffnen* und
-  *Diff als Prompt*. Commit-Box oben in der Mitte, die letzten Commits
-  darunter. Läuft alles über das installierte `git` — Zugangsdaten und
+  *Diff als Prompt*. **Committen** im Inspektor (Knopf *Commit…* im
+  Branch-Kopf springt hin): Nachricht schreiben und *Commit* (⌘⏎), *Alles
+  committen* staged vorher alles, oder *Agent committen lassen* — der
+  Auftrag landet im Agent-Terminal, dort mit Enter bestätigen, der Agent
+  liest den Diff, schreibt die Nachricht und committet. Die letzten
+  Commits stehen in der Mitte. Läuft alles über das installierte `git` — Zugangsdaten und
   SSH-Agent funktionieren wie im Terminal. Ohne Repository: *git init* per
   Knopf.
 - **Playbooks** — stehende Anleitungen aus `.agent/playbooks/` (Release-

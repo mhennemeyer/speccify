@@ -149,8 +149,13 @@ Staged/Änderungen mit +/− und alle-Knöpfen, Commit-Box, Diff-Ansicht
 (eingefärbte Zeilen), letzte 20 Commits; Inspektor mit Zustand, Stagen,
 „Im Editor öffnen" (Event `speccify:open-file` → FilesTab klappt die
 Ordner auf) und „Diff als Prompt". Leerzustände: kein Repo → `git init`
-per Knopf, sauber → „Alles committet". Bewusst nicht: Hunk-Staging,
-Branch-Wechsel, Merge-UI (I3/E4).
+per Knopf, sauber → „Alles committet". **BO-Finding 2026-09-06 („auch
+via Button, mit Nachricht oder durch den Agenten"):** Commit-Panel in den
+Inspektor (ohne Dateiauswahl), Knopf *Commit…* im Branch-Kopf fokussiert
+es, ⌘⏎ committet, *Alles committen* staged vorher, *Agent committen
+lassen* tippt den Auftrag per `speccify:type-command` ins Terminal
+(Enter dort bestätigt; kein Terminal → Hinweis). Bewusst nicht:
+Hunk-Staging, Branch-Wechsel, Merge-UI (I3/E4).
 
 ## Aufwand und Reihenfolge
 

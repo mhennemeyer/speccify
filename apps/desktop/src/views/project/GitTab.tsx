@@ -112,8 +112,24 @@ export default function GitTab({ project, refresh }: { project: string; refresh?
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const [run, setRun] = useState<{ id: string; lines: string[]; running: boolean; exit: number | null } | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const inspector = useInspector("git");
   const activityRef = useRef<string | null>(null);
+  const messageRef = useRef<HTMLTextAreaElement>(null);
+
+  // BO 2026-09-06: Committen auch „via Button" — mit eigener Nachricht
+  // oder durch den Agenten. Der Agent bekommt den Auftrag ins Terminal
+  // getippt (wie der Skill-Import) und bestätigt ihn dort mit Enter.
+  const askAgentToCommit = (stagedCount: number) => {
+    const prompt =
+      stagedCount > 0
+        ? "Bitte prüfe die gestageten Änderungen (git diff --cached), schreibe eine Conventional-Commit-Nachricht auf Deutsch und committe sie. Nicht pushen."
+        : "Bitte sieh dir die Änderungen an (git status, git diff), stage was zusammengehört, schreibe eine Conventional-Commit-Nachricht auf Deutsch und committe. Nicht pushen.";
+    window.dispatchEvent(new CustomEvent("speccify:type-command", { detail: prompt }));
+    setNotice(
+      "Auftrag ins Agent-Terminal getippt — dort mit Enter bestätigen. (Läuft kein Terminal, zuerst „Agent-Terminal starten“.)",
+    );
+  };
 
   const load = useCallback(async () => {
     try {
@@ -282,7 +298,18 @@ export default function GitTab({ project, refresh }: { project: string; refresh?
                 {status?.upstream ? `↑${status.ahead} ↓${status.behind}` : "kein Upstream"}
               </span>
             </div>
-            <div className="mt-1.5 flex gap-1">
+            <div className="mt-1.5 flex flex-wrap gap-1">
+              <button
+                onClick={() => {
+                  setSelected(null);
+                  inspector.reveal();
+                  setTimeout(() => messageRef.current?.focus(), 50);
+                }}
+                className="rounded bg-slate-800 px-2 py-0.5 text-[11px] font-medium text-white hover:bg-slate-700"
+                title="Commit-Nachricht schreiben oder den Agenten committen lassen"
+              >
+                Commit…
+              </button>
               {(["fetch", "pull", "push"] as const).map((verb) => (
                 <button
                   key={verb}
@@ -337,6 +364,64 @@ export default function GitTab({ project, refresh }: { project: string; refresh?
     </NavigatorPortal>
   );
 
+  // Ohne Dateiauswahl zeigt der Inspektor das Commit-Panel.
+  const commitPanel =
+    status?.repo && !(current && selected) ? (
+      <InspectorPortal tab="git" fallback={inlineInspector}>
+        <InspectorPanel
+          title="Commit"
+          subtitle={status.branch ?? undefined}
+          meta={[
+            { label: "Staged", value: `${staged.length} Datei(en)` },
+            { label: "Änderungen", value: `${unstaged.length} Datei(en)` },
+          ]}
+          actions={
+            <>
+              <InspectorButton
+                tone="primary"
+                disabled={busy || staged.length === 0 || !message.trim()}
+                onClick={() => void commit()}
+                title={staged.length === 0 ? "Erst stagen (+ in der Liste)" : "Gestagete Änderungen committen"}
+              >
+                Commit
+              </InspectorButton>
+              <InspectorButton
+                disabled={busy || unstaged.length === 0 || !message.trim()}
+                onClick={() =>
+                  void stage(unstaged.map((entry) => entry.path), true).then(() => commit())
+                }
+                title="Alle Änderungen stagen und mit dieser Nachricht committen"
+              >
+                Alles committen
+              </InspectorButton>
+              <InspectorButton
+                onClick={() => askAgentToCommit(staged.length)}
+                title="Der Agent liest die Änderungen, schreibt die Nachricht und committet"
+              >
+                Agent committen lassen
+              </InspectorButton>
+            </>
+          }
+        >
+          <textarea
+            ref={messageRef}
+            value={message}
+            onChange={(event) => setMessage(event.target.value)}
+            onKeyDown={(event) => {
+              if ((event.metaKey || event.ctrlKey) && event.key === "Enter" && staged.length > 0 && message.trim()) {
+                void commit();
+              }
+            }}
+            placeholder="Commit-Nachricht… (⌘⏎ committet)"
+            rows={3}
+            spellCheck={false}
+            className="w-full resize-none rounded border border-slate-300 bg-white px-2 py-1.5 font-mono text-xs"
+          />
+          {notice ? <p className="mt-2 text-xs text-sky-800">{notice}</p> : null}
+        </InspectorPanel>
+      </InspectorPortal>
+    ) : null;
+
   const details = current && selected ? (
     <InspectorPortal tab="git" fallback={inlineInspector}>
       <InspectorPanel
@@ -381,35 +466,14 @@ export default function GitTab({ project, refresh }: { project: string; refresh?
     <div className="flex h-full min-h-0 gap-4">
       {navigator}
       <div className="flex min-w-0 flex-1 flex-col gap-3 overflow-y-auto">
+        {commitPanel}
         {details}
         {error ? <p className="rounded bg-red-50 px-3 py-2 text-xs text-red-700">{error}</p> : null}
-        {status?.repo ? (
-          <div className="rounded-lg border border-slate-200 bg-white p-3">
-            <textarea
-              value={message}
-              onChange={(event) => setMessage(event.target.value)}
-              placeholder={
-                staged.length > 0
-                  ? `Commit-Nachricht für ${staged.length} Datei(en)…`
-                  : "Erst stagen (+ im Navigator), dann committen."
-              }
-              rows={2}
-              spellCheck={false}
-              className="w-full resize-none rounded border border-slate-300 px-2 py-1.5 font-mono text-xs"
-            />
-            <div className="mt-2 flex items-center justify-between">
-              <span className="text-[11px] text-slate-500">
-                {staged.length} staged · {unstaged.length} geändert
-              </span>
-              <button
-                onClick={() => void commit()}
-                disabled={busy || staged.length === 0 || !message.trim()}
-                className="rounded bg-slate-800 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-700 disabled:opacity-40"
-              >
-                Commit
-              </button>
-            </div>
-          </div>
+        {status?.repo && !selected && !run ? (
+          <p className="text-sm text-slate-400">
+            Datei links wählen für den Diff. Committen im Inspektor: Nachricht schreiben oder den
+            Agenten committen lassen.
+          </p>
         ) : null}
         {run ? (
           <div className="rounded-lg border border-slate-200 bg-slate-900 p-3 font-mono text-[11px] text-slate-200">
