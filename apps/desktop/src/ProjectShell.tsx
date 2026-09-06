@@ -44,6 +44,7 @@ import ActionsTab from "./views/project/ActionsTab";
 import AgentTab from "./views/project/AgentTab";
 import BoardTab from "./views/project/BoardTab";
 import FilesTab from "./views/project/FilesTab";
+import GitTab from "./views/project/GitTab";
 import McpsTab from "./views/project/McpsTab";
 import PlansTab from "./views/project/PlansTab";
 import PlaybooksTab from "./views/project/PlaybooksTab";
@@ -54,6 +55,7 @@ import WorkflowBanner from "./views/project/WorkflowBanner";
 const TABS = [
   { id: "board", label: "Board" },
   { id: "files", label: "Dateien" },
+  { id: "git", label: "Git" },
   { id: "playbooks", label: "Playbooks" },
   { id: "plans", label: "Pläne" },
   { id: "skills", label: "Skills" },
@@ -71,7 +73,7 @@ type TabId = (typeof TABS)[number]["id"];
  *  Arbeitsname — Kandidaten: Vorhaben, Wissen, Steuerung. */
 const GROUPS: ReadonlyArray<{ id: string; label: string; tabs: readonly TabId[] }> = [
   { id: "board", label: "Board", tabs: ["board"] },
-  { id: "dateien", label: "Dateien", tabs: ["files"] },
+  { id: "dateien", label: "Dateien", tabs: ["files", "git"] },
   { id: "orga", label: "Orga", tabs: ["playbooks", "plans", "skills"] },
   { id: "technik", label: "Technik", tabs: ["tools", "actions", "mcps", "agent"] },
   { id: "help", label: "Hilfe", tabs: ["help"] },
@@ -533,6 +535,12 @@ export default function ProjectShell() {
           <div className={active === "files" ? "min-h-0 flex-1" : "hidden"}>
             {/* Der Baum reagiert auf jede Watcher-Meldung (Summe aller Bereiche). */}
             <FilesTab
+              project={project}
+              refresh={Object.values(refresh).reduce((sum, value) => sum + value, 0)}
+            />
+          </div>
+          <div className={active === "git" ? "min-h-0 flex-1" : "hidden"}>
+            <GitTab
               project={project}
               refresh={Object.values(refresh).reduce((sum, value) => sum + value, 0)}
             />

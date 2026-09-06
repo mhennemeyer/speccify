@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { runningActivities, useActivities, type Activity } from "../lib/activity";
 
 function duration(entry: Activity, now: number): string {
-  const ms = (entry.endedAt ?? now) - entry.startedAt;
+  const ms = Math.max(0, (entry.endedAt ?? now) - entry.startedAt);
   if (ms < 1000) return `${ms} ms`;
   if (ms < 60_000) return `${Math.round(ms / 1000)} s`;
   return `${Math.floor(ms / 60_000)} min ${Math.round((ms % 60_000) / 1000)} s`;
@@ -35,10 +35,13 @@ export default function ActivityView() {
 
   // Laufzeiten tickend anzeigen, solange etwas läuft.
   useEffect(() => {
+    // Sofort auf die Uhr, sonst stünde bei einem frischen Start eine
+    // negative Laufzeit (BO-Screenshot 2026-09-06: „−1730 ms").
+    setNow(Date.now());
     if (running.length === 0) return;
     const timer = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(timer);
-  }, [running.length]);
+  }, [running.length, activities.length]);
 
   const latest = activities[0];
   const recentlyFinished =

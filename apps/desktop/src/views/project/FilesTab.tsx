@@ -99,6 +99,29 @@ export default function FilesTab({ project, refresh }: { project: string; refres
     void loadDir("");
   }, [loadDir]);
 
+  // Aus anderen Tabs (Git-Inspektor „Im Editor öffnen"): Datei öffnen und
+  // die Elternordner im Baum aufklappen.
+  useEffect(() => {
+    const handler = (event: Event) => {
+      const path = (event as CustomEvent<string>).detail;
+      if (!path) return;
+      const parts = path.split("/");
+      setExpanded((previous) => {
+        const next = new Set(previous);
+        for (let i = 1; i < parts.length; i += 1) {
+          const dir = parts.slice(0, i).join("/");
+          next.add(dir);
+          void loadDir(dir);
+        }
+        return next;
+      });
+      void openFile(path);
+    };
+    window.addEventListener("speccify:open-file", handler);
+    return () => window.removeEventListener("speccify:open-file", handler);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loadDir]);
+
   // Watcher: offene Ordner neu lesen, ungeänderte offene Dateien nachladen.
   useEffect(() => {
     if (!refresh) return;

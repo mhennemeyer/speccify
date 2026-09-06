@@ -135,6 +135,24 @@
         project_playbook_create: ({ name }) => `.agent/playbooks/${name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.md`,
         project_playbook_delete: () => null,
         project_action_run: () => null,
+        project_git_status: () => EMPTY
+          ? { repo: false, branch: null, upstream: null, ahead: 0, behind: 0, entries: [], error: null }
+          : {
+              repo: true, branch: "main", upstream: "origin/main", ahead: 2, behind: 0, error: null,
+              entries: [
+                { path: "README.md", index: ".", worktree: "M", untracked: false, conflicted: false, renamed_from: null },
+                { path: "notes/zahlen.md", index: "A", worktree: ".", untracked: false, conflicted: false, renamed_from: null },
+                { path: "src/neu.py", index: ".", worktree: "?", untracked: true, conflicted: false, renamed_from: null },
+              ],
+            },
+        project_git_diff: ({ path }) => `diff --git a/${path} b/${path}\n--- a/${path}\n+++ b/${path}\n@@ -1,2 +1,3 @@\n # Titel\n-alt\n+neu\n+noch eine Zeile\n`,
+        project_git_stage: () => null,
+        project_git_commit: ({ message }) => `[main abc1234] ${message}`,
+        project_git_log: () => [
+          { hash: "abc1234def", short: "abc1234", author: "Matthias", date: "2026-09-06T10:00:00+02:00", subject: "feat: notizen" },
+          { hash: "0123456789", short: "0123456", author: "Matthias", date: "2026-09-05T09:00:00+02:00", subject: "chore: start" },
+        ],
+        project_git_init: () => "Initialized empty Git repository",
         project_action_upsert: () => null,
         project_agent_files: () => orEmpty(["CLAUDE.md", ".agent/agent.md"]),
         project_skill_sources: () => ({ default: "/Users/me/Work/speccify/skills", sources: [] }),

@@ -90,6 +90,16 @@ Dunkel. Das Zahnrad daneben öffnet die **Einstellungen**: Erscheinungsbild
   und Cursorzeile und bietet *Speichern*, *Verwerfen*, *Als Prompt
   kopieren* (mit `Pfad:Zeile`) und *Pfad kopieren*. Ändert der Agent eine
   offene, ungeänderte Datei, lädt sie nach.
+- **Git** (im Bereich Dateien) — Branch mit Upstream und ↑↓-Zählern, dazu
+  *fetch*, *pull*, *push* mit Live-Ausgabe (und Eintrag in der
+  Aktivitätsanzeige). Darunter die geänderten Dateien in *Staged* und
+  *Änderungen*; **+** und **−** an der Zeile (oder *alle +*/*alle −*)
+  stagen und entstagen. Ein Klick auf eine Datei zeigt ihren Diff in der
+  Mitte, der Inspektor den Zustand mit *Stagen*, *Im Editor öffnen* und
+  *Diff als Prompt*. Commit-Box oben in der Mitte, die letzten Commits
+  darunter. Läuft alles über das installierte `git` — Zugangsdaten und
+  SSH-Agent funktionieren wie im Terminal. Ohne Repository: *git init* per
+  Knopf.
 - **Playbooks** — stehende Anleitungen aus `.agent/playbooks/` (Release-
   Ablauf, Deploy, Onboarding …). Anders als Pläne werden sie nicht
   abgearbeitet und „fertig", sondern immer wieder benutzt. **+ Playbook**

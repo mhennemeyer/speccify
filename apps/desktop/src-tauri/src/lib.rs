@@ -15,6 +15,7 @@ mod board_cmd;
 mod desktop_ui;
 mod engine;
 mod files_cmd;
+mod git_cmd;
 mod help_docs;
 mod plan_cmd;
 mod playbook_cmd;
@@ -239,6 +240,12 @@ pub fn run() {
             project_cmd::project_read_file,
             files_cmd::project_tree,
             files_cmd::project_file_info,
+            git_cmd::project_git_status,
+            git_cmd::project_git_diff,
+            git_cmd::project_git_stage,
+            git_cmd::project_git_commit,
+            git_cmd::project_git_log,
+            git_cmd::project_git_init,
             project_cmd::project_write_file,
             project_cmd::project_board,
             project_cmd::project_board_move,

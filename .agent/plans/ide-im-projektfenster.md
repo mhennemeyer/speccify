@@ -132,6 +132,26 @@ Verwerfen, Als Prompt kopieren (`Pfad:Zeile`), Pfad kopieren. Speichern
 läuft als Aktivität. Bewusst nicht: Anlegen/Umbenennen/Löschen von
 Dateien (I3), Binärdateien nur als Hinweis.
 
+**I2 ✅ 2026-09-06 — Git über System-git.** Rust `git_cmd.rs`: `git`
+per argv (kein Shell), cwd Projekt, `GIT_TERMINAL_PROMPT=0`, `LC_ALL=C`,
+30-s-Timeout, Windows `CREATE_NO_WINDOW`; `project_git_status`
+(`--porcelain=v2 --branch -z`, Parser mit Branch/Upstream/ahead-behind,
+Records 1/2/u/?, exaktes `splitn`, damit Pfade mit Leerzeichen ganz
+bleiben), `project_git_diff` (Index/Arbeitsbaum, Untracked gegen
+/dev/null bzw. NUL), `project_git_stage` (`add -A` / `restore --staged`,
+ohne HEAD `rm --cached`), `project_git_commit`, `project_git_log`
+(Unit-Separator-Format), `project_git_init`. Tests: Parser (Rename,
+Konflikt, Untracked), Log, echter Roundtrip in einem Temp-Repo (init →
+untracked → stage → unstage → commit → log). Frontend `GitTab.tsx` als
+zweiter Tab der Gruppe Dateien: Branch-Kopf mit fetch/pull/push über
+`project_action_run` (run_id `git:…`, Live-Ausgabe, Aktivität), Listen
+Staged/Änderungen mit +/− und alle-Knöpfen, Commit-Box, Diff-Ansicht
+(eingefärbte Zeilen), letzte 20 Commits; Inspektor mit Zustand, Stagen,
+„Im Editor öffnen" (Event `speccify:open-file` → FilesTab klappt die
+Ordner auf) und „Diff als Prompt". Leerzustände: kein Repo → `git init`
+per Knopf, sauber → „Alles committet". Bewusst nicht: Hunk-Staging,
+Branch-Wechsel, Merge-UI (I3/E4).
+
 ## Aufwand und Reihenfolge
 
 Iterativ, jeder Baustein für sich nutzbar: I1 zuerst (Baum + Editor sind
