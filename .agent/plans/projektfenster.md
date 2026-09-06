@@ -727,9 +727,29 @@ Workflow einrichten, Plan/Playbook speichern. Verifikation: Playwright
 am Mock (Gruppenwechsel merkt Tab, Inspektor-Tabs schalten History,
 Toolbar-Knopf startet Aktion → Aktivität läuft), typecheck, cargo test
 47/47. (5) IDE-Recherche → eigener Plan `ide-im-projektfenster.md`.
-**Offen:** Prüfung der Overlay-Titelleiste in der echten App (macOS)
-durch den BO; Plan-/Playbook-Metadaten in den Inspektor; Tastaturkürzel;
-Aktivität aus dem Agenten (History `agent_run`) speisen; Orga umbenennen.
+**W7e ✅ 2026-09-06 (BO-Findings vom 2026-09-06):** (1) **Inspektor zu
+jeder Auswahl** — `InspectorPanel` in `lib/panels.tsx` (Kopf, Aktionen,
+Meta-Tabelle, optionale Tabs) als Einheitsform; alle neun Tabs portalen
+hinein: Ticket (Tabs Übersicht | Historie, jetzt auch im Inline-Fallback —
+BO hatte die Tabs nicht gesehen), Plan (Lifecycle, Status, Eskalation,
+Aktivieren/Archivieren/Auflösen/Prompt/Bearbeiten — der Inhalt ist nur
+noch das Dokument), Playbook, Skill (Herkunft, Version, Tools; im
+Quellen-Modus Quelle/Kategorie/Id + Importieren), Tool (Plattformen,
+Dateien, Plattform-Lücke), Aktion (Quelle, Ziel, Eingaben, letzter Lauf,
+Ausführen, Toolbar), MCP-Server (Host, Kommando/URL, JSON), Agent-Datei,
+Hilfe-Dokument. `inlineInspector` als Fallback-Kasten über dem Inhalt.
+(2) **Leerzustände** — `NavEmpty` in jeder Navigator-Liste mit Erklärung
+und nächstem Schritt: Board „+ Ticket", Pläne „+ Plan" (neues Rust-
+Kommando `project_plan_create`, Entwurf mit `lifecycle: draft`),
+Playbooks, Skills → „Quellen durchsuchen", Tools → Skills-Tab
+(`showTab`-Event), Aktionen → Formular, MCPs → Prompt für den Agenten
+in die Zwischenablage (MCPs haben jetzt auch eine Liste), Agent-Dateien
+→ Hinweis aufs Einrichten. Mock mit `?empty=1`. Verifikation: Playwright
+— alle neun Auswahlen füllen den Inspektor, alle acht Listen zeigen den
+Leerzustand; cargo test 48/48; typecheck. **Offen:** Prüfung der
+Overlay-Titelleiste in der echten App (macOS) durch den BO;
+Tastaturkürzel; Aktivität aus dem Agenten (History `agent_run`)
+speisen; Orga umbenennen.
 
 **Nicht in P5:** alles aus D29; Discovery-/Speccify-MCP-Anbindung der
 iKanbanAI-Seite (wird obsolet — Speccify ist das Produkt selbst).

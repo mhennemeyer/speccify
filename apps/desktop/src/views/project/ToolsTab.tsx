@@ -7,7 +7,17 @@ import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import Markdown, { stripFrontmatter } from "../../components/Markdown";
 import { LoadingBoundary, useAsync } from "../../components/ui";
-import { NavigatorPortal } from "../../lib/panels";
+import {
+  InspectorButton,
+  InspectorPanel,
+  InspectorPortal,
+  NavEmpty,
+  NavigatorPortal,
+  inlineInspector,
+  showTab,
+  useInspector,
+} from "../../lib/panels";
+import { copyPrompt } from "../../lib/prompt";
 
 interface ToolPlatform {
   name: string;
@@ -37,6 +47,7 @@ export default function ToolsTab({ project, refresh }: { project: string; refres
   );
   const platform = useAsync(() => invoke<string>("project_platform"), "platform");
   const [selected, setSelected] = useState<string | null>(null);
+  const inspector = useInspector("tools");
   const spec = useAsync(
     () =>
       selected
@@ -62,10 +73,22 @@ export default function ToolsTab({ project, refresh }: { project: string; refres
   return (
     <LoadingBoundary loading={list.loading} error={list.error} label="Tools lesen…">
       {tools.length === 0 ? (
-        <p className="text-sm text-slate-500">
-          Keine Tools unter <code>.agent/tools/</code> — Tool-Specs kommen mit
-          Skills über <code>speccify expand</code> ins Projekt.
-        </p>
+        <>
+          <NavigatorPortal tab="tools" fallback={() => null}>
+            <NavEmpty
+              title="Noch keine Tools"
+              action={{ label: "Skills durchsuchen", onClick: () => showTab("skills") }}
+            >
+              Tool-Verträge (<code>TOOL.md</code>) kommen mit Skills über{" "}
+              <code>speccify expand</code> ins Projekt. Importiere einen Skill, der
+              Tools mitbringt — die Implementierung schreibt dann der Agent.
+            </NavEmpty>
+          </NavigatorPortal>
+          <p className="text-sm text-slate-500">
+            Keine Tools unter <code>.agent/tools/</code> — Tool-Specs kommen mit
+            Skills über <code>speccify expand</code> ins Projekt.
+          </p>
+        </>
       ) : (
         <div className="flex h-full min-h-0 gap-4">
           <NavigatorPortal tab="tools">
@@ -73,7 +96,10 @@ export default function ToolsTab({ project, refresh }: { project: string; refres
               {tools.map((tool) => (
                 <li key={tool.file}>
                   <button
-                    onClick={() => setSelected(tool.file)}
+                    onClick={() => {
+                      setSelected(tool.file);
+                      inspector.reveal();
+                    }}
                     className={`w-full rounded px-2 py-1.5 text-left text-sm ${
                       selected === tool.file
                         ? "bg-slate-800 text-white"
@@ -94,42 +120,62 @@ export default function ToolsTab({ project, refresh }: { project: string; refres
           <div className="min-w-0 flex-1 overflow-y-auto rounded-lg border border-slate-200 bg-white p-5">
             {selectedTool ? (
               <>
-                {hereStatus(selectedTool) === null && here ? (
-                  <p className="mb-3 rounded border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
-                    <span className="font-semibold">
-                      Fehlt auf dieser Plattform ({here}).
-                    </span>{" "}
-                    Bitte den Agenten rechts, die Implementierung zu schreiben —
-                    <code className="mx-1">speccify tool check {selectedTool.name}</code>
-                    verifiziert sie.
-                  </p>
-                ) : null}
-                <div className="mb-3 flex flex-wrap gap-2 text-xs text-slate-600">
-                  {selectedTool.platforms.map((entry) => (
-                    <span
-                      key={entry.name}
-                      className={`rounded-full px-2 py-0.5 font-medium ${statusTone(entry.status)}`}
-                      title={entry.checked ? `geprüft ${entry.checked}` : undefined}
-                    >
-                      {entry.name}: {entry.status ?? "?"}
-                    </span>
-                  ))}
-                  {selectedTool.from.length > 0 ? (
-                    <span className="text-slate-400">
-                      aus {selectedTool.from.join(", ")}
-                    </span>
-                  ) : null}
-                </div>
-                {selectedTool.files.length > 0 ? (
-                  <p className="mb-3 text-xs text-slate-500">
-                    Dateien:{" "}
-                    {selectedTool.files.map((file) => (
-                      <code key={file} className="mr-2">
-                        {file}
-                      </code>
-                    ))}
-                  </p>
-                ) : null}
+                <InspectorPortal tab="tools" fallback={inlineInspector}>
+                  <InspectorPanel
+                    title={selectedTool.name}
+                    subtitle={selectedTool.file}
+                    meta={[
+                      { label: "Beschreibung", value: selectedTool.description ?? "—" },
+                      {
+                        label: "Plattformen",
+                        value: (
+                          <span className="flex flex-wrap gap-1">
+                            {selectedTool.platforms.map((entry) => (
+                              <span
+                                key={entry.name}
+                                className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${statusTone(entry.status)}`}
+                                title={entry.checked ? `geprüft ${entry.checked}` : undefined}
+                              >
+                                {entry.name}: {entry.status ?? "fehlt"}
+                              </span>
+                            ))}
+                          </span>
+                        ),
+                      },
+                      {
+                        label: "Aus Skill",
+                        value: selectedTool.from.length > 0 ? selectedTool.from.join(", ") : "—",
+                      },
+                      {
+                        label: "Dateien",
+                        value:
+                          selectedTool.files.length > 0 ? (
+                            <span className="font-mono">{selectedTool.files.join(", ")}</span>
+                          ) : (
+                            "— noch keine Implementierung"
+                          ),
+                      },
+                    ]}
+                    actions={
+                      <InspectorButton
+                        title="TOOL.md als Prompt in die Zwischenablage — z. B. für „implementiere das für diese Plattform“"
+                        disabled={spec.data === null}
+                        onClick={() => void copyPrompt(selectedTool.file, spec.data ?? "")}
+                      >
+                        Als Prompt kopieren
+                      </InspectorButton>
+                    }
+                  >
+                    {hereStatus(selectedTool) === null && here ? (
+                      <p className="rounded border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                        <span className="font-semibold">Fehlt auf dieser Plattform ({here}).</span>{" "}
+                        Bitte den Agenten im Terminal, die Implementierung zu schreiben —
+                        <code className="mx-1">speccify tool check {selectedTool.name}</code>
+                        verifiziert sie.
+                      </p>
+                    ) : null}
+                  </InspectorPanel>
+                </InspectorPortal>
                 <LoadingBoundary loading={spec.loading} error={spec.error} label="Spec lesen…">
                   <Markdown text={stripFrontmatter(spec.data ?? "")} />
                 </LoadingBoundary>

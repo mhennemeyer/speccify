@@ -7,7 +7,7 @@ import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import Markdown from "../components/Markdown";
 import { LoadingBoundary, useAsync } from "../components/ui";
-import { NavigatorPortal } from "../lib/panels";
+import { InspectorPanel, InspectorPortal, NavigatorPortal, inlineInspector } from "../lib/panels";
 
 interface HelpDocMeta {
   slug: string;
@@ -59,7 +59,24 @@ export default function HelpView() {
         <article className="min-w-0 flex-1 overflow-y-auto rounded-lg border border-slate-200 bg-white p-6">
           {current ? (
             <>
-              <p className="mb-4 font-mono text-xs text-slate-400">{current.source_path}</p>
+              <InspectorPortal tab="help" fallback={inlineInspector}>
+                <InspectorPanel
+                  title={current.title}
+                  subtitle={current.source_path}
+                  meta={[
+                    { label: "Inhalt", value: current.description },
+                    {
+                      label: "Quelle",
+                      value: (
+                        <span>
+                          <span className="font-mono">{current.source_path}</span> im Repository —
+                          wer etwas ändern will, ändert diese Datei.
+                        </span>
+                      ),
+                    },
+                  ]}
+                />
+              </InspectorPortal>
               <LoadingBoundary loading={body.loading} error={body.error} label="Dokument laden…">
                 <Markdown text={body.data ?? ""} />
               </LoadingBoundary>

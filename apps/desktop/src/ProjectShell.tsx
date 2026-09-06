@@ -150,6 +150,18 @@ export default function ProjectShell() {
     };
   }, [project]);
 
+  // Tabs aus anderen Bereichen anspringen (lib/panels.ts `showTab`) —
+  // etwa der Leerzustand von Tools, der zu den Skills schickt.
+  useEffect(() => {
+    const handler = (event: Event) => {
+      const id = (event as CustomEvent<string>).detail as TabId;
+      if (TABS.some((tab) => tab.id === id)) activateTab(id);
+    };
+    window.addEventListener("speccify:show-tab", handler);
+    return () => window.removeEventListener("speccify:show-tab", handler);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     if (!project) return;
     void invoke<{ actions: ToolbarAction[] }>("project_actions", { project })
@@ -539,8 +551,8 @@ export default function ProjectShell() {
               ))
             : null}
           <p className="inspector-placeholder p-4 text-xs text-slate-400">
-            Nichts ausgewählt. Der Inspektor zeigt das Detail der Auswahl — im Board
-            das angeklickte Ticket.
+            Nichts ausgewählt. Der Inspektor zeigt Details und Aktionen zur Auswahl —
+            wähle links etwas aus der Liste oder im Board ein Ticket.
           </p>
         </aside>
 

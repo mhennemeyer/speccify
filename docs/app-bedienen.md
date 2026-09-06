@@ -31,9 +31,15 @@ der Tooltip nennt den Namen. Hat ein Bereich mehrere Tabs, stehen sie
 als zweite Zeile darunter, und die App merkt sich je Bereich den zuletzt
 gewählten. Unter den Tabs die Liste des aktiven Tabs: Pläne, Playbooks,
 Skills, Tools, Aktionen, Hilfe-Dokumente, im Board ein Filter nach Plan.
-In der Mitte der Inhalt des Ausgewählten, rechts der **Inspektor**, der
-das Detail zeigt — im Board das angeklickte Ticket mit den Tabs
-*Übersicht* (Fragen und Beschreibung) und *Historie*.
+In der Mitte der Inhalt des Ausgewählten, rechts der **Inspektor**: Zu
+allem, was links ausgewählt ist, zeigt er Metadaten und die passenden
+Knöpfe — beim Ticket die Tabs *Übersicht* (Fragen und Beschreibung) und
+*Historie*, beim Plan Lifecycle, Status, Aktivieren, Archivieren, beim
+Skill die Herkunft, beim Tool die Plattform-Stände, bei der Aktion den
+letzten Lauf und „Ausführen". Ist der Inspektor ausgeblendet, erscheint
+dasselbe als Kasten über dem Inhalt. Ist eine Liste leer, sagt die
+Seitenleiste, was fehlt, und bietet den nächsten Schritt an: „+ Plan",
+„+ Ticket", „Quellen durchsuchen" oder einen Prompt für den Agenten.
 
 Die **Toolbar** oben trägt links den Projektnamen, in der Mitte die
 **Aktions-Knöpfe** (jede Aktion aus `.agent/actions.json` lässt sich im

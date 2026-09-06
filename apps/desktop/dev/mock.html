@@ -9,6 +9,9 @@
       // http://localhost:1420/dev/mock.html). Kein Produktbestandteil.
       // Die Daten spiegeln das W1-Fixture-Projekt der E2E-Läufe.
       const project = "/private/tmp/claude-501/w1-projekt";
+      // ?empty=1 → alle Listen leer (Leerzustände prüfen)
+      const EMPTY = new URLSearchParams(location.search).has("empty");
+      const orEmpty = (value) => (EMPTY ? (Array.isArray(value) ? [] : value) : value);
       const base = {
         assignee: null,
         created: "2026-08-31T09:00:00Z",
@@ -85,44 +88,49 @@
         project_watch_start: () => null,
         project_watch_stop: () => null,
         project_workflow_status: () => ({ state: "current", installed_version: 1, current_version: 1, pending: [] }),
-        project_board: () => tickets,
+        project_board: () => orEmpty(tickets),
         project_board_kpis: () => ({ run_count: 1, tokens_in: 30000, tokens_out: 1500, duration_ms: 120000, recent: [] }),
         project_ticket_history: ({ ticketId }) => history[ticketId] ?? [],
         project_ticket_questions: ({ file }) => questions[file] ?? [],
         project_ticket_answer: () => null,
-        project_plans: () => [
+        project_plans: () => orEmpty([
           { file: ".agent/plans/aufraeumen.md", title: "Plan: Aufräumen", lifecycle: "active", status: "läuft — Tickets geschnitten", escalation: null, archived: false },
           { file: ".agent/plans/archive/notizen.md", title: "Notizen", lifecycle: "done", status: null, escalation: null, archived: true },
-        ],
+        ]),
         project_read_file: ({ file }) => files[file] ?? `# ${file}\n\n(leer)\n`,
-        project_playbooks: () => [
+        project_playbooks: () => orEmpty([
           { file: ".agent/playbooks/release.md", title: "Release", description: "Vom Tag zum veröffentlichten Release" },
-        ],
-        project_skills: () => [
+        ]),
+        project_skills: () => orEmpty([
           { name: "notizen-anlegen", file: ".agent/skills/notizen-anlegen/SKILL.md", description: "Legt eine Notiz mit Frontmatter unter notes/ an", origin: { source: "/Users/me/Work/speccify/skills", version: "0.1.0", expanded: "2026-08-31", tools: ["notiz-pruefen"] } },
           { name: "speccify", file: ".agent/skills/speccify/SKILL.md", description: "Expand, execute, evaluate", origin: { source: "/Users/me/Work/speccify/skills", version: "0.2.0", expanded: "2026-08-31", tools: [] } },
-        ],
-        project_tools: () => [
+        ]),
+        project_tools: () => orEmpty([
           { name: "notiz-pruefen", file: ".agent/tools/notiz-pruefen/TOOL.md", description: "Prüft eine Notiz auf gültiges Frontmatter", from: ["notizen-anlegen"], platforms: [{ name: "macos", status: "verified", checked: "2026-08-31" }, { name: "windows", status: null, checked: null }], files: ["macos.sh"] },
-        ],
+        ]),
         project_actions: () => ({
-          actions: [
+          actions: EMPTY ? [] : [
             { name: "Notizen zählen", command: "ls notes", description: "Wie viele Notizen liegen da?", source: "actions.json", confirmed: true, target: "local" },
             { name: "Tests", command: "uv run pytest", description: null, source: "actions.json", confirmed: true, toolbar: true, target: "local" },
             { name: "Notizen auflisten", command: "ls -la notes", description: null, source: "agent", confirmed: false, target: "local" },
           ],
           pending: [],
         }),
+        project_plan_create: ({ name }) => `.agent/plans/${name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.md`,
+        project_playbook_create: ({ name }) => `.agent/playbooks/${name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.md`,
+        project_playbook_delete: () => null,
         project_action_run: () => null,
         project_action_upsert: () => null,
-        project_agent_files: () => ["CLAUDE.md", ".agent/agent.md"],
+        project_agent_files: () => orEmpty(["CLAUDE.md", ".agent/agent.md"]),
         project_skill_sources: () => ({ default: "/Users/me/Work/speccify/skills", sources: [] }),
         project_platform: () => "macos",
-        project_mcps: () => ({ claude_servers: {}, codex_servers: null, claude_allow: [], claude_allow_local: [] }),
-        help_docs: () => [
+        project_mcps: () => EMPTY
+          ? { claude_servers: null, codex_servers: null, claude_allow: [], claude_allow_local: [] }
+          : { claude_servers: { filesystem: { command: "npx", args: ["-y", "@modelcontextprotocol/server-filesystem", "."], type: "stdio" } }, codex_servers: { "speccify-exec": { url: "http://127.0.0.1:8765/mcp" } }, claude_allow: ["Bash(uv run pytest*)"], claude_allow_local: [] },
+        help_docs: () => orEmpty([
           { slug: "app-bedienen", title: "Die App bedienen", description: "Anleitung", source_path: "docs/app-bedienen.md" },
           { slug: "toolkit", title: "Toolkit", description: "Werkzeuge", source_path: "docs/toolkit.md" },
-        ],
+        ]),
         help_doc: () => "# Die App bedienen\n\nText.\n",
         get_settings: () => ({ working_dir: null, terminal_autostart_command: "claude", skill_library: null, theme: "light" }),
         save_settings: () => null,

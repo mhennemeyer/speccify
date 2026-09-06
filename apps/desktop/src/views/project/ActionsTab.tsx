@@ -11,7 +11,16 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import { LoadingBoundary, useAsync } from "../../components/ui";
-import { NavigatorPortal, NavRow } from "../../lib/panels";
+import {
+  InspectorButton,
+  InspectorPanel,
+  InspectorPortal,
+  NavEmpty,
+  NavigatorPortal,
+  NavRow,
+  inlineInspector,
+  useInspector,
+} from "../../lib/panels";
 import { beginActivity, endActivity } from "../../lib/activity";
 
 interface ActionInput {
@@ -318,6 +327,9 @@ export default function ActionsTab({
   const [inputValues, setInputValues] = useState<Record<string, Record<string, string>>>({});
   const [draft, setDraft] = useState({ name: "", command: "", description: "" });
   const [error, setError] = useState<string | null>(null);
+  // W7: Auswahl aus dem Navigator → Inspektor zeigt Details und Aktionen.
+  const [selected, setSelected] = useState<string | null>(null);
+  const inspector = useInspector("actions");
 
   useEffect(() => {
     if (refresh) void snapshot.reload();
@@ -453,28 +465,105 @@ export default function ActionsTab({
     <LoadingBoundary loading={snapshot.loading} error={snapshot.error} label="Aktionen lesen…">
       <div className="max-w-3xl space-y-5 overflow-y-auto pr-1">
         <NavigatorPortal tab="actions" fallback={() => null}>
-          <div className="space-y-0.5">
-            {confirmed.map((action) => (
-              <NavRow
-                key={action.command}
-                selected={false}
-                subtitle={action.command}
-                onClick={() =>
+          {confirmed.length === 0 && proposals.length + pending.length === 0 ? (
+            <NavEmpty
+              title="Noch keine Aktionen"
+              action={{
+                label: "+ Aktion anlegen",
+                onClick: () =>
                   document
-                    .querySelector(`[data-action="${CSS.escape(action.command)}"]`)
-                    ?.scrollIntoView({ block: "start", behavior: "smooth" })
-                }
-              >
-                {action.name}
-              </NavRow>
-            ))}
-            {proposals.length + pending.length > 0 ? (
-              <p className="px-2 pt-2 text-[11px] text-amber-700">
-                {proposals.length + pending.length} Vorschläge des Agenten — unten im Inhalt.
-              </p>
-            ) : null}
-          </div>
+                    .querySelector("[data-new-action]")
+                    ?.scrollIntoView({ block: "start", behavior: "smooth" }),
+              }}
+            >
+              Aktionen sind benannte Kommandos aus <code>.agent/actions.json</code> —
+              Tests, Build, Start. Die App führt sie mit Live-Ausgabe aus. Unten
+              anlegen, oder den Agenten im Terminal bitten, welche vorzuschlagen.
+            </NavEmpty>
+          ) : (
+            <div className="space-y-0.5">
+              {confirmed.map((action) => (
+                <NavRow
+                  key={action.command}
+                  selected={selected === action.command}
+                  subtitle={action.command}
+                  onClick={() => {
+                    setSelected(action.command);
+                    inspector.reveal();
+                    document
+                      .querySelector(`[data-action="${CSS.escape(action.command)}"]`)
+                      ?.scrollIntoView({ block: "start", behavior: "smooth" });
+                  }}
+                >
+                  {action.name}
+                </NavRow>
+              ))}
+              {proposals.length + pending.length > 0 ? (
+                <p className="px-2 pt-2 text-[11px] text-amber-700">
+                  {proposals.length + pending.length} Vorschläge des Agenten — unten im Inhalt.
+                </p>
+              ) : null}
+            </div>
+          )}
         </NavigatorPortal>
+        {(() => {
+          const action = confirmed.find((entry) => entry.command === selected);
+          if (!action) return null;
+          const run = runs[action.command];
+          return (
+            <InspectorPortal tab="actions" fallback={inlineInspector}>
+              <InspectorPanel
+                title={action.name}
+                subtitle={action.command}
+                meta={[
+                  { label: "Beschreibung", value: action.description ?? "—" },
+                  { label: "Quelle", value: action.source },
+                  { label: "Ziel", value: action.target },
+                  {
+                    label: "Eingaben",
+                    value: action.inputs?.length ? action.inputs.map((input) => input.name).join(", ") : "keine",
+                  },
+                  { label: "Toolbar", value: action.toolbar ? "ja" : "nein" },
+                  {
+                    label: "Letzter Lauf",
+                    value: run
+                      ? run.running
+                        ? "läuft …"
+                        : run.error
+                          ? `Fehler: ${run.error}`
+                          : `Exit ${run.exitCode ?? "?"}${run.durationMs !== null ? ` · ${Math.round(run.durationMs / 1000)} s` : ""}`
+                      : "—",
+                  },
+                ]}
+                actions={
+                  <>
+                    {runnable(action) ? (
+                      <InspectorButton
+                        tone="primary"
+                        disabled={run?.running}
+                        onClick={() => void start(action)}
+                      >
+                        {run?.running ? "läuft…" : "Ausführen"}
+                      </InspectorButton>
+                    ) : null}
+                    <InspectorButton
+                      onClick={() =>
+                        void mutate(() =>
+                          invoke("project_action_upsert", {
+                            project,
+                            action: { ...action, toolbar: !action.toolbar },
+                          }),
+                        )
+                      }
+                    >
+                      {action.toolbar ? "Aus der Toolbar nehmen" : "In die Toolbar"}
+                    </InspectorButton>
+                  </>
+                }
+              />
+            </InspectorPortal>
+          );
+        })()}
         {error ? <p className="text-xs text-red-600">{error}</p> : null}
 
         <section>
@@ -657,7 +746,7 @@ export default function ActionsTab({
           </section>
         ) : null}
 
-        <section>
+        <section data-new-action>
           <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
             Neue Aktion
           </h2>

@@ -90,7 +90,7 @@ pub fn project_playbooks(project: String) -> Result<Vec<PlaybookEntry>, String> 
 
 /// Dateiname aus dem Anzeigenamen: ASCII-alnum bleibt, Umlaute werden
 /// transliteriert, alles andere wird `-` (zusammengefasst).
-fn slugify(name: &str) -> String {
+pub(crate) fn slugify(name: &str) -> String {
     let mut slug = String::new();
     for ch in name.to_lowercase().chars() {
         match ch {

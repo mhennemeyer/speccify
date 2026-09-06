@@ -8,7 +8,16 @@ import { invoke } from "@tauri-apps/api/core";
 import Markdown, { stripFrontmatter } from "../../components/Markdown";
 import { LoadingBoundary, useAsync } from "../../components/ui";
 import { AGENT_PRESETS } from "../../lib/agents";
-import { NavigatorPortal, NavRow } from "../../lib/panels";
+import {
+  InspectorButton,
+  InspectorPanel,
+  InspectorPortal,
+  NavEmpty,
+  NavigatorPortal,
+  NavRow,
+  inlineInspector,
+} from "../../lib/panels";
+import { copyPrompt } from "../../lib/prompt";
 
 export default function AgentTab({
   project,
@@ -75,9 +84,18 @@ export default function AgentTab({
       </div>
       <LoadingBoundary loading={files.loading} error={files.error} label="Agent-Dateien suchen…">
         {available.length === 0 ? (
-          <p className="text-sm text-slate-500">
-            Keine <code>CLAUDE.md</code>/<code>AGENTS.md</code> im Projekt.
-          </p>
+          <>
+            <NavigatorPortal tab="agent" fallback={() => null}>
+              <NavEmpty title="Noch keine Agent-Dateien">
+                <code>CLAUDE.md</code>, <code>AGENTS.md</code> und <code>.agent/agent.md</code>{" "}
+                legt das Workflow-Banner oben mit <em>Einrichten</em> an — sie sind der
+                Vertrag zwischen Dir und dem Agenten.
+              </NavEmpty>
+            </NavigatorPortal>
+            <p className="text-sm text-slate-500">
+              Keine <code>CLAUDE.md</code>/<code>AGENTS.md</code> im Projekt.
+            </p>
+          </>
         ) : (
           <div className="flex min-h-0 flex-1 flex-col">
             <NavigatorPortal
@@ -90,6 +108,33 @@ export default function AgentTab({
                 </NavRow>
               ))}
             </NavigatorPortal>
+            {current ? (
+              <InspectorPortal tab="agent" fallback={inlineInspector}>
+                <InspectorPanel
+                  title={current}
+                  subtitle="Agent-Einweisung"
+                  meta={[
+                    {
+                      label: "Rolle",
+                      value:
+                        current === ".agent/agent.md"
+                          ? "Kanonischer Vertrag — von jedem Agenten gelesen"
+                          : "Host-Adapter — verweist auf .agent/agent.md",
+                    },
+                    { label: "Terminal-Kommando", value: agentCommand || "nur Shell" },
+                  ]}
+                  actions={
+                    <InspectorButton
+                      title="Pfad + Inhalt als Markdown-Prompt in die Zwischenablage"
+                      disabled={body.data === null}
+                      onClick={() => void copyPrompt(current, body.data ?? "")}
+                    >
+                      Als Prompt kopieren
+                    </InspectorButton>
+                  }
+                />
+              </InspectorPortal>
+            ) : null}
             <div className="min-h-0 flex-1 overflow-y-auto rounded-lg border border-slate-200 bg-white p-5">
               <LoadingBoundary loading={body.loading} error={body.error} label="Datei lesen…">
                 <Markdown text={stripFrontmatter(body.data ?? "")} />

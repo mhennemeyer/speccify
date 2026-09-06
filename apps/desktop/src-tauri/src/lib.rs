@@ -272,6 +272,7 @@ pub fn run() {
             plan_cmd::project_plan_activate,
             plan_cmd::project_plan_archive,
             plan_cmd::project_plan_resolve_escalation,
+            plan_cmd::project_plan_create,
             playbook_cmd::project_playbooks,
             playbook_cmd::project_playbook_create,
             playbook_cmd::project_playbook_delete,

@@ -8,7 +8,15 @@ import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import Markdown, { stripFrontmatter } from "../../components/Markdown";
 import { copyPrompt } from "../../lib/prompt";
-import { NavigatorPortal } from "../../lib/panels";
+import {
+  InspectorButton,
+  InspectorPanel,
+  InspectorPortal,
+  NavEmpty,
+  NavigatorPortal,
+  inlineInspector,
+  useInspector,
+} from "../../lib/panels";
 import { trackActivity } from "../../lib/activity";
 import { LoadingBoundary, useAsync } from "../../components/ui";
 import { assemblePlan, splitPlan } from "./PlansTab";
@@ -163,6 +171,7 @@ export default function PlaybooksTab({
   );
   const [selected, setSelected] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
+  const inspector = useInspector("playbooks");
   const body = useAsync(
     () =>
       selected
@@ -202,6 +211,7 @@ export default function PlaybooksTab({
               onClick={() => {
                 setSelected(entry.file);
                 setEditing(false);
+                inspector.reveal();
               }}
               className={`block w-full rounded px-2 py-1.5 text-left text-sm ${
                 selected === entry.file
@@ -231,10 +241,14 @@ export default function PlaybooksTab({
             }}
           />
           {playbooks.length === 0 ? (
-            <p className="px-2 pt-2 text-xs text-slate-400">
-              Stehende Abläufe unter <code>.agent/playbooks/</code> — anders als
-              Pläne werden sie nicht abgearbeitet, sondern immer wieder benutzt.
-            </p>
+            <div className="pt-2">
+              <NavEmpty title="Noch keine Playbooks">
+                Stehende Abläufe unter <code>.agent/playbooks/</code> — Release, Deploy,
+                Onboarding. Anders als Pläne werden sie nicht abgearbeitet, sondern
+                immer wieder benutzt. Mit „+ Playbook" anlegen, dann im Editor
+                beschreiben oder den Agenten den Ablauf aufschreiben lassen.
+              </NavEmpty>
+            </div>
           ) : null}
         </div>
         </NavigatorPortal>
@@ -254,38 +268,39 @@ export default function PlaybooksTab({
               />
             ) : (
               <div className="min-h-0 flex-1 overflow-y-auto">
-                <div className="mb-3 flex items-start justify-between gap-3">
-                  {selectedPlaybook.description ? (
-                    <p className="rounded bg-slate-100 px-3 py-2 text-xs text-slate-600">
-                      {selectedPlaybook.description}
-                    </p>
-                  ) : (
-                    <span />
-                  )}
-                  <div className="flex shrink-0 gap-2">
-                    <button
-                      onClick={() => void copyPrompt(selectedPlaybook.file, body.data ?? "")}
-                      disabled={body.data === null}
-                      className="rounded border border-slate-300 px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-100 disabled:opacity-40"
-                      title="Pfad + Inhalt als Markdown-Prompt in die Zwischenablage"
-                    >
-                      Als Prompt kopieren
-                    </button>
-                    <button
-                      onClick={() => setEditing(true)}
-                      disabled={body.loading || body.data === null}
-                      className="rounded border border-slate-300 px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-100 disabled:opacity-40"
-                    >
-                      Bearbeiten
-                    </button>
-                    <button
-                      onClick={() => void remove(selectedPlaybook.file)}
-                      className="rounded border border-red-200 px-3 py-1.5 text-xs text-red-600 hover:bg-red-50"
-                    >
-                      Löschen
-                    </button>
-                  </div>
-                </div>
+                <InspectorPortal tab="playbooks" fallback={inlineInspector}>
+                  <InspectorPanel
+                    title={selectedPlaybook.title}
+                    subtitle={selectedPlaybook.file}
+                    meta={[
+                      { label: "Beschreibung", value: selectedPlaybook.description ?? "—" },
+                      { label: "Art", value: "Stehende Anleitung — kein Lifecycle" },
+                    ]}
+                    actions={
+                      <>
+                        <InspectorButton
+                          title="Pfad + Inhalt als Markdown-Prompt in die Zwischenablage"
+                          disabled={body.data === null}
+                          onClick={() => void copyPrompt(selectedPlaybook.file, body.data ?? "")}
+                        >
+                          Als Prompt kopieren
+                        </InspectorButton>
+                        <InspectorButton
+                          disabled={body.loading || body.data === null}
+                          onClick={() => setEditing(true)}
+                        >
+                          Bearbeiten
+                        </InspectorButton>
+                        <InspectorButton
+                          tone="danger"
+                          onClick={() => void remove(selectedPlaybook.file)}
+                        >
+                          Löschen
+                        </InspectorButton>
+                      </>
+                    }
+                  />
+                </InspectorPortal>
                 <LoadingBoundary loading={body.loading} error={body.error} label="Playbook lesen…">
                   <Markdown text={stripFrontmatter(body.data ?? "")} />
                 </LoadingBoundary>

@@ -107,6 +107,29 @@ pub fn project_plan_archive(project: String, file: String) -> Result<String, Str
         .replace('\\', "/"))
 }
 
+/// Legt einen Plan als Entwurf an (`lifecycle: draft`, `# <Name>`). Rückgabe:
+/// Pfad relativ zur Projektwurzel. Existierendes wird nie überschrieben.
+#[tauri::command]
+pub fn project_plan_create(project: String, name: String) -> Result<String, String> {
+    let root = resolve_project_root(&project)?;
+    let slug = crate::playbook_cmd::slugify(&name);
+    if slug.is_empty() {
+        return Err("Name ergibt keinen Dateinamen.".into());
+    }
+    let dir = plans_dir(&root);
+    std::fs::create_dir_all(&dir).map_err(|e| format!("{}: {e}", dir.display()))?;
+    let path = dir.join(format!("{slug}.md"));
+    if path.exists() {
+        return Err(format!("Gibt es schon: .agent/plans/{slug}.md"));
+    }
+    std::fs::write(
+        &path,
+        format!("---\nlifecycle: draft\n---\n# {}\n\n", name.trim()),
+    )
+    .map_err(|e| format!("{}: {e}", path.display()))?;
+    Ok(format!(".agent/plans/{slug}.md"))
+}
+
 /// Entfernt den `escalation:`-Eintrag — die einzelne Zeile oder den ganzen
 /// Block (Folgezeilen mit Einzug). Alles andere bleibt wörtlich.
 pub(crate) fn clear_escalation(text: &str) -> String {
@@ -231,6 +254,18 @@ mod tests {
         );
 
         let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn create_makes_a_draft_and_refuses_duplicates() {
+        let dir = fixture("create");
+        let project = dir.to_string_lossy().into_owned();
+        let file = project_plan_create(project.clone(), "Website auf Deutsch!".into()).unwrap();
+        assert_eq!(file, ".agent/plans/website-auf-deutsch.md");
+        let text = std::fs::read_to_string(dir.join(&file)).unwrap();
+        assert!(text.starts_with("---\nlifecycle: draft\n---\n# Website auf Deutsch!\n"));
+        assert!(project_plan_create(project.clone(), "Website auf Deutsch".into()).is_err());
+        assert!(project_plan_create(project, "!!!".into()).is_err());
     }
 
     #[test]

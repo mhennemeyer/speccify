@@ -9,7 +9,15 @@ import { invoke } from "@tauri-apps/api/core";
 import Markdown, { stripFrontmatter } from "../../components/Markdown";
 import { LoadingBoundary, useAsync } from "../../components/ui";
 import { copyPrompt } from "../../lib/prompt";
-import { InspectorPortal, NavigatorPortal, NavRow, useInspector } from "../../lib/panels";
+import {
+  InspectorButton,
+  InspectorPanel,
+  InspectorPortal,
+  NavEmpty,
+  NavigatorPortal,
+  NavRow,
+  useInspector,
+} from "../../lib/panels";
 import type { PlanEntry } from "./PlansTab";
 
 export interface TicketEntry {
@@ -432,85 +440,54 @@ function TicketDetail({
   inInspector: boolean;
 }) {
   const shown = history.slice(0, 100);
-  // W7d: im Inspektor zwei Tabs — Übersicht (Fragen + Text) und Historie —
-  // statt einer langen Scroll-Seite.
-  const [tab, setTab] = useState<"overview" | "history">("overview");
-  const showOverview = !inInspector || tab === "overview";
-  const showHistory = !inInspector || tab === "history";
-  return (
-    <div
-      className={
-        inInspector
-          ? "min-h-0 flex-1 overflow-y-auto p-4"
-          : "mt-3 max-h-[45%] overflow-y-auto rounded-lg border border-slate-200 bg-white p-4"
-      }
-    >
-      <div className="mb-2 flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-slate-800">
-          {ticket.title}{" "}
-          <span className="ml-1 font-mono text-xs font-normal text-slate-400">{ticket.id}</span>
-        </h3>
-        <div className="flex gap-2">
-          <button
-            onClick={() => void copyPrompt(ticket.file, ticket.body)}
-            className="rounded border border-slate-300 px-2.5 py-1 text-xs text-slate-600 hover:bg-slate-100"
+  // W7d: zwei Tabs — Übersicht (Fragen + Text) und Historie — im Inspektor
+  // wie im Inline-Fallback (InspectorPanel bringt die Tabs mit).
+  const overview = (
+    <>
+      <QuestionsSection questions={questions} onAnswer={onAnswer} busy={busy} />
+      {stripQuestions(ticket.body) ? (
+        <Markdown text={stripQuestions(ticket.body)} />
+      ) : (
+        <p className="text-xs text-slate-400">Kein Beschreibungstext.</p>
+      )}
+    </>
+  );
+  const flags = [
+    ticket.ready ? "ready" : null,
+    ticket.needs_human ? "needs_human" : null,
+    ticket.open_question ? `Frage ${ticket.open_question}` : null,
+  ].filter(Boolean);
+  const panel = (
+    <InspectorPanel
+      title={ticket.title}
+      subtitle={`${ticket.id} · ${ticket.file}`}
+      meta={[
+        { label: "Station", value: ticket.station },
+        { label: "Plan", value: ticket.plan ?? "—" },
+        ...(flags.length > 0 ? [{ label: "Flags", value: flags.join(", ") }] : []),
+      ]}
+      actions={
+        <>
+          <InspectorButton
             title="Pfad + Inhalt als Markdown-Prompt in die Zwischenablage"
+            onClick={() => void copyPrompt(ticket.file, ticket.body)}
           >
             Als Prompt kopieren
-          </button>
-          <button
-            onClick={onEdit}
-            className="rounded border border-slate-300 px-2.5 py-1 text-xs text-slate-600 hover:bg-slate-100"
-          >
-            Bearbeiten
-          </button>
-          <button onClick={onClose} className="text-xs text-slate-400 hover:text-slate-700">
-            Schließen
-          </button>
-        </div>
-      </div>
-      {inInspector ? (
-        <div role="tablist" className="mb-3 flex gap-1 border-b border-slate-200 text-xs">
-          {(
-            [
-              ["overview", "Übersicht"],
-              ["history", `Historie${history.length ? ` (${history.length})` : ""}`],
-            ] as const
-          ).map(([id, label]) => (
-            <button
-              key={id}
-              role="tab"
-              aria-selected={tab === id}
-              onClick={() => setTab(id)}
-              className={`-mb-px px-3 py-1.5 font-medium ${
-                tab === id
-                  ? "border-b-2 border-slate-800 text-slate-800"
-                  : "text-slate-400 hover:text-slate-700"
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      ) : null}
-      {showOverview ? (
-        <>
-          <QuestionsSection questions={questions} onAnswer={onAnswer} busy={busy} />
-          {stripQuestions(ticket.body) ? (
-            <Markdown text={stripQuestions(ticket.body)} />
-          ) : (
-            <p className="text-xs text-slate-400">Kein Beschreibungstext.</p>
-          )}
+          </InspectorButton>
+          <InspectorButton onClick={onEdit}>Bearbeiten</InspectorButton>
+          <InspectorButton onClick={onClose}>Schließen</InspectorButton>
         </>
-      ) : null}
-      {showHistory && inInspector && shown.length === 0 ? (
-        <p className="text-xs text-slate-400">Noch keine History.</p>
-      ) : null}
-      {showHistory && shown.length > 0 ? (
-        <div className={inInspector ? "" : "mt-3 border-t border-slate-100 pt-2"}>
-          <h4 className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-            History
-          </h4>
+      }
+      tabs={[
+        { id: "overview", label: "Übersicht", content: overview },
+        {
+          id: "history",
+          label: `Historie${history.length ? ` (${history.length})` : ""}`,
+          content: (
+            <div>
+              {shown.length === 0 ? (
+                <p className="text-xs text-slate-400">Noch keine History.</p>
+              ) : (
           <ul className="space-y-0.5 font-mono text-[11px] text-slate-600">
             {shown.map((event, index) => (
               <li key={index} className="truncate" title={event.summary}>
@@ -523,8 +500,17 @@ function TicketDetail({
               <li className="text-slate-400">… {history.length - shown.length} ältere Events</li>
             ) : null}
           </ul>
-        </div>
-      ) : null}
+              )}
+            </div>
+          ),
+        },
+      ]}
+    />
+  );
+  if (inInspector) return panel;
+  return (
+    <div className="mt-3 flex max-h-[45%] flex-col overflow-hidden rounded-lg border border-slate-200 bg-white">
+      {panel}
     </div>
   );
 }
@@ -710,6 +696,16 @@ export default function BoardTab({
     <LoadingBoundary loading={loading} error={error} label="Board lesen…">
       <div className="flex h-full min-h-0 flex-col">
         <NavigatorPortal tab="board" fallback={() => null}>
+          {allTickets.length === 0 ? (
+            <NavEmpty
+              title="Noch keine Tickets"
+              action={{ label: "+ Ticket", onClick: () => setSheet(emptySheet("Backlog")) }}
+            >
+              Tickets liegen als Markdown unter <code>.agent/board/</code>. Der Agent
+              schneidet sie aus dem aktiven Plan (<em>/ticket-next</em> im Terminal) —
+              oder Du legst das erste selbst an.
+            </NavEmpty>
+          ) : (
           <div className="space-y-0.5">
             <NavRow
               selected={planFilter === null}
@@ -733,6 +729,7 @@ export default function BoardTab({
               </NavRow>
             ))}
           </div>
+          )}
         </NavigatorPortal>
         <ActivePlanPanel project={project} planRefresh={planRefresh} />
         <div className="mb-2 flex items-center justify-between gap-3">

@@ -10,7 +10,17 @@ import { invoke } from "@tauri-apps/api/core";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import Markdown, { stripFrontmatter } from "../../components/Markdown";
 import { LoadingBoundary, useAsync } from "../../components/ui";
-import { NavigatorPortal } from "../../lib/panels";
+import {
+  InspectorButton,
+  InspectorPanel,
+  InspectorPortal,
+  NavEmpty,
+  NavigatorPortal,
+  inlineInspector,
+  showTab,
+  useInspector,
+} from "../../lib/panels";
+import { copyPrompt } from "../../lib/prompt";
 
 export interface SkillEntry {
   name: string;
@@ -216,21 +226,39 @@ function SourceBrowser({ project }: { project: string }) {
           <div className="min-w-0 flex-1 overflow-y-auto rounded-lg border border-slate-200 bg-white p-5">
             {selected ? (
               <>
-                <div className="mb-3 flex items-center justify-between gap-3">
-                  <p className="truncate font-mono text-xs text-slate-400">{selected}</p>
-                  {(() => {
-                    const skill = (skills.data ?? []).find((entry) => entry.file === selected);
-                    return skill ? (
-                      <button
-                        onClick={() => importSkill(skill)}
-                        className="shrink-0 rounded bg-slate-800 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-700"
-                        title="Tippt speccify add + expand ins Agent-Terminal"
-                      >
-                        Importieren (expand)
-                      </button>
-                    ) : null;
-                  })()}
-                </div>
+                {(() => {
+                  const skill = (skills.data ?? []).find((entry) => entry.file === selected);
+                  return skill ? (
+                    <InspectorPortal tab="skills" fallback={inlineInspector}>
+                      <InspectorPanel
+                        title={skill.name}
+                        subtitle={selected}
+                        meta={[
+                          { label: "Quelle", value: <span className="font-mono">{activeSource}</span> },
+                          { label: "Kategorie", value: skill.category || "— (Wurzel)" },
+                          {
+                            label: "Id",
+                            value: skill.id ? (
+                              <span className="font-mono">{skill.id}</span>
+                            ) : (
+                              "— kein metadata.speccify.scope"
+                            ),
+                          },
+                          { label: "Beschreibung", value: skill.description ?? "—" },
+                        ]}
+                        actions={
+                          <InspectorButton
+                            tone="primary"
+                            title="Tippt speccify add + expand ins Agent-Terminal"
+                            onClick={() => importSkill(skill)}
+                          >
+                            Importieren (expand)
+                          </InspectorButton>
+                        }
+                      />
+                    </InspectorPortal>
+                  ) : null;
+                })()}
                 <LoadingBoundary
                   loading={preview.loading}
                   error={preview.error}
@@ -256,6 +284,7 @@ export default function SkillsTab({ project, refresh }: { project: string; refre
   );
   const [mode, setMode] = useState<"project" | "browse">("project");
   const [selected, setSelected] = useState<string | null>(null);
+  const inspector = useInspector("skills");
   const skills = data ?? [];
   const skill = skills.find((entry) => entry.name === selected) ?? null;
   const body = useAsync(
@@ -303,11 +332,23 @@ export default function SkillsTab({ project, refresh }: { project: string; refre
       ) : (
         <LoadingBoundary loading={loading} error={error} label="Skills lesen…">
           {skills.length === 0 ? (
-            <p className="text-sm text-slate-500">
-              Keine Skills unter <code>.agent/skills/</code> — über „Quellen
-              durchsuchen" importieren oder den Agenten im Terminal bitten
-              (<code>speccify expand</code>).
-            </p>
+            <>
+              <NavigatorPortal tab="skills" fallback={() => null}>
+                <NavEmpty
+                  title="Noch keine Skills im Projekt"
+                  action={{ label: "Quellen durchsuchen", onClick: () => setMode("browse") }}
+                >
+                  Skills liegen unter <code>.agent/skills/</code> und kommen per{" "}
+                  <code>speccify expand</code> aus einer Quelle. Durchsuche eine Quelle
+                  und importiere — oder bitte den Agenten im Terminal darum.
+                </NavEmpty>
+              </NavigatorPortal>
+              <p className="text-sm text-slate-500">
+                Keine Skills unter <code>.agent/skills/</code> — über „Quellen
+                durchsuchen" importieren oder den Agenten im Terminal bitten
+                (<code>speccify expand</code>).
+              </p>
+            </>
           ) : (
             <div className="flex h-full min-h-0 gap-4">
               <NavigatorPortal tab="skills">
@@ -315,7 +356,10 @@ export default function SkillsTab({ project, refresh }: { project: string; refre
                 {skills.map((entry) => (
                   <li key={entry.name}>
                     <button
-                      onClick={() => setSelected(entry.name)}
+                      onClick={() => {
+                        setSelected(entry.name);
+                        inspector.reveal();
+                      }}
                       className={`w-full rounded px-2 py-1.5 text-left ${
                         selected === entry.name
                           ? "bg-slate-800 text-white"
@@ -340,21 +384,52 @@ export default function SkillsTab({ project, refresh }: { project: string; refre
               <div className="min-w-0 flex-1 overflow-y-auto rounded-lg border border-slate-200 bg-white p-5">
                 {skill ? (
                   <>
-                    {skill.origin ? (
-                      <p className="mb-3 rounded bg-slate-100 px-3 py-2 text-xs text-slate-600">
-                        Expandiert aus <code>{skill.origin.source}</code>
-                        {skill.origin.version ? ` ${skill.origin.version}` : ""}
-                        {skill.origin.expanded ? ` am ${skill.origin.expanded}` : ""}
-                        {skill.origin.tools.length > 0
-                          ? ` · Tools: ${skill.origin.tools.join(", ")}`
-                          : ""}
-                      </p>
-                    ) : (
-                      <p className="mb-3 rounded bg-slate-100 px-3 py-2 text-xs text-slate-600">
-                        Projekteigener Skill (keine Herkunft in{" "}
-                        <code>expansions.yaml</code>).
-                      </p>
-                    )}
+                    <InspectorPortal tab="skills" fallback={inlineInspector}>
+                      <InspectorPanel
+                        title={skill.name}
+                        subtitle={skill.file}
+                        meta={
+                          skill.origin
+                            ? [
+                                {
+                                  label: "Herkunft",
+                                  value: <span className="font-mono">{skill.origin.source}</span>,
+                                },
+                                { label: "Version", value: skill.origin.version ?? "—" },
+                                { label: "Expandiert", value: skill.origin.expanded ?? "—" },
+                                {
+                                  label: "Tools",
+                                  value:
+                                    skill.origin.tools.length > 0
+                                      ? skill.origin.tools.join(", ")
+                                      : "—",
+                                },
+                              ]
+                            : [
+                                {
+                                  label: "Herkunft",
+                                  value: "Projekteigener Skill (keine Herkunft in expansions.yaml)",
+                                },
+                              ]
+                        }
+                        actions={
+                          <>
+                            <InspectorButton
+                              title="Pfad + Inhalt als Markdown-Prompt in die Zwischenablage"
+                              disabled={body.data === null}
+                              onClick={() => void copyPrompt(skill.file, body.data ?? "")}
+                            >
+                              Als Prompt kopieren
+                            </InspectorButton>
+                            {skill.origin && skill.origin.tools.length > 0 ? (
+                              <InspectorButton onClick={() => showTab("tools")}>
+                                Tools ansehen
+                              </InspectorButton>
+                            ) : null}
+                          </>
+                        }
+                      />
+                    </InspectorPortal>
                     <LoadingBoundary
                       loading={body.loading}
                       error={body.error}
