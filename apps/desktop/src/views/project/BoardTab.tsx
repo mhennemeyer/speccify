@@ -135,7 +135,7 @@ function createdCompare(a: TicketEntry, b: TicketEntry) {
 
 function TicketBadges({ ticket }: { ticket: TicketEntry }) {
   return (
-    <span className="space-x-1">
+    <span className="inline-flex flex-wrap gap-1">
       {ticket.ready ? (
         <span className="rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-medium text-emerald-800">
           ready
@@ -177,8 +177,10 @@ function TicketCard({
     >
       <button onClick={onSelect} className="block w-full text-left">
         <span className="text-sm font-medium text-slate-800">{ticket.title}</span>
-        <div className="mt-1 flex items-center gap-2 text-[11px] text-slate-500">
-          <span className="font-mono">{ticket.id}</span>
+        {/* Schmale Spalten (BO-Screenshot 2026-09-06): Id darf umbrechen,
+            Badges wandern in die nächste Zeile statt über den Text. */}
+        <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-slate-500">
+          <span className="min-w-0 break-all font-mono">{ticket.id}</span>
           {ticket.assignee ? <span>· {ticket.assignee}</span> : null}
           <TicketBadges ticket={ticket} />
         </div>
