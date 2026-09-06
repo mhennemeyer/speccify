@@ -6,7 +6,7 @@
 // nur seine Grid-Zelle — sonst würde der PTY beim Umdocken sterben.
 // Die Wurzel kommt über `project_current` (Fenster-Label → Registry, D15).
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
@@ -24,6 +24,8 @@ import Toolbar, {
   type ToolbarItem,
 } from "./components/Toolbar";
 import { isDark, useTheme } from "./lib/theme";
+import { recordActivity } from "./lib/activity";
+import { isMac } from "./lib/platform";
 import HelpView from "./views/HelpView";
 import { ErrorBox, Spinner } from "./components/ui";
 import { AGENT_PRESETS, DEFAULT_AGENT_COMMAND } from "./lib/agents";
@@ -150,6 +152,41 @@ export default function ProjectShell() {
     };
   }, [project]);
 
+  // Agent-Läufe als Aktivität: der Watcher meldet Board-Änderungen, die
+  // KPI-Liste liefert die letzten agent_run-Events — neue seit dem letzten
+  // Blick landen als abgeschlossene Aktivität mit Ticket und Tokens.
+  const lastRunSeen = useRef<string | null>(null);
+  useEffect(() => {
+    if (!project) return;
+    void invoke<{
+      recent: Array<{
+        ticket_id: string;
+        timestamp: string;
+        summary: string;
+        tokens_in: number;
+        tokens_out: number;
+        duration_ms: number;
+      }>;
+    }>("project_board_kpis", { project })
+      .then((kpis) => {
+        const runs = kpis.recent;
+        if (lastRunSeen.current === null) {
+          lastRunSeen.current = runs[0]?.timestamp ?? "";
+          return;
+        }
+        const fresh = runs.filter((run) => run.timestamp > (lastRunSeen.current ?? ""));
+        for (const run of [...fresh].reverse()) {
+          recordActivity("agent", `Agent: ${run.summary}`, {
+            detail: `${run.ticket_id} · ↑${run.tokens_in} ↓${run.tokens_out}`,
+            durationMs: run.duration_ms,
+            outcome: /abort|fail|error/i.test(run.summary) ? "error" : "ok",
+          });
+        }
+        if (runs[0]) lastRunSeen.current = runs[0].timestamp;
+      })
+      .catch(() => {});
+  }, [project, refresh.board]);
+
   // Tabs aus anderen Bereichen anspringen (lib/panels.ts `showTab`) —
   // etwa der Leerzustand von Tools, der zu den Skills schickt.
   useEffect(() => {
@@ -189,6 +226,41 @@ export default function ProjectShell() {
     },
     [project],
   );
+
+  // Tastaturkürzel wie in Xcode: Cmd/Ctrl+0 Navigator, Cmd/Ctrl+Alt+0
+  // Inspektor, Cmd/Ctrl+Shift+Y Terminal unten, Cmd/Ctrl+1…4 Bereiche.
+  useEffect(() => {
+    const handler = (event: KeyboardEvent) => {
+      const mod = isMac ? event.metaKey : event.ctrlKey;
+      if (!mod) return;
+      const target = event.target as HTMLElement | null;
+      const typing =
+        target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable);
+      if (event.key === "0" && !event.altKey) {
+        event.preventDefault();
+        updateLayout((previous) => ({ navShown: !previous.navShown }));
+      } else if (event.key === "0" && event.altKey) {
+        event.preventDefault();
+        updateLayout((previous) => ({ rightShown: !previous.rightShown }));
+      } else if (event.shiftKey && event.key.toLowerCase() === "y") {
+        event.preventDefault();
+        updateLayout((previous) =>
+          previous.terminalDock === "bottom"
+            ? { bottomShown: !previous.bottomShown }
+            : { terminalDock: "bottom", bottomShown: true, rightTab: "inspector" },
+        );
+      } else if (!typing && !event.altKey && !event.shiftKey && /^[1-4]$/.test(event.key)) {
+        const group = GROUPS[Number(event.key) - 1];
+        if (group) {
+          event.preventDefault();
+          activateTab(lastTab[group.id] ?? group.tabs[0]);
+        }
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lastTab, updateLayout]);
 
   const updateAgentCommand = (value: string) => {
     setAgentCommand(value);
@@ -311,7 +383,7 @@ export default function ProjectShell() {
               <>
             <ToolbarButton
               active={navShown}
-              title={navShown ? "Navigator ausblenden" : "Navigator einblenden"}
+              title={`${navShown ? "Navigator ausblenden" : "Navigator einblenden"} (${isMac ? "⌘" : "Strg+"}0)`}
               onClick={() => updateLayout({ navShown: !navShown })}
             >
               <PanelIcon part="nav" />
@@ -335,7 +407,7 @@ export default function ProjectShell() {
             </ToolbarButton>
             <ToolbarButton
               active={rightShown}
-              title={rightShown ? "Inspektor ausblenden" : "Inspektor einblenden"}
+              title={`${rightShown ? "Inspektor ausblenden" : "Inspektor einblenden"} (${isMac ? "⌥⌘" : "Strg+Alt+"}0)`}
               onClick={() => updateLayout({ rightShown: !rightShown })}
             >
               <PanelIcon part="right" />
@@ -377,7 +449,7 @@ export default function ProjectShell() {
                   role="tab"
                   aria-selected={activeGroup.id === group.id}
                   aria-label={group.label}
-                  title={group.label}
+                  title={`${group.label} (${isMac ? "⌘" : "Strg+"}${GROUPS.indexOf(group) + 1})`}
                   onClick={() => activateTab(lastTab[group.id] ?? group.tabs[0])}
                   className={`flex min-h-6 flex-1 items-center justify-center rounded-full ${
                     activeGroup.id === group.id

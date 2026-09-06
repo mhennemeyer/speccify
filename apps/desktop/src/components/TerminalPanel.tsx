@@ -10,6 +10,7 @@ import { readText, writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
 import "@xterm/xterm/css/xterm.css";
+import { beginActivity, endActivity } from "../lib/activity";
 
 interface TermOut {
   id: string;
@@ -43,6 +44,8 @@ export default function TerminalPanel({
   const terminalRef = useRef<Terminal | null>(null);
   const fitRef = useRef<FitAddon | null>(null);
   const idRef = useRef<string>("");
+  const busyRef = useRef<string | null>(null);
+  const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [generation, setGeneration] = useState(0);
   const [cwd, setCwd] = useState<string>("");
   const [status, setStatus] = useState<string>("");
@@ -119,7 +122,16 @@ export default function TerminalPanel({
       }
       unlisteners.push(
         await listen<TermOut>("term-out", (event) => {
-          if (event.payload.id === id) terminal.write(event.payload.data);
+          if (event.payload.id !== id) return;
+          terminal.write(event.payload.data);
+          // W7: solange Ausgabe fließt, gilt das Terminal als „arbeitet" —
+          // die Aktivitätsanzeige zeigt so, dass der Agent gerade etwas tut.
+          if (!busyRef.current) busyRef.current = beginActivity("agent", "Agent-Terminal arbeitet");
+          if (idleTimer.current) clearTimeout(idleTimer.current);
+          idleTimer.current = setTimeout(() => {
+            if (busyRef.current) endActivity(busyRef.current, "ok");
+            busyRef.current = null;
+          }, 2500);
         }),
         await listen<TermOut>("term-exit", (event) => {
           if (event.payload.id === id) {
@@ -146,6 +158,9 @@ export default function TerminalPanel({
 
     return () => {
       disposed = true;
+      if (idleTimer.current) clearTimeout(idleTimer.current);
+      if (busyRef.current) endActivity(busyRef.current, "cancelled");
+      busyRef.current = null;
       observer.disconnect();
       dataListener.dispose();
       unlisteners.forEach((unlisten) => unlisten());

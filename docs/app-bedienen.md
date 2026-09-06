@@ -45,8 +45,12 @@ Die **Toolbar** oben trägt links den Projektnamen, in der Mitte die
 **Aktions-Knöpfe** (jede Aktion aus `.agent/actions.json` lässt sich im
 Aktionen-Tab mit *Toolbar* dorthin legen; ein Klick startet sie, mit
 Eingaben springt sie in den Aktionen-Tab) und die **Aktivitätsanzeige**:
-Was gerade läuft — eine Aktion, das Einrichten, ein Speichern — mit
-Laufzeit; ein Klick öffnet die Liste der letzten Aktivitäten. Rechts die
+Was gerade läuft — eine Aktion, das Einrichten, ein Speichern, das
+Agent-Terminal, solange Ausgabe fließt — mit Laufzeit; abgeschlossene
+Agent-Läufe aus der Ticket-History erscheinen mit Ticket und Tokens.
+Ein Klick öffnet die Liste der letzten Aktivitäten. Tastaturkürzel wie
+in Xcode: ⌘0 Navigator, ⌥⌘0 Inspektor, ⇧⌘Y Terminal unten, ⌘1 bis ⌘4
+die Bereiche (Windows: Strg statt ⌘). Rechts die
 Schalter für die Bereiche, Hell/Dunkel und die Einstellungen. Auf macOS
 ist die Toolbar zugleich die Titelleiste (die Ampel schwebt links darüber);
 das Fenster lässt sich an ihr ziehen.

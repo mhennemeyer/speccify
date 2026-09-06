@@ -746,10 +746,19 @@ Playbooks, Skills → „Quellen durchsuchen", Tools → Skills-Tab
 in die Zwischenablage (MCPs haben jetzt auch eine Liste), Agent-Dateien
 → Hinweis aufs Einrichten. Mock mit `?empty=1`. Verifikation: Playwright
 — alle neun Auswahlen füllen den Inspektor, alle acht Listen zeigen den
-Leerzustand; cargo test 48/48; typecheck. **Offen:** Prüfung der
-Overlay-Titelleiste in der echten App (macOS) durch den BO;
-Tastaturkürzel; Aktivität aus dem Agenten (History `agent_run`)
-speisen; Orga umbenennen.
+Leerzustand; cargo test 48/48; typecheck. **W7f ✅ 2026-09-06:** Overlay-Titelleiste, Dark Mode und
+Inspektor-Tabs vom BO in der echten App (AVC) bestätigt; Karten-Badges
+brechen jetzt um statt über die Id zu laufen (BO-Screenshot).
+**Tastaturkürzel** wie Xcode: ⌘0 Navigator, ⌥⌘0 Inspektor, ⇧⌘Y Terminal
+unten, ⌘1–4 Bereiche (Windows Strg), Tooltips nennen sie. **Aktivität
+aus dem Agenten**: `recordActivity` trägt abgeschlossene `agent_run`-
+Events nach (Watcher → `project_board_kpis.recent`, neue seit dem letzten
+Blick, mit Ticket, Tokens, Dauer, Fehler-Ausgang bei abort/fail), und das
+Terminal meldet „Agent-Terminal arbeitet", solange Ausgabe fließt (2,5 s
+Ruhe = Ende). Playwright: alle Kürzel schalten, Gruppe 3 = Technik.
+**Nebenfund AVC:** 75 049 „Run aborted"-Zeilen in einer Ticket-History
+(iKanbanAI-Retry-Schleife, Juli) — auf BO-Zuruf entfernt, dort
+uncommittet. **Offen:** Orga umbenennen (BO-Name), Windows-Prüfung.
 
 **Nicht in P5:** alles aus D29; Discovery-/Speccify-MCP-Anbindung der
 iKanbanAI-Seite (wird obsolet — Speccify ist das Produkt selbst).

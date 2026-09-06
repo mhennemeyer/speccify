@@ -44,6 +44,30 @@ export function endActivity(id: string, outcome: ActivityOutcome = "ok", detail?
   emit();
 }
 
+/** Bereits abgeschlossene Aktivität nachtragen — etwa ein Agent-Lauf aus
+ *  der Ticket-History, den der Watcher gemeldet hat. */
+export function recordActivity(
+  kind: ActivityKind,
+  label: string,
+  options: { detail?: string; durationMs?: number; outcome?: ActivityOutcome; endedAt?: number } = {},
+): void {
+  const endedAt = options.endedAt ?? Date.now();
+  const id = `act-${endedAt}-${++counter}`;
+  activities = [
+    {
+      id,
+      kind,
+      label,
+      detail: options.detail,
+      startedAt: endedAt - (options.durationMs ?? 0),
+      endedAt,
+      outcome: options.outcome ?? "ok",
+    },
+    ...activities,
+  ].slice(0, CAP);
+  emit();
+}
+
 /** Komfort: eine Promise als Aktivität begleiten. */
 export async function trackActivity<T>(
   kind: ActivityKind,
