@@ -121,8 +121,9 @@ Dunkel. Das Zahnrad daneben öffnet die **Einstellungen**: Erscheinungsbild
   der Datei; *Fertig* schließt den Editor. Wird die App mitten im Schreiben
   beendet oder neu gestartet, bietet der Plan beim nächsten Öffnen
   *Wiederherstellen* an. Dasselbe gilt für Playbooks und den Code-Editor
-  (dort bleibt ⌘S das Speichern, der Entwurf kommt beim Öffnen zurück). **Aktivieren** macht einen Plan zum aktiven und parkt den
-  bisherigen automatisch auf `onHold`. **Archivieren** verschiebt einen
+  (dort bleibt ⌘S das Speichern, der Entwurf kommt beim Öffnen zurück).
+  **Aktivieren** macht einen Plan zum aktiven und parkt den bisherigen
+  automatisch auf `onHold`. **Archivieren** verschiebt einen
   fertigen Plan nach `.agent/plans/archive/` (lifecycle `done`); das
   Archiv ist in der Liste aufklappbar. Ein rotes Banner bedeutet: Der
   Agent hat den Plan eskaliert — lesen, handeln, **Auflösen**. **Als
