@@ -11,6 +11,7 @@ export default function SettingsSheet({
   onTheme,
   layout,
   onDock,
+  onResumeAgent,
   onResetLayout,
   onClose,
 }: {
@@ -18,6 +19,7 @@ export default function SettingsSheet({
   onTheme: (next: ThemePref) => void;
   layout: ProjectLayout;
   onDock: (dock: TerminalDock) => void;
+  onResumeAgent: (value: boolean) => void;
   onResetLayout: () => void;
   onClose: () => void;
 }) {
@@ -69,6 +71,23 @@ export default function SettingsSheet({
               </button>
             ))}
           </div>
+        </section>
+
+        <section className="mb-4">
+          <h3 className="mb-1 text-xs font-semibold text-slate-500">Agent-Sitzung</h3>
+          <label className="flex items-start gap-2 text-xs text-slate-600">
+            <input
+              type="checkbox"
+              checked={layout.resumeAgent}
+              onChange={(event) => onResumeAgent(event.target.checked)}
+              className="mt-0.5"
+            />
+            <span>
+              Nach einem Neustart der App die letzte Sitzung automatisch fortsetzen
+              (<code>claude --continue</code> bzw. <code>codex resume --last</code>). Der
+              Agent behält so seinen Kontext — auch bei Dev-Neustarts von Speccify.
+            </span>
+          </label>
         </section>
 
         <section>

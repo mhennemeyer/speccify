@@ -189,7 +189,7 @@
         convertFileSrc: (path) => path,
         invoke(cmd, args) {
           const fn = responses[cmd];
-          console.log("[mock invoke]", cmd);
+          console.log("[mock invoke]", cmd, cmd === "terminal_open" ? JSON.stringify(args) : "");
           if (!fn) return Promise.reject(`mock: unbekanntes Kommando ${cmd}`);
           return Promise.resolve(fn(args ?? {}));
         },

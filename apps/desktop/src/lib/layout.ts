@@ -16,6 +16,8 @@ export interface ProjectLayout {
   bottomHeight: number;
   bottomShown: boolean;
   terminalDock: TerminalDock;
+  /** Nach einem Neustart die letzte Agent-Sitzung automatisch fortsetzen. */
+  resumeAgent: boolean;
 }
 
 export const LAYOUT_LIMITS = {
@@ -35,7 +37,13 @@ export const DEFAULT_LAYOUT: ProjectLayout = {
   bottomHeight: 320,
   bottomShown: true,
   terminalDock: "bottom",
+  resumeAgent: true,
 };
+
+/** Merker „in diesem Projekt lief eine Agent-Sitzung" — pro Projekt. */
+export function agentSessionKey(project: string) {
+  return `speccify.project.agentSession:${project}`;
+}
 
 /** Griffbreite der Splitter in px (Trefferfläche; sichtbar ist 1 px). */
 export const HANDLE_SIZE = 5;

@@ -28,13 +28,14 @@ import { recordActivity } from "./lib/activity";
 import { isMac } from "./lib/platform";
 import HelpView from "./views/HelpView";
 import { ErrorBox, Spinner } from "./components/ui";
-import { AGENT_PRESETS, DEFAULT_AGENT_COMMAND } from "./lib/agents";
+import { AGENT_PRESETS, DEFAULT_AGENT_COMMAND, continueCommand } from "./lib/agents";
 import TabIcon from "./components/TabIcon";
 import { PanelsContext, type Slots } from "./lib/panels";
 import {
   DEFAULT_LAYOUT,
   HANDLE_SIZE,
   LAYOUT_LIMITS,
+  agentSessionKey,
   clamp,
   loadLayout,
   saveLayout,
@@ -105,6 +106,25 @@ export default function ProjectShell() {
   const [active, setActive] = useState<TabId>("plans");
   const [agentCommand, setAgentCommand] = useState(DEFAULT_AGENT_COMMAND);
   const [terminalStarted, setTerminalStarted] = useState(false);
+  // Dogfooding (BO 2026-09-07): lief hier eine Agent-Sitzung, wird sie nach
+  // einem Neustart (Dev-Rebuild, Reload, Quit) automatisch fortgesetzt —
+  // `claude --continue` / `codex resume --last` statt frisch zu starten.
+  const [resumeSession, setResumeSession] = useState(false);
+  const [hadSession, setHadSession] = useState(false);
+  const startTerminal = (resume: boolean) => {
+    setResumeSession(resume);
+    setTerminalStarted(true);
+    if (project) {
+      try {
+        localStorage.setItem(agentSessionKey(project), "1");
+      } catch {
+        // ohne Merker kein Fortsetzen — sonst egal
+      }
+    }
+    if (resume) {
+      recordActivity("agent", "Agent-Sitzung fortgesetzt", { detail: continueCommand(agentCommand) });
+    }
+  };
   const [layout, setLayout] = useState<ProjectLayout>(DEFAULT_LAYOUT);
   const [navSlots, setNavSlots] = useState<Slots>({});
   const [inspectorSlots, setInspectorSlots] = useState<Slots>({});
@@ -127,10 +147,20 @@ export default function ProjectShell() {
           return;
         }
         setProject(root);
-        setLayout(loadLayout(root));
+        const stored = loadLayout(root);
+        setLayout(stored);
         try {
-          const stored = localStorage.getItem(agentCommandKey(root));
-          if (stored !== null) setAgentCommand(stored);
+          const command = localStorage.getItem(agentCommandKey(root));
+          if (command !== null) setAgentCommand(command);
+          const session = localStorage.getItem(agentSessionKey(root)) === "1";
+          setHadSession(session);
+          if (session && stored.resumeAgent && (command ?? DEFAULT_AGENT_COMMAND).trim() !== "") {
+            setResumeSession(true);
+            setTerminalStarted(true);
+            recordActivity("agent", "Agent-Sitzung fortgesetzt", {
+              detail: continueCommand(command ?? DEFAULT_AGENT_COMMAND),
+            });
+          }
         } catch {
           // localStorage nicht verfügbar — Default bleibt.
         }
@@ -667,7 +697,11 @@ export default function ProjectShell() {
             </button>
           </div>
           {terminalStarted ? (
-            <TerminalPanel visible={terminalVisible} cwd={project} autostart={agentCommand} />
+            <TerminalPanel
+              visible={terminalVisible}
+              cwd={project}
+              autostart={resumeSession ? continueCommand(agentCommand) : agentCommand}
+            />
           ) : (
             <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6">
               <label className="w-full max-w-xs">
@@ -698,12 +732,23 @@ export default function ProjectShell() {
                   ))}
                 </span>
               </label>
-              <button
-                onClick={() => setTerminalStarted(true)}
-                className="rounded bg-slate-700 px-4 py-2 text-sm text-slate-200 hover:bg-slate-600"
-              >
-                Agent-Terminal starten
-              </button>
+              <div className="flex flex-wrap justify-center gap-2">
+                {hadSession && agentCommand.trim() !== "" ? (
+                  <button
+                    onClick={() => startTerminal(true)}
+                    className="rounded bg-emerald-700 px-4 py-2 text-sm text-white hover:bg-emerald-600"
+                    title={continueCommand(agentCommand)}
+                  >
+                    Letzte Sitzung fortsetzen
+                  </button>
+                ) : null}
+                <button
+                  onClick={() => startTerminal(false)}
+                  className="rounded bg-slate-700 px-4 py-2 text-sm text-slate-200 hover:bg-slate-600"
+                >
+                  {hadSession ? "Neu starten" : "Agent-Terminal starten"}
+                </button>
+              </div>
               <p className="max-w-xs text-center text-xs text-slate-500">
                 Startet im Projektverzeichnis — Skills leben unter{" "}
                 <code>.agent/skills</code> und werden für den gewählten Host verlinkt.
@@ -724,6 +769,7 @@ export default function ProjectShell() {
                 : { terminalDock: "right", rightShown: true, rightTab: "terminal" },
             )
           }
+          onResumeAgent={(value) => updateLayout({ resumeAgent: value })}
           onResetLayout={() => updateLayout({ ...DEFAULT_LAYOUT })}
           onClose={() => setSettingsOpen(false)}
         />

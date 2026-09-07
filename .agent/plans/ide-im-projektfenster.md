@@ -162,6 +162,19 @@ sichtbar alle 4 s `git status` (versteckt gar nicht), Speichern im Editor
 meldet `speccify:worktree-changed`. Bewusst nicht:
 Hunk-Staging, Branch-Wechsel, Merge-UI (I3/E4).
 
+**Dogfooding-Voraussetzung ✅ 2026-09-07 — Agent-Sitzung überlebt den
+Neustart (BO-Frage: „Hook beim Runterfahren, Memory persistieren?").**
+Antwort: kein Hook — `tauri dev` killt den Prozess ohne zu warten, und
+Claude Code/Codex schreiben ihr Protokoll ohnehin fortlaufend. Stattdessen
+Fortsetzen: Merker `speccify.project.agentSession:<root>` beim Start
+eines Agent-Terminals; beim nächsten Öffnen des Fensters startet das
+Terminal automatisch mit `continueCommand()` (`claude --continue`,
+`codex resume --last`, freie Kommandos unverändert), Aktivität
+„Agent-Sitzung fortgesetzt". Option `resumeAgent` im Layout/Settings-
+Sheet (Default an); aus → Knöpfe „Letzte Sitzung fortsetzen" / „Neu
+starten". Verloren geht nur der gerade laufende Werkzeugaufruf. Mock:
+Playwright — Reload startet mit `--continue`, Option aus → manuell.
+
 ## Aufwand und Reihenfolge
 
 Iterativ, jeder Baustein für sich nutzbar: I1 zuerst (Baum + Editor sind

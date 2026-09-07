@@ -58,7 +58,13 @@ das Fenster lässt sich an ihr ziehen.
 
 Offene Projektfenster merkt sich die App über einen Neustart: Was beim
 Beenden offen war, öffnet sich beim nächsten Start wieder. Ein bewusst
-geschlossenes Fenster (roter Knopf, Cmd-W) bleibt zu. Das **Agent-Terminal** lebt in einer Leiste unten
+geschlossenes Fenster (roter Knopf, Cmd-W) bleibt zu. **Die
+Agent-Sitzung überlebt den Neustart mit:** Lief in einem Fenster ein
+Agent, startet das Terminal beim nächsten Öffnen von selbst mit
+`claude --continue` bzw. `codex resume --last` — der Agent liest sein
+eigenes Protokoll und macht dort weiter, wo er war; nur ein gerade
+laufender Werkzeugaufruf ist verloren. In den Einstellungen abschaltbar;
+dann bietet das Terminal *Letzte Sitzung fortsetzen* und *Neu starten*. Das **Agent-Terminal** lebt in einer Leiste unten
 unter dem Inhalt; wer es lieber rechts hat, legt es mit dem Knopf *nach
 rechts* im Terminal als zweiten Tab in die rechte Seitenleiste.
 Alle drei Bereiche lassen sich am Rand ziehen (Doppelklick auf den Griff
