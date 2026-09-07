@@ -18,6 +18,7 @@ import {
   useInspector,
 } from "../../lib/panels";
 import { trackActivity } from "../../lib/activity";
+import { autosaveLabel, draftKey, readDraft, useAutosave } from "../../lib/autosave";
 import { LoadingBoundary, useAsync } from "../../components/ui";
 import { assemblePlan, splitPlan } from "./PlansTab";
 
@@ -42,39 +43,46 @@ function PlaybookEditor({
   file,
   original,
   onSaved,
-  onCancel,
 }: {
   project: string;
   file: string;
   original: string;
   onSaved: () => void;
-  onCancel: () => void;
 }) {
-  const parts = splitPlan(original);
+  const key = draftKey(project, file);
+  const draft = readDraft(key);
+  const restored = draft !== null && draft !== original;
+  const parts = splitPlan(restored ? draft : original);
   const [description, setDescription] = useState(
     frontmatterValue(parts.frontmatter, "description"),
   );
   const [body, setBody] = useState(parts.body);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const content = assemblePlan(original, { description }, body);
+  const autosave = useAutosave({
+    key,
+    content,
+    original,
+    save: (text) =>
+      trackActivity(
+        "write",
+        "Playbook speichern",
+        () => invoke("project_write_file", { project, file, content: text }),
+        file,
+      ),
+  });
 
-  const save = async () => {
-    setSaving(true);
-    setError(null);
-    try {
-      const content = assemblePlan(original, { description }, body);
-      await trackActivity("write", "Playbook speichern", () =>
-        invoke("project_write_file", { project, file, content }), file,
-      );
-      onSaved();
-    } catch (e) {
-      setError(String(e));
-      setSaving(false);
-    }
+  const finish = async () => {
+    await autosave.flush();
+    onSaved();
   };
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-3">
+      {restored ? (
+        <p className="rounded bg-amber-50 px-3 py-1.5 text-xs text-amber-800">
+          Ungespeicherter Entwurf wiederhergestellt — er wird gleich in die Datei geschrieben.
+        </p>
+      ) : null}
       <div className="grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-2">
         <label className="text-xs font-medium text-slate-500">description</label>
         <input
@@ -91,22 +99,28 @@ function PlaybookEditor({
         spellCheck={false}
         className="min-h-0 flex-1 resize-none rounded border border-slate-300 p-3 font-mono text-xs leading-5"
       />
-      {error ? <p className="text-xs text-red-600">{error}</p> : null}
-      <div className="flex justify-end gap-2">
-        <button
-          onClick={onCancel}
-          disabled={saving}
-          className="rounded px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100"
+      {autosave.error ? <p className="text-xs text-red-600">{autosave.error}</p> : null}
+      <div className="flex items-center justify-between gap-2">
+        <span
+          className={`text-xs ${autosave.status === "error" ? "text-red-600" : "text-slate-500"}`}
         >
-          Abbrechen
+          {autosaveLabel(autosave.status)}
+        </span>
+        <div className="flex gap-2">
+        <button
+          onClick={() => void autosave.flush()}
+          disabled={autosave.status === "saved" || autosave.status === "saving"}
+          className="rounded px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100 disabled:opacity-40"
+        >
+          Jetzt speichern
         </button>
         <button
-          onClick={() => void save()}
-          disabled={saving}
-          className="rounded bg-slate-800 px-3 py-1.5 text-sm text-white hover:bg-slate-700 disabled:opacity-50"
+          onClick={() => void finish()}
+          className="rounded bg-slate-800 px-3 py-1.5 text-sm text-white hover:bg-slate-700"
         >
-          {saving ? "Speichert…" : "Speichern"}
+          Fertig
         </button>
+        </div>
       </div>
     </div>
   );
@@ -264,7 +278,6 @@ export default function PlaybooksTab({
                   void body.reload();
                   void list.reload();
                 }}
-                onCancel={() => setEditing(false)}
               />
             ) : (
               <div className="min-h-0 flex-1 overflow-y-auto">

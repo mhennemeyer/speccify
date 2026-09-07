@@ -11,6 +11,7 @@ import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import CodeEditor from "../../components/CodeEditor";
 import { fencedPrompt } from "../../lib/prompt";
 import { trackActivity } from "../../lib/activity";
+import { clearDraft, draftKey, readDraft, writeDraft } from "../../lib/autosave";
 import {
   InspectorButton,
   InspectorPanel,
@@ -42,6 +43,8 @@ interface OpenFile {
   saved: string;
   revision: number;
   error: string | null;
+  /** Aus dem Entwurfs-Speicher wiederhergestellt (noch nicht in der Datei). */
+  restored?: boolean;
 }
 
 function formatSize(bytes: number): string {
@@ -191,7 +194,13 @@ export default function FilesTab({
     }
     try {
       const text = await invoke<string>("project_read_file", { project, file: path });
-      setOpen((previous) => [...previous, { path, text, saved: text, revision: 0, error: null }]);
+      // Entwurf aus einer unterbrochenen Sitzung (Neustart vor ⌘S) hat Vorrang.
+      const draft = readDraft(draftKey(project, path));
+      const restored = draft !== null && draft !== text;
+      setOpen((previous) => [
+        ...previous,
+        { path, text: restored ? draft : text, saved: text, revision: 0, error: null, restored },
+      ]);
     } catch (e) {
       setOpen((previous) => [
         ...previous,
@@ -206,6 +215,7 @@ export default function FilesTab({
     if (file && file.text !== file.saved && !window.confirm(`${path}: ungespeicherte Änderungen verwerfen?`)) {
       return;
     }
+    clearDraft(draftKey(project, path));
     setOpen((previous) => previous.filter((entry) => entry.path !== path));
     if (active === path) {
       const rest = openRef.current.filter((entry) => entry.path !== path);
@@ -224,8 +234,11 @@ export default function FilesTab({
         () => invoke("project_write_file", { project, file: path, content }),
         path,
       );
+      clearDraft(draftKey(project, path));
       setOpen((previous) =>
-        previous.map((entry) => (entry.path === path ? { ...entry, saved: content, error: null } : entry)),
+        previous.map((entry) =>
+          entry.path === path ? { ...entry, saved: content, error: null, restored: false } : entry,
+        ),
       );
       window.dispatchEvent(new CustomEvent("speccify:worktree-changed", { detail: path }));
     } catch (e) {
@@ -235,8 +248,15 @@ export default function FilesTab({
     }
   };
 
-  const setText = (path: string, text: string) =>
-    setOpen((previous) => previous.map((entry) => (entry.path === path ? { ...entry, text } : entry)));
+  const setText = (path: string, text: string) => {
+    // Jeder Tastenanschlag als Entwurf — ein Neustart vor ⌘S kostet nichts mehr.
+    const file = openRef.current.find((entry) => entry.path === path);
+    if (file && text === file.saved) clearDraft(draftKey(project, path));
+    else writeDraft(draftKey(project, path), text);
+    setOpen((previous) =>
+      previous.map((entry) => (entry.path === path ? { ...entry, text, restored: false } : entry)),
+    );
+  };
 
   const matches = (name: string) => filter === "" || name.toLowerCase().includes(filter.toLowerCase());
 
@@ -314,7 +334,14 @@ export default function FilesTab({
             label: "Geändert",
             value: info?.modified ? info.modified.replace("T", " ").slice(0, 16) : "—",
           },
-          { label: "Zustand", value: dirty ? "ungespeichert" : "gespeichert" },
+          {
+            label: "Zustand",
+            value: current.restored
+              ? "Entwurf wiederhergestellt — noch nicht gespeichert (⌘S)"
+              : dirty
+                ? "ungespeichert (Entwurf gesichert)"
+                : "gespeichert",
+          },
           { label: "Cursor", value: `Zeile ${cursorLine}` },
         ]}
         actions={
@@ -324,15 +351,16 @@ export default function FilesTab({
             </InspectorButton>
             <InspectorButton
               disabled={!dirty}
-              onClick={() =>
+              onClick={() => {
+                clearDraft(draftKey(project, current.path));
                 setOpen((previous) =>
                   previous.map((entry) =>
                     entry.path === current.path
-                      ? { ...entry, text: entry.saved, revision: entry.revision + 1 }
+                      ? { ...entry, text: entry.saved, revision: entry.revision + 1, restored: false }
                       : entry,
                   ),
-                )
-              }
+                );
+              }}
             >
               Verwerfen
             </InspectorButton>

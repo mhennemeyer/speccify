@@ -175,6 +175,21 @@ Sheet (Default an); aus → Knöpfe „Letzte Sitzung fortsetzen" / „Neu
 starten". Verloren geht nur der gerade laufende Werkzeugaufruf. Mock:
 Playwright — Reload startet mit `--continue`, Option aus → manuell.
 
+**Autosave + Entwurfs-Speicher ✅ 2026-09-07 (BO-Vorfall: ein Rust-Rebuild
+startete die Dev-App neu, ein halb geschriebener Plan war weg).**
+`lib/autosave.ts`: `useAutosave` hält den Editorinhalt gegen die Datei
+gespeichert — Entwurf synchron in localStorage bei jedem Tastenanschlag
+(`speccify.draft:<projekt>:<datei>`), Datei 1,2 s nach dem Tippen, Rest
+beim Unmount; Status „Entwurf gesichert · speichert gleich…/Gespeichert".
+Plan- und Playbook-Editor: kein Abbrechen mehr (Git ist die Historie),
+*Jetzt speichern* + *Fertig*; liegt beim Öffnen ein Entwurf ≠ Datei, wird
+er wiederhergestellt (Hinweis), und die Plan-Ansicht zeigt schon vor dem
+Bearbeiten „Ungespeicherter Entwurf vorhanden — Wiederherstellen".
+Code-Editor: Entwurf bei jedem Tastenanschlag, ⌘S bleibt; beim Öffnen
+kommt der Entwurf als ungespeicherter Zustand zurück. **Lehre für die
+Arbeitsweise:** Rust-Änderungen starten die Dev-App des BO neu —
+bündeln und vorher ankündigen.
+
 ## Aufwand und Reihenfolge
 
 Iterativ, jeder Baustein für sich nutzbar: I1 zuerst (Baum + Editor sind
