@@ -5,6 +5,10 @@ import AskBoPanel, { type AskBoInteraction } from "./components/AskBoPanel";
 import TerminalPanel from "./components/TerminalPanel";
 import { useTheme } from "./lib/theme";
 import { isMac } from "./lib/platform";
+import { continueCommand } from "./lib/agents";
+
+export const DASHBOARD_SESSION_KEY = "speccify.dashboard.agentSession";
+export const DASHBOARD_RESUME_KEY = "speccify.dashboard.resumeAgent";
 import AgentsView from "./views/AgentsView";
 import HelpView from "./views/HelpView";
 import LibraryView from "./views/LibraryView";
@@ -39,9 +43,41 @@ export default function App() {
   const [terminalStarted, setTerminalStarted] = useState(false);
   const [interactions, setInteractions] = useState<AskBoInteraction[]>([]);
 
+  // Dashboard-Terminal: dieselbe Sitzung nach einem Neustart fortsetzen
+  // (BO 2026-09-08 „gerne überall") — Merker + Fortsetz-Kommando wie im
+  // Projektfenster; das Kommando kommt aus den App-Settings.
+  const [resumeSession, setResumeSession] = useState(false);
+  const [dashboardCommand, setDashboardCommand] = useState<string | null>(null);
+  useEffect(() => {
+    void invoke<{ terminal_autostart_command: string }>("get_settings")
+      .then((settings) => {
+        const command = settings.terminal_autostart_command ?? "";
+        setDashboardCommand(command);
+        let flag = false;
+        let resume = true;
+        try {
+          flag = localStorage.getItem(DASHBOARD_SESSION_KEY) === "1";
+          resume = localStorage.getItem(DASHBOARD_RESUME_KEY) !== "0";
+        } catch {
+          // kein Storage — kein Fortsetzen
+        }
+        if (flag && resume && command.trim() !== "") {
+          setResumeSession(true);
+          setTerminalStarted(true);
+          setSidebarVisible(true);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   const toggleTerminal = () => {
     setTerminalStarted(true);
     setSidebarVisible((current) => !current);
+    try {
+      localStorage.setItem(DASHBOARD_SESSION_KEY, "1");
+    } catch {
+      // dito
+    }
   };
 
   useEffect(() => {
@@ -168,7 +204,12 @@ export default function App() {
       >
         <AskBoPanel interactions={interactions} onAnswer={answerInteraction} />
         {terminalStarted ? (
-          <TerminalPanel visible={sidebarVisible} />
+          <TerminalPanel
+            visible={sidebarVisible}
+            autostart={
+              resumeSession && dashboardCommand ? continueCommand(dashboardCommand) : undefined
+            }
+          />
         ) : (
           <div className="flex flex-1 items-center justify-center">
             <button

@@ -50,9 +50,13 @@ function PlaybookEditor({
   onSaved: () => void;
 }) {
   const key = draftKey(project, file);
-  const draft = readDraft(key);
-  const restored = draft !== null && draft !== original;
-  const parts = splitPlan(restored ? draft : original);
+  // Einmalig beim Öffnen (siehe PlanEditor) — sonst rutscht der Editor.
+  const [initial] = useState(() => {
+    const draft = readDraft(key);
+    const restored = draft !== null && draft !== original;
+    return { restored, parts: splitPlan(restored ? draft : original) };
+  });
+  const { restored, parts } = initial;
   const [description, setDescription] = useState(
     frontmatterValue(parts.frontmatter, "description"),
   );

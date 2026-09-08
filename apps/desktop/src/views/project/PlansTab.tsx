@@ -205,9 +205,15 @@ function PlanEditor({
 }) {
   // Ein liegen gebliebener Entwurf (Neustart mitten im Tippen) hat Vorrang.
   const key = draftKey(project, file);
-  const draft = readDraft(key);
-  const restored = draft !== null && draft !== original;
-  const parts = splitPlan(restored ? draft : original);
+  // Einmalig beim Öffnen entscheiden — nicht je Render, sonst blitzt der
+  // Hinweis bei jedem Tastenanschlag auf und schiebt den Editor (BO-Finding
+  // 2026-09-08: „Info zum Speicherzustand lässt den Editor rutschen").
+  const [initial] = useState(() => {
+    const draft = readDraft(key);
+    const restored = draft !== null && draft !== original;
+    return { restored, parts: splitPlan(restored ? draft : original) };
+  });
+  const { restored, parts } = initial;
   const [lifecycle, setLifecycle] = useState(frontmatterValue(parts.frontmatter, "lifecycle"));
   const [status, setStatus] = useState(frontmatterValue(parts.frontmatter, "status"));
   const [body, setBody] = useState(parts.body);

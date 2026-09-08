@@ -10,6 +10,7 @@ import { ActionButton, ErrorBox } from "../components/ui";
 import { AGENT_PRESETS } from "../lib/agents";
 import { useTheme } from "../lib/theme";
 import ThemePicker from "../components/ThemePicker";
+import { DASHBOARD_RESUME_KEY } from "../App";
 
 interface AppSettings {
   working_dir: string | null;
@@ -30,6 +31,13 @@ export default function SettingsView() {
   const [status, setStatus] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [theme, setTheme] = useTheme();
+  const [resumeDashboard, setResumeDashboard] = useState(() => {
+    try {
+      return localStorage.getItem(DASHBOARD_RESUME_KEY) !== "0";
+    } catch {
+      return true;
+    }
+  });
 
   const refreshBriefings = useCallback(async (workingDir: string | null) => {
     if (!workingDir) {
@@ -83,6 +91,30 @@ export default function SettingsView() {
           Projektfenster.
         </p>
         <ThemePicker value={theme} onChange={(next) => void setTheme(next)} />
+      </section>
+
+      <section>
+        <h3 className="mb-2 text-sm font-semibold text-slate-700">Agent-Sitzung</h3>
+        <label className="flex items-start gap-2 text-sm text-slate-600">
+          <input
+            type="checkbox"
+            checked={resumeDashboard}
+            onChange={(e) => {
+              setResumeDashboard(e.target.checked);
+              try {
+                localStorage.setItem(DASHBOARD_RESUME_KEY, e.target.checked ? "1" : "0");
+              } catch {
+                // dito
+              }
+            }}
+            className="mt-1"
+          />
+          <span>
+            Das Dashboard-Terminal setzt nach einem Neustart die letzte Sitzung fort
+            (<code>claude --continue</code> bzw. <code>codex resume --last</code>).
+            Projektfenster haben denselben Schalter in ihren Einstellungen.
+          </span>
+        </label>
       </section>
 
       <section>

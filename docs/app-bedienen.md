@@ -64,7 +64,9 @@ Agent, startet das Terminal beim nächsten Öffnen von selbst mit
 `claude --continue` bzw. `codex resume --last` — der Agent liest sein
 eigenes Protokoll und macht dort weiter, wo er war; nur ein gerade
 laufender Werkzeugaufruf ist verloren. In den Einstellungen abschaltbar;
-dann bietet das Terminal *Letzte Sitzung fortsetzen* und *Neu starten*. Das **Agent-Terminal** lebt in einer Leiste unten
+dann bietet das Terminal *Letzte Sitzung fortsetzen* und *Neu starten*.
+Das Dashboard-Terminal macht es genauso (Schalter im Dashboard unter
+*Settings → Agent-Sitzung*). Das **Agent-Terminal** lebt in einer Leiste unten
 unter dem Inhalt; wer es lieber rechts hat, legt es mit dem Knopf *nach
 rechts* im Terminal als zweiten Tab in die rechte Seitenleiste.
 Alle drei Bereiche lassen sich am Rand ziehen (Doppelklick auf den Griff
