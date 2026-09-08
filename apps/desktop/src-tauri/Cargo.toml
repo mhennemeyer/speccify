@@ -3,7 +3,7 @@
 
 [package]
 name = "speccify-desktop"
-version = "0.4.0"
+version = "0.5.0"
 description = "Speccify-Desktop-App (Tauri 2): Library/Umgebung/Server/Knowledgebases + Prozess-Supervisor."
 license = "MIT"
 edition = "2021"
