@@ -134,6 +134,24 @@ bewusst entscheiden:
   Rollenzuweisung (*Trusted Signing Certificate Profile Signer* an die App
   Registration) braucht es dort Owner-/User-Access-Admin-Rechte.
 
+### Linux (AppImage, deb, rpm) — keine Signierung nötig
+
+Der Job `release-linux` (ubuntu-22.04, x86_64) baut `.AppImage`, `.deb`
+und `.rpm` und hängt sie an denselben Draft. Ubuntu 22.04 statt -latest
+ist Absicht: das AppImage wird gegen die ältere glibc/WebKitGTK gelinkt
+und läuft dann auch auf Distributionen von 2022. Linux kennt weder
+Gatekeeper noch SmartScreen — es gibt nichts scharf zu schalten; der
+Updater (AppImage) läuft wie auf macOS nur mit den `TAURI_SIGNING_*`-
+Secrets. Systemabhängigkeiten des Builds stehen im Job (WebKitGTK 4.1,
+GTK 3, Ayatana-Appindicator, rsvg, patchelf, libfuse2 fürs AppImage-
+Werkzeug). **Testlauf ohne Tag:** Workflow „Linux bundle (test build)"
+per *Run workflow* starten — er baut dieselben Pakete als Artefakte des
+Laufs. Der CI-Job `desktop-linux` (ci.yml) kompiliert und testet das
+Desktop-Crate bei jedem Push auf Linux. Laufzeit-Voraussetzungen und die
+Liste der Fälle, in denen es nicht läuft (WebKitGTK 4.0-Distributionen,
+AppImage ohne libfuse2, Wayland+NVIDIA, headless, ARM), stehen auf der
+Download-Seite.
+
 ### Danach
 
 - **Draft veröffentlichen — per CLI, nicht im Browser.** Der Draft stammt

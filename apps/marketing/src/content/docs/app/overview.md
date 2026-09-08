@@ -5,7 +5,7 @@ sidebar:
   order: 1
 ---
 
-**The Speccify app** is a desktop app (macOS and Windows) for running
+**The Speccify app** is a desktop app (macOS, Windows and Linux) for running
 a project *with* a terminal agent. The agent (Claude Code, Codex, or
 any other) does its work in the repository; the app renders that same
 repository for you, the owner: the files and the Git state, the plans,

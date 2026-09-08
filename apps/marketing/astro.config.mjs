@@ -32,7 +32,7 @@ export default defineConfig({
     starlight({
       title: "Speccify",
       description:
-        "The agent-agnostic skill and tool manager: reusable skills shared over Git, tool contracts implemented per project, and a desktop app that runs the whole workflow on macOS and Windows.",
+        "The agent-agnostic skill and tool manager: reusable skills shared over Git, tool contracts implemented per project, and a desktop app that runs the whole workflow on macOS, Windows and Linux.",
       defaultLocale: "root",
       locales: {
         root: { label: "English", lang: "en" },

@@ -41,7 +41,7 @@ const features = [
   <main class="mx-auto max-w-5xl px-6 py-12">
     <section class="flex flex-col items-center gap-5 py-8 text-center">
       <p class="text-sm font-semibold uppercase tracking-widest text-sky-400">
-        Desktop app for macOS and Windows
+        Desktop app for macOS, Windows and Linux
       </p>
       <h1 class="max-w-3xl text-4xl font-bold tracking-tight">
         Speccify on your machine
@@ -60,7 +60,8 @@ const features = [
         </a>
         <p class="text-sm text-slate-400">
           macOS: Apple Silicon, macOS 11+ (<code>.dmg</code>) · Windows: x64
-          (<code>*-setup.exe</code>){isSigned ? " · signed and notarized" : ""}
+          (<code>*-setup.exe</code>) · Linux: x86_64 (<code>.AppImage</code>,
+          <code>.deb</code>, <code>.rpm</code>){isSigned ? " · signed and notarized" : ""}
         </p>
       </div>
 
@@ -106,6 +107,67 @@ const features = [
       }
 
       <div class="w-full rounded-xl border border-slate-800 bg-slate-900/50 p-6 text-left">
+        <p class="text-lg font-semibold text-slate-200">Linux</p>
+        <p class="mt-2 text-slate-300">
+          Three formats, pick one. The <strong>AppImage</strong> runs on any
+          distribution without installing: download it, mark it executable
+          (right-click → Properties → “Allow executing”, or
+          <code class="rounded bg-slate-800 px-1.5 py-0.5">chmod +x Speccify_*.AppImage</code>),
+          double-click. The <strong>.deb</strong> (Ubuntu, Debian, Mint) and
+          <strong>.rpm</strong> (Fedora, openSUSE) install through your package
+          manager and put Speccify in the application menu. There is no
+          Gatekeeper or SmartScreen equivalent on Linux — nothing to click
+          through.
+        </p>
+        <p class="mt-4 text-slate-300">
+          <strong>What it needs:</strong> a desktop session with
+          <strong>WebKitGTK 4.1</strong> (<code class="rounded bg-slate-800 px-1.5 py-0.5">libwebkit2gtk-4.1</code>),
+          which is how the app draws its window. Ubuntu 22.04 and newer,
+          Debian 12, Fedora 37 and newer, and current openSUSE, Arch and Mint
+          ship it; the .deb and .rpm pull it in as a dependency. For the
+          Git and agent features, <code class="rounded bg-slate-800 px-1.5 py-0.5">git</code> and
+          Claude Code or Codex on your PATH, as on any platform.
+        </p>
+        <p class="mt-4 text-slate-300"><strong>Where it will not work, or needs a hand:</strong></p>
+        <ul class="mt-2 list-disc space-y-1.5 pl-5 text-slate-300">
+          <li>
+            <strong>Older distributions</strong> (Ubuntu 20.04, Debian 11 and
+            earlier) only have WebKitGTK 4.0 — the app will not start there.
+          </li>
+          <li>
+            <strong>AppImage without FUSE 2:</strong> Ubuntu 22.04 and newer
+            no longer install <code class="rounded bg-slate-800 px-1.5 py-0.5">libfuse2</code> by
+            default, and the AppImage needs it to mount itself. Either
+            <code class="rounded bg-slate-800 px-1.5 py-0.5">sudo apt install libfuse2</code>, run it
+            with <code class="rounded bg-slate-800 px-1.5 py-0.5">--appimage-extract-and-run</code>, or use the
+            .deb instead.
+          </li>
+          <li>
+            <strong>KDE Plasma</strong> works — WebKitGTK is a library, not a
+            desktop requirement — but the window uses GTK styling, so it will
+            not follow your Qt theme, and the .deb/.rpm bring GTK and WebKitGTK
+            along if they are missing.
+          </li>
+          <li>
+            <strong>Wayland with NVIDIA drivers:</strong> if the window comes
+            up blank or flickers, start it with
+            <code class="rounded bg-slate-800 px-1.5 py-0.5">WEBKIT_DISABLE_DMABUF_RENDERER=1</code>
+            (or <code class="rounded bg-slate-800 px-1.5 py-0.5">WEBKIT_DISABLE_COMPOSITING_MODE=1</code>) — a known
+            WebKitGTK issue, not specific to Speccify.
+          </li>
+          <li>
+            <strong>Headless servers, containers, WSL without WSLg:</strong> no
+            display, no window. WSL2 with WSLg works.
+          </li>
+          <li>
+            <strong>ARM (Raspberry Pi, ARM laptops), Alpine/musl:</strong> not
+            built — the release is x86_64 glibc only. Build from source there
+            (below).
+          </li>
+        </ul>
+      </div>
+
+      <div class="w-full rounded-xl border border-slate-800 bg-slate-900/50 p-6 text-left">
         <p class="text-lg font-semibold text-slate-200">Or build it yourself</p>
         <p class="mt-2 text-slate-400">
           Two steps — the script fetches dependencies, builds the app and starts
@@ -117,7 +179,12 @@ cd speccify && ./scripts/dev.sh --release
 
 # Windows (PowerShell)
 git clone https://github.com/mhennemeyer/speccify
-cd speccify; powershell -ExecutionPolicy Bypass -File scripts\dev.ps1</code></pre>
+cd speccify; powershell -ExecutionPolicy Bypass -File scripts\dev.ps1
+
+# Linux (Debian/Ubuntu package names; Fedora: webkit2gtk4.1-devel etc.)
+sudo apt install libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev libssl-dev patchelf build-essential
+git clone https://github.com/mhennemeyer/speccify
+cd speccify && ./scripts/dev.sh --release</code></pre>
         <p class="mt-4 text-sm text-slate-400">
           Prerequisites:
           <code class="rounded bg-slate-800 px-1.5 py-0.5">uv</code>,

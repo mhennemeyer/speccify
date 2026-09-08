@@ -9,7 +9,7 @@ shared over Git like Go modules — no account, no central registry.
 them. **Tools** ship as contracts, not scripts: a `TOOL.md` defines inputs,
 outputs, effects and examples, your agent implements it for the machine at
 hand, and `speccify tool check` proves the implementation against the
-contract's examples. The **Speccify desktop app** (macOS and Windows) runs
+contract's examples. The **Speccify desktop app** (macOS, Windows and Linux) runs
 the whole workflow on top: plans, tickets, a live board, project actions —
 with Claude Code or Codex in the built-in terminal.
 

@@ -187,6 +187,70 @@ jobs:
       - name: Cargo test (speccify-desktop, windows)
         run: cargo test -p speccify-desktop
 
+  # Linux-Referenz (IDE-Plan, BO 2026-09-08): das Tauri-Crate wurde bis
+  # dahin nie auf Linux kompiliert — der rust-workspace-Job schließt es
+  # wegen der WebKitGTK-Systemdeps aus. Dieser Job installiert sie und ist
+  # damit das Netz für die Linux-Releases (release.yml, release-linux).
+  desktop-linux:
+    name: apps/desktop linux (typecheck + build + cargo test)
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.3
+          run_install: false
+
+      - name: Install dependencies (frozen lockfile, workspace root)
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck + build (Tauri app frontend)
+        run: pnpm --filter speccify-desktop build
+
+      # WebKitGTK 4.1 + GTK 3 + Appindicator + rsvg: was Tauri 2 auf Linux
+      # zum Kompilieren braucht (docs/release.md, Abschnitt Linux).
+      - name: Install Linux system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev \
+            librsvg2-dev libssl-dev patchelf build-essential curl wget file
+
+      - name: Install pinned toolchain
+        run: rustup show
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install uv (Sidecar-Quelle)
+        uses: astral-sh/setup-uv@v3
+
+      # Wie im Windows-Job: externalBin/resources müssen bei cargo test schon
+      # existieren — Debug-Sidecars, uv vom Runner, Platzhalter-Resource.
+      - name: Build sidecars (debug)
+        run: |
+          cargo build -p speccify-exec-mcp -p speccify-discovery-mcp -p speccify-parallels-mcp
+          triple="$(rustc -vV | awk '/^host: /{print $2}')"
+          bin=apps/desktop/src-tauri/binaries
+          mkdir -p "$bin" apps/desktop/src-tauri/resources
+          for name in speccify-exec-mcp speccify-discovery-mcp speccify-parallels-mcp; do
+            cp "target/debug/$name" "$bin/$name-$triple"
+          done
+          cp "$(command -v uv)" "$bin/uv-$triple"
+          echo "CI: erfuellt nur den resources-Glob." > apps/desktop/src-tauri/resources/ci-placeholder.txt
+
+      - name: Cargo test (speccify-desktop, linux)
+        run: cargo test -p speccify-desktop
+
   desktop-frontend:
     name: apps/desktop frontend (typecheck + build)
     runs-on: ubuntu-latest
