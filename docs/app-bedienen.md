@@ -116,7 +116,9 @@ Dunkel. Das Zahnrad daneben öffnet die **Einstellungen**: Erscheinungsbild
   legt eins an, der Editor pflegt Beschreibung und Text, **Als Prompt
   kopieren** gibt den Ablauf dem Agenten ins Terminal.
 - **Pläne** — Liste und Inhalt aller Pläne, mit Editor (Status-Felder und
-  Text). **Der Editor speichert von selbst:** jeder Tastenanschlag landet
+  Text); **Doppelklick** auf den Listeneintrag oder den Inhalt öffnet ihn
+  (ebenso bei Playbooks; ein Doppelklick auf eine Ticket-Karte öffnet den
+  Ticket-Editor). **Der Editor speichert von selbst:** jeder Tastenanschlag landet
   sofort als Entwurf im App-Speicher, gut eine Sekunde nach dem Tippen in
   der Datei; *Fertig* schließt den Editor. Wird die App mitten im Schreiben
   beendet oder neu gestartet, bietet der Plan beim nächsten Öffnen

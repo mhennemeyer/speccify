@@ -159,10 +159,13 @@ function TicketCard({
   ticket,
   selected,
   onSelect,
+  onEdit,
 }: {
   ticket: TicketEntry;
   selected: boolean;
   onSelect: () => void;
+  /** Doppelklick öffnet den Ticket-Editor (BO 2026-09-08). */
+  onEdit: () => void;
 }) {
   return (
     <div
@@ -175,7 +178,12 @@ function TicketCard({
         selected ? "border-slate-800 bg-white shadow-sm" : "border-slate-200 bg-white"
       }`}
     >
-      <button onClick={onSelect} className="block w-full text-left">
+      <button
+        onClick={onSelect}
+        onDoubleClick={onEdit}
+        title="Doppelklick zum Bearbeiten"
+        className="block w-full text-left"
+      >
         <span className="text-sm font-medium text-slate-800">{ticket.title}</span>
         {/* Schmale Spalten (BO-Screenshot 2026-09-06): Id darf umbrechen,
             Badges wandern in die nächste Zeile statt über den Text. */}
@@ -824,6 +832,10 @@ export default function BoardTab({
                                 onSelect={() =>
                                   setSelected(selected === ticket.file ? null : ticket.file)
                                 }
+                                onEdit={() => {
+                                  setSelected(ticket.file);
+                                  setSheet(sheetFor(ticket));
+                                }}
                               />
                             ))}
                           </div>
@@ -837,6 +849,10 @@ export default function BoardTab({
                           onSelect={() =>
                             setSelected(selected === ticket.file ? null : ticket.file)
                           }
+                          onEdit={() => {
+                            setSelected(ticket.file);
+                            setSheet(sheetFor(ticket));
+                          }}
                         />
                       ))}
                 </div>

@@ -227,6 +227,10 @@ export default function PlaybooksTab({
                 setEditing(false);
                 inspector.reveal();
               }}
+              onDoubleClick={() => {
+                setSelected(entry.file);
+                setEditing(true);
+              }}
               className={`block w-full rounded px-2 py-1.5 text-left text-sm ${
                 selected === entry.file
                   ? "bg-slate-800 text-white"
@@ -280,7 +284,11 @@ export default function PlaybooksTab({
                 }}
               />
             ) : (
-              <div className="min-h-0 flex-1 overflow-y-auto">
+              <div
+                className="min-h-0 flex-1 overflow-y-auto"
+                onDoubleClick={() => setEditing(true)}
+                title="Doppelklick zum Bearbeiten"
+              >
                 <InspectorPortal tab="playbooks" fallback={inlineInspector}>
                   <InspectorPanel
                     title={selectedPlaybook.title}

@@ -103,10 +103,13 @@ function PlanList({
   plans,
   selected,
   onSelect,
+  onEdit,
 }: {
   plans: PlanEntry[];
   selected: string | null;
   onSelect: (file: string) => void;
+  /** Doppelklick (BO 2026-09-08): direkt in den Editor. */
+  onEdit: (file: string) => void;
 }) {
   return (
     <ul className="space-y-1">
@@ -114,6 +117,7 @@ function PlanList({
         <li key={plan.file}>
           <button
             onClick={() => onSelect(plan.file)}
+            onDoubleClick={() => onEdit(plan.file)}
             className={`w-full rounded px-2 py-1.5 text-left text-sm ${
               selected === plan.file
                 ? "bg-slate-800 text-white"
@@ -318,6 +322,10 @@ export default function PlansTab({ project, refresh }: { project: string; refres
     setEditing(false);
     inspector.reveal();
   };
+  const edit = (file: string) => {
+    setSelected(file);
+    setEditing(true);
+  };
 
   const reloadAll = () => {
     void list.reload();
@@ -332,7 +340,7 @@ export default function PlansTab({ project, refresh }: { project: string; refres
           Leg den ersten an — oder bitte den Agenten im Terminal darum.
         </NavEmpty>
       ) : (
-        <PlanList plans={active} selected={selected} onSelect={select} />
+        <PlanList plans={active} selected={selected} onSelect={select} onEdit={edit} />
       )}
       <div className="mt-2">
         <NewPlan
@@ -350,7 +358,7 @@ export default function PlansTab({ project, refresh }: { project: string; refres
             Archiv ({archived.length})
           </summary>
           <div className="mt-1">
-            <PlanList plans={archived} selected={selected} onSelect={select} />
+            <PlanList plans={archived} selected={selected} onSelect={select} onEdit={edit} />
           </div>
         </details>
       ) : null}
@@ -458,7 +466,11 @@ export default function PlansTab({ project, refresh }: { project: string; refres
                 }}
               />
             ) : (
-              <div className="min-h-0 flex-1 overflow-y-auto">
+              <div
+                className="min-h-0 flex-1 overflow-y-auto"
+                onDoubleClick={() => setEditing(true)}
+                title="Doppelklick zum Bearbeiten"
+              >
                 {(() => {
                   const draft = readDraft(draftKey(project, selectedPlan.file));
                   return draft !== null && body.data !== null && draft !== body.data ? (
