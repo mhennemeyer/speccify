@@ -2,7 +2,7 @@
 title: Questions & answers
 description: The protocol that stops an agent from guessing — and makes every decision survive the conversation.
 sidebar:
-  order: 4
+  order: 5
 ---
 
 Some decisions are yours alone: scope, money, taste, anything
@@ -49,7 +49,7 @@ block directly in the ticket file, or just in the next chat; the
 agent's next run records it, clears the flag, and continues. Settled
 questions fold away under a collapsible **Answered (n)** section.
 
-![An open question at the top of the ticket detail, with the answer field](../../../assets/app/question.png)
+![An open question at the top of the ticket's inspector, with the answer field](../../../assets/app/question.png)
 
 The effect, months later: every "why is it like this?" has a
 findable, timestamped answer sitting in the ticket that made the

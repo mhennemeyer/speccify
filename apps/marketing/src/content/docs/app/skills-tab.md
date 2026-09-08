@@ -2,14 +2,16 @@
 title: Skills, tools & sources
 description: What your agent can do here — browsable in the app, importable from Speccify sources.
 sidebar:
-  order: 6
+  order: 7
 ---
 
-The skills tab shows what the agent knows how to do in *this*
-project: the [skills](/fundamentals/skills/) under `.agent/skills/`,
-each with its origin from `expansions.yaml`. The tools tab does the
-same for the [tools](/fundamentals/tools/) under `.agent/tools/` —
-the same files the agent reads, rendered for you.
+The skills tab (area *Orga*) shows what the agent knows how to do in
+*this* project: the [skills](/fundamentals/skills/) under
+`.agent/skills/`, listed in the navigator, rendered in the middle,
+with their origin from `expansions.yaml` in the inspector. The tools
+tab (area *Tech*) does the same for the [tools](/fundamentals/tools/)
+under `.agent/tools/`, with each platform's verification status in the
+inspector — the same files the agent reads, rendered for you.
 
 ![The skills tab: an expanded skill with its provenance](../../../assets/app/skills.png)
 
@@ -34,7 +36,7 @@ The skills tab's **Browse sources** mode shows the sources configured
 for this project (one or more; the default comes from the dashboard
 settings). The source's folder structure *is* the organization — its
 folders are the categories you browse. Pick a skill to preview it;
-**Import (expand)** types the matching
+**Import (expand)** in the inspector types the matching
 `speccify add … && speccify expand …` command into the agent
 terminal, and the [expand step](/speccify/expand/) does the rest:
 normal skills land in `.agent/skills/`, tool contracts in

@@ -1,6 +1,6 @@
 ---
 title: Overview
-description: A desktop app that renders the files your agent works with — board, plans, skills, and actions, one window per project.
+description: A desktop app that renders the files your agent works with — files, plans, board, actions — one window per project, laid out like Xcode.
 sidebar:
   order: 1
 ---
@@ -8,17 +8,17 @@ sidebar:
 **The Speccify app** is a desktop app (macOS and Windows) for running
 a project *with* a terminal agent. The agent (Claude Code, Codex, or
 any other) does its work in the repository; the app renders that same
-repository for you, the owner: the kanban board, the plans, the
-skills and tools, the project actions. Nothing lives only in the
-app — every ticket, plan, and setting is a plain file under
-`.agent/`, committed with your code.
+repository for you, the owner: the files and the Git state, the plans,
+the kanban board, the skills and tools, the project actions. Nothing
+lives only in the app — every ticket, plan, and setting is a plain
+file under `.agent/`, committed with your code.
 
 ![A project window: navigator with icon tabs on the left, board with the active plan above it, the selected ticket in the inspector on the right, agent terminal at the bottom](../../../assets/app/overview.png)
 
 ## The division of labor
 
-- **You** decide what gets built, answer the agent's questions, and
-  review the results — from the app.
+- **You** decide what gets built, answer the agent's questions, review
+  the results, and commit — from the app.
 - **The agent** slices plans into tickets, works them one at a time,
   and writes down what it did — from the terminal.
 - **The repository** is the single shared state. The app picks up
@@ -36,36 +36,58 @@ versioned workflow block into `.agent/agent.md`, creates the
 `.agents/skills` to `.agent/skills` (a junction on Windows) — so
 both hosts see the same skills.
 
-## Dashboard and project windows
+## The window
 
-The app starts on a **dashboard** — your projects, plus the shared
-pieces: library, environment, servers, agents, settings. Each project
-opens in its **own window** with the tabs **Board, Playbooks, Plans,
-Skills, Tools, Actions, MCPs, Agent, Help** as an icon bar at the top
-of the left **navigator**, with the tab's list below it — plans,
-playbooks, skills, a plan filter on the board. The selected item fills
-the middle, and an **inspector** on the right shows its detail (a
-ticket with its history, for instance). The agent terminal lives in a resizable bar at the bottom,
-or — your choice, per project — as a tab in that right sidebar. All three areas can be resized by dragging and hidden with
-the toolbar toggles, the way Xcode does it; sizes are remembered per
-project. The gear in the toolbar opens the settings — light, dark, or
-system appearance for all windows. Claude Code and Codex are
-equal presets for the terminal — nothing in the workflow is specific
-to either.
+A project window follows the pattern of Xcode: a **navigator** on the
+left, the **content** in the middle, an **inspector** on the right,
+the **agent terminal** at the bottom, a **toolbar** on top.
 
-- **[The board](/app/board/)** — tickets in `Backlog`,
-  `In Progress`, `Done`; per-ticket history; badges for tickets that
-  wait on you.
-- **[Plans & playbooks](/app/plans/)** — the markdown plans under
-  `.agent/plans/`, with exactly one `active` at a time, an escalation
-  banner when the agent needs you, and **Copy as prompt**; next to
-  them the playbooks under `.agent/playbooks/` — standing procedures
-  such as a release, which are reused rather than worked off.
-- **[Skills & tools](/app/skills-tab/)** — what the agent can
-  do here, including skills expanded from
-  [Speccify sources](/speccify/overview/).
-- **[Actions](/app/actions/)** — project commands the app runs
-  itself, with live output.
+- **Navigator.** An icon bar with five areas — **Files** (files, Git),
+  **Orga** (playbooks, plans, skills), **Tech** (tools, actions, MCPs,
+  agent), **Board**, and **Help** — and, for areas with several tabs,
+  a second row naming them. Below that, the list of the active tab.
+  An empty list never stays blank: it says what is missing and offers
+  the next step — *+ Plan*, *+ Ticket*, *Browse sources*, `git init`,
+  or a prompt for the agent.
+- **Content.** The selected item at full width: the board, a plan as a
+  document, a file in the editor, a diff.
+- **Inspector.** Details and actions for whatever is selected on the
+  left — a ticket with its *Overview* and *History* tabs, a plan with
+  lifecycle, status, *Activate* and *Archive*, a skill with its origin,
+  a tool with its per-platform status, the commit panel in the Git tab.
+  Hide the inspector and the same panel appears above the content.
+- **Terminal.** The agent terminal sits under the content, resizable;
+  one click moves it into the right sidebar instead. A session that
+  was running when the app quit is **resumed on the next start**
+  (`claude --continue`, `codex resume --last`) — the agent reads its
+  own transcript and carries on.
+- **Toolbar.** The project name on the left; in the middle, buttons
+  for actions you pinned there and the **activity view** — what is
+  running right now (an action, `git push`, a save, the agent terminal
+  while output flows) with its duration, and finished agent runs from
+  the ticket history with ticket and tokens; on the right, toggles for
+  the three areas, light/dark, and settings. On macOS the toolbar is
+  the title bar.
+
+All areas resize by dragging; sizes, visibility, and the terminal
+position are remembered per project across restarts. Keyboard: ⌘1–⌘5
+switch areas, ⌘0 / ⌥⌘0 / ⇧⌘Y toggle navigator, inspector, and
+terminal (Ctrl on Windows).
+
+## Where to go next
+
+- **[Files & Git](/app/files-and-git/)** — the project tree, a code
+  editor, and Git with staging, diffs, commits by you or by the agent.
+- **[The board](/app/board/)** — tickets in `Backlog`, `In Progress`,
+  `Done`; per-ticket history; badges for tickets that wait on you.
+- **[Plans & playbooks](/app/plans/)** — one active plan at a time,
+  escalations, standing procedures, editors that save as you type.
+- **[Questions](/app/questions/)** — how the agent asks and how your
+  answer reaches its next run.
+- **[Actions](/app/actions/)** — project commands the app runs itself,
+  with live output, pinnable to the toolbar.
+- **[Skills & tools](/app/skills-tab/)** — what the agent can do here,
+  including skills expanded from [Speccify sources](/speccify/overview/).
 
 Start with [the board](/app/board/) — it is where a normal day
 happens.

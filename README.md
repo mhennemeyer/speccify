@@ -53,12 +53,15 @@ links are directory junctions — no admin rights needed.
 
 ## The app
 
-Every project opens in its own window: the board (file-based tickets in
-`.agent/board/`, one in progress at a time, history and token counts from
-the agent's own `agent_run` log lines), the active plan above it, skills and
-tool contracts with their per-platform verification status, project actions
-with live output and charts, and an agent terminal that already knows the
-project. The app watches files; the agent does the work. Everything shown is
+Every project opens in its own window, laid out like Xcode (navigator,
+content, inspector, terminal): the project files with a code editor and a
+Git tab (stage, diff, commit — by you or by the agent — pull, push), the
+board (file-based tickets in `.agent/board/`, one in progress at a time,
+history and token counts from the agent's own `agent_run` log lines), the
+active plan above it, skills and tool contracts with their per-platform
+verification status, project actions with live output and charts, and an
+agent terminal that already knows the project and resumes its session after
+a restart. The app watches files; the agent does the work. Everything shown is
 plain files, so it works with any agent and survives without the app.
 
 ## Repository layout

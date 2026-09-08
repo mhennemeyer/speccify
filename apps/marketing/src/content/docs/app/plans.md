@@ -2,7 +2,7 @@
 title: Plans & playbooks
 description: A plan is what the agent slices into tickets — one active at a time. A playbook is a standing procedure you run again and again.
 sidebar:
-  order: 3
+  order: 4
 ---
 
 Two kinds of long-form text live next to the board, and the app keeps

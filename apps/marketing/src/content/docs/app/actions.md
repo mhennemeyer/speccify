@@ -2,12 +2,16 @@
 title: Actions
 description: Project commands you run from the app — executed natively, with live output, allowlisted for the agent.
 sidebar:
-  order: 5
+  order: 6
 ---
 
 Building, testing, launching — a project's recurring commands are
 **actions**, defined in `.agent/actions.json` and shown in the
-project window's actions tab.
+project window's actions tab (area *Tech*). Select one in the
+navigator and the inspector shows its source, inputs, last run, and a
+**Run** button; **Toolbar** pins it as a button in the window's
+toolbar, where one click runs it while the activity view shows it
+running.
 
 An action runs as **argv without a shell** — `&&`, pipes, and
 `$(…)` don't work there. Compound commands go into a script:
