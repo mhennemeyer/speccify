@@ -25,8 +25,8 @@ Repository — wer etwas ändern will, ändert diese Datei.
 ## Der Aufbau des Projektfensters
 
 Das Fenster folgt dem Muster von Xcode: links der **Navigator** — oben
-eine Icon-Leiste mit den fünf Bereichen **Board**, **Dateien**, **Orga**
-(Playbooks, Pläne, Skills), **Technik** (Tools, Aktionen, MCPs, Agent) und
+eine Icon-Leiste mit den fünf Bereichen **Dateien**, **Orga** (Playbooks,
+Pläne, Skills), **Technik** (Tools, Aktionen, MCPs, Agent), **Board** und
 **Hilfe**;
 der Tooltip nennt den Namen. Hat ein Bereich mehrere Tabs, stehen sie
 als zweite Zeile darunter, und die App merkt sich je Bereich den zuletzt

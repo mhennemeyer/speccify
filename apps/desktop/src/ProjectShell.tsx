@@ -73,10 +73,11 @@ type TabId = (typeof TABS)[number]["id"];
  *  Gruppen als Icons, darunter die Tabs der Gruppe als Text. „Orga" ist ein
  *  Arbeitsname — Kandidaten: Vorhaben, Wissen, Steuerung. */
 const GROUPS: ReadonlyArray<{ id: string; label: string; tabs: readonly TabId[] }> = [
-  { id: "board", label: "Board", tabs: ["board"] },
+  // Reihenfolge nach BO 2026-09-08: Dateien, Orga, Technik, Board, Hilfe (⌘1–5).
   { id: "dateien", label: "Dateien", tabs: ["files", "git"] },
   { id: "orga", label: "Orga", tabs: ["playbooks", "plans", "skills"] },
   { id: "technik", label: "Technik", tabs: ["tools", "actions", "mcps", "agent"] },
+  { id: "board", label: "Board", tabs: ["board"] },
   { id: "help", label: "Hilfe", tabs: ["help"] },
 ];
 
