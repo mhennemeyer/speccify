@@ -12,8 +12,12 @@ Plattformabhängige Werkzeuge werden nicht als fertige Skripte vorausgesetzt,
 sondern durch `TOOL.md` spezifiziert und im Zielprojekt für die jeweilige
 Plattform implementiert und geprüft.
 
-Die aktuelle Richtung steht in `.agent/plans/skills-und-tools.md`; das
-plattformübergreifende Projektfenster steht in `.agent/plans/projektfenster.md`.
+Die Arbeit läuft über Specs unter `.agent/specs/` (Board Backlog / Doing /
+Done, Tasks als Checkboxen; die Policy dazu liegt als Vorlage in
+`apps/desktop/src-tauri/templates/workflow-policy.md` und kommt per
+Einrichten-Knopf in die `agent.md` eines Projekts);
+das Skill-und-Tool-Modell steht in `.agent/specs/skills-und-tools/SPEC.md`,
+das Projektfenster im Archiv unter `.agent/specs/archive/`.
 Beide sind auf ausdrücklichen BO-Entscheid parallel aktiv.
 
 ## Kanonische Projektstruktur
@@ -25,8 +29,7 @@ Beide sind auf ausdrücklichen BO-Entscheid parallel aktiv.
 - `.agent/specs/<slug>/SPEC.md`: **eine Arbeitseinheit** (Spec) mit
   Stationen Backlog / Doing / Done und Tasks als Checkboxen; Fertiges
   unter `.agent/specs/archive/`. Ersetzt seit 2026-09-09 Pläne und Tickets
-  (Plan `spec-workflow.md`); `.agent/plans/` bleibt bis zur Migration (S4)
-  als Lesebestand.
+  (Spec `spec-workflow`); die alten Pläne liegen konvertiert im Archiv.
 - `.agent/playbooks/`: stehende Anleitungen (Release, Deploy, …) — anders
   als Specs werden sie nicht abgearbeitet, sondern wiederverwendet.
 - `.agent/actions.json`: benannte Projektaktionen.

@@ -417,7 +417,7 @@ export default function GitTab({
           }}
         >
           Dieses Projekt ist noch kein Git-Repository. Mit einem Repository sieht der Agent
-          seine Änderungen, und Commits landen in der Ticket-Historie.
+          seine Änderungen, und Commits nennen die Spec, zu der sie gehören.
         </NavEmpty>
       ) : (
         <>

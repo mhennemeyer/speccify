@@ -20,7 +20,10 @@ import {
 import { trackActivity } from "../../lib/activity";
 import { autosaveLabel, draftKey, readDraft, useAutosave } from "../../lib/autosave";
 import { LoadingBoundary, useAsync } from "../../components/ui";
-import { assemblePlan, splitPlan } from "./PlansTab";
+import {
+  assembleFrontmatter as assemblePlan,
+  splitFrontmatter as splitPlan,
+} from "../../lib/frontmatter";
 
 interface PlaybookEntry {
   file: string;

@@ -30,7 +30,7 @@ gem "fastlane", "~> 2.236"
 
 ## 2. Credentials stay in the environment
 
-The [board workflow's rule](/app/board/) — never put secrets in
+The [board workflow's rule](/app/specs/) — never put secrets in
 repo files — applies with force here, because fastlane needs an App
 Store Connect API key. The Fastfile reads it exclusively from the
 environment:

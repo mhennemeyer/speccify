@@ -64,5 +64,5 @@ Two rules keep the bookkeeping sane:
 
 When the agent uses an expanded skill while working a ticket, it logs
 an `agent_run` line in the ticket's history naming the skill and
-tool — the [ticket detail](/app/board/) is the trail of what was
+tool — the [spec's history](/app/specs/) is the trail of what was
 used; there is no separate log file.

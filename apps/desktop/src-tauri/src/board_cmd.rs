@@ -1,19 +1,27 @@
-//! Ticket-Lifecycle + History + KPIs (Plan projektfenster.md, P5/W3, D27).
+//! Spec-Lifecycle + History + KPIs (Plan spec-workflow.md, S2; davor
+//! projektfenster.md P5/W3 für Tickets — dieselbe Mechanik, jetzt auf
+//! `.agent/specs/<slug>/SPEC.md`).
 //!
-//! Die App schreibt Tickets **byte-stabil**: bekannte Frontmatter-Zeilen
+//! Die App schreibt Specs **byte-stabil**: bekannte Frontmatter-Zeilen
 //! werden ersetzt oder ergänzt, unbekannte bleiben in Reihenfolge erhalten
 //! (agentgeschriebene Felder überleben jede UI-Aktion). Jede App-Änderung
-//! loggt eine Zeile in `.agent/board/history/<id>/index.jsonl` mit
+//! loggt eine Zeile in `.agent/specs/<slug>/history.jsonl` mit
 //! `actor: "user"` — `agent_run`-Zeilen schreibt der Agent selbst (D26);
 //! die KPI-Kopfzeile rechnet daraus. Effektiver Input = tokens_in +
 //! cache_read + cache_write (sonst „mehr out als in", iKanban-Befund).
+//! Die Tauri-Kommandos heißen aus Kompatibilität weiter `project_ticket_*`
+//! / `project_board*`; die Begriffe im UI sind „Spec" und „Specs".
 
-use std::hash::{Hash, Hasher};
 use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
 
-use crate::project_cmd::{resolve_project_root, safe_project_path, BOARD_STATIONS};
+use crate::project_cmd::{
+    heading_title, resolve_project_root, safe_project_path, spec_dir_of, spec_file_path,
+    BOARD_STATIONS, SPECS_DIR,
+};
+
+const SPEC_TEMPLATE: &str = include_str!("../templates/spec.md");
 
 fn now_iso() -> String {
     time::OffsetDateTime::now_utc()
@@ -37,7 +45,9 @@ fn write_atomic(path: &Path, content: &str) -> Result<(), String> {
 #[derive(Serialize, Deserialize, Clone)]
 pub struct HistoryEvent {
     pub timestamp: String,
-    pub ticket_id: String,
+    /// Slug der Spec; alte Zeilen (`ticket_id`) werden weiter gelesen.
+    #[serde(alias = "ticket_id")]
+    pub spec_id: String,
     pub event_type: String,
     pub actor: String,
     pub summary: String,
@@ -53,16 +63,18 @@ pub struct HistoryEvent {
     pub duration_ms: Option<u64>,
 }
 
-fn history_dir(root: &Path, ticket_id: &str) -> PathBuf {
-    root.join(".agent/board/history").join(ticket_id)
+/// `history.jsonl` liegt neben der SPEC.md — auch im Archiv.
+fn history_file(root: &Path, spec_id: &str) -> PathBuf {
+    let dir = spec_dir_of(root, spec_id).unwrap_or_else(|| root.join(SPECS_DIR).join(spec_id));
+    dir.join("history.jsonl")
 }
 
 /// Hängt ein User-Event an — Fehler beim Loggen brechen die eigentliche
 /// Aktion nicht ab (History ist Protokoll, nicht Transaktion).
-pub(crate) fn log_user_event(root: &Path, ticket_id: &str, event_type: &str, summary: String) {
+pub(crate) fn log_user_event(root: &Path, spec_id: &str, event_type: &str, summary: String) {
     let event = HistoryEvent {
         timestamp: now_iso(),
-        ticket_id: ticket_id.into(),
+        spec_id: spec_id.into(),
         event_type: event_type.into(),
         actor: "user".into(),
         summary,
@@ -72,24 +84,26 @@ pub(crate) fn log_user_event(root: &Path, ticket_id: &str, event_type: &str, sum
         tokens_cache_write: None,
         duration_ms: None,
     };
-    let dir = history_dir(root, ticket_id);
-    if std::fs::create_dir_all(&dir).is_err() {
-        return;
+    let file = history_file(root, spec_id);
+    if let Some(parent) = file.parent() {
+        if std::fs::create_dir_all(parent).is_err() {
+            return;
+        }
     }
     if let Ok(line) = serde_json::to_string(&event) {
         use std::io::Write;
-        if let Ok(mut file) = std::fs::OpenOptions::new()
+        if let Ok(mut handle) = std::fs::OpenOptions::new()
             .create(true)
             .append(true)
-            .open(dir.join("index.jsonl"))
+            .open(file)
         {
-            let _ = writeln!(file, "{line}");
+            let _ = writeln!(handle, "{line}");
         }
     }
 }
 
-fn read_history(root: &Path, ticket_id: &str) -> Vec<HistoryEvent> {
-    let Ok(text) = std::fs::read_to_string(history_dir(root, ticket_id).join("index.jsonl")) else {
+fn read_history(root: &Path, spec_id: &str) -> Vec<HistoryEvent> {
+    let Ok(text) = std::fs::read_to_string(history_file(root, spec_id)) else {
         return Vec::new();
     };
     // Tolerant: korrupte Zeilen überspringen (der Agent tippt das von Hand).
@@ -98,14 +112,14 @@ fn read_history(root: &Path, ticket_id: &str) -> Vec<HistoryEvent> {
         .collect()
 }
 
-/// History eines Tickets, neueste zuerst (die UI deckelt die Anzeige).
+/// History einer Spec, neueste zuerst (die UI deckelt die Anzeige).
 #[tauri::command]
 pub fn project_ticket_history(
     project: String,
     ticket_id: String,
 ) -> Result<Vec<HistoryEvent>, String> {
     if ticket_id.contains('/') || ticket_id.contains('\\') || ticket_id.contains("..") {
-        return Err(format!("Keine Ticket-Id: {ticket_id}"));
+        return Err(format!("Keine Spec-Id: {ticket_id}"));
     }
     let root = resolve_project_root(&project)?;
     let mut events = read_history(&root, &ticket_id);
@@ -117,7 +131,7 @@ pub fn project_ticket_history(
 
 #[derive(Serialize)]
 pub struct RunEntry {
-    ticket_id: String,
+    spec_id: String,
     timestamp: String,
     summary: String,
     /// Effektiver Input: in + cache_read + cache_write.
@@ -140,15 +154,20 @@ pub struct KpiSummary {
 pub fn project_board_kpis(project: String) -> Result<KpiSummary, String> {
     let root = resolve_project_root(&project)?;
     let mut runs: Vec<RunEntry> = Vec::new();
-    if let Ok(entries) = std::fs::read_dir(root.join(".agent/board/history")) {
-        for entry in entries.filter_map(Result::ok) {
-            let ticket_id = entry.file_name().to_string_lossy().into_owned();
-            for event in read_history(&root, &ticket_id) {
+    for dir in crate::project_cmd::spec_dirs(&root, true) {
+        let Ok(text) = std::fs::read_to_string(dir.join("history.jsonl")) else {
+            continue;
+        };
+        for event in text
+            .lines()
+            .filter_map(|line| serde_json::from_str::<HistoryEvent>(line).ok())
+        {
+            {
                 if event.event_type != "agent_run" {
                     continue;
                 }
                 runs.push(RunEntry {
-                    ticket_id: event.ticket_id,
+                    spec_id: event.spec_id,
                     timestamp: event.timestamp,
                     summary: event.summary,
                     tokens_in: event.tokens_in.unwrap_or(0)
@@ -236,36 +255,45 @@ pub(crate) fn update_ticket_text(
     Ok(format!("---\n{}\n---\n{}", kept.join("\n"), body))
 }
 
-// --- Ticket-Mutationen ---------------------------------------------------------
+// --- Spec-Mutationen -----------------------------------------------------------
 
 fn slugify(title: &str) -> String {
     let mut slug = String::new();
     for ch in title.to_lowercase().chars() {
         if ch.is_ascii_alphanumeric() {
             slug.push(ch);
+        } else if ch == 'ä' || ch == 'ö' || ch == 'ü' || ch == 'ß' {
+            slug.push_str(match ch {
+                'ä' => "ae",
+                'ö' => "oe",
+                'ü' => "ue",
+                _ => "ss",
+            });
         } else if !slug.ends_with('-') && !slug.is_empty() {
             slug.push('-');
         }
     }
     let slug = slug.trim_matches('-').to_string();
     if slug.is_empty() {
-        "ticket".into()
+        "spec".into()
     } else {
         slug.chars().take(48).collect()
     }
 }
 
-fn short_suffix(seed: &str) -> String {
-    let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    seed.hash(&mut hasher);
-    std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .map(|d| d.as_nanos())
-        .unwrap_or(0)
-        .hash(&mut hasher);
-    format!("{:04x}", hasher.finish() & 0xffff)
+/// Body der Vorlage (`templates/spec.md`) ohne deren Frontmatter, Titel
+/// eingesetzt — die Abschnitte, die die Policy vom Agenten erwartet.
+fn template_body(title: &str) -> String {
+    let body = SPEC_TEMPLATE
+        .splitn(3, "---\n")
+        .nth(2)
+        .unwrap_or(SPEC_TEMPLATE)
+        .trim_start_matches('\n');
+    body.replace("<title>", title)
+        .replace("<date>", &now_iso()[..10])
 }
 
+/// Legt `.agent/specs/<slug>/SPEC.md` an; leerer Body = Vorlage.
 #[tauri::command]
 pub fn project_ticket_create(
     project: String,
@@ -273,7 +301,7 @@ pub fn project_ticket_create(
     station: String,
     body: String,
     needs_human: bool,
-    plan: Option<String>,
+    parent: Option<String>,
     order: Option<i64>,
 ) -> Result<String, String> {
     if !BOARD_STATIONS.contains(&station.as_str()) {
@@ -284,51 +312,141 @@ pub fn project_ticket_create(
         return Err("Titel fehlt.".into());
     }
     let root = resolve_project_root(&project)?;
-    let board = root.join(".agent/board");
+    let specs = root.join(SPECS_DIR);
     let base = slugify(title);
-    let mut id = format!("{base}-{}", short_suffix(title));
-    for _ in 0..8 {
-        if !board.join(format!("{id}.md")).exists() {
-            break;
-        }
-        id = format!("{base}-{}", short_suffix(&id));
+    let mut id = base.clone();
+    let mut counter = 2;
+    while specs.join(&id).exists() || specs.join("archive").join(&id).exists() {
+        id = format!("{base}-{counter}");
+        counter += 1;
     }
 
-    let mut frontmatter = vec![
-        format!("id: {id}"),
-        format!("title: {title}"),
-        format!("station: {station}"),
-    ];
+    let mut frontmatter = vec![format!("station: {station}")];
     if let Some(order) = order {
         frontmatter.push(format!("order: {order}"));
     }
-    if let Some(plan) = plan.as_deref().map(str::trim).filter(|p| !p.is_empty()) {
-        frontmatter.push(format!("plan: {plan}"));
-    }
+    frontmatter.push(format!("created: {}", &now_iso()[..10]));
     if needs_human {
         frontmatter.push("needs_human: true".into());
     }
-    frontmatter.push(format!("created: {}", now_iso()));
+    if let Some(parent) = parent.as_deref().map(str::trim).filter(|p| !p.is_empty()) {
+        frontmatter.push(format!("parent: {parent}"));
+    }
 
-    let mut body = body;
-    if !body.is_empty() && !body.ends_with('\n') {
+    let mut body = if body.trim().is_empty() {
+        template_body(title)
+    } else if body.trim_start().starts_with("# ") {
+        body
+    } else {
+        format!("# {title}\n\n{body}")
+    };
+    if !body.ends_with('\n') {
         body.push('\n');
     }
     let text = format!("---\n{}\n---\n{}", frontmatter.join("\n"), body);
-    let file = board.join(format!("{id}.md"));
+    let file = specs.join(&id).join("SPEC.md");
     write_atomic(&file, &text)?;
     log_user_event(
         &root,
         &id,
-        "ticket_created",
-        format!("Ticket angelegt: {title}"),
+        "spec_created",
+        format!("Spec angelegt: {title}"),
     );
 
     Ok(file
         .strip_prefix(&root)
         .unwrap_or(&file)
         .to_string_lossy()
-        .into_owned())
+        .replace('\\', "/"))
+}
+
+/// Erste `- [ ]`/`- [x]`-Zeile Nummer `index` (0-basiert) umschalten.
+#[tauri::command]
+pub fn project_spec_toggle_task(
+    project: String,
+    file: String,
+    index: usize,
+    done: bool,
+) -> Result<(), String> {
+    let root = resolve_project_root(&project)?;
+    let path = spec_file_path(&root, &file)?;
+    let text = std::fs::read_to_string(&path).map_err(|e| format!("{}: {e}", path.display()))?;
+    let mut seen = 0usize;
+    let mut out = String::with_capacity(text.len());
+    let mut changed = false;
+    for line in text.split_inclusive('\n') {
+        let trimmed = line.trim_start();
+        let is_task = trimmed.starts_with("- [ ]")
+            || trimmed.starts_with("- [x]")
+            || trimmed.starts_with("- [X]")
+            || trimmed.starts_with("* [ ]")
+            || trimmed.starts_with("* [x]")
+            || trimmed.starts_with("* [X]");
+        if is_task {
+            if seen == index {
+                let indent = &line[..line.len() - trimmed.len()];
+                let rest = &trimmed[5..];
+                out.push_str(indent);
+                out.push_str(&trimmed[..1]);
+                out.push_str(if done { " [x]" } else { " [ ]" });
+                out.push_str(rest);
+                changed = true;
+            } else {
+                out.push_str(line);
+            }
+            seen += 1;
+        } else {
+            out.push_str(line);
+        }
+    }
+    if !changed {
+        return Err(format!("Task {} gibt es nicht.", index + 1));
+    }
+    write_atomic(&path, &out)?;
+    let id = crate::project_cmd::spec_id_of(&root, &path);
+    log_user_event(
+        &root,
+        &id,
+        "spec_edited",
+        format!(
+            "Task {} {}",
+            index + 1,
+            if done { "erledigt" } else { "wieder offen" }
+        ),
+    );
+    Ok(())
+}
+
+/// Fertige Spec nach `.agent/specs/archive/<YYYY-MM-DD>-<slug>/` verschieben.
+#[tauri::command]
+pub fn project_spec_archive(project: String, file: String) -> Result<String, String> {
+    let root = resolve_project_root(&project)?;
+    let path = spec_file_path(&root, &file)?;
+    let dir = path
+        .parent()
+        .ok_or_else(|| format!("Keine Spec: {file}"))?
+        .to_path_buf();
+    if dir.parent() != Some(root.join(SPECS_DIR).as_path()) {
+        return Err(format!("Schon archiviert: {file}"));
+    }
+    let id = crate::project_cmd::spec_id_of(&root, &path);
+    let archive = root.join(SPECS_DIR).join("archive");
+    std::fs::create_dir_all(&archive).map_err(|e| format!("{}: {e}", archive.display()))?;
+    let stamp = &now_iso()[..10];
+    let mut target = archive.join(format!("{stamp}-{id}"));
+    let mut counter = 2;
+    while target.exists() {
+        target = archive.join(format!("{stamp}-{id}-{counter}"));
+        counter += 1;
+    }
+    log_user_event(&root, &id, "spec_edited", "Archiviert".into());
+    std::fs::rename(&dir, &target).map_err(|e| format!("{}: {e}", dir.display()))?;
+    Ok(target
+        .join("SPEC.md")
+        .strip_prefix(&root)
+        .unwrap_or(&target)
+        .to_string_lossy()
+        .replace('\\', "/"))
 }
 
 #[derive(Deserialize)]
@@ -341,8 +459,21 @@ pub struct TicketPatch {
     body: String,
 }
 
+/// Titel = erste `# `-Überschrift im Body: ersetzen oder voranstellen.
+fn body_with_title(body: &str, title: &str) -> String {
+    let mut lines: Vec<&str> = body.lines().collect();
+    if let Some(position) = lines.iter().position(|line| line.starts_with("# ")) {
+        let heading = format!("# {title}");
+        let mut out: Vec<String> = lines.iter().map(|line| line.to_string()).collect();
+        out[position] = heading;
+        return out.join("\n");
+    }
+    lines.insert(0, "");
+    format!("# {title}\n{}", lines.join("\n"))
+}
+
 /// Speichert das Editor-Sheet in einem Rutsch; loggt `station_changed`
-/// und/oder `ticket_edited`, je nachdem, was sich wirklich geändert hat.
+/// und/oder `spec_edited`, je nachdem, was sich wirklich geändert hat.
 #[tauri::command]
 pub fn project_ticket_save(
     project: String,
@@ -353,10 +484,7 @@ pub fn project_ticket_save(
         return Err(format!("Unbekannte Station: {}", patch.station));
     }
     let root = resolve_project_root(&project)?;
-    let path = safe_project_path(&root, &file)?;
-    if !path.starts_with(root.join(".agent/board")) {
-        return Err(format!("Kein Board-Ticket: {file}"));
-    }
+    let path = spec_file_path(&root, &file)?;
     let text = std::fs::read_to_string(&path).map_err(|e| format!("{}: {e}", path.display()))?;
 
     let old_station = text
@@ -365,25 +493,17 @@ pub fn project_ticket_save(
         .map(str::trim)
         .unwrap_or("")
         .to_string();
-    let ticket_id = text
-        .lines()
-        .find_map(|line| line.strip_prefix("id:"))
-        .map(str::trim)
-        .map(str::to_string)
-        .unwrap_or_else(|| {
-            path.file_stem()
-                .map(|stem| stem.to_string_lossy().into_owned())
-                .unwrap_or_default()
-        });
+    let spec_id = crate::project_cmd::spec_id_of(&root, &path);
 
     let updates: Vec<(&str, Option<String>)> = vec![
-        ("title", Some(patch.title.trim().to_string())),
+        ("title", None), // v1-Feld: der Titel steht in der Überschrift
         ("station", Some(patch.station.clone())),
         ("ready", patch.ready.then(|| "true".into())),
         ("needs_human", patch.needs_human.then(|| "true".into())),
         ("order", patch.order.map(|order| order.to_string())),
     ];
-    let updated = update_ticket_text(&text, &updates, Some(&patch.body))?;
+    let body = body_with_title(&patch.body, patch.title.trim());
+    let updated = update_ticket_text(&text, &updates, Some(&body))?;
     if updated == text {
         return Ok(());
     }
@@ -392,28 +512,27 @@ pub fn project_ticket_save(
     if old_station != patch.station {
         log_user_event(
             &root,
-            &ticket_id,
+            &spec_id,
             "station_changed",
             format!("{old_station} -> {}", patch.station),
         );
     }
     log_user_event(
         &root,
-        &ticket_id,
-        "ticket_edited",
+        &spec_id,
+        "spec_edited",
         "Im Editor gespeichert".into(),
     );
     Ok(())
 }
 
+/// Löscht den ganzen Spec-Ordner (SPEC.md, History, Beilagen).
 #[tauri::command]
 pub fn project_ticket_delete(project: String, file: String) -> Result<(), String> {
     let root = resolve_project_root(&project)?;
-    let path = safe_project_path(&root, &file)?;
-    if !path.starts_with(root.join(".agent/board")) || path.extension().is_none_or(|e| e != "md") {
-        return Err(format!("Kein Board-Ticket: {file}"));
-    }
-    std::fs::remove_file(&path).map_err(|e| format!("{}: {e}", path.display()))
+    let path = spec_file_path(&root, &file)?;
+    let dir = path.parent().ok_or_else(|| format!("Keine Spec: {file}"))?;
+    std::fs::remove_dir_all(dir).map_err(|e| format!("{}: {e}", dir.display()))
 }
 
 // --- Q&A-Protokoll (P5/W4, D27) ------------------------------------------------
@@ -552,10 +671,7 @@ pub fn project_ticket_answer(
         return Err("Leere Antwort.".into());
     }
     let root = resolve_project_root(&project)?;
-    let path = safe_project_path(&root, &file)?;
-    if !path.starts_with(root.join(".agent/board")) {
-        return Err(format!("Kein Board-Ticket: {file}"));
-    }
+    let path = spec_file_path(&root, &file)?;
     let full = std::fs::read_to_string(&path).map_err(|e| format!("{}: {e}", path.display()))?;
     let body_offset = full
         .find("\n---")
@@ -606,16 +722,11 @@ pub fn project_ticket_answer(
     let updated = update_ticket_text(&full, &[("open_question", next_open)], Some(&new_body))?;
     write_atomic(&path, &updated)?;
 
-    let ticket_id = full
-        .lines()
-        .find_map(|line| line.strip_prefix("id:"))
-        .map(str::trim)
-        .map(str::to_string)
-        .unwrap_or_default();
+    let spec_id = crate::project_cmd::spec_id_of(&root, &path);
     log_user_event(
         &root,
-        &ticket_id,
-        "ticket_edited",
+        &spec_id,
+        "spec_edited",
         format!("Frage Q{number} beantwortet"),
     );
     Ok(())
@@ -624,24 +735,18 @@ pub fn project_ticket_answer(
 /// Eine offene Rückfrage fürs Notification-System (W4).
 #[derive(Serialize, Clone)]
 pub struct OpenQuestion {
-    pub ticket_id: String,
+    pub spec_id: String,
     pub title: String,
-    /// Dedupe-Schlüssel `<ticket>|Q<n>` — nie zweimal melden.
+    /// Dedupe-Schlüssel `<spec>|Q<n>` — nie zweimal melden.
     pub key: String,
     pub text: String,
 }
 
-/// Älteste offene Frage je Ticket (Vertrag: der Agent setzt `open_question`).
+/// Älteste offene Frage je Spec (Vertrag: der Agent setzt `open_question`).
 pub(crate) fn scan_open_questions(root: &Path) -> Vec<OpenQuestion> {
     let mut open = Vec::new();
-    let Ok(entries) = std::fs::read_dir(root.join(".agent/board")) else {
-        return open;
-    };
-    for entry in entries.filter_map(Result::ok) {
-        let path = entry.path();
-        if path.extension().is_none_or(|ext| ext != "md") {
-            continue;
-        }
+    for dir in crate::project_cmd::spec_dirs(root, false) {
+        let path = dir.join("SPEC.md");
         let Ok(text) = std::fs::read_to_string(&path) else {
             continue;
         };
@@ -654,24 +759,16 @@ pub(crate) fn scan_open_questions(root: &Path) -> Vec<OpenQuestion> {
         let Some(number) = marker.trim_start_matches(['Q', 'q']).parse::<u32>().ok() else {
             continue;
         };
-        let stem = path
-            .file_stem()
-            .map(|stem| stem.to_string_lossy().into_owned())
-            .unwrap_or_default();
-        let ticket_id = crate::project_cmd::flat_lookup(&fields, "id")
-            .unwrap_or(&stem)
-            .to_string();
-        let title = crate::project_cmd::flat_lookup(&fields, "title")
-            .unwrap_or(&ticket_id)
-            .to_string();
+        let spec_id = crate::project_cmd::spec_id_of(root, &path);
+        let title = heading_title(body).unwrap_or_else(|| spec_id.clone());
         let question_text = parse_questions(body)
             .into_iter()
             .find(|question| question.number == number && question.open)
             .map(|question| question.text)
             .unwrap_or_default();
         open.push(OpenQuestion {
-            key: format!("{ticket_id}|Q{number}"),
-            ticket_id,
+            key: format!("{spec_id}|Q{number}"),
+            spec_id,
             title,
             text: question_text,
         });
@@ -687,7 +784,7 @@ mod tests {
         let dir =
             std::env::temp_dir().join(format!("speccify-board-{test}-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
-        std::fs::create_dir_all(dir.join(".agent/board")).unwrap();
+        std::fs::create_dir_all(dir.join(".agent/specs")).unwrap();
         dir
     }
 
@@ -706,35 +803,30 @@ mod tests {
         // Antworten über den Command: kanonischer Block, open_question rückt.
         let dir = fixture("qa");
         let project = dir.to_string_lossy().into_owned();
-        let ticket = format!(
-            "---\nid: qa-1\ntitle: QA\nstation: Doing\nopen_question: Q1\ncustom: bleibt\n---\n{body}"
-        );
-        std::fs::write(dir.join(".agent/board/qa-1.md"), &ticket).unwrap();
+        let spec =
+            format!("---\nstation: Doing\nopen_question: Q1\ncustom: bleibt\n---\n# QA\n\n{body}");
+        std::fs::create_dir_all(dir.join(".agent/specs/qa-1")).unwrap();
+        std::fs::write(dir.join(".agent/specs/qa-1/SPEC.md"), &spec).unwrap();
+        let file = ".agent/specs/qa-1/SPEC.md".to_string();
+        let open = scan_open_questions(&dir);
+        assert_eq!(open.len(), 1);
+        assert_eq!(open[0].key, "qa-1|Q1");
+        assert_eq!(open[0].title, "QA");
 
         // Q1 ist schon beantwortet — der Command verweigert die zweite Antwort.
-        let twice = project_ticket_answer(
-            project.clone(),
-            ".agent/board/qa-1.md".into(),
-            1,
-            "Nochmal".into(),
-        )
-        .unwrap_err();
+        let twice =
+            project_ticket_answer(project.clone(), file.clone(), 1, "Nochmal".into()).unwrap_err();
         assert!(twice.contains("schon beantwortet"));
 
-        project_ticket_answer(
-            project.clone(),
-            ".agent/board/qa-1.md".into(),
-            2,
-            "Zweite Antwort.".into(),
-        )
-        .unwrap();
-        let saved = std::fs::read_to_string(dir.join(".agent/board/qa-1.md")).unwrap();
+        project_ticket_answer(project.clone(), file.clone(), 2, "Zweite Antwort.".into()).unwrap();
+        let saved = std::fs::read_to_string(dir.join(".agent/specs/qa-1/SPEC.md")).unwrap();
         assert!(saved.contains("### A2 · bo · "));
         assert!(saved.contains("custom: bleibt"));
         assert!(!saved.contains("open_question")); // keine offene mehr
         assert!(saved.contains("## Notizen\nDanach.")); // Folgeabschnitt intakt
-        let after = project_ticket_questions(project, ".agent/board/qa-1.md".into()).unwrap();
+        let after = project_ticket_questions(project, file).unwrap();
         assert!(after.iter().all(|question| !question.open));
+        assert!(dir.join(".agent/specs/qa-1/history.jsonl").is_file());
 
         let _ = std::fs::remove_dir_all(&dir);
     }
@@ -773,71 +865,108 @@ mod tests {
             project.clone(),
             "Board-Tab bauen!".into(),
             "Backlog".into(),
-            "Erste Fassung.".into(),
+            String::new(),
             true,
             Some("projektfenster".into()),
             Some(1),
         )
         .unwrap();
+        assert_eq!(file, ".agent/specs/board-tab-bauen/SPEC.md");
         let text = std::fs::read_to_string(dir.join(&file)).unwrap();
-        assert!(text.contains("title: Board-Tab bauen!"));
-        assert!(text.contains("plan: projektfenster"));
+        assert!(text.starts_with("---\nstation: Backlog\norder: 1\ncreated: "));
         assert!(text.contains("needs_human: true"));
-        let id = text
-            .lines()
-            .find_map(|l| l.strip_prefix("id: "))
-            .unwrap()
-            .to_string();
-        assert!(id.starts_with("board-tab-bauen-"));
+        assert!(text.contains("parent: projektfenster"));
+        assert!(text.contains("# Board-Tab bauen!\n"));
+        assert!(text.contains("## Tasks\n\n- [ ] …"));
+        let id = "board-tab-bauen".to_string();
+        // Gleicher Titel noch einmal → Suffix statt Überschreiben.
+        let second = project_ticket_create(
+            project.clone(),
+            "Board-Tab bauen!".into(),
+            "Backlog".into(),
+            String::new(),
+            false,
+            None,
+            None,
+        )
+        .unwrap();
+        assert_eq!(second, ".agent/specs/board-tab-bauen-2/SPEC.md");
+        project_ticket_delete(project.clone(), second).unwrap();
 
         project_ticket_save(
             project.clone(),
             file.clone(),
             TicketPatch {
-                title: "Board-Tab bauen!".into(),
+                title: "Board-Tab bauen".into(),
                 station: "Doing".into(),
                 ready: true,
                 needs_human: true,
                 order: Some(1),
-                body: "Erste Fassung.\n\nMehr.".into(),
+                body: "# Alt\n\nErste Fassung.\n\n## Tasks\n\n- [ ] eins\n- [x] zwei\n- [ ] drei\n\nMehr.".into(),
             },
         )
         .unwrap();
         let saved = std::fs::read_to_string(dir.join(&file)).unwrap();
         assert!(saved.contains("station: Doing"));
         assert!(saved.contains("ready: true"));
+        assert!(saved.contains("# Board-Tab bauen\n")); // Titel in der Überschrift
+        assert!(!saved.contains("title:"));
         assert!(saved.ends_with("Mehr.\n"));
 
-        // Agent-Lauf dazu (schreibt der Agent selbst — hier simuliert).
-        let run = r#"{"timestamp":"2026-08-31T13:00:00Z","ticket_id":"ID","event_type":"agent_run","actor":"agent:claude","summary":"lief","tokens_in":100,"tokens_out":40,"tokens_cache_read":900,"duration_ms":5000}"#
+        // Tasks umschalten: nur die getroffene Zeile ändert sich.
+        project_spec_toggle_task(project.clone(), file.clone(), 2, true).unwrap();
+        let toggled = std::fs::read_to_string(dir.join(&file)).unwrap();
+        assert!(toggled.contains("- [ ] eins\n- [x] zwei\n- [x] drei\n"));
+        project_spec_toggle_task(project.clone(), file.clone(), 1, false).unwrap();
+        let toggled = std::fs::read_to_string(dir.join(&file)).unwrap();
+        assert!(toggled.contains("- [ ] eins\n- [ ] zwei\n- [x] drei\n"));
+        assert!(project_spec_toggle_task(project.clone(), file.clone(), 7, true).is_err());
+
+        // Agent-Lauf dazu (schreibt der Agent selbst — hier simuliert); eine
+        // Zeile im alten ticket_id-Format wird weiter gelesen.
+        let run = r#"{"timestamp":"2026-08-31T13:00:00Z","spec_id":"ID","event_type":"agent_run","actor":"agent:claude","summary":"lief","tokens_in":100,"tokens_out":40,"tokens_cache_read":900,"duration_ms":5000}"#
+            .replace("ID", &id);
+        let legacy = r#"{"timestamp":"2026-08-30T13:00:00Z","ticket_id":"ID","event_type":"agent_run","actor":"agent:claude","summary":"alt","tokens_in":10,"tokens_out":4,"duration_ms":500}"#
             .replace("ID", &id);
         use std::io::Write;
         let mut handle = std::fs::OpenOptions::new()
             .append(true)
-            .open(
-                dir.join(".agent/board/history")
-                    .join(&id)
-                    .join("index.jsonl"),
-            )
+            .open(dir.join(".agent/specs").join(&id).join("history.jsonl"))
             .unwrap();
         writeln!(handle, "{run}").unwrap();
+        writeln!(handle, "{legacy}").unwrap();
         writeln!(handle, "kaputte zeile die übersprungen wird").unwrap();
         drop(handle);
 
         let history = project_ticket_history(project.clone(), id.clone()).unwrap();
-        assert_eq!(history.len(), 4); // created, station_changed, edited, agent_run
+        // created, station_changed, edited, 2× task, agent_run, legacy agent_run
+        assert_eq!(history.len(), 7);
         assert_eq!(history[0].event_type, "agent_run"); // neueste zuerst
+        assert!(history.iter().all(|event| event.spec_id == id));
 
         let kpis = project_board_kpis(project.clone()).unwrap();
-        assert_eq!(kpis.run_count, 1);
-        assert_eq!(kpis.tokens_in, 1000); // 100 + 900 cache_read — effektiv
-        assert_eq!(kpis.tokens_out, 40);
-        assert_eq!(kpis.recent.len(), 1);
+        assert_eq!(kpis.run_count, 2);
+        assert_eq!(kpis.tokens_in, 1010); // 100 + 900 cache_read + 10 — effektiv
+        assert_eq!(kpis.tokens_out, 44);
+        assert_eq!(kpis.recent.len(), 2);
 
-        project_ticket_delete(project.clone(), file.clone()).unwrap();
-        assert!(!dir.join(&file).exists());
+        // Archivieren nimmt History mit; KPIs zählen weiter.
+        let archived = project_spec_archive(project.clone(), file.clone()).unwrap();
+        assert!(archived.starts_with(".agent/specs/archive/"));
+        assert!(archived.ends_with(&format!("-{id}/SPEC.md")));
+        assert!(!dir.join(".agent/specs").join(&id).exists());
+        assert!(dir.join(&archived).is_file());
+        assert!(dir
+            .join(&archived)
+            .with_file_name("history.jsonl")
+            .is_file());
+        assert_eq!(project_board_kpis(project.clone()).unwrap().run_count, 2);
+        assert!(project_spec_archive(project.clone(), archived.clone()).is_err());
+
+        project_ticket_delete(project.clone(), archived.clone()).unwrap();
+        assert!(!dir.join(&archived).exists());
         let evil = project_ticket_delete(project, ".agent/agent.md".into()).unwrap_err();
-        assert!(evil.contains("Kein Board-Ticket"));
+        assert!(evil.contains("Keine Spec"));
 
         let _ = std::fs::remove_dir_all(&dir);
     }

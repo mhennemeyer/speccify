@@ -50,18 +50,16 @@ import BoardTab from "./views/project/BoardTab";
 import FilesTab from "./views/project/FilesTab";
 import GitTab from "./views/project/GitTab";
 import McpsTab from "./views/project/McpsTab";
-import PlansTab from "./views/project/PlansTab";
 import PlaybooksTab from "./views/project/PlaybooksTab";
 import SkillsTab from "./views/project/SkillsTab";
 import ToolsTab from "./views/project/ToolsTab";
 import WorkflowBanner from "./views/project/WorkflowBanner";
 
 const TABS = [
-  { id: "board", label: "Board" },
+  { id: "board", label: "Specs" },
   { id: "files", label: "Dateien" },
   { id: "git", label: "Git" },
   { id: "playbooks", label: "Playbooks" },
-  { id: "plans", label: "Pläne" },
   { id: "skills", label: "Skills" },
   { id: "tools", label: "Tools" },
   { id: "actions", label: "Aktionen" },
@@ -78,9 +76,10 @@ type TabId = (typeof TABS)[number]["id"];
 const GROUPS: ReadonlyArray<{ id: string; label: string; tabs: readonly TabId[] }> = [
   // Reihenfolge nach BO 2026-09-08: Dateien, Orga, Technik, Board, Hilfe (⌘1–5).
   { id: "dateien", label: "Dateien", tabs: ["files", "git"] },
-  { id: "orga", label: "Orga", tabs: ["playbooks", "plans", "skills"] },
+  { id: "orga", label: "Orga", tabs: ["playbooks", "skills"] },
   { id: "technik", label: "Technik", tabs: ["tools", "actions", "mcps", "agent"] },
-  { id: "board", label: "Board", tabs: ["board"] },
+  // Specs statt Board + Pläne (Plan spec-workflow.md, D5).
+  { id: "board", label: "Specs", tabs: ["board"] },
   { id: "help", label: "Hilfe", tabs: ["help"] },
 ];
 
@@ -107,7 +106,7 @@ function agentCommandKey(project: string) {
 export default function ProjectShell() {
   const [project, setProject] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [active, setActive] = useState<TabId>("plans");
+  const [active, setActive] = useState<TabId>("board");
   const [agentCommand, setAgentCommand] = useState(DEFAULT_AGENT_COMMAND);
   const [terminalStarted, setTerminalStarted] = useState(false);
   // Dogfooding (BO 2026-09-07): lief hier eine Agent-Sitzung, wird sie nach
@@ -193,13 +192,13 @@ export default function ProjectShell() {
 
   // Agent-Läufe als Aktivität: der Watcher meldet Board-Änderungen, die
   // KPI-Liste liefert die letzten agent_run-Events — neue seit dem letzten
-  // Blick landen als abgeschlossene Aktivität mit Ticket und Tokens.
+  // Blick landen als abgeschlossene Aktivität mit Spec und Tokens.
   const lastRunSeen = useRef<string | null>(null);
   useEffect(() => {
     if (!project) return;
     void invoke<{
       recent: Array<{
-        ticket_id: string;
+        spec_id: string;
         timestamp: string;
         summary: string;
         tokens_in: number;
@@ -216,7 +215,7 @@ export default function ProjectShell() {
         const fresh = runs.filter((run) => run.timestamp > (lastRunSeen.current ?? ""));
         for (const run of [...fresh].reverse()) {
           recordActivity("agent", `Agent: ${run.summary}`, {
-            detail: `${run.ticket_id} · ↑${run.tokens_in} ↓${run.tokens_out}`,
+            detail: `${run.spec_id} · ↑${run.tokens_in} ↓${run.tokens_out}`,
             durationMs: run.duration_ms,
             outcome: /abort|fail|error/i.test(run.summary) ? "error" : "ok",
           });
@@ -620,7 +619,7 @@ export default function ProjectShell() {
           <WorkflowBanner project={project} />
           {/* Tabs bleiben gemountet (nur versteckt): Wechsel sofortig, Fetch-State erhalten. */}
           <div className={active === "board" ? "min-h-0 flex-1" : "hidden"}>
-            <BoardTab project={project} refresh={refresh.board} planRefresh={refresh.plans} />
+            <BoardTab project={project} refresh={refresh.board} />
           </div>
           <div className={active === "files" ? "min-h-0 flex-1" : "hidden"}>
             {/* Der Baum reagiert auf jede Watcher-Meldung (Summe aller Bereiche). */}
@@ -636,9 +635,6 @@ export default function ProjectShell() {
               refresh={Object.values(refresh).reduce((sum, value) => sum + value, 0)}
               visible={active === "git"}
             />
-          </div>
-          <div className={active === "plans" ? "min-h-0 flex-1" : "hidden"}>
-            <PlansTab project={project} refresh={refresh.plans} />
           </div>
           <div className={active === "playbooks" ? "min-h-0 flex-1" : "hidden"}>
             <PlaybooksTab project={project} refresh={refresh.playbooks} />
@@ -734,7 +730,7 @@ export default function ProjectShell() {
             : null}
           <p className="inspector-placeholder p-4 text-xs text-slate-400">
             Nichts ausgewählt. Der Inspektor zeigt Details und Aktionen zur Auswahl —
-            wähle links etwas aus der Liste oder im Board ein Ticket.
+            wähle links etwas aus der Liste oder auf dem Board eine Spec.
           </p>
         </aside>
 

@@ -17,11 +17,12 @@ Repository — wer etwas ändern will, ändert diese Datei.
 3. **Agent starten.** In der Leiste unten das Agent-Terminal starten:
    `Claude`, `Codex` oder ein freies Kommando; leer = nur Shell. Lief hier
    schon eine Sitzung, wird sie beim nächsten Öffnen von selbst fortgesetzt.
-4. **Plan schreiben, Board arbeiten lassen.** Unter *Orga → Pläne* einen
-   Plan anlegen (**+ Plan**), schreiben und **Aktivieren**. Dann dem Agenten
-   im Terminal sagen: *„Folge dem Board-Workflow"* (oder `/ticket-next`).
-   Er schneidet Tickets aus dem Plan und arbeitet sie einzeln ab — das
-   Board zeigt alles live.
+4. **Spec schreiben, Agent arbeiten lassen.** Unter *Specs* eine Spec
+   anlegen (**+ Spec**): Warum, Was, Akzeptanz, Tasks als Checkboxen. Sie
+   von *Backlog* nach *Doing* ziehen — das ist Deine Freigabe — und dem
+   Agenten im Terminal sagen: *„Arbeite die Spec in Doing"* (oder
+   `/spec-next`). Er hakt die Tasks ab, schreibt die Prüfung und setzt
+   *Done* — das Board zeigt alles live.
 
 ## Der Aufbau des Projektfensters
 
@@ -36,14 +37,14 @@ Das Fenster folgt dem Muster von Xcode und iKanban: **Navigator** links,
   zweite Zeile darunter; die App merkt sich je Bereich den zuletzt
   gewählten. Unter den Tabs die Liste des aktiven Tabs. Ist eine Liste
   leer, sagt die Seitenleiste, was fehlt, und bietet den nächsten Schritt
-  an: „+ Plan", „+ Ticket", „Quellen durchsuchen", `git init` oder einen
+  an: „+ Spec", „+ Playbook", „Quellen durchsuchen", `git init` oder einen
   Prompt für den Agenten.
-- **Inhalt.** Das Ausgewählte in voller Breite: das Board, ein Plan als
-  Dokument, eine Datei im Editor, ein Diff.
+- **Inhalt.** Das Ausgewählte in voller Breite: das Specs-Board, ein
+  Playbook als Dokument, eine Datei im Editor, ein Diff.
 - **Inspektor.** Zu allem, was links ausgewählt ist, Metadaten und die
-  passenden Knöpfe — beim Ticket die Tabs *Übersicht* (Fragen und
-  Beschreibung) und *Historie*, beim Plan Lifecycle, Status, Aktivieren,
-  Archivieren, beim Skill die Herkunft, beim Tool die Plattform-Stände,
+  passenden Knöpfe — bei der Spec die Tabs *Übersicht* (Fragen und Text),
+  *Tasks* (Checkboxen, direkt abhakbar) und *Historie*, beim Skill die
+  Herkunft, beim Tool die Plattform-Stände,
   bei der Aktion den letzten Lauf und *Ausführen*, im Git-Tab das
   Commit-Panel. Ist der Inspektor ausgeblendet, erscheint dasselbe als
   Kasten über dem Inhalt.
@@ -57,8 +58,8 @@ Das Fenster folgt dem Muster von Xcode und iKanban: **Navigator** links,
   Du im Zahnrad unter *Toolbar* ein — pro Projekt gemerkt. Daneben die
   **Aktivitätsanzeige**: was gerade läuft — eine Aktion, `git push`, das
   Einrichten, ein Speichern, das Agent-Terminal, solange Ausgabe fließt —
-  mit Laufzeit; abgeschlossene Agent-Läufe aus der Ticket-History
-  erscheinen mit Ticket und Tokens; ein Klick öffnet die Liste. Rechts
+  mit Laufzeit; abgeschlossene Agent-Läufe aus der Spec-History
+  erscheinen mit Spec und Tokens; ein Klick öffnet die Liste. Rechts
   die Schalter für Navigator, Terminal und Inspektor, Sonne/Mond für
   Hell/Dunkel und das Zahnrad für die Einstellungen. Auf macOS ist die
   Toolbar zugleich die Titelleiste; das Fenster lässt sich an ihr ziehen.
@@ -124,12 +125,6 @@ unten; im Editor ⌘S speichern, im Commit-Feld ⌘⏎ committen.
   Deploy, Onboarding …). Anders als Pläne werden sie nicht abgearbeitet,
   sondern immer wieder benutzt. **+ Playbook** legt eins an, *Als Prompt
   kopieren* gibt den Ablauf dem Agenten ins Terminal.
-- **Pläne** — alle Pläne aus `.agent/plans/`, das Archiv aufklappbar.
-  **+ Plan** legt einen Entwurf an. **Aktivieren** macht einen Plan zum
-  aktiven und parkt den bisherigen auf `onHold`; **Archivieren**
-  verschiebt einen fertigen Plan nach `.agent/plans/archive/`. Ein rotes
-  Banner heißt: Der Agent hat den Plan eskaliert — lesen, handeln,
-  **Auflösen**. *Als Prompt kopieren* gibt Pfad und Inhalt dem Agenten.
 - **Skills** — die expandierten Skills des Projekts samt Herkunft. Der
   Modus **Quellen durchsuchen** zeigt Skill-Repos: globale aus der
   Dashboard-**Bibliothek** und weitere nur für dieses Projekt (**+ Quelle**
@@ -152,7 +147,7 @@ unten; im Editor ⌘S speichern, im Commit-Feld ⌘⏎ committen.
 Listeneintrag oder den Inhalt. Der Editor speichert von selbst — jeder
 Tastenanschlag landet sofort als Entwurf im App-Speicher, gut eine
 Sekunde nach dem Tippen in der Datei; *Fertig* schließt ihn. Wird die App
-mitten im Schreiben beendet, bietet der Plan beim nächsten Öffnen
+mitten im Schreiben beendet, bietet das Playbook beim nächsten Öffnen
 *Wiederherstellen* an.
 
 ### Technik
@@ -173,15 +168,24 @@ mitten im Schreiben beendet, bietet der Plan beim nächsten Öffnen
 - **Agent** — `CLAUDE.md`, `AGENTS.md` und `.agent/agent.md` des
   Projekts, dazu das Agent-Kommando fürs Terminal.
 
-### Board
+### Specs
 
-Die Tickets aus `.agent/board/` in drei Spalten (Backlog, In Progress,
-Done). Karten lassen sich ziehen; ein Klick zeigt das Ticket im Inspektor,
-ein **Doppelklick** öffnet den Ticket-Editor. **+ Ticket** legt neue an.
-Über dem Board ist der aktive Plan aufklappbar; die Kopfzeile zeigt Läufe
-und Token-Verbrauch des Agenten. Im Navigator filtert die Liste nach
-Plan, der Filter **braucht mich** blendet alles aus, was nicht auf Dich
-wartet.
+Eine **Spec** ist eine Arbeitseinheit, die Du in einem Review abnehmen
+willst — ein Feature, ein Umbau, eine Untersuchung — als
+`.agent/specs/<slug>/SPEC.md` mit den Abschnitten Why, What, Acceptance,
+Decisions, **Tasks** (Checkboxen), Verification und Questions. Das Board
+zeigt die Specs in drei Spalten (Backlog, Doing, Done); jede Karte trägt
+ihren Fortschritt (`3/7` Tasks). Karten lassen sich ziehen —
+**Backlog → Doing ist Deine Freigabe**, erst dann fängt der Agent an. Ein
+Klick zeigt die Spec im Inspektor (Tabs *Übersicht*, *Tasks* zum
+Abhaken, *Historie*), ein **Doppelklick** öffnet den Editor, **+ Spec**
+legt eine neue aus der Vorlage an; eine Spec ohne `order` gilt als Idee.
+*Done* verlangt alle Tasks abgehakt und eine Prüfnotiz; mit *braucht BO*
+wartet die Spec mit *bereit* auf Deine Abnahme. **Archivieren** verschiebt
+Fertiges nach `.agent/specs/archive/`. Die Kopfzeile zeigt Läufe und
+Token-Verbrauch des Agenten; im Navigator filtert die Liste nach
+Ober-Spec, der Filter **braucht mich** blendet alles aus, was nicht auf
+Dich wartet.
 
 ### Hilfe
 
@@ -191,7 +195,7 @@ nennt die Quelldatei im Repository.
 ## Fragen beantworten
 
 Wenn der Agent eine Entscheidung braucht und der Lauf endet, schreibt er
-die Frage ins Ticket. Die App meldet das als System-Benachrichtigung, die
+die Frage in die Spec. Die App meldet das als System-Benachrichtigung, die
 Karte bekommt ein orangefarbenes **?**, und im Inspektor steht die Frage
 ganz oben mit einem Antwortfeld. Antworten — der nächste Lauf des Agenten
 liest sie aus der Datei.

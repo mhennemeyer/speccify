@@ -79,7 +79,7 @@ Two rules protect this when an agent does the work:
 Commits track the *code*; the ticket **history** tracks the
 *process* — an append-only JSONL per ticket where the agent logs
 station moves, recorded answers, and skill runs
-([details](/app/board/)). When something looks odd later, the
+([details](/app/specs/)). When something looks odd later, the
 two logs cross-check each other: what was done, and what was decided
 while doing it.
 

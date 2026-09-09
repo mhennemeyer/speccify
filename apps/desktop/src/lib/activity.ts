@@ -45,7 +45,7 @@ export function endActivity(id: string, outcome: ActivityOutcome = "ok", detail?
 }
 
 /** Bereits abgeschlossene Aktivität nachtragen — etwa ein Agent-Lauf aus
- *  der Ticket-History, den der Watcher gemeldet hat. */
+ *  der Spec-History, den der Watcher gemeldet hat. */
 export function recordActivity(
   kind: ActivityKind,
   label: string,

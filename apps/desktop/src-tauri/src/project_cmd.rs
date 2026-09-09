@@ -296,70 +296,9 @@ fn first_heading(body: &str) -> Option<String> {
         .map(|title| title.trim().to_string())
 }
 
-#[derive(Serialize)]
-pub struct PlanEntry {
-    /// Relativ zur Projektwurzel — zugleich der Schlüssel für `project_read_file`.
-    file: String,
-    title: String,
-    lifecycle: Option<String>,
-    status: Option<String>,
-    /// `escalation:` — einzeilig oder Block (`reason` zählt). Rotes Banner.
-    escalation: Option<String>,
-    archived: bool,
-}
-
-fn plans_in(dir: &Path, root: &Path, archived: bool, out: &mut Vec<PlanEntry>) {
-    let Ok(entries) = std::fs::read_dir(dir) else {
-        return;
-    };
-    let mut paths: Vec<PathBuf> = entries
-        .filter_map(Result::ok)
-        .map(|entry| entry.path())
-        .filter(|path| path.extension().is_some_and(|ext| ext == "md"))
-        .collect();
-    paths.sort();
-    for path in paths {
-        let Ok(text) = std::fs::read_to_string(&path) else {
-            continue;
-        };
-        let (frontmatter, body) = split_frontmatter(&text);
-        let fallback = path
-            .file_stem()
-            .map(|stem| stem.to_string_lossy().into_owned())
-            .unwrap_or_default();
-        out.push(PlanEntry {
-            file: path
-                .strip_prefix(root)
-                .unwrap_or(&path)
-                .to_string_lossy()
-                .into_owned(),
-            title: first_heading(body).unwrap_or(fallback),
-            lifecycle: frontmatter_str(&frontmatter, "lifecycle"),
-            status: frontmatter_str(&frontmatter, "status"),
-            escalation: frontmatter
-                .as_ref()
-                .and_then(|value| value.get("escalation"))
-                .and_then(|entry| match entry {
-                    serde_yaml::Value::String(text) => Some(text.clone()),
-                    other => other
-                        .get("reason")
-                        .and_then(|reason| reason.as_str())
-                        .map(str::to_string),
-                }),
-            archived,
-        });
-    }
-}
-
-/// Pläne aus `.agent/plans/` (+ `archive/`). Fehlende Ordner ⇒ leere Liste.
-#[tauri::command]
-pub fn project_plans(project: String) -> Result<Vec<PlanEntry>, String> {
-    let root = resolve_project_root(&project)?;
-    let mut plans = Vec::new();
-    plans_in(&root.join(".agent/plans"), &root, false, &mut plans);
-    plans_in(&root.join(".agent/plans/archive"), &root, true, &mut plans);
-    Ok(plans)
-}
+// Pläne (`.agent/plans/`) werden seit dem Spec-Workflow (spec-workflow.md,
+// D5) nicht mehr nativ gelesen — die Dateien bleiben über den Dateien-Tab
+// erreichbar.
 
 #[derive(Serialize)]
 pub struct SkillOrigin {
@@ -509,6 +448,91 @@ pub fn project_write_file(project: String, file: String, content: String) -> Res
 
 pub const BOARD_STATIONS: [&str; 3] = ["Backlog", "Doing", "Done"];
 
+/// Specs (Plan spec-workflow.md): `.agent/specs/<slug>/SPEC.md`, Archiv
+/// darunter in `archive/<YYYY-MM-DD>-<slug>/`.
+pub const SPECS_DIR: &str = ".agent/specs";
+
+/// Alle Spec-Ordner (mit SPEC.md), sortiert; optional auch das Archiv.
+pub(crate) fn spec_dirs(root: &Path, include_archive: bool) -> Vec<PathBuf> {
+    let mut dirs = Vec::new();
+    let mut roots = vec![root.join(SPECS_DIR)];
+    if include_archive {
+        roots.push(root.join(SPECS_DIR).join("archive"));
+    }
+    for base in roots {
+        let Ok(entries) = std::fs::read_dir(&base) else {
+            continue;
+        };
+        let mut found: Vec<PathBuf> = entries
+            .filter_map(Result::ok)
+            .map(|entry| entry.path())
+            .filter(|path| path.is_dir() && path.join("SPEC.md").is_file())
+            .collect();
+        found.sort();
+        dirs.extend(found);
+    }
+    dirs
+}
+
+/// Ordner einer Spec-Id — aktiv oder im Archiv (dort mit Datumspräfix).
+pub(crate) fn spec_dir_of(root: &Path, id: &str) -> Option<PathBuf> {
+    let active = root.join(SPECS_DIR).join(id);
+    if active.join("SPEC.md").is_file() {
+        return Some(active);
+    }
+    spec_dirs(root, true)
+        .into_iter()
+        .find(|dir| spec_id_of(root, &dir.join("SPEC.md")) == id)
+}
+
+/// Id = Ordnername; im Archiv ohne das Datumspräfix `YYYY-MM-DD-`.
+pub(crate) fn spec_id_of(root: &Path, spec_file: &Path) -> String {
+    let dir = spec_file.parent().unwrap_or(spec_file);
+    let name = dir
+        .file_name()
+        .map(|n| n.to_string_lossy().into_owned())
+        .unwrap_or_default();
+    let archived = dir.parent() == Some(root.join(SPECS_DIR).join("archive").as_path());
+    if archived && name.len() > 11 && name.as_bytes()[10] == b'-' {
+        name[11..].to_string()
+    } else {
+        name
+    }
+}
+
+/// Guard: relativer Pfad, unterhalb von `.agent/specs/`, Dateiname SPEC.md.
+pub(crate) fn spec_file_path(root: &Path, file: &str) -> Result<PathBuf, String> {
+    let path = safe_project_path(root, file)?;
+    if !path.starts_with(root.join(SPECS_DIR)) || path.file_name().is_none_or(|n| n != "SPEC.md") {
+        return Err(format!("Keine Spec: {file}"));
+    }
+    Ok(path)
+}
+
+/// Erste `# `-Überschrift eines Bodys.
+pub(crate) fn heading_title(body: &str) -> Option<String> {
+    first_heading(body)
+}
+
+fn count_tasks(body: &str) -> (u32, u32) {
+    let mut done = 0;
+    let mut total = 0;
+    for line in body.lines() {
+        let trimmed = line.trim_start();
+        let rest = trimmed
+            .strip_prefix("- ")
+            .or_else(|| trimmed.strip_prefix("* "));
+        let Some(rest) = rest else { continue };
+        if rest.starts_with("[ ]") {
+            total += 1;
+        } else if rest.starts_with("[x]") || rest.starts_with("[X]") {
+            total += 1;
+            done += 1;
+        }
+    }
+    (done, total)
+}
+
 #[derive(Serialize)]
 pub struct TicketEntry {
     /// Relativ zur Projektwurzel (Schlüssel für `project_board_move`).
@@ -520,12 +544,16 @@ pub struct TicketEntry {
     created: Option<String>,
     ready: bool,
     needs_human: bool,
-    /// Backlog-Sortierung: `order` → `created` → `id`.
+    /// Backlog-Sortierung: `order` → `created` → `id`; ohne `order` = Idee.
     order: Option<i64>,
-    /// Beim Schneiden gesetzt — treibt die Done-Gruppierung.
-    plan: Option<String>,
+    /// Ober-Spec (Thema) — treibt Filter und Done-Gruppierung.
+    parent: Option<String>,
     /// `open_question: Q<n>` — älteste offene Rückfrage an den Menschen.
     open_question: Option<String>,
+    /// `- [x]` von `- [ ]`+`- [x]` im Body.
+    tasks_done: u32,
+    tasks_total: u32,
+    archived: bool,
     body: String,
 }
 
@@ -568,56 +596,63 @@ fn flat_truthy(fields: &[(String, String)], key: &str) -> bool {
     )
 }
 
-/// Tickets aus `.agent/board/`. Fehlender Ordner ⇒ leere Liste; die
-/// Spalten-Sortierung (Backlog: order → created → id) macht das Frontend.
+/// Specs aus `.agent/specs/<slug>/SPEC.md` (+ Archiv, `archived: true`).
+/// Fehlender Ordner ⇒ leere Liste; die Spalten-Sortierung (Backlog:
+/// order → created → id) macht das Frontend.
 #[tauri::command]
 pub fn project_board(project: String) -> Result<Vec<TicketEntry>, String> {
     let root = resolve_project_root(&project)?;
-    let board_dir = root.join(".agent/board");
-    let Ok(entries) = std::fs::read_dir(&board_dir) else {
-        return Ok(Vec::new());
-    };
-    let mut paths: Vec<PathBuf> = entries
-        .filter_map(Result::ok)
-        .map(|entry| entry.path())
-        .filter(|path| path.extension().is_some_and(|ext| ext == "md"))
-        .collect();
-    paths.sort();
-    let mut tickets = Vec::new();
-    for path in paths {
+    let archive = root.join(SPECS_DIR).join("archive");
+    let mut specs = Vec::new();
+    for dir in spec_dirs(&root, true) {
+        let path = dir.join("SPEC.md");
         let Ok(text) = std::fs::read_to_string(&path) else {
             continue;
         };
         let Some((fields, body)) = parse_flat_frontmatter(&text) else {
             continue;
         };
-        let stem = path
-            .file_stem()
-            .map(|stem| stem.to_string_lossy().into_owned())
-            .unwrap_or_default();
-        let Some(station) = flat_lookup(&fields, "station") else {
-            continue;
-        };
-        tickets.push(TicketEntry {
+        let id = spec_id_of(&root, &path);
+        let archived = dir.parent() == Some(archive.as_path());
+        let station = flat_lookup(&fields, "station")
+            .map(str::to_string)
+            .unwrap_or_else(|| {
+                if archived {
+                    "Done".into()
+                } else {
+                    "Backlog".into()
+                }
+            });
+        let (tasks_done, tasks_total) = count_tasks(body);
+        specs.push(TicketEntry {
             file: path
                 .strip_prefix(&root)
                 .unwrap_or(&path)
                 .to_string_lossy()
-                .into_owned(),
-            id: flat_lookup(&fields, "id").unwrap_or(&stem).to_string(),
-            title: flat_lookup(&fields, "title").unwrap_or(&stem).to_string(),
-            station: station.to_string(),
+                .replace('\\', "/"),
+            title: first_heading(body)
+                .or_else(|| flat_lookup(&fields, "title").map(str::to_string))
+                .unwrap_or_else(|| id.clone()),
+            id,
+            station,
             assignee: flat_lookup(&fields, "assignee").map(str::to_string),
             created: flat_lookup(&fields, "created").map(str::to_string),
             ready: flat_truthy(&fields, "ready"),
             needs_human: flat_truthy(&fields, "needs_human"),
             order: flat_lookup(&fields, "order").and_then(|raw| raw.parse().ok()),
-            plan: flat_lookup(&fields, "plan").map(str::to_string),
-            open_question: flat_lookup(&fields, "open_question").map(str::to_string),
+            parent: flat_lookup(&fields, "parent")
+                .filter(|p| !p.is_empty() && *p != "null")
+                .map(str::to_string),
+            open_question: flat_lookup(&fields, "open_question")
+                .filter(|q| !q.is_empty() && *q != "null")
+                .map(str::to_string),
+            tasks_done,
+            tasks_total,
+            archived,
             body: body.to_string(),
         });
     }
-    Ok(tickets)
+    Ok(specs)
 }
 
 /// Verschiebt ein Ticket in eine andere Station: ersetzt **nur** die
@@ -629,10 +664,7 @@ pub fn project_board_move(project: String, file: String, station: String) -> Res
         return Err(format!("Unbekannte Station: {station}"));
     }
     let root = resolve_project_root(&project)?;
-    let path = safe_project_path(&root, &file)?;
-    if !path.starts_with(root.join(".agent/board")) {
-        return Err(format!("Kein Board-Ticket: {file}"));
-    }
+    let path = spec_file_path(&root, &file)?;
     let text = std::fs::read_to_string(&path).map_err(|e| format!("{}: {e}", path.display()))?;
     let mut in_frontmatter = false;
     let mut replaced = false;
@@ -952,19 +984,9 @@ mod tests {
     }
 
     #[test]
-    fn plans_and_skills_are_read_natively() {
+    fn skills_are_read_natively() {
         let dir = project_fixture("read");
         let project = dir.to_string_lossy().into_owned();
-
-        let plans = project_plans(project.clone()).unwrap();
-        assert_eq!(plans.len(), 2);
-        let active = plans.iter().find(|plan| !plan.archived).unwrap();
-        assert_eq!(active.title, "Plan: Aktuell");
-        assert_eq!(active.lifecycle.as_deref(), Some("active"));
-        assert_eq!(active.status.as_deref(), Some("Bauen"));
-        let archived = plans.iter().find(|plan| plan.archived).unwrap();
-        assert_eq!(archived.title, "Alter Plan ohne Frontmatter");
-        assert_eq!(archived.lifecycle, None);
 
         let skills = project_skills(project.clone()).unwrap();
         assert_eq!(skills.len(), 1);
@@ -978,7 +1000,7 @@ mod tests {
         assert_eq!(origin.version.as_deref(), Some("1.0.0"));
         assert_eq!(origin.tools, vec!["verify-something".to_string()]);
 
-        let body = project_read_file(project, active.file.clone()).unwrap();
+        let body = project_read_file(project, ".agent/plans/aktuell.md".into()).unwrap();
         assert!(body.contains("# Plan: Aktuell"));
 
         let _ = std::fs::remove_dir_all(&dir);
@@ -1007,39 +1029,60 @@ mod tests {
     }
 
     #[test]
-    fn board_reads_tickets_and_moves_byte_stable() {
+    fn board_reads_specs_and_moves_byte_stable() {
         let dir = project_fixture("board");
-        std::fs::create_dir_all(dir.join(".agent/board")).unwrap();
-        // Zusatzfelder + CRLF-fremde Details bewusst dabei: move darf NUR
-        // die station-Zeile anfassen (D19, byte-stabiler Rest).
-        let ticket = "---\nid: t-1\ntitle: Fenster testen\nstation: Backlog\ncreated: 2026-08-28T06:00:00Z\norder: 2\nready: true\ncustom: bleibt  erhalten\n---\n\n# Fenster testen\n\nBody bleibt unangetastet.\n";
-        std::fs::write(dir.join(".agent/board/t-1.md"), ticket).unwrap();
+        std::fs::create_dir_all(dir.join(".agent/specs/t-1")).unwrap();
+        std::fs::create_dir_all(dir.join(".agent/specs/archive/2026-09-01-alt")).unwrap();
+        std::fs::create_dir_all(dir.join(".agent/specs/kein-spec")).unwrap();
+        // Zusatzfelder bewusst dabei: move darf NUR die station-Zeile
+        // anfassen (byte-stabiler Rest).
+        let spec = "---\nstation: Backlog\ncreated: 2026-08-28\norder: 2\nready: true\nparent: null\ncustom: bleibt  erhalten\n---\n# Fenster testen\n\nBody bleibt unangetastet.\n\n## Tasks\n\n- [x] eins\n- [ ] zwei\n* [X] drei\n";
+        std::fs::write(dir.join(".agent/specs/t-1/SPEC.md"), spec).unwrap();
         std::fs::write(
-            dir.join(".agent/board/t-2.md"),
-            "---\ntitle: Ohne id\nstation: Done\n---\nFertig.\n",
+            dir.join(".agent/specs/archive/2026-09-01-alt/SPEC.md"),
+            "---\nparent: thema\n---\nFertig ohne Überschrift.\n",
         )
         .unwrap();
         let project = dir.to_string_lossy().into_owned();
 
-        let tickets = project_board(project.clone()).unwrap();
-        assert_eq!(tickets.len(), 2);
-        let first = &tickets[0];
+        let specs = project_board(project.clone()).unwrap();
+        assert_eq!(specs.len(), 2); // der Ordner ohne SPEC.md zählt nicht
+        let first = &specs[0];
+        assert_eq!(first.file, ".agent/specs/t-1/SPEC.md");
         assert_eq!(first.id, "t-1");
         assert_eq!(first.title, "Fenster testen");
         assert_eq!(first.station, "Backlog");
         assert_eq!(first.order, Some(2));
         assert!(first.ready);
         assert!(!first.needs_human);
+        assert_eq!(first.parent, None); // `null` zählt nicht
+        assert_eq!((first.tasks_done, first.tasks_total), (2, 3));
+        assert!(!first.archived);
         assert!(first.body.contains("Body bleibt"));
-        // Ohne id-Feld zählt der Dateistamm.
-        assert_eq!(tickets[1].id, "t-2");
+        // Archiv: Id ohne Datumspräfix, Station Done, Titel = Id.
+        let old = &specs[1];
+        assert_eq!(old.id, "alt");
+        assert!(old.archived);
+        assert_eq!(old.station, "Done");
+        assert_eq!(old.title, "alt");
+        assert_eq!(old.parent.as_deref(), Some("thema"));
 
         project_board_move(project.clone(), first.file.clone(), "Doing".into()).unwrap();
-        let moved = std::fs::read_to_string(dir.join(".agent/board/t-1.md")).unwrap();
-        assert_eq!(moved, ticket.replace("station: Backlog", "station: Doing"));
+        let moved = std::fs::read_to_string(dir.join(".agent/specs/t-1/SPEC.md")).unwrap();
+        assert_eq!(moved, spec.replace("station: Backlog", "station: Doing"));
 
-        let unknown = project_board_move(project, "t-1.md".into(), "Doing".into()).unwrap_err();
-        assert!(unknown.contains("Kein Board-Ticket"));
+        let unknown =
+            project_board_move(project, ".agent/agent.md".into(), "Doing".into()).unwrap_err();
+        assert!(unknown.contains("Keine Spec"));
+        assert_eq!(
+            spec_dir_of(&dir, "alt").unwrap(),
+            dir.join(".agent/specs/archive/2026-09-01-alt")
+        );
+        assert_eq!(
+            spec_dir_of(&dir, "t-1").unwrap(),
+            dir.join(".agent/specs/t-1")
+        );
+        assert!(spec_dir_of(&dir, "nix").is_none());
 
         let _ = std::fs::remove_dir_all(&dir);
     }
@@ -1145,7 +1188,7 @@ mod tests {
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
         let project = dir.to_string_lossy().into_owned();
-        assert!(project_plans(project.clone()).unwrap().is_empty());
+        assert!(project_board(project.clone()).unwrap().is_empty());
         assert!(project_skills(project).unwrap().is_empty());
         let _ = std::fs::remove_dir_all(&dir);
     }

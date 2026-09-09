@@ -17,7 +17,6 @@ mod engine;
 mod files_cmd;
 mod git_cmd;
 mod help_docs;
-mod plan_cmd;
 mod playbook_cmd;
 mod project_cmd;
 mod project_watch;
@@ -236,7 +235,6 @@ pub fn run() {
             project_cmd::project_open,
             project_cmd::project_current,
             project_cmd::project_recent,
-            project_cmd::project_plans,
             project_cmd::project_skills,
             project_cmd::project_read_file,
             files_cmd::project_tree,
@@ -283,6 +281,8 @@ pub fn run() {
             board_cmd::project_board_kpis,
             board_cmd::project_ticket_questions,
             board_cmd::project_ticket_answer,
+            board_cmd::project_spec_toggle_task,
+            board_cmd::project_spec_archive,
             help_docs::help_docs,
             help_docs::help_doc,
             agent_config::agent_config_list,
@@ -296,10 +296,6 @@ pub fn run() {
             sources_cmd::source_add,
             sources_cmd::source_remove,
             sources_cmd::source_refresh,
-            plan_cmd::project_plan_activate,
-            plan_cmd::project_plan_archive,
-            plan_cmd::project_plan_resolve_escalation,
-            plan_cmd::project_plan_create,
             playbook_cmd::project_playbooks,
             playbook_cmd::project_playbook_create,
             playbook_cmd::project_playbook_delete,

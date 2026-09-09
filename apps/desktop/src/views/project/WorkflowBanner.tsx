@@ -1,5 +1,5 @@
 // Workflow-Setup-Banner (Plan projektfenster.md, P5/W1): zeigt, ob die
-// Agent-Einweisung (Policy-Block, Ticket-Skills, Scaffold, Host-Verweise)
+// Agent-Einweisung (Policy-Block, Spec-Skills, Scaffold, Host-Verweise)
 // fehlt oder veraltet ist — Einrichten bewusst per Knopf, nie automatisch,
 // weil in Projektdateien geschrieben wird.
 

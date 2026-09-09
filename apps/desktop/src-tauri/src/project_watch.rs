@@ -51,12 +51,7 @@ struct Area {
 const AREAS: &[Area] = &[
     Area {
         name: "board",
-        dirs: &[".agent/board"],
-        files: &[],
-    },
-    Area {
-        name: "plans",
-        dirs: &[".agent/plans"],
+        dirs: &[".agent/specs"],
         files: &[],
     },
     Area {
@@ -256,7 +251,7 @@ mod tests {
     fn fingerprints_react_to_create_change_and_delete() {
         let dir = std::env::temp_dir().join(format!("speccify-watch-test-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
-        std::fs::create_dir_all(dir.join(".agent/board")).unwrap();
+        std::fs::create_dir_all(dir.join(".agent/specs")).unwrap();
         std::fs::create_dir_all(dir.join(".agent/plans")).unwrap();
 
         let base = area_fingerprints(&dir);
@@ -265,7 +260,7 @@ mod tests {
 
         // Neue Datei ⇒ nur der Board-Bereich meldet sich.
         std::fs::write(
-            dir.join(".agent/board/t-1.md"),
+            dir.join(".agent/specs/t-1.md"),
             "---\nstation: Backlog\n---\n",
         )
         .unwrap();
@@ -274,7 +269,7 @@ mod tests {
 
         // In-place-Änderung (andere Länge ⇒ unabhängig von mtime-Auflösung).
         std::fs::write(
-            dir.join(".agent/board/t-1.md"),
+            dir.join(".agent/specs/t-1.md"),
             "---\nstation: Doing\n---\nmehr\n",
         )
         .unwrap();
@@ -282,8 +277,8 @@ mod tests {
         assert_eq!(changed_areas(&created, &edited), vec!["board"]);
 
         // Datei in einem Unterverzeichnis (History) zählt mit.
-        std::fs::create_dir_all(dir.join(".agent/board/history/t-1")).unwrap();
-        std::fs::write(dir.join(".agent/board/history/t-1/index.jsonl"), "{}\n").unwrap();
+        std::fs::create_dir_all(dir.join(".agent/specs/history/t-1")).unwrap();
+        std::fs::write(dir.join(".agent/specs/history/t-1/index.jsonl"), "{}\n").unwrap();
         let history = area_fingerprints(&dir);
         assert_eq!(changed_areas(&edited, &history), vec!["board"]);
 
@@ -293,7 +288,7 @@ mod tests {
         assert_eq!(changed_areas(&history, &agent), vec!["agent"]);
 
         // Löschen ⇒ wieder nur board.
-        std::fs::remove_file(dir.join(".agent/board/t-1.md")).unwrap();
+        std::fs::remove_file(dir.join(".agent/specs/t-1.md")).unwrap();
         let deleted = area_fingerprints(&dir);
         assert_eq!(changed_areas(&agent, &deleted), vec!["board"]);
 

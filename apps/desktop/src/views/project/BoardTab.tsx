@@ -1,12 +1,13 @@
-// Board-Tab (Plan projektfenster.md, D19 + P5/W3): das Projekt-Board aus
-// `.agent/board/*.md` — Speccifys Board-Format. Drei Spalten mit Drag&Drop,
-// Ticket anlegen/editieren/löschen (byte-stabil, App-Aktionen loggen
-// History), KPI-Kopfzeile aus den agent_run-Events, Done-Spalte nach Plan
-// gruppiert. Live über den W2-Watcher — kein Aktualisieren-Knopf mehr.
+// Specs-Board (Plan spec-workflow.md, S3; davor projektfenster.md P5/W3):
+// eine Spec je Ordner `.agent/specs/<slug>/SPEC.md`, drei Spalten mit
+// Drag&Drop, Anlegen/Editieren/Archivieren (byte-stabil, App-Aktionen
+// loggen History), Tasks als Checkboxen direkt umschaltbar, KPI-Kopfzeile
+// aus den agent_run-Events, Done-Spalte nach Ober-Spec gruppiert. Live
+// über den W2-Watcher — kein Aktualisieren-Knopf.
 
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import Markdown, { stripFrontmatter } from "../../components/Markdown";
+import Markdown from "../../components/Markdown";
 import { LoadingBoundary, useAsync } from "../../components/ui";
 import { copyPrompt } from "../../lib/prompt";
 import {
@@ -18,9 +19,8 @@ import {
   NavRow,
   useInspector,
 } from "../../lib/panels";
-import type { PlanEntry } from "./PlansTab";
 
-export interface TicketEntry {
+export interface SpecEntry {
   file: string;
   id: string;
   title: string;
@@ -30,12 +30,15 @@ export interface TicketEntry {
   ready: boolean;
   needs_human: boolean;
   order: number | null;
-  plan: string | null;
+  parent: string | null;
   open_question: string | null;
+  tasks_done: number;
+  tasks_total: number;
+  archived: boolean;
   body: string;
 }
 
-interface TicketQuestion {
+interface SpecQuestion {
   number: number;
   open: boolean;
   asked_at: string | null;
@@ -46,7 +49,7 @@ interface TicketQuestion {
 
 interface HistoryEvent {
   timestamp: string;
-  ticket_id: string;
+  spec_id: string;
   event_type: string;
   actor: string;
   summary: string;
@@ -58,7 +61,7 @@ interface HistoryEvent {
 }
 
 interface RunEntry {
-  ticket_id: string;
+  spec_id: string;
   timestamp: string;
   summary: string;
   tokens_in: number;
@@ -77,12 +80,14 @@ interface KpiSummary {
 const STATIONS = ["Backlog", "Doing", "Done"] as const;
 const STATION_LABELS: Record<string, string> = {
   Backlog: "Backlog",
-  Doing: "In Progress",
+  Doing: "Doing",
   Done: "Done",
 };
 
 const HISTORY_ICONS: Record<string, string> = {
+  spec_created: "✚",
   ticket_created: "✚",
+  spec_edited: "✎",
   ticket_edited: "✎",
   station_changed: "⇄",
   agent_run: "▶",
@@ -106,6 +111,25 @@ function stripQuestions(body: string): string {
   return out.join("\n").trim();
 }
 
+interface Task {
+  index: number;
+  text: string;
+  done: boolean;
+}
+
+/** `- [ ]`/`- [x]`-Zeilen in Reihenfolge — der Index ist der Schlüssel
+ *  für `project_spec_toggle_task` (Rust zählt genauso). */
+export function parseTasks(body: string): Task[] {
+  const tasks: Task[] = [];
+  for (const raw of body.split("\n")) {
+    const line = raw.trimStart();
+    const match = /^[-*] \[( |x|X)\] ?(.*)$/.exec(line);
+    if (!match) continue;
+    tasks.push({ index: tasks.length, done: match[1] !== " ", text: match[2] });
+  }
+  return tasks;
+}
+
 function abbreviate(value: number): string {
   if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
   if (value >= 1_000) return `${(value / 1_000).toFixed(1)}k`;
@@ -118,63 +142,86 @@ function formatDuration(ms: number): string {
   return `${ms}ms`;
 }
 
-/** Backlog: `order` (fehlend = ans Ende) → `created` → `id`. */
-function backlogCompare(a: TicketEntry, b: TicketEntry) {
+/** Backlog: `order` (fehlend = Idee, ans Ende) → `created` → `id`. */
+function backlogCompare(a: SpecEntry, b: SpecEntry) {
   const orderA = a.order ?? Number.MAX_SAFE_INTEGER;
   const orderB = b.order ?? Number.MAX_SAFE_INTEGER;
   if (orderA !== orderB) return orderA - orderB;
   return createdCompare(a, b);
 }
 
-function createdCompare(a: TicketEntry, b: TicketEntry) {
+function createdCompare(a: SpecEntry, b: SpecEntry) {
   const createdA = a.created ?? "";
   const createdB = b.created ?? "";
   if (createdA !== createdB) return createdA < createdB ? -1 : 1;
   return a.id < b.id ? -1 : 1;
 }
 
-function TicketBadges({ ticket }: { ticket: TicketEntry }) {
+function SpecBadges({ spec }: { spec: SpecEntry }) {
   return (
     <span className="inline-flex flex-wrap gap-1">
-      {ticket.ready ? (
+      {spec.ready ? (
         <span className="rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-medium text-emerald-800">
-          ready
+          bereit
         </span>
       ) : null}
-      {ticket.needs_human ? (
+      {spec.needs_human ? (
         <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-800">
           braucht BO
         </span>
       ) : null}
-      {ticket.open_question ? (
+      {spec.open_question ? (
         <span className="rounded-full bg-orange-100 px-1.5 py-0.5 text-[10px] font-bold text-orange-700">
           ?
+        </span>
+      ) : null}
+      {spec.station === "Backlog" && spec.order === null ? (
+        <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] text-slate-500">
+          Idee
         </span>
       ) : null}
     </span>
   );
 }
 
-function TicketCard({
-  ticket,
+function Progress({ spec, compact = false }: { spec: SpecEntry; compact?: boolean }) {
+  if (spec.tasks_total === 0) return null;
+  const percent = Math.round((spec.tasks_done / spec.tasks_total) * 100);
+  return (
+    <span className={`flex items-center gap-1.5 ${compact ? "text-[10px]" : "text-xs"} text-slate-500`}>
+      <span className="h-1.5 w-16 overflow-hidden rounded-full bg-slate-200">
+        <span
+          className={`block h-full ${percent === 100 ? "bg-emerald-500" : "bg-slate-500"}`}
+          style={{ width: `${percent}%` }}
+        />
+      </span>
+      <span className="font-mono">
+        {spec.tasks_done}/{spec.tasks_total}
+      </span>
+    </span>
+  );
+}
+
+function SpecCard({
+  spec,
   selected,
   onSelect,
   onEdit,
 }: {
-  ticket: TicketEntry;
+  spec: SpecEntry;
   selected: boolean;
   onSelect: () => void;
-  /** Doppelklick öffnet den Ticket-Editor (BO 2026-09-08). */
+  /** Doppelklick öffnet den Editor (BO 2026-09-08). */
   onEdit: () => void;
 }) {
   return (
     <div
-      draggable
+      draggable={!spec.archived}
       onDragStart={(event) => {
-        event.dataTransfer.setData("text/speccify-ticket", ticket.file);
+        event.dataTransfer.setData("text/speccify-spec", spec.file);
         event.dataTransfer.effectAllowed = "move";
       }}
-      className={`cursor-grab rounded-lg border p-2 active:cursor-grabbing ${
+      className={`rounded-lg border p-2 ${spec.archived ? "opacity-70" : "cursor-grab active:cursor-grabbing"} ${
         selected ? "border-slate-800 bg-white shadow-sm" : "border-slate-200 bg-white"
       }`}
     >
@@ -184,13 +231,12 @@ function TicketCard({
         title="Doppelklick zum Bearbeiten"
         className="block w-full text-left"
       >
-        <span className="text-sm font-medium text-slate-800">{ticket.title}</span>
-        {/* Schmale Spalten (BO-Screenshot 2026-09-06): Id darf umbrechen,
-            Badges wandern in die nächste Zeile statt über den Text. */}
+        <span className="text-sm font-medium text-slate-800">{spec.title}</span>
         <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-slate-500">
-          <span className="min-w-0 break-all font-mono">{ticket.id}</span>
-          {ticket.assignee ? <span>· {ticket.assignee}</span> : null}
-          <TicketBadges ticket={ticket} />
+          <span className="min-w-0 break-all font-mono">{spec.id}</span>
+          {spec.parent ? <span>· {spec.parent}</span> : null}
+          <Progress spec={spec} compact />
+          <SpecBadges spec={spec} />
         </div>
       </button>
     </div>
@@ -198,13 +244,13 @@ function TicketCard({
 }
 
 interface SheetState {
-  file: string | null; // null = neues Ticket
+  file: string | null; // null = neue Spec
   title: string;
   station: string;
   order: string;
   ready: boolean;
   needsHuman: boolean;
-  plan: string;
+  parent: string;
   body: string;
 }
 
@@ -216,26 +262,27 @@ function emptySheet(station: string): SheetState {
     order: "",
     ready: false,
     needsHuman: false,
-    plan: "",
+    parent: "",
     body: "",
   };
 }
 
-function sheetFor(ticket: TicketEntry): SheetState {
+function sheetFor(spec: SpecEntry): SheetState {
   return {
-    file: ticket.file,
-    title: ticket.title,
-    station: ticket.station,
-    order: ticket.order === null ? "" : String(ticket.order),
-    ready: ticket.ready,
-    needsHuman: ticket.needs_human,
-    plan: ticket.plan ?? "",
-    body: ticket.body,
+    file: spec.file,
+    title: spec.title,
+    station: spec.station,
+    order: spec.order === null ? "" : String(spec.order),
+    ready: spec.ready,
+    needsHuman: spec.needs_human,
+    parent: spec.parent ?? "",
+    body: spec.body,
   };
 }
 
-function TicketSheet({
+function SpecSheet({
   sheet,
+  parents,
   onChange,
   onSave,
   onDelete,
@@ -244,6 +291,7 @@ function TicketSheet({
   error,
 }: {
   sheet: SheetState;
+  parents: string[];
   onChange: (next: SheetState) => void;
   onSave: () => void;
   onDelete: () => void;
@@ -253,14 +301,14 @@ function TicketSheet({
 }) {
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/40 p-6">
-      <div className="flex max-h-full w-[640px] flex-col gap-3 overflow-y-auto rounded-xl bg-white p-5 shadow-xl">
+      <div className="flex max-h-full w-[720px] flex-col gap-3 overflow-y-auto rounded-xl bg-white p-5 shadow-xl">
         <h3 className="text-sm font-semibold text-slate-800">
-          {sheet.file ? "Ticket bearbeiten" : "Neues Ticket"}
+          {sheet.file ? "Spec bearbeiten" : "Neue Spec"}
         </h3>
         <input
           value={sheet.title}
           onChange={(event) => onChange({ ...sheet, title: event.target.value })}
-          placeholder="Titel"
+          placeholder="Titel — was gebaut wird, in einem Satz"
           spellCheck={false}
           autoFocus
           className="rounded border border-slate-300 px-3 py-2 text-sm"
@@ -284,27 +332,33 @@ function TicketSheet({
               onChange={(event) =>
                 onChange({ ...sheet, order: event.target.value.replace(/[^\d-]/g, "") })
               }
+              placeholder="Idee"
               className="w-16 rounded border border-slate-300 px-2 py-1 font-mono"
             />
           </label>
-          {sheet.file === null ? (
-            <label className="flex items-center gap-1.5 text-xs text-slate-600">
-              plan
-              <input
-                value={sheet.plan}
-                onChange={(event) => onChange({ ...sheet, plan: event.target.value })}
-                spellCheck={false}
-                className="w-40 rounded border border-slate-300 px-2 py-1 font-mono"
-              />
-            </label>
-          ) : null}
+          <label className="flex items-center gap-1.5 text-xs text-slate-600">
+            parent
+            <input
+              value={sheet.parent}
+              onChange={(event) => onChange({ ...sheet, parent: event.target.value })}
+              list="speccify-spec-parents"
+              placeholder="Ober-Spec (optional)"
+              spellCheck={false}
+              className="w-44 rounded border border-slate-300 px-2 py-1 font-mono"
+            />
+            <datalist id="speccify-spec-parents">
+              {parents.map((parent) => (
+                <option key={parent} value={parent} />
+              ))}
+            </datalist>
+          </label>
           <label className="flex items-center gap-1.5 text-xs text-slate-600">
             <input
               type="checkbox"
               checked={sheet.ready}
               onChange={(event) => onChange({ ...sheet, ready: event.target.checked })}
             />
-            ready
+            bereit
           </label>
           <label className="flex items-center gap-1.5 text-xs text-slate-600">
             <input
@@ -319,7 +373,12 @@ function TicketSheet({
           value={sheet.body}
           onChange={(event) => onChange({ ...sheet, body: event.target.value })}
           spellCheck={false}
-          rows={12}
+          rows={16}
+          placeholder={
+            sheet.file
+              ? ""
+              : "Leer lassen = Vorlage mit Why / What / Acceptance / Decisions / Tasks / Verification / Questions."
+          }
           className="resize-none rounded border border-slate-300 p-3 font-mono text-xs leading-5"
         />
         {error ? <p className="text-xs text-red-600">{error}</p> : null}
@@ -329,6 +388,7 @@ function TicketSheet({
               onClick={onDelete}
               disabled={busy}
               className="rounded px-3 py-1.5 text-xs text-red-600 hover:bg-red-50"
+              title="Löscht den ganzen Spec-Ordner samt History"
             >
               Löschen
             </button>
@@ -362,7 +422,7 @@ function QuestionsSection({
   onAnswer,
   busy,
 }: {
-  questions: TicketQuestion[];
+  questions: SpecQuestion[];
   onAnswer: (number: number, text: string) => void;
   busy: boolean;
 }) {
@@ -408,7 +468,7 @@ function QuestionsSection({
       {answered.length > 0 ? (
         <details className="mt-2">
           <summary className="cursor-pointer text-[11px] font-semibold text-orange-700">
-            Answered ({answered.length})
+            Beantwortet ({answered.length})
           </summary>
           <ul className="mt-1 space-y-2 text-xs text-orange-900">
             {answered.map((question) => (
@@ -428,20 +488,24 @@ function QuestionsSection({
   );
 }
 
-function TicketDetail({
-  ticket,
+function SpecDetail({
+  spec,
   history,
   questions,
   onAnswer,
+  onToggleTask,
+  onArchive,
   busy,
   onEdit,
   onClose,
   inInspector,
 }: {
-  ticket: TicketEntry;
+  spec: SpecEntry;
   history: HistoryEvent[];
-  questions: TicketQuestion[];
+  questions: SpecQuestion[];
   onAnswer: (number: number, text: string) => void;
+  onToggleTask: (index: number, done: boolean) => void;
+  onArchive: () => void;
   busy: boolean;
   onEdit: () => void;
   onClose: () => void;
@@ -450,46 +514,86 @@ function TicketDetail({
   inInspector: boolean;
 }) {
   const shown = history.slice(0, 100);
-  // W7d: zwei Tabs — Übersicht (Fragen + Text) und Historie — im Inspektor
-  // wie im Inline-Fallback (InspectorPanel bringt die Tabs mit).
+  const tasks = parseTasks(spec.body);
   const overview = (
     <>
       <QuestionsSection questions={questions} onAnswer={onAnswer} busy={busy} />
-      {stripQuestions(ticket.body) ? (
-        <Markdown text={stripQuestions(ticket.body)} />
+      {stripQuestions(spec.body) ? (
+        <Markdown text={stripQuestions(spec.body)} />
       ) : (
-        <p className="text-xs text-slate-400">Kein Beschreibungstext.</p>
+        <p className="text-xs text-slate-400">Kein Text.</p>
       )}
     </>
   );
   const flags = [
-    ticket.ready ? "ready" : null,
-    ticket.needs_human ? "needs_human" : null,
-    ticket.open_question ? `Frage ${ticket.open_question}` : null,
+    spec.ready ? "bereit" : null,
+    spec.needs_human ? "braucht BO" : null,
+    spec.open_question ? `Frage ${spec.open_question}` : null,
+    spec.archived ? "archiviert" : null,
   ].filter(Boolean);
   const panel = (
     <InspectorPanel
-      title={ticket.title}
-      subtitle={`${ticket.id} · ${ticket.file}`}
+      title={spec.title}
+      subtitle={`${spec.id} · ${spec.file}`}
       meta={[
-        { label: "Station", value: ticket.station },
-        { label: "Plan", value: ticket.plan ?? "—" },
+        { label: "Station", value: spec.station },
+        { label: "Ober-Spec", value: spec.parent ?? "—" },
+        {
+          label: "Tasks",
+          value: spec.tasks_total > 0 ? <Progress spec={spec} /> : "— keine Checkboxen",
+        },
         ...(flags.length > 0 ? [{ label: "Flags", value: flags.join(", ") }] : []),
       ]}
       actions={
         <>
           <InspectorButton
             title="Pfad + Inhalt als Markdown-Prompt in die Zwischenablage"
-            onClick={() => void copyPrompt(ticket.file, ticket.body)}
+            onClick={() => void copyPrompt(spec.file, spec.body)}
           >
             Als Prompt kopieren
           </InspectorButton>
-          <InspectorButton onClick={onEdit}>Bearbeiten</InspectorButton>
+          {!spec.archived ? <InspectorButton onClick={onEdit}>Bearbeiten</InspectorButton> : null}
+          {spec.station === "Done" && !spec.archived ? (
+            <InspectorButton
+              onClick={onArchive}
+              disabled={busy}
+              title="Nach .agent/specs/archive/<Datum>-<slug>/ verschieben"
+            >
+              Archivieren
+            </InspectorButton>
+          ) : null}
           <InspectorButton onClick={onClose}>Schließen</InspectorButton>
         </>
       }
       tabs={[
         { id: "overview", label: "Übersicht", content: overview },
+        {
+          id: "tasks",
+          label: `Tasks${spec.tasks_total ? ` ${spec.tasks_done}/${spec.tasks_total}` : ""}`,
+          content:
+            tasks.length === 0 ? (
+              <p className="text-xs text-slate-400">
+                Keine Tasks — Checkboxen unter <code>## Tasks</code> in der Spec anlegen.
+              </p>
+            ) : (
+              <ul className="space-y-1">
+                {tasks.map((task) => (
+                  <li key={task.index}>
+                    <label className="flex cursor-pointer items-start gap-2 text-sm text-slate-700">
+                      <input
+                        type="checkbox"
+                        checked={task.done}
+                        disabled={busy || spec.archived}
+                        onChange={(event) => onToggleTask(task.index, event.target.checked)}
+                        className="mt-0.5"
+                      />
+                      <span className={task.done ? "text-slate-400 line-through" : ""}>{task.text}</span>
+                    </label>
+                  </li>
+                ))}
+              </ul>
+            ),
+        },
         {
           id: "history",
           label: `Historie${history.length ? ` (${history.length})` : ""}`,
@@ -498,18 +602,18 @@ function TicketDetail({
               {shown.length === 0 ? (
                 <p className="text-xs text-slate-400">Noch keine History.</p>
               ) : (
-          <ul className="space-y-0.5 font-mono text-[11px] text-slate-600">
-            {shown.map((event, index) => (
-              <li key={index} className="truncate" title={event.summary}>
-                <span className="mr-1">{HISTORY_ICONS[event.event_type] ?? "•"}</span>
-                <span className="text-slate-400">{event.timestamp.slice(0, 16)}</span>{" "}
-                <span className="text-slate-500">{event.actor}</span> · {event.summary}
-              </li>
-            ))}
-            {history.length > shown.length ? (
-              <li className="text-slate-400">… {history.length - shown.length} ältere Events</li>
-            ) : null}
-          </ul>
+                <ul className="space-y-0.5 font-mono text-[11px] text-slate-600">
+                  {shown.map((event, index) => (
+                    <li key={index} className="truncate" title={event.summary}>
+                      <span className="mr-1">{HISTORY_ICONS[event.event_type] ?? "•"}</span>
+                      <span className="text-slate-400">{event.timestamp.slice(0, 16)}</span>{" "}
+                      <span className="text-slate-500">{event.actor}</span> · {event.summary}
+                    </li>
+                  ))}
+                  {history.length > shown.length ? (
+                    <li className="text-slate-400">… {history.length - shown.length} ältere Events</li>
+                  ) : null}
+                </ul>
               )}
             </div>
           ),
@@ -525,57 +629,9 @@ function TicketDetail({
   );
 }
 
-function ActivePlanPanel({ project, planRefresh }: { project: string; planRefresh?: number }) {
-  const plans = useAsync(
-    () => invoke<PlanEntry[]>("project_plans", { project }),
-    `plans:${project}`,
-  );
-  const active = (plans.data ?? []).find(
-    (plan) => !plan.archived && plan.lifecycle === "active",
-  );
-  const body = useAsync(
-    () =>
-      active
-        ? invoke<string>("project_read_file", { project, file: active.file })
-        : Promise.resolve(""),
-    `plan-body:${project}:${active?.file ?? ""}`,
-  );
-  useEffect(() => {
-    if (planRefresh) {
-      void plans.reload();
-      void body.reload();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [planRefresh]);
-  if (!active) return null;
-  return (
-    <details className="mb-2 rounded-lg border border-slate-200 bg-white px-3 py-2" open>
-      <summary className="cursor-pointer text-xs font-semibold text-slate-600">
-        Aktiver Plan: {active.title}
-        {active.escalation ? (
-          <span className="ml-2 rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-medium text-red-700">
-            Eskalation
-          </span>
-        ) : null}
-      </summary>
-      <div className="mt-2 max-h-48 overflow-y-auto border-t border-slate-100 pt-2">
-        <Markdown text={stripFrontmatter(body.data ?? "")} />
-      </div>
-    </details>
-  );
-}
-
-export default function BoardTab({
-  project,
-  refresh,
-  planRefresh,
-}: {
-  project: string;
-  refresh?: number;
-  planRefresh?: number;
-}) {
+export default function BoardTab({ project, refresh }: { project: string; refresh?: number }) {
   const { data, loading, error, reload } = useAsync(
-    () => invoke<TicketEntry[]>("project_board", { project }),
+    () => invoke<SpecEntry[]>("project_board", { project }),
     `board:${project}`,
   );
   const kpis = useAsync(
@@ -583,7 +639,7 @@ export default function BoardTab({
     `board-kpis:${project}`,
   );
   const [selected, setSelectedState] = useState<string | null>(null);
-  // W7: das Ticket-Detail wohnt im Inspektor; eine neue Auswahl holt den
+  // W7: das Spec-Detail wohnt im Inspektor; eine neue Auswahl holt den
   // Inspektor-Tab nach vorn (ohne die Seitenleiste ungefragt zu öffnen).
   const inspector = useInspector("board");
   const setSelected = (file: string | null) => {
@@ -594,40 +650,37 @@ export default function BoardTab({
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [showRuns, setShowRuns] = useState(false);
-  // Bewusst nicht persistiert (iKanban-Entscheid): ein Blickfilter, kein Modus.
+  // Bewusst nicht persistiert: ein Blickfilter, kein Modus.
   const [needsMe, setNeedsMe] = useState(false);
+  // Navigator-Filter: alle | Ober-Spec | Archiv.
+  const [filter, setFilter] = useState<{ kind: "all" } | { kind: "parent"; parent: string } | { kind: "archive" }>({
+    kind: "all",
+  });
 
-  const allTickets = data ?? [];
-  const needsAttention = (ticket: TicketEntry) =>
-    ticket.open_question !== null || ticket.needs_human;
-  // W7b: Plan-Filter im Navigator (iKanban: Listen in der Seitenleiste).
-  const [planFilter, setPlanFilter] = useState<string | null>(null);
-  const plansOnBoard = [...new Set(allTickets.map((ticket) => ticket.plan ?? ""))].sort();
-  const tickets = allTickets.filter(
-    (ticket) =>
-      (!needsMe || needsAttention(ticket)) &&
-      (planFilter === null || (ticket.plan ?? "") === planFilter),
+  const allSpecs = data ?? [];
+  const live = allSpecs.filter((spec) => !spec.archived);
+  const archived = allSpecs.filter((spec) => spec.archived);
+  const needsAttention = (spec: SpecEntry) => spec.open_question !== null || spec.needs_human;
+  const parents = [...new Set(live.map((spec) => spec.parent).filter((p): p is string => Boolean(p)))].sort();
+  const specs = (filter.kind === "archive" ? archived : live).filter(
+    (spec) =>
+      (!needsMe || needsAttention(spec)) &&
+      (filter.kind !== "parent" || spec.parent === filter.parent || spec.id === filter.parent),
   );
-  const selectedTicket = allTickets.find((ticket) => ticket.file === selected) ?? null;
+  const selectedSpec = allSpecs.find((spec) => spec.file === selected) ?? null;
   const questions = useAsync(
     () =>
-      selectedTicket
-        ? invoke<TicketQuestion[]>("project_ticket_questions", {
-            project,
-            file: selectedTicket.file,
-          })
-        : Promise.resolve([] as TicketQuestion[]),
-    `ticket-questions:${project}:${selectedTicket?.file ?? ""}`,
+      selectedSpec
+        ? invoke<SpecQuestion[]>("project_ticket_questions", { project, file: selectedSpec.file })
+        : Promise.resolve([] as SpecQuestion[]),
+    `spec-questions:${project}:${selectedSpec?.file ?? ""}`,
   );
   const history = useAsync(
     () =>
-      selectedTicket
-        ? invoke<HistoryEvent[]>("project_ticket_history", {
-            project,
-            ticketId: selectedTicket.id,
-          })
+      selectedSpec
+        ? invoke<HistoryEvent[]>("project_ticket_history", { project, ticketId: selectedSpec.id })
         : Promise.resolve([] as HistoryEvent[]),
-    `ticket-history:${project}:${selectedTicket?.id ?? ""}`,
+    `spec-history:${project}:${selectedSpec?.id ?? ""}`,
   );
 
   useEffect(() => {
@@ -662,15 +715,16 @@ export default function BoardTab({
     if (!sheet) return;
     const ok = await run(async () => {
       if (sheet.file === null) {
-        await invoke("project_ticket_create", {
+        const file = await invoke<string>("project_ticket_create", {
           project,
           title: sheet.title,
           station: sheet.station,
           body: sheet.body,
           needsHuman: sheet.needsHuman,
-          plan: sheet.plan.trim() === "" ? null : sheet.plan.trim(),
+          parent: sheet.parent.trim() === "" ? null : sheet.parent.trim(),
           order: sheet.order === "" ? null : Number(sheet.order),
         });
+        setSelected(file);
       } else {
         await invoke("project_ticket_save", {
           project,
@@ -691,7 +745,7 @@ export default function BoardTab({
 
   const deleteSheet = async () => {
     if (!sheet?.file) return;
-    if (!window.confirm("Ticket wirklich löschen?")) return;
+    if (!window.confirm("Spec samt Ordner und History wirklich löschen?")) return;
     const file = sheet.file;
     const ok = await run(() => invoke("project_ticket_delete", { project, file }));
     if (ok) {
@@ -700,54 +754,68 @@ export default function BoardTab({
     }
   };
 
+  const archive = async (file: string) => {
+    const ok = await run(() => invoke<string>("project_spec_archive", { project, file }));
+    if (ok) setSelected(null);
+  };
+
   const kpi = kpis.data;
 
   return (
-    <LoadingBoundary loading={loading} error={error} label="Board lesen…">
+    <LoadingBoundary loading={loading} error={error} label="Specs lesen…">
       <div className="flex h-full min-h-0 flex-col">
         <NavigatorPortal tab="board" fallback={() => null}>
-          {allTickets.length === 0 ? (
+          {allSpecs.length === 0 ? (
             <NavEmpty
-              title="Noch keine Tickets"
-              action={{ label: "+ Ticket", onClick: () => setSheet(emptySheet("Backlog")) }}
+              title="Noch keine Spec"
+              action={{ label: "+ Spec", onClick: () => setSheet(emptySheet("Backlog")) }}
             >
-              Tickets liegen als Markdown unter <code>.agent/board/</code>. Der Agent
-              schneidet sie aus dem aktiven Plan (<em>/ticket-next</em> im Terminal) —
-              oder Du legst das erste selbst an.
+              Eine Spec ist eine Arbeitseinheit — ein Feature, ein Umbau, eine Untersuchung —
+              als <code>.agent/specs/&lt;slug&gt;/SPEC.md</code> mit Tasks als Checkboxen.
+              Backlog → Doing ist Deine Freigabe; der Agent arbeitet die Tasks ab
+              (<em>/spec-next</em> im Terminal).
             </NavEmpty>
           ) : (
-          <div className="space-y-0.5">
-            <NavRow
-              selected={planFilter === null}
-              onClick={() => setPlanFilter(null)}
-              trailing={<span className="font-mono text-[11px] opacity-70">{allTickets.length}</span>}
-            >
-              Alle Tickets
-            </NavRow>
-            {plansOnBoard.map((plan) => (
+            <div className="space-y-0.5">
               <NavRow
-                key={plan || "(ohne)"}
-                selected={planFilter === plan}
-                onClick={() => setPlanFilter(plan)}
-                trailing={
-                  <span className="font-mono text-[11px] opacity-70">
-                    {allTickets.filter((ticket) => (ticket.plan ?? "") === plan).length}
-                  </span>
-                }
+                selected={filter.kind === "all"}
+                onClick={() => setFilter({ kind: "all" })}
+                trailing={<span className="font-mono text-[11px] opacity-70">{live.length}</span>}
               >
-                {plan || "Ohne Plan"}
+                Alle Specs
               </NavRow>
-            ))}
-          </div>
+              {parents.map((parent) => (
+                <NavRow
+                  key={parent}
+                  selected={filter.kind === "parent" && filter.parent === parent}
+                  onClick={() => setFilter({ kind: "parent", parent })}
+                  trailing={
+                    <span className="font-mono text-[11px] opacity-70">
+                      {live.filter((spec) => spec.parent === parent).length}
+                    </span>
+                  }
+                >
+                  {parent}
+                </NavRow>
+              ))}
+              {archived.length > 0 ? (
+                <NavRow
+                  selected={filter.kind === "archive"}
+                  onClick={() => setFilter({ kind: "archive" })}
+                  trailing={<span className="font-mono text-[11px] opacity-70">{archived.length}</span>}
+                >
+                  Archiv
+                </NavRow>
+              ) : null}
+            </div>
           )}
         </NavigatorPortal>
-        <ActivePlanPanel project={project} planRefresh={planRefresh} />
         <div className="mb-2 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             {kpi && kpi.run_count > 0 ? (
               <button
                 onClick={() => setShowRuns((previous) => !previous)}
-                title="Agent-Läufe aus der Ticket-History"
+                title="Agent-Läufe aus der Spec-History"
                 className="rounded-full bg-slate-100 px-2.5 py-1 font-mono text-[11px] text-slate-600 hover:bg-slate-200"
               >
                 {kpi.run_count} {kpi.run_count === 1 ? "Lauf" : "Läufe"} · ↑
@@ -773,7 +841,7 @@ export default function BoardTab({
             onClick={() => setSheet(emptySheet("Backlog"))}
             className="rounded bg-slate-800 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-700"
           >
-            + Ticket
+            + Spec
           </button>
         </div>
         {showRuns && kpi ? (
@@ -782,7 +850,7 @@ export default function BoardTab({
               {kpi.recent.map((entry, index) => (
                 <li key={index} className="truncate" title={entry.summary}>
                   <span className="text-slate-400">{entry.timestamp.slice(0, 16)}</span>{" "}
-                  <span className="font-semibold">{entry.ticket_id}</span> · ↑
+                  <span className="font-semibold">{entry.spec_id}</span> · ↑
                   {abbreviate(entry.tokens_in)} ↓{abbreviate(entry.tokens_out)} ·{" "}
                   {formatDuration(entry.duration_ms)} · {entry.summary}
                 </li>
@@ -792,23 +860,36 @@ export default function BoardTab({
         ) : null}
         <div className="flex min-h-0 flex-1 gap-3">
           {STATIONS.map((station) => {
-            const inStation = tickets.filter((ticket) => ticket.station === station);
+            const inStation = specs.filter((spec) => spec.station === station);
             inStation.sort(station === "Backlog" ? backlogCompare : createdCompare);
+            const card = (spec: SpecEntry) => (
+              <SpecCard
+                key={spec.file}
+                spec={spec}
+                selected={selected === spec.file}
+                onSelect={() => setSelected(selected === spec.file ? null : spec.file)}
+                onEdit={() => {
+                  if (spec.archived) return;
+                  setSelected(spec.file);
+                  setSheet(sheetFor(spec));
+                }}
+              />
+            );
             return (
               <div
                 key={station}
                 onDragOver={(event) => {
-                  if (event.dataTransfer.types.includes("text/speccify-ticket")) {
+                  if (event.dataTransfer.types.includes("text/speccify-spec")) {
                     event.preventDefault();
                     event.dataTransfer.dropEffect = "move";
                   }
                 }}
                 onDrop={(event) => {
-                  const file = event.dataTransfer.getData("text/speccify-ticket");
+                  const file = event.dataTransfer.getData("text/speccify-spec");
                   if (file) {
                     event.preventDefault();
-                    const ticket = tickets.find((entry) => entry.file === file);
-                    if (ticket && ticket.station !== station) move(file, station);
+                    const spec = specs.find((entry) => entry.file === file);
+                    if (spec && spec.station !== station) move(file, station);
                   }
                 }}
                 className="flex min-h-0 flex-1 flex-col rounded-lg bg-slate-100 p-2"
@@ -817,75 +898,54 @@ export default function BoardTab({
                   {STATION_LABELS[station]} ({inStation.length})
                 </h2>
                 <div className="min-h-0 flex-1 space-y-2 overflow-y-auto">
-                  {station === "Done"
-                    ? groupDone(inStation).map(([plan, group]) => (
-                        <details key={plan} className="rounded-lg bg-slate-200/60 p-1.5">
+                  {station === "Done" && filter.kind === "all"
+                    ? groupDone(inStation).map(([parent, group]) => (
+                        <details key={parent} className="rounded-lg bg-slate-200/60 p-1.5" open>
                           <summary className="cursor-pointer px-1 text-[11px] font-semibold text-slate-500">
-                            {plan} ({group.length})
+                            {parent} ({group.length})
                           </summary>
-                          <div className="mt-1.5 space-y-2">
-                            {group.map((ticket) => (
-                              <TicketCard
-                                key={ticket.file}
-                                ticket={ticket}
-                                selected={selected === ticket.file}
-                                onSelect={() =>
-                                  setSelected(selected === ticket.file ? null : ticket.file)
-                                }
-                                onEdit={() => {
-                                  setSelected(ticket.file);
-                                  setSheet(sheetFor(ticket));
-                                }}
-                              />
-                            ))}
-                          </div>
+                          <div className="mt-1.5 space-y-2">{group.map(card)}</div>
                         </details>
                       ))
-                    : inStation.map((ticket) => (
-                        <TicketCard
-                          key={ticket.file}
-                          ticket={ticket}
-                          selected={selected === ticket.file}
-                          onSelect={() =>
-                            setSelected(selected === ticket.file ? null : ticket.file)
-                          }
-                          onEdit={() => {
-                            setSelected(ticket.file);
-                            setSheet(sheetFor(ticket));
-                          }}
-                        />
-                      ))}
+                    : inStation.map(card)}
                 </div>
               </div>
             );
           })}
         </div>
-        {selectedTicket ? (
+        {selectedSpec ? (
           <InspectorPortal tab="board">
-            <TicketDetail
-              ticket={selectedTicket}
+            <SpecDetail
+              spec={selectedSpec}
               history={history.data ?? []}
               questions={questions.data ?? []}
               onAnswer={(number, text) =>
                 void run(() =>
                   invoke("project_ticket_answer", {
                     project,
-                    file: selectedTicket.file,
+                    file: selectedSpec.file,
                     number,
                     text,
                   }),
                 )
               }
+              onToggleTask={(index, done) =>
+                void run(() =>
+                  invoke("project_spec_toggle_task", { project, file: selectedSpec.file, index, done }),
+                )
+              }
+              onArchive={() => void archive(selectedSpec.file)}
               busy={busy}
-              onEdit={() => setSheet(sheetFor(selectedTicket))}
+              onEdit={() => setSheet(sheetFor(selectedSpec))}
               onClose={() => setSelected(null)}
               inInspector={inspector.slot !== null}
             />
           </InspectorPortal>
         ) : null}
         {sheet ? (
-          <TicketSheet
+          <SpecSheet
             sheet={sheet}
+            parents={parents}
             onChange={setSheet}
             onSave={() => void saveSheet()}
             onDelete={() => void deleteSheet()}
@@ -899,13 +959,13 @@ export default function BoardTab({
   );
 }
 
-/** Done-Spalte nach `plan` gruppiert (fehlend = „Ohne Plan"), Gruppen sortiert. */
-function groupDone(tickets: TicketEntry[]): Array<[string, TicketEntry[]]> {
-  const groups = new Map<string, TicketEntry[]>();
-  for (const ticket of tickets) {
-    const key = ticket.plan ?? "Ohne Plan";
+/** Done-Spalte nach Ober-Spec gruppiert (fehlend = „Ohne Thema"), sortiert. */
+function groupDone(specs: SpecEntry[]): Array<[string, SpecEntry[]]> {
+  const groups = new Map<string, SpecEntry[]>();
+  for (const spec of specs) {
+    const key = spec.parent ?? "Ohne Thema";
     const group = groups.get(key) ?? [];
-    group.push(ticket);
+    group.push(spec);
     groups.set(key, group);
   }
   return [...groups.entries()].sort((a, b) => a[0].localeCompare(b[0]));

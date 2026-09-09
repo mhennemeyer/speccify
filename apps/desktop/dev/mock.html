@@ -19,28 +19,34 @@
         { name: "speccify-skills", location: "https://github.com/mhennemeyer/speccify-skills.git", kind: "git", scope: "global",
           path: "/Users/me/.speccify/sources/github.com-mhennemeyer-speccify-skills", state: "ready", detail: null },
       ];
+      // Specs (Plan spec-workflow.md): `.agent/specs/<slug>/SPEC.md`.
       const base = {
         assignee: null,
-        created: "2026-08-31T09:00:00Z",
+        created: "2026-08-31",
         ready: false,
         needs_human: false,
         order: null,
-        plan: "aufraeumen",
+        parent: "aufraeumen",
         open_question: null,
+        tasks_done: 0,
+        tasks_total: 0,
+        archived: false,
       };
       const tickets = [
         {
           ...base,
-          file: ".agent/board/notizen-zahlen.md",
+          file: ".agent/specs/notizen-zahlen/SPEC.md",
           id: "notizen-zahlen",
           title: "notes/zahlen.md mit Quadratzahlen 1–5 anlegen",
           station: "Doing",
           order: 1,
-          body: "## Scope\nEine Notiz `notes/zahlen.md` mit den Quadratzahlen 1–5 als Liste.\n\n## Akzeptanz\nDatei existiert, fünf Zeilen, Zahlen stimmen.",
+          tasks_done: 2,
+          tasks_total: 3,
+          body: "## Scope\nEine Notiz `notes/zahlen.md` mit den Quadratzahlen 1–5 als Liste.\n\n## Akzeptanz\nDatei existiert, fünf Zeilen, Zahlen stimmen.\n\n## Tasks\n\n- [x] Datei anlegen\n- [x] Zahlen eintragen\n- [ ] Prüfen und Verification schreiben",
         },
         {
           ...base,
-          file: ".agent/board/live-test.md",
+          file: ".agent/specs/live-test/SPEC.md",
           id: "live-test",
           title: "Live-Reload Beweisticket",
           station: "Doing",
@@ -50,16 +56,16 @@
         },
         {
           ...base,
-          file: ".agent/board/notizen-ordner.md",
+          file: ".agent/specs/notizen-ordner/SPEC.md",
           id: "notizen-ordner",
           title: "Ordner notes/ anlegen",
           station: "Done",
-          plan: "notizen",
+          parent: "notizen",
           body: "Erledigt.",
         },
       ];
       const questions = {
-        ".agent/board/live-test.md": [
+        ".agent/specs/live-test/SPEC.md": [
           {
             number: 1,
             open: true,
@@ -72,12 +78,12 @@
       };
       const history = {
         "notizen-zahlen": [
-          { timestamp: "2026-08-31T11:52:10Z", ticket_id: "notizen-zahlen", event_type: "agent_run", actor: "agent", summary: "Skill notizen-anlegen ausgeführt", tokens_in: 30000, tokens_out: 1500 },
-          { timestamp: "2026-08-31T11:50:02Z", ticket_id: "notizen-zahlen", event_type: "station_changed", actor: "agent", summary: "Backlog -> In Progress" },
-          { timestamp: "2026-08-31T11:49:30Z", ticket_id: "notizen-zahlen", event_type: "ticket_created", actor: "agent", summary: "aus Plan aufraeumen geschnitten" },
+          { timestamp: "2026-08-31T11:52:10Z", spec_id:"notizen-zahlen", event_type: "agent_run", actor: "agent", summary: "Skill notizen-anlegen ausgeführt", tokens_in: 30000, tokens_out: 1500 },
+          { timestamp: "2026-08-31T11:50:02Z", spec_id:"notizen-zahlen", event_type: "station_changed", actor: "agent", summary: "Backlog -> In Progress" },
+          { timestamp: "2026-08-31T11:49:30Z", spec_id:"notizen-zahlen", event_type: "spec_created", actor: "agent", summary: "aus Plan aufraeumen geschnitten" },
         ],
         "live-test": [
-          { timestamp: "2026-08-31T11:52:00Z", ticket_id: "live-test", event_type: "ticket_edited", actor: "user", summary: "Im Editor gespeichert" },
+          { timestamp: "2026-08-31T11:52:00Z", spec_id:"live-test", event_type: "ticket_edited", actor: "user", summary: "Im Editor gespeichert" },
         ],
       };
       const files = {
@@ -94,16 +100,14 @@
         project_current: () => project,
         project_watch_start: () => null,
         project_watch_stop: () => null,
-        project_workflow_status: () => ({ state: "current", installed_version: 1, current_version: 1, pending: [] }),
+        project_workflow_status: () => ({ state: "current", installed_version: 2, current_version: 2, pending: [] }),
         project_board: () => orEmpty(tickets),
         project_board_kpis: () => ({ run_count: 1, tokens_in: 30000, tokens_out: 1500, duration_ms: 120000, recent: [] }),
         project_ticket_history: ({ ticketId }) => history[ticketId] ?? [],
         project_ticket_questions: ({ file }) => questions[file] ?? [],
         project_ticket_answer: () => null,
-        project_plans: () => orEmpty([
-          { file: ".agent/plans/aufraeumen.md", title: "Plan: Aufräumen", lifecycle: "active", status: "läuft — Tickets geschnitten", escalation: null, archived: false },
-          { file: ".agent/plans/archive/notizen.md", title: "Notizen", lifecycle: "done", status: null, escalation: null, archived: true },
-        ]),
+        project_spec_toggle_task: () => null,
+        project_spec_archive: ({ file }) => file.replace("/specs/", "/specs/archive/2026-09-09-"),
         project_read_file: ({ file }) => files[file] ?? `# ${file}\n\n(leer)\n`,
         project_write_file: () => null,
         project_tree: ({ dir }) => {
@@ -138,7 +142,6 @@
           ],
           pending: [],
         }),
-        project_plan_create: ({ name }) => `.agent/plans/${name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.md`,
         project_playbook_create: ({ name }) => `.agent/playbooks/${name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.md`,
         project_playbook_delete: () => null,
         project_action_run: () => null,
