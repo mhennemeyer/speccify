@@ -1,6 +1,6 @@
 ---
-lifecycle: active
-status: Bauen — I1 (Dateibaum + Editor) seit 2026-09-06; Entscheide E1–E5 nach BO-Delegation getroffen (siehe unten)
+lifecycle: onHold
+status: I1 + I2 geliefert (2026-09-06), Linux-Builds + VM-Test (2026-09-09); I3 „Komfort nach Gebrauch" wartet auf Befunde — aktiv ist jetzt skill-quellen-und-export.md
 ---
 # Plan: IDE-Bausteine im Projektfenster
 

@@ -9,6 +9,47 @@ import {
   type ToolboxManifest,
 } from "../lib/toolbox";
 import { ActionButton, ErrorBox, LoadingBoundary, Spinner, useAsync } from "../components/ui";
+import { SourceAddForm, SourceRow } from "../components/SourcesPanel";
+import { listSources } from "../lib/sources";
+
+/// Globale Skill-Quellen (Plan skill-quellen-und-export.md, Q2): für die
+/// meisten reicht eine — Git-URL oder Ordner; Projekte ergänzen eigene.
+function SkillSourcesSection() {
+  const sources = useAsync(() => listSources(null), "skill-sources:global");
+  const entries = sources.data ?? [];
+  return (
+    <section className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+      <h3 className="text-sm font-semibold text-slate-700">Skill-Quellen</h3>
+      <p className="mb-3 mt-1 text-sm text-slate-600">
+        Repos oder Ordner, aus denen alle Projekte Skills importieren (und in die
+        sie exportieren) können. Git-Quellen werden einmal geklont und liegen
+        unter <code>~/.speccify/sources/</code>; Zugang läuft über dasselbe{" "}
+        <code>git</code> wie im Terminal. Projekte können in ihrem Skills-Tab
+        weitere Quellen anbinden.
+      </p>
+      <LoadingBoundary loading={sources.loading} error={sources.error} label="Quellen lesen…">
+        {entries.length === 0 ? (
+          <p className="mb-3 text-sm text-slate-500">
+            Noch keine Quelle — eine Git-URL (GitHub, GitLab, …) oder einen Ordner
+            eintragen. Ein Repo mit <code>skills/&lt;name&gt;/SKILL.md</code> reicht.
+          </p>
+        ) : (
+          <ul className="mb-3 space-y-2">
+            {entries.map((entry) => (
+              <SourceRow
+                key={entry.location}
+                source={entry}
+                removable
+                onChanged={() => sources.reload()}
+              />
+            ))}
+          </ul>
+        )}
+      </LoadingBoundary>
+      <SourceAddForm project={null} onAdded={() => sources.reload()} />
+    </section>
+  );
+}
 
 const KIND_LABEL: Record<ToolboxManifest["kind"], string> = {
   tool: "Tools",
@@ -85,6 +126,7 @@ export default function LibraryView() {
 
   return (
     <div className="space-y-6">
+      <SkillSourcesSection />
       <div className="flex flex-wrap items-center gap-2">
         <ActionButton
           onClick={reload}

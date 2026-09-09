@@ -31,10 +31,16 @@ never inside a dot-folder.
 
 ## Sources: skills you didn't write
 
-Skills and tools can come from a **Speccify source** — a skills repo.
-The skills tab's **Browse sources** mode shows the sources configured
-for this project (one or more; the default comes from the dashboard
-settings). The source's folder structure *is* the organization — its
+Skills and tools can come from a **Speccify source** — a skills repo
+or folder. Sources live in two places: the dashboard's **Library**
+holds the global ones every project sees (most people need just one),
+and the skills tab's **Browse sources** mode adds sources for this
+project only — a customer's GitLab, a private GitHub repo, a folder
+on disk. **+ Source** takes a Git URL or a folder. Git sources are
+cloned once into `~/.speccify/sources/` and pulled with **Refresh**;
+access goes through the same `git` your terminal uses (credential
+helper or SSH key), so private repos work without any extra setup in
+Speccify. The source's folder structure *is* the organization — its
 folders are the categories you browse. Pick a skill to preview it;
 **Import (expand)** in the inspector types the matching
 `speccify add … && speccify expand …` command into the agent

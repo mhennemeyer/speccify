@@ -16,6 +16,8 @@ interface AppSettings {
   working_dir: string | null;
   terminal_autostart_command: string;
   skill_library: string | null;
+  /** Globale Skill-Quellen — gepflegt in der Bibliothek, hier nur durchgereicht. */
+  skill_sources: string[];
   theme: string;
 }
 
@@ -148,34 +150,15 @@ export default function SettingsView() {
       </section>
 
       <section>
-        <h3 className="mb-2 text-sm font-semibold text-slate-700">Skill-Quelle (Default)</h3>
-        <p className="mb-2 text-sm text-slate-600">
-          Das Work-Repo, in dem eigene Skills und Tools definiert werden.
-          Projekte können in ihren Einstellungen eigene Quellen setzen
-          (Kundenprojekte mit eigenem Skill-Repo).
+        <h3 className="mb-2 text-sm font-semibold text-slate-700">Skill-Quellen</h3>
+        <p className="text-sm text-slate-600">
+          Repos und Ordner, aus denen Projekte Skills importieren, verwaltest Du
+          unter <strong>Bibliothek</strong> (Git-URL oder Ordner, global für alle
+          Projekte). Projekte binden im Skills-Tab weitere Quellen an.
+          {settings.skill_sources.length > 0
+            ? ` Aktuell: ${settings.skill_sources.length} Quelle${settings.skill_sources.length === 1 ? "" : "n"}.`
+            : ""}
         </p>
-        <div className="flex gap-2">
-          <input
-            value={settings.skill_library ?? ""}
-            onChange={(e) =>
-              setSettings({ ...settings, skill_library: e.target.value || null })
-            }
-            placeholder="~/Desktop/Work/speccify/skills"
-            className="w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm"
-            spellCheck={false}
-          />
-          <button
-            onClick={async () => {
-              const picked = await open({ directory: true, title: "Skill-Quelle wählen" });
-              if (typeof picked === "string") {
-                await save({ ...settings, skill_library: picked });
-              }
-            }}
-            className="shrink-0 rounded border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 hover:bg-slate-100"
-          >
-            Auswählen…
-          </button>
-        </div>
       </section>
 
       <section>

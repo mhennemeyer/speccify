@@ -14,19 +14,10 @@ use std::path::{Path, PathBuf};
 
 use serde::Serialize;
 
-use crate::project_cmd::resolve_project_root;
-
+/// Quelle → Ordner mit den Skills: Git-URLs über den verwalteten Checkout
+/// (sources_cmd, Q1), Ordner direkt.
 fn expand_source(raw: &str) -> Result<PathBuf, String> {
-    let trimmed = raw.trim();
-    let path = if let Some(rest) = trimmed.strip_prefix("~/") {
-        crate::settings::home_dir()?.join(rest)
-    } else {
-        PathBuf::from(trimmed)
-    };
-    if !path.is_dir() {
-        return Err(format!("Keine Quelle: {}", path.display()));
-    }
-    Ok(path)
+    crate::sources_cmd::resolve_location(raw)
 }
 
 #[derive(Serialize)]

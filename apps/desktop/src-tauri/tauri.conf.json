@@ -40,7 +40,7 @@
       "binaries/speccify-exec-mcp",
       "binaries/speccify-discovery-mcp",
       "binaries/speccify-parallels-mcp",
-      "binaries/uv"
+      "binaries/speccify-uv"
     ],
     "resources": [
       "resources/**/*"

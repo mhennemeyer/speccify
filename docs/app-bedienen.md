@@ -110,11 +110,15 @@ unten; im Editor ⌘S speichern, im Commit-Feld ⌘⏎ committen.
   Banner heißt: Der Agent hat den Plan eskaliert — lesen, handeln,
   **Auflösen**. *Als Prompt kopieren* gibt Pfad und Inhalt dem Agenten.
 - **Skills** — die expandierten Skills des Projekts samt Herkunft. Der
-  Modus **Quellen durchsuchen** zeigt Skill-Repos (Default aus den
-  Dashboard-Settings, weitere pro Projekt): Ordner sind Kategorien, die
-  Mitte die Vorschau, **Importieren (expand)** im Inspektor tippt das
-  passende `speccify`-Kommando ins Agent-Terminal — dort mit Enter
-  bestätigen.
+  Modus **Quellen durchsuchen** zeigt Skill-Repos: globale aus der
+  Dashboard-**Bibliothek** und weitere nur für dieses Projekt (**+ Quelle**
+  nimmt eine Git-URL — GitHub, GitLab, auch privat — oder einen Ordner).
+  Git-Quellen werden einmal nach `~/.speccify/sources/` geklont und mit
+  **Aktualisieren** nachgezogen; den Zugang regelt dasselbe `git` wie im
+  Terminal (Credential-Helper oder SSH-Schlüssel). Ordner sind
+  Kategorien, die Mitte die Vorschau, **Importieren (expand)** im Inspektor
+  tippt das passende `speccify`-Kommando ins Agent-Terminal — dort mit
+  Enter bestätigen.
 
 **Bearbeiten:** *Bearbeiten* im Inspektor oder **Doppelklick** auf den
 Listeneintrag oder den Inhalt. Der Editor speichert von selbst — jeder
@@ -188,8 +192,11 @@ macht es genauso (*Settings → Agent-Sitzung*).
 - **Server** — die lokalen MCP-Server starten/stoppen.
 - **Agents** — die globale Konfiguration von Claude Code und Codex
   editieren (Settings-Dateien und globale Anweisungen).
-- **Settings** — Erscheinungsbild, Agent-Sitzung, Working Dir,
-  Terminal-Autostart und die Default-Skill-Quelle.
+- **Bibliothek** — oben die **Skill-Quellen** für alle Projekte (Git-URL
+  oder Ordner; hinzufügen, aktualisieren, entfernen), darunter die
+  Toolbox-Manifeste.
+- **Settings** — Erscheinungsbild, Agent-Sitzung, Working Dir und
+  Terminal-Autostart.
 
 ## Wenn etwas nicht geht
 

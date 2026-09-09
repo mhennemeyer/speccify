@@ -7,8 +7,9 @@
 
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import Markdown, { stripFrontmatter } from "../../components/Markdown";
+import { SourceAddForm, SourceRow } from "../../components/SourcesPanel";
+import { listSources, type SourceInfo } from "../../lib/sources";
 import { LoadingBoundary, useAsync } from "../../components/ui";
 import {
   InspectorButton,
@@ -34,11 +35,6 @@ export interface SkillEntry {
   } | null;
 }
 
-interface SkillSources {
-  default: string | null;
-  sources: string[];
-}
-
 interface BrowseSkill {
   name: string;
   category: string;
@@ -47,26 +43,23 @@ interface BrowseSkill {
   id: string | null;
 }
 
-function importCommand(skill: BrowseSkill, source: string): string | null {
+/// `--library` ist der Ordner mit den Skills — bei Git-Quellen der Checkout
+/// (D1); die Herkunfts-URL folgt in Q5.
+function importCommand(skill: BrowseSkill, library: string): string | null {
   if (!skill.id) return null;
-  return `speccify add ${skill.id} --library "${source}" && speccify expand ${skill.name} --library "${source}"`;
+  return `speccify add ${skill.id} --library "${library}" && speccify expand ${skill.name} --library "${library}"`;
 }
 
 function SourceBrowser({ project }: { project: string }) {
-  const config = useAsync(
-    () => invoke<SkillSources>("project_skill_sources", { project }),
-    `skill-sources:${project}`,
-  );
+  const config = useAsync(() => listSources(project), `skill-sources:${project}`);
   const [source, setSource] = useState<string | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [adding, setAdding] = useState(false);
 
-  const all = [
-    ...(config.data?.default ? [config.data.default] : []),
-    ...(config.data?.sources ?? []),
-  ];
-  const activeSource = source ?? all[0] ?? null;
+  const all: SourceInfo[] = config.data ?? [];
+  const active = all.find((entry) => entry.location === source) ?? all[0] ?? null;
+  const activeSource = active?.location ?? null;
 
   const skills = useAsync(
     () =>
@@ -83,40 +76,9 @@ function SourceBrowser({ project }: { project: string }) {
     `source-skill:${activeSource ?? ""}:${selected ?? ""}`,
   );
 
-  const addSource = async () => {
-    setError(null);
-    const picked = await openDialog({ directory: true, title: "Skill-Quelle wählen" });
-    if (typeof picked !== "string") return;
-    try {
-      const normalized = await invoke<string>("source_validate", { source: picked });
-      const next = [...(config.data?.sources ?? [])];
-      if (!next.includes(normalized)) next.push(normalized);
-      await invoke("project_settings_set", {
-        project,
-        key: "speccify.sources",
-        value: next,
-      });
-      await config.reload();
-      setSource(normalized);
-    } catch (e) {
-      setError(String(e));
-    }
-  };
-
-  const removeSource = async (entry: string) => {
-    const next = (config.data?.sources ?? []).filter((known) => known !== entry);
-    await invoke("project_settings_set", {
-      project,
-      key: "speccify.sources",
-      value: next.length > 0 ? next : null,
-    });
-    await config.reload();
-    if (source === entry) setSource(null);
-  };
-
   const importSkill = (skill: BrowseSkill) => {
-    if (!activeSource) return;
-    const command = importCommand(skill, activeSource);
+    if (!active?.path) return;
+    const command = importCommand(skill, active.path);
     if (!command) {
       setNotice(
         `${skill.name} hat kein metadata.speccify.scope — ohne Id kann speccify add nicht adressieren. Skill von Hand übernehmen oder scope ergänzen.`,
@@ -139,48 +101,76 @@ function SourceBrowser({ project }: { project: string }) {
   return (
     <div className="flex h-full min-h-0 flex-col">
       <NavigatorPortal tab="skills" fallback={(children) => children}>
-      <div className="mb-2 flex flex-wrap items-center gap-2">
-        <select
-          value={activeSource ?? ""}
-          onChange={(event) => {
-            setSource(event.target.value || null);
-            setSelected(null);
-          }}
-          className="w-full min-w-0 max-w-md rounded border border-slate-300 px-2 py-1.5 font-mono text-xs"
-        >
-          {all.length === 0 ? <option value="">— keine Quelle —</option> : null}
-          {all.map((entry) => (
-            <option key={entry} value={entry}>
-              {entry}
-              {entry === config.data?.default ? "  (Default)" : ""}
-            </option>
-          ))}
-        </select>
-        <button
-          onClick={() => void addSource()}
-          className="rounded border border-slate-300 px-2.5 py-1.5 text-xs text-slate-600 hover:bg-slate-100"
-        >
-          + Quelle
-        </button>
-        {activeSource && activeSource !== config.data?.default ? (
-          <button
-            onClick={() => void removeSource(activeSource)}
-            className="rounded px-2 py-1.5 text-xs text-slate-400 hover:text-red-600"
+      <div className="mb-2 space-y-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <select
+            value={activeSource ?? ""}
+            onChange={(event) => {
+              setSource(event.target.value || null);
+              setSelected(null);
+            }}
+            className="min-w-0 flex-1 rounded border border-slate-300 px-2 py-1.5 text-xs"
           >
-            Quelle entfernen
+            {all.length === 0 ? <option value="">— keine Quelle —</option> : null}
+            {all.map((entry) => (
+              <option key={entry.location} value={entry.location}>
+                {entry.name} · {entry.scope === "project" ? "Projekt" : "global"}
+                {entry.kind === "git" ? " · Git" : ""}
+                {entry.state !== "ready" ? " · nicht geklont" : ""}
+              </option>
+            ))}
+          </select>
+          <button
+            onClick={() => setAdding((value) => !value)}
+            className="rounded border border-slate-300 px-2.5 py-1.5 text-xs text-slate-600 hover:bg-slate-100"
+            title="Git-URL oder Ordner für dieses Projekt anbinden"
+          >
+            {adding ? "Abbrechen" : "+ Quelle"}
           </button>
+        </div>
+        {adding ? (
+          <SourceAddForm
+            compact
+            project={project}
+            onAdded={async (added) => {
+              setAdding(false);
+              await config.reload();
+              setSource(added.location);
+              setSelected(null);
+            }}
+          />
+        ) : null}
+        {active ? (
+          <ul>
+            <SourceRow
+              source={active}
+              project={project}
+              removable={active.scope === "project"}
+              onChanged={async () => {
+                await config.reload();
+                setSelected(null);
+                await skills.reload();
+              }}
+            />
+          </ul>
         ) : null}
       </div>
       </NavigatorPortal>
       {notice ? (
         <p className="mb-2 rounded bg-sky-50 px-3 py-2 text-xs text-sky-800">{notice}</p>
       ) : null}
-      {error ? <p className="mb-2 text-xs text-red-600">{error}</p> : null}
       {all.length === 0 ? (
-        <p className="text-sm text-slate-500">
-          Keine Skill-Quelle — Default in den Dashboard-Settings setzen oder hier
-          mit „+ Quelle" ein Repo wählen (Projekt-Einstellung, D21).
-        </p>
+        <NavigatorPortal tab="skills" fallback={(children) => children}>
+          <NavEmpty
+            title="Keine Skill-Quelle"
+            action={{ label: "+ Quelle für dieses Projekt", onClick: () => setAdding(true) }}
+          >
+            Ein Repo (GitHub, GitLab, …) oder ein Ordner mit{" "}
+            <code>skills/&lt;name&gt;/SKILL.md</code>. Global für alle Projekte im
+            Dashboard unter <strong>Bibliothek</strong>, oder hier nur für dieses
+            Projekt.
+          </NavEmpty>
+        </NavigatorPortal>
       ) : (
         <div className="flex min-h-0 flex-1 gap-4">
           <NavigatorPortal tab="skills">
@@ -234,7 +224,15 @@ function SourceBrowser({ project }: { project: string }) {
                         title={skill.name}
                         subtitle={selected}
                         meta={[
-                          { label: "Quelle", value: <span className="font-mono">{activeSource}</span> },
+                          {
+                            label: "Quelle",
+                            value: (
+                              <span>
+                                {active?.name}{" "}
+                                <span className="font-mono text-xs text-slate-500">{activeSource}</span>
+                              </span>
+                            ),
+                          },
                           { label: "Kategorie", value: skill.category || "— (Wurzel)" },
                           {
                             label: "Id",

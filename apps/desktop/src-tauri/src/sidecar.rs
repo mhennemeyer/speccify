@@ -89,6 +89,17 @@ pub fn resolve(command: &str) -> (Option<PathBuf>, BinarySource) {
     resolve_in(command, bundle_dir().as_deref(), &dirs)
 }
 
+/// `uv`: der gebündelte Sidecar heißt `speccify-uv` (Linux-Pakete legen
+/// Sidecars nach /usr/bin, ein System-uv darf dabei nicht überschrieben
+/// werden); fällt auf ein `uv` im PATH zurück.
+pub fn resolve_uv() -> (Option<PathBuf>, BinarySource) {
+    let bundled = resolve("speccify-uv");
+    if bundled.0.is_some() {
+        return bundled;
+    }
+    resolve("uv")
+}
+
 /// Für den Prozess-Start: aufgelöster Pfad, sonst das Kommando unverändert
 /// (dann meldet der Spawn selbst einen aussagekräftigen Fehler).
 pub fn command_for_spawn(command: &str) -> PathBuf {

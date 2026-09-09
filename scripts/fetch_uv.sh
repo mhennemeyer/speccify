@@ -37,7 +37,10 @@ done
 
 TRIPLE="$(rustc -vV | awk '/^host: /{print $2}')"
 TARGET_DIR="$REPO_ROOT/apps/desktop/src-tauri/binaries"
-TARGET="$TARGET_DIR/uv-$TRIPLE"
+# Heißt im Bundle `speccify-uv`: Linux-Pakete legen Sidecars nach /usr/bin,
+# und dort darf kein System-uv überschrieben werden (Befund Linux-VM 2026-09-09).
+TARGET="$TARGET_DIR/speccify-uv-$TRIPLE"
+rm -f "$TARGET_DIR/uv-$TRIPLE"
 STAMP="$TARGET_DIR/.uv-version"
 
 if [[ "$FORCE" -eq 0 && -x "$TARGET" && "$(cat "$STAMP" 2>/dev/null || true)" == "$UV_VERSION" ]]; then

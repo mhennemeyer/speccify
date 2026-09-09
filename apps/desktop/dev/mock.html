@@ -12,6 +12,13 @@
       // ?empty=1 → alle Listen leer (Leerzustände prüfen)
       const EMPTY = new URLSearchParams(location.search).has("empty");
       const orEmpty = (value) => (EMPTY ? (Array.isArray(value) ? [] : value) : value);
+      // Skill-Quellen (Q1): eine globale Git-Quelle + eine Projekt-Quelle als Ordner.
+      const SOURCES = [
+        { name: "skills", location: "/Users/me/Work/speccify/skills", kind: "dir", scope: "project",
+          path: "/Users/me/Work/speccify/skills", state: "ready", detail: null },
+        { name: "speccify-skills", location: "https://github.com/mhennemeyer/speccify-skills.git", kind: "git", scope: "global",
+          path: "/Users/me/.speccify/sources/github.com-mhennemeyer-speccify-skills", state: "ready", detail: null },
+      ];
       const base = {
         assignee: null,
         created: "2026-08-31T09:00:00Z",
@@ -156,6 +163,23 @@
         project_action_upsert: () => null,
         project_agent_files: () => orEmpty(["CLAUDE.md", ".agent/agent.md"]),
         project_skill_sources: () => ({ default: "/Users/me/Work/speccify/skills", sources: [] }),
+        sources_list: (a) => EMPTY ? [] : SOURCES.filter((s) => a.project || s.scope === "global"),
+        source_add: (a) => {
+          const git = /^(https?|ssh|git|file):\/\/|^git@|\.git$/.test(a.location);
+          const name = a.location.replace(/\/+$/, "").replace(/\.git$/, "").split(/[\/:]/).pop();
+          const entry = { name, location: a.location, kind: git ? "git" : "dir", scope: a.project ? "project" : "global",
+            path: git ? "/Users/me/.speccify/sources/" + name : a.location, state: "ready", detail: null };
+          SOURCES.push(entry);
+          return entry;
+        },
+        source_browse: () => orEmpty([
+          { name: "release", category: "", file: "release/SKILL.md", description: "Release-Ablauf mit Tag und Notizen.", id: "@acme/release" },
+          { name: "push-setup", category: "mobil/ios", file: "mobil/ios/push-setup/SKILL.md", description: "Push-Benachrichtigungen einrichten.", id: "@acme/push-setup" },
+          { name: "notizen", category: "mobil/ios", file: "mobil/ios/notizen/SKILL.md", description: "Ohne scope — nur von Hand.", id: null },
+        ]),
+        source_skill_read: (a) => `---\nname: ${a.file.split("/").slice(-2, -1)[0]}\n---\n# ${a.file}\n\nWann: immer.\n\n## Vorgehen\n\n1. Erst lesen.\n2. Dann tun.\n`,
+        source_remove: (a) => { const i = SOURCES.findIndex((s) => s.location === a.location); if (i >= 0) SOURCES.splice(i, 1); return null; },
+        source_refresh: (a) => SOURCES.find((s) => s.location === a.location) ?? null,
         project_platform: () => "macos",
         project_mcps: () => EMPTY
           ? { claude_servers: null, codex_servers: null, claude_allow: [], claude_allow_local: [] }
@@ -165,7 +189,7 @@
           { slug: "toolkit", title: "Toolkit", description: "Werkzeuge", source_path: "docs/toolkit.md" },
         ]),
         help_doc: () => "# Die App bedienen\n\nText.\n",
-        get_settings: () => ({ working_dir: null, terminal_autostart_command: "claude", skill_library: null, theme: "light" }),
+        get_settings: () => ({ working_dir: null, terminal_autostart_command: "claude", skill_library: null, theme: "light", skill_sources: SOURCES.filter((s) => s.scope === "global").map((s) => s.location) }),
         save_settings: () => null,
         terminal_open: () => project,
         terminal_write: () => null,
@@ -177,10 +201,14 @@
       };
       let callbackId = 0;
       window.__TAURI_INTERNALS__ = {
-        metadata: {
-          currentWindow: { label: "project-mock" },
-          currentWebview: { label: "project-mock", windowLabel: "project-mock" },
-        },
+        // ?dashboard=1 → Hauptfenster (Label "main") statt Projektfenster.
+        metadata: (() => {
+          const label = new URLSearchParams(location.search).has("dashboard") ? "main" : "project-mock";
+          return {
+            currentWindow: { label },
+            currentWebview: { label, windowLabel: label },
+          };
+        })(),
         transformCallback(callback) {
           const id = ++callbackId;
           window[`_${id}`] = callback;

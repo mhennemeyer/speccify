@@ -125,6 +125,16 @@ fn find_all(binary: &str) -> Vec<PathBuf> {
             found.push(candidate);
         }
     }
+    // Der gebündelte uv heißt `speccify-uv` (siehe sidecar::resolve_uv) und
+    // zählt für den Doctor als vorhandenes uv.
+    if binary == "uv" {
+        if let (Some(bundled), _) = crate::sidecar::resolve("speccify-uv") {
+            let resolved = bundled.canonicalize().unwrap_or_else(|_| bundled.clone());
+            if resolved_seen.insert(resolved) {
+                found.push(bundled);
+            }
+        }
+    }
     found
 }
 

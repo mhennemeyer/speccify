@@ -18,6 +18,11 @@ pub struct AppSettings {
     /// (Plan projektfenster.md, W7c). Die Auswertung macht das Frontend.
     #[serde(default = "default_theme")]
     pub theme: String,
+    /// Globale Skill-Quellen (Plan skill-quellen-und-export.md, D2):
+    /// Git-URLs oder Ordner. `skill_library` wird beim Lesen zum ersten
+    /// Eintrag migriert und bleibt als Feld für ältere Stände.
+    #[serde(default)]
+    pub skill_sources: Vec<String>,
 }
 
 fn default_theme() -> String {
@@ -30,6 +35,7 @@ impl Default for AppSettings {
             working_dir: None,
             skill_library: None,
             theme: default_theme(),
+            skill_sources: Vec::new(),
             terminal_autostart_command: if cfg!(windows) {
                 "claude.cmd".into()
             } else {
@@ -55,10 +61,21 @@ fn settings_path() -> Result<PathBuf, String> {
 pub fn get_settings() -> Result<AppSettings, String> {
     let path = settings_path()?;
     match std::fs::read_to_string(&path) {
-        Ok(text) => serde_json::from_str(&text)
+        Ok(text) => serde_json::from_str::<AppSettings>(&text)
+            .map(migrate_skill_library)
             .map_err(|e| format!("{} ist kein gültiges Settings-JSON: {e}", path.display())),
         Err(_) => Ok(AppSettings::default()),
     }
+}
+
+/// `skill_library` (ein Pfad) → erster Eintrag von `skill_sources`.
+pub(crate) fn migrate_skill_library(mut settings: AppSettings) -> AppSettings {
+    if let Some(library) = settings.skill_library.as_deref().map(str::trim) {
+        if !library.is_empty() && !settings.skill_sources.iter().any(|s| s.trim() == library) {
+            settings.skill_sources.insert(0, library.to_string());
+        }
+    }
+    settings
 }
 
 #[tauri::command]

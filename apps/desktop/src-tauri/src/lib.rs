@@ -24,6 +24,7 @@ mod project_watch;
 mod settings;
 mod sidecar;
 mod skill_sources;
+mod sources_cmd;
 mod system_cmd;
 mod terminal;
 mod toolbox_cmd;
@@ -279,6 +280,10 @@ pub fn run() {
             skill_sources::source_browse,
             skill_sources::source_skill_read,
             skill_sources::source_validate,
+            sources_cmd::sources_list,
+            sources_cmd::source_add,
+            sources_cmd::source_remove,
+            sources_cmd::source_refresh,
             plan_cmd::project_plan_activate,
             plan_cmd::project_plan_archive,
             plan_cmd::project_plan_resolve_escalation,

@@ -138,7 +138,7 @@ pub fn engine_status(app: AppHandle) -> Result<EngineStatus, String> {
         installed_hash,
         python_version: payload.map(|p| p.python),
         venv_dir: venv.display().to_string(),
-        uv_source: sidecar::resolve("uv").1,
+        uv_source: sidecar::resolve_uv().1,
     })
 }
 
@@ -206,7 +206,7 @@ pub fn engine_install(app: AppHandle) -> Result<EngineStatus, String> {
     let resources = resources_dir(&app)
         .ok_or("Kein Engine-Payload im App-Bundle — `./scripts/build_engine_payload.sh` vor dem Build ausführen.")?;
     let payload = read_payload(&resources)?;
-    let uv = sidecar::resolve("uv")
+    let uv = sidecar::resolve_uv()
         .0
         .ok_or("`uv` nicht gefunden — im Umgebungs-Tab installieren (brew install uv).")?;
 
