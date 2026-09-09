@@ -10,9 +10,19 @@ on:
 
 jobs:
   bundle:
-    name: Linux (x86_64) bundles as artifacts
-    runs-on: ubuntu-22.04
+    name: Linux (${{ matrix.arch }}) bundles as artifacts
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            runner: ubuntu-22.04
+          # ARM64 für Linux-VMs auf Apple-Silicon-Macs (BO-Test 2026-09-09);
+          # GitHub stellt ARM-Runner für öffentliche Repos kostenlos.
+          - arch: arm64
+            runner: ubuntu-22.04-arm
 
     steps:
       - name: Checkout
@@ -75,7 +85,7 @@ jobs:
       - name: Upload bundles
         uses: actions/upload-artifact@v4
         with:
-          name: speccify-linux-x86_64
+          name: speccify-linux-${{ matrix.arch }}
           path: |
             target/release/bundle/appimage/*.AppImage
             target/release/bundle/deb/*.deb
