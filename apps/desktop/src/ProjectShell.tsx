@@ -41,6 +41,9 @@ import {
   saveLayout,
   type ProjectLayout,
 } from "./lib/layout";
+import { DEFAULT_TOOLBAR_BUILTINS, TOOLBAR_BUILTINS } from "./lib/layout";
+import { requestGit } from "./lib/git";
+import { GitIcon, TerminalIcon } from "./components/Toolbar";
 import ActionsTab from "./views/project/ActionsTab";
 import AgentTab from "./views/project/AgentTab";
 import BoardTab from "./views/project/BoardTab";
@@ -237,12 +240,13 @@ export default function ProjectShell() {
 
   useEffect(() => {
     if (!project) return;
+    // Alle startbaren Aktionen — welche in der Toolbar stehen, entscheidet
+    // die Toolbar-Konfiguration (I3), Default: die mit `toolbar: true`.
     void invoke<{ actions: ToolbarAction[] }>("project_actions", { project })
       .then((snapshot) =>
         setToolbarActions(
           snapshot.actions.filter(
             (action) =>
-              action.toolbar &&
               action.confirmed &&
               action.target === "local" &&
               !action.command.startsWith("toolui:"),
@@ -381,20 +385,75 @@ export default function ProjectShell() {
       : { gridColumn: 3, gridRow: 5 };
 
   const activeGroup = groupOf(active);
-  const toolbarItems: ToolbarItem[] = toolbarActions.map((action) => ({
-    id: action.command,
-    title: `${action.name} — ${action.command}`,
-    label: action.name,
-    icon: <PlayIcon />,
-    onClick: () => {
-      if (action.inputs && action.inputs.length > 0) {
-        // Mit Eingaben: im Aktionen-Tab ausfüllen und starten.
-        activateTab("actions");
-        return;
-      }
-      window.dispatchEvent(new CustomEvent("speccify:run-action", { detail: action.command }));
-    },
-  }));
+  // Toolbar (I3): eingebaute Knöpfe + Aktionen, Auswahl und Reihenfolge aus
+  // dem Layout (`toolbar`), Default = Git-Knöpfe + Aktionen mit `toolbar: true`.
+  const showTerminal = () => {
+    if (!terminalStarted) startTerminal(false);
+    updateLayout(
+      terminalDock === "bottom"
+        ? { bottomShown: true }
+        : { rightShown: true, rightTab: "terminal" },
+    );
+  };
+  const builtinItems: Record<string, ToolbarItem> = Object.fromEntries(
+    TOOLBAR_BUILTINS.map((item) => [
+      item.id,
+      {
+        id: item.id,
+        title: item.title,
+        label: item.label,
+        icon: item.id === "terminal" ? <TerminalIcon /> : <GitIcon />,
+        onClick: () => {
+          if (item.id === "terminal") showTerminal();
+          else if (item.id === "git-commit") {
+            activateTab("git");
+            requestGit("commit");
+          } else if (item.id === "git-pull") {
+            activateTab("git");
+            requestGit("pull");
+          } else if (item.id === "git-push") {
+            activateTab("git");
+            requestGit("push");
+          }
+        },
+      },
+    ]),
+  );
+  const actionItems: Record<string, ToolbarItem> = Object.fromEntries(
+    toolbarActions.map((action) => [
+      `action:${action.command}`,
+      {
+        id: `action:${action.command}`,
+        title: `${action.name} — ${action.command}`,
+        label: action.name,
+        icon: <PlayIcon />,
+        onClick: () => {
+          if (action.inputs && action.inputs.length > 0) {
+            // Mit Eingaben: im Aktionen-Tab ausfüllen und starten.
+            activateTab("actions");
+            return;
+          }
+          window.dispatchEvent(new CustomEvent("speccify:run-action", { detail: action.command }));
+        },
+      },
+    ]),
+  );
+  const defaultToolbar = [
+    ...DEFAULT_TOOLBAR_BUILTINS,
+    ...toolbarActions.filter((action) => action.toolbar).map((action) => `action:${action.command}`),
+  ];
+  const toolbarIds = layout.toolbar ?? defaultToolbar;
+  const toolbarItems: ToolbarItem[] = toolbarIds
+    .map((id) => builtinItems[id] ?? actionItems[id])
+    .filter((item): item is ToolbarItem => Boolean(item));
+  const toolbarChoices = [
+    ...TOOLBAR_BUILTINS.map((item) => ({ id: item.id, label: item.label, hint: item.title })),
+    ...toolbarActions.map((action) => ({
+      id: `action:${action.command}`,
+      label: action.name,
+      hint: action.command,
+    })),
+  ];
 
   const dockLabel = terminalDock === "right" ? "⬓ nach unten" : "⬔ nach rechts";
   const toggleDock = () =>
@@ -771,7 +830,10 @@ export default function ProjectShell() {
             )
           }
           onResumeAgent={(value) => updateLayout({ resumeAgent: value })}
-          onResetLayout={() => updateLayout({ ...DEFAULT_LAYOUT })}
+          toolbar={toolbarIds}
+          toolbarChoices={toolbarChoices}
+          onToolbar={(ids) => updateLayout({ toolbar: ids })}
+          onResetLayout={() => updateLayout({ ...DEFAULT_LAYOUT, toolbar: undefined })}
           onClose={() => setSettingsOpen(false)}
         />
       ) : null}

@@ -1,14 +1,43 @@
-// Git-Tab (Plan ide-im-projektfenster.md, I2): Status, Diff, Stagen,
-// Commit, Log — über das System-git (git_cmd.rs). Pull/Push laufen mit
-// Live-Ausgabe über die Aktions-Mechanik (project_action_run, run_id
+// Git-Tab (Plan ide-im-projektfenster.md, I2 + I3): Status, Diff mit
+// Hunk-Staging, Stagen, Verwerfen, Commit, Log mit Commit-Details, Datei-
+// Historie, Branches — über das System-git (git_cmd.rs). Pull/Push laufen
+// mit Live-Ausgabe über die Aktions-Mechanik (project_action_run, run_id
 // „git:…") und erscheinen in der Aktivitätsanzeige. Navigator: Branch +
-// Änderungen; Mitte: Commit-Box, Diff, Log; Inspektor: die gewählte Datei.
+// Änderungen; Mitte: Diff, Ausgabe, Log; Inspektor: Auswahl mit Tabs.
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
+import DiffView from "../../components/DiffView";
 import { beginActivity, endActivity, trackActivity } from "../../lib/activity";
+import {
+  type GitBranch,
+  type GitCommit,
+  type GitCommitDetail,
+  type GitEntry,
+  type GitStatus,
+  STATUS_LABEL,
+  entryLabel,
+  gitApplyPatch,
+  gitBranches,
+  gitCommit,
+  gitCommitDetail,
+  gitCommitDiff,
+  gitDiff,
+  gitDiscard,
+  gitFileLog,
+  gitInit,
+  gitLog,
+  gitStage,
+  gitStatus,
+  gitSwitch,
+  hunkPatch,
+  isStaged,
+  isUnstaged,
+  parseDiff,
+  shortDate,
+} from "../../lib/git";
 import { fencedPrompt } from "../../lib/prompt";
 import {
   InspectorButton,
@@ -21,85 +50,68 @@ import {
   useInspector,
 } from "../../lib/panels";
 
-interface GitEntry {
-  path: string;
-  index: string;
-  worktree: string;
-  untracked: boolean;
-  conflicted: boolean;
-  renamed_from: string | null;
-}
-
-interface GitStatus {
-  repo: boolean;
-  branch: string | null;
-  upstream: string | null;
-  ahead: number;
-  behind: number;
-  entries: GitEntry[];
-  error: string | null;
-}
-
-interface GitCommit {
-  hash: string;
-  short: string;
-  author: string;
-  date: string;
-  subject: string;
-}
-
 interface Selection {
   path: string;
   staged: boolean;
 }
 
-const STATUS_LABEL: Record<string, string> = {
-  M: "geändert",
-  A: "neu",
-  D: "gelöscht",
-  R: "umbenannt",
-  C: "kopiert",
-  T: "Typ geändert",
-  U: "Konflikt",
-  "?": "unversioniert",
-};
-
-function label(entry: GitEntry, staged: boolean): string {
-  if (entry.conflicted) return "Konflikt";
-  if (entry.untracked) return "unversioniert";
-  const code = staged ? entry.index : entry.worktree;
-  return STATUS_LABEL[code] ?? code;
+interface RunState {
+  id: string;
+  lines: string[];
+  running: boolean;
+  exit: number | null;
 }
 
-function isStaged(entry: GitEntry): boolean {
-  return !entry.untracked && !entry.conflicted && entry.index !== ".";
-}
-
-function isUnstaged(entry: GitEntry): boolean {
-  return entry.untracked || entry.conflicted || entry.worktree !== ".";
-}
-
-function DiffView({ text }: { text: string }) {
-  if (!text.trim()) return <p className="p-4 text-xs text-slate-400">Kein Unterschied.</p>;
+function HunkButton({ children, onClick, disabled, title }: { children: string; onClick: () => void; disabled?: boolean; title?: string }) {
   return (
-    <pre className="overflow-auto p-3 font-mono text-[11.5px] leading-5">
-      {text.split("\n").map((line, index) => {
-        const tone = line.startsWith("+++") || line.startsWith("---")
-          ? "text-slate-500"
-          : line.startsWith("+")
-            ? "bg-emerald-50 text-emerald-800"
-            : line.startsWith("-")
-              ? "bg-red-50 text-red-800"
-              : line.startsWith("@@")
-                ? "text-sky-700"
-                : "text-slate-700";
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      title={title}
+      className="rounded border border-slate-300 bg-white px-1.5 py-0 text-[10px] text-slate-600 hover:bg-slate-100 disabled:opacity-40"
+    >
+      {children}
+    </button>
+  );
+}
+
+function CommitList({
+  commits,
+  selected,
+  onSelect,
+  empty,
+}: {
+  commits: GitCommit[];
+  selected: string | null;
+  onSelect: (hash: string) => void;
+  empty: string;
+}) {
+  if (commits.length === 0) return <p className="text-xs text-slate-400">{empty}</p>;
+  return (
+    <ul className="space-y-0.5 text-xs">
+      {commits.map((entry) => {
+        const active = selected === entry.hash;
         return (
-          <div key={index} className={`whitespace-pre ${tone}`}>
-            {line || " "}
-          </div>
+          <li key={entry.hash}>
+            <button
+              onClick={() => onSelect(entry.hash)}
+              className={`flex w-full gap-2 rounded px-1.5 py-1 text-left ${
+                active ? "bg-slate-800 text-white" : "hover:bg-slate-100"
+              }`}
+              title={`${entry.short} · ${entry.author} · ${shortDate(entry.date)}`}
+            >
+              <span className={`shrink-0 font-mono ${active ? "text-slate-300" : "text-slate-400"}`}>
+                {entry.short}
+              </span>
+              <span className="min-w-0 flex-1 truncate">{entry.subject}</span>
+              <span className={`shrink-0 ${active ? "text-slate-300" : "text-slate-400"}`}>
+                {entry.date.slice(0, 10)}
+              </span>
+            </button>
+          </li>
         );
       })}
-    </pre>
+    </ul>
   );
 }
 
@@ -117,12 +129,24 @@ export default function GitTab({
 }) {
   const [status, setStatus] = useState<GitStatus | null>(null);
   const [log, setLog] = useState<GitCommit[]>([]);
+  const [branches, setBranches] = useState<GitBranch[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<Selection | null>(null);
   const [diff, setDiff] = useState<string>("");
+  // Datei-Historie der Auswahl + der dort gewählte Commit (Diff dieser Datei).
+  const [fileHistory, setFileHistory] = useState<GitCommit[]>([]);
+  const [historyCommit, setHistoryCommit] = useState<string | null>(null);
+  const [historyDiff, setHistoryDiff] = useState<string>("");
+  // Commit aus dem Log: Details im Inspektor, Diff in der Mitte.
+  const [selectedCommit, setSelectedCommit] = useState<string | null>(null);
+  const [commitDetail, setCommitDetail] = useState<GitCommitDetail | null>(null);
+  const [commitFile, setCommitFile] = useState<string | null>(null);
+  const [commitDiff, setCommitDiff] = useState<string>("");
   const [message, setMessage] = useState("");
+  const [newBranch, setNewBranch] = useState("");
   const [busy, setBusy] = useState(false);
-  const [run, setRun] = useState<{ id: string; lines: string[]; running: boolean; exit: number | null } | null>(null);
+  const [discardArmed, setDiscardArmed] = useState<string | null>(null);
+  const [run, setRun] = useState<RunState | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const inspector = useInspector("git");
   const activityRef = useRef<string | null>(null);
@@ -144,10 +168,13 @@ export default function GitTab({
 
   const load = useCallback(async () => {
     try {
-      const next = await invoke<GitStatus>("project_git_status", { project });
+      const next = await gitStatus(project);
       setStatus(next);
       setError(next.error);
-      if (next.repo) setLog(await invoke<GitCommit[]>("project_git_log", { project, limit: 20 }));
+      if (next.repo) {
+        setLog(await gitLog(project, 30));
+        setBranches(await gitBranches(project));
+      }
     } catch (e) {
       setError(String(e));
     }
@@ -173,16 +200,48 @@ export default function GitTab({
     return () => window.removeEventListener("speccify:worktree-changed", handler);
   }, [load]);
 
-  // Diff der Auswahl nachladen (auch nach Watcher-Meldungen).
+  // Diff + Historie der Auswahl nachladen (auch nach Watcher-Meldungen).
   useEffect(() => {
     if (!selected) {
       setDiff("");
+      setFileHistory([]);
       return;
     }
-    void invoke<string>("project_git_diff", { project, path: selected.path, staged: selected.staged })
+    void gitDiff(project, selected.path, selected.staged)
       .then(setDiff)
       .catch((e) => setDiff(String(e)));
+    void gitFileLog(project, selected.path, 100)
+      .then(setFileHistory)
+      .catch(() => setFileHistory([]));
   }, [project, selected, refresh]);
+
+  useEffect(() => {
+    if (!selected || !historyCommit) {
+      setHistoryDiff("");
+      return;
+    }
+    void gitCommitDiff(project, historyCommit, selected.path)
+      .then(setHistoryDiff)
+      .catch((e) => setHistoryDiff(String(e)));
+  }, [project, selected, historyCommit]);
+
+  useEffect(() => {
+    if (!selectedCommit) {
+      setCommitDetail(null);
+      setCommitDiff("");
+      return;
+    }
+    void gitCommitDetail(project, selectedCommit)
+      .then(setCommitDetail)
+      .catch((e) => setError(String(e)));
+  }, [project, selectedCommit]);
+
+  useEffect(() => {
+    if (!selectedCommit) return;
+    void gitCommitDiff(project, selectedCommit, commitFile)
+      .then(setCommitDiff)
+      .catch((e) => setCommitDiff(String(e)));
+  }, [project, selectedCommit, commitFile]);
 
   // Pull/Push: Live-Ausgabe über die Aktions-Events.
   useEffect(() => {
@@ -220,24 +279,45 @@ export default function GitTab({
     };
   }, [load]);
 
-  const remote = async (verb: "fetch" | "pull" | "push") => {
-    const id = `git:${verb}`;
-    setRun({ id, lines: [], running: true, exit: null });
-    activityRef.current = beginActivity("action", `git ${verb}`, status?.branch ?? undefined);
-    try {
-      await invoke("project_action_run", { project, runId: id, commandLine: `git ${verb}` });
-    } catch (e) {
-      setRun({ id, lines: [String(e)], running: false, exit: -1 });
-      if (activityRef.current) endActivity(activityRef.current, "error", String(e));
-      activityRef.current = null;
-    }
-  };
+  const remote = useCallback(
+    async (verb: "fetch" | "pull" | "push") => {
+      const id = `git:${verb}`;
+      setRun({ id, lines: [], running: true, exit: null });
+      activityRef.current = beginActivity("action", `git ${verb}`, status?.branch ?? undefined);
+      try {
+        await invoke("project_action_run", { project, runId: id, commandLine: `git ${verb}` });
+      } catch (e) {
+        setRun({ id, lines: [String(e)], running: false, exit: -1 });
+        if (activityRef.current) endActivity(activityRef.current, "error", String(e));
+        activityRef.current = null;
+      }
+    },
+    [project, status?.branch],
+  );
 
-  const stage = async (paths: string[], value: boolean) => {
+  const openCommitPanel = useCallback(() => {
+    setSelected(null);
+    setSelectedCommit(null);
+    inspector.reveal();
+    setTimeout(() => messageRef.current?.focus(), 50);
+  }, [inspector]);
+
+  // Toolbar-Knöpfe (I3): pull/push/commit kommen als Ereignis.
+  useEffect(() => {
+    const handler = (event: Event) => {
+      const verb = (event as CustomEvent<string>).detail;
+      if (verb === "commit") openCommitPanel();
+      else if (verb === "fetch" || verb === "pull" || verb === "push") void remote(verb);
+    };
+    window.addEventListener("speccify:git", handler);
+    return () => window.removeEventListener("speccify:git", handler);
+  }, [remote, openCommitPanel]);
+
+  const guard = async (work: () => Promise<unknown>) => {
     setBusy(true);
     setError(null);
     try {
-      await invoke("project_git_stage", { project, paths, stage: value });
+      await work();
       await load();
     } catch (e) {
       setError(String(e));
@@ -246,13 +326,29 @@ export default function GitTab({
     }
   };
 
+  const stage = (paths: string[], value: boolean) => guard(() => gitStage(project, paths, value));
+
+  const stageHunk = (index: number, reverse: boolean) =>
+    guard(async () => {
+      const patch = hunkPatch(parseDiff(diff), index);
+      if (!patch) return;
+      await gitApplyPatch(project, patch, reverse);
+      if (selected) setDiff(await gitDiff(project, selected.path, selected.staged));
+    });
+
+  const discard = (path: string) =>
+    guard(async () => {
+      await gitDiscard(project, [path]);
+      setDiscardArmed(null);
+      setSelected(null);
+      window.dispatchEvent(new CustomEvent("speccify:worktree-changed"));
+    });
+
   const commit = async () => {
     setBusy(true);
     setError(null);
     try {
-      const summary = await trackActivity("action", "git commit", () =>
-        invoke<string>("project_git_commit", { project, message }),
-      );
+      const summary = await trackActivity("action", "git commit", () => gitCommit(project, message));
       setMessage("");
       setRun({ id: "git:commit", lines: [summary], running: false, exit: 0 });
       await load();
@@ -262,6 +358,13 @@ export default function GitTab({
       setBusy(false);
     }
   };
+
+  const switchBranch = (name: string, create: boolean) =>
+    guard(async () => {
+      await trackActivity("action", `git switch ${name}`, () => gitSwitch(project, name, create));
+      setNewBranch("");
+      window.dispatchEvent(new CustomEvent("speccify:worktree-changed"));
+    });
 
   const entries = status?.entries ?? [];
   const staged = entries.filter(isStaged);
@@ -278,10 +381,13 @@ export default function GitTab({
         <button
           onClick={() => {
             setSelected({ path: entry.path, staged: stagedList });
+            setSelectedCommit(null);
+            setHistoryCommit(null);
+            setDiscardArmed(null);
             inspector.reveal();
           }}
           className="min-w-0 flex-1 truncate py-1 text-left text-[12.5px]"
-          title={`${entry.path} — ${label(entry, stagedList)}`}
+          title={`${entry.path} — ${entryLabel(entry, stagedList)}`}
         >
           <span className={`mr-1.5 inline-block w-3 text-center font-mono text-[10px] ${active ? "text-slate-300" : "text-slate-400"}`}>
             {entry.conflicted ? "U" : entry.untracked ? "?" : stagedList ? entry.index : entry.worktree}
@@ -307,8 +413,7 @@ export default function GitTab({
           title="Kein Git-Repository"
           action={{
             label: "Repository anlegen (git init)",
-            onClick: () =>
-              void trackActivity("action", "git init", () => invoke("project_git_init", { project })).then(load),
+            onClick: () => void trackActivity("action", "git init", () => gitInit(project)).then(load),
           }}
         >
           Dieses Projekt ist noch kein Git-Repository. Mit einem Repository sieht der Agent
@@ -318,20 +423,20 @@ export default function GitTab({
         <>
           <div className="mb-2 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2">
             <div className="flex items-center justify-between gap-2">
-              <span className="truncate font-mono text-xs font-semibold text-slate-800">
+              <button
+                onClick={openCommitPanel}
+                className="truncate font-mono text-xs font-semibold text-slate-800 hover:underline"
+                title="Branches und Commit im Inspektor"
+              >
                 {status?.branch ?? "(kein Branch)"}
-              </span>
+              </button>
               <span className="shrink-0 font-mono text-[10px] text-slate-500">
                 {status?.upstream ? `↑${status.ahead} ↓${status.behind}` : "kein Upstream"}
               </span>
             </div>
             <div className="mt-1.5 flex flex-wrap gap-1">
               <button
-                onClick={() => {
-                  setSelected(null);
-                  inspector.reveal();
-                  setTimeout(() => messageRef.current?.focus(), 50);
-                }}
+                onClick={openCommitPanel}
                 className="rounded bg-slate-800 px-2 py-0.5 text-[11px] font-medium text-white hover:bg-slate-700"
                 title="Commit-Nachricht schreiben oder den Agenten committen lassen"
               >
@@ -391,9 +496,9 @@ export default function GitTab({
     </NavigatorPortal>
   );
 
-  // Ohne Dateiauswahl zeigt der Inspektor das Commit-Panel.
+  // Ohne Auswahl zeigt der Inspektor Commit + Branches.
   const commitPanel =
-    status?.repo && !(current && selected) ? (
+    status?.repo && !(current && selected) && !selectedCommit ? (
       <InspectorPortal tab="git" fallback={inlineInspector}>
         <InspectorPanel
           title="Commit"
@@ -429,23 +534,85 @@ export default function GitTab({
               </InspectorButton>
             </>
           }
-        >
-          <textarea
-            ref={messageRef}
-            value={message}
-            onChange={(event) => setMessage(event.target.value)}
-            onKeyDown={(event) => {
-              if ((event.metaKey || event.ctrlKey) && event.key === "Enter" && staged.length > 0 && message.trim()) {
-                void commit();
-              }
-            }}
-            placeholder="Commit-Nachricht… (⌘⏎ committet)"
-            rows={3}
-            spellCheck={false}
-            className="w-full resize-none rounded border border-slate-300 bg-white px-2 py-1.5 font-mono text-xs"
-          />
-          {notice ? <p className="mt-2 text-xs text-sky-800">{notice}</p> : null}
-        </InspectorPanel>
+          tabs={[
+            {
+              id: "commit",
+              label: "Commit",
+              content: (
+                <div>
+                  <textarea
+                    ref={messageRef}
+                    value={message}
+                    onChange={(event) => setMessage(event.target.value)}
+                    onKeyDown={(event) => {
+                      if ((event.metaKey || event.ctrlKey) && event.key === "Enter" && staged.length > 0 && message.trim()) {
+                        void commit();
+                      }
+                    }}
+                    placeholder="Commit-Nachricht… (⌘⏎ committet)"
+                    rows={4}
+                    spellCheck={false}
+                    className="w-full resize-none rounded border border-slate-300 bg-white px-2 py-1.5 font-mono text-xs"
+                  />
+                  {notice ? <p className="mt-2 text-xs text-sky-800">{notice}</p> : null}
+                </div>
+              ),
+            },
+            {
+              id: "branches",
+              label: `Branches${branches.length ? ` (${branches.length})` : ""}`,
+              content: (
+                <div>
+                  <ul className="mb-3 space-y-0.5 text-xs">
+                    {branches.map((branch) => (
+                      <li key={branch.name}>
+                        <button
+                          onClick={() => (branch.current ? undefined : void switchBranch(branch.name, false))}
+                          disabled={busy || branch.current}
+                          className={`flex w-full items-center gap-2 rounded px-1.5 py-1 text-left font-mono ${
+                            branch.current ? "bg-slate-800 text-white" : "hover:bg-slate-100"
+                          }`}
+                          title={branch.current ? "aktueller Branch" : `git switch ${branch.name}`}
+                        >
+                          <span className="min-w-0 flex-1 truncate">{branch.name}</span>
+                          {branch.upstream ? (
+                            <span className={`shrink-0 text-[10px] ${branch.current ? "text-slate-300" : "text-slate-400"}`}>
+                              {branch.upstream}
+                            </span>
+                          ) : null}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="flex gap-1">
+                    <input
+                      value={newBranch}
+                      onChange={(event) => setNewBranch(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" && newBranch.trim()) void switchBranch(newBranch.trim(), true);
+                      }}
+                      placeholder="neuer Branch…"
+                      spellCheck={false}
+                      className="min-w-0 flex-1 rounded border border-slate-300 bg-white px-2 py-1 font-mono text-xs"
+                    />
+                    <button
+                      onClick={() => void switchBranch(newBranch.trim(), true)}
+                      disabled={busy || !newBranch.trim()}
+                      className="rounded bg-slate-800 px-2.5 py-1 text-xs text-white hover:bg-slate-700 disabled:opacity-40"
+                      title="git switch -c — anlegen und wechseln"
+                    >
+                      Anlegen
+                    </button>
+                  </div>
+                  <p className="mt-2 text-[11px] text-slate-400">
+                    Wechseln geht nur mit sauberem Arbeitsbaum oder ohne Konflikt — sonst
+                    meldet git den Grund oben.
+                  </p>
+                </div>
+              ),
+            },
+          ]}
+        />
       </InspectorPortal>
     ) : null;
 
@@ -455,7 +622,7 @@ export default function GitTab({
         title={current.path.split("/").pop() ?? current.path}
         subtitle={current.path}
         meta={[
-          { label: "Zustand", value: label(current, selected.staged) },
+          { label: "Zustand", value: entryLabel(current, selected.staged) },
           { label: "Index", value: <span className="font-mono">{current.index}</span> },
           { label: "Arbeitsbaum", value: <span className="font-mono">{current.worktree}</span> },
           ...(current.renamed_from ? [{ label: "Vorher", value: current.renamed_from }] : []),
@@ -483,11 +650,152 @@ export default function GitTab({
             >
               Diff als Prompt
             </InspectorButton>
+            {!selected.staged ? (
+              discardArmed === current.path ? (
+                <>
+                  <InspectorButton tone="danger" disabled={busy} onClick={() => void discard(current.path)}>
+                    Ja, verwerfen
+                  </InspectorButton>
+                  <InspectorButton onClick={() => setDiscardArmed(null)}>Abbrechen</InspectorButton>
+                </>
+              ) : (
+                <InspectorButton
+                  title={current.untracked ? "Datei löschen (git clean)" : "Änderungen im Arbeitsbaum zurücksetzen (git restore)"}
+                  onClick={() => setDiscardArmed(current.path)}
+                >
+                  Verwerfen…
+                </InspectorButton>
+              )
+            ) : null}
           </>
         }
+        tabs={[
+          {
+            id: "changes",
+            label: "Änderungen",
+            content: (
+              <p className="text-xs text-slate-500">
+                {current.untracked
+                  ? "Neue Datei — komplett stagen oder verwerfen."
+                  : selected.staged
+                    ? "Der Diff in der Mitte zeigt den Index. „Hunk zurücknehmen“ holt einzelne Blöcke wieder heraus."
+                    : "Der Diff in der Mitte zeigt den Arbeitsbaum gegen den Index. „Hunk stagen“ übernimmt einzelne Blöcke."}
+                {historyCommit ? (
+                  <button
+                    onClick={() => setHistoryCommit(null)}
+                    className="ml-1 text-sky-700 hover:underline"
+                  >
+                    Zurück zum aktuellen Diff.
+                  </button>
+                ) : null}
+              </p>
+            ),
+          },
+          {
+            id: "history",
+            label: `Historie${fileHistory.length ? ` (${fileHistory.length})` : ""}`,
+            content: (
+              <CommitList
+                commits={fileHistory}
+                selected={historyCommit}
+                onSelect={(hash) => setHistoryCommit((previous) => (previous === hash ? null : hash))}
+                empty={current.untracked ? "Noch nie committet." : "Keine Historie."}
+              />
+            ),
+          },
+        ]}
       />
     </InspectorPortal>
   ) : null;
+
+  const commitPanelDetail =
+    selectedCommit && commitDetail ? (
+      <InspectorPortal tab="git" fallback={inlineInspector}>
+        <InspectorPanel
+          title={commitDetail.subject}
+          subtitle={`${commitDetail.short} · ${commitDetail.author} · ${shortDate(commitDetail.date)}`}
+          meta={[
+            { label: "Hash", value: <span className="font-mono">{commitDetail.hash}</span> },
+            { label: "Dateien", value: `${commitDetail.files.length}` },
+          ]}
+          actions={
+            <>
+              <InspectorButton onClick={() => void writeText(commitDetail.hash)}>Hash kopieren</InspectorButton>
+              <InspectorButton
+                title="Diff des Commits als Markdown-Prompt in die Zwischenablage"
+                onClick={() => void writeText(fencedPrompt(`git show ${commitDetail.short}`, commitDiff))}
+              >
+                Diff als Prompt
+              </InspectorButton>
+              <InspectorButton onClick={() => setSelectedCommit(null)}>Schließen</InspectorButton>
+            </>
+          }
+          tabs={[
+            {
+              id: "files",
+              label: `Dateien (${commitDetail.files.length})`,
+              content: (
+                <ul className="space-y-0.5 text-xs">
+                  <li>
+                    <button
+                      onClick={() => setCommitFile(null)}
+                      className={`w-full rounded px-1.5 py-1 text-left ${commitFile === null ? "bg-slate-800 text-white" : "hover:bg-slate-100"}`}
+                    >
+                      Alle Dateien
+                    </button>
+                  </li>
+                  {commitDetail.files.map((file) => (
+                    <li key={file.path}>
+                      <button
+                        onClick={() => setCommitFile(file.path)}
+                        className={`flex w-full gap-2 rounded px-1.5 py-1 text-left ${commitFile === file.path ? "bg-slate-800 text-white" : "hover:bg-slate-100"}`}
+                        title={STATUS_LABEL[file.status] ?? file.status}
+                      >
+                        <span className={`w-3 shrink-0 text-center font-mono ${commitFile === file.path ? "text-slate-300" : "text-slate-400"}`}>
+                          {file.status}
+                        </span>
+                        <span className="min-w-0 flex-1 truncate">{file.path}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              ),
+            },
+            {
+              id: "message",
+              label: "Nachricht",
+              content: (
+                <pre className="whitespace-pre-wrap font-mono text-[11px] text-slate-700">
+                  {commitDetail.subject}
+                  {commitDetail.body ? `\n\n${commitDetail.body}` : ""}
+                </pre>
+              ),
+            },
+          ]}
+        />
+      </InspectorPortal>
+    ) : null;
+
+  const diffTitle = selected
+    ? historyCommit
+      ? `Commit ${historyCommit.slice(0, 7)} · ${selected.path}`
+      : `${selected.staged ? "Index" : "Arbeitsbaum"} · ${selected.path}`
+    : selectedCommit && commitDetail
+      ? `Commit ${commitDetail.short}${commitFile ? ` · ${commitFile}` : " · alle Dateien"}`
+      : null;
+  const shownDiff = selected ? (historyCommit ? historyDiff : diff) : selectedCommit ? commitDiff : "";
+  const hunkActions =
+    selected && current && !historyCommit && !current.untracked && !current.conflicted
+      ? (index: number) => (
+          <HunkButton
+            onClick={() => void stageHunk(index, selected.staged)}
+            disabled={busy}
+            title={selected.staged ? "Diesen Block aus dem Index nehmen" : "Nur diesen Block stagen"}
+          >
+            {selected.staged ? "Hunk zurücknehmen" : "Hunk stagen"}
+          </HunkButton>
+        )
+      : undefined;
 
   return (
     <div className="flex h-full min-h-0 gap-4">
@@ -495,28 +803,36 @@ export default function GitTab({
       <div className="flex min-w-0 flex-1 flex-col gap-3 overflow-y-auto">
         {commitPanel}
         {details}
+        {commitPanelDetail}
         {error ? <p className="rounded bg-red-50 px-3 py-2 text-xs text-red-700">{error}</p> : null}
-        {status?.repo && !selected && !run ? (
+        {status?.repo && !selected && !selectedCommit && !run ? (
           <p className="text-sm text-slate-400">
-            Datei links wählen für den Diff. Committen im Inspektor: Nachricht schreiben oder den
-            Agenten committen lassen.
+            Datei links wählen für den Diff, Commit unten für Details. Committen im Inspektor:
+            Nachricht schreiben oder den Agenten committen lassen.
           </p>
         ) : null}
         {run ? (
           <div className="rounded-lg border border-slate-200 bg-slate-900 p-3 font-mono text-[11px] text-slate-200">
             <div className="mb-1 flex items-center justify-between text-slate-400">
               <span>{run.id.replace("git:", "git ")}</span>
-              <span>{run.running ? "läuft…" : run.exit === 0 ? "✓ fertig" : `✕ Exit ${run.exit ?? "?"}`}</span>
+              <span className="flex items-center gap-2">
+                {run.running ? "läuft…" : run.exit === 0 ? "✓ fertig" : `✕ Exit ${run.exit ?? "?"}`}
+                {!run.running ? (
+                  <button onClick={() => setRun(null)} className="text-slate-500 hover:text-white" title="Ausgabe schließen">
+                    ×
+                  </button>
+                ) : null}
+              </span>
             </div>
             <pre className="max-h-48 overflow-auto whitespace-pre-wrap">{run.lines.join("\n") || " "}</pre>
           </div>
         ) : null}
-        {selected ? (
+        {diffTitle ? (
           <div className="rounded-lg border border-slate-200 bg-white">
             <div className="border-b border-slate-200 px-3 py-1.5 font-mono text-[11px] text-slate-500">
-              {selected.staged ? "Index" : "Arbeitsbaum"} · {selected.path}
+              {diffTitle}
             </div>
-            <DiffView text={diff} />
+            <DiffView text={shownDiff} hunkActions={hunkActions} />
           </div>
         ) : null}
         {status?.repo ? (
@@ -524,21 +840,18 @@ export default function GitTab({
             <h3 className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
               Letzte Commits
             </h3>
-            {log.length === 0 ? (
-              <p className="text-xs text-slate-400">Noch kein Commit.</p>
-            ) : (
-              <ul className="space-y-1 text-xs">
-                {log.map((entry) => (
-                  <li key={entry.hash} className="flex gap-2">
-                    <span className="shrink-0 font-mono text-slate-400">{entry.short}</span>
-                    <span className="min-w-0 flex-1 truncate text-slate-800" title={entry.subject}>
-                      {entry.subject}
-                    </span>
-                    <span className="shrink-0 text-slate-400">{entry.date.slice(0, 10)}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
+            <CommitList
+              commits={log}
+              selected={selectedCommit}
+              onSelect={(hash) => {
+                setSelected(null);
+                setHistoryCommit(null);
+                setCommitFile(null);
+                setSelectedCommit((previous) => (previous === hash ? null : hash));
+                inspector.reveal();
+              }}
+              empty="Noch kein Commit."
+            />
           </div>
         ) : null}
       </div>

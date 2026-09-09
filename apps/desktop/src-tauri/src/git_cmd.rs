@@ -24,13 +24,22 @@ struct GitOutput {
 }
 
 fn git(root: &Path, args: &[&str]) -> Result<GitOutput, String> {
+    git_with_input(root, args, None)
+}
+
+/// Wie `git`, optional mit Text auf stdin (`git apply -` für Hunks).
+fn git_with_input(root: &Path, args: &[&str], input: Option<&str>) -> Result<GitOutput, String> {
     let mut command = Command::new("git");
     command
         .args(args)
         .current_dir(root)
         .env("GIT_TERMINAL_PROMPT", "0")
         .env("LC_ALL", "C")
-        .stdin(Stdio::null())
+        .stdin(if input.is_some() {
+            Stdio::piped()
+        } else {
+            Stdio::null()
+        })
         .stdout(Stdio::piped())
         .stderr(Stdio::piped());
     #[cfg(windows)]
@@ -41,6 +50,13 @@ fn git(root: &Path, args: &[&str]) -> Result<GitOutput, String> {
     let mut child = command
         .spawn()
         .map_err(|e| format!("git nicht startbar ({e}) — ist Git installiert und im PATH?"))?;
+    if let Some(text) = input {
+        if let Some(mut stdin) = child.stdin.take() {
+            use std::io::Write;
+            let _ = stdin.write_all(text.as_bytes());
+            // stdin fällt hier zu — git liest EOF.
+        }
+    }
     let stdout_pipe = child.stdout.take();
     let stderr_pipe = child.stderr.take();
     let reader = std::thread::spawn(move || {
@@ -323,6 +339,260 @@ pub fn project_git_init(project: String) -> Result<String, String> {
     git_ok(&root, &["init"]).map(|out| out.trim().to_string())
 }
 
+// --- I3: Datei-Historie, Commit-Details, Hunks, Verwerfen, Branches ---------------
+
+const LOG_FORMAT: &str = "--format=%H%x1f%h%x1f%an%x1f%aI%x1f%s";
+
+/// Commits, die eine Datei berührt haben (folgt Umbenennungen).
+#[tauri::command]
+pub fn project_git_file_log(
+    project: String,
+    path: String,
+    limit: u32,
+) -> Result<Vec<GitCommit>, String> {
+    let root = resolve_project_root(&project)?;
+    let count = format!("-n{}", limit.clamp(1, 500));
+    let output = git(&root, &["log", "--follow", LOG_FORMAT, &count, "--", &path])?;
+    if output.code != 0 {
+        return Ok(Vec::new());
+    }
+    Ok(parse_log(&String::from_utf8_lossy(&output.stdout)))
+}
+
+#[derive(Serialize, Debug, PartialEq)]
+pub struct GitChangedFile {
+    pub path: String,
+    /// `M`, `A`, `D`, `R`, `C`, `T`
+    pub status: String,
+    pub renamed_from: Option<String>,
+}
+
+#[derive(Serialize, Debug)]
+pub struct GitCommitDetail {
+    pub hash: String,
+    pub short: String,
+    pub author: String,
+    pub date: String,
+    pub subject: String,
+    pub body: String,
+    pub files: Vec<GitChangedFile>,
+}
+
+pub(crate) fn parse_name_status(raw: &[u8]) -> Vec<GitChangedFile> {
+    let text = String::from_utf8_lossy(raw);
+    let mut fields = text.split('\0');
+    let mut files = Vec::new();
+    while let Some(status) = fields.next() {
+        if status.is_empty() {
+            continue;
+        }
+        let Some(path) = fields.next() else { break };
+        let code = status.chars().next().unwrap_or('M').to_string();
+        if code == "R" || code == "C" {
+            let target = fields.next().unwrap_or("").to_string();
+            files.push(GitChangedFile {
+                path: target,
+                status: code,
+                renamed_from: Some(path.to_string()),
+            });
+        } else {
+            files.push(GitChangedFile {
+                path: path.to_string(),
+                status: code,
+                renamed_from: None,
+            });
+        }
+    }
+    files
+}
+
+/// Ein Commit mit Nachricht und geänderten Dateien (für den Inspektor).
+#[tauri::command]
+pub fn project_git_commit_detail(
+    project: String,
+    commit: String,
+) -> Result<GitCommitDetail, String> {
+    let root = resolve_project_root(&project)?;
+    let meta = git_ok(
+        &root,
+        &[
+            "show",
+            "-s",
+            "--format=%H%x1f%h%x1f%an%x1f%aI%x1f%s%x1f%b",
+            &commit,
+        ],
+    )?;
+    let mut parts = meta.trim_end_matches('\n').split('\u{1f}');
+    let mut next = || parts.next().unwrap_or("").to_string();
+    let (hash, short, author, date, subject) = (next(), next(), next(), next(), next());
+    let body = next().trim().to_string();
+    let files = git(
+        &root,
+        &["show", "--format=", "--name-status", "-z", "-M", &commit],
+    )?;
+    Ok(GitCommitDetail {
+        hash,
+        short,
+        author,
+        date,
+        subject,
+        body,
+        files: parse_name_status(&files.stdout),
+    })
+}
+
+/// Diff eines Commits — ganz oder für eine Datei.
+#[tauri::command]
+pub fn project_git_commit_diff(
+    project: String,
+    commit: String,
+    path: Option<String>,
+) -> Result<String, String> {
+    let root = resolve_project_root(&project)?;
+    let mut args = vec!["show", "--no-color", "--format=", "-M", commit.as_str()];
+    if let Some(path) = path.as_deref() {
+        args.extend(["--", path]);
+    }
+    git_ok(&root, &args)
+}
+
+/// Einen Patch (Diff-Kopf + ein Hunk, vom Frontend zusammengesetzt) in den
+/// Index anwenden — `reverse` nimmt einen gestageten Hunk wieder heraus.
+#[tauri::command]
+pub fn project_git_apply_patch(
+    project: String,
+    patch: String,
+    reverse: bool,
+) -> Result<(), String> {
+    let root = resolve_project_root(&project)?;
+    let mut args = vec!["apply", "--cached", "--whitespace=nowarn"];
+    if reverse {
+        args.push("--reverse");
+    }
+    args.push("-");
+    let text = if patch.ends_with('\n') {
+        patch
+    } else {
+        format!("{patch}\n")
+    };
+    let output = git_with_input(&root, &args, Some(&text))?;
+    if output.code != 0 {
+        return Err(output.stderr.trim().to_string());
+    }
+    Ok(())
+}
+
+/// Änderungen im Arbeitsbaum verwerfen: versionierte Dateien zurück auf den
+/// Index-/HEAD-Stand, unversionierte löschen. Unumkehrbar — das Frontend fragt.
+#[tauri::command]
+pub fn project_git_discard(project: String, paths: Vec<String>) -> Result<(), String> {
+    let root = resolve_project_root(&project)?;
+    if paths.is_empty() {
+        return Ok(());
+    }
+    let status = project_git_status(project)?;
+    let untracked: Vec<&str> = status
+        .entries
+        .iter()
+        .filter(|entry| entry.untracked && paths.contains(&entry.path))
+        .map(|entry| entry.path.as_str())
+        .collect();
+    let tracked: Vec<&str> = paths
+        .iter()
+        .map(String::as_str)
+        .filter(|path| !untracked.contains(path))
+        .collect();
+    if !tracked.is_empty() {
+        let mut args = vec!["restore", "--worktree", "--"];
+        args.extend(tracked.iter().copied());
+        if let Err(message) = git_ok(&root, &args) {
+            if !message.contains("is not a git command") {
+                return Err(message);
+            }
+            let mut fallback = vec!["checkout", "--"];
+            fallback.extend(tracked.iter().copied());
+            git_ok(&root, &fallback)?;
+        }
+    }
+    if !untracked.is_empty() {
+        let mut args = vec!["clean", "-f", "-q", "--"];
+        args.extend(untracked.iter().copied());
+        git_ok(&root, &args)?;
+    }
+    Ok(())
+}
+
+#[derive(Serialize, Debug, PartialEq)]
+pub struct GitBranch {
+    pub name: String,
+    pub current: bool,
+    pub upstream: Option<String>,
+}
+
+#[tauri::command]
+pub fn project_git_branches(project: String) -> Result<Vec<GitBranch>, String> {
+    let root = resolve_project_root(&project)?;
+    let output = git(
+        &root,
+        &[
+            "branch",
+            "--list",
+            "--format=%(refname:short)%1f%(HEAD)%1f%(upstream:short)",
+        ],
+    )?;
+    if output.code != 0 {
+        return Ok(Vec::new());
+    }
+    Ok(String::from_utf8_lossy(&output.stdout)
+        .lines()
+        .filter_map(|line| {
+            let mut parts = line.split('\u{1f}');
+            let name = parts.next()?.trim().to_string();
+            if name.is_empty() {
+                return None;
+            }
+            let current = parts.next().unwrap_or("").trim() == "*";
+            let upstream = parts
+                .next()
+                .map(str::trim)
+                .filter(|s| !s.is_empty())
+                .map(String::from);
+            Some(GitBranch {
+                name,
+                current,
+                upstream,
+            })
+        })
+        .collect())
+}
+
+/// Branch wechseln oder (mit `create`) anlegen und wechseln.
+#[tauri::command]
+pub fn project_git_switch(project: String, branch: String, create: bool) -> Result<String, String> {
+    let root = resolve_project_root(&project)?;
+    let name = branch.trim();
+    if name.is_empty() {
+        return Err("Branch-Name fehlt.".into());
+    }
+    let args: Vec<&str> = if create {
+        vec!["switch", "-c", name]
+    } else {
+        vec!["switch", name]
+    };
+    match git_ok(&root, &args) {
+        Ok(_) => Ok(name.to_string()),
+        Err(message) if message.contains("is not a git command") => {
+            let fallback: Vec<&str> = if create {
+                vec!["checkout", "-b", name]
+            } else {
+                vec!["checkout", name]
+            };
+            git_ok(&root, &fallback).map(|_| name.to_string())
+        }
+        Err(message) => Err(message),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -395,6 +665,92 @@ mod tests {
         let log = project_git_log(project.clone(), 10).unwrap();
         assert_eq!(log.len(), 1);
         assert_eq!(log[0].subject, "erster");
-        assert!(project_git_status(project).unwrap().entries.is_empty());
+        assert!(project_git_status(project.clone())
+            .unwrap()
+            .entries
+            .is_empty());
+
+        // I3: zwei getrennte Hunks, nur den ersten stagen.
+        let lines: Vec<String> = (1..=12).map(|n| format!("zeile {n}")).collect();
+        std::fs::write(dir.join("b.txt"), lines.join("\n") + "\n").unwrap();
+        project_git_stage(project.clone(), vec!["b.txt".into()], true).unwrap();
+        project_git_commit(project.clone(), "b".into()).unwrap();
+        let mut changed = lines.clone();
+        changed[0] = "ZEILE 1".into();
+        changed[11] = "ZEILE 12".into();
+        std::fs::write(dir.join("b.txt"), changed.join("\n") + "\n").unwrap();
+        let diff = project_git_diff(project.clone(), "b.txt".into(), false).unwrap();
+        let header_end = diff.find("@@").unwrap();
+        let header = &diff[..header_end];
+        let hunks: Vec<&str> = diff[header_end..].split_inclusive("\n@@").collect();
+        assert_eq!(hunks.len(), 2, "{diff}");
+        let first = hunks[0].trim_end_matches("@@");
+        project_git_apply_patch(project.clone(), format!("{header}{first}"), false).unwrap();
+        let status = project_git_status(project.clone()).unwrap();
+        let entry = status.entries.iter().find(|e| e.path == "b.txt").unwrap();
+        assert_eq!((entry.index.as_str(), entry.worktree.as_str()), ("M", "M"));
+        // … und wieder heraus.
+        project_git_apply_patch(project.clone(), format!("{header}{first}"), true).unwrap();
+        let entry = project_git_status(project.clone())
+            .unwrap()
+            .entries
+            .remove(0);
+        assert_eq!((entry.index.as_str(), entry.worktree.as_str()), (".", "M"));
+
+        // Datei-Historie, Commit-Details, Diff eines Commits.
+        let history = project_git_file_log(project.clone(), "b.txt".into(), 10).unwrap();
+        assert_eq!(history.len(), 1);
+        assert_eq!(history[0].subject, "b");
+        let detail = project_git_commit_detail(project.clone(), history[0].hash.clone()).unwrap();
+        assert_eq!(detail.subject, "b");
+        assert_eq!(
+            detail.files,
+            vec![GitChangedFile {
+                path: "b.txt".into(),
+                status: "A".into(),
+                renamed_from: None
+            }]
+        );
+        let commit_diff = project_git_commit_diff(
+            project.clone(),
+            history[0].hash.clone(),
+            Some("b.txt".into()),
+        )
+        .unwrap();
+        assert!(commit_diff.contains("+zeile 1"));
+
+        // Verwerfen: versioniert zurück, unversioniert weg.
+        std::fs::write(dir.join("neu.txt"), "x\n").unwrap();
+        project_git_discard(project.clone(), vec!["b.txt".into(), "neu.txt".into()]).unwrap();
+        assert!(project_git_status(project.clone())
+            .unwrap()
+            .entries
+            .is_empty());
+        assert!(!dir.join("neu.txt").exists());
+
+        // Branches.
+        let created = project_git_switch(project.clone(), "feature/x".into(), true).unwrap();
+        assert_eq!(created, "feature/x");
+        let branches = project_git_branches(project.clone()).unwrap();
+        assert!(branches.iter().any(|b| b.name == "feature/x" && b.current));
+        assert_eq!(branches.iter().filter(|b| b.current).count(), 1);
+        let main = branches.iter().find(|b| !b.current).unwrap().name.clone();
+        project_git_switch(project.clone(), main.clone(), false).unwrap();
+        assert_eq!(
+            project_git_status(project).unwrap().branch.as_deref(),
+            Some(main.as_str())
+        );
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn name_status_z_parses_renames() {
+        let raw = b"M\0a.txt\0R100\0alt.md\0neu.md\0A\0x y.txt\0";
+        let files = parse_name_status(raw);
+        assert_eq!(files.len(), 3);
+        assert_eq!(files[1].status, "R");
+        assert_eq!(files[1].path, "neu.md");
+        assert_eq!(files[1].renamed_from.as_deref(), Some("alt.md"));
+        assert_eq!(files[2].path, "x y.txt");
     }
 }

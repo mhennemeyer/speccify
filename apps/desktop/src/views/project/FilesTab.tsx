@@ -9,6 +9,8 @@ import type { ReactNode } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import CodeEditor from "../../components/CodeEditor";
+import DiffView from "../../components/DiffView";
+import { type GitCommit, gitCommitDiff, gitFileLog, shortDate } from "../../lib/git";
 import { fencedPrompt } from "../../lib/prompt";
 import { trackActivity } from "../../lib/activity";
 import { clearDraft, draftKey, readDraft, writeDraft } from "../../lib/autosave";
@@ -90,7 +92,33 @@ export default function FilesTab({
   const [active, setActive] = useState<string | null>(null);
   const [info, setInfo] = useState<FileInfo | null>(null);
   const [cursorLine, setCursorLine] = useState(1);
+  // I3: Git-Historie der aktiven Datei im Inspektor, gewählter Commit → Diff.
+  const [history, setHistory] = useState<GitCommit[]>([]);
+  const [historyCommit, setHistoryCommit] = useState<string | null>(null);
+  const [historyDiff, setHistoryDiff] = useState("");
   const inspector = useInspector("files");
+
+  useEffect(() => {
+    setHistoryCommit(null);
+    if (!active) {
+      setHistory([]);
+      return;
+    }
+    void gitFileLog(project, active, 100)
+      .then(setHistory)
+      .catch(() => setHistory([]));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [project, active, refresh]);
+
+  useEffect(() => {
+    if (!active || !historyCommit) {
+      setHistoryDiff("");
+      return;
+    }
+    void gitCommitDiff(project, historyCommit, active)
+      .then(setHistoryDiff)
+      .catch((e) => setHistoryDiff(String(e)));
+  }, [project, active, historyCommit]);
   const openRef = useRef(open);
   openRef.current = open;
 
@@ -375,10 +403,80 @@ export default function FilesTab({
             </InspectorButton>
           </>
         }
-      >
-        {current.error ? <p className="text-xs text-red-600">{current.error}</p> : null}
-        {info?.binary ? <p className="text-xs text-amber-700">Binärdatei — nicht editierbar.</p> : null}
-      </InspectorPanel>
+        tabs={[
+          {
+            id: "file",
+            label: "Datei",
+            content: (
+              <div className="space-y-1">
+                {current.error ? <p className="text-xs text-red-600">{current.error}</p> : null}
+                {info?.binary ? <p className="text-xs text-amber-700">Binärdatei — nicht editierbar.</p> : null}
+                {!current.error && !info?.binary ? (
+                  <p className="text-xs text-slate-400">
+                    ⌘S speichert; Entwürfe werden automatisch gesichert. Git-Zustand und Diff
+                    im Git-Tab.
+                  </p>
+                ) : null}
+              </div>
+            ),
+          },
+          {
+            id: "history",
+            label: `Historie${history.length ? ` (${history.length})` : ""}`,
+            content: (
+              <div>
+                {history.length === 0 ? (
+                  <p className="text-xs text-slate-400">
+                    Keine Commits für diese Datei — neu, unversioniert oder kein Repository.
+                  </p>
+                ) : (
+                  <ul className="space-y-0.5 text-xs">
+                    {history.map((entry) => {
+                      const activeCommit = historyCommit === entry.hash;
+                      return (
+                        <li key={entry.hash}>
+                          <button
+                            onClick={() =>
+                              setHistoryCommit((previous) => (previous === entry.hash ? null : entry.hash))
+                            }
+                            className={`flex w-full gap-2 rounded px-1.5 py-1 text-left ${
+                              activeCommit ? "bg-slate-800 text-white" : "hover:bg-slate-100"
+                            }`}
+                            title={`${entry.short} · ${entry.author} · ${shortDate(entry.date)}`}
+                          >
+                            <span className={`shrink-0 font-mono ${activeCommit ? "text-slate-300" : "text-slate-400"}`}>
+                              {entry.short}
+                            </span>
+                            <span className="min-w-0 flex-1 truncate">{entry.subject}</span>
+                            <span className={`shrink-0 ${activeCommit ? "text-slate-300" : "text-slate-400"}`}>
+                              {entry.date.slice(0, 10)}
+                            </span>
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+                {historyCommit ? (
+                  <div className="mt-2 rounded border border-slate-200 bg-white">
+                    <div className="flex items-center justify-between border-b border-slate-200 px-2 py-1 font-mono text-[10px] text-slate-500">
+                      <span>Commit {historyCommit.slice(0, 7)} · diese Datei</span>
+                      <button
+                        onClick={() => void writeText(fencedPrompt(`git show ${historyCommit.slice(0, 7)} -- ${current.path}`, historyDiff))}
+                        className="text-slate-400 hover:text-slate-800"
+                        title="Diff als Markdown-Prompt in die Zwischenablage"
+                      >
+                        als Prompt
+                      </button>
+                    </div>
+                    <DiffView text={historyDiff} compact />
+                  </div>
+                ) : null}
+              </div>
+            ),
+          },
+        ]}
+      />
     </InspectorPortal>
   ) : null;
 

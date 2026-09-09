@@ -152,7 +152,7 @@
                 { path: "src/neu.py", index: ".", worktree: "?", untracked: true, conflicted: false, renamed_from: null },
               ],
             },
-        project_git_diff: ({ path }) => `diff --git a/${path} b/${path}\n--- a/${path}\n+++ b/${path}\n@@ -1,2 +1,3 @@\n # Titel\n-alt\n+neu\n+noch eine Zeile\n`,
+        project_git_diff: ({ path }) => `diff --git a/${path} b/${path}\n--- a/${path}\n+++ b/${path}\n@@ -1,2 +1,3 @@\n # Titel\n-alt\n+neu\n+noch eine Zeile\n@@ -10,2 +11,2 @@\n zeile 10\n-zeile 11\n+ZEILE 11\n`,
         project_git_stage: () => null,
         project_git_commit: ({ message }) => `[main abc1234] ${message}`,
         project_git_log: () => [
@@ -160,6 +160,25 @@
           { hash: "0123456789", short: "0123456", author: "Matthias", date: "2026-09-05T09:00:00+02:00", subject: "chore: start" },
         ],
         project_git_init: () => "Initialized empty Git repository",
+        // I3: Datei-Historie, Commit-Details, Hunks, Verwerfen, Branches
+        project_git_file_log: ({ path }) => path.endsWith("README.md") || path.endsWith(".md") ? [
+          { hash: "abc1234def0000000000000000000000000000000", short: "abc1234", author: "Matthias", date: "2026-09-06T10:00:00+02:00", subject: "feat: notizen" },
+          { hash: "0123456789000000000000000000000000000000", short: "0123456", author: "Matthias", date: "2026-09-05T09:00:00+02:00", subject: "chore: start" },
+        ] : [],
+        project_git_commit_detail: ({ commit }) => ({
+          hash: commit, short: commit.slice(0, 7), author: "Matthias", date: "2026-09-06T10:00:00+02:00",
+          subject: commit.startsWith("abc") ? "feat: notizen" : "chore: start",
+          body: commit.startsWith("abc") ? "Notizen-Skill und Board-Ticket.\n\nClaude-Session: https://claude.ai/code/x" : "",
+          files: [ { path: "README.md", status: "M", renamed_from: null }, { path: "notes/erste.md", status: "A", renamed_from: null } ],
+        }),
+        project_git_commit_diff: ({ commit, path }) => `diff --git a/${path ?? "README.md"} b/${path ?? "README.md"}\n--- a/${path ?? "README.md"}\n+++ b/${path ?? "README.md"}\n@@ -1,2 +1,3 @@\n # Titel\n-alt (${commit.slice(0, 7)})\n+neu\n+noch eine Zeile\n@@ -10,2 +11,2 @@\n zeile 10\n-zeile 11\n+ZEILE 11\n`,
+        project_git_apply_patch: () => null,
+        project_git_discard: () => null,
+        project_git_branches: () => [
+          { name: "main", current: true, upstream: "origin/main" },
+          { name: "feature/notizen", current: false, upstream: null },
+        ],
+        project_git_switch: ({ branch }) => branch,
         project_action_upsert: () => null,
         project_agent_files: () => orEmpty(["CLAUDE.md", ".agent/agent.md"]),
         project_skill_sources: () => ({ default: "/Users/me/Work/speccify/skills", sources: [] }),

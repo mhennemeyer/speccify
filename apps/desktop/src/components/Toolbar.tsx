@@ -17,6 +17,26 @@ export interface ToolbarItem {
   disabled?: boolean;
 }
 
+export function GitIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true">
+      <circle cx="4.5" cy="3.5" r="1.6" />
+      <circle cx="4.5" cy="12.5" r="1.6" />
+      <circle cx="11.5" cy="6" r="1.6" />
+      <path d="M4.5 5.1v5.8M11.5 7.6c0 2.2-2.5 2.6-4.7 2.9" />
+    </svg>
+  );
+}
+
+export function TerminalIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true">
+      <rect x="1.5" y="2.5" width="13" height="11" rx="1.5" />
+      <path d="M4.5 6l2.5 2-2.5 2M8.5 10.5h3" />
+    </svg>
+  );
+}
+
 export function PlayIcon() {
   return (
     <Icon>

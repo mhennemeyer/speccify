@@ -50,9 +50,11 @@ Das Fenster folgt dem Muster von Xcode und iKanban: **Navigator** links,
 - **Agent-Terminal.** Unten unter dem Inhalt, höhenverstellbar; wer es
   lieber rechts hat, legt es mit *nach rechts* als zweiten Tab in die
   rechte Seitenleiste.
-- **Toolbar.** Links der Projektname. In der Mitte die **Aktions-Knöpfe**
-  (jede Aktion aus `.agent/actions.json` lässt sich im Aktionen-Tab mit
-  *Toolbar* dorthin legen; ein Klick startet sie) und die
+- **Toolbar.** Links der Projektname. In der Mitte die **Knöpfe**:
+  eingebaute (*Pull*, *Push*, *Commit*, *Agent*) und Aktionen aus
+  `.agent/actions.json` (im Aktionen-Tab mit *Toolbar* markiert, ein
+  Klick startet sie). Welche Knöpfe in welcher Reihenfolge stehen, stellst
+  Du im Zahnrad unter *Toolbar* ein — pro Projekt gemerkt. Daneben die
   **Aktivitätsanzeige**: was gerade läuft — eine Aktion, `git push`, das
   Einrichten, ein Speichern, das Agent-Terminal, solange Ausgabe fließt —
   mit Laufzeit; abgeschlossene Agent-Läufe aus der Ticket-History
@@ -81,18 +83,29 @@ unten; im Editor ⌘S speichern, im Commit-Feld ⌘⏎ committen.
   Tastenanschlag wird als Entwurf gesichert und kommt nach einem Neustart
   zurück. Der Inspektor nennt Größe, Zeilen, Änderungsdatum und
   Cursorzeile und bietet *Speichern*, *Verwerfen*, *Als Prompt kopieren*
-  (mit `Pfad:Zeile`) und *Pfad kopieren*. Ändert der Agent eine offene,
-  ungeänderte Datei, lädt sie nach.
+  (mit `Pfad:Zeile`) und *Pfad kopieren*; sein Tab **Historie** listet die
+  Commits, die die Datei berührt haben — ein Klick zeigt den Diff dieses
+  Commits für genau diese Datei, *als Prompt* kopiert ihn. Ändert der
+  Agent eine offene, ungeänderte Datei, lädt sie nach.
 - **Git** — Branch mit Upstream und ↑↓-Zählern, dazu *fetch*, *pull*,
   *push* mit Live-Ausgabe. Darunter die geänderten Dateien in *Staged* und
   *Änderungen*; **+** und **−** an der Zeile (oder *alle +* / *alle −*)
-  stagen und entstagen. Ein Klick auf eine Datei zeigt ihren Diff, der
-  Inspektor den Zustand mit *Stagen*, *Im Editor öffnen* und *Diff als
-  Prompt*. **Committen** im Inspektor (*Commit…* im Branch-Kopf springt
-  hin): Nachricht schreiben und *Commit* (⌘⏎), *Alles committen* staged
-  vorher alles, oder *Agent committen lassen* — der Auftrag landet im
+  stagen und entstagen. Ein Klick auf eine Datei zeigt ihren Diff — jeder
+  Block hat **Hunk stagen** bzw. **Hunk zurücknehmen**, so wandern nur die
+  Zeilen in den Commit, die zusammengehören. Der Inspektor nennt den
+  Zustand mit *Stagen*, *Im Editor öffnen*, *Diff als Prompt* und
+  *Verwerfen…* (zweiter Klick bestätigt; unversionierte Dateien werden
+  gelöscht) und hat die Tabs **Änderungen** und **Historie** (Commits
+  dieser Datei; ein Klick zeigt den Diff des Commits). Ein Klick auf einen
+  Commit in *Letzte Commits* öffnet ihn im Inspektor: Dateiliste (Klick =
+  Diff nur dieser Datei), Nachricht, *Hash kopieren*, *Diff als Prompt*.
+  **Committen** im Inspektor (*Commit…* im Branch-Kopf springt hin):
+  Nachricht schreiben und *Commit* (⌘⏎), *Alles committen* staged vorher
+  alles, oder *Agent committen lassen* — der Auftrag landet im
   Agent-Terminal, dort mit Enter bestätigen, der Agent liest den Diff,
-  schreibt die Nachricht und committet. Läuft über das installierte `git`;
+  schreibt die Nachricht und committet. Der Tab **Branches** daneben
+  wechselt per Klick und legt mit *Anlegen* einen neuen an. Läuft über das
+  installierte `git`;
   Zugangsdaten und SSH-Agent funktionieren wie im Terminal. Ohne
   Repository: `git init` per Knopf. Der Tab liest den Status beim
   Einblenden und alle paar Sekunden nach.
@@ -180,7 +193,8 @@ liest sie aus der Datei.
 Das Zahnrad in der Toolbar öffnet die **Einstellungen** des
 Projektfensters: Erscheinungsbild (System, Hell, Dunkel — gilt für alle
 Fenster, auch im Dashboard unter *Settings*), Terminal-Position,
-„Agent-Sitzung nach Neustart fortsetzen" und „Layout zurücksetzen".
+„Agent-Sitzung nach Neustart fortsetzen", die **Toolbar-Knöpfe** (an- und
+abwählen, mit den Pfeilen sortieren) und „Layout zurücksetzen".
 
 **Die Agent-Sitzung überlebt den Neustart:** Lief in einem Fenster ein
 Agent, startet das Terminal beim nächsten Öffnen von selbst mit

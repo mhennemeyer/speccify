@@ -12,6 +12,9 @@ export default function SettingsSheet({
   layout,
   onDock,
   onResumeAgent,
+  toolbar,
+  toolbarChoices,
+  onToolbar,
   onResetLayout,
   onClose,
 }: {
@@ -20,6 +23,10 @@ export default function SettingsSheet({
   layout: ProjectLayout;
   onDock: (dock: TerminalDock) => void;
   onResumeAgent: (value: boolean) => void;
+  /** Toolbar (I3): aktive Knopf-Ids in Reihenfolge + alle wählbaren. */
+  toolbar: string[];
+  toolbarChoices: Array<{ id: string; label: string; hint: string }>;
+  onToolbar: (ids: string[]) => void;
   onResetLayout: () => void;
   onClose: () => void;
 }) {
@@ -90,10 +97,77 @@ export default function SettingsSheet({
           </label>
         </section>
 
+        <section className="mb-4">
+          <h3 className="mb-1 text-xs font-semibold text-slate-500">Toolbar</h3>
+          <p className="mb-2 text-xs text-slate-500">
+            Knöpfe in der Mitte der Toolbar — eingebaute und Aktionen aus{" "}
+            <code>actions.json</code>; Reihenfolge per Pfeil. Pro Projekt gemerkt.
+          </p>
+          <ul className="max-h-48 space-y-0.5 overflow-y-auto rounded border border-slate-200 p-1.5">
+            {[
+              ...toolbar
+                .map((id) => toolbarChoices.find((choice) => choice.id === id))
+                .filter((choice): choice is { id: string; label: string; hint: string } => Boolean(choice)),
+              ...toolbarChoices.filter((choice) => !toolbar.includes(choice.id)),
+            ].map((choice) => {
+              const position = toolbar.indexOf(choice.id);
+              const enabled = position >= 0;
+              const move = (delta: number) => {
+                const next = [...toolbar];
+                const target = position + delta;
+                if (target < 0 || target >= next.length) return;
+                [next[position], next[target]] = [next[target], next[position]];
+                onToolbar(next);
+              };
+              return (
+                <li key={choice.id} className="flex items-center gap-2 rounded px-1 py-0.5 text-xs hover:bg-slate-50">
+                  <input
+                    type="checkbox"
+                    checked={enabled}
+                    onChange={(event) =>
+                      onToolbar(
+                        event.target.checked
+                          ? [...toolbar, choice.id]
+                          : toolbar.filter((id) => id !== choice.id),
+                      )
+                    }
+                  />
+                  <span className="min-w-0 flex-1 truncate text-slate-700" title={choice.hint}>
+                    {choice.label}
+                    {choice.id.startsWith("action:") ? (
+                      <span className="ml-1 font-mono text-[10px] text-slate-400">{choice.hint}</span>
+                    ) : null}
+                  </span>
+                  {enabled ? (
+                    <span className="flex gap-0.5">
+                      <button
+                        onClick={() => move(-1)}
+                        disabled={position === 0}
+                        className="rounded px-1 text-slate-400 hover:text-slate-800 disabled:opacity-30"
+                        title="nach links"
+                      >
+                        ↑
+                      </button>
+                      <button
+                        onClick={() => move(1)}
+                        disabled={position === toolbar.length - 1}
+                        className="rounded px-1 text-slate-400 hover:text-slate-800 disabled:opacity-30"
+                        title="nach rechts"
+                      >
+                        ↓
+                      </button>
+                    </span>
+                  ) : null}
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+
         <section>
           <h3 className="mb-1 text-xs font-semibold text-slate-500">Layout</h3>
           <p className="mb-2 text-xs text-slate-500">
-            Breiten und Sichtbarkeiten der Bereiche werden pro Projekt gemerkt.
+            Breiten, Sichtbarkeiten und Toolbar werden pro Projekt gemerkt.
           </p>
           <button
             onClick={onResetLayout}

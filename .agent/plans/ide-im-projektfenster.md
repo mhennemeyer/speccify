@@ -1,6 +1,6 @@
 ---
-lifecycle: onHold
-status: I1 + I2 geliefert (2026-09-06), Linux-Builds + VM-Test (2026-09-09); I3 „Komfort nach Gebrauch" wartet auf Befunde — aktiv ist jetzt skill-quellen-und-export.md
+lifecycle: active
+status: I1 + I2 geliefert (2026-09-06); I3-Kern geliefert 2026-09-09 (BO-Auftrag „Aktionen, konfigurierbare Toolbar, Git vollständig, Datei-Historie im Inspektor, Inspektor-Tabs") — Hunk-Staging, Verwerfen, Commit-Details, Branches, Datei-Historie in Git- und Dateien-Inspektor, Toolbar-Knöpfe (eingebaut + Aktionen) wählbar und sortierbar; offen aus I3: Blame, Projektsuche, pfad:zeile aus dem Terminal, Anlegen/Umbenennen/Löschen von Dateien
 ---
 # Plan: IDE-Bausteine im Projektfenster
 

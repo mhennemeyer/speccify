@@ -18,7 +18,20 @@ export interface ProjectLayout {
   terminalDock: TerminalDock;
   /** Nach einem Neustart die letzte Agent-Sitzung automatisch fortsetzen. */
   resumeAgent: boolean;
+  /** Toolbar-Knöpfe in Reihenfolge (I3): eingebaute Ids (`git-pull`, …) und
+   *  `action:<command>`. `undefined` = Default (Git-Knöpfe + Aktionen mit
+   *  `toolbar: true`). */
+  toolbar?: string[];
 }
+
+/** Eingebaute Toolbar-Knöpfe — Reihenfolge = Default-Reihenfolge. */
+export const TOOLBAR_BUILTINS: Array<{ id: string; label: string; title: string }> = [
+  { id: "git-pull", label: "Pull", title: "git pull — mit Live-Ausgabe im Git-Tab" },
+  { id: "git-push", label: "Push", title: "git push" },
+  { id: "git-commit", label: "Commit", title: "Git-Tab öffnen und Commit-Nachricht schreiben" },
+  { id: "terminal", label: "Agent", title: "Agent-Terminal anzeigen bzw. starten" },
+];
+export const DEFAULT_TOOLBAR_BUILTINS = ["git-pull", "git-push"];
 
 export const LAYOUT_LIMITS = {
   nav: [200, 420] as const,
