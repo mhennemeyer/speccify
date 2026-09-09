@@ -211,6 +211,45 @@ export default function FilesTab({
   const openRef = useRef(open);
   openRef.current = open;
 
+  // Zuletzt geöffnete Dateien je Projekt (I3): Tabs überleben den Neustart —
+  // Entwürfe kommen ohnehin aus dem Draft-Speicher zurück.
+  const recentKey = `speccify.files.open:${project}`;
+  // Erst nach dem Wiederherstellen wird gemerkt — sonst überschriebe der
+  // leere Anfangszustand die Liste, bevor sie gelesen ist.
+  const restoredRef = useRef<"pending" | "running" | "done">("pending");
+  useEffect(() => {
+    if (restoredRef.current !== "pending") return;
+    restoredRef.current = "running";
+    let stored: { paths: string[]; active: string | null } | null = null;
+    try {
+      const raw = localStorage.getItem(recentKey);
+      stored = raw ? (JSON.parse(raw) as { paths: string[]; active: string | null }) : null;
+    } catch {
+      stored = null;
+    }
+    if (!stored || stored.paths.length === 0) {
+      restoredRef.current = "done";
+      return;
+    }
+    void (async () => {
+      for (const path of stored.paths.slice(0, 20)) await openFile(path);
+      if (stored.active) setActive(stored.active);
+      restoredRef.current = "done";
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [project]);
+  useEffect(() => {
+    if (restoredRef.current !== "done") return;
+    try {
+      localStorage.setItem(
+        recentKey,
+        JSON.stringify({ paths: open.map((file) => file.path), active }),
+      );
+    } catch {
+      // localStorage nicht verfügbar — dann eben nicht gemerkt.
+    }
+  }, [recentKey, open, active]);
+
   const loadDir = useCallback(
     async (dir: string) => {
       try {
