@@ -1,10 +1,13 @@
 """A directory of skills, behind the same `Library` protocol as everything else.
 
-Layout is what a skills repository actually looks like — flat, one directory
-per skill, no version segment:
+Layout is what a skills repository actually looks like — one directory per
+skill, no version segment, optionally grouped in folders (the folder
+structure is the repository's organisation, the app shows it as categories;
+`speccify export --category` writes into it):
 
     <root>/<name>/SKILL.md
     <root>/<name>/assets/…
+    <root>/<category>/<sub>/<name>/SKILL.md
 
 Two consequences follow from the format rather than from taste:
 
@@ -55,10 +58,34 @@ class LocalSkillLibrary:
     # --- Lookup ---------------------------------------------------------------
 
     def _directory(self, playbook_id: str) -> Path | None:
-        """`@scope/name` and a bare `name` both resolve to `<root>/<name>`."""
+        """`@scope/name` and a bare `name` both resolve to a `<name>/SKILL.md` here.
+
+        `<root>/<name>` wins; otherwise the first (sorted) `<name>` in any
+        category folder.
+        """
         name = split_id(playbook_id)[1] if "/" in playbook_id else playbook_id.lstrip("@")
         directory = self._root / name
-        return directory if (directory / SKILL_FILENAME).is_file() else None
+        if (directory / SKILL_FILENAME).is_file():
+            return directory
+        for candidate in self._skill_directories():
+            if candidate.name == name:
+                return candidate
+        return None
+
+    def _skill_directories(self, directory: Path | None = None, depth: int = 0) -> list[Path]:
+        """Every skill directory below the root, sorted; bundles are not descended into."""
+        directory = directory or self._root
+        found: list[Path] = []
+        if depth > 6:
+            return found
+        for child in sorted(p for p in directory.iterdir() if p.is_dir()):
+            if child.name.startswith(".") or child.name in ("node_modules", "target"):
+                continue
+            if (child / SKILL_FILENAME).is_file():
+                found.append(child)
+                continue
+            found.extend(self._skill_directories(child, depth + 1))
+        return found
 
     def _version_of(self, directory: Path) -> Version | None:
         try:
@@ -86,9 +113,7 @@ class LocalSkillLibrary:
     def list_playbooks(self) -> list[tuple[str, Version]]:
         """Every skill here, sorted — used by `search` and the viewer."""
         found: list[tuple[str, Version]] = []
-        for directory in sorted(p for p in self._root.iterdir() if p.is_dir()):
-            if not (directory / SKILL_FILENAME).is_file():
-                continue
+        for directory in self._skill_directories():
             version = self._version_of(directory)
             if version is None:
                 continue

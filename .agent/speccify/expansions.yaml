@@ -64,9 +64,9 @@ skills:
     - verify-stream
   speccify:
     source: '@speccify/speccify'
-    version: 0.2.0
-    bundle_sha256: sha256:a757115f6e45d97f33e223830413fde4edcd00d611ba9c4a8f4f07b8f5fe3304
-    expanded: '2026-08-21'
+    version: 0.4.0
+    bundle_sha256: sha256:600c999fb85a2ef0068d810b562d1eaefa8f28477ebc0898aaa5fefc3688ff61
+    expanded: '2026-09-09'
     requested: true
     tools: []
   storekit-sandbox-testing:

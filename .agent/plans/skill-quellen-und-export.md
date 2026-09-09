@@ -1,6 +1,6 @@
 ---
 lifecycle: active
-status: Bauen — Q1 (Quellen-Modell + verwaltete Checkouts) seit 2026-09-09; Entscheide D1–D5 nach BO-Delegation getroffen
+status: Q1 + Q2 geliefert 2026-09-09 (d6982ae); Q3 Export (CLI `speccify export`, Inspektor-Knopf) + Q4 Skill-Text geliefert 2026-09-09; offen Q5 Herkunft/Drift und die Eval an einem AVC-Skill
 ---
 # Plan: Skill-Quellen und Export — beliebige Repos, pro Projekt und global
 

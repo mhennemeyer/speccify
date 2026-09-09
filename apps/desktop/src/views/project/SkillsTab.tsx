@@ -275,12 +275,99 @@ function SourceBrowser({ project }: { project: string }) {
   );
 }
 
+/// Quelle + Ordner wählen → `speccify export` ins Agent-Terminal (D4: die App
+/// committet nicht selbst; das macht der Git-Tab im Checkout oder der Agent).
+function ExportForm({
+  skill,
+  sources,
+  onDone,
+}: {
+  skill: string;
+  sources: SourceInfo[];
+  onDone: (message: string | null) => void;
+}) {
+  const ready = sources.filter((entry) => entry.path);
+  const [location, setLocation] = useState<string | null>(null);
+  const [category, setCategory] = useState("skills");
+  const target = ready.find((entry) => entry.location === location) ?? ready[0];
+  if (!target) {
+    return (
+      <p className="rounded bg-amber-50 px-3 py-2 text-xs text-amber-800">
+        Keine Quelle bereit — im Modus „Quellen durchsuchen“ eine anbinden (Git-URL oder
+        Ordner) oder im Dashboard unter Bibliothek.
+      </p>
+    );
+  }
+  const folder = category.trim() || "skills";
+  const command = `speccify export ${skill} --to "${target.path}" --category "${folder}"`;
+  return (
+    <div className="space-y-2 rounded border border-slate-200 bg-slate-50 p-3 text-xs">
+      <label className="block">
+        <span className="mb-1 block font-medium text-slate-600">Quelle</span>
+        <select
+          value={target.location}
+          onChange={(event) => setLocation(event.target.value)}
+          className="w-full rounded border border-slate-300 bg-white px-2 py-1.5"
+        >
+          {ready.map((entry) => (
+            <option key={entry.location} value={entry.location}>
+              {entry.name} · {entry.scope === "project" ? "Projekt" : "global"}
+              {entry.kind === "git" ? " · Git" : ""}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="block">
+        <span className="mb-1 block font-medium text-slate-600">Ordner in der Quelle (Kategorie)</span>
+        <input
+          value={category}
+          onChange={(event) => setCategory(event.target.value)}
+          className="w-full rounded border border-slate-300 bg-white px-2 py-1.5 font-mono"
+          spellCheck={false}
+        />
+      </label>
+      <pre className="overflow-x-auto whitespace-pre-wrap rounded bg-white px-2 py-1.5 font-mono text-[11px] text-slate-600">
+        {command}
+      </pre>
+      <p className="text-slate-500">
+        Der Export streicht „## In this project“, setzt Version und Scope, nimmt Tools als
+        Vertrag mit und listet Stellen, die projektspezifisch aussehen. Committen und Pushen
+        passiert danach im Quell-Checkout — per Git-Tab oder Agent.
+      </p>
+      <div className="flex gap-2">
+        <button
+          onClick={() => {
+            window.dispatchEvent(new CustomEvent("speccify:type-command", { detail: command }));
+            onDone(
+              `Kommando ins Agent-Terminal getippt (Enter dort bestätigt): ${skill} nach ${target.name} exportieren.`,
+            );
+          }}
+          className="rounded bg-slate-800 px-3 py-1.5 text-white hover:bg-slate-700"
+        >
+          Ins Terminal tippen
+        </button>
+        <button
+          onClick={() => onDone(null)}
+          className="rounded px-3 py-1.5 text-slate-500 hover:bg-slate-100"
+        >
+          Abbrechen
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function SkillsTab({ project, refresh }: { project: string; refresh?: number }) {
   const { data, loading, error, reload } = useAsync(
     () => invoke<SkillEntry[]>("project_skills", { project }),
     `skills:${project}`,
   );
   const [mode, setMode] = useState<"project" | "browse">("project");
+  // Export (Plan skill-quellen-und-export.md, Q3): Quelle + Ordner wählen,
+  // `speccify export` landet im Agent-Terminal — committet wird im Checkout.
+  const [exporting, setExporting] = useState<string | null>(null);
+  const [exportNotice, setExportNotice] = useState<string | null>(null);
+  const sources = useAsync(() => listSources(project), `skill-sources:${project}`);
   const [selected, setSelected] = useState<string | null>(null);
   const inspector = useInspector("skills");
   const skills = data ?? [];
@@ -424,9 +511,33 @@ export default function SkillsTab({ project, refresh }: { project: string; refre
                                 Tools ansehen
                               </InspectorButton>
                             ) : null}
+                            <InspectorButton
+                              title="Als allgemeinen Skill in eine Quelle exportieren (speccify export)"
+                              onClick={() => {
+                                setExportNotice(null);
+                                setExporting(exporting === skill.name ? null : skill.name);
+                              }}
+                            >
+                              Exportieren…
+                            </InspectorButton>
                           </>
                         }
-                      />
+                      >
+                        {exporting === skill.name ? (
+                          <ExportForm
+                            skill={skill.name}
+                            sources={sources.data ?? []}
+                            onDone={(message) => {
+                              setExporting(null);
+                              setExportNotice(message);
+                            }}
+                          />
+                        ) : exportNotice ? (
+                          <p className="rounded bg-sky-50 px-3 py-2 text-xs text-sky-800">
+                            {exportNotice}
+                          </p>
+                        ) : null}
+                      </InspectorPanel>
                     </InspectorPortal>
                     <LoadingBoundary
                       loading={body.loading}

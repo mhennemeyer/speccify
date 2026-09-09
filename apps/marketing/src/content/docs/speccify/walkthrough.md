@@ -2,7 +2,7 @@
 title: 'Walkthrough: release-checks'
 description: One real skill, end to end — from a source repo to three verified tools in a shipping project.
 sidebar:
-  order: 5
+  order: 6
 ---
 
 The `release-checks` skill audits a sandboxed macOS app before an App

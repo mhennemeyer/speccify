@@ -118,7 +118,12 @@ unten; im Editor ⌘S speichern, im Commit-Feld ⌘⏎ committen.
   Terminal (Credential-Helper oder SSH-Schlüssel). Ordner sind
   Kategorien, die Mitte die Vorschau, **Importieren (expand)** im Inspektor
   tippt das passende `speccify`-Kommando ins Agent-Terminal — dort mit
-  Enter bestätigen.
+  Enter bestätigen. Umgekehrt bringt **Exportieren…** im Inspektor eines
+  Projekt-Skills ihn als allgemeinen Skill in eine Quelle: Quelle und
+  Ordner wählen, `speccify export` landet im Terminal, streicht „In this
+  project", setzt Version und Scope, nimmt Tools als Vertrag mit und
+  listet Stellen, die noch projektspezifisch aussehen. Committen und
+  Pushen passiert danach im Quell-Checkout — per Git-Tab oder Agent.
 
 **Bearbeiten:** *Bearbeiten* im Inspektor oder **Doppelklick** auf den
 Listeneintrag oder den Inhalt. Der Editor speichert von selbst — jeder

@@ -9,7 +9,7 @@ description: Bring a skill from a Speccify library into this project and use it
 license: MIT
 compatibility: Requires the `speccify` CLI on PATH and a project with speccify.yaml
 metadata:
-  speccify.version: 0.3.0
+  speccify.version: 0.4.0
   speccify.scope: speccify
 ---
 
@@ -143,31 +143,39 @@ stays in `## In this project`.
 
 Sometimes the recurring thing was never in a library: you did it three times
 here, with tools you wrote. Then the skill goes upstream whole — the reverse
-of expand. Do it by hand, it is a reading exercise, not a build step:
+of expand. The copying is a command; the generalising is a reading exercise
+that only you can do:
 
-1. **Generalise the text.** Copy `.agent/skills/<name>/SKILL.md` into the
-   library repository as `skills/<name>/SKILL.md`. Replace every value that
-   belongs to this project (bundle id, paths, identities, ports) with a
-   placeholder `<like-this>`; drop `## In this project`. Add
-   `metadata.speccify.version: 1.0.0` and, if the skill builds on another
-   library skill, `speccify.uses` with that skill's git id.
-2. **Ship contracts, not scripts.** For each tool the skill uses, copy
-   `.agent/tools/<tool>/TOOL.md` to `skills/<name>/tools/<tool>/TOOL.md`.
-   Defaults in the spec must be generic too (`Info.plist`, not
-   `Resources/Info.plist` of this app). Your implementation may travel as
-   `reference.<ext>` beside it — a hint, never the contract. Fixtures the
-   examples need go beside them.
-3. **Prove it reads.** `speccify check` in the library repository must be
-   green; then try the skill from a throwaway folder: `speccify add
-   git+<repo>#skills/<name>`, `expand`, implement the tools from the
-   reference, `tool check`. If that round trip needs knowledge that is only
-   in your head, it goes into the skill.
-4. **Tag.** `git tag skills/<name>/v1.0.0`, push the tag. Tags are final:
-   a broken tag is fixed by a new version, not by moving the tag (the
-   resolver picks the lowest version that satisfies a range).
-5. Back in the project, record the origin so drift shows up later:
-   `speccify add git+<repo>#skills/<name>` and `expand` once more — your
-   `## In this project` section survives.
+1. **Export.** `speccify export <name> --to <source>` — `<source>` is a
+   checkout of the library repository (the app clones its sources to
+   `~/.speccify/sources/<slug>/`; `speccify export --help` for `--category`,
+   `--scope`, `--version`). It writes `skills/<name>/SKILL.md` without
+   `## In this project`, with `metadata.speccify.version` and `.scope`, every
+   tool the skill uses as `tools/<tool>/TOOL.md`, your implementation as
+   `reference.<ext>` beside it, fixtures alongside; then it checks the
+   result and prints **the lines that look project-specific** — absolute
+   paths, bundle ids, private hosts, emails, anything that reads like a
+   secret.
+2. **Generalise the text.** Go through that list in the exported files.
+   Every value that belongs to this project (bundle id, paths, identities,
+   ports, people) becomes a placeholder `<like-this>` or goes. The list is
+   a heuristic: read the whole skill once more with a stranger's eyes —
+   an assumption that is only true here is as project-specific as a path.
+   Defaults in tool specs must be generic too (`Info.plist`, not
+   `Resources/Info.plist` of this app). If the skill builds on another
+   library skill, add `speccify.uses` with that skill's id.
+3. **Prove it reads.** `speccify check skills/<name>` in the library must
+   be green; then try the skill from a throwaway folder: `speccify add
+   @<scope>/<name> --library <source>`, `expand`, implement the tools from
+   the reference, `tool check`. If that round trip needs knowledge that is
+   only in your head, it goes into the skill.
+4. **Commit and push** in the library checkout — the app's Git tab does it,
+   or you do. For repositories that pin by tag, `git tag
+   skills/<name>/v1.0.0` and push the tag; tags are final (a broken tag is
+   fixed by a new version, never by moving the tag).
+5. **Record the origin** so drift shows up later — the export printed the
+   line: `speccify add @<scope>/<name> --library <source> && speccify expand
+   <name> --library <source>`. Your `## In this project` section survives.
 
 ## Pitfalls
 

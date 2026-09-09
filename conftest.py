@@ -22,4 +22,12 @@ if str(_SCRIPTS_DIR) not in sys.path:
 
 from _venv_hygiene import unhide_venv_pth_files  # noqa: E402
 
-unhide_venv_pth_files(_REPO_ROOT / ".venv")
+if unhide_venv_pth_files(_REPO_ROOT / ".venv"):
+    # `site.py` hat die versteckten `.pth`-Dateien beim Start dieses Prozesses
+    # bereits übersprungen — jetzt, da sie sichtbar sind, nachladen, damit der
+    # laufende Testlauf sie sieht und nicht erst der nächste (uv 0.11 versteckt
+    # sie bei jedem `uv run` erneut, auch mit --no-sync).
+    import site  # noqa: E402
+
+    for candidate in (_REPO_ROOT / ".venv" / "lib").glob("python*/site-packages"):
+        site.addsitedir(str(candidate))

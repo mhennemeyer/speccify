@@ -109,9 +109,10 @@ progress means the skill itself is wrong: stop and say so (step 5).
 
 ### The trace
 
-One entry per skill use in the project log (`.agent/log.md` if the project
-has one, otherwise the place the project keeps its history), appended, never
-rewritten:
+One entry per skill use in the place the project keeps its history —
+`.agent/log.md` if the project has one; on an iKanban AI board the history of
+the ticket you are working (`agent_run` line naming skill and tool) —
+appended, never rewritten:
 
 ```markdown
 ### 2026-08-21 · macos-notarize-tauri 1.0.0 · iteration 2 · ok
@@ -133,6 +134,44 @@ for this project, it belongs upstream: in the skill's source repository, as
 a step, a pitfall, or a sharper example in a tool spec — an example that
 would have caught your bug is the best gift. Project-specific knowledge
 stays in `## In this project`.
+
+### A skill born in this project
+
+Sometimes the recurring thing was never in a library: you did it three times
+here, with tools you wrote. Then the skill goes upstream whole — the reverse
+of expand. The copying is a command; the generalising is a reading exercise
+that only you can do:
+
+1. **Export.** `speccify export <name> --to <source>` — `<source>` is a
+   checkout of the library repository (the app clones its sources to
+   `~/.speccify/sources/<slug>/`; `speccify export --help` for `--category`,
+   `--scope`, `--version`). It writes `skills/<name>/SKILL.md` without
+   `## In this project`, with `metadata.speccify.version` and `.scope`, every
+   tool the skill uses as `tools/<tool>/TOOL.md`, your implementation as
+   `reference.<ext>` beside it, fixtures alongside; then it checks the
+   result and prints **the lines that look project-specific** — absolute
+   paths, bundle ids, private hosts, emails, anything that reads like a
+   secret.
+2. **Generalise the text.** Go through that list in the exported files.
+   Every value that belongs to this project (bundle id, paths, identities,
+   ports, people) becomes a placeholder `<like-this>` or goes. The list is
+   a heuristic: read the whole skill once more with a stranger's eyes —
+   an assumption that is only true here is as project-specific as a path.
+   Defaults in tool specs must be generic too (`Info.plist`, not
+   `Resources/Info.plist` of this app). If the skill builds on another
+   library skill, add `speccify.uses` with that skill's id.
+3. **Prove it reads.** `speccify check skills/<name>` in the library must
+   be green; then try the skill from a throwaway folder: `speccify add
+   @<scope>/<name> --library <source>`, `expand`, implement the tools from
+   the reference, `tool check`. If that round trip needs knowledge that is
+   only in your head, it goes into the skill.
+4. **Commit and push** in the library checkout — the app's Git tab does it,
+   or you do. For repositories that pin by tag, `git tag
+   skills/<name>/v1.0.0` and push the tag; tags are final (a broken tag is
+   fixed by a new version, never by moving the tag).
+5. **Record the origin** so drift shows up later — the export printed the
+   line: `speccify add @<scope>/<name> --library <source> && speccify expand
+   <name> --library <source>`. Your `## In this project` section survives.
 
 ## Pitfalls
 

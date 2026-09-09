@@ -13,6 +13,7 @@ hat eine eigene Referenzseite:
 | [`speccify add`](/cli/add/) | Add a playbook dependency and update the lockfile. |
 | [`speccify check`](/cli/check/) | Check whether skills are still current: source age, dead links, best practice. |
 | [`speccify expand`](/cli/expand/) | Turn locked skills into normal, project-specific skills under .agent/. |
+| [`speccify export`](/cli/export/) | Copy a project skill into a library as a general skill — the reverse of expand. |
 | [`speccify init`](/cli/init/) | Create the manifest and link Claude/Codex skill dirs to .agent/skills. |
 | [`speccify link`](/cli/link/) | Point agent skill directories at the canonical .agent/skills directory. |
 | [`speccify lint`](/cli/lint/) | Validate skills against the Agent Skills specification. |
