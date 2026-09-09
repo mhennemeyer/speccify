@@ -29,21 +29,30 @@ What the command does mechanically:
   prints the `speccify add … && speccify expand …` line that records
   the origin back in your project once the export is pushed.
 
-What no command can do is *generalise the text*. A bundle id, an
-absolute path, a team id, a private host — they were right here and
-are wrong everywhere else. The export ends with a list of lines that
-look like that:
+What no command can do is *generalise the text*. A bundle id, a
+repository path, a team id, a private host, a mention of another skill
+that only this project has — they were right here and are wrong
+everywhere else. The export ends with a list of lines that look like
+that:
 
 ```text
 Review before you commit — these lines look project-specific:
-  SKILL.md:14  path: /Users/me/Work/App/build/App.app
-  SKILL.md:15  bundle-id: com.acme.app
+  SKILL.md:13  project-path: ReKas/ReKas.Core
+  SKILL.md:15  project-path: Legacy/
+  SKILL.md:15  skill-ref: migration-playbook
+  SKILL.md:36  path: /Users/me/Work/App/build/App.app
+  SKILL.md:37  bundle-id: com.acme.app
   tools/verify/reference.sh:3  host: https://gitlab.acme.internal/ci
 ```
 
-Each becomes a placeholder `<like-this>` or goes. Placeholders are the
-contract between the author and the next reader: expand reports them
-as *to fill in*, so a reader is never left guessing what was specific.
+Each becomes a placeholder `<like-this>` or goes; a `skill-ref` means
+the other skill is exported too and referenced via
+`metadata.speccify.uses`, or what this skill needs from it is inlined.
+Placeholders are the contract between the author and the next reader:
+expand reports them as *to fill in*, so a reader is never left guessing
+what was specific. The list is a heuristic — read the whole skill once
+more with a stranger's eyes; an assumption that is only true here is as
+project-specific as a path.
 
 Nothing is committed. The source is a git checkout — the app's
 **Library** clones it, or you did — and committing and pushing is a

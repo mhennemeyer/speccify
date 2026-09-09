@@ -151,3 +151,31 @@ def test_suspects_point_at_paths_ids_private_hosts_and_secrets() -> None:
     # Binary or unknown files are skipped, placeholders are not suspects.
     assert find_suspects({"tools/x/fixtures/App.app": b"/Users/me/"}) == ()
     assert find_suspects({"SKILL.md": b"Copy it to ~/<vendor-dir>/bin.\n"}) == ()
+
+
+def test_suspects_find_repository_paths_and_sibling_skills() -> None:
+    """A hand-written skill: no absolute paths, but the project is everywhere."""
+    text = (
+        "Rebuild the form as a service in `ReKas/ReKas.Core/Services/<Name>Service.cs`.\n"
+        "`Legacy/` is read-only (see `migration-playbook`); status lives in\n"
+        "`.agent/plans/migration-status.md`. Then apply skill `wpf-view`.\n"
+        "Generic layout is fine: `.agent/skills/<name>/SKILL.md`, `tools/verify/TOOL.md`,\n"
+        "`references/sql.md`, `/tmp/build.log`, a 1/2 ratio, `<root>/<name>`.\n"
+        "The sibling-name-like `wpf-viewer` is something else entirely.\n"
+    )
+    suspects = find_suspects(
+        {"SKILL.md": text.encode()},
+        sibling_skills=("migration-playbook", "wpf-view", "unrelated"),
+    )
+    got = {(s.kind, s.text, s.line) for s in suspects}
+    assert ("project-path", "ReKas/ReKas.Core/Services/<Name>Service.cs", 1) in got
+    assert ("project-path", "Legacy/", 2) in got
+    assert ("project-path", ".agent/plans/migration-status.md", 3) in got
+    assert ("skill-ref", "migration-playbook", 2) in got
+    assert ("skill-ref", "wpf-view", 3) in got
+    assert not any(
+        s.text.startswith((".agent/skills", "tools/", "references/", "/tmp")) for s in suspects
+    )
+    assert not any(s.text in ("1/2", "<root>/<name>") for s in suspects)
+    assert not any(s.kind == "skill-ref" and s.line == 6 for s in suspects)
+    assert not any(s.text == "unrelated" for s in suspects)

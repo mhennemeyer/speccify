@@ -69,6 +69,26 @@ _PRIVATE_HOST_RE = re.compile(
     r"(?:^localhost$|^\d{1,3}(?:\.\d{1,3}){3}$|\.(?:local|internal|lan|corp|intranet)$|^gitlab\.|"
     r"^git\.|^intranet\.|^jira\.|^confluence\.)"
 )
+# A backtick span with a slash is a path nine times out of ten — and a path
+# whose first segment is a concrete directory of *this* repository
+# (`ReKas/ReKas.Core/…`, `Legacy/`) is the most common project-specific thing
+# in a hand-written skill. Generic layout paths are not suspects.
+_CODE_PATH_RE = re.compile(r"`([^`\s]*?/[^`\s]*)`")
+_GENERIC_PATH_PREFIXES = (
+    ".agent/skills",
+    ".agent/tools",
+    ".agent/speccify",
+    ".claude/",
+    ".agents/",
+    "tools/",
+    "references/",
+    "assets/",
+    "scripts/",
+    "fixtures/",
+    "/tmp/",
+    "./",
+    "../",
+)
 _TEXT_SUFFIXES = (
     ".md",
     ".sh",
@@ -138,12 +158,15 @@ def generalise_skill(
     tools: dict[str, dict[str, bytes]],
     uses: tuple[str, ...] = (),
     platform: str | None = None,
+    sibling_skills: tuple[str, ...] = (),
 ) -> ExportedSkill:
     """Turn an expanded project skill back into a library bundle.
 
     `tools` maps each tool name to the files in `.agent/tools/<name>/`
     (relative name → bytes). `platform` says which implementation becomes
     `reference.<ext>` when several exist (default: the first of `PLATFORMS`).
+    `sibling_skills` are the other skills of the project: a mention of one is
+    a suspect, because the library does not have it.
     """
     skill = parse_skill(markdown)
     body = strip_project_section(skill.body).strip("\n") + "\n"
@@ -163,14 +186,30 @@ def generalise_skill(
         name=skill.name,
         files=files,
         tools=tuple(sorted(tools)),
-        suspects=find_suspects(files),
+        suspects=find_suspects(files, sibling_skills=sibling_skills),
         placeholders=tuple(find_placeholders(body)),
     )
 
 
-def find_suspects(files: dict[str, bytes]) -> tuple[Suspect, ...]:
-    """Lines in text files that look like they belong to one project, not to everyone."""
+def find_suspects(
+    files: dict[str, bytes], *, sibling_skills: tuple[str, ...] = ()
+) -> tuple[Suspect, ...]:
+    """Lines in text files that look like they belong to one project, not to everyone.
+
+    Kinds: `path` (absolute or home paths), `project-path` (a repository path
+    in backticks), `bundle-id`, `email`, `host` (private hosts, ports),
+    `secret`, and `skill-ref` (another skill of the same project).
+    """
     found: list[Suspect] = []
+    sibling_patterns = [
+        (name, re.compile(rf"(?<![\w-]){re.escape(name)}(?![\w-])")) for name in sibling_skills
+    ]
+
+    def add(path: str, number: int, kind: str, text: str) -> None:
+        suspect = Suspect(file=path, line=number, kind=kind, text=text)
+        if suspect not in found:
+            found.append(suspect)
+
     for path in sorted(files):
         if not path.endswith(_TEXT_SUFFIXES):
             continue
@@ -183,10 +222,28 @@ def find_suspects(files: dict[str, bytes]) -> tuple[Suspect, ...]:
                         continue
                     if kind == "path" and _is_placeholder_only(hit):
                         continue
-                    suspect = Suspect(file=path, line=number, kind=kind, text=hit)
-                    if suspect not in found:
-                        found.append(suspect)
+                    add(path, number, kind, hit)
+            if path.endswith(".md"):
+                for match in _CODE_PATH_RE.finditer(line):
+                    if _is_project_path(match.group(1)):
+                        add(path, number, "project-path", match.group(1))
+            for name, pattern in sibling_patterns:
+                if pattern.search(line):
+                    add(path, number, "skill-ref", name)
     return tuple(found)
+
+
+def _is_project_path(span: str) -> bool:
+    """A repository path with a concrete first segment — not generic layout, not a URL."""
+    if span.startswith(("http://", "https://", "<", "~/", "/", "@", "git+")):
+        return False
+    if any(span.startswith(prefix) for prefix in _GENERIC_PATH_PREFIXES):
+        return False
+    first = span.split("/", 1)[0]
+    if not first or "<" in first or "*" in first or first.startswith("-"):
+        return False
+    # `a/b` in prose is often a ratio or an either/or; demand something file-like.
+    return "." in span or span.endswith("/") or span.count("/") >= 2
 
 
 def _private_host(url: str) -> bool:

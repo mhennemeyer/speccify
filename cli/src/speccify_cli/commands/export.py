@@ -145,12 +145,20 @@ def run_export(
         else:
             version = "1.0.0"
 
+    siblings = tuple(
+        sorted(
+            p.name
+            for p in (root / SKILLS_DIR).iterdir()
+            if p.is_dir() and p.name != name and (p / SKILL_FILENAME).is_file()
+        )
+    )
     exported = generalise_skill(
         markdown,
         version=version,
         scope=scope,
         tools=tools,
         platform=platform or current_platform(),
+        sibling_skills=siblings,
     )
     files = dict(exported.files)
     # Assets beside the skill (assets/, scripts/, references/) travel with it.
@@ -183,7 +191,7 @@ def run_export(
         left_alone=tuple(left_alone),
         tools=exported.tools,
         placeholders=exported.placeholders,
-        suspects=find_suspects(files),
+        suspects=find_suspects(files, sibling_skills=siblings),
         findings=tuple(check_skill_directory(target)),
         library=library,
     )
@@ -257,6 +265,11 @@ def export_command(
         typer.echo(
             "Replace what belongs to this project with a placeholder <like-this>, or cut it."
         )
+        if any(s.kind == "skill-ref" for s in report.suspects):
+            typer.echo(
+                "skill-ref: another skill of this project — export it too and reference it "
+                "via metadata.speccify.uses, or inline what this skill needs from it."
+            )
     if not report.skill_id.startswith("@"):
         typer.echo(
             "\nNo scope: the skill has no @scope/name id and cannot be added from the library. "

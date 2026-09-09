@@ -1,6 +1,6 @@
 ---
 lifecycle: active
-status: Q1 + Q2 geliefert 2026-09-09 (d6982ae); Q3 Export (CLI `speccify export`, Inspektor-Knopf) + Q4 Skill-Text geliefert 2026-09-09; offen Q5 Herkunft/Drift und die Eval an einem AVC-Skill
+status: Q1 + Q2 geliefert 2026-09-09 (d6982ae); Q3 Export (CLI `speccify export`, Inspektor-Knopf) + Q4 Skill-Text geliefert 2026-09-09; Eval an AVC-Skills 2026-09-09 (extract-service: erster Bericht leer → Heuristiken project-path + skill-ref ergänzt, jetzt 20 echte Treffer); offen Q5 Herkunft/Drift
 ---
 # Plan: Skill-Quellen und Export — beliebige Repos, pro Projekt und global
 
