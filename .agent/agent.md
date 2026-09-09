@@ -22,10 +22,13 @@ Beide sind auf ausdrücklichen BO-Entscheid parallel aktiv.
 - `.agent/tools/<name>/TOOL.md`: Tool-Vertrag; Implementierungen daneben als
   `<platform>.<ext>`.
 - `.agent/speccify/expansions.yaml`: Herkunft, Hashes und Prüfstatus.
-- `.agent/plans/`: aktive Pläne und Entwürfe; Fertiges unter `archive/`.
+- `.agent/specs/<slug>/SPEC.md`: **eine Arbeitseinheit** (Spec) mit
+  Stationen Backlog / Doing / Done und Tasks als Checkboxen; Fertiges
+  unter `.agent/specs/archive/`. Ersetzt seit 2026-09-09 Pläne und Tickets
+  (Plan `spec-workflow.md`); `.agent/plans/` bleibt bis zur Migration (S4)
+  als Lesebestand.
 - `.agent/playbooks/`: stehende Anleitungen (Release, Deploy, …) — anders
-  als Pläne werden sie nicht abgearbeitet, sondern wiederverwendet.
-- `.agent/board/`: optionale, dateibasierte Tickets.
+  als Specs werden sie nicht abgearbeitet, sondern wiederverwendet.
 - `.agent/actions.json`: benannte Projektaktionen.
 
 Agent-spezifische Ordner sind nur Adapter: `.claude/skills` und

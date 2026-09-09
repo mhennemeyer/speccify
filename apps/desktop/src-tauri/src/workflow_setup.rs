@@ -14,7 +14,10 @@ use serde::Serialize;
 use crate::project_cmd::resolve_project_root;
 
 /// Version des Policy-Textes — Bump ⇒ Banner zeigt „veraltet".
-pub const WORKFLOW_VERSION: u32 = 1;
+/// v1 = Board/Ticket-Workflow (2026-08-31), v2 = Spec-Workflow
+/// (Plan spec-workflow.md, 2026-09-09): der Block in agent.md wird beim
+/// Einrichten ersetzt, angepasste Texte außerhalb der Marker bleiben.
+pub const WORKFLOW_VERSION: u32 = 2;
 
 const POLICY: &str = include_str!("../templates/workflow-policy.md");
 const BEGIN_PREFIX: &str = "<!-- speccify:workflow:begin v";
@@ -27,6 +30,13 @@ agent-independent source of truth for this project. Host files like \
 `CLAUDE.md` and `AGENTS.md` only point here.\n";
 
 const TICKET_SKILLS: &[(&str, &str)] = &[
+    ("spec-next", include_str!("../templates/skill-spec-next.md")),
+    ("spec-ask", include_str!("../templates/skill-spec-ask.md")),
+];
+
+/// Skills des v1-Workflows: werden beim Einrichten entfernt, wenn sie noch
+/// unverändert die alte Vorlage sind (angepasste bleiben).
+const LEGACY_SKILLS: &[(&str, &str)] = &[
     (
         "ticket-next",
         include_str!("../templates/skill-ticket-next.md"),
@@ -194,7 +204,7 @@ fn collect_pending(root: &Path) -> (Option<u32>, Vec<String>) {
         }
         Some(_) => {}
     }
-    for dir in [".agent/board", ".agent/plans"] {
+    for dir in [".agent/specs", ".agent/playbooks"] {
         if !root.join(dir).is_dir() {
             pending.push(format!("{dir}/ anlegen"));
         }
@@ -260,7 +270,7 @@ pub fn project_workflow_status(project: String) -> Result<WorkflowStatus, String
 pub fn project_workflow_install(project: String) -> Result<WorkflowStatus, String> {
     let root = resolve_project_root(&project)?;
 
-    for dir in [".agent/board", ".agent/plans", ".agent/skills"] {
+    for dir in [".agent/specs", ".agent/playbooks", ".agent/skills"] {
         std::fs::create_dir_all(root.join(dir)).map_err(|e| format!("{dir}: {e}"))?;
     }
 
@@ -272,6 +282,15 @@ pub fn project_workflow_install(project: String) -> Result<WorkflowStatus, Strin
         let skill = root.join(".agent/skills").join(name).join("SKILL.md");
         if !skill.is_file() {
             write_atomic(&skill, content)?;
+        }
+    }
+    // v1-Skills nur entfernen, wenn sie noch die unveränderte Vorlage sind.
+    for (name, template) in LEGACY_SKILLS {
+        let dir = root.join(".agent/skills").join(name);
+        let skill = dir.join("SKILL.md");
+        if std::fs::read_to_string(&skill).ok().as_deref() == Some(*template) {
+            let _ = std::fs::remove_file(&skill);
+            let _ = std::fs::remove_dir(&dir);
         }
     }
 
@@ -442,14 +461,15 @@ mod tests {
 
         let after = project_workflow_install(project.clone()).unwrap();
         assert_eq!(after.state, "current", "pending: {:?}", after.pending);
-        assert!(dir.join(".agent/board").is_dir());
-        assert!(dir.join(".agent/plans").is_dir());
-        assert!(dir.join(".agent/skills/ticket-next/SKILL.md").is_file());
-        assert!(dir.join(".agent/skills/ticket-ask/SKILL.md").is_file());
+        assert!(dir.join(".agent/specs").is_dir());
+        assert!(dir.join(".agent/playbooks").is_dir());
+        assert!(dir.join(".agent/skills/spec-next/SKILL.md").is_file());
+        assert!(dir.join(".agent/skills/spec-ask/SKILL.md").is_file());
         assert!(dir.join("CLAUDE.md").is_file());
         assert!(dir.join("AGENTS.md").is_file());
         let agent_md = std::fs::read_to_string(dir.join(".agent/agent.md")).unwrap();
-        assert!(agent_md.contains("## Board workflow"));
+        assert!(agent_md.contains("## Spec workflow"));
+        assert!(agent_md.contains("speccify:workflow:begin v2"));
 
         // Zweiter Lauf ist ein No-op auf Byte-Ebene.
         let first = std::fs::read_to_string(dir.join(".agent/agent.md")).unwrap();
@@ -472,6 +492,13 @@ mod tests {
             "---\nname: ticket-next\ndescription: Angepasst.\n---\nEigene Variante.\n",
         )
         .unwrap();
+        // Unveränderter v1-Skill daneben: der wird beim Einrichten aufgeräumt.
+        std::fs::create_dir_all(dir.join(".agent/skills/ticket-ask")).unwrap();
+        std::fs::write(
+            dir.join(".agent/skills/ticket-ask/SKILL.md"),
+            include_str!("../templates/skill-ticket-ask.md"),
+        )
+        .unwrap();
         std::fs::write(dir.join("CLAUDE.md"), "# Eigenes CLAUDE.md ohne Verweis\n").unwrap();
         std::fs::write(
             dir.join(".agent/agent.md"),
@@ -484,11 +511,13 @@ mod tests {
         let skill =
             std::fs::read_to_string(dir.join(".agent/skills/ticket-next/SKILL.md")).unwrap();
         assert!(skill.contains("Eigene Variante"));
+        assert!(!dir.join(".agent/skills/ticket-ask").exists());
+        assert!(dir.join(".agent/skills/spec-ask/SKILL.md").is_file());
         let claude = std::fs::read_to_string(dir.join("CLAUDE.md")).unwrap();
         assert_eq!(claude, "# Eigenes CLAUDE.md ohne Verweis\n");
         let agent_md = std::fs::read_to_string(dir.join(".agent/agent.md")).unwrap();
         assert!(agent_md.starts_with("# Bestand\n"));
-        assert!(agent_md.contains("## Board workflow"));
+        assert!(agent_md.contains("## Spec workflow"));
         // Host-Datei ohne Verweis wird gemeldet, nicht angefasst.
         assert_eq!(status.state, "outdated");
         assert!(status

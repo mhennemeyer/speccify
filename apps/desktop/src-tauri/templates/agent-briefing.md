@@ -10,8 +10,11 @@ this machine. The active coding agent remains the executor.
 - `.agent/tools/<name>/TOOL.md` is a platform-independent tool contract;
   implementations live beside it as `<platform>.<ext>`.
 - `.agent/speccify/expansions.yaml` records provenance and verification state.
-- `.agent/plans/` and `.agent/board/` contain plans and file-based tickets when
-  the project uses those workflows.
+- `.agent/specs/<slug>/SPEC.md` is one piece of work (a spec) with stations
+  Backlog / Doing / Done and its tasks as checkboxes; finished specs live
+  under `.agent/specs/archive/`.
+- `.agent/playbooks/<name>.md` are standing procedures that are reused, not
+  worked off.
 - `.agent/actions.json` contains named, reviewable project commands.
 
 Agent-specific directories are adapters only. Claude reads `.claude/skills`;

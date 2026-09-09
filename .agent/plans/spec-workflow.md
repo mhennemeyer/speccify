@@ -1,6 +1,6 @@
 ---
-lifecycle: draft
-status: Entwurf 2026-09-09 nach BO-Exkurs („Spec-Workflow durchdenken, Webrecherche, schneller Umbau bevor viele Leute mitarbeiten"); Entscheide D1–D8 offen
+lifecycle: active
+status: BO 2026-09-09 „Dein Vorschlag klingt super, lass uns das so machen" — D1–D8 entschieden (s. unten), S1 Format + Policy läuft
 ---
 # Plan: Specs statt Pläne und Tickets — eine Arbeitseinheit, drei Stationen
 
@@ -105,7 +105,24 @@ Was wurde wie verifiziert (Tests, Screenshots, Klick-Test).
   und Hilfe (O'Reilly: konkurrierende Wahrheiten). `design.md` neben der
   SPEC.md ist erlaubt, wenn es groß wird.
 
-## Entscheidungen für BO
+## Entscheidungen (BO, 2026-09-09, per Rückfrage im Chat)
+
+* **D1/D2:** Arbeitseinheit heißt **Spec**, Stationen **Backlog / Doing /
+  Done**, keine vierte Station — eine Spec ohne `order` gilt als Idee.
+* **D3:** **Eine Spec in Doing je Agent-Sitzung** (Policy); das Board
+  erzwingt nichts.
+* **D4:** Tasks als Checkboxen **in der SPEC.md** unter `## Tasks`.
+* **D5:** **Pläne-Tab entfällt komplett**; `.agent/plans/` bleibt als
+  Dateien lesbar (Dateien-Tab), die App zeigt sie nicht mehr an.
+* **D6:** iKanbanAI-Format (D19) **aufgegeben**.
+* **D7:** **Aktive Pläne → Specs** (ide-im-projektfenster, skill-quellen-
+  und-export, skills-und-tools; Meilensteine → Tasks), alle anderen Pläne
+  und die Tickets ins Spec-Archiv.
+* **D8:** Verhaltens-Specs **jetzt nicht**, später prüfen.
+* **Navigator:** Gruppe „Board" wird **„Specs"**; „Orga" behält Playbooks
+  und Skills.
+
+### Die Fragen, wie sie gestellt wurden
 
 * **D1 Name.** „Spec" (Vorschlag) — passt zu Speccify und zum Markt; die
   Tabs heißen dann „Specs" statt „Pläne" + „Board".

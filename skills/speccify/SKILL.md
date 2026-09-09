@@ -9,7 +9,7 @@ description: Bring a skill from a Speccify library into this project and use it
 license: MIT
 compatibility: Requires the `speccify` CLI on PATH and a project with speccify.yaml
 metadata:
-  speccify.version: 0.4.1
+  speccify.version: 0.4.2
   speccify.scope: speccify
 ---
 
@@ -114,9 +114,9 @@ progress means the skill itself is wrong: stop and say so (step 5).
 ### The trace
 
 One entry per skill use in the place the project keeps its history —
-`.agent/log.md` if the project has one; on an iKanban AI board the history of
-the ticket you are working (`agent_run` line naming skill and tool) —
-appended, never rewritten:
+`.agent/log.md` if the project has one; in a Speccify project the
+`## Verification` section and the `agent_run` history line of the spec you
+are working (naming skill and tool) — appended, never rewritten:
 
 ```markdown
 ### 2026-08-21 · macos-notarize-tauri 1.0.0 · iteration 2 · ok
