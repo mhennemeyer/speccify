@@ -64,8 +64,8 @@ skills:
     - verify-stream
   speccify:
     source: '@speccify/speccify'
-    version: 0.4.0
-    bundle_sha256: sha256:600c999fb85a2ef0068d810b562d1eaefa8f28477ebc0898aaa5fefc3688ff61
+    version: 0.4.1
+    bundle_sha256: sha256:294ee4e0840f24d9711dde1f0c1f6571b5d81157dfafc8b4db566ec0733e2c47
     expanded: '2026-09-09'
     requested: true
     tools: []

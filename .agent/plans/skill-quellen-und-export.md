@@ -1,6 +1,6 @@
 ---
 lifecycle: active
-status: Q1 + Q2 geliefert 2026-09-09 (d6982ae); Q3 Export (CLI `speccify export`, Inspektor-Knopf) + Q4 Skill-Text geliefert 2026-09-09; Eval an AVC-Skills 2026-09-09 (extract-service: erster Bericht leer → Heuristiken project-path + skill-ref ergänzt, jetzt 20 echte Treffer); offen Q5 Herkunft/Drift
+status: Q1 + Q2 geliefert 2026-09-09 (d6982ae); Q3 Export (CLI `speccify export`, Inspektor-Knopf) + Q4 Skill-Text geliefert 2026-09-09; Eval an AVC-Skills 2026-09-09 (extract-service: erster Bericht leer → Heuristiken project-path + skill-ref ergänzt, jetzt 20 echte Treffer); Q5 Kern geliefert 2026-09-09 (Manifest `sources:`, `add --source`, Lockfile `resolved_via` = Quelle, Drift über `verify` nach Aktualisieren) — offen nur noch die Anzeige „neuere Version in der Quelle" im Skills-Tab
 ---
 # Plan: Skill-Quellen und Export — beliebige Repos, pro Projekt und global
 

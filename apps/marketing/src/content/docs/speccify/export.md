@@ -60,13 +60,17 @@ normal git step there, yours or the agent's. Then, back in the
 project:
 
 ```sh
-speccify add @acme/notarize --library "~/.speccify/sources/github.com-acme-skills"
-speccify expand notarize --library "~/.speccify/sources/github.com-acme-skills"
+speccify add @acme/notarize --source "https://github.com/acme/skills.git"
+speccify expand notarize
 ```
 
-Your `## In this project` section survives that re-expand, and from
-now on `speccify verify` tells you when the library's version moves
-on.
+`--source` reads from the source *and* remembers it under `sources:`
+in `speccify.yaml`, so `lock`, `verify` and `expand` find the skill
+from now on without being told where to look; the lockfile records
+the source as the skill's provenance. Your `## In this project`
+section survives that re-expand, and after the next *Refresh* of the
+source `speccify verify` tells you when the library's version has
+moved on.
 
 In the app, the **Skills** tab has an *Export…* action in the
 inspector of every project skill: pick a source and a folder, and the

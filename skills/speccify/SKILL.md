@@ -9,7 +9,7 @@ description: Bring a skill from a Speccify library into this project and use it
 license: MIT
 compatibility: Requires the `speccify` CLI on PATH and a project with speccify.yaml
 metadata:
-  speccify.version: 0.4.0
+  speccify.version: 0.4.1
   speccify.scope: speccify
 ---
 
@@ -166,7 +166,7 @@ that only you can do:
    library skill, add `speccify.uses` with that skill's id.
 3. **Prove it reads.** `speccify check skills/<name>` in the library must
    be green; then try the skill from a throwaway folder: `speccify add
-   @<scope>/<name> --library <source>`, `expand`, implement the tools from
+   @<scope>/<name> --source <source>`, `expand`, implement the tools from
    the reference, `tool check`. If that round trip needs knowledge that is
    only in your head, it goes into the skill.
 4. **Commit and push** in the library checkout — the app's Git tab does it,
@@ -174,8 +174,10 @@ that only you can do:
    skills/<name>/v1.0.0` and push the tag; tags are final (a broken tag is
    fixed by a new version, never by moving the tag).
 5. **Record the origin** so drift shows up later — the export printed the
-   line: `speccify add @<scope>/<name> --library <source> && speccify expand
-   <name> --library <source>`. Your `## In this project` section survives.
+   line: `speccify add @<scope>/<name> --source <source> && speccify expand
+   <name>`. `--source` remembers the source in `speccify.yaml`, so later
+   `verify`/`expand` runs need no path. Your `## In this project` section
+   survives.
 
 ## Pitfalls
 

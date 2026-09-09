@@ -278,9 +278,9 @@ def export_command(
         )
     lib = str(report.library)
     typer.echo(
-        "\nNext: commit and push in the library, then record the origin here:\n"
-        f'  speccify add {report.skill_id} --library "{lib}" && '
-        f'speccify expand {name} --library "{lib}"'
+        "\nNext: commit and push in the library, then record the origin here "
+        "(--source remembers the library in speccify.yaml):\n"
+        f'  speccify add {report.skill_id} --source "{lib}" && speccify expand {name}'
     )
     if report.errors:
         raise typer.Exit(code=1)

@@ -106,7 +106,7 @@ def test_export_writes_a_library_skill_and_reports_suspects(tmp_path: Path) -> N
 
     assert "@acme/notarize 1.0.0" in result.output
     assert "SKILL.md:" in result.output and "/Users/me/Work/App/build/App.app" in result.output
-    assert f'speccify add @acme/notarize --library "{library.resolve()}"' in result.output
+    assert f'speccify add @acme/notarize --source "{library.resolve()}"' in result.output
 
     # Second export refuses to overwrite unless forced; forced bumps the patch version.
     again = runner.invoke(

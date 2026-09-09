@@ -25,3 +25,4 @@ speccify add [OPTIONS] REFERENCE
 | --- | --- |
 | `--project`, `-p` | Project directory (default: current directory). |
 | `--library` | Local playbook library (default: from the manifest). |
+| `--source` | Skill source to read from and remember in speccify.yaml: a git URL (cloned by the app to ~/.speccify/sources/) or a directory. |

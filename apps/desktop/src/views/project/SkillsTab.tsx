@@ -43,11 +43,11 @@ interface BrowseSkill {
   id: string | null;
 }
 
-/// `--library` ist der Ordner mit den Skills — bei Git-Quellen der Checkout
-/// (D1); die Herkunfts-URL folgt in Q5.
-function importCommand(skill: BrowseSkill, library: string): string | null {
+/// `--source` ist die Quelle selbst (URL oder Ordner, D3): `add` merkt sie in
+/// speccify.yaml, danach finden lock/verify/expand den Skill ohne Angabe.
+function importCommand(skill: BrowseSkill, location: string): string | null {
   if (!skill.id) return null;
-  return `speccify add ${skill.id} --library "${library}" && speccify expand ${skill.name} --library "${library}"`;
+  return `speccify add ${skill.id} --source "${location}" && speccify expand ${skill.name}`;
 }
 
 function SourceBrowser({ project }: { project: string }) {
@@ -78,7 +78,7 @@ function SourceBrowser({ project }: { project: string }) {
 
   const importSkill = (skill: BrowseSkill) => {
     if (!active?.path) return;
-    const command = importCommand(skill, active.path);
+    const command = importCommand(skill, active.location);
     if (!command) {
       setNotice(
         `${skill.name} hat kein metadata.speccify.scope — ohne Id kann speccify add nicht adressieren. Skill von Hand übernehmen oder scope ergänzen.`,

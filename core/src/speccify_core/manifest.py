@@ -32,6 +32,8 @@ class ProjectManifest:
     dependencies: dict[str, str] = field(default_factory=dict)
     library_path: str = DEFAULT_LIBRARY_PATH
     source_path: Path | None = None
+    # Further skill sources (git URLs or directories), see `speccify_core.sources`.
+    sources: tuple[str, ...] = ()
 
     @classmethod
     def load(cls, path: str | Path, schema_path: str | Path | None = None) -> ProjectManifest:
@@ -54,12 +56,16 @@ class ProjectManifest:
             dependencies={str(k): str(v) for k, v in (data.get("dependencies") or {}).items()},
             library_path=str(library.get("path", DEFAULT_LIBRARY_PATH)),
             source_path=manifest_path,
+            sources=tuple(str(s) for s in (data.get("sources") or [])),
         )
+
+    @property
+    def base_dir(self) -> Path:
+        return self.source_path.parent if self.source_path else Path.cwd()
 
     def resolved_library_path(self) -> Path:
         """Library directory, resolved relative to the manifest."""
-        base = self.source_path.parent if self.source_path else Path.cwd()
-        return (base / self.library_path).resolve()
+        return (self.base_dir / self.library_path).resolve()
 
     def with_dependency(self, playbook_id: str, range_raw: str) -> ProjectManifest:
         return ProjectManifest(
@@ -67,12 +73,28 @@ class ProjectManifest:
             dependencies={**self.dependencies, playbook_id: range_raw},
             library_path=self.library_path,
             source_path=self.source_path,
+            sources=self.sources,
+        )
+
+    def with_source(self, location: str) -> ProjectManifest:
+        """The same manifest with `location` among its sources (once)."""
+        location = location.strip()
+        if location in self.sources:
+            return self
+        return ProjectManifest(
+            schema_version=self.schema_version,
+            dependencies=self.dependencies,
+            library_path=self.library_path,
+            source_path=self.source_path,
+            sources=(*self.sources, location),
         )
 
     def to_dict(self) -> dict[str, Any]:
         out: dict[str, Any] = {"schema_version": self.schema_version}
         if self.library_path != DEFAULT_LIBRARY_PATH:
             out["library"] = {"path": self.library_path}
+        if self.sources:
+            out["sources"] = list(self.sources)
         if self.dependencies:
             out["dependencies"] = dict(sorted(self.dependencies.items()))
         return out

@@ -14,9 +14,21 @@ from speccify_cli.commands.lock import run_lock
 _EXPLICIT_VERSION = re.compile(r"^(?P<id>.+)@(?P<version>\d+\.\d+\.\d+)$")
 
 
-def run_add(project_dir: Path, reference: str, library_override: Path | None = None) -> str:
-    """Add `reference` to the manifest; returns the range that was written."""
-    context = ProjectContext.load(project_dir, library_override=library_override)
+def run_add(
+    project_dir: Path,
+    reference: str,
+    library_override: Path | None = None,
+    source: str | None = None,
+) -> str:
+    """Add `reference` to the manifest; returns the range that was written.
+
+    `source` (a git URL or directory) is recorded under `sources:` in the
+    manifest, so `lock`, `verify` and `expand` find the skill again without
+    being told where to look — unlike `--library`, which is for this call only.
+    """
+    context = ProjectContext.load(
+        project_dir, library_override=library_override, extra_source=source
+    )
 
     match = _EXPLICIT_VERSION.match(reference)
     if match and not reference.startswith("git+"):
@@ -30,13 +42,19 @@ def run_add(project_dir: Path, reference: str, library_override: Path | None = N
     if version_raw is None:
         available = list_versions(context.libraries, playbook_id)
         if not available:
-            raise RegistryError(f"'{playbook_id}' is not available locally or as a git source.")
+            raise RegistryError(
+                f"'{playbook_id}' is not available locally or as a git source."
+                + context.not_found_hint()
+            )
         version = available[-1]
     else:
         version = Version.parse(version_raw)
 
     range_raw = f"^{version.major}.{version.minor}"
-    context.manifest.with_dependency(playbook_id, range_raw).write(context.manifest_path)
+    manifest = context.manifest.with_dependency(playbook_id, range_raw)
+    if source:
+        manifest = manifest.with_source(source)
+    manifest.write(context.manifest_path)
     run_lock(project_dir, library_override)
     return range_raw
 
@@ -51,10 +69,16 @@ def add_command(
     library: Path | None = typer.Option(  # noqa: B008
         None, "--library", help="Local playbook library (default: from the manifest)."
     ),
+    source: str | None = typer.Option(
+        None,
+        "--source",
+        help="Skill source to read from and remember in speccify.yaml: a git URL "
+        "(cloned by the app to ~/.speccify/sources/) or a directory.",
+    ),
 ) -> None:
     """Add a playbook dependency and update the lockfile."""
     try:
-        range_raw = run_add(project_dir, reference, library)
+        range_raw = run_add(project_dir, reference, library, source)
     except (ResolverError, RegistryError, ManifestError, FileNotFoundError, ValueError) as exc:
         typer.echo(f"x speccify add failed: {exc}", err=True)
         raise typer.Exit(code=1) from exc

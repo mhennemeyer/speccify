@@ -29,6 +29,12 @@
           "description": "Directory of local playbook bundles (default: ./playbooks)."
         }
       }
+    },
+    "sources": {
+      "type": "array",
+      "description": "Further skill sources: git URLs (cloned by the app to ~/.speccify/sources/) or directories relative to this file.",
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
     }
   }
 }

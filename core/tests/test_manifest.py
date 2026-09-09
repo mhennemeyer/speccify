@@ -29,6 +29,24 @@ def test_load_reads_dependencies_and_library(tmp_path: Path) -> None:
     assert manifest.resolved_library_path() == (tmp_path / "my-playbooks").resolve()
 
 
+def test_sources_are_kept_once_and_round_trip(tmp_path: Path) -> None:
+    path = _write(
+        tmp_path,
+        {"schema_version": 1, "sources": ["https://github.com/acme/skills.git", "./vendor"]},
+    )
+    manifest = ProjectManifest.load(path)
+    assert manifest.sources == ("https://github.com/acme/skills.git", "./vendor")
+    same = manifest.with_source("./vendor")
+    assert same.sources == manifest.sources
+    more = manifest.with_source("git@gitlab.example:team/skills.git")
+    more.write()
+    reloaded = ProjectManifest.load(path)
+    assert reloaded.sources[-1] == "git@gitlab.example:team/skills.git"
+    assert reloaded.with_dependency("@acme/x", "^1.0").sources == reloaded.sources
+    with pytest.raises(ManifestError):
+        ProjectManifest.load(_write(tmp_path, {"schema_version": 1, "sources": ["a", "a"]}))
+
+
 def test_library_path_defaults_next_to_the_manifest(tmp_path: Path) -> None:
     manifest = ProjectManifest.load(_write(tmp_path, {"schema_version": 1}))
     assert manifest.resolved_library_path() == (tmp_path / "skills").resolve()

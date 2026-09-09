@@ -43,8 +43,10 @@ helper or SSH key), so private repos work without any extra setup in
 Speccify. The source's folder structure *is* the organization — its
 folders are the categories you browse. Pick a skill to preview it;
 **Import (expand)** in the inspector types the matching
-`speccify add … && speccify expand …` command into the agent
-terminal, and the [expand step](/speccify/expand/) does the rest:
+`speccify add … --source … && speccify expand …` command into the
+agent terminal. `--source` remembers the source under `sources:` in
+`speccify.yaml`, so later `verify` and `expand` runs find the skill
+on their own, and the [expand step](/speccify/expand/) does the rest:
 normal skills land in `.agent/skills/`, tool contracts in
 `.agent/tools/`, and `.agent/speccify/expansions.yaml` records where
 each came from, at which version, and whether each tool's

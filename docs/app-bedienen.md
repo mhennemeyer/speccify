@@ -118,8 +118,10 @@ unten; im Editor ⌘S speichern, im Commit-Feld ⌘⏎ committen.
   Terminal (Credential-Helper oder SSH-Schlüssel). Ordner sind
   Kategorien, die Mitte die Vorschau, **Importieren (expand)** im Inspektor
   tippt das passende `speccify`-Kommando ins Agent-Terminal — dort mit
-  Enter bestätigen. Umgekehrt bringt **Exportieren…** im Inspektor eines
-  Projekt-Skills ihn als allgemeinen Skill in eine Quelle: Quelle und
+  Enter bestätigen. Das `add --source` darin merkt sich die Quelle in
+  `speccify.yaml`, spätere `verify`/`expand`-Läufe brauchen keinen Pfad.
+  Umgekehrt bringt **Exportieren…** im Inspektor eines Projekt-Skills ihn
+  als allgemeinen Skill in eine Quelle: Quelle und
   Ordner wählen, `speccify export` landet im Terminal, streicht „In this
   project", setzt Version und Scope, nimmt Tools als Vertrag mit und
   listet Stellen, die noch projektspezifisch aussehen. Committen und

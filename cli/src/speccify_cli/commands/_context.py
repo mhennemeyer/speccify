@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 from speccify_core import (
@@ -15,6 +15,7 @@ from speccify_core import (
     Version,
 )
 from speccify_core.skill_library import LocalSkillLibrary
+from speccify_core.sources import SourceUnavailable, resolve_source
 
 MANIFEST_FILENAME = "speccify.yaml"
 LOCKFILE_FILENAME = "speccify.lock"
@@ -26,17 +27,35 @@ def git_cache_dir() -> Path:
     return Path(override) if override else DEFAULT_GIT_CACHE_DIR
 
 
-def build_libraries(library_path: Path, *, offline: bool = False) -> list[Library]:
-    """Local skill library plus git sources.
+def build_libraries(
+    library_path: Path,
+    *,
+    sources: tuple[str, ...] = (),
+    base: Path | None = None,
+    offline: bool = False,
+) -> tuple[list[Library], list[str]]:
+    """Local skill library, the manifest's sources, then tag-pinned git sources.
 
-    Each library answers only for the ids it serves, so the order does not
-    matter and local-only projects behave exactly as before.
+    Each library answers only for the ids it serves; the local library and
+    the sources are asked in order (first match wins for `@scope/name`). A
+    source that is not on disk — a git URL nobody cloned yet — is skipped and
+    returned in the second list, so the caller can say so when an id is not
+    found.
     """
     libraries: list[Library] = []
+    unavailable: list[str] = []
     if library_path.is_dir():
         libraries.append(LocalSkillLibrary(library_path))
+    for location in sources:
+        try:
+            directory = resolve_source(location, base)
+        except SourceUnavailable as exc:
+            unavailable.append(str(exc))
+            continue
+        # `via` is the location, so the lockfile records where a skill came from.
+        libraries.append(LocalSkillLibrary(directory, via=location.strip()))
     libraries.append(GitLibrary(cache_dir=git_cache_dir(), offline=offline))
-    return libraries
+    return libraries, unavailable
 
 
 def fetch_bundle(libraries: list[Library], playbook_id: str, version: Version):
@@ -73,6 +92,14 @@ class ProjectContext:
     lockfile_path: Path
     manifest: ProjectManifest
     libraries: list[Library]
+    # Sources from the manifest that are not on disk (messages, one per source).
+    unavailable_sources: list[str] = field(default_factory=list)
+
+    def not_found_hint(self) -> str:
+        """Appended to 'not available' errors: the sources that could not be read."""
+        if not self.unavailable_sources:
+            return ""
+        return " Sources not available: " + " / ".join(self.unavailable_sources)
 
     @classmethod
     def load(
@@ -81,6 +108,7 @@ class ProjectContext:
         library_override: Path | None = None,
         *,
         offline: bool = False,
+        extra_source: str | None = None,
     ) -> ProjectContext:
         manifest_path = project_dir / MANIFEST_FILENAME
         if manifest_path.is_file():
@@ -101,10 +129,17 @@ class ProjectContext:
             if library_override is not None
             else manifest.resolved_library_path()
         )
+        sources = manifest.sources
+        if extra_source and extra_source.strip() not in sources:
+            sources = (*sources, extra_source.strip())
+        libraries, unavailable = build_libraries(
+            library_path, sources=sources, base=manifest.base_dir, offline=offline
+        )
         return cls(
             project_dir=project_dir,
             manifest_path=manifest_path,
             lockfile_path=project_dir / LOCKFILE_FILENAME,
             manifest=manifest,
-            libraries=build_libraries(library_path, offline=offline),
+            libraries=libraries,
+            unavailable_sources=unavailable,
         )
