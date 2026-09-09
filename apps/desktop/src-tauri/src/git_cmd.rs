@@ -522,6 +522,96 @@ pub fn project_git_discard(project: String, paths: Vec<String>) -> Result<(), St
     Ok(())
 }
 
+#[derive(Serialize, Debug, PartialEq, Clone)]
+pub struct BlameLine {
+    pub line: u64,
+    pub short: String,
+    pub author: String,
+    /// ISO-Datum (aus author-time), nur Tag.
+    pub date: String,
+    pub summary: String,
+    /// Noch nicht committet (Hash aus Nullen).
+    pub uncommitted: bool,
+}
+
+/// `git blame --line-porcelain` parsen: je Zeile ein Kopf `<hash> <orig> <final>
+/// [n]`, dann Schlüssel-Zeilen, dann die Inhaltszeile mit Tab.
+pub(crate) fn parse_blame(text: &str) -> Vec<BlameLine> {
+    let mut out = Vec::new();
+    let mut known: std::collections::HashMap<String, (String, String, String)> =
+        std::collections::HashMap::new();
+    let mut lines = text.lines().peekable();
+    while let Some(head) = lines.next() {
+        let mut parts = head.split(' ');
+        let Some(hash) = parts.next() else { continue };
+        if hash.len() < 7 || !hash.chars().all(|c| c.is_ascii_hexdigit()) {
+            continue;
+        }
+        let final_line: u64 = parts.nth(1).and_then(|s| s.parse().ok()).unwrap_or(0);
+        let mut author = String::new();
+        let mut date = String::new();
+        let mut summary = String::new();
+        for line in lines.by_ref() {
+            if line.starts_with('\t') {
+                break;
+            }
+            if let Some(rest) = line.strip_prefix("author ") {
+                author = rest.to_string();
+            } else if let Some(rest) = line.strip_prefix("author-time ") {
+                if let Ok(secs) = rest.parse::<i64>() {
+                    date = time::OffsetDateTime::from_unix_timestamp(secs)
+                        .map(|t| t.date().to_string())
+                        .unwrap_or_default();
+                }
+            } else if let Some(rest) = line.strip_prefix("summary ") {
+                summary = rest.to_string();
+            }
+        }
+        // Wiederholte Commits nennen author/summary nicht noch einmal.
+        if author.is_empty() {
+            if let Some((a, d, s)) = known.get(hash) {
+                author = a.clone();
+                date = d.clone();
+                summary = s.clone();
+            }
+        } else {
+            known.insert(
+                hash.to_string(),
+                (author.clone(), date.clone(), summary.clone()),
+            );
+        }
+        let uncommitted = hash.chars().all(|c| c == '0');
+        out.push(BlameLine {
+            line: final_line,
+            short: hash[..7].to_string(),
+            author: if uncommitted { "—".into() } else { author },
+            date,
+            summary: if uncommitted {
+                "nicht committet".into()
+            } else {
+                summary
+            },
+            uncommitted,
+        });
+    }
+    out
+}
+
+/// Blame je Zeile (Rand im Editor).
+#[tauri::command]
+pub fn project_git_blame(project: String, path: String) -> Result<Vec<BlameLine>, String> {
+    let root = resolve_project_root(&project)?;
+    let output = git(&root, &["blame", "--line-porcelain", "--", &path])?;
+    if output.code != 0 {
+        let message = output.stderr.trim();
+        if message.contains("no such path") || message.contains("outside repository") {
+            return Ok(Vec::new());
+        }
+        return Err(message.to_string());
+    }
+    Ok(parse_blame(&String::from_utf8_lossy(&output.stdout)))
+}
+
 #[derive(Serialize, Debug, PartialEq)]
 pub struct GitBranch {
     pub name: String,
@@ -741,6 +831,31 @@ mod tests {
             Some(main.as_str())
         );
         let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn blame_porcelain_parses_lines_and_reuses_commit_details() {
+        let text = concat!(
+            "abc1234abc1234abc1234abc1234abc1234abc12 1 1 2\n",
+            "author Matthias\nauthor-mail <m@example.com>\nauthor-time 1757152800\nauthor-tz +0200\n",
+            "committer Matthias\ncommitter-mail <m@example.com>\ncommitter-time 1757152800\ncommitter-tz +0200\n",
+            "summary feat: x\nfilename a.txt\n\tzeile eins\n",
+            "abc1234abc1234abc1234abc1234abc1234abc12 2 2\n",
+            "\tzeile zwei\n",
+            "0000000000000000000000000000000000000000 3 3 1\n",
+            "author Not Committed Yet\nauthor-mail <not.committed.yet>\nauthor-time 1757152800\nauthor-tz +0200\n",
+            "committer Not Committed Yet\ncommitter-mail <not.committed.yet>\ncommitter-time 1757152800\ncommitter-tz +0200\n",
+            "summary Version of a.txt from a.txt\nprevious abc1234abc1234abc1234abc1234abc1234abc12 a.txt\nfilename a.txt\n\tneu\n",
+        );
+        let blame = parse_blame(text);
+        assert_eq!(blame.len(), 3);
+        assert_eq!(blame[0].short, "abc1234");
+        assert_eq!(blame[0].author, "Matthias");
+        assert_eq!(blame[0].date, "2025-09-06");
+        assert_eq!(blame[1].line, 2);
+        assert_eq!(blame[1].summary, "feat: x");
+        assert!(blame[2].uncommitted);
+        assert_eq!(blame[2].summary, "nicht committet");
     }
 
     #[test]

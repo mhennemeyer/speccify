@@ -89,6 +89,174 @@ pub fn project_tree(project: String, dir: String) -> Result<Vec<TreeEntry>, Stri
     list_dir(&root, &dir)
 }
 
+// --- I3: Suche, Anlegen, Umbenennen, Löschen -----------------------------------
+
+#[derive(Serialize, Debug, PartialEq)]
+pub struct SearchHit {
+    pub path: String,
+    pub line: u64,
+    /// 0-basierte Spalte des ersten Treffers in der Zeile.
+    pub column: usize,
+    pub text: String,
+}
+
+const SEARCH_MAX_FILE: u64 = 2 * 1024 * 1024;
+
+fn escape_regex(text: &str) -> String {
+    let mut out = String::with_capacity(text.len() * 2);
+    for ch in text.chars() {
+        if "\\.+*?()|[]{}^$#&-~".contains(ch) {
+            out.push('\\');
+        }
+        out.push(ch);
+    }
+    out
+}
+
+pub(crate) fn search_tree(
+    root: &Path,
+    query: &str,
+    regex: bool,
+    case_sensitive: bool,
+    limit: usize,
+) -> Result<Vec<SearchHit>, String> {
+    use grep_matcher::Matcher;
+    use grep_searcher::sinks::UTF8;
+    use grep_searcher::{BinaryDetection, SearcherBuilder};
+
+    if query.trim().is_empty() {
+        return Ok(Vec::new());
+    }
+    let pattern = if regex {
+        query.to_string()
+    } else {
+        escape_regex(query)
+    };
+    let matcher = grep_regex::RegexMatcherBuilder::new()
+        .case_insensitive(!case_sensitive)
+        .build(&pattern)
+        .map_err(|e| format!("Suchmuster ungültig: {e}"))?;
+    let mut searcher = SearcherBuilder::new()
+        .binary_detection(BinaryDetection::quit(b'\x00'))
+        .line_number(true)
+        .build();
+    let walker = ignore::WalkBuilder::new(root)
+        .hidden(false)
+        .git_ignore(true)
+        .git_exclude(true)
+        .git_global(false)
+        .filter_entry(|entry| entry.file_name() != ".git")
+        .build();
+    let mut hits: Vec<SearchHit> = Vec::new();
+    for item in walker.flatten() {
+        if hits.len() >= limit {
+            break;
+        }
+        let path = item.path();
+        if !item.file_type().map(|t| t.is_file()).unwrap_or(false) {
+            continue;
+        }
+        if item.metadata().map(|m| m.len()).unwrap_or(0) > SEARCH_MAX_FILE {
+            continue;
+        }
+        let relative = relative_slash(root, path);
+        let result = searcher.search_path(
+            &matcher,
+            path,
+            UTF8(|line_number, line| {
+                let column = matcher
+                    .find(line.as_bytes())
+                    .ok()
+                    .flatten()
+                    .map(|m| m.start())
+                    .unwrap_or(0);
+                hits.push(SearchHit {
+                    path: relative.clone(),
+                    line: line_number,
+                    column,
+                    text: line
+                        .trim_end_matches(['\n', '\r'])
+                        .chars()
+                        .take(400)
+                        .collect(),
+                });
+                Ok(hits.len() < limit)
+            }),
+        );
+        // Unlesbare Dateien überspringen, nicht die Suche abbrechen.
+        let _ = result;
+    }
+    Ok(hits)
+}
+
+/// Volltextsuche im Projekt (ripgrep-Bausteine, .gitignore gilt, .git bleibt zu).
+#[tauri::command]
+pub fn project_search(
+    project: String,
+    query: String,
+    regex: bool,
+    case_sensitive: bool,
+    limit: u32,
+) -> Result<Vec<SearchHit>, String> {
+    let root = resolve_project_root(&project)?;
+    search_tree(
+        &root,
+        &query,
+        regex,
+        case_sensitive,
+        limit.clamp(1, 2000) as usize,
+    )
+}
+
+/// Datei (leer) oder Ordner anlegen — nie über Bestehendes.
+#[tauri::command]
+pub fn project_file_create(project: String, path: String, is_dir: bool) -> Result<String, String> {
+    let root = resolve_project_root(&project)?;
+    let target = safe_project_path(&root, &path)?;
+    if target.exists() {
+        return Err(format!("Gibt es schon: {path}"));
+    }
+    if is_dir {
+        std::fs::create_dir_all(&target).map_err(|e| format!("{path}: {e}"))?;
+    } else {
+        if let Some(parent) = target.parent() {
+            std::fs::create_dir_all(parent).map_err(|e| format!("{}: {e}", parent.display()))?;
+        }
+        std::fs::write(&target, b"").map_err(|e| format!("{path}: {e}"))?;
+    }
+    Ok(relative_slash(&root, &target))
+}
+
+/// Umbenennen/Verschieben innerhalb des Projekts — nie über Bestehendes.
+#[tauri::command]
+pub fn project_file_rename(project: String, from: String, to: String) -> Result<String, String> {
+    let root = resolve_project_root(&project)?;
+    let source = safe_project_path(&root, &from)?;
+    let target = safe_project_path(&root, &to)?;
+    if !source.exists() {
+        return Err(format!("Gibt es nicht: {from}"));
+    }
+    if target.exists() {
+        return Err(format!("Gibt es schon: {to}"));
+    }
+    if let Some(parent) = target.parent() {
+        std::fs::create_dir_all(parent).map_err(|e| format!("{}: {e}", parent.display()))?;
+    }
+    std::fs::rename(&source, &target).map_err(|e| format!("{from} → {to}: {e}"))?;
+    Ok(relative_slash(&root, &target))
+}
+
+/// In den Papierkorb — kein endgültiges Löschen aus der App heraus.
+#[tauri::command]
+pub fn project_file_delete(project: String, path: String) -> Result<(), String> {
+    let root = resolve_project_root(&project)?;
+    let target = safe_project_path(&root, &path)?;
+    if !target.exists() {
+        return Err(format!("Gibt es nicht: {path}"));
+    }
+    trash::delete(&target).map_err(|e| format!("{path}: {e}"))
+}
+
 #[derive(Serialize)]
 pub struct FileInfo {
     pub path: String,
@@ -188,5 +356,87 @@ mod tests {
         let logo = project_file_info(project, "logo.bin".into()).unwrap();
         assert!(logo.binary);
         assert_eq!(logo.lines, None);
+    }
+
+    #[test]
+    fn search_respects_gitignore_and_reports_line_and_column() {
+        let dir = fixture("search");
+        std::fs::write(
+            dir.join("src/a.rs"),
+            "fn main() {\n    let Needle = 1;\n}\n",
+        )
+        .unwrap();
+        std::fs::write(dir.join("build/needle.txt"), "needle\n").unwrap();
+        std::fs::write(
+            dir.join("notes.md"),
+            "# needle\nkein treffer\nNEEDLE again\n",
+        )
+        .unwrap();
+        let hits = search_tree(&dir, "needle", false, false, 100).unwrap();
+        let mut paths: Vec<String> = hits
+            .iter()
+            .map(|h| format!("{}:{}", h.path, h.line))
+            .collect();
+        paths.sort();
+        assert_eq!(paths, vec!["notes.md:1", "notes.md:3", "src/a.rs:2"]);
+        let hit = hits.iter().find(|h| h.path == "src/a.rs").unwrap();
+        assert_eq!(hit.column, 8);
+        assert_eq!(hit.text, "    let Needle = 1;");
+        // Groß/klein, Regex, Limit.
+        assert_eq!(
+            search_tree(&dir, "Needle", false, true, 100).unwrap().len(),
+            1
+        );
+        assert_eq!(
+            search_tree(&dir, "^#\\s+nee", true, true, 100)
+                .unwrap()
+                .len(),
+            1
+        );
+        assert_eq!(
+            search_tree(&dir, "needle", false, false, 2).unwrap().len(),
+            2
+        );
+        assert!(search_tree(&dir, "(", true, true, 10).is_err());
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn create_and_rename_never_overwrite() {
+        let dir = fixture("create");
+        let project = dir.to_string_lossy().into_owned();
+        assert_eq!(
+            project_file_create(project.clone(), "docs/neu.md".into(), false).unwrap(),
+            "docs/neu.md"
+        );
+        assert!(dir.join("docs/neu.md").is_file());
+        assert!(project_file_create(project.clone(), "docs/neu.md".into(), false).is_err());
+        project_file_create(project.clone(), "assets/img".into(), true).unwrap();
+        assert!(dir.join("assets/img").is_dir());
+        assert_eq!(
+            project_file_rename(
+                project.clone(),
+                "docs/neu.md".into(),
+                "docs/alt/neu.md".into()
+            )
+            .unwrap(),
+            "docs/alt/neu.md"
+        );
+        assert!(!dir.join("docs/neu.md").exists());
+        assert!(dir.join("docs/alt/neu.md").is_file());
+        std::fs::write(dir.join("docs/x.md"), "x").unwrap();
+        assert!(project_file_rename(
+            project.clone(),
+            "docs/alt/neu.md".into(),
+            "docs/x.md".into()
+        )
+        .is_err());
+        assert!(
+            project_file_rename(project.clone(), "docs/x.md".into(), "../raus.md".into()).is_err()
+        );
+        // Löschen geht in den Papierkorb — im Test nicht ausgeführt (würde den
+        // Papierkorb des Entwicklers füllen); der Guard greift trotzdem:
+        assert!(project_file_delete(project, "gibts-nicht.md".into()).is_err());
+        let _ = std::fs::remove_dir_all(&dir);
     }
 }

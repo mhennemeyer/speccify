@@ -10,7 +10,21 @@ import { invoke } from "@tauri-apps/api/core";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import CodeEditor from "../../components/CodeEditor";
 import DiffView from "../../components/DiffView";
-import { type GitCommit, gitCommitDiff, gitFileLog, shortDate } from "../../lib/git";
+import {
+  type BlameLine,
+  type GitCommit,
+  gitBlame,
+  gitCommitDiff,
+  gitFileLog,
+  shortDate,
+} from "../../lib/git";
+
+interface SearchHit {
+  path: string;
+  line: number;
+  column: number;
+  text: string;
+}
 import { fencedPrompt } from "../../lib/prompt";
 import { trackActivity } from "../../lib/activity";
 import { clearDraft, draftKey, readDraft, writeDraft } from "../../lib/autosave";
@@ -73,6 +87,42 @@ function FileIcon() {
   );
 }
 
+function RenameForm({
+  from,
+  onSubmit,
+  onCancel,
+}: {
+  from: string;
+  onSubmit: (to: string) => void;
+  onCancel: () => void;
+}) {
+  const [value, setValue] = useState(from);
+  return (
+    <div className="flex w-full gap-1">
+      <input
+        autoFocus
+        value={value}
+        onChange={(event) => setValue(event.target.value)}
+        onKeyDown={(event) => {
+          if (event.key === "Enter") onSubmit(value);
+          if (event.key === "Escape") onCancel();
+        }}
+        spellCheck={false}
+        className="min-w-0 flex-1 rounded border border-slate-300 bg-white px-2 py-1 font-mono text-xs"
+      />
+      <button
+        onClick={() => onSubmit(value)}
+        className="rounded bg-slate-800 px-2 py-1 text-[11px] text-white hover:bg-slate-700"
+      >
+        Umbenennen
+      </button>
+      <button onClick={onCancel} className="rounded px-2 py-1 text-[11px] text-slate-500 hover:bg-slate-100">
+        Abbrechen
+      </button>
+    </div>
+  );
+}
+
 export default function FilesTab({
   project,
   refresh,
@@ -96,7 +146,46 @@ export default function FilesTab({
   const [history, setHistory] = useState<GitCommit[]>([]);
   const [historyCommit, setHistoryCommit] = useState<string | null>(null);
   const [historyDiff, setHistoryDiff] = useState("");
+  // I3: Zeile anspringen (Suche, Terminal-Link), Blame, Suche, Anlegen/Umbenennen/Löschen.
+  const [reveal, setReveal] = useState<{ path: string; line: number; nonce: number } | null>(null);
+  const [blameOn, setBlameOn] = useState(false);
+  const [blame, setBlame] = useState<BlameLine[] | null>(null);
+  const [mode, setMode] = useState<"tree" | "search">("tree");
+  const [query, setQuery] = useState("");
+  const [searchRegex, setSearchRegex] = useState(false);
+  const [searchCase, setSearchCase] = useState(false);
+  const [hits, setHits] = useState<SearchHit[]>([]);
+  const [searchError, setSearchError] = useState<string | null>(null);
+  const [creating, setCreating] = useState<{ isDir: boolean; path: string } | null>(null);
+  const [renaming, setRenaming] = useState<string | null>(null);
+  const [deleteArmed, setDeleteArmed] = useState(false);
+  const [fileError, setFileError] = useState<string | null>(null);
   const inspector = useInspector("files");
+
+  // Suche: 250 ms nach der letzten Eingabe, .gitignore gilt wie im Baum.
+  useEffect(() => {
+    if (mode !== "search") return;
+    if (!query.trim()) {
+      setHits([]);
+      setSearchError(null);
+      return;
+    }
+    const timer = setTimeout(() => {
+      void invoke<SearchHit[]>("project_search", {
+        project,
+        query,
+        regex: searchRegex,
+        caseSensitive: searchCase,
+        limit: 500,
+      })
+        .then((found) => {
+          setHits(found);
+          setSearchError(null);
+        })
+        .catch((e) => setSearchError(String(e)));
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [project, mode, query, searchRegex, searchCase, refresh]);
 
   useEffect(() => {
     setHistoryCommit(null);
@@ -149,8 +238,12 @@ export default function FilesTab({
   // die Elternordner im Baum aufklappen.
   useEffect(() => {
     const handler = (event: Event) => {
-      const path = (event as CustomEvent<string>).detail;
-      if (!path) return;
+      const raw = (event as CustomEvent<string>).detail;
+      if (!raw) return;
+      // `pfad:zeile` (Terminal-Link, Suche) → Datei öffnen und Zeile anspringen.
+      const at = /^(.*?):(\d+)$/.exec(raw);
+      const path = at ? at[1] : raw;
+      const line = at ? Number(at[2]) : undefined;
       const parts = path.split("/");
       setExpanded((previous) => {
         const next = new Set(previous);
@@ -161,7 +254,7 @@ export default function FilesTab({
         }
         return next;
       });
-      void openFile(path);
+      void openFile(path, line);
     };
     window.addEventListener("speccify:open-file", handler);
     return () => window.removeEventListener("speccify:open-file", handler);
@@ -214,8 +307,9 @@ export default function FilesTab({
     });
   };
 
-  const openFile = async (path: string) => {
+  const openFile = async (path: string, line?: number) => {
     inspector.reveal();
+    if (line) setReveal({ path, line, nonce: Date.now() });
     if (openRef.current.some((file) => file.path === path)) {
       setActive(path);
       return;
@@ -236,6 +330,80 @@ export default function FilesTab({
       ]);
     }
     setActive(path);
+  };
+
+  // Blame der aktiven Datei — nachladen, wenn der gespeicherte Stand wechselt.
+  useEffect(() => {
+    if (!blameOn || !active) {
+      setBlame(null);
+      return;
+    }
+    void gitBlame(project, active)
+      .then(setBlame)
+      .catch(() => setBlame([]));
+  }, [project, active, blameOn, current?.saved]);
+
+  const reloadParent = (path: string) => {
+    const dir = path.includes("/") ? path.slice(0, path.lastIndexOf("/")) : "";
+    void loadDir(dir);
+    if (dir) setExpanded((previous) => new Set(previous).add(dir));
+  };
+
+  const createEntry = async () => {
+    if (!creating || !creating.path.trim()) return;
+    setFileError(null);
+    try {
+      const created = await invoke<string>("project_file_create", {
+        project,
+        path: creating.path.trim(),
+        isDir: creating.isDir,
+      });
+      reloadParent(created);
+      setCreating(null);
+      if (!creating.isDir) void openFile(created);
+      window.dispatchEvent(new CustomEvent("speccify:worktree-changed", { detail: created }));
+    } catch (e) {
+      setFileError(String(e));
+    }
+  };
+
+  const renameEntry = async (from: string, to: string) => {
+    if (!to.trim() || to.trim() === from) {
+      setRenaming(null);
+      return;
+    }
+    setFileError(null);
+    try {
+      const moved = await invoke<string>("project_file_rename", { project, from, to: to.trim() });
+      setOpen((previous) =>
+        previous.map((entry) => (entry.path === from ? { ...entry, path: moved } : entry)),
+      );
+      if (active === from) setActive(moved);
+      reloadParent(from);
+      reloadParent(moved);
+      setRenaming(null);
+      window.dispatchEvent(new CustomEvent("speccify:worktree-changed", { detail: moved }));
+    } catch (e) {
+      setFileError(String(e));
+    }
+  };
+
+  const deleteEntry = async (path: string) => {
+    setFileError(null);
+    try {
+      await invoke("project_file_delete", { project, path });
+      clearDraft(draftKey(project, path));
+      setOpen((previous) => previous.filter((entry) => entry.path !== path));
+      if (active === path) {
+        const rest = openRef.current.filter((entry) => entry.path !== path);
+        setActive(rest.length > 0 ? rest[rest.length - 1].path : null);
+      }
+      setDeleteArmed(false);
+      reloadParent(path);
+      window.dispatchEvent(new CustomEvent("speccify:worktree-changed", { detail: path }));
+    } catch (e) {
+      setFileError(String(e));
+    }
   };
 
   const closeFile = (path: string) => {
@@ -328,17 +496,151 @@ export default function FilesTab({
     });
   };
 
+  const activeDir = active && active.includes("/") ? active.slice(0, active.lastIndexOf("/") + 1) : "";
+  const grouped = new Map<string, SearchHit[]>();
+  for (const hit of hits) {
+    const list = grouped.get(hit.path) ?? [];
+    list.push(hit);
+    grouped.set(hit.path, list);
+  }
+
   const navigator = (
     <NavigatorPortal tab="files">
-      <input
-        value={filter}
-        onChange={(event) => setFilter(event.target.value)}
-        placeholder="Dateiname filtern…"
-        spellCheck={false}
-        className="mb-2 w-full rounded border border-slate-300 bg-white px-2 py-1 text-xs"
-      />
+      <div className="mb-2 flex items-center gap-1">
+        <div className="flex gap-0.5 rounded bg-slate-100 p-0.5">
+          {(
+            [
+              ["tree", "Dateien"],
+              ["search", "Suchen"],
+            ] as const
+          ).map(([id, label]) => (
+            <button
+              key={id}
+              onClick={() => setMode(id)}
+              className={`rounded px-2 py-0.5 text-[11px] font-medium ${
+                mode === id ? "bg-white text-slate-800 shadow-sm" : "text-slate-500 hover:text-slate-800"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        <span className="flex-1" />
+        <button
+          onClick={() => setCreating({ isDir: false, path: activeDir })}
+          className="rounded px-1.5 py-0.5 text-[11px] text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+          title="Neue Datei (Pfad relativ zum Projekt)"
+        >
+          + Datei
+        </button>
+        <button
+          onClick={() => setCreating({ isDir: true, path: activeDir })}
+          className="rounded px-1.5 py-0.5 text-[11px] text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+          title="Neuer Ordner"
+        >
+          + Ordner
+        </button>
+      </div>
+      {creating ? (
+        <div className="mb-2 flex gap-1">
+          <input
+            autoFocus
+            value={creating.path}
+            onChange={(event) => setCreating({ ...creating, path: event.target.value })}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") void createEntry();
+              if (event.key === "Escape") setCreating(null);
+            }}
+            placeholder={creating.isDir ? "ordner/neu" : "ordner/datei.md"}
+            spellCheck={false}
+            className="min-w-0 flex-1 rounded border border-slate-300 bg-white px-2 py-1 font-mono text-xs"
+          />
+          <button
+            onClick={() => void createEntry()}
+            className="rounded bg-slate-800 px-2 py-1 text-[11px] text-white hover:bg-slate-700"
+          >
+            {creating.isDir ? "Ordner anlegen" : "Anlegen"}
+          </button>
+        </div>
+      ) : null}
+      {fileError ? <p className="mb-2 text-xs text-red-600">{fileError}</p> : null}
+      {mode === "search" ? (
+        <>
+          <div className="mb-2 flex gap-1">
+            <input
+              autoFocus
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="In Dateien suchen…"
+              spellCheck={false}
+              className="min-w-0 flex-1 rounded border border-slate-300 bg-white px-2 py-1 text-xs"
+            />
+            <button
+              onClick={() => setSearchCase((value) => !value)}
+              className={`rounded border px-1.5 text-[11px] ${searchCase ? "border-slate-800 bg-slate-800 text-white" : "border-slate-300 text-slate-500"}`}
+              title="Groß-/Kleinschreibung beachten"
+            >
+              Aa
+            </button>
+            <button
+              onClick={() => setSearchRegex((value) => !value)}
+              className={`rounded border px-1.5 font-mono text-[11px] ${searchRegex ? "border-slate-800 bg-slate-800 text-white" : "border-slate-300 text-slate-500"}`}
+              title="Regulärer Ausdruck"
+            >
+              .*
+            </button>
+          </div>
+          {searchError ? <p className="mb-2 text-xs text-red-600">{searchError}</p> : null}
+          {query.trim() && hits.length === 0 && !searchError ? (
+            <p className="text-xs text-slate-400">Keine Treffer.</p>
+          ) : null}
+          {hits.length > 0 ? (
+            <p className="mb-1 text-[11px] text-slate-400">
+              {hits.length}{hits.length >= 500 ? "+" : ""} Treffer in {grouped.size} Datei(en)
+            </p>
+          ) : null}
+          {[...grouped.entries()].map(([path, list]) => (
+            <details key={path} open className="mb-1">
+              <summary className="cursor-pointer truncate px-1 text-xs font-medium text-slate-700" title={path}>
+                {path} <span className="text-slate-400">({list.length})</span>
+              </summary>
+              <ul>
+                {list.map((hit) => (
+                  <li key={`${hit.path}:${hit.line}`}>
+                    <button
+                      onClick={() => {
+                        setExpanded((previous) => {
+                          const next = new Set(previous);
+                          const parts = hit.path.split("/");
+                          for (let i = 1; i < parts.length; i += 1) next.add(parts.slice(0, i).join("/"));
+                          return next;
+                        });
+                        void openFile(hit.path, hit.line);
+                      }}
+                      className="flex w-full gap-2 rounded px-2 py-0.5 text-left font-mono text-[11px] text-slate-600 hover:bg-slate-100"
+                      title={`${hit.path}:${hit.line}`}
+                    >
+                      <span className="w-8 shrink-0 text-right text-slate-400">{hit.line}</span>
+                      <span className="min-w-0 flex-1 truncate">{hit.text.trim()}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </details>
+          ))}
+        </>
+      ) : null}
+      {mode === "tree" ? (
+        <input
+          value={filter}
+          onChange={(event) => setFilter(event.target.value)}
+          placeholder="Dateiname filtern…"
+          spellCheck={false}
+          className="mb-2 w-full rounded border border-slate-300 bg-white px-2 py-1 text-xs"
+        />
+      ) : null}
       {treeError ? <p className="mb-2 text-xs text-red-600">{treeError}</p> : null}
-      {tree[""] && tree[""].length === 0 ? (
+      {mode === "search" ? null : tree[""] && tree[""].length === 0 ? (
         <NavEmpty title="Leeres Projekt">
           Hier liegen noch keine Dateien — oder alle sind per <code>.gitignore</code>
           ausgeblendet.
@@ -412,11 +714,54 @@ export default function FilesTab({
                 {current.error ? <p className="text-xs text-red-600">{current.error}</p> : null}
                 {info?.binary ? <p className="text-xs text-amber-700">Binärdatei — nicht editierbar.</p> : null}
                 {!current.error && !info?.binary ? (
-                  <p className="text-xs text-slate-400">
-                    ⌘S speichert; Entwürfe werden automatisch gesichert. Git-Zustand und Diff
-                    im Git-Tab.
-                  </p>
+                  <label className="flex items-center gap-2 text-xs text-slate-600">
+                    <input
+                      type="checkbox"
+                      checked={blameOn}
+                      onChange={(event) => setBlameOn(event.target.checked)}
+                    />
+                    <span>
+                      Blame am Rand{" "}
+                      <span className="text-slate-400">(Commit und Autor je Zeile)</span>
+                    </span>
+                  </label>
                 ) : null}
+                {blameOn && blame && blame.length === 0 ? (
+                  <p className="text-xs text-slate-400">Kein Blame — Datei nicht committet oder kein Repository.</p>
+                ) : null}
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {renaming === current.path ? (
+                    <RenameForm
+                      from={current.path}
+                      onSubmit={(to) => void renameEntry(current.path, to)}
+                      onCancel={() => setRenaming(null)}
+                    />
+                  ) : (
+                    <InspectorButton onClick={() => setRenaming(current.path)}>
+                      Umbenennen…
+                    </InspectorButton>
+                  )}
+                  {deleteArmed ? (
+                    <>
+                      <InspectorButton tone="danger" onClick={() => void deleteEntry(current.path)}>
+                        In den Papierkorb
+                      </InspectorButton>
+                      <InspectorButton onClick={() => setDeleteArmed(false)}>Abbrechen</InspectorButton>
+                    </>
+                  ) : (
+                    <InspectorButton
+                      title="Datei in den Papierkorb legen (zweiter Klick bestätigt)"
+                      onClick={() => setDeleteArmed(true)}
+                    >
+                      Löschen…
+                    </InspectorButton>
+                  )}
+                </div>
+                {fileError ? <p className="text-xs text-red-600">{fileError}</p> : null}
+                <p className="text-xs text-slate-400">
+                  ⌘S speichert; Entwürfe werden automatisch gesichert. Git-Zustand und Diff im
+                  Git-Tab.
+                </p>
               </div>
             ),
           },
@@ -524,6 +869,8 @@ export default function FilesTab({
                 onChange={(text) => setText(current.path, text)}
                 onSave={() => void save(current.path)}
                 onCursor={setCursorLine}
+                reveal={reveal && reveal.path === current.path ? reveal : null}
+                blame={blameOn ? blame : null}
               />
             </div>
           )

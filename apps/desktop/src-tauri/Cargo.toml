@@ -35,6 +35,12 @@ portable-pty = "0.9"
 wait-timeout = "0.2"
 # Projektbaum mit .gitignore-Regeln (IDE-Plan I1)
 ignore = "0.4"
+# Projektsuche in Inhalten (IDE-Plan I3) — ripgrep-Bausteine
+grep-regex = "0.1"
+grep-searcher = "0.1"
+grep-matcher = "0.1"
+# Dateien löschen = in den Papierkorb (IDE-Plan I3)
+trash = "5"
 speccify-mcp-core = { path = "../../../crates/mcp-core" }
 speccify-toolbox = { path = "../../../crates/toolbox" }
 tauri-plugin-updater = "2.10.1"

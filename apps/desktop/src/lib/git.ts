@@ -100,6 +100,18 @@ export const gitSwitch = (project: string, branch: string, create: boolean) =>
   invoke<string>("project_git_switch", { project, branch, create });
 export const gitInit = (project: string) => invoke<string>("project_git_init", { project });
 
+export interface BlameLine {
+  line: number;
+  short: string;
+  author: string;
+  date: string;
+  summary: string;
+  uncommitted: boolean;
+}
+
+export const gitBlame = (project: string, path: string) =>
+  invoke<BlameLine[]>("project_git_blame", { project, path });
+
 export interface DiffHunk {
   /** Die `@@`-Zeile. */
   heading: string;

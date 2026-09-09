@@ -11,6 +11,11 @@ import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
 import "@xterm/xterm/css/xterm.css";
 import { beginActivity, endActivity } from "../lib/activity";
+import { showTab } from "../lib/panels";
+
+/** Relativer Pfad mit Endung + `:zeile` (optional `:spalte`), wie Compiler
+ *  und Test-Runner ihn ausgeben; absolute Pfade und URLs bleiben außen vor. */
+const FILE_LINE_RE = /(?<![\w/:])((?:[\w.@-]+\/)*[\w.@-]+\.[a-zA-Z0-9]{1,8}):(\d+)(?::\d+)?/g;
 
 interface TermOut {
   id: string;
@@ -73,6 +78,36 @@ export default function TerminalPanel({
     const fit = new FitAddon();
     terminal.loadAddon(fit);
     terminal.open(container);
+    // I3: `pfad:zeile` in der Ausgabe (Compiler, Tests, grep) ist ein Link
+    // in den Editor — ⌘/Strg-Klick wie in Terminals üblich, Hover zeigt es.
+    terminal.registerLinkProvider({
+      provideLinks(lineNumber, callback) {
+        const row = terminal.buffer.active.getLine(lineNumber - 1);
+        const text = row?.translateToString(true) ?? "";
+        const links: Array<{
+          range: { start: { x: number; y: number }; end: { x: number; y: number } };
+          text: string;
+          activate: () => void;
+        }> = [];
+        for (const match of text.matchAll(FILE_LINE_RE)) {
+          const start = (match.index ?? 0) + 1;
+          links.push({
+            range: {
+              start: { x: start, y: lineNumber },
+              end: { x: start + match[0].length - 1, y: lineNumber },
+            },
+            text: match[0],
+            activate: () => {
+              window.dispatchEvent(
+                new CustomEvent("speccify:open-file", { detail: `${match[1]}:${match[2]}` }),
+              );
+              showTab("files");
+            },
+          });
+        }
+        callback(links.length > 0 ? links : undefined);
+      },
+    });
     fit.fit();
     terminalRef.current = terminal;
     fitRef.current = fit;

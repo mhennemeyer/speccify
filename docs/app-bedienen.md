@@ -85,8 +85,16 @@ unten; im Editor ⌘S speichern, im Commit-Feld ⌘⏎ committen.
   Cursorzeile und bietet *Speichern*, *Verwerfen*, *Als Prompt kopieren*
   (mit `Pfad:Zeile`) und *Pfad kopieren*; sein Tab **Historie** listet die
   Commits, die die Datei berührt haben — ein Klick zeigt den Diff dieses
-  Commits für genau diese Datei, *als Prompt* kopiert ihn. Ändert der
-  Agent eine offene, ungeänderte Datei, lädt sie nach.
+  Commits für genau diese Datei, *als Prompt* kopiert ihn. Im Tab *Datei*
+  schaltet **Blame am Rand** Commit und Autor je Zeile im Editor ein;
+  *Umbenennen…* und *Löschen…* (in den Papierkorb, zweiter Klick
+  bestätigt) stehen daneben, **+ Datei** / **+ Ordner** oben im Navigator
+  legen Neues an. Der Schalter **Suchen** im Navigator durchsucht
+  Dateiinhalte (`Aa` = Groß/Klein, `.*` = regulärer Ausdruck,
+  `.gitignore` gilt); ein Treffer öffnet die Datei an der Zeile. Genauso
+  ist `pfad:zeile` in der Terminal-Ausgabe ein Link in den Editor (⌘-Klick
+  bzw. Strg-Klick). Ändert der Agent eine offene, ungeänderte Datei, lädt
+  sie nach.
 - **Git** — Branch mit Upstream und ↑↓-Zählern, dazu *fetch*, *pull*,
   *push* mit Live-Ausgabe. Darunter die geänderten Dateien in *Staged* und
   *Änderungen*; **+** und **−** an der Zeile (oder *alle +* / *alle −*)

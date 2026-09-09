@@ -30,8 +30,18 @@ line, with **Save**, **Discard**, **Copy as prompt** (path and line as
 the reference, so the agent can open the exact spot), and **Copy
 path**. Its **History** tab lists the commits that touched the file;
 click one to see that commit's diff for exactly this file, and copy it
-as a prompt. When the agent changes a file you have open but did not
+as a prompt. **Blame in the margin** (a checkbox on the *File* tab)
+shows commit and author per line right in the editor. **Rename…** and
+**Delete…** (to the trash, a second click confirms) sit next to it;
+**+ File** and **+ Folder** at the top of the navigator create new
+entries. When the agent changes a file you have open but did not
 touch, it reloads.
+
+The navigator's **Search** mode searches file *contents* — the same
+`.gitignore` rules as the tree, `Aa` for case, `.*` for regular
+expressions — and a hit opens the file at that line. The agent
+terminal does the same for `path:line` in its output: ⌘-click (Ctrl on
+Windows and Linux) on a compiler or test error jumps to the spot.
 
 ## Git
 

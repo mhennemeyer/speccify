@@ -1,6 +1,6 @@
 ---
 lifecycle: active
-status: I1 + I2 geliefert (2026-09-06); I3-Kern geliefert 2026-09-09 (BO-Auftrag „Aktionen, konfigurierbare Toolbar, Git vollständig, Datei-Historie im Inspektor, Inspektor-Tabs") — Hunk-Staging, Verwerfen, Commit-Details, Branches, Datei-Historie in Git- und Dateien-Inspektor, Toolbar-Knöpfe (eingebaut + Aktionen) wählbar und sortierbar; offen aus I3: Blame, Projektsuche, pfad:zeile aus dem Terminal, Anlegen/Umbenennen/Löschen von Dateien
+status: I1 + I2 geliefert (2026-09-06); I3-Kern geliefert 2026-09-09 (BO-Auftrag „Aktionen, konfigurierbare Toolbar, Git vollständig, Datei-Historie im Inspektor, Inspektor-Tabs") — Hunk-Staging, Verwerfen, Commit-Details, Branches, Datei-Historie in Git- und Dateien-Inspektor, Toolbar-Knöpfe (eingebaut + Aktionen) wählbar und sortierbar; I3-Rest ebenfalls 2026-09-09: Projektsuche (ripgrep-Bausteine), Blame-Gutter, pfad:zeile-Links im Terminal, Dateien anlegen/umbenennen/löschen (Papierkorb) — I3 komplett, es bleibt „Zuletzt geöffnet je Projekt" und Tastaturkürzel für den Editor
 ---
 # Plan: IDE-Bausteine im Projektfenster
 
