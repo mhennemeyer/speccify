@@ -62,8 +62,12 @@ Größere Interaktionsänderungen sind ausdrücklich noch nicht damit geliefert:
    kein Archiv-Bedienweg, Altbestand als beschriftete schreibgeschützte Einträge.
    Unbekannte historische Stationen bleiben lesbar statt still umgedeutet.
    Später nach Projekt gruppieren/sortieren.
-2. 021: Git mit sichtbarem Commit-Composer, eindeutigem Branch-Einstieg und
-   zusammenhängender Verwaltung. Entwürfe und Git-Sicherheit gehen vor Optik.
+2. 021 umgesetzt: Git-Composer mit Betreff/Body und Index-Vorschau im Hauptbereich;
+   Branch-Verwaltung mit Suche, lokalen Aktionen und separater Bestätigung.
+   Blau für Branch-Einstieg, Grün für Index-Commit, Rose für Löschbestätigung.
+   `tone-surface` kombiniert Akzenttext und weiche Fläche für lesbare Hell-/Dunkel-
+   Zustände; `tone-fill` bleibt für reine Farbbalken. Entwürfe und Git-Sicherheit
+   gehen vor Optik. Menschliche Alltagsabnahme offen.
 3. 022: Dateien und Ordner auswählen, Kontextmenü, später Move/Refactoring mit
    Vorschau. Auswahl ist nicht dasselbe wie Öffnen oder Aufklappen.
 4. Nach Alltagsfeedback Dichte, Abstände, Status-Badges und gemeinsame

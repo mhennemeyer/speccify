@@ -29,6 +29,7 @@
 [data-tone="slate"] { --tone-ink: var(--accent-slate-ink); --tone-soft: var(--accent-slate-soft); --tone-line: var(--accent-slate-line); }
 .tone-ink { color: var(--tone-ink); }
 .tone-fill { background: var(--tone-ink); }
+.tone-surface { color: var(--tone-ink); background: var(--tone-soft); border-color: var(--tone-line); }
 .accent-tab { color: var(--tone-ink); border: 1px solid transparent; }
 .accent-tab:hover { background: var(--tone-soft); }
 .accent-tab[aria-selected="true"] { background: var(--tone-soft); border-color: var(--tone-line); box-shadow: inset 0 -2px var(--tone-ink); }

@@ -211,17 +211,20 @@ Navigator · fünf Gruppen, zehn Tabs
 │   │       └── Historie: Commitliste → Datei-Diff → als Prompt kopieren
 │   └── Git
 │       ├── ohne Repo: Repository anlegen
-│       ├── Navigator: Branch · Commitbereich · Fetch/Pull/Push
-│       │   ├── unstaged / staged Dateien → stagen / aus Index nehmen
+│       ├── Navigator: Branch → Verwaltung · Commit… → Composer-Fokus · Fetch/Pull/Push
+│       │   └── unstaged / staged Dateien → stagen / aus Index nehmen
+│       ├── Inhalt: Projekt-/Worktree-Kontext und aktueller Branch
+│       │   ├── Commit-Composer: Betreff · optionaler Body · projektgebundener lokaler Entwurf
+│       │   │   ├── Index-Vorschau auch ohne Navigator · nur gestagete Dateien committen
+│       │   │   └── expliziter Commit-Auftrag ans Terminal (dort bestätigen)
+│       │   ├── Branch-Verwaltung: Suche · lokale/Remote-/Tracking-/Worktree-Anzeige
+│       │   │   ├── Wechsel / Anlegen und Wechsel / Umbenennen → Bestätigung mit Ziel
+│       │   │   └── lokal Löschen → Bestätigung, HEAD-Integration prüfen, kein Force
+│       │   ├── ausgewählter Datei-/Commit-Diff · Hunks
+│       │   │   └── Hunk stagen / unstagen
+│       │   ├── Remote-/Commit-/Branch-Ausgabe mit Laufstatus, Fehler und Schließen
 │       │   └── Commit-Historie → Commit auswählen
-│       ├── Inhalt: ausgewählter Datei-/Commit-Diff · Hunks
-│       │   ├── Hunk stagen / unstagen
-│       │   └── Remote-/Commit-Ausgabe mit Laufstatus, Fehler und Schließen
 │       └── Inspektor (abhängig von Auswahl)
-│           ├── Commit: Nachricht · gestagete Änderungen committen
-│           │   ├── alles stagen und committen
-│           │   ├── Commit-Auftrag an Agent-Terminal
-│           │   └── Branches: auflisten/wechseln · neu anlegen und wechseln
 │           ├── Datei: Git-Status/Index/Arbeitsbaum · öffnen · Diff kopieren
 │           │   └── Änderungen / Historie · Dateiänderungen verwerfen (destruktiv)
 │           └── Commitdetail: Hash · betroffene Dateien/Diffs · Nachricht anzeigen
@@ -362,17 +365,34 @@ Diese Tabelle verändert keine Station oder Reihenfolge.
 | [018 Ausgabetabs](../specs/018-aktionsausgabe-seitenleiste/SPEC.md) | Doing | Aktionsausgaben rechts neben Inspektor; UI-Tests grün, lokale App aktualisiert und Projektfenster wieder geöffnet; Sichtabnahme offen |
 | [019 Farbkonzept](../specs/019-farbkonzept/SPEC.md) | Doing, ready, needs_human | Navigation, Board, Dateisymbole für Hell/Dunkel; Kontrast-/UI-Tests grün, in lokaler App sichtbar |
 | [020 Spec-Navigation](../specs/020-spec-navigation/SPEC.md) | Doing, ready, needs_human | Gesamtliste, Suche/Filter, Altbestand lesbar, pfadgenaue Historie und Policy v5; 107 Rust-Tests/vier UI-Suiten grün, lokale App aktualisiert |
-| [021 Git-Arbeitsbereich](../specs/021-git-arbeitsbereich/SPEC.md) | Backlog | Commit-Composer auffindbar machen, Branch-Verwaltung und IDE-artige Anordnung |
+| [021 Git-Arbeitsbereich](../specs/021-git-arbeitsbereich/SPEC.md) | Doing, ready, needs_human | sichtbarer Composer mit Entwurf/Index-Vorschau, sichere lokale Branch-Verwaltung, Remote-/Tracking-Anzeige; 108 Rust-Tests/fünf UI-Suiten grün, App aktualisiert |
 | [022 Dateien/Refactoring](../specs/022-dateiauswahl-und-refactoring/SPEC.md) | Backlog | Ordnerauswahl und Kontextmenü; später sicherer Move und sprachbezogene Refactorings |
 
 ## Verifikation und verbleibende Risiken
+
+**Nachtrag 021, 2026-09-10 19:42 UTC:** App PID 18058 auf 18768 aktualisiert und
+offen; Bundle/Binary identisch, Hauptfenster und speccify/AVC wiederhergestellt.
+108 Rust-Tests bestanden/2 ignoriert, fünf Browser-Suiten, Typecheck/Format,
+lokaler Build sowie Live-HTTP-Smoke grün. Git-Flows einschließlich unsicherer
+Branch-Ziele in Wegwerf-Repos und isolierter UI geprüft; menschliche Abnahme offen.
+Screenshots in Hell/Dunkel geprüft; Branch-Knopf kontrastgeprüft.
+
+**Startverzögerung:** Bei diesem Neustart blieben die nativen Fenster zunächst
+mehrere Minuten leer, während HTTP bereits antwortete. Stack-Snapshot belegt
+einen blockierten `open` beim Lesen der Workflow-Policy auf dem Hauptthread.
+Danach ohne Force-Kill wieder vollständig gezeichnet (54/54 Specs, Terminal).
+Grund des verzögerten Dateizugriffs nicht abschließend geklärt; synchrones
+Datei-I/O bei Startdiagnosen ist ein Risiko für 013/009. Prozess/HTTP-Erreichbarkeit
+allein weiterhin nicht als nutzbare Oberfläche werten. Terminal zeigt unverändert
+die bereits anderswo geöffnete Conversation; keine erzwungene Übernahme.
 
 **Nachtrag 020, 2026-09-10 18:37 UTC:** App PID 80479 auf 18768 aktualisiert und
 offen; Fenster speccify/AVC wiederhergestellt. Native Sichtprüfung: 54/54 Specs
 in der Gesamtliste, kein Archiv-Bedienweg. Policy-Diagnose current/v5, 107 Rust-
 Tests bestanden/2 ignoriert, vier Browser-Suiten und Builds grün. Terminal-
 Übernahmekonflikt unverändert offen (009). Zwischenstand b5764e1 gepusht, Website
-deployed; drei CI-Plattformfehler gezielt korrigiert, Remote-Nachprüfung folgt.
+deployed; drei CI-Plattformfehler gezielt korrigiert. Remote-Nachprüfung am
+2026-09-10: 93412b6 vollständig grün (CI, Docs, Deployment).
 
 **Nachtrag 019, 2026-09-10 18:14 UTC:** Farbschnitt lokal gebaut und gestartet,
 PID 54016 auf 18768; native Fensterliste und gezielter Screenshot bestätigen

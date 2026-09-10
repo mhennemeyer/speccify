@@ -8,7 +8,7 @@
       // Screenshots im Browser (Playwright gegen den Vite-Dev-Server,
       // http://localhost:1420/dev/mock.html). Kein Produktbestandteil.
       // Die Daten spiegeln das W1-Fixture-Projekt der E2E-Läufe.
-      const project = "/private/tmp/claude-501/w1-projekt";
+      const project = new URLSearchParams(location.search).get("project") ?? "/private/tmp/claude-501/w1-projekt";
       // ?empty=1 → alle Listen leer (Leerzustände prüfen)
       const EMPTY = new URLSearchParams(location.search).has("empty");
       const orEmpty = (value) => (EMPTY ? (Array.isArray(value) ? [] : value) : value);
@@ -118,6 +118,27 @@
         }
       };
       window.__SPECCIFY_MOCK__ = { emit, actionStarts, failStart: false, failStop: false, taskCalls: [], staleTaskOnce: false, specs: tickets, workflowInstalls: 0 };
+      const gitState = {
+        repo: true, branch: "main", upstream: "origin/main", ahead: 2, behind: 0, error: null,
+        entries: [
+          { path: "README.md", index: ".", worktree: "M", untracked: false, conflicted: false, renamed_from: null },
+          { path: "notes/zahlen.md", index: "A", worktree: ".", untracked: false, conflicted: false, renamed_from: null },
+          { path: "src/neu.py", index: ".", worktree: "?", untracked: true, conflicted: false, renamed_from: null },
+        ],
+      };
+      const branchState = [
+        { name: "main", current: true, upstream: "origin/main", remote: false, worktree: project },
+        { name: "feature/notizen", current: false, upstream: null, remote: false, worktree: null },
+        { name: "origin/main", current: false, upstream: null, remote: true, worktree: null },
+      ];
+      Object.assign(window.__SPECCIFY_MOCK__, { gitState, branchState, gitCalls: [], gitFailure: null, gitDelay: 0 });
+      const gitMutation = async (command, args, work) => {
+        const control = window.__SPECCIFY_MOCK__;
+        control.gitCalls.push({ command, ...args });
+        if (control.gitDelay) await new Promise(resolve => setTimeout(resolve, control.gitDelay));
+        if (control.gitFailure) throw new Error(control.gitFailure);
+        return work();
+      };
       const workflowDemo = new URLSearchParams(location.search).get("workflow");
       const workflowStatus = () => {
         const issues = workflowDemo ? [
@@ -214,17 +235,19 @@
         },
         project_git_status: () => EMPTY
           ? { repo: false, branch: null, upstream: null, ahead: 0, behind: 0, entries: [], error: null }
-          : {
-              repo: true, branch: "main", upstream: "origin/main", ahead: 2, behind: 0, error: null,
-              entries: [
-                { path: "README.md", index: ".", worktree: "M", untracked: false, conflicted: false, renamed_from: null },
-                { path: "notes/zahlen.md", index: "A", worktree: ".", untracked: false, conflicted: false, renamed_from: null },
-                { path: "src/neu.py", index: ".", worktree: "?", untracked: true, conflicted: false, renamed_from: null },
-              ],
-            },
+          : gitState,
         project_git_diff: ({ path }) => `diff --git a/${path} b/${path}\n--- a/${path}\n+++ b/${path}\n@@ -1,2 +1,3 @@\n # Titel\n-alt\n+neu\n+noch eine Zeile\n@@ -10,2 +11,2 @@\n zeile 10\n-zeile 11\n+ZEILE 11\n`,
-        project_git_stage: () => null,
-        project_git_commit: ({ message }) => `[main abc1234] ${message}`,
+        project_git_stage: args => gitMutation("stage", args, () => {
+          for (const entry of gitState.entries.filter(entry => args.paths.includes(entry.path))) {
+            entry.index = args.stage ? "M" : ".";
+            entry.worktree = args.stage ? "." : "M";
+            entry.untracked = false;
+          }
+        }),
+        project_git_commit: args => gitMutation("commit", args, () => {
+          gitState.entries = gitState.entries.filter(entry => entry.index === "." || entry.untracked);
+          return `[${gitState.branch} abc1234] ${args.message}`;
+        }),
         project_git_log: () => [
           { hash: "abc1234def", short: "abc1234", author: "Matthias", date: "2026-09-06T10:00:00+02:00", subject: "feat: notizen" },
           { hash: "0123456789", short: "0123456", author: "Matthias", date: "2026-09-05T09:00:00+02:00", subject: "chore: start" },
@@ -244,11 +267,22 @@
         project_git_commit_diff: ({ commit, path }) => `diff --git a/${path ?? "README.md"} b/${path ?? "README.md"}\n--- a/${path ?? "README.md"}\n+++ b/${path ?? "README.md"}\n@@ -1,2 +1,3 @@\n # Titel\n-alt (${commit.slice(0, 7)})\n+neu\n+noch eine Zeile\n@@ -10,2 +11,2 @@\n zeile 10\n-zeile 11\n+ZEILE 11\n`,
         project_git_apply_patch: () => null,
         project_git_discard: () => null,
-        project_git_branches: () => [
-          { name: "main", current: true, upstream: "origin/main" },
-          { name: "feature/notizen", current: false, upstream: null },
-        ],
-        project_git_switch: ({ branch }) => branch,
+        project_git_branches: () => branchState,
+        project_git_switch: args => gitMutation("switch", args, () => {
+          if (args.create) branchState.push({ name: args.branch, current: false, upstream: null, remote: false, worktree: null });
+          gitState.branch = args.branch;
+          for (const b of branchState) { b.current = !b.remote && b.name === args.branch; b.worktree = b.current ? project : null; }
+          return args.branch;
+        }),
+        project_git_branch_rename: args => gitMutation("rename", args, () => {
+          branchState.find(b => !b.remote && b.name === args.branch).name = args.name;
+          if (gitState.branch === args.branch) gitState.branch = args.name;
+          return `Branch ${args.branch} → ${args.name} umbenannt.`;
+        }),
+        project_git_branch_delete: args => gitMutation("delete", args, () => {
+          branchState.splice(branchState.findIndex(b => !b.remote && b.name === args.branch), 1);
+          return `Lokalen Branch ${args.branch} gelöscht.`;
+        }),
         project_git_blame: ({ path }) => path.endsWith(".md") ? [
           { line: 1, short: "abc1234", author: "Matthias Hennemeyer", date: "2026-09-06", summary: "feat: notizen", uncommitted: false },
           { line: 2, short: "abc1234", author: "Matthias Hennemeyer", date: "2026-09-06", summary: "feat: notizen", uncommitted: false },

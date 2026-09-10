@@ -617,6 +617,8 @@ pub struct GitBranch {
     pub name: String,
     pub current: bool,
     pub upstream: Option<String>,
+    pub remote: bool,
+    pub worktree: Option<String>,
 }
 
 #[tauri::command]
@@ -625,57 +627,139 @@ pub fn project_git_branches(project: String) -> Result<Vec<GitBranch>, String> {
     let output = git(
         &root,
         &[
-            "branch",
-            "--list",
-            "--format=%(refname:short)%1f%(HEAD)%1f%(upstream:short)",
+            "for-each-ref",
+            "--sort=refname",
+            "--format=%(refname)%1f%(HEAD)%1f%(upstream:short)%1f%(symref)%1f%(worktreepath)",
+            "refs/heads/",
+            "refs/remotes/",
         ],
     )?;
     if output.code != 0 {
-        return Ok(Vec::new());
+        return Err(output.stderr.trim().to_string());
     }
     Ok(String::from_utf8_lossy(&output.stdout)
         .lines()
         .filter_map(|line| {
             let mut parts = line.split('\u{1f}');
-            let name = parts.next()?.trim().to_string();
-            if name.is_empty() {
-                return None;
-            }
+            let reference = parts.next()?;
+            let remote = reference.starts_with("refs/remotes/");
+            let name = reference
+                .strip_prefix(if remote {
+                    "refs/remotes/"
+                } else {
+                    "refs/heads/"
+                })?
+                .to_string();
             let current = parts.next().unwrap_or("").trim() == "*";
             let upstream = parts
                 .next()
                 .map(str::trim)
                 .filter(|s| !s.is_empty())
                 .map(String::from);
+            if !parts.next().unwrap_or("").is_empty() {
+                return None; // Remote-HEAD is a symbolic alias, not a branch.
+            }
+            let worktree = parts.next().filter(|s| !s.is_empty()).map(String::from);
             Some(GitBranch {
                 name,
                 current,
                 upstream,
+                remote,
+                worktree,
             })
         })
         .collect())
+}
+
+fn validate_branch(root: &Path, name: &str) -> Result<(), String> {
+    // Full refs reject revision shorthands such as @{-1}; reject argv options too.
+    if name.is_empty()
+        || name.starts_with('-')
+        || name == "HEAD"
+        || name.trim() != name
+        || git(root, &["check-ref-format", &format!("refs/heads/{name}")])?.code != 0
+    {
+        return Err("Ungültiger lokaler Branch-Name.".into());
+    }
+    Ok(())
+}
+
+fn require_local_branch(root: &Path, name: &str) -> Result<(), String> {
+    validate_branch(root, name)?;
+    git_ok(
+        root,
+        &["show-ref", "--verify", &format!("refs/heads/{name}")],
+    )?;
+    Ok(())
+}
+
+#[tauri::command]
+pub fn project_git_branch_rename(
+    project: String,
+    branch: String,
+    name: String,
+) -> Result<String, String> {
+    let root = resolve_project_root(&project)?;
+    require_local_branch(&root, &branch)?;
+    validate_branch(&root, &name)?;
+    if project_git_branches(project)?.iter().any(|entry| {
+        !entry.remote && entry.name == branch && !entry.current && entry.worktree.is_some()
+    }) {
+        return Err("Branch ist in einem anderen Worktree geöffnet.".into());
+    }
+    // No -M: an existing destination is never overwritten.
+    git_ok(&root, &["branch", "-m", "--", &branch, &name])?;
+    Ok(format!("Branch {branch} → {name} umbenannt."))
+}
+
+#[tauri::command]
+pub fn project_git_branch_delete(project: String, branch: String) -> Result<String, String> {
+    let root = resolve_project_root(&project)?;
+    require_local_branch(&root, &branch)?;
+    let reference = format!("refs/heads/{branch}");
+    if git_ok(&root, &["symbolic-ref", "-q", "HEAD"])
+        .ok()
+        .as_deref()
+        .map(str::trim)
+        == Some(reference.as_str())
+    {
+        return Err("Der aktuelle Branch kann nicht gelöscht werden.".into());
+    }
+    // `branch -d` alone can allow upstream-merged branches not merged into HEAD.
+    if git(&root, &["merge-base", "--is-ancestor", &reference, "HEAD"])?.code != 0 {
+        return Err(
+            "Branch ist nicht vollständig in den aktuellen HEAD integriert. Kein Force-Delete."
+                .into(),
+        );
+    }
+    // Git additionally protects branches checked out in another worktree.
+    git_ok(&root, &["branch", "-d", "--", &branch])?;
+    Ok(format!(
+        "Lokalen Branch {branch} gelöscht. Remote bleibt unverändert."
+    ))
 }
 
 /// Branch wechseln oder (mit `create`) anlegen und wechseln.
 #[tauri::command]
 pub fn project_git_switch(project: String, branch: String, create: bool) -> Result<String, String> {
     let root = resolve_project_root(&project)?;
-    let name = branch.trim();
-    if name.is_empty() {
-        return Err("Branch-Name fehlt.".into());
+    let name = branch.as_str();
+    validate_branch(&root, name)?;
+    if !create {
+        require_local_branch(&root, name)?;
     }
     let args: Vec<&str> = if create {
-        vec!["switch", "-c", name]
+        vec!["switch", "--no-guess", "-c", name, "--"]
     } else {
-        vec!["switch", name]
+        vec!["switch", "--no-guess", name, "--"]
     };
     match git_ok(&root, &args) {
         Ok(_) => Ok(name.to_string()),
         Err(message) if message.contains("is not a git command") => {
             let fallback: Vec<&str> = if create {
-                vec!["checkout", "-b", name]
+                vec!["checkout", "-b", name, "--"]
             } else {
-                vec!["checkout", name]
+                vec!["checkout", name, "--"]
             };
             git_ok(&root, &fallback).map(|_| name.to_string())
         }
@@ -686,6 +770,189 @@ pub fn project_git_switch(project: String, branch: String, create: bool) -> Resu
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    struct TestRepo(std::path::PathBuf);
+    impl TestRepo {
+        fn new() -> Self {
+            let nonce = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos();
+            let dir = std::env::temp_dir().join(format!(
+                "speccify-git-workspace-{}-{nonce}",
+                std::process::id()
+            ));
+            std::fs::create_dir(&dir).unwrap();
+            let repo = Self(dir);
+            project_git_init(repo.project()).unwrap();
+            git_ok(&repo.0, &["config", "user.email", "test@example.com"]).unwrap();
+            git_ok(&repo.0, &["config", "user.name", "Test"]).unwrap();
+            git_ok(&repo.0, &["config", "commit.gpgsign", "false"]).unwrap();
+            // Tests must not execute global/local hooks or depend on the user's default branch.
+            std::fs::create_dir(repo.0.join("empty-hooks")).unwrap();
+            git_ok(&repo.0, &["config", "core.hooksPath", "empty-hooks"]).unwrap();
+            git_ok(&repo.0, &["symbolic-ref", "HEAD", "refs/heads/main"]).unwrap();
+            std::fs::write(repo.0.join("tracked.txt"), "base\n").unwrap();
+            project_git_stage(repo.project(), vec!["tracked.txt".into()], true).unwrap();
+            project_git_commit(repo.project(), "initial".into()).unwrap();
+            repo
+        }
+        fn project(&self) -> String {
+            self.0.to_string_lossy().into_owned()
+        }
+    }
+    impl Drop for TestRepo {
+        fn drop(&mut self) {
+            let _ = std::fs::remove_dir_all(&self.0);
+        }
+    }
+
+    #[test]
+    fn git_workspace_commit_and_branches_are_scoped_and_safe() {
+        let a = TestRepo::new();
+        let b = TestRepo::new();
+        let b_head = git_ok(&b.0, &["rev-parse", "HEAD"]).unwrap();
+        std::fs::write(b.0.join("tracked.txt"), "b staged\n").unwrap();
+        project_git_stage(b.project(), vec!["tracked.txt".into()], true).unwrap();
+        std::fs::write(b.0.join("tracked.txt"), "b unstaged\n").unwrap();
+        std::fs::write(b.0.join("untracked.txt"), "b private\n").unwrap();
+        let b_status = git_ok(&b.0, &["status", "--porcelain=v2"]).unwrap();
+        let b_diff = git_ok(&b.0, &["diff", "--cached"]).unwrap();
+        std::fs::write(a.0.join("tracked.txt"), "a staged\n").unwrap();
+        project_git_stage(a.project(), vec!["tracked.txt".into()], true).unwrap();
+        std::fs::write(a.0.join("tracked.txt"), "a unstaged\n").unwrap();
+        std::fs::write(a.0.join("untracked.txt"), "a private\n").unwrap();
+        assert!(project_git_commit(a.project(), "  \n".into()).is_err());
+        project_git_commit(
+            a.project(),
+            "feat: scoped\n\nDetailed body\nsecond line".into(),
+        )
+        .unwrap();
+        assert_eq!(
+            git_ok(&a.0, &["show", "HEAD:tracked.txt"]).unwrap(),
+            "a staged\n"
+        );
+        assert_eq!(
+            std::fs::read_to_string(a.0.join("tracked.txt")).unwrap(),
+            "a unstaged\n"
+        );
+        assert!(project_git_status(a.project())
+            .unwrap()
+            .entries
+            .iter()
+            .any(|e| e.path == "untracked.txt" && e.untracked));
+        assert!(git_ok(&a.0, &["log", "-1", "--format=%B"])
+            .unwrap()
+            .contains("Detailed body\nsecond line"));
+        assert!(project_git_commit(a.project(), "no staged files".into()).is_err());
+        // Feature diverges; switching back into its edited file must not discard work.
+        project_git_switch(a.project(), "feature/safe".into(), true).unwrap();
+        project_git_stage(a.project(), vec!["tracked.txt".into()], true).unwrap();
+        project_git_commit(a.project(), "feature".into()).unwrap();
+        project_git_switch(a.project(), "main".into(), false).unwrap();
+        std::fs::write(a.0.join("tracked.txt"), "do not lose\n").unwrap();
+        assert!(project_git_switch(a.project(), "feature/safe".into(), false).is_err());
+        assert_eq!(
+            std::fs::read_to_string(a.0.join("tracked.txt")).unwrap(),
+            "do not lose\n"
+        );
+        assert_eq!(
+            project_git_status(a.project()).unwrap().branch.as_deref(),
+            Some("main")
+        );
+        assert!(git_ok(&a.0, &["stash", "list"]).unwrap().is_empty());
+        assert!(project_git_branch_delete(a.project(), "main".into()).is_err());
+        assert!(
+            project_git_branch_delete(a.project(), "feature/safe".into())
+                .unwrap_err()
+                .contains("integriert")
+        );
+        project_git_branch_rename(a.project(), "feature/safe".into(), "feature/renamed".into())
+            .unwrap();
+        assert!(
+            project_git_branch_rename(a.project(), "feature/renamed".into(), "main".into())
+                .is_err()
+        );
+        git_ok(&a.0, &["branch", "merged"]).unwrap();
+        project_git_branch_delete(a.project(), "merged".into()).unwrap();
+        for invalid in [
+            "--discard-changes",
+            "-f",
+            "@{-1}",
+            "HEAD~1",
+            "bad name",
+            "HEAD",
+            "",
+        ] {
+            assert!(
+                project_git_switch(a.project(), invalid.into(), false).is_err(),
+                "{invalid}"
+            );
+            assert!(
+                project_git_switch(a.project(), invalid.into(), true).is_err(),
+                "{invalid}"
+            );
+            assert!(
+                project_git_branch_rename(a.project(), "main".into(), invalid.into()).is_err(),
+                "{invalid}"
+            );
+            assert!(
+                project_git_branch_delete(a.project(), invalid.into()).is_err(),
+                "{invalid}"
+            );
+        }
+        // Remote refs are display-only, with distinct identity and no synthetic HEAD row.
+        git_ok(&a.0, &["update-ref", "refs/remotes/origin/main", "HEAD"]).unwrap();
+        git_ok(
+            &a.0,
+            &[
+                "symbolic-ref",
+                "refs/remotes/origin/HEAD",
+                "refs/remotes/origin/main",
+            ],
+        )
+        .unwrap();
+        let branches = project_git_branches(a.project()).unwrap();
+        assert!(branches.iter().any(|b| b.remote && b.name == "origin/main"));
+        assert!(!branches.iter().any(|b| b.name == "origin/HEAD"));
+        assert!(project_git_switch(a.project(), "origin/main".into(), false).is_err());
+        assert!(project_git_branch_delete(a.project(), "origin/main".into()).is_err());
+        // A branch checked out elsewhere is not a safe mutation target.
+        let worktree = a.0.join("other-worktree");
+        git_ok(
+            &a.0,
+            &[
+                "worktree",
+                "add",
+                "-b",
+                "occupied",
+                worktree.to_str().unwrap(),
+                "HEAD",
+            ],
+        )
+        .unwrap();
+        assert!(project_git_branches(a.project())
+            .unwrap()
+            .iter()
+            .any(|b| b.name == "occupied" && b.worktree.is_some()));
+        assert!(project_git_branch_delete(a.project(), "occupied".into()).is_err());
+        assert!(project_git_branch_rename(a.project(), "occupied".into(), "moved".into()).is_err());
+        assert!(project_git_switch(a.project(), "occupied".into(), false).is_err());
+        assert_eq!(git_ok(&b.0, &["rev-parse", "HEAD"]).unwrap(), b_head);
+        assert_eq!(
+            git_ok(&b.0, &["status", "--porcelain=v2"]).unwrap(),
+            b_status
+        );
+        assert_eq!(git_ok(&b.0, &["diff", "--cached"]).unwrap(), b_diff);
+        assert_eq!(
+            std::fs::read_to_string(b.0.join("tracked.txt")).unwrap(),
+            "b unstaged\n"
+        );
+        assert_eq!(
+            std::fs::read_to_string(b.0.join("untracked.txt")).unwrap(),
+            "b private\n"
+        );
+    }
 
     #[test]
     fn status_v2_parses_branch_entries_renames_and_untracked() {

@@ -259,6 +259,8 @@ pub fn run() {
             git_cmd::project_git_discard,
             git_cmd::project_git_branches,
             git_cmd::project_git_switch,
+            git_cmd::project_git_branch_rename,
+            git_cmd::project_git_branch_delete,
             git_cmd::project_git_blame,
             files_cmd::project_search,
             files_cmd::project_file_create,

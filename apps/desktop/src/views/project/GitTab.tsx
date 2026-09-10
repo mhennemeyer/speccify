@@ -3,13 +3,14 @@
 // Historie, Branches — über das System-git (git_cmd.rs). Pull/Push laufen
 // mit Live-Ausgabe über die Aktions-Mechanik (project_action_run, run_id
 // „git:…") und erscheinen in der Aktivitätsanzeige. Navigator: Branch +
-// Änderungen; Mitte: Diff, Ausgabe, Log; Inspektor: Auswahl mit Tabs.
+// Änderungen; Mitte: Commit/Branches, Diff, Ausgabe, Log; Inspektor: Auswahl mit Tabs.
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import DiffView from "../../components/DiffView";
+import GitWorkspace, { type BranchAction } from "./GitWorkspace";
 import { beginActivity, endActivity, trackActivity } from "../../lib/activity";
 import {
   type GitBranch,
@@ -21,6 +22,8 @@ import {
   entryLabel,
   gitApplyPatch,
   gitBranches,
+  gitBranchRename,
+  gitBranchDelete,
   gitCommit,
   gitCommitDetail,
   gitCommitDiff,
@@ -142,15 +145,17 @@ export default function GitTab({
   const [commitDetail, setCommitDetail] = useState<GitCommitDetail | null>(null);
   const [commitFile, setCommitFile] = useState<string | null>(null);
   const [commitDiff, setCommitDiff] = useState<string>("");
-  const [message, setMessage] = useState("");
-  const [newBranch, setNewBranch] = useState("");
+  const [showBranches, setShowBranches] = useState(false);
   const [busy, setBusy] = useState(false);
   const [discardArmed, setDiscardArmed] = useState<string | null>(null);
   const [run, setRun] = useState<RunState | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const inspector = useInspector("git");
   const activityRef = useRef<string | null>(null);
-  const messageRef = useRef<HTMLTextAreaElement>(null);
+  const messageRef = useRef<HTMLInputElement>(null);
+  const mutationRef = useRef(false);
+  const remoteRunRef = useRef<string | null>(null);
+  const listenersReadyRef = useRef<Promise<unknown> | null>(null);
 
   // BO 2026-09-06: Committen auch „via Button" — mit eigener Nachricht
   // oder durch den Agenten. Der Agent bekommt den Auftrag ins Terminal
@@ -170,7 +175,7 @@ export default function GitTab({
     try {
       const next = await gitStatus(project);
       setStatus(next);
-      setError(next.error);
+      if (next.error) setError(next.error);
       if (next.repo) {
         setLog(await gitLog(project, 30));
         setBranches(await gitBranches(project));
@@ -257,15 +262,20 @@ export default function GitTab({
       "action-exit",
       (event) => {
         if (!event.payload.run_id.startsWith("git:")) return;
+        if (event.payload.run_id !== remoteRunRef.current) return;
+        remoteRunRef.current = null;
+        mutationRef.current = false;
+        setBusy(false);
         setRun((previous) =>
           previous && previous.id === event.payload.run_id
-            ? { ...previous, running: false, exit: event.payload.exit_code }
+            ? { ...previous, running: false, exit: event.payload.error ? -1 : event.payload.exit_code,
+                lines: event.payload.error ? [...previous.lines, event.payload.error] : previous.lines }
             : previous,
         );
         if (activityRef.current) {
           endActivity(
             activityRef.current,
-            event.payload.error || (event.payload.exit_code ?? 0) !== 0 ? "error" : "ok",
+            event.payload.error || event.payload.exit_code !== 0 ? "error" : "ok",
             event.payload.error ?? undefined,
           );
           activityRef.current = null;
@@ -273,34 +283,43 @@ export default function GitTab({
         void load();
       },
     );
+    listenersReadyRef.current = Promise.all([out, exit]);
+    void listenersReadyRef.current.catch(() => {}); // Report on action attempt, never run without output listeners.
     return () => {
-      void out.then((dispose) => dispose());
-      void exit.then((dispose) => dispose());
+      void out.then((dispose) => dispose()).catch(() => {});
+      void exit.then((dispose) => dispose()).catch(() => {});
     };
   }, [load]);
 
   const remote = useCallback(
     async (verb: "fetch" | "pull" | "push") => {
-      const id = `git:${verb}`;
+      if (mutationRef.current) return;
+      mutationRef.current = true;
+      setBusy(true);
+      setError(null);
+      const id = `git:${verb}:${crypto.randomUUID()}`;
+      remoteRunRef.current = id;
       setRun({ id, lines: [], running: true, exit: null });
       activityRef.current = beginActivity("action", `git ${verb}`, status?.branch ?? undefined);
       try {
+        await listenersReadyRef.current;
         await invoke("project_action_run", { project, runId: id, commandLine: `git ${verb}` });
       } catch (e) {
         setRun({ id, lines: [String(e)], running: false, exit: -1 });
         if (activityRef.current) endActivity(activityRef.current, "error", String(e));
         activityRef.current = null;
+        remoteRunRef.current = null;
+        mutationRef.current = false;
+        setBusy(false);
       }
     },
     [project, status?.branch],
   );
 
   const openCommitPanel = useCallback(() => {
-    setSelected(null);
-    setSelectedCommit(null);
-    inspector.reveal();
-    setTimeout(() => messageRef.current?.focus(), 50);
-  }, [inspector]);
+    messageRef.current?.scrollIntoView({ block: "center" });
+    messageRef.current?.focus();
+  }, []);
 
   // Toolbar-Knöpfe (I3): pull/push/commit kommen als Ereignis.
   useEffect(() => {
@@ -314,14 +333,19 @@ export default function GitTab({
   }, [remote, openCommitPanel]);
 
   const guard = async (work: () => Promise<unknown>) => {
+    if (mutationRef.current) return false;
+    mutationRef.current = true;
     setBusy(true);
     setError(null);
     try {
       await work();
       await load();
+      return true;
     } catch (e) {
       setError(String(e));
+      return false;
     } finally {
+      mutationRef.current = false;
       setBusy(false);
     }
   };
@@ -344,25 +368,23 @@ export default function GitTab({
       window.dispatchEvent(new CustomEvent("speccify:worktree-changed"));
     });
 
-  const commit = async () => {
-    setBusy(true);
-    setError(null);
-    try {
+  const commit = (message: string) => guard(async () => {
       const summary = await trackActivity("action", "git commit", () => gitCommit(project, message));
-      setMessage("");
       setRun({ id: "git:commit", lines: [summary], running: false, exit: 0 });
-      await load();
-    } catch (e) {
-      setError(String(e));
-    } finally {
-      setBusy(false);
-    }
-  };
+      setSelected(null);
+      setSelectedCommit(null);
+      window.dispatchEvent(new CustomEvent("speccify:worktree-changed"));
+  });
 
-  const switchBranch = (name: string, create: boolean) =>
+  const branchAction = (action: BranchAction, branch: string, name: string) =>
     guard(async () => {
-      await trackActivity("action", `git switch ${name}`, () => gitSwitch(project, name, create));
-      setNewBranch("");
+      const summary = await trackActivity("action", `git branch ${action}`, () =>
+        action === "rename" ? gitBranchRename(project, branch, name)
+        : action === "delete" ? gitBranchDelete(project, branch)
+        : gitSwitch(project, action === "create" ? name : branch, action === "create"));
+      setRun({ id: `git:branch ${action}`, lines: [summary], running: false, exit: 0 });
+      setSelected(null);
+      setSelectedCommit(null);
       window.dispatchEvent(new CustomEvent("speccify:worktree-changed"));
     });
 
@@ -413,7 +435,7 @@ export default function GitTab({
           title="Kein Git-Repository"
           action={{
             label: "Repository anlegen (git init)",
-            onClick: () => void trackActivity("action", "git init", () => gitInit(project)).then(load),
+            onClick: () => void guard(() => trackActivity("action", "git init", () => gitInit(project))),
           }}
         >
           Dieses Projekt ist noch kein Git-Repository. Mit einem Repository sieht der Agent
@@ -424,9 +446,9 @@ export default function GitTab({
           <div className="mb-2 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2">
             <div className="flex items-center justify-between gap-2">
               <button
-                onClick={openCommitPanel}
+                onClick={() => { setShowBranches(true); openCommitPanel(); }}
                 className="truncate font-mono text-xs font-semibold text-slate-800 hover:underline"
-                title="Branches und Commit im Inspektor"
+                title="Branch-Verwaltung öffnen"
               >
                 {status?.branch ?? "(kein Branch)"}
               </button>
@@ -446,7 +468,7 @@ export default function GitTab({
                 <button
                   key={verb}
                   onClick={() => void remote(verb)}
-                  disabled={run?.running}
+                  disabled={busy}
                   className="rounded border border-slate-300 bg-white px-2 py-0.5 text-[11px] text-slate-600 hover:bg-slate-100 disabled:opacity-40"
                 >
                   {verb}
@@ -467,6 +489,7 @@ export default function GitTab({
                 </span>
                 {staged.length > 0 ? (
                   <button
+                    disabled={busy}
                     onClick={() => void stage(staged.map((entry) => entry.path), false)}
                     className="text-[11px] text-slate-400 hover:text-slate-800"
                   >
@@ -481,6 +504,7 @@ export default function GitTab({
                 </span>
                 {unstaged.length > 0 ? (
                   <button
+                    disabled={busy}
                     onClick={() => void stage(unstaged.map((entry) => entry.path), true)}
                     className="text-[11px] text-slate-400 hover:text-slate-800"
                   >
@@ -496,125 +520,6 @@ export default function GitTab({
     </NavigatorPortal>
   );
 
-  // Ohne Auswahl zeigt der Inspektor Commit + Branches.
-  const commitPanel =
-    status?.repo && !(current && selected) && !selectedCommit ? (
-      <InspectorPortal tab="git" fallback={inlineInspector}>
-        <InspectorPanel
-          title="Commit"
-          subtitle={status.branch ?? undefined}
-          meta={[
-            { label: "Staged", value: `${staged.length} Datei(en)` },
-            { label: "Änderungen", value: `${unstaged.length} Datei(en)` },
-          ]}
-          actions={
-            <>
-              <InspectorButton
-                tone="primary"
-                disabled={busy || staged.length === 0 || !message.trim()}
-                onClick={() => void commit()}
-                title={staged.length === 0 ? "Erst stagen (+ in der Liste)" : "Gestagete Änderungen committen"}
-              >
-                Commit
-              </InspectorButton>
-              <InspectorButton
-                disabled={busy || unstaged.length === 0 || !message.trim()}
-                onClick={() =>
-                  void stage(unstaged.map((entry) => entry.path), true).then(() => commit())
-                }
-                title="Alle Änderungen stagen und mit dieser Nachricht committen"
-              >
-                Alles committen
-              </InspectorButton>
-              <InspectorButton
-                onClick={() => askAgentToCommit(staged.length)}
-                title="Der Agent liest die Änderungen, schreibt die Nachricht und committet"
-              >
-                Agent committen lassen
-              </InspectorButton>
-            </>
-          }
-          tabs={[
-            {
-              id: "commit",
-              label: "Commit",
-              content: (
-                <div>
-                  <textarea
-                    ref={messageRef}
-                    value={message}
-                    onChange={(event) => setMessage(event.target.value)}
-                    onKeyDown={(event) => {
-                      if ((event.metaKey || event.ctrlKey) && event.key === "Enter" && staged.length > 0 && message.trim()) {
-                        void commit();
-                      }
-                    }}
-                    placeholder="Commit-Nachricht… (⌘⏎ committet)"
-                    rows={4}
-                    spellCheck={false}
-                    className="w-full resize-none rounded border border-slate-300 bg-white px-2 py-1.5 font-mono text-xs"
-                  />
-                  {notice ? <p className="mt-2 text-xs text-sky-800">{notice}</p> : null}
-                </div>
-              ),
-            },
-            {
-              id: "branches",
-              label: `Branches${branches.length ? ` (${branches.length})` : ""}`,
-              content: (
-                <div>
-                  <ul className="mb-3 space-y-0.5 text-xs">
-                    {branches.map((branch) => (
-                      <li key={branch.name}>
-                        <button
-                          onClick={() => (branch.current ? undefined : void switchBranch(branch.name, false))}
-                          disabled={busy || branch.current}
-                          className={`flex w-full items-center gap-2 rounded px-1.5 py-1 text-left font-mono ${
-                            branch.current ? "bg-slate-800 text-white" : "hover:bg-slate-100"
-                          }`}
-                          title={branch.current ? "aktueller Branch" : `git switch ${branch.name}`}
-                        >
-                          <span className="min-w-0 flex-1 truncate">{branch.name}</span>
-                          {branch.upstream ? (
-                            <span className={`shrink-0 text-[10px] ${branch.current ? "text-slate-300" : "text-slate-400"}`}>
-                              {branch.upstream}
-                            </span>
-                          ) : null}
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                  <div className="flex gap-1">
-                    <input
-                      value={newBranch}
-                      onChange={(event) => setNewBranch(event.target.value)}
-                      onKeyDown={(event) => {
-                        if (event.key === "Enter" && newBranch.trim()) void switchBranch(newBranch.trim(), true);
-                      }}
-                      placeholder="neuer Branch…"
-                      spellCheck={false}
-                      className="min-w-0 flex-1 rounded border border-slate-300 bg-white px-2 py-1 font-mono text-xs"
-                    />
-                    <button
-                      onClick={() => void switchBranch(newBranch.trim(), true)}
-                      disabled={busy || !newBranch.trim()}
-                      className="rounded bg-slate-800 px-2.5 py-1 text-xs text-white hover:bg-slate-700 disabled:opacity-40"
-                      title="git switch -c — anlegen und wechseln"
-                    >
-                      Anlegen
-                    </button>
-                  </div>
-                  <p className="mt-2 text-[11px] text-slate-400">
-                    Wechseln geht nur mit sauberem Arbeitsbaum oder ohne Konflikt — sonst
-                    meldet git den Grund oben.
-                  </p>
-                </div>
-              ),
-            },
-          ]}
-        />
-      </InspectorPortal>
-    ) : null;
 
   const details = current && selected ? (
     <InspectorPortal tab="git" fallback={inlineInspector}>
@@ -801,20 +706,24 @@ export default function GitTab({
     <div className="flex h-full min-h-0 gap-4">
       {navigator}
       <div className="flex min-w-0 flex-1 flex-col gap-3 overflow-y-auto">
-        {commitPanel}
+        {status?.repo ? <GitWorkspace key={project} project={project} status={status} branches={branches}
+          stagedCount={staged.length} busy={busy} showBranches={showBranches} setShowBranches={setShowBranches}
+          messageRef={messageRef} onCommit={commit} onBranch={branchAction} onAgent={() => askAgentToCommit(staged.length)} /> : null}
         {details}
         {commitPanelDetail}
-        {error ? <p className="rounded bg-red-50 px-3 py-2 text-xs text-red-700">{error}</p> : null}
+        {busy ? <p role="status" className="text-xs text-slate-500">Git-Aktion läuft…</p> : null}
+        {notice ? <p role="status" className="text-xs text-sky-800">{notice}</p> : null}
+        {error ? <div role="alert" className="rounded bg-red-50 px-3 py-2 text-xs text-red-700">{error}
+          <button className="ml-2 underline" onClick={() => setError(null)}>Schließen</button></div> : null}
         {status?.repo && !selected && !selectedCommit && !run ? (
           <p className="text-sm text-slate-400">
-            Datei links wählen für den Diff, Commit unten für Details. Committen im Inspektor:
-            Nachricht schreiben oder den Agenten committen lassen.
+            Datei links wählen für den Diff, Commit unten für Details. Oben den Index committen oder Branches verwalten.
           </p>
         ) : null}
         {run ? (
           <div className="rounded-lg border border-slate-200 bg-slate-900 p-3 font-mono text-[11px] text-slate-200">
             <div className="mb-1 flex items-center justify-between text-slate-400">
-              <span>{run.id.replace("git:", "git ")}</span>
+              <span>git {run.id.split(":")[1]}</span>
               <span className="flex items-center gap-2">
                 {run.running ? "läuft…" : run.exit === 0 ? "✓ fertig" : `✕ Exit ${run.exit ?? "?"}`}
                 {!run.running ? (

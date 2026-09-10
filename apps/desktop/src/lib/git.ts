@@ -47,6 +47,8 @@ export interface GitBranch {
   name: string;
   current: boolean;
   upstream: string | null;
+  remote: boolean;
+  worktree: string | null;
 }
 
 export const STATUS_LABEL: Record<string, string> = {
@@ -98,6 +100,10 @@ export const gitBranches = (project: string) =>
   invoke<GitBranch[]>("project_git_branches", { project });
 export const gitSwitch = (project: string, branch: string, create: boolean) =>
   invoke<string>("project_git_switch", { project, branch, create });
+export const gitBranchRename = (project: string, branch: string, name: string) =>
+  invoke<string>("project_git_branch_rename", { project, branch, name });
+export const gitBranchDelete = (project: string, branch: string) =>
+  invoke<string>("project_git_branch_delete", { project, branch });
 export const gitInit = (project: string) => invoke<string>("project_git_init", { project });
 
 export interface BlameLine {

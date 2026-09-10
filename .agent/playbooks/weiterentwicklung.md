@@ -229,8 +229,10 @@ auffindbarer und wie ein zusammenhängender IDE-Arbeitsbereich wirken. Das
   gruppieren und filtern. [Spec 020](../specs/020-spec-navigation/SPEC.md).
 - **Git:** sichtbarer Commit-Composer und leicht erreichbare Branch-Auswahl;
   Branches wechseln und verwalten, Zustände/Fehler verständlich präsentieren.
-  Bestand: Git → Commit… → Nachrichtenfeld im Inspektor; Branches ebenfalls
-  dort als Unter-Tab. Diese versteckte Anordnung ist das konkrete UX-Problem.
+  Umsetzung 021: Betreff/Body und projektgebundener Neustart-Entwurf im Hauptbereich,
+  Index-Vorschau auch ohne Navigator. Lokale Branches suchen, bestätigt wechseln,
+  anlegen/umbenennen/sicher löschen; Remote-/Tracking-/Worktree-Anzeige.
+  Kein implizites Alles-stagen, Force-Delete oder automatischer Stash.
   [Spec 021](../specs/021-git-arbeitsbereich/SPEC.md).
 - **Dateien:** Ordner zusätzlich zum Aufklappen auswählen können; unterschiedliche
   Dateityp-Symbole/Farben. Dateien und Ordner werden Aktionsziele für Kontextmenüs;
@@ -241,8 +243,8 @@ auffindbarer und wie ein zusammenhängender IDE-Arbeitsbereich wirken. Das
   echter Nutzung verfeinern. Semantische Akzente, ruhige Flächen, Hell/Dunkel,
   keine allein farbliche Informationsvermittlung. [Spec 019](../specs/019-farbkonzept/SPEC.md).
 
-019 ist geliefert, 020 durch den Fortsetzungsauftrag umgesetzt (Abnahme offen);
-021–022 bleiben konkretisierte Folgearbeit. Projektsortierung
+019–021 sind durch den Fortsetzungsauftrag umgesetzt (Abnahmen offen);
+022 bleibt konkretisierte Folgearbeit. Projektsortierung
 setzt die Identitäten aus 015/016 voraus, kein zweites Multi-Repo-Modell erfinden.
 
 **Bestand:** Editor mit mehreren Dateien, Entwürfen, Suche, Dateiverwaltung,
