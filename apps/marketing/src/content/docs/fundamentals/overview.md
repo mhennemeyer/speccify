@@ -13,7 +13,7 @@ repository:
 ├── agent.md          # the workflow contract — how the agent works here
 ├── specs/            # one folder per piece of work: SPEC.md with tasks as checkboxes
 │   ├── <slug>/       #   + history.jsonl, the append-only log
-│   └── archive/      # finished specs, date-prefixed
+│   └── archive/      # optional historical content; new Done specs stay in place
 ├── playbooks/        # standing procedures (release, deploy) — reused, not worked off
 ├── skills/           # reusable instructions for the agent
 │   └── <name>/SKILL.md

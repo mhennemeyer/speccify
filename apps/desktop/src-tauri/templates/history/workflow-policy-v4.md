@@ -12,11 +12,9 @@ and attribution/provenance restrictions.
   its running number (`012-…`) is how people refer to the spec ("spec 12");
   flat `key: value` front matter between `---` lines, then a Markdown body
   whose first `#` heading is the title. Stations: `Backlog`, `Doing`,
-  `Done`. Finished specs stay in place in `Done`; there is no archiving step.
-  Existing `.agent/specs/archive/` content is historical, remains discoverable
-  and is read-only in spec actions. Do not delete or relocate it automatically.
-  New specs take the next free number, including historical numbers
-  (the app does this; by hand: highest number + 1).
+  `Done`. Finished specs are archived under
+  `.agent/specs/archive/<YYYY-MM-DD>-<NNN-slug>/`. New specs take the next
+  free number (the app does this; by hand: highest number + 1).
 - Spec history: `.agent/specs/<slug>/history.jsonl` (append-only).
 - Playbooks: `.agent/playbooks/<name>.md` — standing procedures, reused,
   never "worked off".
@@ -60,7 +58,7 @@ the spec.
 5. **Done means:** every task ticked, `## Verification` written, an
    `agent_run` history line appended. Then set `station: Done`. With
    `needs_human: true` set `ready: true` instead and leave the spec in
-   `Doing` — the human accepts and moves it to `Done`, without moving files.
+   `Doing` — the human accepts, moves it to `Done` and archives it.
 6. Too big after all? Split into child specs (`parent:`), leave the parent
    in `Doing` with the remaining tasks, and say so in the body.
 

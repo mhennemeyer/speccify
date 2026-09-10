@@ -84,8 +84,9 @@ verified, and appends an `agent_run` line to the history.
 
 **Done means:** every task ticked, `## Verification` written, the
 history line appended. With `needs_human` the agent sets `ready`
-instead and you move the spec to Done. **Archive** moves a finished
-spec to `.agent/specs/archive/<date>-<slug>/`, history included.
+instead and you move the spec to Done. Finished specs stay in place:
+there is no separate archiving step. Existing historical content in
+`.agent/specs/archive/` remains discoverable and read-only in spec actions.
 
 ## The board in the app
 
@@ -96,7 +97,9 @@ Click a card to open the spec in the inspector on the right: an
 tick boxes yourself, a *History* tab with the timeline. Double-click a
 card, or **Edit** in the inspector, for the editor sheet; drag & drop
 moves specs between columns; **+ Spec** creates one from the template.
-The navigator filters by parent spec, the **needs me** filter shows
+The navigator lists every spec with its number, station and progress.
+Search by title, number or path and filter by parent above the board,
+including when the navigator is hidden. The **needs me** filter shows
 only specs waiting on you, and Done is grouped by parent so finished
 work stays legible.
 
@@ -128,7 +131,7 @@ prompt** to hand it to the agent. The *Playbooks* tab lists them,
 
 The spec workflow is modeled on
 [OpenSpec](https://github.com/Fission-AI/OpenSpec) (one folder per
-change, tasks as checkboxes, archive with a date) and on
+change and tasks as checkboxes) and on
 [Kiro's specs](https://kiro.dev/docs/specs/) (testable requirements,
 a human gate between phases). Speccify keeps the format to a single
 `SPEC.md` and adds what those tools leave to you: the board, the

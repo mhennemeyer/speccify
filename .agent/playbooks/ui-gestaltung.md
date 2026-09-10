@@ -58,8 +58,10 @@ nutzen `data-tone` und gemeinsame Klassen, keine verstreuten Hexwerte in Views.
 019 liefert Bereichstabs, Board-Spalten/Auswahl/Fortschritt und Dateisymbole.
 Größere Interaktionsänderungen sind ausdrücklich noch nicht damit geliefert:
 
-1. 020: Specs links als echte Gesamtliste; Archiv als Workflow entfernen,
-   vorhandenen Altbestand erhalten. Später nach Projekt gruppieren/sortieren.
+1. 020: Gesamtliste links und Such-/Themenfilter über dem Board umgesetzt;
+   kein Archiv-Bedienweg, Altbestand als beschriftete schreibgeschützte Einträge.
+   Unbekannte historische Stationen bleiben lesbar statt still umgedeutet.
+   Später nach Projekt gruppieren/sortieren.
 2. 021: Git mit sichtbarem Commit-Composer, eindeutigem Branch-Einstieg und
    zusammenhängender Verwaltung. Entwürfe und Git-Sicherheit gehen vor Optik.
 3. 022: Dateien und Ordner auswählen, Kontextmenü, später Move/Refactoring mit

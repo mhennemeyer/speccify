@@ -1,6 +1,6 @@
 // Specs-Board (Plan spec-workflow.md, S3; davor projektfenster.md P5/W3):
 // eine Spec je Ordner `.agent/specs/<slug>/SPEC.md`, drei Spalten mit
-// Drag&Drop, Anlegen/Editieren/Archivieren (byte-stabil, App-Aktionen
+// Drag&Drop, Anlegen/Editieren (byte-stabil, App-Aktionen
 // loggen History), Tasks als Checkboxen direkt umschaltbar, KPI-Kopfzeile
 // aus den agent_run-Events, Done-Spalte nach Ober-Spec gruppiert. Live
 // über den W2-Watcher — kein Aktualisieren-Knopf.
@@ -16,7 +16,6 @@ import {
   InspectorPortal,
   NavEmpty,
   NavigatorPortal,
-  NavRow,
   useInspector,
 } from "../../lib/panels";
 
@@ -210,6 +209,7 @@ function SpecCard({
     <div
       data-tone={STATION_TONES[spec.station] ?? "slate"}
       data-selected={selected}
+      data-spec-card={spec.file}
       draggable={!spec.archived}
       onDragStart={(event) => {
         event.dataTransfer.setData("text/speccify-spec", spec.file);
@@ -236,6 +236,7 @@ function SpecCard({
           {spec.parent ? <span>· {spec.parent}</span> : null}
           <Progress spec={spec} compact />
           <SpecBadges spec={spec} />
+          {spec.archived ? <span>Altbestand · nur lesen</span> : null}
         </div>
       </button>
     </div>
@@ -441,6 +442,7 @@ function QuestionsSection({
           <div className="mt-2 flex gap-2">
             <textarea
               value={draft}
+              disabled={busy}
               onChange={(event) => setDraft(event.target.value)}
               rows={2}
               placeholder="Antwort…"
@@ -493,7 +495,6 @@ function SpecDetail({
   questions,
   onAnswer,
   onToggleTask,
-  onArchive,
   busy,
   onEdit,
   onClose,
@@ -504,7 +505,6 @@ function SpecDetail({
   questions: SpecQuestion[];
   onAnswer: (number: number, text: string) => void;
   onToggleTask: (index: number, done: boolean) => void;
-  onArchive: () => void;
   busy: boolean;
   onEdit: () => void;
   onClose: () => void;
@@ -516,7 +516,8 @@ function SpecDetail({
   const tasks = spec.tasks;
   const overview = (
     <>
-      <QuestionsSection questions={questions} onAnswer={onAnswer} busy={busy} />
+      {spec.archived ? <p className="mb-2 text-xs text-slate-500">Altbestand · nur lesen. Datei und Historie bleiben am ursprünglichen Ort erhalten.</p> : null}
+      <QuestionsSection questions={questions} onAnswer={onAnswer} busy={busy || spec.archived} />
       {stripQuestions(spec.body) ? (
         <Markdown text={stripQuestions(spec.body)} />
       ) : (
@@ -528,7 +529,7 @@ function SpecDetail({
     spec.ready ? "bereit" : null,
     spec.needs_human ? "braucht BO" : null,
     spec.open_question ? `Frage ${spec.open_question}` : null,
-    spec.archived ? "archiviert" : null,
+    spec.archived ? "Altbestand · nur lesen" : null,
   ].filter(Boolean);
   const panel = (
     <InspectorPanel
@@ -552,15 +553,6 @@ function SpecDetail({
             Als Prompt kopieren
           </InspectorButton>
           {!spec.archived ? <InspectorButton onClick={onEdit}>Bearbeiten</InspectorButton> : null}
-          {spec.station === "Done" && !spec.archived ? (
-            <InspectorButton
-              onClick={onArchive}
-              disabled={busy}
-              title="Nach .agent/specs/archive/<Datum>-<slug>/ verschieben"
-            >
-              Archivieren
-            </InspectorButton>
-          ) : null}
           <InspectorButton onClick={onClose}>Schließen</InspectorButton>
         </>
       }
@@ -651,21 +643,25 @@ export default function BoardTab({ project, refresh }: { project: string; refres
   const [showRuns, setShowRuns] = useState(false);
   // Bewusst nicht persistiert: ein Blickfilter, kein Modus.
   const [needsMe, setNeedsMe] = useState(false);
-  // Navigator-Filter: alle | Ober-Spec | Archiv.
-  const [filter, setFilter] = useState<{ kind: "all" } | { kind: "parent"; parent: string } | { kind: "archive" }>({
-    kind: "all",
-  });
+  const [parentFilter, setParentFilter] = useState("");
+  const [search, setSearch] = useState("");
 
   const allSpecs = data ?? [];
   const live = allSpecs.filter((spec) => !spec.archived);
-  const archived = allSpecs.filter((spec) => spec.archived);
   const needsAttention = (spec: SpecEntry) => spec.open_question !== null || spec.needs_human;
-  const parents = [...new Set(live.map((spec) => spec.parent).filter((p): p is string => Boolean(p)))].sort();
-  const specs = (filter.kind === "archive" ? archived : live).filter(
+  const parents = [...new Set(allSpecs.map((spec) => spec.parent).filter((p): p is string => Boolean(p)))].sort();
+  const query = search.trim().toLocaleLowerCase();
+  const specs = allSpecs.filter(
     (spec) =>
       (!needsMe || needsAttention(spec)) &&
-      (filter.kind !== "parent" || spec.parent === filter.parent || spec.id === filter.parent),
+      (!parentFilter || spec.parent === parentFilter || spec.id === parentFilter) &&
+      (!query || `${spec.number ?? ""} ${spec.title} ${spec.id} ${spec.file}`.toLocaleLowerCase().includes(query)),
   );
+  const listed = [...specs].sort((a, b) =>
+    (a.number ?? Number.MAX_SAFE_INTEGER) - (b.number ?? Number.MAX_SAFE_INTEGER) ||
+    a.id.localeCompare(b.id) || a.file.localeCompare(b.file));
+  // Preserve unknown historical station names without making them drop targets.
+  const stations = [...new Set<string>([...STATIONS, ...specs.map(spec => spec.station)])];
   const selectedSpec = allSpecs.find((spec) => spec.file === selected) ?? null;
   const questions = useAsync(
     () =>
@@ -677,10 +673,22 @@ export default function BoardTab({ project, refresh }: { project: string; refres
   const history = useAsync(
     () =>
       selectedSpec
-        ? invoke<HistoryEvent[]>("project_ticket_history", { project, ticketId: selectedSpec.id })
+        ? invoke<HistoryEvent[]>("project_ticket_history", { project, ticketId: selectedSpec.id, file: selectedSpec.file })
         : Promise.resolve([] as HistoryEvent[]),
-    `spec-history:${project}:${selectedSpec?.id ?? ""}`,
+    `spec-history:${project}:${selectedSpec?.file ?? ""}`,
   );
+
+  useEffect(() => {
+    // Hidden by a filter or removed by the watcher: never leave stale details.
+    if (selected && !specs.some(spec => spec.file === selected)) setSelectedState(null);
+  }, [selected, data, search, parentFilter, needsMe]);
+
+  useEffect(() => {
+    if (!selected) return;
+    const card = [...document.querySelectorAll<HTMLElement>("[data-spec-card]")]
+      .find(element => element.dataset.specCard === selected);
+    card?.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }, [selected]);
 
   useEffect(() => {
     if (refresh) {
@@ -754,11 +762,6 @@ export default function BoardTab({ project, refresh }: { project: string; refres
     }
   };
 
-  const archive = async (file: string) => {
-    const ok = await run(() => invoke<string>("project_spec_archive", { project, file }));
-    if (ok) setSelected(null);
-  };
-
   // Laufende Nummern (BO 2026-09-10): neue Specs bekommen sie automatisch,
   // ältere per Knopf — Ordner werden umbenannt, parent-Verweise ziehen mit.
   const unnumbered = live.filter((spec) => spec.number === null).length;
@@ -785,40 +788,42 @@ export default function BoardTab({ project, refresh }: { project: string; refres
               (<em>/spec-next</em> im Terminal).
             </NavEmpty>
           ) : (
-            <div className="space-y-0.5">
-              <NavRow
-                selected={filter.kind === "all"}
-                onClick={() => setFilter({ kind: "all" })}
-                trailing={<span className="font-mono text-[11px] opacity-70">{live.length}</span>}
-              >
-                Alle Specs
-              </NavRow>
-              {parents.map((parent) => (
-                <NavRow
-                  key={parent}
-                  selected={filter.kind === "parent" && filter.parent === parent}
-                  onClick={() => setFilter({ kind: "parent", parent })}
-                  trailing={
-                    <span className="font-mono text-[11px] opacity-70">
-                      {live.filter((spec) => spec.parent === parent).length}
-                    </span>
-                  }
-                >
-                  {parent}
-                </NavRow>
+            <div className="space-y-1" aria-label="Spec-Liste">
+              <p className="px-2 py-1 text-[11px] text-slate-500">Specs · {listed.length}/{allSpecs.length}</p>
+              {listed.map(spec => (
+                <button key={spec.file} data-spec-file={spec.file}
+                  aria-current={selected === spec.file ? "true" : undefined}
+                  title={`${spec.title}\n${spec.file}`}
+                  onClick={() => setSelected(spec.file)}
+                  className="file-row block w-full rounded px-2 py-2 text-left text-slate-700 hover:bg-slate-100">
+                  <span className="block break-words text-sm font-medium">
+                    {spec.number !== null ? <span className="mr-1 font-mono text-xs">#{spec.number}</span> : null}
+                    {spec.title}
+                  </span>
+                  <span className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px]">
+                    <span className="tone-ink font-medium" data-tone={STATION_TONES[spec.station] ?? "slate"}>{spec.station}</span>
+                    <span>{spec.tasks_done}/{spec.tasks_total}</span>
+                    <SpecBadges spec={spec} />
+                    {spec.archived ? <span>Altbestand · nur lesen</span> : null}
+                  </span>
+                </button>
               ))}
-              {archived.length > 0 ? (
-                <NavRow
-                  selected={filter.kind === "archive"}
-                  onClick={() => setFilter({ kind: "archive" })}
-                  trailing={<span className="font-mono text-[11px] opacity-70">{archived.length}</span>}
-                >
-                  Archiv
-                </NavRow>
-              ) : null}
+              {listed.length === 0 ? <p className="p-2 text-xs text-slate-500">Keine passenden Specs. Filter zurücksetzen oder Suche ändern.</p> : null}
             </div>
           )}
         </NavigatorPortal>
+        <div className="mb-2 flex flex-wrap items-center gap-2">
+          <input aria-label="Specs suchen" placeholder="Specs suchen · Titel, Nummer, Pfad…" value={search}
+            onChange={event => setSearch(event.target.value)}
+            className="min-w-40 flex-1 rounded border border-slate-300 bg-white px-2 py-1.5 text-xs text-slate-800" />
+          <select aria-label="Ober-Spec filtern" value={parentFilter} onChange={event => setParentFilter(event.target.value)}
+            className="max-w-48 rounded border border-slate-300 bg-white px-2 py-1.5 text-xs text-slate-700">
+            <option value="">Alle Themen</option>
+            {parents.map(parent => <option key={parent} value={parent}>{parent}</option>)}
+          </select>
+          {search || parentFilter || needsMe ? <button className="text-xs text-slate-600 underline"
+            onClick={() => { setSearch(""); setParentFilter(""); setNeedsMe(false); }}>Filter zurücksetzen</button> : null}
+        </div>
         <div className="mb-2 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             {kpi && kpi.run_count > 0 ? (
@@ -877,8 +882,8 @@ export default function BoardTab({ project, refresh }: { project: string; refres
             </ul>
           </div>
         ) : null}
-        <div className="flex min-h-0 flex-1 gap-3">
-          {STATIONS.map((station) => {
+        <div className="flex min-h-0 flex-1 gap-3 overflow-x-auto">
+          {stations.map((station) => {
             const inStation = specs.filter((spec) => spec.station === station);
             inStation.sort(station === "Backlog" ? backlogCompare : createdCompare);
             const card = (spec: SpecEntry) => (
@@ -897,29 +902,31 @@ export default function BoardTab({ project, refresh }: { project: string; refres
             return (
               <div
                 key={station}
-                data-tone={STATION_TONES[station]}
+                data-tone={STATION_TONES[station] ?? "slate"}
                 data-station={station}
                 onDragOver={(event) => {
+                  if (!STATIONS.some(known => known === station)) return;
                   if (event.dataTransfer.types.includes("text/speccify-spec")) {
                     event.preventDefault();
                     event.dataTransfer.dropEffect = "move";
                   }
                 }}
                 onDrop={(event) => {
+                  if (!STATIONS.some(known => known === station)) return;
                   const file = event.dataTransfer.getData("text/speccify-spec");
                   if (file) {
                     event.preventDefault();
                     const spec = specs.find((entry) => entry.file === file);
-                    if (spec && spec.station !== station) move(file, station);
+                    if (spec && !spec.archived && spec.station !== station) move(file, station);
                   }
                 }}
-                className="spec-lane flex min-h-0 flex-1 flex-col rounded-lg p-2"
+                className="spec-lane flex min-h-0 min-w-48 flex-1 flex-col rounded-lg p-2"
               >
                 <h2 className="tone-ink mb-2 px-1 text-xs font-semibold uppercase tracking-wide">
-                  {STATION_LABELS[station]} ({inStation.length})
+                  {STATION_LABELS[station] ?? station} ({inStation.length})
                 </h2>
                 <div className="min-h-0 flex-1 space-y-2 overflow-y-auto">
-                  {station === "Done" && filter.kind === "all"
+                  {station === "Done" && !parentFilter
                     ? groupDone(inStation).map(([parent, group]) => (
                         <details key={parent} className="rounded-lg bg-slate-200/60 p-1.5" open>
                           <summary className="cursor-pointer px-1 text-[11px] font-semibold text-slate-500">
@@ -955,7 +962,6 @@ export default function BoardTab({ project, refresh }: { project: string; refres
                   invoke("project_spec_toggle_task", { project, file: selectedSpec.file, index, done, expectedBody: selectedSpec.body }),
                 )
               }
-              onArchive={() => void archive(selectedSpec.file)}
               busy={busy}
               onEdit={() => setSheet(sheetFor(selectedSpec))}
               onClose={() => setSelected(null)}

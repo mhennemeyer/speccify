@@ -241,7 +241,8 @@ auffindbarer und wie ein zusammenhängender IDE-Arbeitsbereich wirken. Das
   echter Nutzung verfeinern. Semantische Akzente, ruhige Flächen, Hell/Dunkel,
   keine allein farbliche Informationsvermittlung. [Spec 019](../specs/019-farbkonzept/SPEC.md).
 
-019 ist direkt beauftragt; 020–022 sind konkretisierte Folgearbeit. Projektsortierung
+019 ist geliefert, 020 durch den Fortsetzungsauftrag umgesetzt (Abnahme offen);
+021–022 bleiben konkretisierte Folgearbeit. Projektsortierung
 setzt die Identitäten aus 015/016 voraus, kein zweites Multi-Repo-Modell erfinden.
 
 **Bestand:** Editor mit mehreren Dateien, Entwürfen, Suche, Dateiverwaltung,
@@ -663,7 +664,7 @@ Auslöser, Ergebnis und Fehlerfall. Halte Aufgaben ausschließlich unter
 native Markdown-Erkennung: Tasklisten im gesamten Body zählen, Codeblöcke nicht.
 Bei veraltetem angezeigtem Body verweigert die App den Klick und lädt neu.
 
-Workflow-Einrichtung (Policy v4): ausdrückliche Projekt-/Hostregeln haben Vorrang,
+Workflow-Einrichtung (Policy v5): ausdrückliche Projekt-/Hostregeln haben Vorrang,
 auch bei Commit/Push und Herkunftsangaben. Das Setup aktualisiert ausschließlich
 bekannte unveränderte ältere Vorlagen. Angepasste Skills/Policy-Blöcke, unbekannte
 neuere Versionen und beschädigte/falsche Links bleiben mit konkretem Befund

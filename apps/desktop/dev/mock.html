@@ -90,6 +90,15 @@
           { timestamp: "2026-08-31T11:52:00Z", spec_id:"live-test", event_type: "ticket_edited", actor: "user", summary: "Im Editor gespeichert" },
         ],
       };
+      if (new URLSearchParams(location.search).has("specnav")) {
+        tickets.push({ ...base, id: "notizen-zahlen", number: 12,
+          file: ".agent/specs/archive/2026-09-01-notizen-zahlen/SPEC.md",
+          title: "Historische Zahlen", station: "Done", archived: true,
+          tasks_total: 1, tasks: [{index: 0, done: false, text: "Historischer Task"}],
+          body: "# Historische Zahlen\n\n- [ ] Historischer Task" });
+        tickets.push({ ...base, id: "old-state", file: ".agent/specs/archive/2026-09-01-old-state/SPEC.md",
+          title: "Alte Station bleibt lesbar", station: "Abgenommen", archived: true, body: "Altbestand" });
+      }
       const files = {
         ".agent/plans/aufraeumen.md": "---\nlifecycle: active\nstatus: läuft — Tickets geschnitten\n---\n# Plan: Aufräumen\n\nNotizen sortieren und Altes löschen.\n\n## Schritte\n\n1. `notes/` anlegen\n2. Zahlen-Notiz schreiben\n3. Alte Entwürfe löschen\n",
         ".agent/plans/archive/notizen.md": "---\nlifecycle: done\n---\n# Notizen\n\nErster Durchlauf.\n",
@@ -117,7 +126,7 @@
             { path: ".agent/skills/spec-next/SKILL.md", kind: "missing", action: "install", message: "Skill spec-next fehlt" },
           ] : []),
         ] : [];
-        return { state: issues.length ? "outdated" : "current", installed_version: 4, current_version: 4, pending: issues.map(i => i.message), issues };
+        return { state: issues.length ? "outdated" : "current", installed_version: 5, current_version: 5, pending: issues.map(i => i.message), issues };
       };
       window.__TAURI_EVENT_PLUGIN_INTERNALS__ = { unregisterListener: () => {} };
       const responses = {
@@ -129,7 +138,9 @@
         project_workflow_install: () => { window.__SPECCIFY_MOCK__.workflowInstalls++; return workflowStatus(); },
         project_board: () => orEmpty(tickets),
         project_board_kpis: () => ({ run_count: 1, tokens_in: 30000, tokens_out: 1500, duration_ms: 120000, recent: [] }),
-        project_ticket_history: ({ ticketId }) => history[ticketId] ?? [],
+        project_ticket_history: ({ ticketId, file }) => file?.includes("/archive/")
+          ? [{timestamp: "2026-09-01T10:00:00Z", spec_id: ticketId, event_type: "spec_created", actor: "project", summary: "Eindeutig historische History"}]
+          : history[ticketId] ?? [],
         project_ticket_questions: ({ file }) => questions[file] ?? [],
         project_ticket_answer: () => null,
         project_spec_toggle_task: ({ file, index, done, expectedBody }) => {
@@ -146,7 +157,6 @@
           spec.tasks_done = spec.tasks.filter(t => t.done).length;
           return null;
         },
-        project_spec_archive: ({ file }) => file.replace("/specs/", "/specs/archive/2026-09-09-"),
         project_specs_number: () => ["013-live-test", "014-notizen-ordner"],
         project_read_file: ({ file }) => files[file] ?? `# ${file}\n\n(leer)\n`,
         project_write_file: () => null,

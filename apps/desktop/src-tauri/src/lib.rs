@@ -289,7 +289,6 @@ pub fn run() {
             board_cmd::project_ticket_questions,
             board_cmd::project_ticket_answer,
             board_cmd::project_spec_toggle_task,
-            board_cmd::project_spec_archive,
             board_cmd::project_specs_number,
             help_docs::help_docs,
             help_docs::help_doc,

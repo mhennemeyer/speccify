@@ -184,11 +184,13 @@ Ordnernamen (`012-slug`, „Spec 12" im Gespräch und im Commit); ältere
 Specs ohne Nummer bekommen sie über den Knopf *nummerieren* über dem
 Board. Eine Spec ohne `order` gilt als Idee.
 *Done* verlangt alle Tasks abgehakt und eine Prüfnotiz; mit *braucht BO*
-wartet die Spec mit *bereit* auf Deine Abnahme. **Archivieren** verschiebt
-Fertiges nach `.agent/specs/archive/`. Die Kopfzeile zeigt Läufe und
-Token-Verbrauch des Agenten; im Navigator filtert die Liste nach
-Ober-Spec, der Filter **braucht mich** blendet alles aus, was nicht auf
-Dich wartet.
+wartet die Spec mit *bereit* auf Deine Abnahme. Fertiges bleibt in **Done**
+am selben Ort; ein Archivierungsschritt ist nicht nötig. Die linke Gesamtliste
+zeigt jede Spec mit Nummer, Station und Fortschritt. Suche nach Titel, Nummer
+oder Pfad und Themenfilter stehen über dem Board, auch ohne Navigator.
+Der Filter **braucht mich** zeigt Arbeit, die auf Dich wartet. Vorhandener
+Altbestand bleibt mit Herkunftshinweis lesbar, seine Spec-Aktionen sind
+schreibgeschützt. Die Kopfzeile zeigt Läufe und Token-Verbrauch.
 
 ### Hilfe
 

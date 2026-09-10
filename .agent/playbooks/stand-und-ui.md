@@ -59,8 +59,8 @@ oder vollständige Plattformabnahme.
 | Fähigkeit | Ist-Stand | Grenze / Folgeschritt |
 |---|---|---|
 | Projekte | Ordner/Pfad öffnen, zuletzt verwendete Projekte, eigenes Fenster | keine automatische Verbunderkennung oder gemeinsame Board-Sicht; V1-01 |
-| Specs | Backlog/Doing/Done, gemeinsame native Aufgabenliste/Zähler/Checkbox-Bearbeitung, Konfliktprüfung beim Task-Klick, Fragen, Historie, Archiv, Nummerierung, Hierarchie, Lauf-Kennzahlen | keine Sperre gegenüber externen Editoren; Team-/Branch-Sicht fehlt |
-| Workflow-Setup | Policy v4, versionierte Skills, bekannte Vorlagen sicher migrieren, konkrete Link-/Anpassungsdiagnose | individuelle/neue unbekannte Vorlagen und fremde Links bleiben zur manuellen Prüfung erhalten |
+| Specs | Gesamtliste links, Suche/Themenfilter, Backlog/Doing/Done, gemeinsamer Task-Vertrag, Fragen und pfadgenaue Historie; Altbestand lesbar, kein Archivierungsschritt | keine Sperre gegenüber externen Editoren; Team-/Branch-Sicht fehlt |
+| Workflow-Setup | Policy v5 ohne Archivierungsschritt, versionierte Skills, bekannte Vorlagen sicher migrieren, konkrete Link-/Anpassungsdiagnose | individuelle/neue unbekannte Vorlagen und fremde Links bleiben zur manuellen Prüfung erhalten |
 | Playbooks | Liste, Markdown lesen/bearbeiten, neu/löschen, als Prompt kopieren | keine Workspace-Herkunft oder Team-Verteilung |
 | Editor/Git | mehrere offene Dateien, Entwürfe, Suche, Dateioperationen, Diff, Staging auch pro Hunk, Commit, Branches, Remotes, Historie/Blame | echte IDE-Abnahme 002 offen; kein belegtes LSP-/Debugger-/Konfliktlösesystem |
 | Skills | Projektliste, Bibliotheken durchsuchen, globale/projekteigene Quellen, Import/Expand, Exportkommando | keine explizite Source-/Target-Rolle; Teile von 004 noch abnehmen |
@@ -271,21 +271,22 @@ Navigator · fünf Gruppen, zehn Tabs
 │       ├── Inhalt: gewählte Einweisung als Markdown
 │       └── Inspektor: Pfad/Rolle/Terminal-Kommando · als Prompt kopieren
 ├── Specs [Gruppe 4; ein Tab]
-│   ├── Navigator: Alle Specs / Parent-Gruppen / Archiv
-│   ├── Filter: braucht mich
+│   ├── Navigator: jede Spec als Listeneintrag · Nummer/Titel/Station/Tasks/Flags
+│   │   └── Altbestand in derselben Liste · Herkunft im Detail · nur lesen
+│   ├── Filter über Board: Suche (Titel/Nummer/Pfad) · Ober-Spec · braucht mich · zurücksetzen
 │   ├── Lauf-Kennzahlen → Liste jüngster Läufe (wenn History Daten enthält)
 │   ├── unnummerierte Specs nummerieren (falls vorhanden)
 │   ├── Board: Backlog / Doing / Done (v1: Slate / Blau / Grün; getönte Flächen)
 │   │   ├── Karten: Nummer/ID · Titel · Status-Badges · Aufgabenfortschritt
 │   │   ├── Drag-and-drop zwischen Stationen
-│   │   └── Done nach Parent gruppiert; Archiv über Navigator
+│   │   └── Done nach Parent gruppiert; unbekannte Alt-Stationen unverändert als zusätzliche Lesespalten
 │   ├── + Spec / Doppelklick → Spec-Dialog
 │   │   ├── Titel · Station · order · parent · bereit · braucht BO
 │   │   ├── Markdown-Inhalt / Standardvorlage
 │   │   └── Speichern / Abbrechen / gesamten Spec-Ordner löschen
 │   └── Inspektor: Metadaten · Markdown · Tasks abhaken
 │       ├── Fragen beantworten · Historie
-│       └── Prompt kopieren · bearbeiten · archivieren (abhängig vom Zustand)
+│       └── Prompt kopieren · bearbeiten; Altbestand ohne Schreibaktionen, kein Archivieren
 └── Hilfe [Gruppe 5; ein Tab]
     └── Navigator: Dokumentliste → Inhalt/Inspektor: Dokument und Quellenpfad
 ```
@@ -360,11 +361,18 @@ Diese Tabelle verändert keine Station oder Reihenfolge.
 | [017 Demoaktionen](../specs/017-projektaktionen-fuer-demo/SPEC.md) | Doing | fünf Projektaktionen und Tests-Knopf, Live-Dateiänderung ohne Neustart; Sichtabnahme offen |
 | [018 Ausgabetabs](../specs/018-aktionsausgabe-seitenleiste/SPEC.md) | Doing | Aktionsausgaben rechts neben Inspektor; UI-Tests grün, lokale App aktualisiert und Projektfenster wieder geöffnet; Sichtabnahme offen |
 | [019 Farbkonzept](../specs/019-farbkonzept/SPEC.md) | Doing, ready, needs_human | Navigation, Board, Dateisymbole für Hell/Dunkel; Kontrast-/UI-Tests grün, in lokaler App sichtbar |
-| [020 Spec-Navigation](../specs/020-spec-navigation/SPEC.md) | Backlog | Archiv-Workflow entfernen, verlustfreie Gesamtliste links; spätere Projektsortierung |
+| [020 Spec-Navigation](../specs/020-spec-navigation/SPEC.md) | Doing, ready, needs_human | Gesamtliste, Suche/Filter, Altbestand lesbar, pfadgenaue Historie und Policy v5; 107 Rust-Tests/vier UI-Suiten grün, lokale App aktualisiert |
 | [021 Git-Arbeitsbereich](../specs/021-git-arbeitsbereich/SPEC.md) | Backlog | Commit-Composer auffindbar machen, Branch-Verwaltung und IDE-artige Anordnung |
 | [022 Dateien/Refactoring](../specs/022-dateiauswahl-und-refactoring/SPEC.md) | Backlog | Ordnerauswahl und Kontextmenü; später sicherer Move und sprachbezogene Refactorings |
 
 ## Verifikation und verbleibende Risiken
+
+**Nachtrag 020, 2026-09-10 18:37 UTC:** App PID 80479 auf 18768 aktualisiert und
+offen; Fenster speccify/AVC wiederhergestellt. Native Sichtprüfung: 54/54 Specs
+in der Gesamtliste, kein Archiv-Bedienweg. Policy-Diagnose current/v5, 107 Rust-
+Tests bestanden/2 ignoriert, vier Browser-Suiten und Builds grün. Terminal-
+Übernahmekonflikt unverändert offen (009). Zwischenstand b5764e1 gepusht, Website
+deployed; drei CI-Plattformfehler gezielt korrigiert, Remote-Nachprüfung folgt.
 
 **Nachtrag 019, 2026-09-10 18:14 UTC:** Farbschnitt lokal gebaut und gestartet,
 PID 54016 auf 18768; native Fensterliste und gezielter Screenshot bestätigen
@@ -375,10 +383,9 @@ eine bereits in anderer App geöffnete Conversation; kein Nachweis nahtloser
 Sitzungsfortsetzung, keine automatische Übernahme. 019 zur menschlichen Abnahme.
 
 **Neue UI-Findings:** [UI-Konzept](ui-gestaltung.md) und Specs 019–022 trennen
-erste Farbänderungen von noch ausstehender Interaktion. Archiv ist weiterhin
-im aktuellen UI-Baum verzeichnet, aber ausdrücklich zur Entfernung vorgesehen;
-Altbestand darf nicht verloren gehen. Links stehen bisher Filter/Gruppen statt
-aller einzelnen Specs. Branch-Wechsel/-Anlegen und Commit-Nachrichten existieren
+erste Farbänderungen von noch ausstehender Interaktion. Spec 020 liefert nun
+die Gesamtliste ohne Archiv-Bedienweg; Altbestand bleibt ohne Umzug lesbar.
+Projektübergreifende Sortierung folgt nach 015/016. Branch-Wechsel/-Anlegen und Commit-Nachrichten existieren
 bereits im Inspektor, sind zu versteckt. Ordner sind bisher nur aufklappbar;
 Ordnerauswahl, Kontextmenü und semantische Refactorings sind noch nicht geliefert.
 
@@ -421,9 +428,14 @@ auch im Checkout des Kollegen wirksam.
 
 Noch relevante Befunde:
 
+- GitHub meldete beim Push von b5764e1 am 2026-09-10 insgesamt 47 Dependabot-
+  Warnungen (2 kritisch, 21 hoch, 16 mittel, 8 niedrig). Paket-/Laufzeitbetroffenheit
+  und Upgradepfade noch separat zu prüfen; kein ungeprüftes Sammel-Upgrade im UI-Schnitt.
+  [Repository-Sicherheitsübersicht](https://github.com/mhennemeyer/speccify/security/dependabot).
+
 - Globale Speccify-CLI im Basisbefund veraltet; Workspace-Runtime verwenden.
   007 priorisiert Projekt-venv, installierte Engine, dann Login-Shell-PATH.
-- Eigenes Repo ist seit Spec 008 auf Policy v4 und versionierten Workflow-Skills;
+- Eigenes Repo ist seit Spec 020 auf Policy v5 und versionierten Workflow-Skills;
   Diagnose prüft Linkziele und bewahrt Anpassungen. Alte status/resume-Dokumente
   tragen einen Historienhinweis und sind keine aktuelle Anweisung.
 - Aufgaben folgen nativ Markdown-Tasklisten, auch außerhalb Tasks; Codebeispiele

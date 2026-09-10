@@ -28,8 +28,9 @@ Beide sind auf ausdrücklichen BO-Entscheid parallel aktiv.
 - `.agent/speccify/expansions.yaml`: Herkunft, Hashes und Prüfstatus.
 - `.agent/specs/<NNN-slug>/SPEC.md`: **eine Arbeitseinheit** (Spec, „Spec 12"
   im Gespräch) mit
-  Stationen Backlog / Doing / Done und Tasks als Checkboxen; Fertiges
-  unter `.agent/specs/archive/`. Ersetzt seit 2026-09-09 Pläne und Tickets
+  Stationen Backlog / Doing / Done und Tasks als Checkboxen; Fertiges bleibt
+  in Done am selben Ort. `.agent/specs/archive/` ist erhaltener Altbestand.
+  Ersetzt seit 2026-09-09 Pläne und Tickets
   (Spec `spec-workflow`); die alten Pläne liegen konvertiert im Archiv.
 - `.agent/playbooks/`: stehende Anleitungen (Release, Deploy, …) — anders
   als Specs werden sie nicht abgearbeitet, sondern wiederverwendet.
@@ -66,15 +67,14 @@ Vorschläge sind keine bereits implementierten Fähigkeiten. Der überprüfte Au
 die vorgeschlagenen Folgeschritte in Specs 007–012. `.agent/status.md` und
 `.agent/resume.md` enthalten ältere Produktstände und sind keine aktuelle
 Arbeitsanweisung. Spec 008 vereinheitlicht Aufgaben und Workflow-Diagnose;
-das eigene Repo verwendet Policy v4 und die versionierten Workflow-Skills.
+das eigene Repo verwendet Policy v5 und die versionierten Workflow-Skills.
 
 Nutzerentscheidung 2026-09-10 (Specs 019–022): Farbkonzept und UI-Findings stehen
 zusätzlich in `.agent/playbooks/ui-gestaltung.md`. Archivieren entfällt als
 gewünschter Workflow-Schritt; abgeschlossene Specs vorerst an Ort und Stelle
 in Done belassen. Altbestand unter archive nicht löschen oder pauschal umziehen.
-Die noch vorhandene Archiv-UI und die verwaltete Policy werden in Spec 020
-konsistent abgelöst. Diese konkrete Projektregel hat bis dahin Vorrang vor
-der Archivierungsanweisung im verwalteten Block unten.
+Spec 020 löst die Archiv-UI durch eine durchsuchbare Gesamtliste ab; Policy v5
+beschreibt denselben Abschluss ohne Dateiverschiebung.
 
 Für laufende Nutzung und Abnahme die lokale gebündelte App ohne Watcher offen
 halten (Spec 013; Startkommandos im Weiterentwicklungs-Playbook). Vor und nach
@@ -109,7 +109,7 @@ vor einer Implementierung verstanden sein. Prüfe Implementierungen mit
 `speccify tool check <name>`; ändere den Status in `expansions.yaml` nie von
 Hand. `speccify verify` prüft Lock-, Bundle-, Expansions- und Tool-Drift.
 
-<!-- speccify:workflow:begin v4 -->
+<!-- speccify:workflow:begin v5 -->
 ## Spec workflow
 
 The human owns priorities, authorization and acceptance; you implement the
@@ -124,9 +124,11 @@ and attribution/provenance restrictions.
   its running number (`012-…`) is how people refer to the spec ("spec 12");
   flat `key: value` front matter between `---` lines, then a Markdown body
   whose first `#` heading is the title. Stations: `Backlog`, `Doing`,
-  `Done`. Finished specs are archived under
-  `.agent/specs/archive/<YYYY-MM-DD>-<NNN-slug>/`. New specs take the next
-  free number (the app does this; by hand: highest number + 1).
+  `Done`. Finished specs stay in place in `Done`; there is no archiving step.
+  Existing `.agent/specs/archive/` content is historical, remains discoverable
+  and is read-only in spec actions. Do not delete or relocate it automatically.
+  New specs take the next free number, including historical numbers
+  (the app does this; by hand: highest number + 1).
 - Spec history: `.agent/specs/<slug>/history.jsonl` (append-only).
 - Playbooks: `.agent/playbooks/<name>.md` — standing procedures, reused,
   never "worked off".
@@ -170,7 +172,7 @@ the spec.
 5. **Done means:** every task ticked, `## Verification` written, an
    `agent_run` history line appended. Then set `station: Done`. With
    `needs_human: true` set `ready: true` instead and leave the spec in
-   `Doing` — the human accepts, moves it to `Done` and archives it.
+   `Doing` — the human accepts and moves it to `Done`, without moving files.
 6. Too big after all? Split into child specs (`parent:`), leave the parent
    in `Doing` with the remaining tasks, and say so in the body.
 

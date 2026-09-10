@@ -20,7 +20,7 @@ try {
   await page.goto(`${url}?workflow=manual`);
   await page.getByText("Workflow-Einrichtung braucht Prüfung.", { exact: true }).waitFor();
   assert.equal(await page.getByRole("button", { name: "Einrichten", exact: true }).count(), 0);
-  console.log("PASS setup: structured manual/installable issues, custom target preserved, no v4→v4 warning");
+  console.log("PASS setup: structured manual/installable issues, custom target preserved, no v5→v5 warning");
 
   await page.goto(url);
   await page.getByText("notes/zahlen.md mit Quadratzahlen 1–5 anlegen").first().click();

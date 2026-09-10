@@ -16,6 +16,7 @@ use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
 
+use crate::project_cmd::writable_spec_path;
 use crate::project_cmd::{
     heading_title, resolve_project_root, safe_project_path, spec_dir_of, spec_file_path,
     BOARD_STATIONS, SPECS_DIR,
@@ -103,7 +104,11 @@ pub(crate) fn log_user_event(root: &Path, spec_id: &str, event_type: &str, summa
 }
 
 fn read_history(root: &Path, spec_id: &str) -> Vec<HistoryEvent> {
-    let Ok(text) = std::fs::read_to_string(history_file(root, spec_id)) else {
+    read_history_path(&history_file(root, spec_id))
+}
+
+fn read_history_path(path: &Path) -> Vec<HistoryEvent> {
+    let Ok(text) = std::fs::read_to_string(path) else {
         return Vec::new();
     };
     // Tolerant: korrupte Zeilen überspringen (der Agent tippt das von Hand).
@@ -117,12 +122,21 @@ fn read_history(root: &Path, spec_id: &str) -> Vec<HistoryEvent> {
 pub fn project_ticket_history(
     project: String,
     ticket_id: String,
+    file: Option<String>,
 ) -> Result<Vec<HistoryEvent>, String> {
     if ticket_id.contains('/') || ticket_id.contains('\\') || ticket_id.contains("..") {
         return Err(format!("Keine Spec-Id: {ticket_id}"));
     }
     let root = resolve_project_root(&project)?;
-    let mut events = read_history(&root, &ticket_id);
+    let mut events = if let Some(file) = file {
+        let path = spec_file_path(&root, &file)?;
+        if crate::project_cmd::spec_id_of(&root, &path) != ticket_id {
+            return Err("Spec-Pfad und Id passen nicht zusammen.".into());
+        }
+        read_history_path(&path.with_file_name("history.jsonl"))
+    } else {
+        read_history(&root, &ticket_id)
+    };
     events.reverse();
     Ok(events)
 }
@@ -284,10 +298,17 @@ fn slugify(title: &str) -> String {
 /// Body der Vorlage (`templates/spec.md`) ohne deren Frontmatter, Titel
 /// eingesetzt — die Abschnitte, die die Policy vom Agenten erwartet.
 fn template_body(title: &str) -> String {
-    let body = SPEC_TEMPLATE
+    template_body_from(SPEC_TEMPLATE, title)
+}
+
+fn template_body_from(template: &str, title: &str) -> String {
+    // Git checkouts may materialize bundled templates with CRLF on Windows.
+    // Normalize only new template output, never an existing project document.
+    let normalized = template.replace("\r\n", "\n");
+    let body = normalized
         .splitn(3, "---\n")
         .nth(2)
-        .unwrap_or(SPEC_TEMPLATE)
+        .unwrap_or(&normalized)
         .trim_start_matches('\n');
     body.replace("<title>", title)
         .replace("<date>", &now_iso()[..10])
@@ -378,7 +399,7 @@ pub fn project_spec_toggle_task(
     static TASK_WRITES: std::sync::Mutex<()> = std::sync::Mutex::new(());
     let _guard = TASK_WRITES.lock().map_err(|e| e.to_string())?;
     let root = resolve_project_root(&project)?;
-    let path = spec_file_path(&root, &file)?;
+    let path = writable_spec_path(&root, &file)?;
     let text = std::fs::read_to_string(&path).map_err(|e| format!("{}: {e}", path.display()))?;
     let body = crate::project_cmd::parse_flat_frontmatter(&text)
         .map(|(_, body)| body)
@@ -459,8 +480,8 @@ pub fn project_specs_number(project: String) -> Result<Vec<String>, String> {
     if renamed.is_empty() {
         return Ok(Vec::new());
     }
-    // parent:-Verweise nachziehen (aktiv und Archiv).
-    for dir in crate::project_cmd::spec_dirs(&root, true) {
+    // Historical snapshots remain unchanged, including their parent references.
+    for dir in crate::project_cmd::spec_dirs(&root, false) {
         let path = dir.join("SPEC.md");
         let Ok(text) = std::fs::read_to_string(&path) else {
             continue;
@@ -477,38 +498,6 @@ pub fn project_specs_number(project: String) -> Result<Vec<String>, String> {
         }
     }
     Ok(renamed.into_iter().map(|(_, new_id)| new_id).collect())
-}
-
-/// Fertige Spec nach `.agent/specs/archive/<YYYY-MM-DD>-<slug>/` verschieben.
-#[tauri::command]
-pub fn project_spec_archive(project: String, file: String) -> Result<String, String> {
-    let root = resolve_project_root(&project)?;
-    let path = spec_file_path(&root, &file)?;
-    let dir = path
-        .parent()
-        .ok_or_else(|| format!("Keine Spec: {file}"))?
-        .to_path_buf();
-    if dir.parent() != Some(root.join(SPECS_DIR).as_path()) {
-        return Err(format!("Schon archiviert: {file}"));
-    }
-    let id = crate::project_cmd::spec_id_of(&root, &path);
-    let archive = root.join(SPECS_DIR).join("archive");
-    std::fs::create_dir_all(&archive).map_err(|e| format!("{}: {e}", archive.display()))?;
-    let stamp = &now_iso()[..10];
-    let mut target = archive.join(format!("{stamp}-{id}"));
-    let mut counter = 2;
-    while target.exists() {
-        target = archive.join(format!("{stamp}-{id}-{counter}"));
-        counter += 1;
-    }
-    log_user_event(&root, &id, "spec_edited", "Archiviert".into());
-    std::fs::rename(&dir, &target).map_err(|e| format!("{}: {e}", dir.display()))?;
-    Ok(target
-        .join("SPEC.md")
-        .strip_prefix(&root)
-        .unwrap_or(&target)
-        .to_string_lossy()
-        .replace('\\', "/"))
 }
 
 #[derive(Deserialize)]
@@ -546,7 +535,7 @@ pub fn project_ticket_save(
         return Err(format!("Unbekannte Station: {}", patch.station));
     }
     let root = resolve_project_root(&project)?;
-    let path = spec_file_path(&root, &file)?;
+    let path = writable_spec_path(&root, &file)?;
     let text = std::fs::read_to_string(&path).map_err(|e| format!("{}: {e}", path.display()))?;
 
     let old_station = text
@@ -592,7 +581,7 @@ pub fn project_ticket_save(
 #[tauri::command]
 pub fn project_ticket_delete(project: String, file: String) -> Result<(), String> {
     let root = resolve_project_root(&project)?;
-    let path = spec_file_path(&root, &file)?;
+    let path = writable_spec_path(&root, &file)?;
     let dir = path.parent().ok_or_else(|| format!("Keine Spec: {file}"))?;
     std::fs::remove_dir_all(dir).map_err(|e| format!("{}: {e}", dir.display()))
 }
@@ -733,7 +722,7 @@ pub fn project_ticket_answer(
         return Err("Leere Antwort.".into());
     }
     let root = resolve_project_root(&project)?;
-    let path = spec_file_path(&root, &file)?;
+    let path = writable_spec_path(&root, &file)?;
     let full = std::fs::read_to_string(&path).map_err(|e| format!("{}: {e}", path.display()))?;
     let body_offset = full
         .find("\n---")
@@ -841,6 +830,101 @@ pub(crate) fn scan_open_questions(root: &Path) -> Vec<OpenQuestion> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn bundled_template_accepts_lf_and_crlf_checkouts() {
+        let lf = SPEC_TEMPLATE.replace("\r\n", "\n");
+        let crlf = lf.replace('\n', "\r\n");
+        let expected = template_body_from(&lf, "Windows title");
+        assert!(expected.starts_with("# Windows title\n"));
+        assert!(!expected.contains("station:"));
+        assert_eq!(template_body_from(&crlf, "Windows title"), expected);
+    }
+
+    #[test]
+    fn historical_specs_are_read_only_and_history_is_path_addressed() {
+        let dir = fixture("historical-identity");
+        let project = dir.display().to_string();
+        let id = "001-same";
+        let active = format!(".agent/specs/{id}/SPEC.md");
+        let old = format!(".agent/specs/archive/2026-09-01-{id}/SPEC.md");
+        let body = "# Same\n\n- [ ] task\n\n## Questions\n\n### Q1 · open · 2026-09-01T10:00:00Z\nQuestion?\n";
+        let source = format!(
+            "---\nstation: Done\nparent: topic\nopen_question: Q1\ncustom: keep\n---\n{body}"
+        );
+        for (file, summary) in [(&active, "active history"), (&old, "old history")] {
+            let path = dir.join(file);
+            std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+            std::fs::write(&path, &source).unwrap();
+            let event = serde_json::json!({"timestamp":"2026-09-01T10:00:00Z", "spec_id":id, "event_type":"spec_created", "actor":"project", "summary":summary});
+            std::fs::write(path.with_file_name("history.jsonl"), format!("{event}\n")).unwrap();
+        }
+        let old_history = std::fs::read(dir.join(&old).with_file_name("history.jsonl")).unwrap();
+        let board =
+            serde_json::to_value(crate::project_cmd::project_board(project.clone()).unwrap())
+                .unwrap();
+        assert_eq!(board.as_array().unwrap().len(), 2);
+        for (file, summary) in [(&active, "active history"), (&old, "old history")] {
+            let events =
+                project_ticket_history(project.clone(), id.into(), Some(file.clone())).unwrap();
+            assert_eq!(events[0].summary, summary);
+        }
+        assert!(
+            project_ticket_history(project.clone(), "002-wrong".into(), Some(old.clone())).is_err()
+        );
+        assert!(
+            project_ticket_history(project.clone(), id.into(), Some("../SPEC.md".into())).is_err()
+        );
+        assert_eq!(
+            project_ticket_questions(project.clone(), old.clone())
+                .unwrap()
+                .len(),
+            1
+        );
+        assert!(
+            project_spec_toggle_task(project.clone(), old.clone(), 0, true, body.into()).is_err()
+        );
+        assert!(project_ticket_answer(project.clone(), old.clone(), 1, "Answer".into()).is_err());
+        assert!(crate::project_cmd::project_board_move(
+            project.clone(),
+            old.clone(),
+            "Doing".into()
+        )
+        .is_err());
+        assert!(project_ticket_save(
+            project.clone(),
+            old.clone(),
+            TicketPatch {
+                title: "Changed".into(),
+                station: "Doing".into(),
+                ready: false,
+                needs_human: false,
+                order: None,
+                body: "Changed".into(),
+            }
+        )
+        .is_err());
+        assert!(project_ticket_delete(project.clone(), old.clone()).is_err());
+        let topic = dir.join(".agent/specs/topic");
+        std::fs::create_dir_all(&topic).unwrap();
+        std::fs::write(
+            topic.join("SPEC.md"),
+            "---\nstation: Backlog\n---\n# Topic\n",
+        )
+        .unwrap();
+        project_specs_number(project.clone()).unwrap();
+        assert_eq!(std::fs::read_to_string(dir.join(&old)).unwrap(), source);
+        assert_eq!(
+            std::fs::read(dir.join(&old).with_file_name("history.jsonl")).unwrap(),
+            old_history
+        );
+        // Done is a state change, never a move to an archive directory.
+        crate::project_cmd::project_board_move(project.clone(), active.clone(), "Doing".into())
+            .unwrap();
+        crate::project_cmd::project_board_move(project, active.clone(), "Done".into()).unwrap();
+        assert!(dir.join(active).is_file());
+        std::fs::remove_dir_all(dir).unwrap();
+    }
 
     #[test]
     fn task_list_count_and_toggle_share_markdown_offsets() {
@@ -1098,7 +1182,7 @@ mod tests {
         writeln!(handle, "kaputte zeile die übersprungen wird").unwrap();
         drop(handle);
 
-        let history = project_ticket_history(project.clone(), id.clone()).unwrap();
+        let history = project_ticket_history(project.clone(), id.clone(), None).unwrap();
         // created, station_changed, edited, 2× task, agent_run, legacy agent_run
         assert_eq!(history.len(), 7);
         assert_eq!(history[0].event_type, "agent_run"); // neueste zuerst
@@ -1110,8 +1194,13 @@ mod tests {
         assert_eq!(kpis.tokens_out, 44);
         assert_eq!(kpis.recent.len(), 2);
 
-        // Archivieren nimmt History mit; KPIs zählen weiter.
-        let archived = project_spec_archive(project.clone(), file.clone()).unwrap();
+        // Fixture from the retired workflow: reads/KPIs still include old data.
+        let legacy_dir = dir
+            .join(".agent/specs/archive")
+            .join(format!("2026-09-01-{id}"));
+        std::fs::create_dir_all(legacy_dir.parent().unwrap()).unwrap();
+        std::fs::rename(dir.join(&file).parent().unwrap(), &legacy_dir).unwrap();
+        let archived = format!(".agent/specs/archive/2026-09-01-{id}/SPEC.md");
         assert!(archived.starts_with(".agent/specs/archive/"));
         assert!(archived.ends_with(&format!("-{id}/SPEC.md")));
         assert!(!dir.join(".agent/specs").join(&id).exists());
@@ -1121,10 +1210,8 @@ mod tests {
             .with_file_name("history.jsonl")
             .is_file());
         assert_eq!(project_board_kpis(project.clone()).unwrap().run_count, 2);
-        assert!(project_spec_archive(project.clone(), archived.clone()).is_err());
-
-        project_ticket_delete(project.clone(), archived.clone()).unwrap();
-        assert!(!dir.join(&archived).exists());
+        assert!(project_ticket_delete(project.clone(), archived.clone()).is_err());
+        assert!(dir.join(&archived).exists());
         let evil = project_ticket_delete(project, ".agent/agent.md".into()).unwrap_err();
         assert!(evil.contains("Keine Spec"));
 

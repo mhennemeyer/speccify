@@ -528,6 +528,14 @@ pub(crate) fn spec_file_path(root: &Path, file: &str) -> Result<PathBuf, String>
     Ok(path)
 }
 
+pub(crate) fn writable_spec_path(root: &Path, file: &str) -> Result<PathBuf, String> {
+    let path = spec_file_path(root, file)?;
+    if path.starts_with(root.join(SPECS_DIR).join("archive")) {
+        return Err("Altbestand ist in Spec-Aktionen schreibgeschützt.".into());
+    }
+    Ok(path)
+}
+
 /// Erste `# `-Überschrift eines Bodys.
 pub(crate) fn heading_title(body: &str) -> Option<String> {
     first_heading(body)
@@ -672,7 +680,7 @@ pub fn project_board_move(project: String, file: String, station: String) -> Res
         return Err(format!("Unbekannte Station: {station}"));
     }
     let root = resolve_project_root(&project)?;
-    let path = spec_file_path(&root, &file)?;
+    let path = writable_spec_path(&root, &file)?;
     let text = std::fs::read_to_string(&path).map_err(|e| format!("{}: {e}", path.display()))?;
     let mut in_frontmatter = false;
     let mut replaced = false;

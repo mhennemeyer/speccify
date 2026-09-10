@@ -42,8 +42,8 @@ fn plain_url(location: &str) -> &str {
 
 /// Anzeigename: letztes Pfadsegment ohne `.git`, sonst der Ordnername.
 pub(crate) fn display_name(location: &str) -> String {
-    let s = plain_url(location).trim_end_matches('/');
-    let last = s.rsplit(['/', ':']).next().unwrap_or(s);
+    let s = plain_url(location).trim_end_matches(['/', '\\']);
+    let last = s.rsplit(['/', '\\', ':']).next().unwrap_or(s);
     let name = last.strip_suffix(".git").unwrap_or(last);
     if name.is_empty() {
         s.to_string()
@@ -385,6 +385,8 @@ mod tests {
             "itsd-skills"
         );
         assert_eq!(display_name("~/Work/speccify/skills/"), "skills");
+        assert_eq!(display_name(r"C:\Work\skills\"), "skills");
+        assert_eq!(display_name(r"file://C:\Work\upstream"), "upstream");
         assert_eq!(
             slug("https://github.com/acme/Skills.git"),
             "github.com-acme-skills"
