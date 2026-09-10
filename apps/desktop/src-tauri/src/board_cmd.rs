@@ -313,10 +313,16 @@ pub fn project_ticket_create(
     }
     let root = resolve_project_root(&project)?;
     let specs = root.join(SPECS_DIR);
-    let base = slugify(title);
+    // Laufende Nummer als Präfix (BO 2026-09-10, „in anderen Projekten gut
+    // aufgenommen"): `012-slug` — eindeutig, sortierbar, zitierbar.
+    let base = format!(
+        "{:03}-{}",
+        crate::project_cmd::next_spec_number(&root),
+        slugify(title)
+    );
     let mut id = base.clone();
     let mut counter = 2;
-    while specs.join(&id).exists() || specs.join("archive").join(&id).exists() {
+    while specs.join(&id).exists() {
         id = format!("{base}-{counter}");
         counter += 1;
     }
@@ -415,6 +421,69 @@ pub fn project_spec_toggle_task(
         ),
     );
     Ok(())
+}
+
+/// Specs ohne Nummer nachnummerieren — in Reihenfolge `created`, dann Name.
+/// Benennt den Ordner um (`slug` → `NNN-slug`) und zieht `parent:`-Verweise
+/// in allen Specs nach. Archivierte bleiben, wie sie sind. Rückgabe: die
+/// neuen Ids.
+#[tauri::command]
+pub fn project_specs_number(project: String) -> Result<Vec<String>, String> {
+    let root = resolve_project_root(&project)?;
+    let mut candidates: Vec<(String, String, PathBuf)> = Vec::new(); // (created, id, dir)
+    for dir in crate::project_cmd::spec_dirs(&root, false) {
+        let path = dir.join("SPEC.md");
+        let id = crate::project_cmd::spec_id_of(&root, &path);
+        if crate::project_cmd::spec_number_of(&id).is_some() {
+            continue;
+        }
+        let created = std::fs::read_to_string(&path)
+            .ok()
+            .and_then(|text| {
+                crate::project_cmd::parse_flat_frontmatter(&text).and_then(|(fields, _)| {
+                    crate::project_cmd::flat_lookup(&fields, "created").map(str::to_string)
+                })
+            })
+            .unwrap_or_default();
+        candidates.push((created, id, dir));
+    }
+    candidates.sort();
+    let mut number = crate::project_cmd::next_spec_number(&root);
+    let mut renamed: Vec<(String, String)> = Vec::new();
+    for (_, id, dir) in candidates {
+        let new_id = format!("{number:03}-{id}");
+        let target = root.join(SPECS_DIR).join(&new_id);
+        std::fs::rename(&dir, &target).map_err(|e| format!("{}: {e}", dir.display()))?;
+        log_user_event(
+            &root,
+            &new_id,
+            "spec_edited",
+            format!("Nummeriert: {id} → {new_id}"),
+        );
+        renamed.push((id, new_id));
+        number += 1;
+    }
+    if renamed.is_empty() {
+        return Ok(Vec::new());
+    }
+    // parent:-Verweise nachziehen (aktiv und Archiv).
+    for dir in crate::project_cmd::spec_dirs(&root, true) {
+        let path = dir.join("SPEC.md");
+        let Ok(text) = std::fs::read_to_string(&path) else {
+            continue;
+        };
+        let Some((fields, _)) = crate::project_cmd::parse_flat_frontmatter(&text) else {
+            continue;
+        };
+        let Some(parent) = crate::project_cmd::flat_lookup(&fields, "parent") else {
+            continue;
+        };
+        if let Some((_, new_id)) = renamed.iter().find(|(old, _)| old == parent) {
+            let updated = update_ticket_text(&text, &[("parent", Some(new_id.clone()))], None)?;
+            write_atomic(&path, &updated)?;
+        }
+    }
+    Ok(renamed.into_iter().map(|(_, new_id)| new_id).collect())
 }
 
 /// Fertige Spec nach `.agent/specs/archive/<YYYY-MM-DD>-<slug>/` verschieben.
@@ -871,15 +940,15 @@ mod tests {
             Some(1),
         )
         .unwrap();
-        assert_eq!(file, ".agent/specs/board-tab-bauen/SPEC.md");
+        assert_eq!(file, ".agent/specs/001-board-tab-bauen/SPEC.md");
         let text = std::fs::read_to_string(dir.join(&file)).unwrap();
         assert!(text.starts_with("---\nstation: Backlog\norder: 1\ncreated: "));
         assert!(text.contains("needs_human: true"));
         assert!(text.contains("parent: projektfenster"));
         assert!(text.contains("# Board-Tab bauen!\n"));
         assert!(text.contains("## Tasks\n\n- [ ] …"));
-        let id = "board-tab-bauen".to_string();
-        // Gleicher Titel noch einmal → Suffix statt Überschreiben.
+        let id = "001-board-tab-bauen".to_string();
+        // Gleicher Titel noch einmal → nächste Nummer, nie Überschreiben.
         let second = project_ticket_create(
             project.clone(),
             "Board-Tab bauen!".into(),
@@ -890,8 +959,38 @@ mod tests {
             None,
         )
         .unwrap();
-        assert_eq!(second, ".agent/specs/board-tab-bauen-2/SPEC.md");
+        assert_eq!(second, ".agent/specs/002-board-tab-bauen/SPEC.md");
         project_ticket_delete(project.clone(), second).unwrap();
+        // Nachnummerieren: unnummerierte Specs bekommen die nächste Nummer,
+        // parent-Verweise ziehen mit.
+        std::fs::create_dir_all(dir.join(".agent/specs/thema")).unwrap();
+        std::fs::write(
+            dir.join(".agent/specs/thema/SPEC.md"),
+            "---\nstation: Backlog\ncreated: 2026-09-01\n---\n# Thema\n",
+        )
+        .unwrap();
+        std::fs::create_dir_all(dir.join(".agent/specs/kind")).unwrap();
+        std::fs::write(
+            dir.join(".agent/specs/kind/SPEC.md"),
+            "---\nstation: Backlog\ncreated: 2026-09-02\nparent: thema\n---\n# Kind\n",
+        )
+        .unwrap();
+        let numbered = project_specs_number(project.clone()).unwrap();
+        // 002 wurde gelöscht → die Nummer ist wieder frei (Archiv zählt mit).
+        assert_eq!(
+            numbered,
+            vec!["002-thema".to_string(), "003-kind".to_string()]
+        );
+        let kind = std::fs::read_to_string(dir.join(".agent/specs/003-kind/SPEC.md")).unwrap();
+        assert!(kind.contains("parent: 002-thema"));
+        assert!(project_specs_number(project.clone()).unwrap().is_empty());
+        assert_eq!(crate::project_cmd::spec_number_of("002-thema"), Some(2));
+        assert_eq!(crate::project_cmd::spec_number_of("thema"), None);
+        assert_eq!(crate::project_cmd::next_spec_number(&dir), 4);
+        for extra in ["002-thema", "003-kind"] {
+            project_ticket_delete(project.clone(), format!(".agent/specs/{extra}/SPEC.md"))
+                .unwrap();
+        }
 
         project_ticket_save(
             project.clone(),

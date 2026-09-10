@@ -16,7 +16,7 @@ Die Arbeit läuft über Specs unter `.agent/specs/` (Board Backlog / Doing /
 Done, Tasks als Checkboxen; die Policy dazu liegt als Vorlage in
 `apps/desktop/src-tauri/templates/workflow-policy.md` und kommt per
 Einrichten-Knopf in die `agent.md` eines Projekts);
-das Skill-und-Tool-Modell steht in `.agent/specs/skills-und-tools/SPEC.md`,
+das Skill-und-Tool-Modell steht in `.agent/specs/001-skills-und-tools/SPEC.md`,
 das Projektfenster im Archiv unter `.agent/specs/archive/`.
 Beide sind auf ausdrücklichen BO-Entscheid parallel aktiv.
 
@@ -26,7 +26,8 @@ Beide sind auf ausdrücklichen BO-Entscheid parallel aktiv.
 - `.agent/tools/<name>/TOOL.md`: Tool-Vertrag; Implementierungen daneben als
   `<platform>.<ext>`.
 - `.agent/speccify/expansions.yaml`: Herkunft, Hashes und Prüfstatus.
-- `.agent/specs/<slug>/SPEC.md`: **eine Arbeitseinheit** (Spec) mit
+- `.agent/specs/<NNN-slug>/SPEC.md`: **eine Arbeitseinheit** (Spec, „Spec 12"
+  im Gespräch) mit
   Stationen Backlog / Doing / Done und Tasks als Checkboxen; Fertiges
   unter `.agent/specs/archive/`. Ersetzt seit 2026-09-09 Pläne und Tickets
   (Spec `spec-workflow`); die alten Pläne liegen konvertiert im Archiv.

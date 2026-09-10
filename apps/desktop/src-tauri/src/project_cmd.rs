@@ -500,6 +500,25 @@ pub(crate) fn spec_id_of(root: &Path, spec_file: &Path) -> String {
     }
 }
 
+/// Laufende Nummer aus einer Spec-Id (`012-slug` → 12); ohne Präfix `None`.
+pub(crate) fn spec_number_of(id: &str) -> Option<u32> {
+    let (digits, rest) = id.split_once('-')?;
+    if digits.len() < 3 || !digits.chars().all(|c| c.is_ascii_digit()) || rest.is_empty() {
+        return None;
+    }
+    digits.parse().ok()
+}
+
+/// Nächste freie Nummer über aktive und archivierte Specs.
+pub(crate) fn next_spec_number(root: &Path) -> u32 {
+    spec_dirs(root, true)
+        .iter()
+        .filter_map(|dir| spec_number_of(&spec_id_of(root, &dir.join("SPEC.md"))))
+        .max()
+        .unwrap_or(0)
+        + 1
+}
+
 /// Guard: relativer Pfad, unterhalb von `.agent/specs/`, Dateiname SPEC.md.
 pub(crate) fn spec_file_path(root: &Path, file: &str) -> Result<PathBuf, String> {
     let path = safe_project_path(root, file)?;
@@ -554,6 +573,8 @@ pub struct TicketEntry {
     tasks_done: u32,
     tasks_total: u32,
     archived: bool,
+    /// Laufende Nummer aus dem Ordnernamen (`012-slug`), wenn vergeben.
+    number: Option<u32>,
     body: String,
 }
 
@@ -624,6 +645,7 @@ pub fn project_board(project: String) -> Result<Vec<TicketEntry>, String> {
                 }
             });
         let (tasks_done, tasks_total) = count_tasks(body);
+        let number = spec_number_of(&id);
         specs.push(TicketEntry {
             file: path
                 .strip_prefix(&root)
@@ -649,6 +671,7 @@ pub fn project_board(project: String) -> Result<Vec<TicketEntry>, String> {
             tasks_done,
             tasks_total,
             archived,
+            number,
             body: body.to_string(),
         });
     }

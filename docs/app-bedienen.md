@@ -179,7 +179,10 @@ ihren Fortschritt (`3/7` Tasks). Karten lassen sich ziehen —
 **Backlog → Doing ist Deine Freigabe**, erst dann fängt der Agent an. Ein
 Klick zeigt die Spec im Inspektor (Tabs *Übersicht*, *Tasks* zum
 Abhaken, *Historie*), ein **Doppelklick** öffnet den Editor, **+ Spec**
-legt eine neue aus der Vorlage an; eine Spec ohne `order` gilt als Idee.
+legt eine neue aus der Vorlage an — mit **laufender Nummer** im
+Ordnernamen (`012-slug`, „Spec 12" im Gespräch und im Commit); ältere
+Specs ohne Nummer bekommen sie über den Knopf *nummerieren* über dem
+Board. Eine Spec ohne `order` gilt als Idee.
 *Done* verlangt alle Tasks abgehakt und eine Prüfnotiz; mit *braucht BO*
 wartet die Spec mit *bereit* auf Deine Abnahme. **Archivieren** verschiebt
 Fertiges nach `.agent/specs/archive/`. Die Kopfzeile zeigt Läufe und

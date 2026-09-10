@@ -31,6 +31,7 @@
         tasks_done: 0,
         tasks_total: 0,
         archived: false,
+        number: null,
       };
       const tickets = [
         {
@@ -40,6 +41,7 @@
           title: "notes/zahlen.md mit Quadratzahlen 1–5 anlegen",
           station: "Doing",
           order: 1,
+          number: 12,
           tasks_done: 2,
           tasks_total: 3,
           body: "## Scope\nEine Notiz `notes/zahlen.md` mit den Quadratzahlen 1–5 als Liste.\n\n## Akzeptanz\nDatei existiert, fünf Zeilen, Zahlen stimmen.\n\n## Tasks\n\n- [x] Datei anlegen\n- [x] Zahlen eintragen\n- [ ] Prüfen und Verification schreiben",
@@ -108,6 +110,7 @@
         project_ticket_answer: () => null,
         project_spec_toggle_task: () => null,
         project_spec_archive: ({ file }) => file.replace("/specs/", "/specs/archive/2026-09-09-"),
+        project_specs_number: () => ["013-live-test", "014-notizen-ordner"],
         project_read_file: ({ file }) => files[file] ?? `# ${file}\n\n(leer)\n`,
         project_write_file: () => null,
         project_tree: ({ dir }) => {

@@ -35,6 +35,8 @@ export interface SpecEntry {
   tasks_done: number;
   tasks_total: number;
   archived: boolean;
+  /** Laufende Nummer aus dem Ordnernamen (`012-slug`). */
+  number: number | null;
   body: string;
 }
 
@@ -231,9 +233,16 @@ function SpecCard({
         title="Doppelklick zum Bearbeiten"
         className="block w-full text-left"
       >
-        <span className="text-sm font-medium text-slate-800">{spec.title}</span>
+        <span className="text-sm font-medium text-slate-800">
+          {spec.number !== null ? (
+            <span className="mr-1.5 font-mono text-[11px] font-semibold text-slate-400">#{spec.number}</span>
+          ) : null}
+          {spec.title}
+        </span>
         <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-slate-500">
-          <span className="min-w-0 break-all font-mono">{spec.id}</span>
+          <span className="min-w-0 break-all font-mono" title={spec.id}>
+            {spec.number !== null ? spec.id.replace(/^\d+-/, "") : spec.id}
+          </span>
           {spec.parent ? <span>· {spec.parent}</span> : null}
           <Progress spec={spec} compact />
           <SpecBadges spec={spec} />
@@ -533,7 +542,7 @@ function SpecDetail({
   ].filter(Boolean);
   const panel = (
     <InspectorPanel
-      title={spec.title}
+      title={spec.number !== null ? `#${spec.number} ${spec.title}` : spec.title}
       subtitle={`${spec.id} · ${spec.file}`}
       meta={[
         { label: "Station", value: spec.station },
@@ -759,6 +768,15 @@ export default function BoardTab({ project, refresh }: { project: string; refres
     if (ok) setSelected(null);
   };
 
+  // Laufende Nummern (BO 2026-09-10): neue Specs bekommen sie automatisch,
+  // ältere per Knopf — Ordner werden umbenannt, parent-Verweise ziehen mit.
+  const unnumbered = live.filter((spec) => spec.number === null).length;
+  const numberSpecs = async () => {
+    if (!window.confirm(`${unnumbered} Spec(s) nummerieren? Die Ordner werden umbenannt (slug → NNN-slug).`)) return;
+    const ok = await run(() => invoke<string[]>("project_specs_number", { project }));
+    if (ok) setSelected(null);
+  };
+
   const kpi = kpis.data;
 
   return (
@@ -833,6 +851,16 @@ export default function BoardTab({ project, refresh }: { project: string; refres
             >
               braucht mich
             </button>
+            {unnumbered > 0 ? (
+              <button
+                onClick={() => void numberSpecs()}
+                disabled={busy}
+                title="Specs ohne laufende Nummer umbenennen: slug → NNN-slug"
+                className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-600 hover:bg-slate-200 disabled:opacity-40"
+              >
+                {unnumbered} ohne Nummer · nummerieren
+              </button>
+            ) : null}
             {actionError && !sheet ? (
               <p className="text-xs text-red-600">{actionError}</p>
             ) : null}

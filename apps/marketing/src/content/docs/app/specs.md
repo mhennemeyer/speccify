@@ -59,8 +59,12 @@ What was run and what was seen.
 ## Questions
 ```
 
-The first heading is the title, the folder name is the id. Three
-optional flags matter to you as the owner:
+The first heading is the title, the folder name is the id — with a
+**running number** in front (`012-import-skills`), so a spec is
+"spec 12" in conversation and in commit messages. New specs take the
+next free number; older folders without one get theirs from the
+**number** button above the board. Three optional flags matter to
+you as the owner:
 
 - `needs_human: true` — a human must accept this spec (a manual test,
   an account, a DNS entry). The agent finishes its part, sets

@@ -6,10 +6,13 @@ plain files inside this project.
 
 ### Where everything lives
 
-- Specs: `.agent/specs/<slug>/SPEC.md` — flat `key: value` front matter
-  between `---` lines, then a Markdown body whose first `#` heading is the
-  title. Stations: `Backlog`, `Doing`, `Done`. Finished specs are archived
-  under `.agent/specs/archive/<YYYY-MM-DD>-<slug>/`.
+- Specs: `.agent/specs/<NNN-slug>/SPEC.md` — the folder name is the id,
+  its running number (`012-…`) is how people refer to the spec ("spec 12");
+  flat `key: value` front matter between `---` lines, then a Markdown body
+  whose first `#` heading is the title. Stations: `Backlog`, `Doing`,
+  `Done`. Finished specs are archived under
+  `.agent/specs/archive/<YYYY-MM-DD>-<NNN-slug>/`. New specs take the next
+  free number (the app does this; by hand: highest number + 1).
 - Spec history: `.agent/specs/<slug>/history.jsonl` (append-only).
 - Playbooks: `.agent/playbooks/<name>.md` — standing procedures, reused,
   never "worked off".
@@ -97,5 +100,5 @@ without a shell — no `&&`, pipes or `$(…)`; put chains into a script.
 
 - Never write secrets into `.agent/settings.json`, `.mcp.json`,
   `.codex/config.toml`, or any tracked file.
-- Mention the spec slug in commit message bodies when you commit.
+- Mention the spec id (`012-slug`) in commit message bodies when you commit.
 - Do not commit or push unless the human asks for it.

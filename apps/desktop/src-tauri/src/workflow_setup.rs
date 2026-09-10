@@ -17,7 +17,7 @@ use crate::project_cmd::resolve_project_root;
 /// v1 = Board/Ticket-Workflow (2026-08-31), v2 = Spec-Workflow
 /// (Plan spec-workflow.md, 2026-09-09): der Block in agent.md wird beim
 /// Einrichten ersetzt, angepasste Texte außerhalb der Marker bleiben.
-pub const WORKFLOW_VERSION: u32 = 2;
+pub const WORKFLOW_VERSION: u32 = 3; // v3: laufende Nummern (NNN-slug)
 
 const POLICY: &str = include_str!("../templates/workflow-policy.md");
 const BEGIN_PREFIX: &str = "<!-- speccify:workflow:begin v";
@@ -469,7 +469,7 @@ mod tests {
         assert!(dir.join("AGENTS.md").is_file());
         let agent_md = std::fs::read_to_string(dir.join(".agent/agent.md")).unwrap();
         assert!(agent_md.contains("## Spec workflow"));
-        assert!(agent_md.contains("speccify:workflow:begin v2"));
+        assert!(agent_md.contains("speccify:workflow:begin v3"));
 
         // Zweiter Lauf ist ein No-op auf Byte-Ebene.
         let first = std::fs::read_to_string(dir.join(".agent/agent.md")).unwrap();
