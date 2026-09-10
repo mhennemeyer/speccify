@@ -70,8 +70,8 @@ foreach ($name in "speccify-exec-mcp", "speccify-discovery-mcp", "speccify-paral
     Copy-Item (Join-Path $repo "target\debug\$name.exe") (Join-Path $bin "$name-$triple.exe") -Force
     Write-Host "  $name-$triple.exe"
 }
-Copy-Item (Get-Command uv).Source (Join-Path $bin "uv-$triple.exe") -Force
-Write-Host "  uv-$triple.exe"
+Copy-Item (Get-Command uv).Source (Join-Path $bin "speccify-uv-$triple.exe") -Force
+Write-Host "  speccify-uv-$triple.exe"
 
 Step "resources fuellen (Referenz-Skills; Engine-Payload ist Release-Sache)"
 $res = Join-Path $repo "apps\desktop\src-tauri\resources"

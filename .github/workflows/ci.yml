@@ -180,7 +180,7 @@ jobs:
           foreach ($name in "speccify-exec-mcp", "speccify-discovery-mcp", "speccify-parallels-mcp") {
             Copy-Item "target/debug/$name.exe" "$bin/$name-$triple.exe"
           }
-          Copy-Item (Get-Command uv).Source "$bin/uv-$triple.exe"
+          Copy-Item (Get-Command uv).Source "$bin/speccify-uv-$triple.exe"
           New-Item -ItemType Directory -Force "apps/desktop/src-tauri/resources" | Out-Null
           Set-Content "apps/desktop/src-tauri/resources/ci-placeholder.txt" "CI: erfuellt nur den resources-Glob."
 
@@ -245,7 +245,7 @@ jobs:
           for name in speccify-exec-mcp speccify-discovery-mcp speccify-parallels-mcp; do
             cp "target/debug/$name" "$bin/$name-$triple"
           done
-          cp "$(command -v uv)" "$bin/uv-$triple"
+          cp "$(command -v uv)" "$bin/speccify-uv-$triple"
           echo "CI: erfuellt nur den resources-Glob." > apps/desktop/src-tauri/resources/ci-placeholder.txt
 
       - name: Cargo test (speccify-desktop, linux)

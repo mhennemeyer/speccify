@@ -272,7 +272,7 @@ jobs:
           foreach ($name in "speccify-exec-mcp", "speccify-discovery-mcp", "speccify-parallels-mcp") {
             Copy-Item "target/release/$name.exe" "$bin/$name-$triple.exe"
           }
-          Copy-Item (Get-Command uv).Source "$bin/uv-$triple.exe"
+          Copy-Item (Get-Command uv).Source "$bin/speccify-uv-$triple.exe"
 
       # Das Payload-Skript ist plattformneutral (uv build/export, shasum) und
       # laeuft im Git-Bash des Runners.
