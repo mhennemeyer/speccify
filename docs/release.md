@@ -9,7 +9,7 @@
 > im Git-Bash des Runners.
 
 Speccify wird **außerhalb des App Store** verteilt (Plan
-[`r5-distribution.md`](../.agent/plans/archive/r5-distribution.md), D5): Download über
+[`r5-distribution`](../.agent/specs/archive/2026-08-04-r5-distribution/SPEC.md), D5): Download über
 GitHub-Releases statt Store, ohne Sandbox — der Exec-MCP und der
 Prozess-Supervisor starten beliebige CLI-Befehle, das ginge sandboxed nicht.
 

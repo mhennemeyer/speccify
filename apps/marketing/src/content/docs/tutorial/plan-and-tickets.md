@@ -5,6 +5,13 @@ sidebar:
   order: 4
 ---
 
+:::note[Recorded with the ticket workflow]
+Today's app has no tickets: a **spec** carries what and why, its
+acceptance, and the steps as checkboxes ([Specs](/app/specs/)). What
+this chapter calls a plan is a spec, what it calls tickets are its
+tasks — everything else still applies.
+:::
+
 Work does not start in chat. It starts as a **plan**
 (what and why), becomes **tickets** (small, ordered, checkable), and
 moves across the **board**. This chapter shows the real 4Notice

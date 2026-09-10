@@ -11,8 +11,8 @@ Repository — wer etwas ändern will, ändert diese Datei.
    ein eigenes Fenster; offene Fenster kommen nach einem Neustart wieder.
 2. **Einrichten.** Zeigt das Fenster oben einen gelben Workflow-Banner,
    einmal **Einrichten** klicken: Das legt die Workflow-Regeln in
-   `.agent/agent.md`, die Skills `/ticket-next` und `/ticket-ask`, die
-   Ordner `.agent/board` und `.agent/plans` sowie die Skill-Links für
+   `.agent/agent.md`, die Skills `/spec-next` und `/spec-ask`, die
+   Ordner `.agent/specs` und `.agent/playbooks` sowie die Skill-Links für
    Claude Code und Codex an. Bestehendes wird nie überschrieben.
 3. **Agent starten.** In der Leiste unten das Agent-Terminal starten:
    `Claude`, `Codex` oder ein freies Kommando; leer = nur Shell. Lief hier
@@ -31,8 +31,8 @@ Das Fenster folgt dem Muster von Xcode und iKanban: **Navigator** links,
 **Toolbar** oben.
 
 - **Navigator.** Oben eine Icon-Leiste mit fünf Bereichen — **Dateien**
-  (Dateien, Git), **Orga** (Playbooks, Pläne, Skills), **Technik** (Tools,
-  Aktionen, MCPs, Agent), **Board** und **Hilfe**; der Tooltip nennt den
+  (Dateien, Git), **Orga** (Playbooks, Skills), **Technik** (Tools,
+  Aktionen, MCPs, Agent), **Specs** und **Hilfe**; der Tooltip nennt den
   Namen und das Kürzel. Hat ein Bereich mehrere Tabs, stehen sie als
   zweite Zeile darunter; die App merkt sich je Bereich den zuletzt
   gewählten. Unter den Tabs die Liste des aktiven Tabs. Ist eine Liste
@@ -122,7 +122,7 @@ unten; im Editor ⌘S speichern, im Commit-Feld ⌘⏎ committen.
 ### Orga
 
 - **Playbooks** — stehende Anleitungen aus `.agent/playbooks/` (Release,
-  Deploy, Onboarding …). Anders als Pläne werden sie nicht abgearbeitet,
+  Deploy, Onboarding …). Anders als Specs werden sie nicht abgearbeitet,
   sondern immer wieder benutzt. **+ Playbook** legt eins an, *Als Prompt
   kopieren* gibt den Ablauf dem Agenten ins Terminal.
 - **Skills** — die expandierten Skills des Projekts samt Herkunft. Der

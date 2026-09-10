@@ -120,6 +120,21 @@ the code, with a `description` in the front matter and **Copy as
 prompt** to hand it to the agent. The *Playbooks* tab lists them,
 **+ Playbook** creates one, and the editor saves as you type.
 
+## Where the format comes from
+
+The spec workflow is modeled on
+[OpenSpec](https://github.com/Fission-AI/OpenSpec) (one folder per
+change, tasks as checkboxes, archive with a date) and on
+[Kiro's specs](https://kiro.dev/docs/specs/) (testable requirements,
+a human gate between phases). Speccify keeps the format to a single
+`SPEC.md` and adds what those tools leave to you: the board, the
+gate, the history with token counts, and the question protocol.
+Speccify is meant to **fit into what you already use** — the heart is
+the skill and tool contract management; the spec workflow around it
+is one way to run a project, not the only one, and reading OpenSpec
+projects directly is on the list. (Not to be confused with GitHub's
+Spec Kit, whose CLI is called `specify`.)
+
 ## Specs, playbooks, skills — which is which?
 
 - A **spec** is work: it has a station, tasks, and an end.

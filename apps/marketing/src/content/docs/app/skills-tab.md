@@ -62,7 +62,7 @@ Two rules keep the bookkeeping sane:
   contract-checked, so the agent can call them without a permission
   prompt each time.
 
-When the agent uses an expanded skill while working a ticket, it logs
-an `agent_run` line in the ticket's history naming the skill and
+When the agent uses an expanded skill while working a spec, it logs
+an `agent_run` line in the spec's history naming the skill and
 tool — the [spec's history](/app/specs/) is the trail of what was
 used; there is no separate log file.

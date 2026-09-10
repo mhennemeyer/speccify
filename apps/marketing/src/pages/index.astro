@@ -5,7 +5,7 @@ import MarketingLayout from "../layouts/MarketingLayout.astro";
 
 const title = "Speccify — share the contract, not the implementation";
 const description =
-  "The agent-agnostic skill and tool manager: reusable skills shared over Git, tool contracts your agent implements and verifies per project, and a desktop app that runs the whole workflow — plans, tickets, board — on macOS, Windows and Linux.";
+  "The agent-agnostic skill and tool manager: reusable skills shared over Git, tool contracts your agent implements and verifies per project, and a desktop app that puts specs, files and Git in one window — on macOS, Windows and Linux.";
 
 const problems = [
   "What you learned the hard way lives in one project. The next project starts from zero, and so does the agent.",
@@ -16,13 +16,13 @@ const problems = [
 const solutions = [
   "Skills are plain SKILL.md files, shared over Git like Go modules — no account, no registry. speccify expand copies them into the project where every agent finds them.",
   "Tools ship as contracts, not scripts: TOOL.md defines inputs, outputs, effects, and examples. Your agent implements it for this machine — speccify tool check proves it works.",
-  "One file-based workflow — plans, tickets, questions, history — that any agent can follow and the Speccify app makes visible. Claude Code and Codex are equally at home.",
+  "One file-based workflow — specs with tasks, questions, history — that any agent can follow and the Speccify app makes visible. Modeled on OpenSpec and Kiro, built to fit into what you already use. Claude Code and Codex are equally at home.",
 ];
 
 const useCases = [
   { name: "Platform rituals", note: "Notarization, entitlements, store review" },
   { name: "Payments & auth", note: "Trials, subscriptions, OAuth flows" },
-  { name: "Team workflows", note: "Plans, tickets, review loops for agents" },
+  { name: "Team workflows", note: "Specs, gates, review loops for agents" },
   { name: "Client projects", note: "Each with its own skill repo and sources" },
 ];
 
@@ -40,8 +40,8 @@ const steps = [
     body: "speccify tool check runs the contract's examples against the implementation. Status becomes verified only when the examples pass — never by hand.",
   },
   {
-    title: "4 · Work the board",
-    body: "The app turns the active plan into tickets, the agent works them one at a time, asks when it must, and writes history you can audit.",
+    title: "4 · Work the spec",
+    body: "You write a spec and move it to Doing; the agent works its tasks one by one, asks when it must, and writes history you can audit.",
   },
 ];
 
@@ -84,9 +84,10 @@ effects: [reads-filesystem]
         <strong class="text-slate-100">Tool contracts</strong> say what a tool
         must do; your agent implements them for this machine and
         <code class="text-sky-300">speccify tool check</code> proves they work.
-        And the <strong class="text-slate-100">Speccify app</strong> runs the
-        whole workflow — plans, tickets, board, questions — on macOS and
-        Windows, with Claude Code or Codex in the terminal.
+        And the <strong class="text-slate-100">Speccify app</strong> puts the
+        workflow around it — specs, board, questions, files and Git — in one
+        window on macOS, Windows and Linux, with Claude Code or Codex in the
+        terminal.
       </p>
       <div class="flex flex-wrap items-center justify-center gap-4">
         <a
@@ -189,8 +190,8 @@ effects: [reads-filesystem]
       <h2 class="text-2xl font-bold">One window per project, an agent inside</h2>
       <p class="max-w-xl text-slate-300">
         The Speccify app opens every project in its own window, laid out like
-        Xcode: files with a code editor and Git, the board with your tickets,
-        plans, skills and tool contracts with their verification status,
+        Xcode: files with a code editor and Git, the board with your specs,
+        playbooks, skills and tool contracts with their verification status,
         project actions with live output — and an agent terminal that already
         knows the project and picks its session back up after a restart. The
         app watches files; the agent does the work. Everything it shows is plain files in

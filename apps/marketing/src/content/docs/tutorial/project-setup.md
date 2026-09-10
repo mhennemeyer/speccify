@@ -67,8 +67,8 @@ skill provenance, CI.
 Open the folder as a project in **the Speccify app** and click
 **Set up** in the workflow banner. The app writes the agent setup:
 `.agent/agent.md` (the workflow contract), pointer files `CLAUDE.md`
-and `AGENTS.md`, the `/ticket-next` and `/ticket-ask` skills, and the
-empty `plans/` and `board/` folders. From this moment, any terminal
+and `AGENTS.md`, the `/spec-next` and `/spec-ask` skills, and the
+empty `specs/` and `playbooks/` folders. From this moment, any terminal
 agent started in this directory knows the workflow rules — and the
 app shows whatever the agent does.
 
@@ -118,4 +118,5 @@ One click on the Build and Run actions in the Speccify app builds
 and launches the app; the Test action runs the tests; everything the
 setup consists of — `project.yml`,
 `scripts/`, `.agent/` — is committed and readable. Time to decide
-*what* to build: [a plan and a board](/tutorial/plan-and-tickets/).
+*what* to build: [a plan and a board](/tutorial/plan-and-tickets/)
+(recorded with the ticket workflow; today that is one spec with tasks).

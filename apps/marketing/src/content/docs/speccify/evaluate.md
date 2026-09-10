@@ -36,7 +36,7 @@ never "verified" against a contract it wasn't checked against.
 Mechanical checks prove the tools match their contracts, not that the
 *skill's outcome* is right. So the agent evaluates the result against
 the skill's own **`Verify:` lines** (every step of a well-written
-skill has one) and against the ticket's acceptance criteria —
+skill has one) and against the spec's acceptance criteria —
 actively searching for counter-evidence, not confirmation.
 
 - No counter-evidence found → done.

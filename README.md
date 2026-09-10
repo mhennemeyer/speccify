@@ -9,9 +9,11 @@ shared over Git like Go modules — no account, no central registry.
 them. **Tools** ship as contracts, not scripts: a `TOOL.md` defines inputs,
 outputs, effects and examples, your agent implements it for the machine at
 hand, and `speccify tool check` proves the implementation against the
-contract's examples. The **Speccify desktop app** (macOS, Windows and Linux) runs
-the whole workflow on top: plans, tickets, a live board, project actions —
-with Claude Code or Codex in the built-in terminal.
+contract's examples. That is the heart. The **Speccify desktop app** (macOS,
+Windows and Linux) adds the cherry on top: specs on a live board, project
+actions, files and Git — with Claude Code or Codex in the built-in terminal.
+The spec workflow is modeled on [OpenSpec](https://github.com/Fission-AI/OpenSpec)
+and Kiro and meant to fit into what you already use, not replace it.
 
 ## Why
 
@@ -21,8 +23,8 @@ with Claude Code or Codex in the built-in terminal.
   a path that only existed on yours. The contract travels; the
   implementation is local.
 - Agent workflows drift. Speccify keeps one file-based workflow —
-  `.agent/plans/`, `.agent/board/`, questions, history — that any agent can
-  follow and the app makes visible.
+  `.agent/specs/`, questions, history — that any agent can follow and the
+  app makes visible.
 
 ## The three steps
 
@@ -55,11 +57,12 @@ links are directory junctions — no admin rights needed.
 
 Every project opens in its own window, laid out like Xcode (navigator,
 content, inspector, terminal): the project files with a code editor and a
-Git tab (stage, diff, commit — by you or by the agent — pull, push), the
-board (file-based tickets in `.agent/board/`, one in progress at a time,
-history and token counts from the agent's own `agent_run` log lines), the
-active plan above it, skills and tool contracts with their per-platform
-verification status, project actions with live output and charts, and an
+Git tab (hunk staging, diffs, history, branches, commits — by you or by the
+agent — pull, push), the specs board (one folder per piece of work in
+`.agent/specs/`, tasks as checkboxes, Backlog → Doing as your gate, history
+and token counts from the agent's own `agent_run` log lines), skills and
+tool contracts with their per-platform verification status, project actions
+with live output and charts, and an
 agent terminal that already knows the project and resumes its session after
 a restart. The app watches files; the agent does the work. Everything shown is
 plain files, so it works with any agent and survives without the app.
@@ -85,9 +88,9 @@ plain files, so it works with any agent and survives without the app.
   discovery via index repositories
 - [`docs/toolkit.md`](./docs/toolkit.md) — the local MCP servers the app can
   expose (exec, discovery, owner questions)
-- [`.agent/plans/`](./.agent/plans/) — the living roadmap; the repo is built
-  with its own workflow (plans, board, skills), so the best documentation of
-  how Speccify works is how this repository works
+- [`.agent/specs/`](./.agent/specs/) — the living roadmap; the repo is built
+  with its own workflow (specs, skills), so the best documentation of how
+  Speccify works is how this repository works
 
 ## License
 

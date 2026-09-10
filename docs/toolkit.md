@@ -1,7 +1,7 @@
 # Agent-Toolkit — MCPs, Toolbox, Discovery & Terminal
 
 Der Infrastruktur-Workstream aus
-[`toolkit-discovery-terminal.md`](../.agent/plans/archive/toolkit-discovery-terminal.md):
+[`toolkit-discovery-terminal.md`](../.agent/specs/archive/2026-08-04-toolkit-discovery-terminal/SPEC.md):
 Rust-MCP-Server + Toolbox als Fundament, die Desktop-App als Cockpit.
 Herkunft: Rust-Neustart der dotagent-Referenz (Commit `2949d1d`). Seit R3
 ruft Speccify dotagent nirgends mehr auf; die verbliebenen Erwähnungen in

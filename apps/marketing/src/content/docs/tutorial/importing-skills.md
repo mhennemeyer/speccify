@@ -76,7 +76,7 @@ speccify tool check orphan-strings       # → verified
 Each check runs the contract's examples against the fresh
 implementation ([how that works](/speccify/evaluate/)). After that,
 the agent uses these skills like any local one — and logs an
-`agent_run` line in the ticket history when it does.
+`agent_run` line in the spec's history when it does.
 
 The whole import was **one atomic commit** in 4Notice, subject
 "Import skills from speccify-first-test and implement their tools" —

@@ -5,6 +5,14 @@ sidebar:
   order: 1
 ---
 
+:::note[Recorded with the ticket workflow]
+This tutorial was recorded when the app sliced plans into tickets.
+Since v0.6 the unit of work is the **spec** — one folder, tasks as
+checkboxes, Backlog → Doing as your gate ([Specs](/app/specs/)). Read
+"plan" as *spec* and "ticket" as *task in a spec*; the method, the
+questions and the history are unchanged.
+:::
+
 This tutorial builds one real app, end to end: **4Notice**, a small
 SwiftUI sticky-notes app — four notes, always at hand — for macOS and
 iOS from shared sources. The app is deliberately small; the subject

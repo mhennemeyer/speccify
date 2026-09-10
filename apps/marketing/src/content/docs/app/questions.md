@@ -13,7 +13,7 @@ irreversible. The workflow's rule for the agent:
 > continue. A wrong assumption costs more than a short pause.
 
 The chat is where the question is *asked* — but chat scrolls away.
-So every answered question is **recorded in the ticket**, where the
+So every answered question is **recorded in the spec**, where the
 decision belongs:
 
 ```markdown
@@ -27,8 +27,9 @@ Session scope is enough.
 ```
 
 Questions are numbered consecutively and numbers are never reused.
-The ticket is the record, not a mailbox: normally the Q/A block is
-written complete, after you answered.
+The spec is the record, not a mailbox: normally the Q/A block is
+written complete, after you answered, and the outcome goes into
+`## Decisions`.
 
 ## When you're not there
 
@@ -40,17 +41,17 @@ started unattended — the question is written as *open*:
 Which of the two paywall layouts should ship?
 ```
 
-The ticket's frontmatter gets `open_question: Q2`, the ticket stays
-in `In Progress`, and the board shows it as **waiting** — the app
-also posts a system notification, so a new question doesn't wait for
-you to look. You answer whenever you're back — in the answer field at
-the very top of the ticket detail, by adding the `### A2 · bo · …`
-block directly in the ticket file, or just in the next chat; the
-agent's next run records it, clears the flag, and continues. Settled
-questions fold away under a collapsible **Answered (n)** section.
+The spec's frontmatter gets `open_question: Q2`, the spec stays in
+`Doing`, and the board shows it as **waiting** — the app also posts a
+system notification, so a new question doesn't wait for you to look.
+You answer whenever you're back — in the answer field at the very top
+of the spec's inspector, by adding the `### A2 · bo · …` block
+directly in `SPEC.md`, or just in the next chat; the agent's next run
+records it, clears the flag, and continues. Settled questions fold
+away under a collapsible **Answered (n)** section.
 
-![An open question at the top of the ticket's inspector, with the answer field](../../../assets/app/question.png)
+![An open question at the top of the spec's inspector, with the answer field](../../../assets/app/question.png)
 
 The effect, months later: every "why is it like this?" has a
-findable, timestamped answer sitting in the ticket that made the
+findable, timestamped answer sitting in the spec that made the
 decision — not in a chat log nobody can search.

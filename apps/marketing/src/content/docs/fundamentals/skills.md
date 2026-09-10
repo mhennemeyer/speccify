@@ -6,41 +6,37 @@ sidebar:
 ---
 
 A **skill** is a reusable instruction set for the agent: how to run
-the pre-release checks, how to pick the next ticket, how to ask the
+the pre-release checks, how to work the next spec, how to ask the
 owner a question. Each skill is a folder under `.agent/skills/` with a
 `SKILL.md` inside — frontmatter says *when* to use it, the body says
 *how*.
 
 ## A minimal, real skill
 
-This is `ticket-next` — the skill that drives the board, verbatim:
+This is `spec-next` — the skill the app installs to drive the specs
+board, verbatim:
 
 ```markdown
 ---
-name: ticket-next
-description: Pick the next backlog ticket, move it to In Progress and work it
-  to completion. Use when the user says "next ticket", "weiter", or asks
-  what to work on.
+name: spec-next
+description: Work the next spec. Use when the user says "next spec", "spec next", names a spec to start, or asks to continue the board.
 ---
 
-Follow the board workflow in `.agent/agent.md`.
+# spec-next
 
-1. Read `.agent/board/*.md`. Refuse to start if a ticket is already in
-   `In Progress` — finish or split that one first.
-2. Pick the `Backlog` ticket with the lowest `order`.
-3. Set `station: In Progress`, then implement it.
-4. Verify against the ticket's acceptance criteria before setting
-   `station: Done`.
-
-If a decision is needed that only the owner can make, use the
-`ticket-ask` skill instead of guessing.
+Follow the "Spec workflow" section in `.agent/agent.md` — it is the single
+source of truth. In short: take the spec the human moved to `Doing` (or the
+topmost `Backlog` spec if the human asked you to start it), attack the spec
+for gaps before building, work through `## Tasks` ticking as you go, write
+`## Verification` and an `agent_run` history line, finish with
+`station: Done` or `ready: true`. One spec in `Doing` per session.
 ```
 
 Two things to notice:
 
 - The **description** is written for the agent's trigger decision:
-  it names the situations ("next ticket", "weiter") in which the skill
-  applies. A vague description means the skill never fires.
+  it names the situations ("next spec", a named spec) in which the
+  skill applies. A vague description means the skill never fires.
 - The **body** is a procedure with a refusal condition and a
   verification step — not prose about the topic. Skills that read like
   articles get skimmed; skills that read like checklists get followed.
