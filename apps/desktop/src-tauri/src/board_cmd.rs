@@ -366,47 +366,40 @@ pub fn project_ticket_create(
         .replace('\\', "/"))
 }
 
-/// Erste `- [ ]`/`- [x]`-Zeile Nummer `index` (0-basiert) umschalten.
+/// Toggle a task from the same Markdown snapshot the inspector displayed.
 #[tauri::command]
 pub fn project_spec_toggle_task(
     project: String,
     file: String,
     index: usize,
     done: bool,
+    expected_body: String,
 ) -> Result<(), String> {
+    static TASK_WRITES: std::sync::Mutex<()> = std::sync::Mutex::new(());
+    let _guard = TASK_WRITES.lock().map_err(|e| e.to_string())?;
     let root = resolve_project_root(&project)?;
     let path = spec_file_path(&root, &file)?;
     let text = std::fs::read_to_string(&path).map_err(|e| format!("{}: {e}", path.display()))?;
-    let mut seen = 0usize;
-    let mut out = String::with_capacity(text.len());
-    let mut changed = false;
-    for line in text.split_inclusive('\n') {
-        let trimmed = line.trim_start();
-        let is_task = trimmed.starts_with("- [ ]")
-            || trimmed.starts_with("- [x]")
-            || trimmed.starts_with("- [X]")
-            || trimmed.starts_with("* [ ]")
-            || trimmed.starts_with("* [x]")
-            || trimmed.starts_with("* [X]");
-        if is_task {
-            if seen == index {
-                let indent = &line[..line.len() - trimmed.len()];
-                let rest = &trimmed[5..];
-                out.push_str(indent);
-                out.push_str(&trimmed[..1]);
-                out.push_str(if done { " [x]" } else { " [ ]" });
-                out.push_str(rest);
-                changed = true;
-            } else {
-                out.push_str(line);
-            }
-            seen += 1;
-        } else {
-            out.push_str(line);
-        }
+    let body = crate::project_cmd::parse_flat_frontmatter(&text)
+        .map(|(_, body)| body)
+        .unwrap_or(&text);
+    const CONFLICT: &str =
+        "SPEC_CHANGED: Spec wurde zwischenzeitlich geändert. Bitte neu laden und erneut wählen.";
+    if body != expected_body {
+        return Err(CONFLICT.into());
     }
-    if !changed {
-        return Err(format!("Task {} gibt es nicht.", index + 1));
+    let tasks = crate::spec_tasks::parse_tasks(body);
+    let task = tasks
+        .get(index)
+        .ok_or_else(|| format!("Task {} gibt es nicht.", index + 1))?;
+    if task.done == done {
+        return Ok(());
+    }
+    let offset = text.len() - body.len() + task.marker_offset;
+    let mut out = text.clone();
+    out.replace_range(offset..offset + 1, if done { "x" } else { " " });
+    if std::fs::read_to_string(&path).map_err(|e| e.to_string())? != text {
+        return Err(CONFLICT.into());
     }
     write_atomic(&path, &out)?;
     let id = crate::project_cmd::spec_id_of(&root, &path);
@@ -849,6 +842,62 @@ pub(crate) fn scan_open_questions(root: &Path) -> Vec<OpenQuestion> {
 mod tests {
     use super::*;
 
+    #[test]
+    fn task_list_count_and_toggle_share_markdown_offsets() {
+        let dir = fixture("markdown-tasks");
+        let folder = dir.join(".agent/specs/001-tasks");
+        std::fs::create_dir_all(&folder).unwrap();
+        let file = ".agent/specs/001-tasks/SPEC.md".to_string();
+        let body = "# Übung\r\n\r\n```markdown\r\n- [ ] kein Task\r\n```\r\n\r\n    - [ ] Code\r\n\r\n## Acceptance\r\n- [ ] öffnen\r\n* [X] erledigt\r\n";
+        let text = format!("---\r\nstation: Doing\r\ncustom: keep\r\n---\r\n{body}");
+        std::fs::write(folder.join("SPEC.md"), &text).unwrap();
+        let project = dir.display().to_string();
+        let entries =
+            serde_json::to_value(crate::project_cmd::project_board(project.clone()).unwrap())
+                .unwrap();
+        assert_eq!(entries[0]["tasks_total"], 2);
+        assert_eq!(entries[0]["tasks_done"], 1);
+        assert_eq!(entries[0]["tasks"][0]["text"], "öffnen");
+        project_spec_toggle_task(project, file, 1, false, body.into()).unwrap();
+        assert_eq!(
+            std::fs::read_to_string(folder.join("SPEC.md")).unwrap(),
+            text.replace("* [X] erledigt", "* [ ] erledigt")
+        );
+        std::fs::remove_dir_all(dir).unwrap();
+    }
+
+    #[test]
+    fn stale_task_click_preserves_external_changes_and_current_frontmatter() {
+        let dir = fixture("stale-tasks");
+        let folder = dir.join(".agent/specs/001-tasks");
+        std::fs::create_dir_all(&folder).unwrap();
+        let file = ".agent/specs/001-tasks/SPEC.md".to_string();
+        let project = dir.display().to_string();
+        let body = "# Tasks\n- [ ] original\n";
+        let changed =
+            "---\nstation: Doing\nforeign: keep\n---\n# Tasks\n- [ ] inserted\n- [ ] original\n";
+        std::fs::write(folder.join("SPEC.md"), changed).unwrap();
+        let error = project_spec_toggle_task(project.clone(), file.clone(), 0, true, body.into())
+            .unwrap_err();
+        assert!(error.starts_with("SPEC_CHANGED:"));
+        assert_eq!(
+            std::fs::read_to_string(folder.join("SPEC.md")).unwrap(),
+            changed
+        );
+        assert!(!folder.join("history.jsonl").exists());
+        let current = format!("---\nstation: Doing\nforeign: new-value\n---\n{body}");
+        std::fs::write(folder.join("SPEC.md"), &current).unwrap();
+        project_spec_toggle_task(project.clone(), file.clone(), 0, true, body.into()).unwrap();
+        let updated = std::fs::read_to_string(folder.join("SPEC.md")).unwrap();
+        assert_eq!(updated, current.replace("- [ ] original", "- [x] original"));
+        assert!(project_spec_toggle_task(project, file, 0, true, body.into()).is_err());
+        assert_eq!(
+            std::fs::read_to_string(folder.join("SPEC.md")).unwrap(),
+            updated
+        );
+        std::fs::remove_dir_all(dir).unwrap();
+    }
+
     fn fixture(test: &str) -> PathBuf {
         let dir =
             std::env::temp_dir().join(format!("speccify-board-{test}-{}", std::process::id()));
@@ -1013,13 +1062,25 @@ mod tests {
         assert!(saved.ends_with("Mehr.\n"));
 
         // Tasks umschalten: nur die getroffene Zeile ändert sich.
-        project_spec_toggle_task(project.clone(), file.clone(), 2, true).unwrap();
+        let body = crate::project_cmd::parse_flat_frontmatter(&saved)
+            .unwrap()
+            .1
+            .to_string();
+        project_spec_toggle_task(project.clone(), file.clone(), 2, true, body).unwrap();
         let toggled = std::fs::read_to_string(dir.join(&file)).unwrap();
         assert!(toggled.contains("- [ ] eins\n- [x] zwei\n- [x] drei\n"));
-        project_spec_toggle_task(project.clone(), file.clone(), 1, false).unwrap();
+        let body = crate::project_cmd::parse_flat_frontmatter(&toggled)
+            .unwrap()
+            .1
+            .to_string();
+        project_spec_toggle_task(project.clone(), file.clone(), 1, false, body).unwrap();
         let toggled = std::fs::read_to_string(dir.join(&file)).unwrap();
         assert!(toggled.contains("- [ ] eins\n- [ ] zwei\n- [x] drei\n"));
-        assert!(project_spec_toggle_task(project.clone(), file.clone(), 7, true).is_err());
+        let body = crate::project_cmd::parse_flat_frontmatter(&toggled)
+            .unwrap()
+            .1
+            .to_string();
+        assert!(project_spec_toggle_task(project.clone(), file.clone(), 7, true, body).is_err());
 
         // Agent-Lauf dazu (schreibt der Agent selbst — hier simuliert); eine
         // Zeile im alten ticket_id-Format wird weiter gelesen.

@@ -18,6 +18,12 @@
 #   ./scripts/dev.sh --refresh      # Payload/Sidecars erzwingen (Caches ignorieren)
 #   ./scripts/dev.sh --no-start     # nur vorbereiten, nicht starten
 #   ./scripts/dev.sh --skip-engine  # Python-Engine-Payload auslassen (schneller)
+#   ./scripts/dev.sh --check        # nur Voraussetzungen prüfen, nichts bauen
+#   ./scripts/dev.sh --status       # Listener und lokalen App-Build anzeigen
+#   ./scripts/dev.sh --app          # lokale macOS-App ohne Watcher bauen + öffnen
+#   ./scripts/dev.sh --open         # vorhandenen lokalen App-Build öffnen
+#   ./scripts/dev.sh --ui-port=18768 # expliziter alternativer Fragen-MCP-Port
+#   ./scripts/dev.sh --prepared     # vorhandene Deps/Sidecars/Payload verwenden
 #
 # Für das Web-System (Backend/Playground/Marketing) ist dev-up.sh
 # zuständig — dieses Skript kümmert sich um die Desktop-App.
@@ -35,14 +41,24 @@ MODE="dev"
 REFRESH=0
 START=1
 SKIP_ENGINE=0
+CHECK_ONLY=0
+STATUS_ONLY=0
+UI_PORT=8768
+PREPARED=0
 for arg in "$@"; do
   case "$arg" in
     --release|--bundle) MODE="release" ;;
+    --app) MODE="app" ;;
+    --open) MODE="open" ;;
+    --status) STATUS_ONLY=1 ;;
+    --ui-port=*) UI_PORT="${arg#*=}" ;;
+    --prepared) PREPARED=1 ;;
     --refresh|--force) REFRESH=1 ;;
     --no-start) START=0 ;;
     --skip-engine) SKIP_ENGINE=1 ;;
+    --check) CHECK_ONLY=1 ;;
     -h|--help)
-      sed -n '2,23p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+      sed -n '/^#$/,/^set -e/{ /^set -e/d; s/^# \{0,1\}//; p; }' "${BASH_SOURCE[0]}"
       exit 0
       ;;
     *)
@@ -51,6 +67,49 @@ for arg in "$@"; do
       ;;
   esac
 done
+
+source "$REPO_ROOT/scripts/dev-runtime.sh"
+if ! command -v lsof >/dev/null 2>&1; then
+  echo "lsof fehlt; sichere Portdiagnose ist nicht möglich." >&2
+  exit 1
+fi
+if ! desktop_validate_port "$UI_PORT"; then
+  echo "Ungültiger --ui-port: erwartet 1–65535." >&2
+  exit 2
+fi
+UI_PORT=$((10#$UI_PORT))
+LOCAL_APP="$REPO_ROOT/target/debug/bundle/macos/Speccify.app"
+if [[ "$STATUS_ONLY" -eq 1 ]]; then
+  desktop_status "$UI_PORT" "$LOCAL_APP"
+  exit 0
+fi
+if [[ "$MODE" == "app" || "$MODE" == "open" ]] && [[ "$(uname -s)" != "Darwin" ]]; then
+  echo "--app/--open ist derzeit ein lokaler macOS-Startweg; Windows: dev.ps1." >&2
+  exit 2
+fi
+if [[ "$MODE" == "open" ]]; then
+  if [[ ! -d "$LOCAL_APP" ]]; then
+    echo "Noch kein lokaler App-Build. Zuerst: ./scripts/dev.sh --app --ui-port=$UI_PORT" >&2
+    exit 1
+  fi
+  if ! lsof -t "$LOCAL_APP/Contents/MacOS/speccify-desktop" >/dev/null 2>&1; then
+    desktop_require_free_port "$UI_PORT"
+  fi
+  # Ohne -n: vorhandene Instanz aktivieren, keine zweite erzwingen.
+  echo "Öffnen: $LOCAL_APP (Port $UI_PORT gilt nur bei neuem Prozessstart)"
+  open "$LOCAL_APP" --args "--desktop-ui-port=$UI_PORT"
+  exit 0
+fi
+if [[ "$MODE" == "app" ]] && lsof -t "$LOCAL_APP/Contents/MacOS/speccify-desktop" >/dev/null 2>&1; then
+  echo "Der lokale App-Build läuft. Mit --open aktivieren; vor Neubau bewusst mit ⌘Q beenden." >&2
+  exit 1
+fi
+if [[ "$START" -eq 1 && "$CHECK_ONLY" -eq 0 ]]; then
+  desktop_require_free_port "$UI_PORT"
+  if [[ "$MODE" == "dev" ]]; then
+    desktop_require_free_port 1420
+  fi
+fi
 
 step() { printf '\n\033[1m→ %s\033[0m\n' "$1"; }
 skip() { printf '  \033[2m✓ %s\033[0m\n' "$1"; }
@@ -90,24 +149,57 @@ require() {
   fi
 }
 require uv "brew install uv"
-require pnpm "brew install pnpm"
+require node "Node-Version aus .nvmrc installieren (mindestens engines.node aus package.json)"
+require pnpm "Corepack verwenden oder die packageManager-Version aus package.json installieren"
 require cargo "brew install rustup && rustup default stable"
+require rustc "brew install rustup && rustup default stable"
+require git "xcode-select --install"
 if [[ "$MISSING" -eq 1 ]]; then
   echo "" >&2
   echo "Fehlende Werkzeuge installieren und dev.sh erneut starten." >&2
   exit 1
 fi
 
+node -e '
+const minimum = require("./package.json").engines.node.replace(/^>=/, "").split(".").map(Number);
+const actual = process.versions.node.split(".").map(Number);
+let compatible = true;
+for (let i = 0; i < 3; i++) {
+  if (actual[i] !== minimum[i]) { compatible = actual[i] > minimum[i]; break; }
+}
+if (!compatible) {
+  console.error(`Node ${process.versions.node} ist zu alt. Benötigt: ${require("./package.json").engines.node}; .nvmrc verwenden.`);
+  process.exit(1);
+}'
+PNPM_REQUIRED="$(node -p 'require("./package.json").packageManager.split("@")[1]')"
+PNPM_ACTUAL="$(pnpm --version)"
+if [[ "$PNPM_ACTUAL" != "$PNPM_REQUIRED" ]]; then
+  printf 'pnpm %s benötigt (gefunden: %s). Installation: npm install -g pnpm@%s\n' "$PNPM_REQUIRED" "$PNPM_ACTUAL" "$PNPM_REQUIRED" >&2
+  exit 1
+fi
+skip "Node $(node --version), pnpm $PNPM_ACTUAL, $(uv --version)"
+skip "$(rustc --version) — Toolchain aus rust-toolchain.toml"
+skip "Python $(tr -d '\n' < .python-version) — wird bei Bedarf durch uv eingerichtet"
+if [[ "$(uname -s)" == "Darwin" ]] && ! xcode-select -p >/dev/null 2>&1; then
+  echo "Xcode Command Line Tools fehlen: xcode-select --install" >&2
+  exit 1
+fi
+if [[ "$CHECK_ONLY" -eq 1 ]]; then
+  step "Voraussetzungen geprüft — keine Abhängigkeiten installiert"
+  exit 0
+fi
+
 # --- 2. Abhängigkeiten ----------------------------------------------------------
 
+if [[ "$PREPARED" -eq 0 ]]; then
 step "JS-Abhängigkeiten (pnpm install)"
-pnpm install
+pnpm install --frozen-lockfile
 
 step "Python-Abhängigkeiten (uv sync)"
 # --all-packages wie in der CI: bringt die .venv exakt auf den Lockfile-Stand.
 # Das entfernt auch Pakete, die dort von Hand oder aus entfernten Komponenten
 # hängengeblieben sind — gewollt, damit lokal und CI dieselbe Umgebung sehen.
-uv sync --all-packages
+uv sync --frozen --all-packages
 # macOS-Quarantäne versteckt die editable-.pth-Dateien der venv wiederkehrend.
 if [[ -x ./scripts/fix-venv-hidden.sh ]]; then
   ./scripts/fix-venv-hidden.sh --deep >/dev/null 2>&1 || true
@@ -161,6 +253,15 @@ else
   skip "aktuell ($(sed -n 's/.*"hash": "\(............\).*/\1/p' "$PAYLOAD")…)"
 fi
 
+else
+  step "Vorbereitete Umgebung verwenden (--prepared)"
+  if [[ ! -d node_modules || ! -d .venv || ! -f "$PAYLOAD" || ! -d "$BINARIES" ]]; then
+    echo "Vorbereitung fehlt. Zuerst ./scripts/dev.sh --no-start ausführen." >&2
+    exit 1
+  fi
+  skip "Deps/Sidecars/Payload nicht synchronisiert; nur nach erfolgreicher Vorbereitung verwenden"
+fi
+
 # --- 5. Starten -----------------------------------------------------------------
 
 if [[ "$START" -eq 0 ]]; then
@@ -168,23 +269,20 @@ if [[ "$START" -eq 0 ]]; then
   exit 0
 fi
 
-# Die App hält den desktop-ui-MCP auf :8768 und ist Single-Instance — eine
-# zweite Instanz würde sich nur ins Leere starten.
-if lsof -ti :8768 >/dev/null 2>&1; then
-  echo "" >&2
-  echo "⚠ Auf :8768 läuft bereits eine Speccify-Instanz (desktop-ui-MCP)." >&2
-  echo "  Erst beenden (⌘Q oder: pkill -f 'Speccify.app|speccify-desktop'), dann erneut starten." >&2
-  exit 1
-fi
-
-if [[ "$MODE" == "release" ]]; then
+if [[ "$MODE" == "app" ]]; then
+  step "Lokale App ohne Watcher bauen"
+  pnpm --filter speccify-desktop tauri build --debug --bundles app --no-sign
+  step "Lokale Speccify.app öffnen (kein Vite/Watcher nötig)"
+  echo "  Desktop-UI-MCP: http://127.0.0.1:$UI_PORT"
+  open "$LOCAL_APP" --args "--desktop-ui-port=$UI_PORT"
+elif [[ "$MODE" == "release" ]]; then
   step "App bündeln (tauri build)"
   pnpm --filter speccify-desktop tauri build
   APP="$REPO_ROOT/target/release/bundle/macos/Speccify.app"
   step "Speccify.app öffnen"
   echo "  $APP"
-  open -a "$APP"
+  open -a "$APP" --args "--desktop-ui-port=$UI_PORT"
 else
   step "App starten (tauri dev — Ctrl-C beendet sie)"
-  pnpm --filter speccify-desktop tauri dev
+  pnpm --filter speccify-desktop tauri dev -- -- "--desktop-ui-port=$UI_PORT"
 fi

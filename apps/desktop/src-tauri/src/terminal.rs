@@ -15,6 +15,7 @@ use portable_pty::{native_pty_system, ChildKiller, CommandBuilder, MasterPty, Pt
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, State};
 
+use crate::agent_startup::{self, login_shell, StartupReport};
 use crate::settings;
 
 struct TerminalSession {
@@ -53,23 +54,10 @@ struct TermExit {
     id: String,
 }
 
-#[cfg(not(windows))]
-fn login_shell() -> String {
-    std::env::var("SHELL").unwrap_or_else(|_| "/bin/zsh".into())
-}
-
-#[cfg(windows)]
-fn login_shell() -> String {
-    let on_path = |name: &str| {
-        std::env::var_os("PATH")
-            .map(|path| std::env::split_paths(&path).any(|dir| dir.join(name).is_file()))
-            .unwrap_or(false)
-    };
-    if on_path("pwsh.exe") {
-        "pwsh.exe".into()
-    } else {
-        "powershell.exe".into()
-    }
+#[derive(Serialize)]
+pub struct TerminalOpened {
+    cwd: String,
+    startup: Option<StartupReport>,
 }
 
 /// Öffnet ein Terminal und tippt den Autostart-Command vor. Ohne `cwd`/
@@ -77,15 +65,15 @@ fn login_shell() -> String {
 /// übergibt beides selbst (Plan projektfenster.md, P1: cwd = Projektwurzel,
 /// Agent-Kommando pro Projekt). → Startverzeichnis (für die UI-Anzeige).
 #[tauri::command]
-pub fn terminal_open(
+pub async fn terminal_open(
     app: AppHandle,
-    state: State<Terminals>,
+    state: State<'_, Terminals>,
     id: String,
     cols: u16,
     rows: u16,
     cwd: Option<String>,
     autostart: Option<String>,
-) -> Result<String, String> {
+) -> Result<TerminalOpened, String> {
     let app_settings = settings::get_settings()?;
     let cwd = match cwd {
         Some(dir) => settings::resolve_working_dir(&dir)?,
@@ -102,6 +90,26 @@ pub fn terminal_open(
         .trim()
         .to_string();
 
+    let probe_app = app.clone();
+    let probe_cwd = cwd.clone();
+    let probe_command = autostart.clone();
+    let prepared = tauri::async_runtime::spawn_blocking(move || {
+        agent_startup::prepare(&probe_app, &probe_cwd, &probe_command)
+    })
+    .await
+    .map_err(|e| e.to_string())?;
+    // A plain shell remains available even if a profile cannot be probed.
+    let startup = match prepared {
+        Ok(report) if !report.host_ready => {
+            return Err(report
+                .error
+                .unwrap_or_else(|| "Agent nicht startbar".into()))
+        }
+        Ok(report) => Some(report),
+        Err(_) if autostart.is_empty() => None,
+        Err(error) => return Err(error),
+    };
+
     let pty = native_pty_system()
         .openpty(PtySize {
             rows,
@@ -117,12 +125,13 @@ pub fn terminal_open(
     command.arg("-l"); // Login-Shell: PATH/Profile des Users
     command.cwd(&cwd);
     command.env("TERM", "xterm-256color");
+    command.env("PATH", crate::augmented_path());
 
     let child = pty
         .slave
         .spawn_command(command)
         .map_err(|e| format!("{shell}: {e}"))?;
-    let killer = child.clone_killer();
+    let mut killer = child.clone_killer();
 
     let mut reader = pty
         .master
@@ -135,8 +144,26 @@ pub fn terminal_open(
 
     // Autostart-Command vortippen (die tty-Eingabe puffert, bis die Shell
     // liest). Leer = reines Terminal.
-    if !autostart.is_empty() {
-        let _ = writer.write_all(format!("{autostart}\r").as_bytes());
+    let preamble = startup
+        .as_ref()
+        .map(|report| {
+            agent_startup::path_setup(report.runtime_dir.as_deref().map(std::path::Path::new))
+        })
+        .unwrap_or_default();
+    let launch = startup
+        .as_ref()
+        .map(|r| r.launch.as_str())
+        .unwrap_or(&autostart);
+    if !preamble.is_empty() || !launch.is_empty() {
+        if let Err(error) = writer
+            .write_all(format!("{preamble}{launch}\r").as_bytes())
+            .and_then(|_| writer.flush())
+        {
+            let _ = killer.kill();
+            return Err(format!(
+                "Terminal-Start konnte nicht geschrieben werden: {error}"
+            ));
+        }
     }
 
     // Reader-Thread: PTY-Output als Events (lossy — Escape-Sequenzen sind
@@ -171,7 +198,10 @@ pub fn terminal_open(
             killer,
         },
     );
-    Ok(cwd.display().to_string())
+    Ok(TerminalOpened {
+        cwd: cwd.display().to_string(),
+        startup,
+    })
 }
 
 #[tauri::command]

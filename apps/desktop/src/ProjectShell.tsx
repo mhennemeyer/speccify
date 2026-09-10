@@ -13,6 +13,7 @@ import { listen } from "@tauri-apps/api/event";
 import SettingsSheet from "./components/SettingsSheet";
 import SplitHandle from "./components/SplitHandle";
 import TerminalPanel from "./components/TerminalPanel";
+import AgentStartup from "./components/AgentStartup";
 import ActivityView from "./components/ActivityView";
 import Toolbar, {
   GearIcon,
@@ -44,7 +45,7 @@ import {
 import { DEFAULT_TOOLBAR_BUILTINS, TOOLBAR_BUILTINS } from "./lib/layout";
 import { requestGit } from "./lib/git";
 import { GitIcon, TerminalIcon } from "./components/Toolbar";
-import ActionsTab from "./views/project/ActionsTab";
+import ActionsTab, { type ActionOutputTab } from "./views/project/ActionsTab";
 import AgentTab from "./views/project/AgentTab";
 import BoardTab from "./views/project/BoardTab";
 import FilesTab from "./views/project/FilesTab";
@@ -73,14 +74,14 @@ type TabId = (typeof TABS)[number]["id"];
 /** Zwei Tab-Ebenen im Navigator (BO 2026-09-05, Vorbild iKanban): oben die
  *  Gruppen als Icons, darunter die Tabs der Gruppe als Text. „Orga" ist ein
  *  Arbeitsname — Kandidaten: Vorhaben, Wissen, Steuerung. */
-const GROUPS: ReadonlyArray<{ id: string; label: string; tabs: readonly TabId[] }> = [
+const GROUPS: ReadonlyArray<{ id: string; label: string; tone: string; tabs: readonly TabId[] }> = [
   // Reihenfolge nach BO 2026-09-08: Dateien, Orga, Technik, Board, Hilfe (⌘1–5).
-  { id: "dateien", label: "Dateien", tabs: ["files", "git"] },
-  { id: "orga", label: "Orga", tabs: ["playbooks", "skills"] },
-  { id: "technik", label: "Technik", tabs: ["tools", "actions", "mcps", "agent"] },
+  { id: "dateien", label: "Dateien", tone: "blue", tabs: ["files", "git"] },
+  { id: "orga", label: "Orga", tone: "violet", tabs: ["playbooks", "skills"] },
+  { id: "technik", label: "Technik", tone: "teal", tabs: ["tools", "actions", "mcps", "agent"] },
   // Specs statt Board + Pläne (Plan spec-workflow.md, D5).
-  { id: "board", label: "Specs", tabs: ["board"] },
-  { id: "help", label: "Hilfe", tabs: ["help"] },
+  { id: "board", label: "Specs", tone: "violet", tabs: ["board"] },
+  { id: "help", label: "Hilfe", tone: "slate", tabs: ["help"] },
 ];
 
 function groupOf(tab: TabId) {
@@ -117,20 +118,25 @@ export default function ProjectShell() {
   const startTerminal = (resume: boolean) => {
     setResumeSession(resume);
     setTerminalStarted(true);
-    if (project) {
+  };
+  const terminalOpened = (command: string) => {
+    if (project && command.trim()) {
       try {
         localStorage.setItem(agentSessionKey(project), "1");
+        setHadSession(true);
       } catch {
         // ohne Merker kein Fortsetzen — sonst egal
       }
     }
-    if (resume) {
-      recordActivity("agent", "Agent-Sitzung fortgesetzt", { detail: continueCommand(agentCommand) });
-    }
+    recordActivity("agent", "Terminal geöffnet", {
+      detail: command || "Nur Shell",
+    });
   };
   const [layout, setLayout] = useState<ProjectLayout>(DEFAULT_LAYOUT);
   const [navSlots, setNavSlots] = useState<Slots>({});
   const [inspectorSlots, setInspectorSlots] = useState<Slots>({});
+  const [outputSlot, setOutputSlot] = useState<HTMLDivElement | null>(null);
+  const [outputTabs, setOutputTabs] = useState<ActionOutputTab[]>([]);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [theme, setTheme] = useTheme();
   // Zuletzt aktiver Tab je Gruppe — ein Gruppenwechsel kehrt dorthin zurück.
@@ -160,9 +166,6 @@ export default function ProjectShell() {
           if (session && stored.resumeAgent && (command ?? DEFAULT_AGENT_COMMAND).trim() !== "") {
             setResumeSession(true);
             setTerminalStarted(true);
-            recordActivity("agent", "Agent-Sitzung fortgesetzt", {
-              detail: continueCommand(command ?? DEFAULT_AGENT_COMMAND),
-            });
           }
         } catch {
           // localStorage nicht verfügbar — Default bleibt.
@@ -266,6 +269,10 @@ export default function ProjectShell() {
     [project],
   );
 
+  const revealOutput = useCallback((id: string) => {
+    updateLayout({ rightShown: true, rightTab: `output:${id}` });
+  }, [updateLayout]);
+
   // Tastaturkürzel wie in Xcode: Cmd/Ctrl+0 Navigator, Cmd/Ctrl+Alt+0
   // Inspektor, Cmd/Ctrl+Shift+Y Terminal unten, Cmd/Ctrl+1…5 Bereiche.
   useEffect(() => {
@@ -357,7 +364,8 @@ export default function ProjectShell() {
   const bottomVisible = terminalDock === "bottom" && layout.bottomShown;
   const terminalVisible =
     terminalDock === "right" ? rightShown && layout.rightTab === "terminal" : bottomVisible;
-  const inspectorVisible = rightShown && (terminalDock === "bottom" || layout.rightTab === "inspector");
+  const inspectorVisible = rightShown && layout.rightTab === "inspector";
+  const activeOutput = layout.rightTab.startsWith("output:") ? layout.rightTab.slice(7) : null;
 
   // Spalten: Navigator | Griff | Inhalt | Griff | rechte Seitenleiste.
   // Zeilen: Toolbar | Tabzeile rechts | Körper | Griff | Bottom-Bar.
@@ -542,14 +550,11 @@ export default function ProjectShell() {
                   key={group.id}
                   role="tab"
                   aria-selected={activeGroup.id === group.id}
+                  data-tone={group.tone}
                   aria-label={group.label}
                   title={`${group.label} (${isMac ? "⌘" : "Strg+"}${GROUPS.indexOf(group) + 1})`}
                   onClick={() => activateTab(lastTab[group.id] ?? group.tabs[0])}
-                  className={`flex min-h-6 flex-1 items-center justify-center rounded-full ${
-                    activeGroup.id === group.id
-                      ? "bg-slate-800 text-white"
-                      : "text-slate-500 hover:bg-slate-200 hover:text-slate-800"
-                  }`}
+                  className="accent-tab flex min-h-7 flex-1 items-center justify-center rounded-full"
                 >
                   <TabIcon id={group.id} />
                 </button>
@@ -567,12 +572,9 @@ export default function ProjectShell() {
                     key={id}
                     role="tab"
                     aria-selected={active === id}
+                    data-tone={activeGroup.tone}
                     onClick={() => activateTab(id)}
-                    className={`rounded px-2 py-1 text-xs font-medium ${
-                      active === id
-                        ? "bg-slate-200 text-slate-900"
-                        : "text-slate-500 hover:bg-slate-100 hover:text-slate-800"
-                    }`}
+                    className="accent-tab rounded px-2 py-1 text-xs font-medium"
                   >
                     {tab.label}
                   </button>
@@ -646,7 +648,9 @@ export default function ProjectShell() {
             <ToolsTab project={project} refresh={refresh.tools} />
           </div>
           <div className={active === "actions" ? "min-h-0 flex-1" : "hidden"}>
-            <ActionsTab project={project} refresh={refresh.actions} />
+            <ActionsTab project={project} refresh={refresh.actions}
+              outputSlot={outputSlot} activeOutput={activeOutput}
+              onOutputTabsChange={setOutputTabs} onRevealOutput={revealOutput} />
           </div>
           <div className={active === "mcps" ? "min-h-0 flex-1" : "hidden"}>
             <McpsTab project={project} refresh={refresh.mcps} />
@@ -688,7 +692,8 @@ export default function ProjectShell() {
           />
         ) : null}
         <div
-          className={`${rightShown ? "flex" : "hidden"} items-stretch border-b border-l border-slate-200 bg-white text-xs`}
+          aria-label="Rechte Seitenleiste"
+          className={`${rightShown ? "flex" : "hidden"} min-w-0 items-stretch overflow-x-auto border-b border-l border-slate-200 bg-white text-xs`}
           style={{ gridColumn: 5, gridRow: 2 }}
         >
           {(terminalDock === "right"
@@ -702,8 +707,9 @@ export default function ProjectShell() {
               key={id}
               type="button"
               onClick={() => updateLayout({ rightTab: id })}
-              className={`px-3 py-1.5 font-medium ${
-                layout.rightTab === id || terminalDock === "bottom"
+              aria-pressed={layout.rightTab === id}
+              className={`shrink-0 px-3 py-1.5 font-medium ${
+                layout.rightTab === id
                   ? "border-b-2 border-slate-800 text-slate-800"
                   : "text-slate-400 hover:text-slate-700"
               }`}
@@ -711,7 +717,35 @@ export default function ProjectShell() {
               {label}
             </button>
           ))}
+          {outputTabs.map((tab) => (
+            <div key={tab.id} className={`flex shrink-0 items-center ${activeOutput === tab.id ? "border-b-2 border-slate-800 text-slate-800" : "text-slate-500"}`}>
+              <button
+                type="button"
+                aria-pressed={activeOutput === tab.id}
+                aria-label={`Ausgabe: ${tab.name}`}
+                title={`${tab.name} · ${tab.running ? "läuft" : tab.failed ? "fehlgeschlagen" : "beendet"}\n${tab.id}`}
+                ref={(node) => { if (activeOutput === tab.id) node?.scrollIntoView({ block: "nearest", inline: "nearest" }); }}
+                onClick={() => revealOutput(tab.id)}
+                className="flex max-w-48 items-center gap-1.5 py-1.5 pl-3 pr-1 font-medium hover:text-slate-800"
+              >
+                <span aria-hidden="true" className={tab.running ? "animate-pulse text-blue-600" : tab.failed ? "text-red-600" : "text-emerald-600"}>{tab.running ? "●" : tab.failed ? "!" : "✓"}</span>
+                <span className="truncate">{tab.name}</span>
+              </button>
+              <button type="button" aria-label={`Ausgabe schließen: ${tab.name}`}
+                title={tab.running ? "Laufende Aktion zuerst stoppen" : "Ausgabe schließen"}
+                disabled={tab.running}
+                onClick={() => {
+                  tab.close();
+                  if (activeOutput === tab.id) updateLayout({ rightTab: "inspector" });
+                }}
+                className="mr-1 rounded px-1.5 py-1 hover:bg-slate-100 disabled:opacity-25"
+              >×</button>
+            </div>
+          ))}
         </div>
+        <div ref={setOutputSlot} aria-label="Aktionsausgabe"
+          className={`${rightShown && activeOutput !== null ? "flex" : "hidden"} min-h-0 min-w-0 flex-col overflow-hidden border-l border-slate-700`}
+          style={{ gridColumn: 5, gridRow: "3 / -1" }} />
         <aside
           className={`inspector-body ${inspectorVisible ? "flex" : "hidden"} min-h-0 flex-col overflow-y-auto border-l border-slate-200 bg-white`}
           style={{ gridColumn: 5, gridRow: "3 / -1" }}
@@ -757,6 +791,7 @@ export default function ProjectShell() {
               visible={terminalVisible}
               cwd={project}
               autostart={resumeSession ? continueCommand(agentCommand) : agentCommand}
+              onOpened={terminalOpened}
             />
           ) : (
             <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6">
@@ -788,6 +823,9 @@ export default function ProjectShell() {
                   ))}
                 </span>
               </label>
+              <div className="w-full max-w-xs text-slate-400">
+                <AgentStartup project={project} command={agentCommand} />
+              </div>
               <div className="flex flex-wrap justify-center gap-2">
                 {hadSession && agentCommand.trim() !== "" ? (
                   <button

@@ -16,6 +16,33 @@ use speccify_mcp_core::{error_result, text_result, ToolServer};
 use tauri::{AppHandle, Emitter, State};
 
 pub const DEFAULT_PORT: u16 = 8768;
+
+fn port_from_args(args: impl Iterator<Item = String>) -> Result<u16, String> {
+    let mut port = DEFAULT_PORT;
+    for arg in args {
+        if let Some(value) = arg.strip_prefix("--desktop-ui-port=") {
+            port = value
+                .parse::<u16>()
+                .ok()
+                .filter(|port| *port > 0)
+                .ok_or_else(|| "Ungültiger --desktop-ui-port: erwartet 1–65535".to_string())?;
+        }
+    }
+    Ok(port)
+}
+
+pub fn configured_port() -> Result<u16, String> {
+    port_from_args(std::env::args().skip(1))
+}
+
+#[tauri::command]
+pub fn desktop_ui_endpoint() -> Result<String, String> {
+    Ok(format!("http://127.0.0.1:{}", configured_port()?))
+}
+
+pub fn render_endpoint(template: &str, port: u16) -> String {
+    template.replace("http://127.0.0.1:8768", &format!("http://127.0.0.1:{port}"))
+}
 const DEFAULT_TIMEOUT_SECONDS: f64 = 300.0;
 const KINDS: &[&str] = &["buttons", "multi_select", "form"];
 
@@ -322,6 +349,38 @@ pub fn ask_bo_pending(registry: State<AskBoRegistry>) -> Vec<Value> {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn port_selection_is_explicit_and_validated() {
+        assert_eq!(super::port_from_args(std::iter::empty()).unwrap(), 8768);
+        assert_eq!(
+            super::port_from_args(["--desktop-ui-port=18768".into()].into_iter()).unwrap(),
+            18768
+        );
+        for value in ["0", "65536", "no", ""] {
+            assert!(
+                super::port_from_args([format!("--desktop-ui-port={value}")].into_iter()).is_err()
+            );
+        }
+    }
+
+    #[test]
+    fn new_host_configs_use_selected_port_and_preserve_other_endpoints() {
+        let json = super::render_endpoint(include_str!("../templates/mcp.json"), 18768);
+        let toml = super::render_endpoint(include_str!("../templates/codex-config.toml"), 18768);
+        let parsed: serde_json::Value = serde_json::from_str(&json).unwrap();
+        assert_eq!(
+            parsed["mcpServers"]["speccify-desktop-ui"]["url"],
+            "http://127.0.0.1:18768"
+        );
+        let parsed: toml::Value = toml::from_str(&toml).unwrap();
+        assert_eq!(
+            parsed["mcp_servers"]["speccify-desktop-ui"]["url"].as_str(),
+            Some("http://127.0.0.1:18768")
+        );
+        assert!(json.contains("http://127.0.0.1:8765"));
+        assert!(toml.contains("http://127.0.0.1:8767"));
+    }
+
     use super::*;
 
     fn call(server: &DesktopUiMcp, name: &str, args: Value) -> Value {

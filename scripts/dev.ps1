@@ -57,7 +57,8 @@ if (-not $vcInstall) {
 }
 
 Step "pnpm install (Workspace)"
-pnpm install
+pnpm install --frozen-lockfile
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 Step "MCP-Sidecars bauen"
 cargo build -p speccify-exec-mcp -p speccify-discovery-mcp -p speccify-parallels-mcp

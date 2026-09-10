@@ -1,5 +1,9 @@
 # Projektstatus: Speccify
 
+> Historischer Stand, keine aktuelle Arbeitsanweisung. Einstieg: [agent.md](agent.md).
+> Aktuelle Vision und Bestandsübersicht: [Weiterentwicklung](playbooks/weiterentwicklung.md)
+> und [Stand und UI](playbooks/stand-und-ui.md). Der folgende Altstand bleibt erhalten.
+
 ## Meta
 - **Typ:** Code
 - **Phase:** **Neuausrichtung auf Workflow-Playbooks abgeschlossen (2026-08-06)** — W1–W5 geliefert: Rückbau des Codegen-Zweigs, Playbook-Schema (Neustart bei `schema_version: 1`), Playbooks als Bundles, `speccify check` gegen Verrottung, read-only Viewer mit Workflow-Diagramm, Kontext-Brücke zum Agenten (`viewer_selection` / `playbook_propose`), Außendarstellung komplett auf Playbooks und Englisch. Offen nur noch BO-Aktionen (Repo öffentlich, Index säen, Doku-Site deployen, IAP-Playbook gegenlesen). Plan archiviert: [`plans/archive/neuausrichtung-workflow-playbooks.md`](./plans/archive/neuausrichtung-workflow-playbooks.md). Branch: `feat/oss-pivot`. Historie der Komponenten-Ära (P1–P6.1) in [`plans/archive/pivot-open-source-git-composer.md`](./plans/archive/pivot-open-source-git-composer.md).

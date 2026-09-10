@@ -11,6 +11,7 @@ use tauri::{AppHandle, Emitter, Manager, State};
 
 mod actions_cmd;
 mod agent_config;
+mod agent_startup;
 mod board_cmd;
 mod desktop_ui;
 mod engine;
@@ -24,6 +25,7 @@ mod settings;
 mod sidecar;
 mod skill_sources;
 mod sources_cmd;
+mod spec_tasks;
 mod system_cmd;
 mod terminal;
 mod toolbox_cmd;
@@ -190,6 +192,10 @@ pub fn run() {
     let ask_bo_for_setup = ask_bo.clone();
     let context = tauri::generate_context!();
     let updater_configured = updater_pubkey(context.config()).is_some();
+    let desktop_ui_port = desktop_ui::configured_port().unwrap_or_else(|error| {
+        eprintln!("{error}");
+        std::process::exit(2);
+    });
 
     let builder = tauri::Builder::default()
         // Single-Instance zuerst (Plugin-Doku): eine zweite App-Instanz
@@ -218,11 +224,11 @@ pub fn run() {
             std::thread::spawn(move || {
                 if let Err(error) = speccify_mcp_core::serve_http(
                     std::sync::Arc::new(server),
-                    desktop_ui::DEFAULT_PORT,
+                    desktop_ui_port,
                     "speccify desktop-ui-mcp",
                     None,
                 ) {
-                    eprintln!("desktop-ui-MCP: {error} (läuft die App doppelt?)");
+                    eprintln!("desktop-ui-MCP auf Port {desktop_ui_port}: {error}");
                 }
             });
             // W7d: beim letzten Quit offene Projektfenster wieder öffnen.
@@ -230,6 +236,7 @@ pub fn run() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            desktop_ui::desktop_ui_endpoint,
             spawn_process,
             kill_process,
             project_cmd::project_open,
@@ -312,6 +319,7 @@ pub fn run() {
             engine::engine_status,
             engine::engine_install,
             system_cmd::doctor,
+            agent_startup::project_agent_startup,
             system_cmd::python_list,
             system_cmd::python_install,
             system_cmd::kb_list,

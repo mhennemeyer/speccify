@@ -7,6 +7,7 @@
 // kaputte Pflichtfelder fallen auf Text zurück, Output geht nie verloren.
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
@@ -68,11 +69,20 @@ interface ChartSpec {
 type OutputItem = { kind: "line"; text: string } | { kind: "chart"; chart: ChartSpec };
 
 interface RunState {
+  name: string;
   items: OutputItem[];
   running: boolean;
   exitCode: number | null;
   durationMs: number | null;
   error: string | null;
+}
+
+export interface ActionOutputTab {
+  id: string;
+  name: string;
+  running: boolean;
+  failed: boolean;
+  close: () => void;
 }
 
 const MAX_ITEMS = 2000;
@@ -269,15 +279,16 @@ function InputField({
   );
 }
 
-function OutputPanel({ run, onStop }: { run: RunState; onStop: () => void }) {
+function OutputPanel({ run, onStop, fill = false }: { run: RunState; onStop: () => void; fill?: boolean }) {
   const scroller = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     const node = scroller.current;
     if (node) node.scrollTop = node.scrollHeight;
-  }, [run.items.length, run.running]);
+  }, [run.items, run.running]);
   const progress = run.running ? detectProgress(run.items) : null;
   return (
-    <div className="mt-2 rounded-lg border border-slate-700 bg-slate-900 p-2">
+    <div className={`keep-dark border border-slate-700 bg-slate-900 p-2 ${fill ? "flex min-h-0 flex-1 flex-col" : "mt-2 rounded-lg"}`}>
+      {fill ? <h2 className="mb-2 break-words text-xs font-semibold text-slate-200">{run.name}</h2> : null}
       <div className="mb-1 flex items-center justify-between text-[11px]">
         <span className="text-slate-400">
           {run.running
@@ -297,7 +308,8 @@ function OutputPanel({ run, onStop }: { run: RunState; onStop: () => void }) {
           </button>
         ) : null}
       </div>
-      <div ref={scroller} className="max-h-64 overflow-y-auto">
+      <div ref={scroller} className={`${fill ? "min-h-0 flex-1" : "max-h-64"} overflow-y-auto break-words`}>
+        {run.items.length === 0 && run.running ? <p className="text-xs text-slate-400">Warte auf Ausgabe …</p> : null}
         {run.items.map((item, index) =>
           item.kind === "chart" ? (
             <ChartBlock key={index} chart={item.chart} />
@@ -315,15 +327,42 @@ function OutputPanel({ run, onStop }: { run: RunState; onStop: () => void }) {
 export default function ActionsTab({
   project,
   refresh,
+  outputSlot,
+  activeOutput,
+  onOutputTabsChange,
+  onRevealOutput,
 }: {
   project: string;
   refresh?: number;
+  outputSlot?: HTMLElement | null;
+  activeOutput?: string | null;
+  onOutputTabsChange?: (tabs: ActionOutputTab[]) => void;
+  onRevealOutput?: (id: string) => void;
 }) {
   const snapshot = useAsync(
     () => invoke<ActionsSnapshot>("project_actions", { project }),
     `actions:${project}`,
   );
   const [runs, setRuns] = useState<Record<string, RunState>>({});
+  const runningIds = useRef(new Set<string>());
+  const listenersReady = useRef<Promise<unknown>>(Promise.resolve());
+  // Streaming lines must not rerender the entire project shell.
+  const outputTabsKey = JSON.stringify(Object.entries(runs).map(([id, run]) => ({
+    id, name: run.name, running: run.running,
+    failed: Boolean(run.error) || (run.exitCode !== null && run.exitCode !== 0),
+  })));
+  useEffect(() => {
+    const tabs = JSON.parse(outputTabsKey) as Omit<ActionOutputTab, "close">[];
+    onOutputTabsChange?.(tabs.map((tab) => ({
+      ...tab,
+      close: () => setRuns((previous) => {
+        if (runningIds.current.has(tab.id)) return previous;
+        const next = { ...previous };
+        delete next[tab.id];
+        return next;
+      }),
+    })));
+  }, [outputTabsKey, onOutputTabsChange]);
   const [inputValues, setInputValues] = useState<Record<string, Record<string, string>>>({});
   const [draft, setDraft] = useState({ name: "", command: "", description: "" });
   const [error, setError] = useState<string | null>(null);
@@ -355,6 +394,7 @@ export default function ActionsTab({
       error: string | null;
     }>("action-exit", (event) => {
       const { run_id, exit_code, duration_ms, error } = event.payload;
+      runningIds.current.delete(run_id);
       const activity = activityIds.current[run_id];
       if (activity) {
         delete activityIds.current[run_id];
@@ -379,9 +419,12 @@ export default function ActionsTab({
         };
       });
     });
+    listenersReady.current = Promise.all([outputPromise, exitPromise]);
+    // A failed subscription is reported in the output tab when a run is requested.
+    void listenersReady.current.catch(() => {});
     return () => {
-      void outputPromise.then((dispose) => dispose());
-      void exitPromise.then((dispose) => dispose());
+      void outputPromise.then((dispose) => dispose()).catch(() => {});
+      void exitPromise.then((dispose) => dispose()).catch(() => {});
     };
   }, []);
 
@@ -389,6 +432,9 @@ export default function ActionsTab({
   const activityIds = useRef<Record<string, string>>({});
 
   const start = async (action: ProjectAction) => {
+    onRevealOutput?.(action.command);
+    if (runningIds.current.has(action.command)) return;
+    runningIds.current.add(action.command);
     setError(null);
     const values = inputValues[action.command] ?? {};
     const commandLine = substitute(action.command, values);
@@ -396,6 +442,7 @@ export default function ActionsTab({
     setRuns((previous) => ({
       ...previous,
       [action.command]: {
+        name: action.name,
         items: [],
         running: true,
         exitCode: null,
@@ -404,12 +451,14 @@ export default function ActionsTab({
       },
     }));
     try {
+      await listenersReady.current;
       await invoke("project_action_run", {
         project,
         runId: action.command,
         commandLine,
       });
     } catch (e) {
+      runningIds.current.delete(action.command);
       const activity = activityIds.current[action.command];
       if (activity) {
         delete activityIds.current[action.command];
@@ -418,7 +467,7 @@ export default function ActionsTab({
       setRuns((previous) => ({
         ...previous,
         [action.command]: {
-          items: [],
+          ...previous[action.command],
           running: false,
           exitCode: null,
           durationMs: null,
@@ -432,11 +481,13 @@ export default function ActionsTab({
   // die Lauf-Mechanik (Events, Output, Stop) bleibt hier an einer Stelle.
   const actionsRef = useRef<ProjectAction[]>([]);
   actionsRef.current = snapshot.data?.actions ?? [];
+  const startRef = useRef(start);
+  startRef.current = start;
   useEffect(() => {
     const handler = (event: Event) => {
       const command = (event as CustomEvent<string>).detail;
       const action = actionsRef.current.find((entry) => entry.command === command);
-      if (action && action.confirmed && runnable(action)) void start(action);
+      if (action && action.confirmed && runnable(action)) void startRef.current(action);
     };
     window.addEventListener("speccify:run-action", handler);
     return () => window.removeEventListener("speccify:run-action", handler);
@@ -461,7 +512,25 @@ export default function ActionsTab({
   const runnable = (action: ProjectAction) =>
     action.target === "local" && !action.command.startsWith("toolui:");
 
+  const stop = async (id: string) => {
+    try {
+      await invoke("project_action_stop", { runId: id });
+    } catch (e) {
+      setRuns((previous) => {
+        const run = previous[id];
+        if (!run) return previous;
+        const item: OutputItem = { kind: "line", text: `Stop fehlgeschlagen: ${String(e)}` };
+        return { ...previous, [id]: { ...run, items: [...run.items, item].slice(-MAX_ITEMS) } };
+      });
+    }
+  };
+
   return (
+    <>
+      {outputSlot && activeOutput && runs[activeOutput] ? createPortal(
+        <OutputPanel key={activeOutput} run={runs[activeOutput]} fill onStop={() => void stop(activeOutput)} />,
+        outputSlot,
+      ) : null}
     <LoadingBoundary loading={snapshot.loading} error={snapshot.error} label="Aktionen lesen…">
       <div className="max-w-3xl space-y-5 overflow-y-auto pr-1">
         <NavigatorPortal tab="actions" fallback={() => null}>
@@ -675,11 +744,15 @@ export default function ActionsTab({
                         ))}
                       </div>
                     ) : null}
-                    {run ? (
+                    {run && onRevealOutput ? (
+                      <button className="mt-2 text-xs text-blue-700 hover:underline" onClick={() => onRevealOutput(action.command)}>
+                        Ausgabe anzeigen{run.running ? " · läuft …" : ""}
+                      </button>
+                    ) : run ? (
                       <OutputPanel
                         run={run}
                         onStop={() =>
-                          void invoke("project_action_stop", { runId: action.command })
+                          void stop(action.command)
                         }
                       />
                     ) : null}
@@ -805,5 +878,6 @@ export default function ActionsTab({
         </section>
       </div>
     </LoadingBoundary>
+    </>
   );
 }

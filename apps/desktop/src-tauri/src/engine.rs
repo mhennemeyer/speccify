@@ -98,8 +98,16 @@ fn marker_path(app: &AppHandle) -> Result<PathBuf, String> {
 }
 
 /// Ausführbares aus der Engine-venv (z. B. `speccify-web-backend`).
-pub fn venv_bin(app: &AppHandle, name: &str) -> Result<PathBuf, String> {
-    Ok(venv_dir(app)?.join("bin").join(name))
+pub fn bin_dir(venv: &Path) -> PathBuf {
+    venv.join(if cfg!(windows) { "Scripts" } else { "bin" })
+}
+
+fn python_bin(venv: &Path) -> PathBuf {
+    bin_dir(venv).join(if cfg!(windows) {
+        "python.exe"
+    } else {
+        "python3"
+    })
 }
 
 fn read_payload(resources: &Path) -> Result<Payload, String> {
@@ -121,7 +129,7 @@ pub fn engine_status(app: AppHandle) -> Result<EngineStatus, String> {
     let venv = venv_dir(&app)?;
     let payload = resources_dir(&app).and_then(|res| read_payload(&res).ok());
     let marker = read_marker(&app);
-    let installed = venv.join("bin").join("python3").exists();
+    let installed = python_bin(&venv).exists();
 
     let payload_hash = payload.as_ref().map(|p| p.hash.clone());
     let installed_hash = marker.as_ref().map(|m| m.hash.clone());
@@ -221,7 +229,7 @@ pub fn engine_install(app: AppHandle) -> Result<EngineStatus, String> {
     let venv_str = venv.display().to_string();
     run_streamed(&app, &uv, &["venv", "--python", &payload.python, &venv_str])?;
 
-    let python = venv.join("bin").join("python3").display().to_string();
+    let python = python_bin(&venv).display().to_string();
     let requirements = resources
         .join("engine")
         .join("requirements.txt")

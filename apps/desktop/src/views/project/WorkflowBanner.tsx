@@ -13,6 +13,7 @@ interface WorkflowStatus {
   installed_version: number | null;
   current_version: number;
   pending: string[];
+  issues?: { path: string; kind: string; action: "install" | "manual"; message: string }[];
 }
 
 export default function WorkflowBanner({ project, refresh }: { project: string; refresh?: number }) {
@@ -30,8 +31,11 @@ export default function WorkflowBanner({ project, refresh }: { project: string; 
   if (!data || data.state === "current") return null;
 
   // Manuell zu prüfende Punkte kann install nicht beheben — trennen.
-  const manual = data.pending.filter((entry) => entry.includes("manuell"));
-  const installable = data.pending.filter((entry) => !entry.includes("manuell"));
+  const issues = data.issues ?? data.pending.map((message) => ({
+    path: message, kind: "legacy", action: message.includes("manuell") ? "manual" : "install", message,
+  }));
+  const manual = issues.filter((entry) => entry.action === "manual");
+  const installable = issues.filter((entry) => entry.action === "install");
 
   const install = async () => {
     setBusy(true);
@@ -43,6 +47,7 @@ export default function WorkflowBanner({ project, refresh }: { project: string; 
       await reload();
     } catch (e) {
       setError(String(e));
+      await reload();
     } finally {
       setBusy(false);
     }
@@ -55,17 +60,19 @@ export default function WorkflowBanner({ project, refresh }: { project: string; 
           <p className="font-semibold">
             {data.state === "missing"
               ? "Agent-Workflow ist noch nicht eingerichtet."
-              : `Agent-Workflow ist veraltet (v${data.installed_version} → v${data.current_version}).`}
+              : data.installed_version !== null && data.installed_version < data.current_version
+                ? `Agent-Workflow aktualisieren (v${data.installed_version} → v${data.current_version}).`
+                : "Workflow-Einrichtung braucht Prüfung."}
           </p>
           {installable.length > 0 ? (
             <p className="mt-1">
-              Einrichten ergänzt: {installable.join(" · ")} — Bestehendes wird
-              nie überschrieben.
+              Einrichten: {installable.map((entry) => entry.message).join(" · ")}.
+              Bekannte Vorlagen werden aktualisiert; eigene Änderungen bleiben erhalten.
             </p>
           ) : null}
           {manual.map((entry) => (
-            <p key={entry} className="mt-1 text-amber-700">
-              ⚠ {entry}
+            <p key={entry.path} className="mt-1 text-amber-700">
+              ⚠ {entry.message}
             </p>
           ))}
           {error ? <p className="mt-1 text-red-700">{error}</p> : null}

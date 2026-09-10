@@ -533,25 +533,6 @@ pub(crate) fn heading_title(body: &str) -> Option<String> {
     first_heading(body)
 }
 
-fn count_tasks(body: &str) -> (u32, u32) {
-    let mut done = 0;
-    let mut total = 0;
-    for line in body.lines() {
-        let trimmed = line.trim_start();
-        let rest = trimmed
-            .strip_prefix("- ")
-            .or_else(|| trimmed.strip_prefix("* "));
-        let Some(rest) = rest else { continue };
-        if rest.starts_with("[ ]") {
-            total += 1;
-        } else if rest.starts_with("[x]") || rest.starts_with("[X]") {
-            total += 1;
-            done += 1;
-        }
-    }
-    (done, total)
-}
-
 #[derive(Serialize)]
 pub struct TicketEntry {
     /// Relativ zur Projektwurzel (Schlüssel für `project_board_move`).
@@ -572,6 +553,7 @@ pub struct TicketEntry {
     /// `- [x]` von `- [ ]`+`- [x]` im Body.
     tasks_done: u32,
     tasks_total: u32,
+    tasks: Vec<crate::spec_tasks::SpecTask>,
     archived: bool,
     /// Laufende Nummer aus dem Ordnernamen (`012-slug`), wenn vergeben.
     number: Option<u32>,
@@ -644,7 +626,9 @@ pub fn project_board(project: String) -> Result<Vec<TicketEntry>, String> {
                     "Backlog".into()
                 }
             });
-        let (tasks_done, tasks_total) = count_tasks(body);
+        let tasks = crate::spec_tasks::parse_tasks(body);
+        let tasks_done = tasks.iter().filter(|task| task.done).count() as u32;
+        let tasks_total = tasks.len() as u32;
         let number = spec_number_of(&id);
         specs.push(TicketEntry {
             file: path
@@ -670,6 +654,7 @@ pub fn project_board(project: String) -> Result<Vec<TicketEntry>, String> {
                 .map(str::to_string),
             tasks_done,
             tasks_total,
+            tasks,
             archived,
             number,
             body: body.to_string(),

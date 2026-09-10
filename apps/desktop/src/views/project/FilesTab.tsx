@@ -9,6 +9,7 @@ import type { ReactNode } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import CodeEditor from "../../components/CodeEditor";
+import FileTypeIcon from "../../components/FileTypeIcon";
 import DiffView from "../../components/DiffView";
 import {
   type BlameLine,
@@ -67,24 +68,6 @@ function formatSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} kB`;
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
-}
-
-function FolderIcon({ open }: { open: boolean }) {
-  return (
-    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true">
-      <path d="M2 4.5A1.5 1.5 0 0 1 3.5 3h3l1.5 1.5h4.5A1.5 1.5 0 0 1 14 6v6.5a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 12.5z" />
-      {open ? <path d="M2 7.5h12" /> : null}
-    </svg>
-  );
-}
-
-function FileIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true">
-      <path d="M4 2h5l3 3v9H4z" />
-      <path d="M9 2v3h3" />
-    </svg>
-  );
 }
 
 function RenameForm({
@@ -508,7 +491,7 @@ export default function FilesTab({
               className="flex w-full items-center gap-1.5 rounded px-2 py-0.5 text-left text-[13px] text-slate-700 hover:bg-slate-100"
               style={{ paddingLeft: 8 + depth * 14 }}
             >
-              <span className="text-slate-400"><FolderIcon open={isOpen} /></span>
+              <FileTypeIcon path={entry.path} folder open={isOpen} />
               <span className="truncate">{entry.name}</span>
             </button>
             {isOpen ? renderDir(entry.path, depth + 1) : null}
@@ -521,13 +504,12 @@ export default function FilesTab({
         <button
           key={entry.path}
           onClick={() => void openFile(entry.path)}
-          className={`flex w-full items-center gap-1.5 rounded px-2 py-0.5 text-left text-[13px] ${
-            active === entry.path ? "bg-slate-800 text-white" : "text-slate-700 hover:bg-slate-100"
-          }`}
+          aria-current={active === entry.path ? "true" : undefined}
+          className="file-row flex w-full items-center gap-1.5 rounded px-2 py-0.5 text-left text-[13px] text-slate-700 hover:bg-slate-100"
           style={{ paddingLeft: 8 + depth * 14 }}
           title={entry.path}
         >
-          <span className={active === entry.path ? "text-slate-300" : "text-slate-400"}><FileIcon /></span>
+          <FileTypeIcon path={entry.path} />
           <span className="truncate">{entry.name}</span>
           {opened && opened.text !== opened.saved ? <span className="ml-auto text-amber-500">●</span> : null}
         </button>

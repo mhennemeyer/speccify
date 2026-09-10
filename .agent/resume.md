@@ -1,5 +1,9 @@
 # Resume — Speccify Phase 5c abgeschlossen (Visual-Regression-Skeleton)
 
+> Historischer Stand, kein aktueller Session-Einstieg. Lies [agent.md](agent.md),
+> die [Playbooks](playbooks/weiterentwicklung.md) und das aktuelle Spec-Board.
+> Die folgenden Angaben dokumentieren ausschließlich den damaligen Stand.
+
 > Einstiegspunkt für die nächste Session. Letzte Aktualisierung: 2026-05-29 (Phase-5c-Final).
 
 ## Status

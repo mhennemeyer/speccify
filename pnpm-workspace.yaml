@@ -1,3 +1,10 @@
 packages:
   - "apps/marketing"
   - "apps/desktop"
+
+# Dependency install scripts are an explicit project decision.
+onlyBuiltDependencies:
+  - esbuild
+  - sharp
+strictDepBuilds: true
+engineStrict: true

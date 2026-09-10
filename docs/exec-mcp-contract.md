@@ -7,6 +7,43 @@ Commit `2949d1d`); Kontrakt-Gegenseite ist die Mac-App **iKanbanAi**
 (`ExecStreamClient.swift`). **Der Rust-Port übernimmt alle Semantiken und
 Fehlertexte wörtlich** — nur `serverInfo.name`/`version` und das GET-Banner
 dürfen abweichen (der Diff-Harness normalisiert genau diese Felder).
+Seit Spec 014 ergänzt der Rust-Port davor die unten beschriebene lokale
+HTTP-Sicherheitsgrenze. Erfolgreiche RPC-/SSE-Nutzlasten bleiben unverändert;
+unsichere oder übergroße HTTP-Anfragen müssen nicht referenzkompatibel sein.
+
+## Lokale HTTP-Sicherheitsgrenze (Rust)
+
+Gilt gemeinsam für Exec, Discovery, Parallels und Desktop-UI, vor Banner,
+JSON-RPC und `/stream`:
+
+- `Host` genau einmal: `127.0.0.1:<Listen-Port>` oder `localhost:<Listen-Port>`
+  (Groß-/Kleinschreibung des Namens egal). Nur bei Port 80 darf die Portangabe
+  fehlen. Fremde Namen/Ports, fehlende oder doppelte Hosts → **403**.
+  Proxy-Header ersetzen die Prüfung nicht; Bindung bleibt IPv4-Loopback.
+- Die Browser-Origin-Allowlist ist leer. Jeder `Origin`-Header → **403**, auch
+  `null`, leer und localhost. Keine CORS-Freigabe/Preflight-Ausnahme. Native
+  Clients senden keinen Origin. Eine neue Browserintegration benötigt zuerst
+  einen expliziten Sicherheitsvertrag; Loopback allein ist keine Freigabe.
+- Nur `GET` (bestehendes Banner) und `POST`; sonst **405**, `Allow: GET, POST`.
+- `POST` braucht genau einen `Content-Type: application/json` (Parameter wie
+  `charset=utf-8` erlaubt), sonst **415**. Damit werden auch einfache
+  Browser-Formular-/Textanfragen nicht als RPC interpretiert.
+- Maximal **1 MiB Anfragekörper**, auch bei `Transfer-Encoding: chunked`;
+  größere deklarierte/empfangene Bodies → **413**. Grenze gilt nicht für
+  SSE-Ausgaben. Ungültiges/mehrdeutiges Framing oder verkürzte Bodies → **400**.
+- Transportfehler enthalten `{"error":{"code":"…","message":"…"}}`;
+  ungültiges JSON behält den unten beschriebenen JSON-RPC-Parsefehler.
+
+Dies erfüllt die für diesen Ausbau gewählte Host-/Origin-/Body-Grenze,
+nicht vollständige MCP-Konformität oder Authentifizierung. Andere lokale
+Programme können ohne Origin weiter zugreifen; Exec-Allowlist bleibt wichtig.
+GET liefert aus Kompatibilitätsgründen weiterhin das historische Banner, keinen
+MCP-GET-Stream. Header-Timeouts, Verbindungslimits und Schutz gegen langsame
+Clients sind nicht Gegenstand dieser Änderung. stdio bleibt unverändert.
+
+Grundlage: [MCP-Transport 2025-03-26, Security Warning](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports).
+Prüfung: `cargo test -p speccify-mcp-core` und der reine Lese-Smoke-Test
+`python scripts/test_mcp_http_boundary.py --url http://127.0.0.1:18768 --expect-server speccify-desktop-ui-mcp`.
 
 ## HTTP-Layer
 
@@ -98,7 +135,7 @@ Datei fehlt → `[]`.
 ## `POST …/stream` (SSE — iKanbanAi-Ausgabefenster)
 
 Request-Body: `{"command": "...", "project": "<abs. Pfad>"}` (kein JSON-RPC).
-Antwort immer `200`, `Content-Type: text/event-stream`, `Cache-Control: no-cache`;
+Nach bestandener HTTP-Eingangsprüfung Antwort `200`, `Content-Type: text/event-stream`, `Cache-Control: no-cache`;
 je Event eine Zeile `data: <json>\n\n` (`ensure_ascii=False`), geflusht.
 
 - je Ausgabezeile: `{"type":"line","text":"…"}` — **stderr in stdout

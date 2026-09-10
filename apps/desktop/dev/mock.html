@@ -30,6 +30,7 @@
         open_question: null,
         tasks_done: 0,
         tasks_total: 0,
+        tasks: [],
         archived: false,
         number: null,
       };
@@ -44,6 +45,7 @@
           number: 12,
           tasks_done: 2,
           tasks_total: 3,
+          tasks: [{ index: 0, done: true, text: "Datei anlegen" }, { index: 1, done: true, text: "Zahlen eintragen" }, { index: 2, done: false, text: "Prüfen und Verification schreiben" }],
           body: "## Scope\nEine Notiz `notes/zahlen.md` mit den Quadratzahlen 1–5 als Liste.\n\n## Akzeptanz\nDatei existiert, fünf Zeilen, Zahlen stimmen.\n\n## Tasks\n\n- [x] Datei anlegen\n- [x] Zahlen eintragen\n- [ ] Prüfen und Verification schreiben",
         },
         {
@@ -98,23 +100,59 @@
         "CLAUDE.md": "# Speccify agent guidance\n\n@.agent/agent.md\n",
         ".agent/agent.md": "# w1-projekt\n\nSprache Deutsch. Board-Workflow nach Speccify.\n",
       };
+      const eventListeners = new Map();
+      let eventId = 0;
+      const actionStarts = [];
+      const emit = (event, payload) => {
+        for (const [id, listener] of eventListeners) {
+          if (listener.event === event) window[`_${listener.handler}`]({ event, id, payload });
+        }
+      };
+      window.__SPECCIFY_MOCK__ = { emit, actionStarts, failStart: false, failStop: false, taskCalls: [], staleTaskOnce: false, specs: tickets, workflowInstalls: 0 };
+      const workflowDemo = new URLSearchParams(location.search).get("workflow");
+      const workflowStatus = () => {
+        const issues = workflowDemo ? [
+          { path: ".claude/skills", kind: "wrong_target", action: "manual", message: ".claude/skills: fremdes Ziel (manuell prüfen; bleibt erhalten)" },
+          ...(workflowDemo !== "manual" && window.__SPECCIFY_MOCK__.workflowInstalls === 0 ? [
+            { path: ".agent/skills/spec-next/SKILL.md", kind: "missing", action: "install", message: "Skill spec-next fehlt" },
+          ] : []),
+        ] : [];
+        return { state: issues.length ? "outdated" : "current", installed_version: 4, current_version: 4, pending: issues.map(i => i.message), issues };
+      };
+      window.__TAURI_EVENT_PLUGIN_INTERNALS__ = { unregisterListener: () => {} };
       const responses = {
+        desktop_ui_endpoint: () => "http://127.0.0.1:18768",
         project_current: () => project,
         project_watch_start: () => null,
         project_watch_stop: () => null,
-        project_workflow_status: () => ({ state: "current", installed_version: 2, current_version: 2, pending: [] }),
+        project_workflow_status: workflowStatus,
+        project_workflow_install: () => { window.__SPECCIFY_MOCK__.workflowInstalls++; return workflowStatus(); },
         project_board: () => orEmpty(tickets),
         project_board_kpis: () => ({ run_count: 1, tokens_in: 30000, tokens_out: 1500, duration_ms: 120000, recent: [] }),
         project_ticket_history: ({ ticketId }) => history[ticketId] ?? [],
         project_ticket_questions: ({ file }) => questions[file] ?? [],
         project_ticket_answer: () => null,
-        project_spec_toggle_task: () => null,
+        project_spec_toggle_task: ({ file, index, done, expectedBody }) => {
+          const spec = tickets.find(s => s.file === file);
+          window.__SPECCIFY_MOCK__.taskCalls.push({ file, index, done, expectedBody });
+          if (window.__SPECCIFY_MOCK__.staleTaskOnce) {
+            window.__SPECCIFY_MOCK__.staleTaskOnce = false;
+            spec.body += "\nExterne Änderung bleibt erhalten.\n";
+          }
+          if (spec.body !== expectedBody) return Promise.reject("SPEC_CHANGED: Spec wurde zwischenzeitlich geändert. Bitte neu laden und erneut wählen.");
+          const task = spec.tasks[index];
+          spec.body = spec.body.replace(`- [${task.done ? "x" : " "}] ${task.text}`, `- [${done ? "x" : " "}] ${task.text}`);
+          task.done = done;
+          spec.tasks_done = spec.tasks.filter(t => t.done).length;
+          return null;
+        },
         project_spec_archive: ({ file }) => file.replace("/specs/", "/specs/archive/2026-09-09-"),
         project_specs_number: () => ["013-live-test", "014-notizen-ordner"],
         project_read_file: ({ file }) => files[file] ?? `# ${file}\n\n(leer)\n`,
         project_write_file: () => null,
         project_tree: ({ dir }) => {
-          const all = Object.keys(files).concat(["notes/zahlen.md", "src/main.py", "README.md"]);
+          const all = Object.keys(files).concat(["notes/zahlen.md", "src/main.py", "README.md"],
+            new URLSearchParams(location.search).has("colors") ? ["package.json", "logo.svg", "unknown.xyz"] : []);
           const prefix = dir ? dir + "/" : "";
           const seen = new Map();
           for (const f of all) {
@@ -147,7 +185,23 @@
         }),
         project_playbook_create: ({ name }) => `.agent/playbooks/${name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.md`,
         project_playbook_delete: () => null,
-        project_action_run: () => null,
+        project_action_run: ({ runId }) => {
+          if (window.__SPECCIFY_MOCK__.failStart) throw new Error("mock start failed");
+          actionStarts.push(runId);
+          emit("action-output", { run_id: runId, line: "Erste Ausgabe direkt beim Start" });
+          if (new URLSearchParams(location.search).get("actions") !== "manual") {
+            setTimeout(() => {
+              emit("action-output", { run_id: runId, line: "7 Tests bestanden" });
+              emit("action-exit", { run_id: runId, exit_code: 0, duration_ms: 300, error: null });
+            }, 300);
+          }
+          return null;
+        },
+        project_action_stop: ({ runId }) => {
+          if (window.__SPECCIFY_MOCK__.failStop) throw new Error("mock stop failed");
+          emit("action-exit", { run_id: runId, exit_code: null, duration_ms: 400, error: "gestoppt" });
+          return null;
+        },
         project_git_status: () => EMPTY
           ? { repo: false, branch: null, upstream: null, ahead: 0, behind: 0, entries: [], error: null }
           : {
@@ -230,13 +284,23 @@
         help_doc: () => "# Die App bedienen\n\nText.\n",
         get_settings: () => ({ working_dir: null, terminal_autostart_command: "claude", skill_library: null, theme: "light", skill_sources: SOURCES.filter((s) => s.scope === "global").map((s) => s.location) }),
         save_settings: () => null,
-        terminal_open: () => project,
+        terminal_open: () => ({ cwd: project, startup: null }),
+        project_agent_startup: () => ({ project, shell: "/bin/zsh", host: "agent", host_path: "/usr/local/bin/codex", host_version: "mock", host_ready: true, runtime_source: "workspace", runtime_dir: project + "/.venv/bin", shell_cli: "/usr/local/bin/speccify", effective_cli: project + "/.venv/bin/speccify", missing_commands: [], warnings: [], error: null }),
         terminal_write: () => null,
         terminal_resize: () => null,
         terminal_kill: () => null,
         "plugin:event|emit": () => null,
-        "plugin:event|listen": () => 1,
-        "plugin:event|unlisten": () => null,
+        "plugin:event|listen": ({ event, handler }) => {
+          const id = ++eventId;
+          const mode = new URLSearchParams(location.search).get("listeners");
+          if (event.startsWith("action-") && mode === "fail") return Promise.reject("mock listener failed");
+          if (event.startsWith("action-") && mode === "delayed") return new Promise((resolve) => {
+            setTimeout(() => { eventListeners.set(id, { event, handler }); resolve(id); }, 1000);
+          });
+          eventListeners.set(id, { event, handler });
+          return id;
+        },
+        "plugin:event|unlisten": ({ eventId }) => { eventListeners.delete(eventId); return null; },
       };
       let callbackId = 0;
       window.__TAURI_INTERNALS__ = {
@@ -258,7 +322,7 @@
           const fn = responses[cmd];
           console.log("[mock invoke]", cmd, cmd === "terminal_open" ? JSON.stringify(args) : "");
           if (!fn) return Promise.reject(`mock: unbekanntes Kommando ${cmd}`);
-          return Promise.resolve(fn(args ?? {}));
+          return Promise.resolve(fn(args ?? {})).then(value => structuredClone(value));
         },
       };
     </script>

@@ -5,8 +5,10 @@
 //! Methode → -32601, Tool-Ergebnisse als `{content:[{type:"text",…}],isError}`.
 
 pub mod allowlist;
+mod http_security;
+pub use http_security::MAX_HTTP_BODY_BYTES;
 
-use std::io::{BufRead, Write};
+use std::io::{BufRead, Read, Write};
 use std::sync::Arc;
 
 use serde_json::{Map, Value, json};
@@ -85,6 +87,8 @@ pub fn serve_http(
 ) -> Result<(), String> {
     let http = tiny_http::Server::http(("127.0.0.1", port))
         .map_err(|e| format!("HTTP-Server auf Port {port}: {e}"))?;
+    // Port 0 selects an ephemeral port; validate the actual bound authority.
+    let port = http.server_addr().to_ip().expect("TCP listener").port();
     let http = Arc::new(http);
     loop {
         let request = match http.recv() {
@@ -94,7 +98,7 @@ pub fn serve_http(
         let server = Arc::clone(&server);
         let stream = stream.clone();
         std::thread::spawn(move || {
-            let _ = handle_http_request(server.as_ref(), request, banner, stream);
+            let _ = handle_http_request(server.as_ref(), request, port, banner, stream);
         });
     }
 }
@@ -112,15 +116,39 @@ fn json_response(payload: &str, status: u32) -> tiny_http::Response<std::io::Cur
 fn handle_http_request(
     server: &dyn ToolServer,
     mut request: tiny_http::Request,
+    port: u16,
     banner: &'static str,
     stream: Option<Arc<StreamHandler>>,
 ) -> std::io::Result<()> {
+    if let Err(rejection) = http_security::validate(&request, port) {
+        let payload = json!({"error": {"code": rejection.code, "message": rejection.message}});
+        let mut response = json_response(&payload.to_string(), rejection.status.into());
+        if rejection.status == 405 {
+            response.add_header(tiny_http::Header::from_bytes("Allow", "GET, POST").unwrap());
+        }
+        return request.respond(response);
+    }
     if request.method() == &tiny_http::Method::Get {
         return request.respond(tiny_http::Response::from_string(banner));
     }
-    let mut raw = String::new();
-    let _ = request.as_reader().read_to_string(&mut raw);
-    let Ok(body) = serde_json::from_str::<Value>(&raw) else {
+    let mut raw = Vec::new();
+    let read = request
+        .as_reader()
+        .take((MAX_HTTP_BODY_BYTES + 1) as u64)
+        .read_to_end(&mut raw);
+    if raw.len() > MAX_HTTP_BODY_BYTES {
+        return request.respond(json_response(
+            r#"{"error":{"code":"body_too_large","message":"Request body exceeds the 1 MiB limit."}}"#, 413,
+        ));
+    }
+    if read.is_err()
+        || request
+            .body_length()
+            .is_some_and(|length| length != raw.len())
+    {
+        return request.respond(json_response(PARSE_ERROR, 400));
+    }
+    let Ok(body) = serde_json::from_slice::<Value>(&raw) else {
         return request.respond(json_response(PARSE_ERROR, 400));
     };
 
@@ -229,6 +257,9 @@ pub fn serve_stdio(server: &dyn ToolServer) {
         }
     }
 }
+
+#[cfg(test)]
+mod http_tests;
 
 #[cfg(test)]
 mod tests {

@@ -5,7 +5,7 @@
 // localStorage — sie gehören nicht ins Repository.
 
 export type TerminalDock = "right" | "bottom";
-export type RightTab = "inspector" | "terminal";
+export type RightTab = "inspector" | "terminal" | `output:${string}`;
 
 export interface ProjectLayout {
   navWidth: number;
@@ -92,7 +92,9 @@ export function loadLayout(project: string): ProjectLayout {
   layout.navWidth = clamp(layout.navWidth, LAYOUT_LIMITS.nav);
   layout.rightWidth = clamp(layout.rightWidth, LAYOUT_LIMITS.right);
   layout.bottomHeight = clamp(layout.bottomHeight, LAYOUT_LIMITS.bottom);
-  if (layout.terminalDock === "bottom" && layout.rightTab === "terminal") {
+  // Action output lives only in this window's memory, not across restarts.
+  if ((layout.rightTab !== "inspector" && layout.rightTab !== "terminal") ||
+      (layout.terminalDock === "bottom" && layout.rightTab === "terminal")) {
     layout.rightTab = "inspector";
   }
   return layout;

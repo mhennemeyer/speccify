@@ -1,0 +1,44 @@
+[
+  {
+    "name": "Tests",
+    "command": ".venv/bin/python -u scripts/project_actions.py quick-tests",
+    "description": "Schneller Demo-Check: die 7 Startskript-Tests mit Live-Ausgabe. Kein vollständiger Projekttest.",
+    "source": "bo",
+    "confirmed": true,
+    "toolbar": true,
+    "target": "local"
+  },
+  {
+    "name": "Desktop-Tests",
+    "command": ".venv/bin/python -u scripts/project_actions.py desktop-tests",
+    "description": "Rust-Tests der Desktop-App. Ein nötiger Compile kann etwas dauern; die laufende App bleibt offen.",
+    "source": "bo",
+    "confirmed": true,
+    "target": "local"
+  },
+  {
+    "name": "Typecheck",
+    "command": ".venv/bin/python -u scripts/project_actions.py typecheck",
+    "description": "Prüft das Desktop-Frontend mit TypeScript, ohne App-Neustart.",
+    "source": "bo",
+    "confirmed": true,
+    "target": "local"
+  },
+  {
+    "name": "Git-Überblick",
+    "command": ".venv/bin/python -u scripts/project_actions.py git-status",
+    "description": "Zeigt Branch und geänderte/unversionierte Dateien. Kein Stage, Commit, Pull oder Push.",
+    "source": "bo",
+    "confirmed": true,
+    "target": "local"
+  },
+  {
+    "name": "Live-Diagramm",
+    "command": ".venv/bin/python -u scripts/project_actions.py chart-demo",
+    "description": "Kurze SHA-256-Messreihe im Arbeitsspeicher mit echten MiB/s-Werten. Demo des Diagrammformats, kein App-Profiling.",
+    "source": "bo",
+    "confirmed": true,
+    "toolbar": true,
+    "target": "local"
+  }
+]

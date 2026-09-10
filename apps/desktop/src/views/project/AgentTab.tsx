@@ -18,6 +18,7 @@ import {
   inlineInspector,
 } from "../../lib/panels";
 import { copyPrompt } from "../../lib/prompt";
+import AgentStartup from "../../components/AgentStartup";
 
 export default function AgentTab({
   project,
@@ -82,6 +83,7 @@ export default function AgentTab({
           ))}
         </div>
       </div>
+      <AgentStartup project={project} command={agentCommand} />
       <LoadingBoundary loading={files.loading} error={files.error} label="Agent-Dateien suchen…">
         {available.length === 0 ? (
           <>

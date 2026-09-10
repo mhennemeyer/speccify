@@ -21,6 +21,27 @@ export interface DoctorCheck {
 
 export const fetchDoctor = () => invoke<{ checks: DoctorCheck[] }>("doctor");
 
+export const fetchDesktopUiEndpoint = () => invoke<string>("desktop_ui_endpoint");
+
+export interface AgentStartupReport {
+  project: string;
+  shell: string;
+  host: "agent" | "shell" | "custom";
+  host_path: string | null;
+  host_version: string | null;
+  host_ready: boolean;
+  runtime_source: "workspace" | "engine" | "shell";
+  runtime_dir: string | null;
+  shell_cli: string | null;
+  effective_cli: string | null;
+  missing_commands: string[];
+  warnings: string[];
+  error: string | null;
+}
+
+export const fetchAgentStartup = (project: string, command: string) =>
+  invoke<AgentStartupReport>("project_agent_startup", { project, command });
+
 export interface PythonsInfo {
   installed: { path: string; version: string | null }[];
   available: string[];

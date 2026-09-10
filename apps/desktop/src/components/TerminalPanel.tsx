@@ -12,6 +12,8 @@ import { FitAddon } from "@xterm/addon-fit";
 import "@xterm/xterm/css/xterm.css";
 import { beginActivity, endActivity } from "../lib/activity";
 import { showTab } from "../lib/panels";
+import type { AgentStartupReport } from "../lib/system";
+import { StartupDetails } from "./AgentStartup";
 
 /** Relativer Pfad mit Endung + `:zeile` (optional `:spalte`), wie Compiler
  *  und Test-Runner ihn ausgeben; absolute Pfade und URLs bleiben außen vor. */
@@ -28,10 +30,12 @@ export default function TerminalPanel({
   visible,
   cwd: cwdProp,
   autostart,
+  onOpened,
 }: {
   visible: boolean;
   cwd?: string;
   autostart?: string;
+  onOpened?: (command: string) => void;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -54,6 +58,9 @@ export default function TerminalPanel({
   const [generation, setGeneration] = useState(0);
   const [cwd, setCwd] = useState<string>("");
   const [status, setStatus] = useState<string>("");
+  const [startup, setStartup] = useState<AgentStartupReport | null>(null);
+  const onOpenedRef = useRef(onOpened);
+  onOpenedRef.current = onOpened;
 
   const restart = useCallback(() => {
     const oldId = idRef.current;
@@ -68,6 +75,7 @@ export default function TerminalPanel({
     const id = `term-${Date.now()}-${generation}`;
     idRef.current = id;
     setStatus("");
+    setStartup(null);
 
     const terminal = new Terminal({
       fontSize: 12,
@@ -140,40 +148,46 @@ export default function TerminalPanel({
 
     void (async () => {
       try {
-        const startedIn = await invoke<string>("terminal_open", {
-          id,
-          cols: terminal.cols,
-          rows: terminal.rows,
-          cwd: cwdProp,
-          autostart,
+        unlisteners.push(
+          await listen<TermOut>("term-out", (event) => {
+            if (event.payload.id !== id) return;
+            terminal.write(event.payload.data);
+            // Output indicates terminal activity, not a successful task.
+            if (!busyRef.current) busyRef.current = beginActivity("agent", "Agent-Terminal arbeitet");
+            if (idleTimer.current) clearTimeout(idleTimer.current);
+            idleTimer.current = setTimeout(() => {
+              if (busyRef.current) endActivity(busyRef.current, "ok");
+              busyRef.current = null;
+            }, 2500);
+          }),
+          await listen<TermOut>("term-exit", (event) => {
+            if (event.payload.id === id) {
+              terminal.writeln("\r\n\x1b[33m[Shell beendet — bitte 'Neu starten']\x1b[0m");
+            }
+          }),
+        );
+        if (disposed) {
+          unlisteners.forEach((unlisten) => unlisten());
+          return;
+        }
+        setStatus("Startumgebung wird geprüft…");
+        const opened = await invoke<{ cwd: string; startup: AgentStartupReport | null }>("terminal_open", {
+          id, cols: terminal.cols, rows: terminal.rows, cwd: cwdProp, autostart,
         });
-        if (!disposed) setCwd(startedIn);
+        if (disposed) {
+          await invoke("terminal_kill", { id });
+          return;
+        }
+        setCwd(opened.cwd);
+        setStartup(opened.startup);
+        setStatus("");
+        onOpenedRef.current?.(autostart ?? "");
       } catch (error) {
         if (!disposed) {
           setStatus(String(error));
           terminal.writeln(`\x1b[31m${String(error)}\x1b[0m`);
         }
-        return;
       }
-      unlisteners.push(
-        await listen<TermOut>("term-out", (event) => {
-          if (event.payload.id !== id) return;
-          terminal.write(event.payload.data);
-          // W7: solange Ausgabe fließt, gilt das Terminal als „arbeitet" —
-          // die Aktivitätsanzeige zeigt so, dass der Agent gerade etwas tut.
-          if (!busyRef.current) busyRef.current = beginActivity("agent", "Agent-Terminal arbeitet");
-          if (idleTimer.current) clearTimeout(idleTimer.current);
-          idleTimer.current = setTimeout(() => {
-            if (busyRef.current) endActivity(busyRef.current, "ok");
-            busyRef.current = null;
-          }, 2500);
-        }),
-        await listen<TermOut>("term-exit", (event) => {
-          if (event.payload.id === id) {
-            terminal.writeln("\r\n\x1b[33m[Shell beendet — bitte 'Neu starten']\x1b[0m");
-          }
-        }),
-      );
     })();
 
     const dataListener = terminal.onData((data) => {
@@ -222,6 +236,12 @@ export default function TerminalPanel({
   // nur der Terminal-Inhalt, damit AskBoPanel darüber wohnen kann.
   return (
     <div className="flex min-h-0 flex-1 flex-col">
+      {startup ? (
+        <details className="max-h-40 overflow-y-auto border-b border-slate-700 px-3 py-2 text-slate-400">
+          <summary className="cursor-pointer text-xs">Startumgebung{startup.warnings.length ? ` · ${startup.warnings.length} Hinweise` : ""}</summary>
+          <StartupDetails report={startup} />
+        </details>
+      ) : null}
       <div className="flex items-center gap-2 border-b border-slate-700 px-3 py-1.5">
         <span className="text-xs font-semibold text-slate-300">Agent-Terminal</span>
         <span className="truncate font-mono text-[10px] text-slate-500" title={cwd}>

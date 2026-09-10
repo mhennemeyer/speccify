@@ -1,8 +1,10 @@
 ## Spec workflow
 
-You are the product owner _and_ the implementer — there is no second agent.
-The Speccify app never drives you; it only watches files. Everything below is
-plain files inside this project.
+The human owns priorities, authorization and acceptance; you implement the
+requested spec. The Speccify app watches project files, it does not grant
+permission or direct your work. Explicit project and host rules take
+precedence over these workflow defaults, including commit/push permissions
+and attribution/provenance restrictions.
 
 ### Where everything lives
 
@@ -49,6 +51,8 @@ the spec.
 3. Work through `## Tasks`: tick `- [x]` as you go, add tasks you discover
    (mark them `(added)`), keep short notes indented under a task. Never
    rewrite front matter you do not own.
+   The board counts Markdown task lists throughout the spec body, excluding
+   code blocks. Put illustrative checkboxes in fenced code blocks.
 4. Record decisions in `## Decisions` and what you verified in
    `## Verification` — commands, results, screenshots, click-throughs.
 5. **Done means:** every task ticked, `## Verification` written, an
@@ -82,12 +86,14 @@ The app only logs what it changes itself. Append one JSON line per event to
 `.agent/specs/<slug>/history.jsonl`:
 
 ```json
-{"timestamp":"2026-09-09T10:00:00Z","spec_id":"my-spec","event_type":"agent_run","actor":"agent:claude","summary":"Tasks 3–5: …; skills: speccify","tokens_in":1200,"tokens_out":300,"tokens_cache_read":8000,"tokens_cache_write":0,"duration_ms":45000}
+{"timestamp":"2026-09-09T10:00:00Z","spec_id":"my-spec","event_type":"agent_run","actor":"project","summary":"Tasks 3–5: …; skills: speccify"}
 ```
 
 `event_type` ∈ `spec_created | spec_edited | station_changed | agent_run`;
 token and duration fields belong to `agent_run` lines only. Name the skills
 and tools you used in `summary`.
+Use an actor label permitted by the project's provenance rules. Include
+token/duration measurements only when actually available; do not invent them.
 
 ### Project actions
 
@@ -101,4 +107,5 @@ without a shell — no `&&`, pipes or `$(…)`; put chains into a script.
 - Never write secrets into `.agent/settings.json`, `.mcp.json`,
   `.codex/config.toml`, or any tracked file.
 - Mention the spec id (`012-slug`) in commit message bodies when you commit.
-- Do not commit or push unless the human asks for it.
+- Commit/push only within explicit authorization, including standing project
+  permissions. This default does not revoke permissions already granted.

@@ -184,7 +184,9 @@ pub fn create_briefing_file(working_dir: String, id: String) -> Result<String, S
     if let Some(parent) = target.parent() {
         std::fs::create_dir_all(parent).map_err(|e| format!("{}: {e}", parent.display()))?;
     }
-    std::fs::write(&target, template.content).map_err(|e| format!("{}: {e}", target.display()))?;
+    let content =
+        crate::desktop_ui::render_endpoint(template.content, crate::desktop_ui::configured_port()?);
+    std::fs::write(&target, content).map_err(|e| format!("{}: {e}", target.display()))?;
     Ok(target.display().to_string())
 }
 

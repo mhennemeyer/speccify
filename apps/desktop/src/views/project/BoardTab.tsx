@@ -34,6 +34,7 @@ export interface SpecEntry {
   open_question: string | null;
   tasks_done: number;
   tasks_total: number;
+  tasks: Task[];
   archived: boolean;
   /** Laufende Nummer aus dem Ordnernamen (`012-slug`). */
   number: number | null;
@@ -80,6 +81,7 @@ interface KpiSummary {
 }
 
 const STATIONS = ["Backlog", "Doing", "Done"] as const;
+const STATION_TONES: Record<string, string> = { Backlog: "slate", Doing: "blue", Done: "green" };
 const STATION_LABELS: Record<string, string> = {
   Backlog: "Backlog",
   Doing: "Doing",
@@ -117,19 +119,6 @@ interface Task {
   index: number;
   text: string;
   done: boolean;
-}
-
-/** `- [ ]`/`- [x]`-Zeilen in Reihenfolge — der Index ist der Schlüssel
- *  für `project_spec_toggle_task` (Rust zählt genauso). */
-export function parseTasks(body: string): Task[] {
-  const tasks: Task[] = [];
-  for (const raw of body.split("\n")) {
-    const line = raw.trimStart();
-    const match = /^[-*] \[( |x|X)\] ?(.*)$/.exec(line);
-    if (!match) continue;
-    tasks.push({ index: tasks.length, done: match[1] !== " ", text: match[2] });
-  }
-  return tasks;
 }
 
 function abbreviate(value: number): string {
@@ -193,7 +182,8 @@ function Progress({ spec, compact = false }: { spec: SpecEntry; compact?: boolea
     <span className={`flex items-center gap-1.5 ${compact ? "text-[10px]" : "text-xs"} text-slate-500`}>
       <span className="h-1.5 w-16 overflow-hidden rounded-full bg-slate-200">
         <span
-          className={`block h-full ${percent === 100 ? "bg-emerald-500" : "bg-slate-500"}`}
+          data-tone={percent === 100 ? "green" : "blue"}
+          className="tone-fill block h-full"
           style={{ width: `${percent}%` }}
         />
       </span>
@@ -218,14 +208,14 @@ function SpecCard({
 }) {
   return (
     <div
+      data-tone={STATION_TONES[spec.station] ?? "slate"}
+      data-selected={selected}
       draggable={!spec.archived}
       onDragStart={(event) => {
         event.dataTransfer.setData("text/speccify-spec", spec.file);
         event.dataTransfer.effectAllowed = "move";
       }}
-      className={`rounded-lg border p-2 ${spec.archived ? "opacity-70" : "cursor-grab active:cursor-grabbing"} ${
-        selected ? "border-slate-800 bg-white shadow-sm" : "border-slate-200 bg-white"
-      }`}
+      className={`spec-card rounded-lg border p-2 ${spec.archived ? "opacity-70" : "cursor-grab active:cursor-grabbing"}`}
     >
       <button
         onClick={onSelect}
@@ -523,7 +513,7 @@ function SpecDetail({
   inInspector: boolean;
 }) {
   const shown = history.slice(0, 100);
-  const tasks = parseTasks(spec.body);
+  const tasks = spec.tasks;
   const overview = (
     <>
       <QuestionsSection questions={questions} onAnswer={onAnswer} busy={busy} />
@@ -711,6 +701,7 @@ export default function BoardTab({ project, refresh }: { project: string; refres
       return true;
     } catch (e) {
       setActionError(String(e));
+      if (String(e).includes("SPEC_CHANGED:")) await reload();
       return false;
     } finally {
       setBusy(false);
@@ -906,6 +897,8 @@ export default function BoardTab({ project, refresh }: { project: string; refres
             return (
               <div
                 key={station}
+                data-tone={STATION_TONES[station]}
+                data-station={station}
                 onDragOver={(event) => {
                   if (event.dataTransfer.types.includes("text/speccify-spec")) {
                     event.preventDefault();
@@ -920,9 +913,9 @@ export default function BoardTab({ project, refresh }: { project: string; refres
                     if (spec && spec.station !== station) move(file, station);
                   }
                 }}
-                className="flex min-h-0 flex-1 flex-col rounded-lg bg-slate-100 p-2"
+                className="spec-lane flex min-h-0 flex-1 flex-col rounded-lg p-2"
               >
-                <h2 className="mb-2 px-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <h2 className="tone-ink mb-2 px-1 text-xs font-semibold uppercase tracking-wide">
                   {STATION_LABELS[station]} ({inStation.length})
                 </h2>
                 <div className="min-h-0 flex-1 space-y-2 overflow-y-auto">
@@ -959,7 +952,7 @@ export default function BoardTab({ project, refresh }: { project: string; refres
               }
               onToggleTask={(index, done) =>
                 void run(() =>
-                  invoke("project_spec_toggle_task", { project, file: selectedSpec.file, index, done }),
+                  invoke("project_spec_toggle_task", { project, file: selectedSpec.file, index, done, expectedBody: selectedSpec.body }),
                 )
               }
               onArchive={() => void archive(selectedSpec.file)}

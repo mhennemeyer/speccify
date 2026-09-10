@@ -6,6 +6,7 @@ import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import {
   ENGINE_LOG_ID,
   fetchDoctor,
+  fetchDesktopUiEndpoint,
   fetchEngineStatus,
   fetchPythons,
   fetchUpdaterStatus,
@@ -29,17 +30,19 @@ interface EnvData {
   pythons: PythonsInfo;
   engine: EngineStatus;
   updater: UpdaterStatus;
+  desktopUiEndpoint: string;
 }
 
 export default function EnvironmentView() {
   const { data, loading, refreshing, error, reload } = useAsync<EnvData>(async () => {
-    const [doctor, pythons, engine, updater] = await Promise.all([
+    const [doctor, pythons, engine, updater, desktopUiEndpoint] = await Promise.all([
       fetchDoctor(),
       fetchPythons(),
       fetchEngineStatus(),
       fetchUpdaterStatus(),
+      fetchDesktopUiEndpoint(),
     ]);
-    return { checks: doctor.checks, pythons, engine, updater };
+    return { checks: doctor.checks, pythons, engine, updater, desktopUiEndpoint };
   }, "environment");
 
   return (
@@ -58,6 +61,14 @@ export default function EnvironmentView() {
         {data && (
           <>
             <UpdateCard updater={data.updater} />
+            <section className="rounded-lg border border-slate-200 bg-white p-4 text-sm">
+              <h3 className="font-medium text-slate-900">Fragen-MCP dieser App</h3>
+              <code className="text-xs">{data.desktopUiEndpoint}</code>
+              <p className="mt-1 text-xs text-slate-500">
+                Konfigurierter Endpoint, kein Verbindungstest. Neue Einweisungsdateien
+                verwenden diesen Port; vorhandene MCP-Konfigurationen bleiben unverändert.
+              </p>
+            </section>
             <EngineCard engine={data.engine} onChanged={reload} />
           <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
             {data.checks.map((c) =>

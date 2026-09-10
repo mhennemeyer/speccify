@@ -75,7 +75,7 @@ fn resolve_run(
     app: &AppHandle,
     run: &speccify_toolbox::RunSpec,
 ) -> (String, Vec<String>, BinarySource) {
-    if let Ok(bin_dir) = engine::venv_dir(app).map(|venv| venv.join("bin")) {
+    if let Ok(bin_dir) = engine::venv_dir(app).map(|venv| engine::bin_dir(&venv)) {
         if let Some((command, args)) = engine_run(run, &bin_dir) {
             return (command, args, BinarySource::Engine);
         }
@@ -93,14 +93,12 @@ fn engine_run(
     run: &speccify_toolbox::RunSpec,
     bin_dir: &std::path::Path,
 ) -> Option<(String, Vec<String>)> {
-    let direct = bin_dir.join(&run.command);
-    if direct.is_file() {
+    if let Some(direct) = sidecar::find_in_dir(bin_dir, &run.command) {
         return Some((direct.display().to_string(), run.args.clone()));
     }
     if run.command == "uv" && run.args.first().map(String::as_str) == Some("run") {
         let name = run.args.get(1)?;
-        let engine_bin = bin_dir.join(name);
-        if engine_bin.is_file() {
+        if let Some(engine_bin) = sidecar::find_in_dir(bin_dir, name) {
             return Some((engine_bin.display().to_string(), run.args[2..].to_vec()));
         }
     }
