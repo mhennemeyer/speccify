@@ -661,6 +661,216 @@ pub async fn workspace_open(
     crate::project_cmd::open_project_window(&app, &state, &path)
 }
 
+#[derive(Serialize)]
+struct WorkspaceSpec {
+    key: String,
+    project_id: String,
+    project_name: String,
+    repository_id: String,
+    repository_name: String,
+    worktree_id: String,
+    worktree_path: String,
+    worktree_label: String,
+    spec: crate::project_cmd::TicketEntry,
+}
+
+#[derive(Serialize)]
+pub struct WorkspaceBoard {
+    workspace_id: String,
+    revision: u64,
+    captured_at: u64,
+    specs: Vec<WorkspaceSpec>,
+    warnings: Vec<String>,
+    partial: bool,
+}
+
+// This reader intentionally refuses linked knowledge directories. Merely resolving
+// the final SPEC.md would allow enumeration outside the selected worktree first.
+fn board_directory(path: &Path) -> Result<bool, String> {
+    match fs::symlink_metadata(path) {
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(false),
+        Err(e) => Err(format!("{}: {e}", display(path))),
+        Ok(meta) if meta.is_dir() && !meta.file_type().is_symlink() => Ok(true),
+        Ok(_) => Err(format!("Kein regulärer Wissensordner: {}", display(path))),
+    }
+}
+
+fn read_workspace_board(workspace: &Workspace, max_entries: usize) -> WorkspaceBoard {
+    let mut result = WorkspaceBoard {
+        workspace_id: workspace.id.clone(),
+        revision: workspace.revision,
+        captured_at: std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_millis() as u64,
+        specs: vec![],
+        warnings: vec![],
+        partial: false,
+    };
+    let started = Instant::now();
+    let mut entries_seen = 0;
+    let mut trees_seen = 0;
+    let mut bytes_read = 0;
+    'repos: for repo in &workspace.repositories {
+        let Some(project) = workspace
+            .projects
+            .iter()
+            .find(|project| project.repository_ids.contains(&repo.id))
+        else {
+            continue;
+        };
+        'trees: for tree in &repo.worktrees {
+            trees_seen += 1;
+            if trees_seen > 100 || started.elapsed() > Duration::from_secs(3) {
+                result
+                    .warnings
+                    .push("Board-Lesebudget erreicht; Ergebnis unvollständig.".into());
+                break 'repos;
+            }
+            let root = match resolve_worktree(workspace, &tree.id) {
+                Ok(root) => PathBuf::from(root),
+                Err(e) => {
+                    result.warnings.push(format!("{}: {e}", tree.path));
+                    continue;
+                }
+            };
+            let base = root.join(crate::project_cmd::SPECS_DIR);
+            for directory in [root.join(".agent"), base.clone()] {
+                match board_directory(&directory) {
+                    Ok(true) => (),
+                    Ok(false) => continue 'trees,
+                    Err(e) => {
+                        result.warnings.push(e);
+                        continue 'trees;
+                    }
+                }
+            }
+            for directory in [base.clone(), base.join("archive")] {
+                match board_directory(&directory) {
+                    Ok(true) => (),
+                    Ok(false) => continue,
+                    Err(e) => {
+                        result.warnings.push(e);
+                        continue;
+                    }
+                }
+                let entries = match fs::read_dir(&directory) {
+                    Ok(entries) => entries,
+                    Err(e) => {
+                        result
+                            .warnings
+                            .push(format!("{}: {e}", display(&directory)));
+                        continue;
+                    }
+                };
+                for entry in entries {
+                    entries_seen += 1;
+                    if entries_seen > max_entries
+                        || bytes_read >= 8 * 1024 * 1024
+                        || started.elapsed() > Duration::from_secs(3)
+                    {
+                        result
+                            .warnings
+                            .push("Board-Lesebudget erreicht; Ergebnis unvollständig.".into());
+                        break 'repos;
+                    }
+                    let entry = match entry {
+                        Ok(entry) => entry,
+                        Err(e) => {
+                            result.warnings.push(e.to_string());
+                            continue;
+                        }
+                    };
+                    let dir = entry.path();
+                    if dir == base.join("archive") {
+                        continue;
+                    }
+                    let kind = match entry.file_type() {
+                        Ok(kind) => kind,
+                        Err(e) => {
+                            result.warnings.push(e.to_string());
+                            continue;
+                        }
+                    };
+                    if kind.is_symlink() {
+                        result
+                            .warnings
+                            .push(format!("Verlinkte Spec ausgelassen: {}", display(&dir)));
+                        continue;
+                    }
+                    if !kind.is_dir() {
+                        continue;
+                    }
+                    let path = dir.join("SPEC.md");
+                    // Recheck directory identity before accessing its file.
+                    if !board_directory(&dir).unwrap_or(false) {
+                        result
+                            .warnings
+                            .push(format!("Spec-Ordner verändert: {}", display(&dir)));
+                        continue;
+                    }
+                    match fs::symlink_metadata(&path) {
+                        Err(e) if e.kind() == std::io::ErrorKind::NotFound => continue,
+                        _ => (),
+                    }
+                    let text = match small_text(&path, 256 * 1024) {
+                        Ok(text) => text,
+                        Err(e) => {
+                            result.warnings.push(e);
+                            continue;
+                        }
+                    };
+                    bytes_read += text.len();
+                    let Some(spec) = crate::project_cmd::spec_from_text(&root, &path, &text) else {
+                        result
+                            .warnings
+                            .push(format!("Ungültiges Spec-Frontmatter: {}", display(&path)));
+                        continue;
+                    };
+                    let relative = path
+                        .strip_prefix(&root)
+                        .unwrap()
+                        .to_string_lossy()
+                        .replace('\\', "/");
+                    result.specs.push(WorkspaceSpec {
+                        key: serde_json::to_string(&[&workspace.id, &repo.id, &tree.id, &relative])
+                            .unwrap(),
+                        project_id: project.id.clone(),
+                        project_name: project.name.clone(),
+                        repository_id: repo.id.clone(),
+                        repository_name: repo.name.clone(),
+                        worktree_id: tree.id.clone(),
+                        worktree_path: tree.path.clone(),
+                        worktree_label: tree.relative_path.clone(),
+                        spec,
+                    });
+                }
+            }
+        }
+    }
+    result.specs.sort_by(|a, b| a.key.cmp(&b.key));
+    result.partial = !result.warnings.is_empty();
+    result
+}
+
+#[tauri::command]
+pub async fn workspace_board(workspace_id: String) -> Result<WorkspaceBoard, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let workspace = {
+            let _guard = STORE_LOCK.lock().map_err(|e| e.to_string())?;
+            let store = load(&store_path()?)?;
+            store
+                .workspaces
+                .into_iter()
+                .find(|workspace| workspace.id == workspace_id)
+                .ok_or("Workspace nicht gefunden")?
+        };
+        Ok(read_workspace_board(&workspace, 5000))
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -706,6 +916,186 @@ mod tests {
             version: 1,
             workspaces: vec![],
         }
+    }
+
+    fn board_fixture_spec(root: &Path, relative: &str, station: &str) -> PathBuf {
+        let path = root.join(relative);
+        fs::create_dir_all(path.parent().unwrap()).unwrap();
+        fs::write(&path, format!("---\nstation: {station}\nready: true\nneeds_human: true\n---\n# Shared title\n\n- [x] Tested\n- [ ] Review\n")).unwrap();
+        path
+    }
+
+    #[test]
+    fn workspace_board_keeps_colliding_worktrees_and_group_identity_separate() {
+        let fixture = tempfile::tempdir().unwrap();
+        let root = fixture.path().canonicalize().unwrap();
+        let api = root.join("api");
+        let web = root.join("web");
+        let feature = root.join("api-feature");
+        repo(&api);
+        repo(&web);
+        let file = ".agent/specs/001-shared/SPEC.md";
+        board_fixture_spec(&api, file, "Backlog");
+        git(&api, &["add", "."]);
+        git(
+            &api,
+            &[
+                "-c",
+                "user.name=Demo",
+                "-c",
+                "user.email=demo@example.invalid",
+                "commit",
+                "-m",
+                "spec",
+            ],
+        );
+        git(
+            &api,
+            &[
+                "worktree",
+                "add",
+                "-b",
+                "feature",
+                feature.to_str().unwrap(),
+            ],
+        );
+        board_fixture_spec(&feature, file, "Doing");
+        board_fixture_spec(&web, file, "Done");
+        let index_before = fs::read(api.join(".git/index")).unwrap();
+        let spec_before = fs::read(api.join(file)).unwrap();
+        let mut workspace = merge(&mut empty_store(), &root, scan(&root, 20000, 6));
+        let board = read_workspace_board(&workspace, 5000);
+        assert!(!board.partial, "{:?}", board.warnings);
+        assert_eq!(board.specs.len(), 3);
+        assert_eq!(
+            board
+                .specs
+                .iter()
+                .map(|entry| &entry.key)
+                .collect::<HashSet<_>>()
+                .len(),
+            3
+        );
+        for entry in &board.specs {
+            let local = crate::project_cmd::project_board(entry.worktree_path.clone()).unwrap();
+            assert_eq!(
+                serde_json::to_value(&entry.spec).unwrap(),
+                serde_json::to_value(&local[0]).unwrap()
+            );
+            assert_eq!(
+                resolve_worktree(&workspace, &entry.worktree_id).unwrap(),
+                entry.worktree_path
+            );
+        }
+        let keys: Vec<_> = board.specs.iter().map(|entry| entry.key.clone()).collect();
+        let repository_ids = workspace
+            .repositories
+            .iter()
+            .map(|repo| repo.id.clone())
+            .collect();
+        edit(
+            &mut workspace,
+            1,
+            Edit::Group {
+                repository_ids,
+                name: "Suite".into(),
+            },
+        )
+        .unwrap();
+        let grouped = read_workspace_board(&workspace, 5000);
+        assert_eq!(
+            grouped
+                .specs
+                .iter()
+                .map(|entry| entry.key.clone())
+                .collect::<Vec<_>>(),
+            keys
+        );
+        assert!(grouped
+            .specs
+            .iter()
+            .all(|entry| entry.project_name == "Suite"));
+        assert_eq!(fs::read(api.join(".git/index")).unwrap(), index_before);
+        assert_eq!(fs::read(api.join(file)).unwrap(), spec_before);
+        board_fixture_spec(&feature, file, "Review");
+        let updated = read_workspace_board(&workspace, 5000);
+        let item = updated
+            .specs
+            .iter()
+            .find(|entry| entry.worktree_path == display(&feature))
+            .unwrap();
+        assert_eq!(
+            serde_json::to_value(&item.spec).unwrap()["station"],
+            "Review"
+        );
+    }
+
+    #[test]
+    fn workspace_board_reports_limits_invalid_missing_and_historical_sources() {
+        let fixture = tempfile::tempdir().unwrap();
+        let root = fixture.path().canonicalize().unwrap();
+        let good = board_fixture_spec(&root, ".agent/specs/001-shared/SPEC.md", "Doing");
+        board_fixture_spec(
+            &root,
+            ".agent/specs/archive/2026-09-10-001-shared/SPEC.md",
+            "In Progress",
+        );
+        let broken = board_fixture_spec(&root, ".agent/specs/002-broken/SPEC.md", "Backlog");
+        fs::write(&broken, "no frontmatter").unwrap();
+        let huge = board_fixture_spec(&root, ".agent/specs/003-huge/SPEC.md", "Backlog");
+        fs::write(&huge, vec![b'x'; 256 * 1024 + 1]).unwrap();
+        let workspace = merge(&mut empty_store(), &root, scan(&root, 20000, 6));
+        let board = read_workspace_board(&workspace, 5000);
+        assert_eq!(board.specs.len(), 2);
+        assert!(board.partial);
+        assert_eq!(board.warnings.len(), 2);
+        assert_ne!(board.specs[0].key, board.specs[1].key);
+        assert!(read_workspace_board(&workspace, 0).partial);
+        assert!(good.exists());
+        let mut missing = workspace.clone();
+        missing.repositories[0].worktrees[0].path = display(&root.join("missing"));
+        let board = read_workspace_board(&missing, 5000);
+        assert!(board.partial);
+        assert!(board.specs.is_empty());
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn workspace_board_rejects_linked_knowledge_and_keeps_other_worktrees() {
+        use std::os::unix::fs::symlink;
+        let fixture = tempfile::tempdir().unwrap();
+        let root = fixture.path().canonicalize().unwrap();
+        let api = root.join("api");
+        let linked = root.join("linked");
+        repo(&api);
+        git(
+            &api,
+            &["worktree", "add", "-b", "feature", linked.to_str().unwrap()],
+        );
+        board_fixture_spec(&linked, ".agent/specs/001-shared/SPEC.md", "Doing");
+        let workspace = merge(&mut empty_store(), &root, scan(&root, 20000, 6));
+        // Missing knowledge in the first tree must not skip the second tree.
+        assert_eq!(read_workspace_board(&workspace, 5000).specs.len(), 1);
+        let outside = tempfile::tempdir().unwrap();
+        let secret = board_fixture_spec(outside.path(), ".agent/specs/001-secret/SPEC.md", "Done");
+        symlink(outside.path().join(".agent"), api.join(".agent")).unwrap();
+        symlink(secret, linked.join(".agent/specs/001-shared/linked.md")).unwrap();
+        symlink(
+            outside.path().join(".agent/specs/001-secret"),
+            linked.join(".agent/specs/002-linked"),
+        )
+        .unwrap();
+        let file = board_fixture_spec(&linked, ".agent/specs/003-file-link/SPEC.md", "Backlog");
+        fs::remove_file(&file).unwrap();
+        symlink(
+            outside.path().join(".agent/specs/001-secret/SPEC.md"),
+            &file,
+        )
+        .unwrap();
+        let board = read_workspace_board(&workspace, 5000);
+        assert_eq!(board.specs.len(), 1);
+        assert!(board.partial);
+        assert_eq!(board.warnings.len(), 3);
     }
 
     #[test]

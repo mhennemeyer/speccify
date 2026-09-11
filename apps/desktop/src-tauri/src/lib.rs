@@ -245,6 +245,7 @@ pub fn run() {
             workspace_cmd::workspace_discover,
             workspace_cmd::workspace_edit,
             workspace_cmd::workspace_open,
+            workspace_cmd::workspace_board,
             project_cmd::project_current,
             project_cmd::project_recent,
             project_cmd::project_skills,

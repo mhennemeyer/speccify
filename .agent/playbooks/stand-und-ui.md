@@ -49,7 +49,8 @@ einem angemeldeten Host auf den Zielplattformen steht aus.
 Ein Projektfenster erhält weiterhin **einen Projektpfad**. Das Dashboard erkennt
 seit Spec 015 mehrere Repos/Worktrees in einem Arbeitsordner und speichert deren
 fachliche Projektgruppen lokal. Ein Worktree öffnet ein eigenes Projektfenster;
-aggregiertes Board und durchgängige Projekt-Badges sind noch nicht enthalten.
+Spec 024 ergänzt eine lesende aggregierte Spec-Sicht im Dashboard. Projekt-Badges
+in weiteren Bereichen und gemeinsames Team-Sync sind noch nicht enthalten.
 Speccify-Server starten und Host-Konfiguration anzeigen ersetzt nicht automatisch
 deren Einrichtung oder Verfügbarkeit im gewählten Agenten.
 
@@ -60,7 +61,7 @@ oder vollständige Plattformabnahme.
 
 | Fähigkeit | Ist-Stand | Grenze / Folgeschritt |
 |---|---|---|
-| Projekte/Workspaces | begrenzte Repo-/Worktree-Erkennung, lokale IDs, Gruppieren/Umbenennen/Entgruppieren, gezieltes eigenes Fenster; Einzelprojekte bleiben nutzbar | keine gemeinsame Board-Sicht, Team-Identitätsbindung oder automatische Pfadumzüge; weitere Schnitte V1-01 |
+| Projekte/Workspaces | begrenzte Repo-/Worktree-Erkennung, lokale IDs, Gruppieren/Umbenennen/Entgruppieren, gezieltes eigenes Fenster; 024: lesendes gemeinsames Board mit Projektfilter und Herkunft | keine aggregierten Schreibaktionen, automatische Board-Aktualisierung, Team-Identitätsbindung oder automatische Pfadumzüge; weitere Schnitte V1-01 |
 | Specs | Gesamtliste links, Suche/Themenfilter, Backlog/Doing/Done, gemeinsamer Task-Vertrag, Fragen und pfadgenaue Historie; Altbestand lesbar, kein Archivierungsschritt | keine Sperre gegenüber externen Editoren; Team-/Branch-Sicht fehlt |
 | Workflow-Setup | Policy v5 ohne Archivierungsschritt, versionierte Skills, bekannte Vorlagen sicher migrieren, konkrete Link-/Anpassungsdiagnose | individuelle/neue unbekannte Vorlagen und fremde Links bleiben zur manuellen Prüfung erhalten |
 | Playbooks | Liste, Markdown lesen/bearbeiten, neu/löschen, als Prompt kopieren | keine Workspace-Herkunft oder Team-Verteilung |
@@ -102,6 +103,11 @@ Speccify · Dashboard
 │   │   ├── Repos auswählen → Projektgruppe benennen und speichern
 │   │   ├── Projektkarten → umbenennen · Repo aus Gruppe lösen
 │   │   │   └── Worktrees mit relativem Pfad/Markern/Verfügbarkeit → eigenes Projektfenster
+│   │   ├── Alle Specs → lesendes Workspace-Board
+│   │   │   ├── Projektfilter · Suche · explizit aktualisieren · Snapshot-Zeit/Teilresultate
+│   │   │   ├── Liste links und Board: Backlog/Doing/Done + unbekannte Stationen
+│   │   │   │   └── Karten: Projekt · Repo · Worktree · Aufgaben · Frage/Abnahme/Altbestand
+│   │   │   └── Auswahl → lesende Vorschau mit genauem Dateipfad → eigenes Projektfenster
 │   │   └── Einzelprojekt direkt öffnen / zuletzt geöffnet (aufklappbar)
 │   ├── Bibliothek
 │   │   ├── Globale Skill-Quellen
@@ -383,8 +389,20 @@ Diese Tabelle verändert keine Station oder Reihenfolge.
 | [021 Git-Arbeitsbereich](../specs/021-git-arbeitsbereich/SPEC.md) | Doing, ready, needs_human | sichtbarer Composer mit Entwurf/Index-Vorschau, sichere lokale Branch-Verwaltung, Remote-/Tracking-Anzeige; 108 Rust-Tests/fünf UI-Suiten grün, App aktualisiert |
 | [022 Dateien/Refactoring](../specs/022-dateiauswahl-und-refactoring/SPEC.md) | Backlog | Ordnerauswahl und Kontextmenü; später sicherer Move und sprachbezogene Refactorings |
 | [023 Landingpage-Bilder](../specs/023-landingpage-app-screenshots/SPEC.md) | Done | Landingpage/Features mit acht Motiven; lokale Variante vom Nutzer abgenommen, nicht veröffentlicht; Screenshot-Pflege verbindlich |
+| [024 Workspace-Spec-Board](../specs/024-workspace-spec-board/SPEC.md) | Doing · Q1 | Code/automatisierte Prüfungen grün; native Abnahme durch macOS/tccd blockiert; noch nicht ready |
 
 ## Verifikation und verbleibende Risiken
+
+**Nachtrag 024, 2026-09-11:** Lesendes Workspace-Board mit Herkunft/Liste/Filter
+implementiert; 82 Rust-Tests bestanden, 2 ignoriert, sieben Desktop-UI-Suites,
+Typecheck, Marketing-Build und Bildtests grün. Acht Website-Motive unverändert.
+Nativer Kaltstart zeigt leere Fenster: Sample belegt Dateizugriff der bestehenden
+Workflow-Diagnose auf dem UI-Thread. Command im Code auf Hintergrundausführung
+umgestellt und Diagnosegleichheit geprüft. Finaler Neubau wird jedoch durch
+offene App-Binärdatei im macOS-Dienst `tccd` verhindert. Bestehender Board-Build
+mit `--open` wieder geöffnet; die zusätzliche Startkorrektur ist darin noch
+nicht enthalten. Systemfreigabe nicht umgangen; Q1 hält Prüfung durch Nutzer und
+anschließende native Abnahme offen. Kein erfolgreicher Wiederanlauf zugesagt.
 
 **Nachtrag 015, 2026-09-11:** Dashboard → Projekte enthält jetzt den Workspace-
 Einstieg. Nativer Vertrag und Fixture-Anleitung in [docs/workspaces.md](../../docs/workspaces.md).

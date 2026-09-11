@@ -124,3 +124,13 @@ Verification on 2026-09-11: all eight captures match the existing assets on the
 repeat run. The initial MCP capture showed a tiny raster-only difference; inspect
 such differences before replacing assets. Marketing build and responsive landing/
 Features checks pass. No website publication in this change.
+
+UI change check, Spec 024: read-only workspace aggregation is now implemented in
+the dashboard. It is not the shared team register of Spec 016 and has no aggregate
+editing or automatic sync. Existing project-window screenshots remain the current
+website motifs; inspect capture drift after the shared parser/mock changes. A new
+workspace motif and public claims await review of this capability. No publication.
+
+024 capture check: repeat capture matches all eight existing originals; marketing
+build and responsive landing/Features tests pass. Initial Skills raster variance
+did not persist. The dashboard preview is reviewed separately from public assets.

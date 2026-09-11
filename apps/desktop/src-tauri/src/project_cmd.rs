@@ -613,62 +613,66 @@ fn flat_truthy(fields: &[(String, String)], key: &str) -> bool {
 #[tauri::command]
 pub fn project_board(project: String) -> Result<Vec<TicketEntry>, String> {
     let root = resolve_project_root(&project)?;
-    let archive = root.join(SPECS_DIR).join("archive");
     let mut specs = Vec::new();
     for dir in spec_dirs(&root, true) {
         let path = dir.join("SPEC.md");
         let Ok(text) = std::fs::read_to_string(&path) else {
             continue;
         };
-        let Some((fields, body)) = parse_flat_frontmatter(&text) else {
-            continue;
-        };
-        let id = spec_id_of(&root, &path);
-        let archived = dir.parent() == Some(archive.as_path());
-        let station = flat_lookup(&fields, "station")
-            .map(str::to_string)
-            .unwrap_or_else(|| {
-                if archived {
-                    "Done".into()
-                } else {
-                    "Backlog".into()
-                }
-            });
-        let tasks = crate::spec_tasks::parse_tasks(body);
-        let tasks_done = tasks.iter().filter(|task| task.done).count() as u32;
-        let tasks_total = tasks.len() as u32;
-        let number = spec_number_of(&id);
-        specs.push(TicketEntry {
-            file: path
-                .strip_prefix(&root)
-                .unwrap_or(&path)
-                .to_string_lossy()
-                .replace('\\', "/"),
-            title: first_heading(body)
-                .or_else(|| flat_lookup(&fields, "title").map(str::to_string))
-                .unwrap_or_else(|| id.clone()),
-            id,
-            station,
-            assignee: flat_lookup(&fields, "assignee").map(str::to_string),
-            created: flat_lookup(&fields, "created").map(str::to_string),
-            ready: flat_truthy(&fields, "ready"),
-            needs_human: flat_truthy(&fields, "needs_human"),
-            order: flat_lookup(&fields, "order").and_then(|raw| raw.parse().ok()),
-            parent: flat_lookup(&fields, "parent")
-                .filter(|p| !p.is_empty() && *p != "null")
-                .map(str::to_string),
-            open_question: flat_lookup(&fields, "open_question")
-                .filter(|q| !q.is_empty() && *q != "null")
-                .map(str::to_string),
-            tasks_done,
-            tasks_total,
-            tasks,
-            archived,
-            number,
-            body: body.to_string(),
-        });
+        if let Some(spec) = spec_from_text(&root, &path, &text) {
+            specs.push(spec);
+        }
     }
     Ok(specs)
+}
+
+/// Shared interpretation for project and read-only workspace boards.
+pub(crate) fn spec_from_text(root: &Path, path: &Path, text: &str) -> Option<TicketEntry> {
+    let (fields, body) = parse_flat_frontmatter(text)?;
+    let id = spec_id_of(root, path);
+    let archived = path.parent()?.parent() == Some(root.join(SPECS_DIR).join("archive").as_path());
+    let station = flat_lookup(&fields, "station")
+        .map(str::to_string)
+        .unwrap_or_else(|| {
+            if archived {
+                "Done".into()
+            } else {
+                "Backlog".into()
+            }
+        });
+    let tasks = crate::spec_tasks::parse_tasks(body);
+    let tasks_done = tasks.iter().filter(|task| task.done).count() as u32;
+    let tasks_total = tasks.len() as u32;
+    let number = spec_number_of(&id);
+    Some(TicketEntry {
+        file: path
+            .strip_prefix(root)
+            .unwrap_or(path)
+            .to_string_lossy()
+            .replace('\\', "/"),
+        title: first_heading(body)
+            .or_else(|| flat_lookup(&fields, "title").map(str::to_string))
+            .unwrap_or_else(|| id.clone()),
+        id,
+        station,
+        assignee: flat_lookup(&fields, "assignee").map(str::to_string),
+        created: flat_lookup(&fields, "created").map(str::to_string),
+        ready: flat_truthy(&fields, "ready"),
+        needs_human: flat_truthy(&fields, "needs_human"),
+        order: flat_lookup(&fields, "order").and_then(|raw| raw.parse().ok()),
+        parent: flat_lookup(&fields, "parent")
+            .filter(|p| !p.is_empty() && *p != "null")
+            .map(str::to_string),
+        open_question: flat_lookup(&fields, "open_question")
+            .filter(|q| !q.is_empty() && *q != "null")
+            .map(str::to_string),
+        tasks_done,
+        tasks_total,
+        tasks,
+        archived,
+        number,
+        body: body.to_string(),
+    })
 }
 
 /// Verschiebt ein Ticket in eine andere Station: ersetzt **nur** die

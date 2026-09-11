@@ -19,6 +19,26 @@ export function installWorkspaceFixture(responses) {
   window.__SPECCIFY_MOCK__.workspaceOpened = [];
   window.__SPECCIFY_MOCK__.workspaceStale = false;
   responses.workspace_list = () => read();
+  responses.workspace_board = async ({ workspaceId }) => {
+    const workspace = read().find(entry => entry.id === workspaceId);
+    if (!workspace) throw Error("Workspace nicht gefunden");
+    const specs = workspace.repositories.flatMap(repo => repo.worktrees.map(tree => {
+      const project = workspace.projects.find(project => project.repository_ids.includes(repo.id));
+      const file = ".agent/specs/001-shared/SPEC.md";
+      const station = tree.id === "tree-feature" ? "Doing" : tree.id === "tree-web" ? "Done" : "Backlog";
+      return { key: JSON.stringify([workspace.id, repo.id, tree.id, file]), project_id: project.id, project_name: project.name,
+        repository_id: repo.id, repository_name: repo.name, worktree_id: tree.id, worktree_path: tree.path, worktree_label: tree.relative_path,
+        spec: { file, id: "001-shared", number: 1, title: "Shared feature", station, order: 1, created: "2026-09-11", ready: true, needs_human: true,
+          tasks_done: 1, tasks_total: 2, tasks: [], parent: null, assignee: null, open_question: null, archived: false,
+          body: `# Shared feature\n\nOnly ${tree.relative_path}.\n\n- [x] Tested\n- [ ] Review` } };
+    }));
+    const flags = window.__SPECCIFY_MOCK__;
+    if (flags.boardDelay) await new Promise(resolve => setTimeout(resolve, flags.boardDelay));
+    if (flags.boardError) throw Error("Workspace nicht erreichbar");
+    if (flags.boardUnknown && specs[0]) specs[0].spec.station = "Review";
+    return { workspace_id: workspace.id, revision: workspace.revision, captured_at: Date.now(), specs,
+      partial: !!flags.boardPartial, warnings: flags.boardPartial ? ["Nicht verfügbar: api-feature"] : [] };
+  };
   responses.workspace_discover = ({ path }) => {
     if (path.includes("missing")) throw Error("Kein Verzeichnis: missing");
     const entries = read(); const workspace = entries[0] ?? initial();

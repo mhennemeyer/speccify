@@ -131,9 +131,13 @@ Ein zweiter Worktree wird korrekt erkannt, nicht als unabhängiges Repo duplizie
 **Bestand 2026-09-11:** Spec 015 implementiert die begrenzte Verbunderkennung und
 lokal persistierte Projektgruppen mit getrennten Worktree-Fenstern. Native
 Verträge und Grenzen: [Workspace-Vertrag](../../docs/workspaces.md).
-Aggregierte Sicht, Herkunfts-Badges und gemeinsame Team-Identitätsbindung fehlen
-weiterhin. Die lokale Zuordnung ist kein gemeinsames Team-Register. Basis ist
-auch für itsdcloud, Team-Board und spätere Workflow-Adapter erforderlich.
+Spec 024 ergänzt ein lesendes Workspace-Board mit Liste, Projektfilter, Suche und
+Projekt-/Repo-/Worktree-Herkunft je Karte. Gleiche Spec-IDs bleiben getrennt.
+Aktualisierung ist ausdrücklich manuell, Bearbeitung erfolgt im eigenen
+Projektfenster. [Spec 024](../specs/024-workspace-spec-board/SPEC.md).
+Durchgängige Herkunft in weiteren Bereichen und gemeinsame Team-Identitätsbindung
+fehlen weiterhin. Die lokale Zuordnung ist kein gemeinsames Team-Register; 016
+bleibt der getrennte Sync-Pilot. Basis ist auch für itsdcloud und spätere Adapter erforderlich.
 
 ### V1-02 — Autoupdater für die Apps
 

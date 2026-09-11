@@ -259,7 +259,13 @@ pub struct WorkflowIssue {
 }
 
 #[tauri::command]
-pub fn project_workflow_status(project: String) -> Result<WorkflowStatus, String> {
+pub async fn project_workflow_status(project: String) -> Result<WorkflowStatus, String> {
+    tauri::async_runtime::spawn_blocking(move || workflow_status(project))
+        .await
+        .map_err(|e| e.to_string())?
+}
+
+fn workflow_status(project: String) -> Result<WorkflowStatus, String> {
     let root = resolve_project_root(&project)?;
     let (installed, issues) = collect_issues(&root);
     let pending: Vec<_> = issues.iter().map(|issue| issue.message.clone()).collect();
@@ -348,7 +354,7 @@ pub fn project_workflow_install(project: String) -> Result<WorkflowStatus, Strin
     ensure_skills_link(&root, ".claude")?;
     ensure_skills_link(&root, ".agents")?;
 
-    project_workflow_status(root.display().to_string())
+    workflow_status(root.display().to_string())
 }
 
 // --- Projekt-Settings (`.agent/settings.json`, D21/D27) -----------------------
@@ -437,6 +443,19 @@ mod tests {
     use super::*;
 
     #[test]
+    fn asynchronous_status_preserves_diagnostics_without_writes() {
+        let root = tempfile::tempdir().unwrap();
+        let project = root.path().display().to_string();
+        let expected = workflow_status(project.clone()).unwrap();
+        let actual = tauri::async_runtime::block_on(project_workflow_status(project)).unwrap();
+        assert_eq!(
+            serde_json::to_value(actual).unwrap(),
+            serde_json::to_value(expected).unwrap()
+        );
+        assert!(!root.path().join(".agent").exists());
+    }
+
+    #[test]
     fn known_policy_and_skill_upgrades_preserve_project_rules() {
         for (version, policy) in PREVIOUS_POLICY {
             let dir = fixture(&format!("upgrade-{version}"));
@@ -456,7 +475,7 @@ mod tests {
                 std::fs::create_dir_all(&folder).unwrap();
                 std::fs::write(folder.join("SKILL.md"), old).unwrap();
             }
-            let before = project_workflow_status(project.clone()).unwrap();
+            let before = workflow_status(project.clone()).unwrap();
             assert!(before
                 .issues
                 .iter()
@@ -593,7 +612,7 @@ mod tests {
     #[ignore = "Set SPECCIFY_CHECK_PROJECT to explicitly inspect a real checkout"]
     fn check_project_from_env() {
         let project = std::env::var("SPECCIFY_CHECK_PROJECT").expect("explicit project required");
-        let status = project_workflow_status(project).unwrap();
+        let status = workflow_status(project).unwrap();
         println!("{}", serde_json::to_string_pretty(&status).unwrap());
         assert_eq!(status.state, "current");
     }
@@ -661,7 +680,7 @@ mod tests {
         let dir = fixture("install");
         let project = dir.to_string_lossy().into_owned();
 
-        let before = project_workflow_status(project.clone()).unwrap();
+        let before = workflow_status(project.clone()).unwrap();
         assert_eq!(before.state, "missing");
         assert!(!before.pending.is_empty());
 

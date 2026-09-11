@@ -2,6 +2,7 @@ import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 import { ErrorBox, useAsync } from "../components/ui";
+import WorkspaceBoardView from "./WorkspaceBoardView";
 
 interface Worktree { id: string; path: string; relative_path: string; markers: string[]; available: boolean }
 interface Repository { id: string; name: string; common_dir: string | null; default_project_id: string; worktrees: Worktree[] }
@@ -22,6 +23,7 @@ export default function WorkspaceView() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [mode, setMode] = useState<"projects" | "specs">("projects");
   const workspace = list.data?.find(entry => entry.id === active) ?? list.data?.[0];
 
   const select = (id: string) => {
@@ -60,7 +62,7 @@ export default function WorkspaceView() {
   return <section aria-label="Workspaces" className="max-w-5xl space-y-4">
     <div>
       <h2 className="text-lg font-semibold text-slate-800">Ein Arbeitsordner. Mehrere Projekte.</h2>
-      <p className="mt-1 max-w-3xl text-sm text-slate-500">Repos und Worktrees erkennen, fachlich gruppieren und gezielt öffnen. Specs, Skills, Git und Terminals bleiben pro Worktree getrennt. Ein gemeinsames Board folgt später.</p>
+      <p className="mt-1 max-w-3xl text-sm text-slate-500">Repos und Worktrees erkennen, fachlich gruppieren und gezielt öffnen. Specs gemeinsam überblicken; Dateien, Skills, Git und Terminals bleiben pro Worktree getrennt.</p>
     </div>
     <form className="flex flex-wrap items-end gap-2" onSubmit={event => { event.preventDefault(); void discover(path); }}>
       <label className="min-w-56 flex-1 text-xs text-slate-500">Arbeitsordner
@@ -88,11 +90,16 @@ export default function WorkspaceView() {
         <span className="text-xs text-slate-500">{workspace.repositories.length} Repos/Ordner · {workspace.repositories.reduce((sum, repo) => sum + repo.worktrees.length, 0)} Worktrees</span>
         <p className="w-full break-all font-mono text-xs text-slate-500">{workspace.root}</p>
       </div>
+      <nav aria-label="Workspace-Ansicht" className="flex gap-2">
+        <button data-tone="violet" className={`${button} ${mode === "projects" ? "tone-surface" : ""}`} aria-pressed={mode === "projects"} onClick={() => setMode("projects")}>Projektgruppen</button>
+        <button data-tone="violet" className={`${button} ${mode === "specs" ? "tone-surface" : ""}`} aria-pressed={mode === "specs"} onClick={() => setMode("specs")}>Alle Specs</button>
+      </nav>
       {(workspace.partial || workspace.warnings.length > 0) && <aside role="status" data-tone="amber" className="tone-surface rounded border p-3 text-xs">
         <strong>{workspace.partial ? "Erkennung unvollständig" : "Hinweise zur Erkennung"}</strong>
         <ul className="mt-1 list-inside list-disc">{workspace.warnings.map((warning, index) => <li key={index}>{warning}</li>)}</ul>
         <p className="mt-1">Bekannte Zuordnungen bleiben erhalten. Fehlende Unterordner bei Bedarf separat öffnen.</p>
       </aside>}
+      {mode === "specs" ? <WorkspaceBoardView key={workspace.id} workspaceId={workspace.id} revision={workspace.revision} /> : <>
       <form onSubmit={event => { event.preventDefault(); void edit({ kind: "group", repository_ids: selected, name: groupName }); }} data-tone="violet" className="tone-surface flex flex-wrap items-center gap-2 rounded-lg border p-3">
         <span className="text-xs">{selected.length} ausgewählt</span>
         <input aria-label="Name der Projektgruppe" value={groupName} onChange={event => setGroupName(event.target.value)} disabled={busy} maxLength={100} placeholder="Gemeinsames Projekt, z. B. Kundenportal" className="min-w-64 flex-1 rounded border border-slate-300 bg-white px-2 py-1.5 text-sm" />
@@ -127,6 +134,7 @@ export default function WorkspaceView() {
           </div>;
         })}</div>
       </article>)}
+      </>}
     </> : !list.loading && !list.error && <p className="rounded border border-dashed border-slate-300 p-6 text-sm text-slate-500">Noch kein Workspace. Wähle einen Arbeitsordner mit Deinen Repositories – einzelne Ordner ohne Git funktionieren ebenfalls.</p>}
   </section>;
 }

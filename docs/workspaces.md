@@ -52,8 +52,38 @@ preserve IDs, names and grouping, and report partial results explicitly.
 Dashboard: choose folder → inspect workspace → select repos → group/name/ungroup →
 open an explicitly named worktree. Every opened worktree uses existing project
 window identity and its own terminal cwd. Workspace selection never retargets a
-running terminal, Git operation, action or editor. Aggregated board and project
-badges are a follow-up, not an implicit merge of `.agent` trees.
+running terminal, Git operation, action or editor. Spec 024 adds a read-only
+aggregated board; it does not merge `.agent` trees or grant cross-project writes.
+
+## Read-only board snapshot (Spec 024)
+
+`workspace_board(workspace_id)` returns the workspace revision, capture timestamp,
+entries and explicit partial-result warnings. Each entry contains the existing
+project-board spec representation plus project/repository/worktree IDs and labels.
+Both boards use `project_cmd::spec_from_text`; no competing frontmatter/task parser.
+The key is an encoded tuple of workspace ID, repository ID, worktree ID and relative
+spec path. Renaming/grouping cannot change it. Identical spec IDs across repos,
+worktrees or historical paths remain distinct; this is not a shared team spec ID.
+
+Revalidate every worktree before reading. Do not follow linked `.agent`, `specs`,
+historical directories, spec directories or files. Missing knowledge directories
+mean no specs; inaccessible/invalid sources produce warnings. Existing historical
+specs remain labelled read-only entries, without an archive action. Unknown stations
+remain visible with their original names. The parser matches single-project behavior.
+
+Bounds per request: 100 worktrees, 5,000 directory entries, 256 KiB per document,
+8 MiB aggregate text budget (the final document can exceed the threshold by up to
+256 KiB), three seconds best-effort between filesystem operations. OS filesystem
+calls can still block; these limits are not a hard I/O timeout or an adversarial
+filesystem race-proof sandbox. The snapshot is not transactional across files.
+Unread sources are reported, never replaced with a misleading empty success.
+
+The dashboard offers project filter, search, matching list/cards and a read-only
+preview. Refresh is explicit; file watchers/team sync are not implied. Failed refresh
+labels the previous same-workspace snapshot as potentially stale. Workspace changes
+reset the component and ignore late responses. Opening revalidates the worktree via
+the existing `workspace_open` command; it opens that project's window, not a spec
+deep link. Editing/acceptance stays in that window. There is no aggregate write API.
 
 ## Fixture matrix
 
