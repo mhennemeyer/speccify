@@ -8,8 +8,8 @@ try {
   page.setDefaultTimeout(10000);
   const errors = []; page.on("pageerror", error => errors.push(error.message));
   await page.goto(`${base}?dashboard=1&workspaces=1`);
-  await page.getByLabel("Arbeitsordner", { exact: true }).fill("/private/tmp/demo-workspace");
-  await page.getByRole("button", { name: "Workspace erkennen", exact: true }).click();
+  await page.getByLabel("Ordner", { exact: true }).fill("/private/tmp/demo-workspace");
+  await page.getByRole("button", { name: "Öffnen", exact: true }).click();
   await page.getByRole("button", { name: "Alle Specs", exact: true }).click();
   const view = page.getByRole("region", { name: "Workspace-Specs", exact: true });
   const cards = view.locator("[data-workspace-spec]");
@@ -26,7 +26,11 @@ try {
   const preview = view.getByRole("article", { name: "Workspace-Spec-Vorschau" });
   await preview.getByText("Only api-search.", { exact: true }).waitFor();
   await preview.getByRole("button", { name: /Projektfenster öffnen/ }).click();
-  assert.deepEqual(await page.evaluate(() => window.__SPECCIFY_MOCK__.workspaceOpened), [{ workspaceId: "workspace-demo", worktreeId: "tree-feature" }]);
+  // Spec 027: „Ordner öffnen“ hat zuerst das Arbeitsfenster geöffnet, dann folgt das gezielte Projektfenster.
+  assert.deepEqual(await page.evaluate(() => window.__SPECCIFY_MOCK__.workspaceOpened), [
+    { workspaceId: "workspace-demo", window: true },
+    { workspaceId: "workspace-demo", worktreeId: "tree-feature" },
+  ]);
   assert.ok(await view.getByRole("checkbox").evaluateAll(elements => elements.every(element => element.disabled)), "preview tasks cannot be edited");
   await view.getByLabel("Workspace-Specs suchen").fill("");
   await view.getByLabel("Board-Projekt").selectOption("");

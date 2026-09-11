@@ -242,6 +242,7 @@ pub fn run() {
             spawn_process,
             kill_process,
             project_cmd::project_open,
+            workspace_cmd::folder_open,
             workspace_cmd::workspace_list,
             workspace_cmd::workspace_discover,
             workspace_cmd::workspace_edit,

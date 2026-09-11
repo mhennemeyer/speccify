@@ -48,6 +48,10 @@ einem angemeldeten Host auf den Zielplattformen steht aus.
 
 Ein Einzelprojektfenster erhält weiterhin **einen Projektpfad**. Das Dashboard
 erkennt seit Spec 015 mehrere Repos/Worktrees und speichert fachliche Gruppen lokal.
+Seit Spec 027 gibt es nur noch einen Einstieg „Ordner öffnen“: Ein Ordner mit
+eigenem Git-Repo (oder ohne erkannte Unterprojekte) öffnet sein Projektfenster,
+ein Elternordner mit Repos/Projekten wird als Workspace gespeichert und im
+Arbeitsfenster geöffnet.
 Spec 024 ergänzt eine lesende aggregierte Spec-Sicht im Dashboard. Spec 026 öffnet
 zusätzlich alle Projekte in einem gemeinsamen Arbeitsfenster: gruppierte Navigation,
 gemeinsames bearbeitbares Board und unveränderliche Ziele pro Worktree. Gemeinsamer
@@ -99,7 +103,11 @@ Quelle: [App.tsx](../../apps/desktop/src/App.tsx),
 Speccify · Dashboard
 ├── Hauptnavigation / Inhaltsbereich
 │   ├── Projekte
-│   │   ├── Arbeitsordner eingeben / wählen → begrenzte Workspace-Erkennung
+│   │   ├── Ordner öffnen (027): Pfad eingeben / wählen → App erkennt die Art
+│   │   │   ├── eigenes Git-Repo oder einfacher Ordner → Projektfenster
+│   │   │   ├── Elternordner mit Repos/Projekten → Workspace speichern + Arbeitsfenster
+│   │   │   ├── Statusmeldung: erkannte Art, Repos/Worktrees · Fehler bei ungültigem Pfad
+│   │   │   └── Zuletzt geöffnete Projekte → derselbe Einstieg
 │   │   ├── Gespeicherte Workspaces wählen · erneut erkennen (16 Ebenen)
 │   │   │   └── Echte Suchgrenzen: übersprungene Pfade · verfügbare Projekte weiter nutzbar
 │   │   ├── Workspace öffnen → ein gemeinsames Arbeitsfenster (026)
@@ -111,7 +119,7 @@ Speccify · Dashboard
 │   │   │   ├── Liste links und Board: Backlog/Doing/Done + unbekannte Stationen
 │   │   │   │   └── Karten: Projekt · Repo · Worktree · Aufgaben · Frage/Abnahme/Altbestand
 │   │   │   └── Auswahl → lesende Vorschau mit genauem Dateipfad → eigenes Projektfenster
-│   │   └── Einzelprojekt direkt öffnen / zuletzt geöffnet (aufklappbar)
+│   │   └── (kein separates Einzelprojekt-Formular mehr seit 027)
 │   ├── Bibliothek
 │   │   ├── Globale Skill-Quellen
 │   │   │   ├── Git-URL oder lokaler Ordner hinzufügen

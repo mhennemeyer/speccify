@@ -643,6 +643,80 @@ pub async fn workspace_discover(path: String) -> Result<Workspace, String> {
     .map_err(|e| e.to_string())?
 }
 
+/// Ergebnis von `folder_open`: was die App aus dem gewählten Ordner gemacht hat.
+#[derive(Serialize, Debug)]
+#[serde(tag = "kind", rename_all = "snake_case")]
+pub enum FolderOpened {
+    Project { root: String },
+    Workspace { workspace: Workspace },
+}
+
+#[derive(Debug, PartialEq, Eq)]
+enum FolderKind {
+    Project,
+    Workspace,
+}
+
+/// Spec 027, D1: Ein Ordner mit eigenem Git-Repository ist immer ein
+/// Einzelprojekt — auch mit verschachtelten Repos oder Markern (Submodule,
+/// Fixtures, Beispielprojekte). Ohne eigenes Repo entscheidet die Erkennung:
+/// mindestens ein Repo/Projekt unterhalb → Workspace, sonst einfaches Projekt.
+fn folder_kind(root: &Path, root_is_repo: bool, scan: &Scan) -> FolderKind {
+    if root_is_repo {
+        return FolderKind::Project;
+    }
+    if scan.found.iter().any(|found| found.path != root) {
+        FolderKind::Workspace
+    } else {
+        FolderKind::Project
+    }
+}
+
+enum FolderDecision {
+    Project(PathBuf),
+    Workspace(Workspace),
+}
+
+/// Ein Einstieg fürs Dashboard (Spec 027): Ordner klassifizieren und
+/// entsprechend weitermachen — Projektfenster oder gespeicherter Workspace
+/// samt gemeinsamem Arbeitsfenster. Ein fehlerhafter Pfad ändert nichts.
+#[tauri::command]
+pub async fn folder_open(
+    app: tauri::AppHandle,
+    state: tauri::State<'_, crate::project_cmd::ProjectWindows>,
+    path: String,
+) -> Result<FolderOpened, String> {
+    let root = crate::project_cmd::resolve_project_root(&path)?;
+    let decision = tauri::async_runtime::spawn_blocking(move || {
+        let root_is_repo = matches!(common_dir(&root), Ok(Some(_)));
+        if root_is_repo {
+            return Ok(FolderDecision::Project(root));
+        }
+        let scan = scan(&root, DISCOVERY_MAX_ENTRIES, DISCOVERY_MAX_DEPTH);
+        if folder_kind(&root, root_is_repo, &scan) == FolderKind::Project {
+            return Ok(FolderDecision::Project(root));
+        }
+        let _guard = STORE_LOCK.lock().map_err(|e| e.to_string())?;
+        let path = store_path()?;
+        let mut store = load(&path)?;
+        let workspace = merge(&mut store, &root, scan);
+        save(&path, &store)?;
+        Ok::<_, String>(FolderDecision::Workspace(workspace))
+    })
+    .await
+    .map_err(|e| e.to_string())??;
+    match decision {
+        FolderDecision::Project(root) => {
+            let opened = crate::project_cmd::open_project_window(&app, &state, &display(&root))?;
+            Ok(FolderOpened::Project { root: opened })
+        }
+        FolderDecision::Workspace(workspace) => {
+            workspace_window_open(app, workspace.id.clone()).await?;
+            Ok(FolderOpened::Workspace { workspace })
+        }
+    }
+}
+
 #[tauri::command]
 pub async fn workspace_edit(
     workspace_id: String,
@@ -1390,6 +1464,53 @@ mod tests {
                 assert_eq!(resolve_worktree(&workspace, &tree.id).unwrap(), tree.path);
             }
         }
+    }
+
+    #[test]
+    fn folder_kind_prefers_repo_root_then_nested_projects() {
+        let fixture = tempfile::tempdir().unwrap();
+        let root = fixture.path().canonicalize().unwrap();
+
+        // Elternordner ohne eigenes Repo, zwei Repos darunter → Workspace.
+        let parent = root.join("work");
+        repo(&parent.join("api"));
+        repo(&parent.join("web"));
+        let parent_scan = scan(&parent, 20000, 6);
+        assert_eq!(parent_scan.found.len(), 2);
+        assert_eq!(
+            folder_kind(&parent, false, &parent_scan),
+            FolderKind::Workspace
+        );
+
+        // Repo-Wurzel mit verschachteltem Repo und Marker-Unterprojekt → Projekt (D1).
+        let mono = root.join("mono");
+        repo(&mono);
+        repo(&mono.join("fixtures/button-repo"));
+        fs::create_dir_all(mono.join("example")).unwrap();
+        fs::write(mono.join("example/speccify.yaml"), "skills: []\n").unwrap();
+        let mono_scan = scan(&mono, 20000, 6);
+        assert!(mono_scan.found.len() >= 3);
+        assert_eq!(folder_kind(&mono, true, &mono_scan), FolderKind::Project);
+
+        // Leerer Ordner ohne Git → einfaches Projekt (Scan-Fallback ist die Wurzel).
+        let plain = root.join("plain");
+        fs::create_dir_all(plain.join("notes")).unwrap();
+        let plain_scan = scan(&plain, 20000, 6);
+        assert_eq!(plain_scan.found.len(), 1);
+        assert_eq!(plain_scan.found[0].path, plain);
+        assert_eq!(folder_kind(&plain, false, &plain_scan), FolderKind::Project);
+
+        // Ordner ohne Git mit einem Marker-Unterprojekt → Workspace.
+        let marked = root.join("marked");
+        fs::create_dir_all(marked.join("tool/.agent")).unwrap();
+        fs::write(marked.join("tool/.agent/agent.md"), "# Tool\n").unwrap();
+        let marked_scan = scan(&marked, 20000, 6);
+        assert_eq!(
+            folder_kind(&marked, false, &marked_scan),
+            FolderKind::Workspace
+        );
+        assert!(!marked.join(".agent").exists());
+        assert!(!parent.join(".agent").exists());
     }
 
     #[test]

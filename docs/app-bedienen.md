@@ -6,9 +6,14 @@ Repository — wer etwas ändern will, ändert diese Datei.
 
 ## Der schnelle Weg
 
-1. **Projekt öffnen.** Im Dashboard unter *Projekte* das Projektverzeichnis
-   wählen (oder einen Eintrag aus *Zuletzt geöffnet*). Jedes Projekt bekommt
-   ein eigenes Fenster; offene Fenster kommen nach einem Neustart wieder.
+1. **Ordner öffnen.** Im Dashboard unter *Projekte* einen Ordner wählen
+   (oder einen Eintrag aus *Zuletzt geöffnete Projekte*). Die App erkennt
+   selbst, was das ist: Ein Ordner mit eigenem Git-Repository oder ein
+   einfacher Projektordner bekommt ein eigenes Projektfenster. Ein Ordner,
+   der mehrere Repositories oder Projekte enthält, wird als **Workspace**
+   gespeichert und in einem gemeinsamen Arbeitsfenster geöffnet; seine
+   Projektgruppen lassen sich danach unter *Gespeicherte Workspaces*
+   anpassen. Offene Fenster kommen nach einem Neustart wieder.
 2. **Einrichten.** Zeigt das Fenster oben einen gelben Workflow-Banner,
    einmal **Einrichten** klicken: Das legt die Workflow-Regeln in
    `.agent/agent.md`, die Skills `/spec-next` und `/spec-ask`, die
@@ -223,7 +228,10 @@ macht es genauso (*Settings → Agent-Sitzung*).
 
 ## Das Dashboard
 
-- **Projekte** — Projekte in eigenen Fenstern öffnen.
+- **Projekte** — einen Ordner öffnen: Einzelprojekte in eigenen Fenstern,
+  Ordner mit mehreren Repositories als Workspace im gemeinsamen
+  Arbeitsfenster; gespeicherte Workspaces gruppieren und ihre Specs
+  gemeinsam überblicken.
 - **Bibliothek** — die Skill-Bibliothek durchsehen.
 - **Umgebung** — Python-Engine und Werkzeug-Checks (Doctor); hier steht,
   was fehlt und wie es installiert wird.

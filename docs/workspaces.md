@@ -60,8 +60,17 @@ preserve IDs, names and grouping, and report partial results explicitly.
 
 ## UI and execution boundary
 
-Dashboard: choose folder → inspect workspace → select repos → group/name/ungroup →
-open an explicitly named worktree. Every opened worktree uses existing project
+Dashboard (Spec 027): one entry, **choose folder → open**. The native adapter
+classifies the folder before anything is stored: a folder that is itself a Git
+repository is always a single project and opens the existing project window,
+even when it contains nested repositories or marker folders (submodules,
+fixtures, examples). A folder without its own repository that contains at least
+one discovered repository or project is a workspace: it is merged into the local
+store exactly like an explicit discovery and its shared work window opens. A
+folder with neither is a plain single project. An invalid path stores and opens
+nothing. Saved workspaces stay in the dashboard: inspect → select repos →
+group/name/ungroup → rescan → open an explicitly named worktree or the shared
+window. Every opened worktree uses existing project
 window identity and its own terminal cwd. Workspace selection never retargets a
 running terminal, Git operation, action or editor. Spec 024 adds a read-only
 aggregated board; it does not merge `.agent` trees or grant cross-project writes.

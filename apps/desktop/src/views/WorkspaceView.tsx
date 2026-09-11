@@ -1,21 +1,23 @@
-import { useState } from "react";
+// Gespeicherte Workspaces im Projekte-Tab (Specs 015/024/026). Neue Workspaces
+// entstehen seit Spec 027 über „Ordner öffnen“ (ProjectsView); hier bleiben
+// Auswahl, erneutes Erkennen, Gruppen, Worktrees und das lesende Board.
+import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { open } from "@tauri-apps/plugin-dialog";
 import { ErrorBox, useAsync } from "../components/ui";
 import WorkspaceBoardView from "./WorkspaceBoardView";
 
-interface Worktree { id: string; path: string; relative_path: string; markers: string[]; available: boolean }
-interface Repository { id: string; name: string; common_dir: string | null; default_project_id: string; worktrees: Worktree[] }
-interface Project { id: string; name: string; repository_ids: string[] }
-interface Workspace { id: string; name: string; root: string; revision: number; projects: Project[]; repositories: Repository[]; warnings: string[]; partial: boolean }
+export interface Worktree { id: string; path: string; relative_path: string; markers: string[]; available: boolean }
+export interface Repository { id: string; name: string; common_dir: string | null; default_project_id: string; worktrees: Worktree[] }
+export interface Project { id: string; name: string; repository_ids: string[] }
+export interface Workspace { id: string; name: string; root: string; revision: number; projects: Project[]; repositories: Repository[]; warnings: string[]; partial: boolean }
 type Edit = { kind: "rename"; project_id: string; name: string } | { kind: "group"; repository_ids: string[]; name: string } | { kind: "ungroup"; repository_id: string };
 const selectionKey = "speccify.dashboard.workspace";
 const button = "rounded border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-40";
 
-export default function WorkspaceView() {
+/** `focus` wählt nach „Ordner öffnen“ den gerade gespeicherten Workspace; `token` erzwingt das Neuladen auch bei gleicher Id. */
+export default function WorkspaceView({ focus }: { focus?: { id: string; token: number } | null }) {
   const list = useAsync(() => invoke<Workspace[]>("workspace_list"), "workspaces");
   const [active, setActive] = useState(() => { try { return localStorage.getItem(selectionKey) ?? ""; } catch { return ""; } });
-  const [path, setPath] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
   const [groupName, setGroupName] = useState("");
   const [renaming, setRenaming] = useState<string | null>(null);
@@ -30,11 +32,19 @@ export default function WorkspaceView() {
     setActive(id); setSelected([]); setRenaming(null); setError(null); setNotice(null);
     try { localStorage.setItem(selectionKey, id); } catch { /* Selection remains usable without storage. */ }
   };
-  const discover = async (target: string) => {
+  useEffect(() => {
+    if (!focus) return;
+    let cancelled = false;
+    void list.reload().then(() => { if (!cancelled) select(focus.id); });
+    return () => { cancelled = true; };
+    // `select` ist zustandslos außer über Setter; nur der Fokus löst neu aus.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focus?.id, focus?.token]);
+  const rescan = async (target: string) => {
     setBusy(true); setError(null); setNotice(null);
     try {
       const result = await invoke<Workspace>("workspace_discover", { path: target });
-      await list.reload(); select(result.id); setPath(result.root);
+      await list.reload(); select(result.id);
     } catch (e) { setError(String(e)); }
     finally { setBusy(false); }
   };
@@ -61,21 +71,9 @@ export default function WorkspaceView() {
 
   return <section aria-label="Workspaces" className="max-w-5xl space-y-4">
     <div>
-      <h2 className="text-lg font-semibold text-slate-800">Ein Arbeitsordner. Mehrere Projekte.</h2>
-      <p className="mt-1 max-w-3xl text-sm text-slate-500">Repos und Worktrees erkennen, fachlich gruppieren und gezielt öffnen. Specs gemeinsam überblicken; Dateien, Skills, Git und Terminals bleiben pro Worktree getrennt.</p>
+      <h2 className="text-lg font-semibold text-slate-800">Gespeicherte Workspaces</h2>
+      <p className="mt-1 max-w-3xl text-sm text-slate-500">Ein Arbeitsordner, mehrere Projekte: Repos und Worktrees fachlich gruppieren und gezielt öffnen. Specs gemeinsam überblicken; Dateien, Skills, Git und Terminals bleiben pro Worktree getrennt.</p>
     </div>
-    <form className="flex flex-wrap items-end gap-2" onSubmit={event => { event.preventDefault(); void discover(path); }}>
-      <label className="min-w-56 flex-1 text-xs text-slate-500">Arbeitsordner
-        <input aria-label="Arbeitsordner" value={path} onChange={event => setPath(event.target.value)} placeholder="~/Projekte" spellCheck={false} disabled={busy}
-          className="mt-1 block w-full rounded border border-slate-300 bg-white px-3 py-2 font-mono text-sm text-slate-800" />
-      </label>
-      <button type="button" className={button} disabled={busy} onClick={async () => {
-        try { const picked = await open({ directory: true, title: "Arbeitsordner wählen" }); if (typeof picked === "string") { setPath(picked); void discover(picked); } }
-        catch (e) { setError(String(e)); }
-      }}>Auswählen…</button>
-      <button type="submit" disabled={busy || !path.trim()} data-tone="blue" className={`${button} tone-surface`}>{busy ? "Bitte warten…" : "Workspace erkennen"}</button>
-    </form>
-    <p className="text-xs text-slate-500">Begrenzte Suche: 16 Ebenen, ohne Symlinks, Abhängigkeits- und Buildordner. Keine Git- oder Projektdateien werden verändert.</p>
     {(error || list.error) && <ErrorBox message={error ?? list.error ?? ""} />}
     {notice && <p role="status" data-tone="green" className="tone-surface rounded p-3 text-xs">{notice}</p>}
     {list.loading && <p role="status" className="text-sm text-slate-500">Workspaces laden…</p>}
@@ -86,7 +84,7 @@ export default function WorkspaceView() {
             {list.data?.map(entry => <option key={entry.id} value={entry.id}>{entry.name} · {entry.root}</option>)}
           </select>
         </label>
-        <button className={button} disabled={busy} onClick={() => void discover(workspace.root)}>Erneut erkennen</button>
+        <button className={button} disabled={busy} onClick={() => void rescan(workspace.root)}>{busy ? "Bitte warten…" : "Erneut erkennen"}</button>
         <button data-tone="blue" className={`${button} tone-surface`} disabled={busy} onClick={async () => {
           setBusy(true); setError(null);
           try { await invoke("workspace_window_open", { workspaceId: workspace.id }); }
@@ -141,6 +139,6 @@ export default function WorkspaceView() {
         })}</div>
       </article>)}
       </>}
-    </> : !list.loading && !list.error && <p className="rounded border border-dashed border-slate-300 p-6 text-sm text-slate-500">Noch kein Workspace. Wähle einen Arbeitsordner mit Deinen Repositories – einzelne Ordner ohne Git funktionieren ebenfalls.</p>}
+    </> : !list.loading && !list.error && <p className="rounded border border-dashed border-slate-300 p-6 text-sm text-slate-500">Noch kein Workspace gespeichert. Öffne oben einen Ordner, der mehrere Repositories oder Projekte enthält.</p>}
   </section>;
 }

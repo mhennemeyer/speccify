@@ -10,9 +10,16 @@ try {
   const errors = []; page.on("pageerror", error => errors.push(error.message));
   await page.goto(`${base}?dashboard=1&workspaces=1`);
   const view = page.getByRole("region", { name: "Workspaces" });
+  const opener = page.getByRole("region", { name: "Ordner öffnen", exact: true });
+  const openFolder = async path => {
+    await opener.getByLabel("Ordner", { exact: true }).fill(path);
+    await opener.getByRole("button", { name: "Öffnen", exact: true }).click();
+  };
   await view.getByText(/Noch kein Workspace/).waitFor();
-  await view.getByLabel("Arbeitsordner", { exact: true }).fill("/private/tmp/demo-workspace");
-  await view.getByRole("button", { name: "Workspace erkennen", exact: true }).click();
+  // Spec 027: ein Einstieg — der Elternordner wird als Workspace erkannt und öffnet sein Arbeitsfenster.
+  await openFolder("/private/tmp/demo-workspace");
+  await opener.getByText(/Workspace erkannt: 2 Repos\/Ordner · 3 Worktrees/).waitFor();
+  assert.deepEqual((await page.evaluate(() => window.__SPECCIFY_MOCK__.workspaceOpened)).at(-1), { workspaceId: "workspace-demo", window: true });
   await view.getByText("2 Repos/Ordner · 3 Worktrees", { exact: true }).waitFor();
   assert.equal(await view.locator("article[data-project-id]").count(), 2);
   await view.getByRole("checkbox", { name: /API/ }).check();
@@ -41,7 +48,7 @@ try {
   await view.getByRole("heading", { name: /Orbit Suite/ }).waitFor();
   assert.equal(await view.locator("article[data-project-id]").getAttribute("data-project-id"), groupedId);
   await view.getByRole("button", { name: "Erneut erkennen", exact: true }).click();
-  await view.getByRole("button", { name: "Workspace erkennen", exact: true }).waitFor();
+  await view.locator('button:has-text("Erneut erkennen"):not([disabled])').waitFor();
   assert.equal(await view.locator("article[data-project-id]").getAttribute("data-project-id"), groupedId);
   await view.getByRole("button", { name: "Worktree öffnen: /private/tmp/demo-workspace/api-search", exact: true }).click();
   assert.deepEqual(await page.evaluate(() => window.__SPECCIFY_MOCK__.workspaceOpened), [{ workspaceId: "workspace-demo", worktreeId: "tree-feature" }]);
@@ -55,21 +62,24 @@ try {
   await view.getByRole("button", { name: "Speichern", exact: true }).click();
   await view.getByText(/WORKSPACE_CHANGED/).waitFor();
   assert.equal(await view.getByRole("heading", { name: /Stale name/ }).count(), 0);
-  await view.getByLabel("Arbeitsordner", { exact: true }).fill("/private/tmp/partial");
-  await view.getByRole("button", { name: "Workspace erkennen", exact: true }).click();
+  await openFolder("/private/tmp/partial");
   await view.getByText("Suche begrenzt", { exact: true }).waitFor();
   await view.getByText(/Nicht durchsucht: api\/deep\/project/).waitFor();
   await view.getByText(/Verfügbare Projekte können geöffnet werden/).waitFor();
   await view.getByRole("button", { name: "Erneut erkennen", exact: true }).click();
   await view.getByText("Suche begrenzt", { exact: true }).waitFor({ state: "hidden" });
   assert.equal(await view.locator("article[data-project-id]").count(), 2);
-  await view.getByLabel("Arbeitsordner", { exact: true }).fill("/missing");
-  await view.getByRole("button", { name: "Workspace erkennen", exact: true }).click();
-  await view.getByText(/Kein Verzeichnis: missing/).waitFor();
+  await openFolder("/missing");
+  await opener.getByText(/Kein Verzeichnis: missing/).waitFor();
   assert.equal(await view.locator("article[data-project-id]").count(), 2);
-  await page.getByText("Einzelprojekt direkt öffnen / zuletzt geöffnet", { exact: true }).click();
-  await page.getByRole("button", { name: "/private/tmp/demo-workspace/legacy", exact: true }).click();
+  // Einzelprojekt (Repo-Wurzel): derselbe Einstieg öffnet direkt das Projektfenster.
+  await openFolder("/private/tmp/demo-workspace/legacy");
+  await opener.getByText(/Einzelprojekt erkannt/).waitFor();
   assert.deepEqual((await page.evaluate(() => window.__SPECCIFY_MOCK__.workspaceOpened)).at(-1), { path: "/private/tmp/demo-workspace/legacy" });
+  await opener.getByRole("button", { name: "/private/tmp/demo-workspace/legacy", exact: true }).click();
+  await opener.getByText(/Einzelprojekt erkannt/).waitFor();
+  // Seit dem Reload: Worktree, Partial-Workspace, zweimal Einzelprojekt; „/missing“ öffnet nichts.
+  assert.equal((await page.evaluate(() => window.__SPECCIFY_MOCK__.workspaceOpened)).length, 4);
   await page.setViewportSize({ width: 1000, height: 800 });
   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), "workspace overflow");
   await view.evaluate(element => { element.style.width = "320px"; });

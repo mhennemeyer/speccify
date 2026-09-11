@@ -80,6 +80,14 @@ export function installWorkspaceFixture(responses) {
     workspace.revision++; write([workspace]); return workspace;
   };
   responses.workspace_open = ({ workspaceId, worktreeId }) => { window.__SPECCIFY_MOCK__.workspaceOpened.push({ workspaceId, worktreeId }); return root; };
+  // Spec 027: ein Einstieg. Pfade auf "/legacy" gelten als Einzelprojekt (Repo-Wurzel),
+  // alles andere als Elternordner mit mehreren Repos → gespeicherter Workspace + Fenster.
+  responses.folder_open = ({ path }) => {
+    if (path.endsWith("/legacy")) { window.__SPECCIFY_MOCK__.workspaceOpened.push({ path }); return { kind: "project", root: path }; }
+    const workspace = responses.workspace_discover({ path });
+    window.__SPECCIFY_MOCK__.workspaceOpened.push({ workspaceId: workspace.id, window: true });
+    return { kind: "workspace", workspace };
+  };
   responses.project_recent = () => [root + "/legacy"];
   responses.project_open = ({ path }) => { window.__SPECCIFY_MOCK__.workspaceOpened.push({ path }); return path; };
   responses.ask_bo_pending = () => [];
