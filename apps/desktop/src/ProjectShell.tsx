@@ -30,7 +30,7 @@ import { isMac } from "./lib/platform";
 import HelpView from "./views/HelpView";
 import { ErrorBox, Spinner } from "./components/ui";
 import { AGENT_PRESETS, DEFAULT_AGENT_COMMAND, continueCommand } from "./lib/agents";
-import TabIcon from "./components/TabIcon";
+import ProjectNavigation, { PROJECT_TABS as TABS, PROJECT_GROUPS as GROUPS, projectGroupOf as groupOf, type ProjectTab as TabId } from "./components/ProjectNavigation";
 import { PanelsContext, type Slots } from "./lib/panels";
 import {
   DEFAULT_LAYOUT,
@@ -56,37 +56,6 @@ import SkillsTab from "./views/project/SkillsTab";
 import ToolsTab from "./views/project/ToolsTab";
 import WorkflowBanner from "./views/project/WorkflowBanner";
 
-const TABS = [
-  { id: "board", label: "Specs" },
-  { id: "files", label: "Dateien" },
-  { id: "git", label: "Git" },
-  { id: "playbooks", label: "Playbooks" },
-  { id: "skills", label: "Skills" },
-  { id: "tools", label: "Tools" },
-  { id: "actions", label: "Aktionen" },
-  { id: "mcps", label: "MCPs" },
-  { id: "agent", label: "Agent" },
-  { id: "help", label: "Hilfe" },
-] as const;
-
-type TabId = (typeof TABS)[number]["id"];
-
-/** Zwei Tab-Ebenen im Navigator (BO 2026-09-05, Vorbild iKanban): oben die
- *  Gruppen als Icons, darunter die Tabs der Gruppe als Text. „Orga" ist ein
- *  Arbeitsname — Kandidaten: Vorhaben, Wissen, Steuerung. */
-const GROUPS: ReadonlyArray<{ id: string; label: string; tone: string; tabs: readonly TabId[] }> = [
-  // Reihenfolge nach BO 2026-09-08: Dateien, Orga, Technik, Board, Hilfe (⌘1–5).
-  { id: "dateien", label: "Dateien", tone: "blue", tabs: ["files", "git"] },
-  { id: "orga", label: "Orga", tone: "violet", tabs: ["playbooks", "skills"] },
-  { id: "technik", label: "Technik", tone: "teal", tabs: ["tools", "actions", "mcps", "agent"] },
-  // Specs statt Board + Pläne (Plan spec-workflow.md, D5).
-  { id: "board", label: "Specs", tone: "violet", tabs: ["board"] },
-  { id: "help", label: "Hilfe", tone: "slate", tabs: ["help"] },
-];
-
-function groupOf(tab: TabId) {
-  return GROUPS.find((group) => group.tabs.includes(tab)) ?? GROUPS[0];
-}
 
 /** Aktion aus actions.json, soweit die Toolbar sie braucht. */
 interface ToolbarAction {
@@ -391,7 +360,6 @@ export default function ProjectShell() {
       ? { gridColumn: 5, gridRow: "3 / -1" }
       : { gridColumn: 3, gridRow: 5 };
 
-  const activeGroup = groupOf(active);
   // Toolbar (I3): eingebaute Knöpfe + Aktionen, Auswahl und Reihenfolge aus
   // dem Layout (`toolbar`), Default = Git-Knöpfe + Aktionen mit `toolbar: true`.
   const showTerminal = () => {
@@ -538,54 +506,7 @@ export default function ProjectShell() {
           className={`${navShown ? "flex" : "hidden"} min-h-0 flex-col border-r border-slate-200 bg-white`}
           style={{ gridColumn: 1, gridRow: "2 / -1" }}
         >
-          {/* Ebene 1: Gruppen als Icons */}
-          <div className="px-2 py-1.5">
-            <div
-              role="tablist"
-              aria-label="Bereiche"
-              className="flex gap-0.5 rounded-full bg-slate-100 p-0.5"
-            >
-              {GROUPS.map((group) => (
-                <button
-                  key={group.id}
-                  role="tab"
-                  aria-selected={activeGroup.id === group.id}
-                  data-tone={group.tone}
-                  aria-label={group.label}
-                  title={`${group.label} (${isMac ? "⌘" : "Strg+"}${GROUPS.indexOf(group) + 1})`}
-                  onClick={() => activateTab(lastTab[group.id] ?? group.tabs[0])}
-                  className="accent-tab flex min-h-7 flex-1 items-center justify-center rounded-full"
-                >
-                  <TabIcon id={group.id} />
-                </button>
-              ))}
-            </div>
-          </div>
-          {/* Ebene 2: Tabs der Gruppe (nur wenn es mehr als einen gibt) */}
-          {activeGroup.tabs.length > 1 ? (
-            <div role="tablist" aria-label={activeGroup.label} className="flex gap-1 px-2 pb-1">
-              {activeGroup.tabs.map((id) => {
-                const tab = TABS.find((entry) => entry.id === id);
-                if (!tab) return null;
-                return (
-                  <button
-                    key={id}
-                    role="tab"
-                    aria-selected={active === id}
-                    data-tone={activeGroup.tone}
-                    onClick={() => activateTab(id)}
-                    className="accent-tab rounded px-2 py-1 text-xs font-medium"
-                  >
-                    {tab.label}
-                  </button>
-                );
-              })}
-            </div>
-          ) : (
-            <h2 className="px-3 pb-1 text-xs font-semibold text-slate-500">
-              {TABS.find((tab) => tab.id === active)?.label}
-            </h2>
-          )}
+          <ProjectNavigation active={active} lastTab={lastTab} activate={activateTab} />
           {/* Ein Listen-Slot pro Tab — die Tabs portalen ihre Liste hinein
               (lib/panels.tsx); nur der aktive ist sichtbar. */}
           <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-2">

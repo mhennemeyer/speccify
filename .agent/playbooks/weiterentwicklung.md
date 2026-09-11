@@ -171,6 +171,14 @@ Wiederaufnahme stehen: itsdcloud mit allen drei Repos und 66 Specs geöffnet,
 nach Neustart automatisch wiederhergestellt. Menschliche Abnahme offen; Grenzen
 und Betriebsbefunde siehe Bestandsplaybook und Spec-Verifikation.
 
+**Nutzerkorrektur 026:** Der Mehrprojekt-Modus soll im Wesentlichen genau wie ein
+Einzelprojekt bedienbar sein. Die zunächst separate Workspace-Oberfläche wurde
+nicht abgenommen. Jetzt gemeinsame Toolbar und zweistufige Bereichsnavigation,
+gleiche Splitter/Layoutwerte, Inspektor-/Ausgabetabs, Terminal unten/rechts und
+Shortcuts; zusätzlich einklappbare Projektgruppen. Titel und Pfad müssen das
+Fenster bewegen können. Dieses Prinzip dauerhaft im UI-Playbook festgehalten;
+keine weitere eigenständige Workspace-Bedienlogik als Standard einführen.
+
 ### V1-02 — Autoupdater für die Apps
 
 **Gewünscht:** Interne Nutzer bekommen neue Versionen ohne manuelles Neuinstallieren.

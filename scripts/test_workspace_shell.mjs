@@ -9,7 +9,13 @@ try {
   const errors = []; page.on("pageerror", error => errors.push(error.message));
   await page.goto(`${base}?workspaces=1&workspace-shell=1`);
   const root = "/private/tmp/demo-workspace";
-  const nav = page.getByRole("navigation", { name: "Workspace-Bereiche" });
+  const nav = page.getByRole("navigation", { name: "Workspace-Projekte" });
+  const activate = async label => {
+    const group = ({ Dateien: "Dateien", Git: "Dateien", Skills: "Orga", Playbooks: "Orga", Tools: "Technik", MCPs: "Technik", Agent: "Technik", Aktionen: "Technik", "Gemeinsames Board": "Specs" })[label];
+    await nav.getByRole("tablist", { name: "Bereiche", exact: true }).getByRole("tab", { name: group, exact: true }).click();
+    if (group !== "Specs") await nav.getByRole("tablist", { name: group, exact: true }).getByRole("tab", { name: label, exact: true }).click();
+  };
+  const terminal = id => page.getByRole("region", { name: `Terminal ${root}/${id}`, exact: true });
   const pane = id => page.locator(`[data-worktree-id="tree-${id}"]`);
   const area = id => page.getByRole("region", { name: `Arbeitsbereich ${root}/${id}`, exact: true });
   const inspector = id => page.getByRole("region", { name: `Inspektor ${root}/${id}`, exact: true });
@@ -21,8 +27,8 @@ try {
   assert.equal((await calls("terminal_open")).length, 0, "opening a workspace starts no terminals");
   await pane("api").getByRole("button", { name: "+ Spec in API", exact: true }).click();
   await page.getByRole("button", { name: "Abbrechen", exact: true }).click();
-  await nav.getByRole("button", { name: "Dateien", exact: true }).click();
-  await nav.getByRole("button", { name: "Gemeinsames Board", exact: true }).click();
+  await activate("Dateien");
+  await activate("Gemeinsames Board");
   assert.equal(await page.getByRole("button", { name: "Abbrechen", exact: true }).count(), 0, "dismissed creation stays dismissed across tabs");
   await page.getByLabel("Specs tree-feature", { exact: true }).getByRole("button").click();
   await inspector("api-search").getByRole("tab", { name: /Tasks/ }).click();
@@ -30,7 +36,7 @@ try {
   await page.waitForFunction(() => window.__SPECCIFY_MOCK__.workspaceCalls.some(call => call.command === "project_spec_toggle_task"));
   assert.equal((await calls("project_spec_toggle_task")).at(-1).args.project, `${root}/api-search`);
   await cards.filter({ hasText: "api-search" }).getByText(/2\/2 Aufgaben/).waitFor();
-  await nav.getByRole("button", { name: "Dateien", exact: true }).click();
+  await activate("Dateien");
   await pane("api").getByRole("button", { name: "shared.txt", exact: true }).click();
   await area("api").getByText(`Only ${root}/api`, { exact: true }).waitFor();
   const editor = area("api").locator(".cm-content");
@@ -41,7 +47,7 @@ try {
   assert.match(await editor.innerText(), /API draft stays here/);
   await editor.press("Meta+s");
   assert.equal((await calls("project_write_file")).at(-1).args.project, `${root}/api`);
-  await nav.getByRole("button", { name: "Git", exact: true }).click();
+  await activate("Git");
   const message = area("api").getByLabel("Commit-Betreff", { exact: true });
   await message.fill("API commit draft");
   await select("web", "Web web");
@@ -52,11 +58,11 @@ try {
   await page.waitForFunction(() => window.__SPECCIFY_MOCK__.workspaceCalls.some(call => call.command === "project_action_run"));
   assert.equal((await calls("project_action_run")).length, 1);
   assert.equal((await calls("project_action_run"))[0].args.project, `${root}/api`);
-  await nav.getByRole("button", { name: "Terminals", exact: true }).click();
-  await area("api").getByRole("button", { name: "Terminal starten: API", exact: true }).click();
+  // Terminal remains docked below the content.
+  await terminal("api").getByRole("button", { name: "Agent-Terminal starten", exact: true }).click();
   await page.waitForFunction(() => window.__SPECCIFY_MOCK__.workspaceCalls.filter(call => call.command === "terminal_open").length === 1);
   await select("web", "Web web");
-  await area("web").getByRole("button", { name: "Terminal starten: Web", exact: true }).click();
+  await terminal("web").getByRole("button", { name: "Agent-Terminal starten", exact: true }).click();
   await page.waitForFunction(() => window.__SPECCIFY_MOCK__.workspaceCalls.filter(call => call.command === "terminal_open").length === 2);
   assert.deepEqual((await calls("terminal_open")).map(call => call.args.cwd).sort(), [`${root}/api`, `${root}/web`]);
   const count = (await calls("terminal_write")).length;
@@ -65,13 +71,13 @@ try {
   const webTerminal = (await calls("terminal_open")).find(call => call.args.cwd.endsWith("/web")).args.id;
   assert.equal((await calls("terminal_write")).at(-1).args.id, webTerminal);
   const killedBeforeSwitch = (await calls("terminal_kill")).length;
-  await nav.getByRole("button", { name: "Skills", exact: true }).click();
+  await activate("Skills");
   assert.equal((await calls("terminal_kill")).length, killedBeforeSwitch, "switching retains both processes");
   const liveIds = new Set((await calls("terminal_open")).map(call => call.args.id));
   assert.equal(liveIds.size, 2);
   assert.ok((await calls("terminal_kill")).every(call => !liveIds.has(call.args.id)), "Strict Mode cleanup cannot kill a live terminal");
   for (const label of ["Playbooks", "Tools", "MCPs", "Agent", "Aktionen"]) {
-    await nav.getByRole("button", { name: label, exact: true }).click();
+    await activate(label);
     await area("web").waitFor();
   }
   const beforeGroupingKills = (await calls("terminal_kill")).length;
@@ -84,9 +90,9 @@ try {
   await page.getByRole("button", { name: "Aktualisieren", exact: true }).click();
   await page.getByRole("region", { name: "Projektgruppe Product Suite" }).waitFor();
   assert.equal((await calls("terminal_kill")).length, beforeGroupingKills, "regrouping preserves mounted processes");
-  await nav.getByRole("button", { name: "Git", exact: true }).click();
+  await activate("Git");
   assert.equal(await area("web").getByLabel("Commit-Betreff", { exact: true }).inputValue(), "Web commit draft");
-  await nav.getByRole("button", { name: "Gemeinsames Board", exact: true }).click();
+  await activate("Gemeinsames Board");
   await page.screenshot({ path: "/private/tmp/speccify-026-workspace.png", fullPage: true });
   for (const theme of ["light", "dark"]) {
     await page.evaluate(theme => document.documentElement.setAttribute("data-theme", theme), theme);

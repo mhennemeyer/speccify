@@ -400,10 +400,14 @@ Diese Tabelle verändert keine Station oder Reihenfolge.
 
 ```text
 Workspace-Fenster · eigener Titel, bestehendes Fenster fokussieren
-├── Kopf: Workspace/Root · Aktualisieren
-├── Bereiche: Gemeinsames Board · Dateien · Git · Playbooks · Skills
-│             Tools · Aktionen · MCPs · Agent · Terminals
-├── Navigator: Projektgruppe → Repository → Worktree
+├── Gemeinsame Projekt-Toolbar: Titel/Root (ziehbar) · Git/Aktionen · Aktivität
+│   └── Navigator / Terminal / Inspektor schalten · Theme · Einstellungen
+├── Gemeinsame Bereichsleiste im Navigator
+│   ├── Dateien: Dateien / Git
+│   ├── Orga: Playbooks / Skills
+│   ├── Technik: Tools / Aktionen / MCPs / Agent
+│   └── Specs (gemeinsames Board) / Hilfe
+├── Navigator: Aktualisieren · einklappbare Projektgruppe → Repository → Worktree
 │   ├── Board: jeweilige Specs · + Spec mit explizitem Repo-Ziel
 │   ├── Dateien: je Worktree eigener Baum / Suche / Dateiliste
 │   ├── Git: je Worktree eigener Status / Änderungen / Historie
@@ -412,18 +416,36 @@ Workspace-Fenster · eigener Titel, bestehendes Fenster fokussieren
 ├── Mitte
 │   ├── Gemeinsames Board: Filter / Suche / Herkunftskarten / Snapshot aktualisieren
 │   └── Gewähltes Projekt: bestehender Editor, Git-Composer, Dokument oder Aktion
-├── Inspektor: Projekt / Repo / absoluter Worktree-Pfad
+├── Verstellbarer Inspektor: Projekt / Repo / Worktree (voller Pfad im Tooltip)
 │   ├── Vorhandene Detailaktionen; bei Specs Tasks / Fragen / Historie / Bearbeiten
-│   └── Projektbezogene Aktionsausgaben als Tabs · zum Terminal wechseln
-└── Terminal je Worktree: explizit starten; Ziel fest, Wechsel erhält Prozess
+│   └── Projektbezogene Aktionsausgaben als Tabs · Stop / Ausgabe schließen
+└── Terminal je Worktree: unten/rechts andocken, explizit starten, Ziel fest
+    └── Projektwechsel, Ein-/Ausblenden und Docking erhalten den Prozess
 ```
 
 Die Projektkomponenten behalten beim Wechsel und Umgruppieren ihren Zustand.
 Keine aggregierte Git-Operation, kein automatischer Multi-Agenten-Start, kein
 fensterübergreifender Team-Sync. Fenster werden wiederhergestellt, laufende PTYs
 nach App-Quit nicht als fortgesetzt zugesagt. Dashboard-Board bleibt lesend.
+Breiten, Sichtbarkeit, Terminal-Dock und Toolbar-Präferenz werden pro Workspace
+lokal gespeichert; dieselben Defaults, Komponenten und Tastenkürzel wie im
+Einzelprojektfenster. Gleichnamige Projektaktionen haben getrennte Lauf-IDs.
 
 ## Verifikation und verbleibende Risiken
+
+**UI-Korrektur 026, 2026-09-11:** Nutzer lehnt separate Workspace-Bedienoberfläche
+ab. Gemeinsame Projekt-Navigation und Toolbar verwenden; Splitter, Docking,
+Theme/Einstellungen, Hilfe und Shortcuts wiederhergestellt. Board verwendet im
+Arbeitsfenster dieselben Farb-/Auswahlklassen; Dashboard-Vorschau bleibt unverändert.
+Neuer Layout-Paritätstest vergleicht Einzelprojekt/Workspace und prüft den tatsächlich
+per Lockdatei festgelegten Tauri-Drag-Handler, Splitter, Gruppen, gespeichertes Layout, PTY-Docking,
+gleichnamige parallele Toolbar-Aktionen mit getrennten Streams/Stop-Zielen.
+Neun UI-Suites plus Typecheck grün. Finaler lokaler Build PID 53572 auf 18768,
+alle sechs Fenster wiederhergestellt, Board mit 66 Specs visuell geprüft und
+App offen gelassen. Nativer Titel-Ziehtest: (114,69) → (154,89),
+also exakt 40×20 Pixel. Frühe Testversuche hatten nicht Speccify im Vordergrund;
+kein fehlendes macOS-Eingaberecht. Alle acht Website-Motive visuell geprüft und
+im zweiten Capture bytegleich; Website-Build/responsive Prüfung grün. Kein Push.
 
 **Nachtrag 026, 2026-09-11, 09:05 UTC:** Gemeinsames Arbeitsfenster implementiert
 und mit drei Repos plus Feature-Worktree automatisiert geprüft: Herkunft bei

@@ -332,6 +332,7 @@ export default function ActionsTab({
   activeOutput,
   onOutputTabsChange,
   onRevealOutput,
+  runNamespace,
 }: {
   project: string;
   refresh?: number;
@@ -339,7 +340,10 @@ export default function ActionsTab({
   activeOutput?: string | null;
   onOutputTabsChange?: (tabs: ActionOutputTab[]) => void;
   onRevealOutput?: (id: string) => void;
+  runNamespace?: string;
 }) {
+  const runPrefix = runNamespace ? `${runNamespace}:` : "";
+  const backendRunId = (id: string) => `${runPrefix}${id}`;
   const snapshot = useAsync(
     () => invoke<ActionsSnapshot>("project_actions", { project }),
     `actions:${project}`,
@@ -379,7 +383,9 @@ export default function ActionsTab({
 
   useEffect(() => {
     const outputPromise = listen<{ run_id: string; line: string }>("action-output", (event) => {
-      const { run_id, line } = event.payload;
+      const { line } = event.payload;
+      if (!event.payload.run_id.startsWith(runPrefix)) return;
+      const run_id = event.payload.run_id.slice(runPrefix.length);
       setRuns((previous) => {
         const run = previous[run_id];
         if (!run) return previous;
@@ -395,7 +401,9 @@ export default function ActionsTab({
       duration_ms: number;
       error: string | null;
     }>("action-exit", (event) => {
-      const { run_id, exit_code, duration_ms, error } = event.payload;
+      const { exit_code, duration_ms, error } = event.payload;
+      if (!event.payload.run_id.startsWith(runPrefix)) return;
+      const run_id = event.payload.run_id.slice(runPrefix.length);
       runningIds.current.delete(run_id);
       const activity = activityIds.current[run_id];
       if (activity) {
@@ -456,7 +464,7 @@ export default function ActionsTab({
       await listenersReady.current;
       await invoke("project_action_run", {
         project,
-        runId: action.command,
+        runId: backendRunId(action.command),
         commandLine,
       });
     } catch (e) {
@@ -517,7 +525,7 @@ export default function ActionsTab({
 
   const stop = async (id: string) => {
     try {
-      await invoke("project_action_stop", { runId: id });
+      await invoke("project_action_stop", { runId: backendRunId(id) });
     } catch (e) {
       setRuns((previous) => {
         const run = previous[id];

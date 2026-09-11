@@ -55,7 +55,7 @@ export default function WorkspaceBoardView({ workspaceId, revision, refresh = 0,
     catch (e) { setOpenError(String(e)); }
     finally { setOpening(false); }
   };
-  return <section aria-label="Workspace-Specs" className="min-w-0 space-y-3">
+  return <section aria-label="Workspace-Specs" className={`min-w-0 space-y-3 ${listSlots ? "flex h-full min-h-0 flex-col" : ""}`}>
     <div className="flex flex-wrap items-end gap-3">
       <label className="text-xs text-slate-500">Projekt
         <select aria-label="Board-Projekt" value={filter} onChange={event => setFilter(event.target.value)} className="ml-2 max-w-full rounded border border-slate-300 bg-white p-2 text-slate-800">
@@ -73,7 +73,7 @@ export default function WorkspaceBoardView({ workspaceId, revision, refresh = 0,
     {data && data.revision !== revision && <p role="status" className="text-xs text-amber-700">Projektzuordnung inzwischen geändert. Board und Workspace erneut aktualisieren.</p>}
     {data?.partial && <aside role="status" data-tone="amber" className="tone-surface rounded border p-3 text-xs"><strong>Board unvollständig</strong><ul className="mt-1 list-inside list-disc break-all">{data.warnings.map((warning,index) => <li key={index}>{warning}</li>)}</ul></aside>}
     {!loading && !error && visible.length === 0 && <p className="text-sm text-slate-500">Keine Specs für diese Auswahl. Projektfilter oder Suche prüfen.</p>}
-    <div className={listSlots ? "min-w-0" : "grid min-w-0 gap-3 xl:grid-cols-[12rem_minmax(0,1fr)]"}>
+    <div className={listSlots ? "min-h-0 min-w-0 flex-1" : "grid min-w-0 gap-3 xl:grid-cols-[12rem_minmax(0,1fr)]"}>
       {listSlots ? Object.entries(listSlots).map(([id, slot]) => slot && createPortal(<div aria-label={`Specs ${id}`}>
         {visible.filter(entry => entry.worktree_id === id).map(entry => <button key={entry.key} aria-pressed={selected === entry.key} onClick={() => choose(entry.key)} data-tone="violet" className={`mb-1 block w-full rounded p-2 text-left text-xs ${selected === entry.key ? "tone-surface" : "text-slate-700 hover:bg-slate-100"}`}>{entry.spec.id} · {entry.spec.title}</button>)}
       </div>, slot, id)) : <aside aria-label="Workspace-Spec-Liste" className="max-h-96 overflow-auto rounded border border-slate-200 bg-white p-2">
@@ -83,11 +83,11 @@ export default function WorkspaceBoardView({ workspaceId, revision, refresh = 0,
           <span className="mt-1 block break-all text-[11px]">{entry.project_name} / {entry.repository_name} / {entry.worktree_label || "."}</span>
         </button>)}
       </aside>}
-      <div aria-label="Workspace-Board" className="grid min-w-0 gap-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 13rem), 1fr))" }}>
-        {stations.map(station => <section key={station} aria-label={`Workspace-Spalte ${station}`} data-tone={tones[station] ?? "slate"} className="min-w-0 rounded-lg border border-slate-200 bg-slate-50 p-2">
-          <h3 className="mb-2 text-sm font-semibold text-slate-700">{station} <span className="text-xs font-normal">{visible.filter(entry => entry.spec.station === station).length}</span></h3>
-          {visible.filter(entry => entry.spec.station === station).map(entry => <button key={entry.key} data-workspace-spec={entry.key} aria-pressed={selected === entry.key} onClick={() => choose(entry.key)}
-            className={`mb-2 block w-full min-w-0 rounded border p-3 text-left text-sm ${selected === entry.key ? "tone-surface" : "border-slate-200 bg-white text-slate-800 hover:border-slate-400"}`}>
+      <div aria-label="Workspace-Board" className={`grid min-w-0 gap-3 ${listSlots ? "h-full min-h-0" : ""}`} style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 13rem), 1fr))" }}>
+        {stations.map(station => <section key={station} aria-label={`Workspace-Spalte ${station}`} data-tone={tones[station] ?? "slate"} className={`min-w-0 rounded-lg p-2 ${listSlots ? "spec-lane min-h-0 overflow-y-auto" : "border border-slate-200 bg-slate-50"}`}>
+          <h3 className={`mb-2 text-sm font-semibold ${listSlots ? "tone-ink uppercase" : "text-slate-700"}`}>{station} <span className="text-xs font-normal">{visible.filter(entry => entry.spec.station === station).length}</span></h3>
+          {visible.filter(entry => entry.spec.station === station).map(entry => <button key={entry.key} data-workspace-spec={entry.key} data-selected={selected === entry.key} aria-pressed={selected === entry.key} onClick={() => choose(entry.key)}
+            className={`mb-2 block w-full min-w-0 rounded-lg border p-2 text-left text-sm ${listSlots ? "spec-card text-slate-800" : selected === entry.key ? "tone-surface" : "border-slate-200 bg-white text-slate-800 hover:border-slate-400"}`}>
             <span className="block text-[11px]">{entry.spec.id}</span><span className="block font-semibold">{entry.spec.title}</span>
             <span data-tone="violet" className="tone-surface mt-2 block break-words rounded px-2 py-1 text-[11px]">{entry.project_name}</span>
             <span className="mt-1 block break-all text-[11px]">{entry.repository_name} · {entry.worktree_label || "."}</span>

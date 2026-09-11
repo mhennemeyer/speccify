@@ -152,7 +152,7 @@ export default function Toolbar({
     // data-tauri-drag-region: die Toolbar ersetzt auf macOS die Titelleiste,
     // also zieht man das Fenster an ihr (Kinder-Elemente bleiben klickbar).
     <header
-      data-tauri-drag-region
+      data-tauri-drag-region="deep"
       className="flex items-center gap-3 border-b border-slate-200 bg-white px-3"
       style={{ paddingLeft: 12 + TRAFFIC_LIGHT_INSET, minHeight: 38 }}
     >
@@ -166,7 +166,7 @@ export default function Toolbar({
       ) : null}
       {/* Mitte: konfigurierbare Knöpfe */}
       <div
-        data-tauri-drag-region
+        data-tauri-drag-region="deep"
         className="flex min-w-0 flex-1 items-center justify-center gap-0.5"
       >
         {items.map((item) => (

@@ -22,7 +22,7 @@ export default function SettingsSheet({
   onTheme: (next: ThemePref) => void;
   layout: ProjectLayout;
   onDock: (dock: TerminalDock) => void;
-  onResumeAgent: (value: boolean) => void;
+  onResumeAgent?: (value: boolean) => void;
   /** Toolbar (I3): aktive Knopf-Ids in Reihenfolge + alle wählbaren. */
   toolbar: string[];
   toolbarChoices: Array<{ id: string; label: string; hint: string }>;
@@ -82,7 +82,7 @@ export default function SettingsSheet({
 
         <section className="mb-4">
           <h3 className="mb-1 text-xs font-semibold text-slate-500">Agent-Sitzung</h3>
-          <label className="flex items-start gap-2 text-xs text-slate-600">
+          {onResumeAgent ? <label className="flex items-start gap-2 text-xs text-slate-600">
             <input
               type="checkbox"
               checked={layout.resumeAgent}
@@ -94,7 +94,7 @@ export default function SettingsSheet({
               (<code>claude --continue</code> bzw. <code>codex resume --last</code>). Der
               Agent behält so seinen Kontext — auch bei Dev-Neustarts von Speccify.
             </span>
-          </label>
+          </label> : <p className="text-xs text-slate-500">Im Workspace startest Du Terminals pro Projekt ausdrücklich. Beim App-Neustart werden keine Sitzungen automatisch gestartet.</p>}
         </section>
 
         <section className="mb-4">

@@ -27,6 +27,10 @@ kein automatischer Start mehrerer Agenten und keine Cross-Repo-Refactorings.
 
 ## Acceptance
 
+- Einzelprojekt- und Workspace-Fenster verwenden dieselbe Toolbar, zweistufige
+  Navigation, Splitter und Terminal-Anordnung. Mehrprojekte ergänzen die vorhandene
+  Oberfläche; sie sind kein eigener UI-Modus. Fensterziehen funktioniert auch auf
+  Titel und Pfad, Toolbar-Knöpfe bleiben normal bedienbar.
 - Workspace öffnen zeigt drei oder mehr Repos in einem Fenster, ohne ein
   Einzelprojektfenster pro Repo zu öffnen; wiederholtes Öffnen fokussiert dasselbe.
 - Fachliche Projektgruppen enthalten ihre Repos/Worktrees in jeder Navigation.
@@ -62,9 +66,24 @@ kein automatischer Start mehrerer Agenten und keine Cross-Repo-Refactorings.
 - D6, 2026-09-11: Neue Spec verwendet den vorhandenen Projekt-Dialog. Dessen
   Zustand bleibt beim Bereichswechsel erhalten; geschlossene Dialoge öffnen
   nicht durch erneutes Mounten von selbst.
+- D7, 2026-09-11: Nutzer lehnt den separaten Workspace-UI-Modus ab. Vertraute
+  Projektoberfläche ist verbindlich: gemeinsame Toolbar/Bereichsnavigation,
+  Splitter, Terminal unten/rechts, Ausgabetabs, Hilfe, Einstellungen und Shortcuts.
+  Gruppierung ergänzt Listen; dieselben Board-Farbklassen erhalten. Keine pauschale
+  Zusage vollständiger Funktionsparität: gemeinsames Board hat weiterhin kein
+  Cross-Repo-Drag-and-drop oder Team-Sync, Terminal-Resume bleibt ausdrücklich aus.
+- D8, 2026-09-11: Ziehfehler durch nicht als Drag-Region wirksame Titel-/Pfad-
+  Kinder. Gemeinsame Toolbar verwendet Tauri `deep`; interaktive Nachfahren
+  bleiben ausgenommen. Gegen exakt verwendetes Tauri-Script und nativ prüfen.
+- D9, 2026-09-11: Toolbar-Rückkehr legt Kollisionsrisiko gleichnamiger Aktionen
+  offen. Workspace/Worktree-Namensraum für Run-/Output-/Stop-IDs; vorhandene
+  Einzelprojekt-Aufrufe und Aktionsdefinitionen unverändert.
 
 ## Tasks
 
+- [x] (added) Nutzerkorrektur: vertraute Projektoberfläche im Workspace wiederherstellen.
+- [x] (added) Titelleiste einschließlich Text verschiebbar machen und nativ prüfen.
+- [x] (added) Layout-/Docking-/Toolbar-Parität sowie bestehende Isolation regressionsprüfen.
 - [x] Nativen Workspace-Fenstervertrag mit Öffnen/Fokus/Wiederaufnahme implementieren.
 - [x] Projektweise Navigation, bestehende Arbeitsansichten und gemeinsame Spec-Sicht.
 - [x] Prozess-/Ereignis-/Editor-Isolation und fehlende Zielbindungen absichern.
@@ -107,6 +126,29 @@ kein automatischer Start mehrerer Agenten und keine Cross-Repo-Refactorings.
   Große Spec-Listen können weitere Projektgruppen unter den Scrollbereich schieben;
   einklappbare Gruppen sind ein möglicher UI-Feinschliff. Kein Team-Sync oder
   automatischer Umzug von Spec-/Wissensdateien.
+
+### Verification · Nutzerkorrektur 2026-09-11
+
+- Skills spec-next, speccify und app-screenshots; Suche `workspace` ohne Treffer.
+  Gemeinsame `ProjectNavigation` aus dem vorhandenen Projektfenster extrahiert;
+  dessen gerendertes Aussehen unverändert. Workspace nutzt bestehende Toolbar,
+  Layoutwerte/Splitter, SettingsSheet und TerminalPanel, zusätzlich Projektgruppen.
+- `test_workspace_layout.mjs` grün: DOM-/Toolbar-Höhen-/Splitter-Parität, festgelegter
+  Tauri-Drag-Code für Titel/Pfad/Leerraum und ausgeschlossene Bedienelemente,
+  Tastenkürzel, einklappbare Gruppen, persistierte Breite, Docking ohne PTY-Kill,
+  zwei gleichnamige Tests-Aktionen mit getrennten Ausgaben und Stop-Zielen.
+- Alle acht bisherigen UI-Suites erneut grün, insgesamt neun; Typecheck grün.
+  Keine Rust-Domänenänderung, lokaler Tauri-Build kompiliert erfolgreich.
+- Native App 48635: Titel-Ziehtest nach gemeinsamer Aktivierung und Fokusprüfung
+  bewegt itsdcloud von (114,69) auf (154,89). Vorige Versuche bei inzwischen
+  anderem Vordergrundprozess nicht als Produktfehler oder Freigabeproblem werten.
+- Acht öffentliche Screenshot-Motive nach gemeinsamer Komponentenänderung visuell
+  geprüft. Zweiter Capture vollständig bytegleich (erste MCP-Rastervarianz entfällt).
+  Marketing-Build und responsive Landing/Features-Prüfung grün; keine Publikation.
+- Finaler Build einschließlich Board-Farbklassen erfolgreich; PID 53572 auf
+  18768. Workspace plus fünf vorherige Fenster wiederhergestellt, native Sichtprüfung
+  bestätigt 66 Specs und vertrauten Fensteraufbau. App offen, UI-Testserver beendet.
+  Lokale Dokumentationslinks und `git diff --check` grün. Menschliche Abnahme offen.
 
 ## Questions
 

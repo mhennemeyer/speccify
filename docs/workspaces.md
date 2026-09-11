@@ -78,6 +78,13 @@ filesystem security sandbox: existing native per-project mutation checks still a
 
 The workspace shell groups navigation by logical project, repository and worktree.
 Its common board lists specs in those groups and retains independent card keys.
+The workspace extends the familiar project workbench: the same compact toolbar,
+two-level navigator, panel splitters, theme/settings, help, keyboard shortcuts and
+terminal dock positions. Groups in the navigator can collapse without unmounting
+their project components. Layout is stored locally under the workspace identity;
+it does not overwrite individual project-window preferences. The title and path
+are draggable; toolbar buttons remain interactive. Shared board lanes/cards use
+the existing project color and selection styles.
 Selection shows the original project's existing spec inspector, task toggles,
 questions/history and editor. New-spec buttons name the destination repository.
 There is no aggregate write command or cross-repository drag-and-drop; changes use
@@ -97,6 +104,9 @@ There is no automatic multi-agent start or promise of terminal resumption after 
 quit. Every terminal instance has a UUID, including development lifecycle probes.
 Window-wide Git, action, file-open and type-command listeners are gated by active
 project context. Output/exit events remain matched to their unique execution IDs.
+Workspace action run IDs include workspace and worktree identity, including when
+two projects use the same command. Stream routing and stop use this qualified ID;
+the displayed action label and each project's action definitions remain unchanged.
 Typing a command without a started terminal still requires starting that project's
 terminal and retrying; no invisible command queue or automatic execution is implied.
 

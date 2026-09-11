@@ -12,6 +12,15 @@ Ansichten und Prüfgrenzen: [Stand und UI](stand-und-ui.md).
 
 ## Richtung
 
+**Verbindliche Präzisierung 2026-09-11 (026):** Mehrprojekte erweitern das
+Einzelprojektfenster, sie erhalten keine eigene Bedienoberfläche. Dieselbe kompakte
+Toolbar, zweistufige Bereichsnavigation, Splitter, Inspektor-/Ausgabetabs und
+Terminal-Docks verwenden. Projektgruppen innerhalb der Listen ergänzen, gemeinsam
+überblickbares Board erhalten. Gemeinsame Komponenten statt auseinanderlaufender
+Nachbauten; Parität ausdrücklich testen. Titel und Pfad sind Fenster-Ziehflächen,
+interaktive Toolbar-Elemente bleiben klickbar. Dieses Prinzip gilt auch für künftige
+Funktionen, nicht nur als optische Nachbesserung dieses Schnitts.
+
 Eine aufgeräumte IDE mit farbigen Orientierungspunkten. Editor, Text, Diffs
 und Ausgaben behalten ruhige, überwiegend neutrale Flächen. Bereiche erhalten
 farbige Icons und leicht getönte Auswahlflächen; Status kommt als zusätzliche

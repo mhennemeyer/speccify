@@ -148,3 +148,10 @@ All eight motifs inspected; final capture is byte-identical to the checked-in
 assets (minor earlier raster variation did not persist). Marketing build (93
 pages) and 1440/390/320 px/no-JavaScript checks pass. No publication or asset
 change required for this implementation.
+
+026 review correction: workspace windows now reuse the familiar project toolbar
+and two-level navigator; project groups extend those lists, not a different shell
+design. Native title/path dragging is tested separately from website screenshots.
+After extracting shared navigation and correcting toolbar drag regions, all eight
+motifs inspected and byte-identical on repeat capture. No replacement, new public
+workspace claim or publication required.
