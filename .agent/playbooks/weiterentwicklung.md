@@ -18,6 +18,9 @@ Schnelleinstieg: [Leitbild](#leitbild) · [Phasen](#phasen-und-priorisierung) ·
   Arbeitsbaum tatsächlich existiert, Belege, Grenzen und Navigationsstruktur.
 - **[Specs](../specs/):** einzelne abnehmbare Aufträge samt Aufgaben und Historie.
   Eine Vision ist noch keine Umsetzungsfreigabe oder zugesagte Veröffentlichung.
+- **[Website](website.md):** Bildsprache und Pflege der Landingpage. Spec 023
+  zeigt das tatsächliche Produkt mit festen öffentlichen Demodaten; Aufnahme
+  per lokalem Skill `app-screenshots`, visuelle Freigabe vor Veröffentlichung.
 - **[Bestandsaufnahme 006](../specs/006-bestandsaufnahme-agent-terminal/SPEC.md):**
   historischer Ausgangspunkt; wird nicht nachträglich zur heutigen Wahrheit umgeschrieben.
 

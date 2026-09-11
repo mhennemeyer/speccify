@@ -311,6 +311,10 @@ und Starlight-Standardbedienung (Suche, Sprache, Theme, Inhaltsverzeichnis) komm
 ```text
 Website
 ├── Landingpage Englisch (/), Deutsch (/de/)
+│   ├── Hero mit Tutorial / Download / GitHub
+│   ├── Board-Bild im macOS-Layout mit Demodaten → volle Bildgröße
+│   ├── Problem / Idee · Tool-Vertrag · Anwendungsfälle · CLI-Beispiel · Ablauf
+│   └── App-Abschnitt mit Git-Detailbild → volle Bildgröße / App-Dokumentation
 ├── Download (/download/)
 ├── Rechtliches: Impressum / Datenschutzerklärung
 └── Dokumentation (EN; DE teilweise übersetzt)
@@ -367,8 +371,16 @@ Diese Tabelle verändert keine Station oder Reihenfolge.
 | [020 Spec-Navigation](../specs/020-spec-navigation/SPEC.md) | Doing, ready, needs_human | Gesamtliste, Suche/Filter, Altbestand lesbar, pfadgenaue Historie und Policy v5; 107 Rust-Tests/vier UI-Suiten grün, lokale App aktualisiert |
 | [021 Git-Arbeitsbereich](../specs/021-git-arbeitsbereich/SPEC.md) | Doing, ready, needs_human | sichtbarer Composer mit Entwurf/Index-Vorschau, sichere lokale Branch-Verwaltung, Remote-/Tracking-Anzeige; 108 Rust-Tests/fünf UI-Suiten grün, App aktualisiert |
 | [022 Dateien/Refactoring](../specs/022-dateiauswahl-und-refactoring/SPEC.md) | Backlog | Ordnerauswahl und Kontextmenü; später sicherer Move und sprachbezogene Refactorings |
+| [023 Landingpage-Bilder](../specs/023-landingpage-app-screenshots/SPEC.md) | Doing, ready, needs_human | zwei reproduzierbare App-Motive, Website-Playbook und Aufnahme-Skill; lokal zur visuellen Abnahme, nicht veröffentlicht |
 
 ## Verifikation und verbleibende Risiken
+
+**Nachtrag 023, 2026-09-11:** Landingpage EN/DE lokal um großes Board-Motiv nach
+dem Hero und Git-Detail im App-Abschnitt ergänzt. Reale Desktop-Komponenten mit
+kontrollierter Demo-Bridge im macOS-Layout, keine native OS-Aufnahme. Responsive
+WebP, volle Bildgröße per Link, Alt-Texte und deutsche Seitensprache. Pflege in
+[Website-Playbook](website.md) und Skill `app-screenshots`; erste visuelle Abnahme
+und Veröffentlichung offen. Laufende native App nicht verändert/neugestartet.
 
 **Nachtrag 021, 2026-09-10 19:42 UTC:** App PID 18058 auf 18768 aktualisiert und
 offen; Bundle/Binary identisch, Hauptfenster und speccify/AVC wiederhergestellt.

@@ -2,10 +2,13 @@
 // Landing page: hero, problem/solution, a real tool contract, how it works,
 // the app, CTA. Header and footer live in MarketingLayout.
 import MarketingLayout from "../../layouts/MarketingLayout.astro";
+import AppScreenshot from "../../components/AppScreenshot.astro";
+import boardScreenshot from "../../assets/landing/board.png";
+import gitScreenshot from "../../assets/landing/git.png";
 
 const title = "Speccify — teile den Vertrag, nicht die Implementierung";
 const description =
-  "Der agentenagnostische Skill- und Tool-Manager: wiederverwendbare Skills über Git, Tool-Verträge, die Dein Agent pro Projekt implementiert und verifiziert, und eine Desktop-App für den ganzen Workflow — Pläne, Tickets, Board — auf macOS und Windows.";
+  "Der agentenagnostische Skill- und Tool-Manager: wiederverwendbare Skills über Git, Tool-Verträge pro Projekt und eine Desktop-App für Specs, Dateien, Git und Dein Agent-Terminal.";
 
 const problems = [
   "Was Du mühsam gelernt hast, lebt in einem Projekt. Das nächste startet bei null — und der Agent auch.",
@@ -16,13 +19,13 @@ const problems = [
 const solutions = [
   "Skills sind schlichte SKILL.md-Dateien, geteilt über Git wie Go-Module — kein Konto, keine Registry. speccify expand kopiert sie dorthin, wo jeder Agent sie findet.",
   "Tools reisen als Verträge, nicht als Skripte: TOOL.md definiert Eingaben, Ausgaben, Effekte und Beispiele. Dein Agent implementiert sie für diese Maschine — speccify tool check beweist, dass es funktioniert.",
-  "Ein dateibasierter Workflow — Pläne, Tickets, Fragen, History —, dem jeder Agent folgen kann und den die Speccify-App sichtbar macht. Claude Code und Codex sind gleich zu Hause.",
+  "Ein dateibasierter Workflow — Specs mit Tasks, Fragen und History —, dem jeder Agent folgen kann und den die Speccify-App sichtbar macht. Claude Code und Codex sind gleich zu Hause.",
 ];
 
 const useCases = [
   { name: "Plattform-Rituale", note: "Notarisierung, Entitlements, Store-Review" },
   { name: "Payments & Auth", note: "Trials, Abos, OAuth-Flows" },
-  { name: "Team-Workflows", note: "Pläne, Tickets, Review-Schleifen für Agenten" },
+  { name: "Team-Workflows", note: "Specs, Tasks, Review-Schleifen für Agenten" },
   { name: "Kundenprojekte", note: "Jedes mit eigenem Skill-Repo und Quellen" },
 ];
 
@@ -40,8 +43,8 @@ const steps = [
     body: "speccify tool check prüft die Implementierung gegen die Beispiele des Vertrags. verified wird ein Tool nur durch bestandene Beispiele — nie von Hand.",
   },
   {
-    title: "4 · Board arbeiten",
-    body: "Die App macht aus dem aktiven Plan Tickets, der Agent arbeitet sie einzeln ab, fragt, wenn er muss, und schreibt nachvollziehbare History.",
+    title: "4 · Die Spec umsetzen",
+    body: "Du schreibst eine Spec und schiebst sie nach Doing. Der Agent arbeitet ihre Tasks ab, fragt, wenn er muss, und schreibt nachvollziehbare History.",
   },
 ];
 
@@ -68,10 +71,10 @@ effects: [reads-filesystem]
 # examples below are the acceptance test for any implementation`;
 ---
 
-<MarketingLayout title={title} description={description}>
-  <main class="mx-auto max-w-5xl px-6">
+<MarketingLayout title={title} description={description} lang="de">
+  <main class="mx-auto max-w-6xl px-6">
     <!-- Hero -->
-    <section class="flex flex-col items-center gap-6 py-20 text-center">
+    <section class="flex flex-col items-center gap-6 pb-10 pt-14 text-center sm:pt-16">
       <p class="text-sm font-semibold uppercase tracking-widest text-sky-400">
         Der agentenagnostische Skill- &amp; Tool-Manager
       </p>
@@ -79,14 +82,9 @@ effects: [reads-filesystem]
         Teile den Vertrag, nicht die Implementierung.
       </h1>
       <p class="max-w-2xl text-lg text-slate-300">
-        <strong class="text-slate-100">Skills</strong> tragen, was Du gelernt
-        hast — über Git geteilt, in jedes Projekt expandiert.
-        <strong class="text-slate-100">Tool-Verträge</strong> sagen, was ein
-        Tool können muss; Dein Agent implementiert sie für diese Maschine, und
-        <code class="text-sky-300">speccify tool check</code> beweist es. Die
-        <strong class="text-slate-100">Speccify-App</strong> fährt den ganzen
-        Workflow — Pläne, Tickets, Board, Fragen — auf macOS und Windows, mit
-        Claude Code oder Codex im Terminal.
+        Bewahre, was Du lernst, als <strong class="text-slate-100">Skills und Tool-Verträge</strong>.
+        Behalte Specs, Dateien, Git und Deinen Agenten in einem Projektfenster.
+        Schlichte Dateien. Über Git geteilt. Dein Agent nach Wahl.
       </p>
       <div class="flex flex-wrap items-center justify-center gap-4">
         <a
@@ -108,6 +106,12 @@ effects: [reads-filesystem]
           GitHub
         </a>
       </div>
+    </section>
+
+    <section aria-label="Einblick in die Speccify-App" class="pb-12">
+      <AppScreenshot image={boardScreenshot} hero lang="de"
+        alt="Speccify im macOS-Layout: sechs Specs auf dem Board, ausgewählte Such-Tasks im Inspektor und das Projekt-Terminal darunter"
+        caption="Die App mit Demodaten · Auf dem Board planen. Tasks prüfen. Im Terminal arbeiten." />
     </section>
 
     <!-- Problem / solution -->
@@ -185,23 +189,25 @@ effects: [reads-filesystem]
     </section>
 
     <!-- The app -->
-    <section class="flex flex-col items-center gap-5 py-16 text-center">
-      <h2 class="text-2xl font-bold">Ein Fenster pro Projekt, ein Agent darin</h2>
-      <p class="max-w-xl text-slate-300">
-        Die Speccify-App öffnet jedes Projekt in einem eigenen Fenster: das
-        Board mit Deinen Tickets, der aktive Plan darüber, Skills und
-        Tool-Verträge mit Prüfstatus, Projekt-Aktionen mit Live-Ausgabe — und
-        ein Agent-Terminal, das das Projekt schon kennt. Die App beobachtet
-        Dateien; der Agent macht die Arbeit. Alles Gezeigte sind schlichte
-        Dateien unter <code class="text-sky-300">.agent/</code> — es
-        funktioniert mit jedem Agenten und überlebt ohne die App.
+    <section class="grid items-center gap-8 py-16 lg:grid-cols-[1fr_1.7fr]">
+      <div>
+      <p class="mb-3 text-xs font-semibold uppercase tracking-widest text-sky-400">Von der Spec zum Commit</p>
+      <h2 class="mb-4 text-2xl font-bold">Kontext behalten.<br />Änderungen verstehen.</h2>
+      <p class="mb-6 text-slate-300">
+        Änderungen prüfen, gezielt stagen und den Commit schreiben — direkt im
+        Projekt. Dein Entwurf bleibt gespeichert; der Index bleibt sichtbar.
+        Specs, Skills und Playbooks bleiben schlichte Dateien in <code class="text-sky-300">.agent/</code>.
       </p>
       <a
         href="/de/app/overview/"
-        class="rounded-md bg-sky-500 px-6 py-3 font-medium text-white transition hover:bg-sky-400"
+        class="inline-block rounded-md bg-sky-500 px-6 py-3 font-medium text-white transition hover:bg-sky-400"
       >
         Die App ansehen
       </a>
+      </div>
+      <AppScreenshot image={gitScreenshot} lang="de"
+        alt="Git-Detail in Speccify: Commit-Betreff, optionale Beschreibung, zwei gestagete Dateien und Branch-Auswahl"
+        caption="Git-Arbeitsbereich · App-Ausschnitt mit Demodaten" />
     </section>
   </main>
 </MarketingLayout>

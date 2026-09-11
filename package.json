@@ -8,6 +8,7 @@
   },
   "description": "Speccify pnpm workspace root (apps/marketing + apps/desktop).",
   "scripts": {
+    "screenshots:app": "node .agent/skills/app-screenshots/scripts/capture.mjs",
     "marketing:dev": "pnpm --filter speccify-marketing dev",
     "marketing:build": "pnpm --filter speccify-marketing build",
     "marketing:preview": "pnpm --filter speccify-marketing preview",
@@ -15,5 +16,8 @@
     "desktop:dev": "bash scripts/build_sidecars.sh --debug && pnpm --filter speccify-desktop tauri dev",
     "desktop:build": "bash scripts/build_sidecars.sh && pnpm --filter speccify-desktop tauri build",
     "desktop:typecheck": "pnpm --filter speccify-desktop typecheck"
+  },
+  "devDependencies": {
+    "playwright": "1.63.0"
   }
 }

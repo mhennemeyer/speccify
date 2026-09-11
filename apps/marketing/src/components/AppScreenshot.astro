@@ -1,0 +1,43 @@
+---
+import { Image } from "astro:assets";
+import type { ImageMetadata } from "astro";
+interface Props {
+  image: ImageMetadata;
+  alt: string;
+  caption: string;
+  lang?: "en" | "de";
+  hero?: boolean;
+}
+const { image, alt, caption, lang = "en", hero = false } = Astro.props;
+---
+<figure class:list={["app-screenshot", { "app-screenshot-hero": hero }]}>
+  <a class="app-screenshot-link" href={image.src} aria-label={`${alt} — ${lang === "de" ? "in voller Größe öffnen" : "open full size"}`}>
+    {hero && <span class="window-dots" aria-hidden="true"><i></i><i></i><i></i></span>}
+    <Image src={image} alt={alt} widths={hero ? [640, 960, 1344, 2688] : [480, 768, 1568]}
+      sizes={hero ? "(min-width: 1152px) 1104px, calc(100vw - 48px)" : "(min-width: 1024px) 680px, calc(100vw - 48px)"}
+      format="webp" quality={85} loading={hero ? "eager" : "lazy"} fetchpriority={hero ? "high" : "auto"} />
+  </a>
+  <figcaption>
+    <span>{caption}</span>
+    <a href={image.src}>{lang === "de" ? "Bild vergrößern ↗" : "View full size ↗"}</a>
+  </figcaption>
+</figure>
+<style>
+  .app-screenshot { margin: 0; min-width: 0; width: 100%; text-align: left; }
+  .app-screenshot-link { position: relative; display: block; overflow: hidden; border: 1px solid #334155;
+    border-radius: 12px; background: #0f172a; box-shadow: 0 24px 70px -28px #000; transition: border-color 150ms; }
+  .app-screenshot-link:hover { border-color: #7dd3fc; }
+  .app-screenshot-link:focus-visible { outline: 3px solid #7dd3fc; outline-offset: 6px; }
+  .app-screenshot-hero .app-screenshot-link { box-shadow: 0 0 90px -40px #2563eb66, 0 30px 100px -40px #000; }
+  .app-screenshot :global(img) { display: block; width: 100%; height: auto; }
+  figcaption { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px 16px;
+    padding: 14px 2px 0; color: #94a3b8; font-size: 12px; line-height: 1.6; }
+  figcaption a { text-underline-offset: 3px; }
+  figcaption a:hover { color: #e2e8f0; text-decoration: underline; }
+  figcaption a:focus-visible { outline: 2px solid #7dd3fc; outline-offset: 3px; }
+  .window-dots { position: absolute; top: 1.85%; left: 1.15%; width: 3.8%; display: flex; gap: 12%; }
+  .window-dots i { width: 25%; aspect-ratio: 1; border-radius: 50%; background: #ff5f57; }
+  .window-dots i:nth-child(2) { background: #febc2e; }
+  .window-dots i:nth-child(3) { background: #28c840; }
+  @media (prefers-reduced-motion: reduce) { .app-screenshot-link { transition: none; } }
+</style>

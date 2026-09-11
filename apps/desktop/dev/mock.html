@@ -3,12 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <title>Speccify — Layout-Attrappe</title>
-    <script>
+    <script type="module">
+      import { installMarketingFixture, marketingProject } from "./marketing-fixture.js";
       // Attrappe der Tauri-Brücke für Layout-Prüfungen und Website-
       // Screenshots im Browser (Playwright gegen den Vite-Dev-Server,
       // http://localhost:1420/dev/mock.html). Kein Produktbestandteil.
       // Die Daten spiegeln das W1-Fixture-Projekt der E2E-Läufe.
-      const project = new URLSearchParams(location.search).get("project") ?? "/private/tmp/claude-501/w1-projekt";
+      const marketing = new URLSearchParams(location.search).has("marketing");
+      const project = marketing ? marketingProject : new URLSearchParams(location.search).get("project") ?? "/private/tmp/claude-501/w1-projekt";
       // ?empty=1 → alle Listen leer (Leerzustände prüfen)
       const EMPTY = new URLSearchParams(location.search).has("empty");
       const orEmpty = (value) => (EMPTY ? (Array.isArray(value) ? [] : value) : value);
@@ -347,6 +349,7 @@
         "plugin:event|unlisten": ({ eventId }) => { eventListeners.delete(eventId); return null; },
       };
       let callbackId = 0;
+      if (marketing) installMarketingFixture({ responses, tickets, base, gitState, branchState, emit });
       window.__TAURI_INTERNALS__ = {
         // ?dashboard=1 → Hauptfenster (Label "main") statt Projektfenster.
         metadata: (() => {
@@ -369,10 +372,10 @@
           return Promise.resolve(fn(args ?? {})).then(value => structuredClone(value));
         },
       };
+      await import("/src/main.tsx");
     </script>
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
