@@ -75,7 +75,7 @@ export default function WorkspaceView() {
       }}>Auswählen…</button>
       <button type="submit" disabled={busy || !path.trim()} data-tone="blue" className={`${button} tone-surface`}>{busy ? "Bitte warten…" : "Workspace erkennen"}</button>
     </form>
-    <p className="text-xs text-slate-500">Begrenzte Suche: 6 Ebenen, ohne Symlinks, Abhängigkeits- und Buildordner. Keine Git- oder Projektdateien werden verändert.</p>
+    <p className="text-xs text-slate-500">Begrenzte Suche: 16 Ebenen, ohne Symlinks, Abhängigkeits- und Buildordner. Keine Git- oder Projektdateien werden verändert.</p>
     {(error || list.error) && <ErrorBox message={error ?? list.error ?? ""} />}
     {notice && <p role="status" data-tone="green" className="tone-surface rounded p-3 text-xs">{notice}</p>}
     {list.loading && <p role="status" className="text-sm text-slate-500">Workspaces laden…</p>}
@@ -95,9 +95,9 @@ export default function WorkspaceView() {
         <button data-tone="violet" className={`${button} ${mode === "specs" ? "tone-surface" : ""}`} aria-pressed={mode === "specs"} onClick={() => setMode("specs")}>Alle Specs</button>
       </nav>
       {(workspace.partial || workspace.warnings.length > 0) && <aside role="status" data-tone="amber" className="tone-surface rounded border p-3 text-xs">
-        <strong>{workspace.partial ? "Erkennung unvollständig" : "Hinweise zur Erkennung"}</strong>
+        <strong>{workspace.partial ? "Suche begrenzt" : "Hinweise zur Erkennung"}</strong>
         <ul className="mt-1 list-inside list-disc">{workspace.warnings.map((warning, index) => <li key={index}>{warning}</li>)}</ul>
-        <p className="mt-1">Bekannte Zuordnungen bleiben erhalten. Fehlende Unterordner bei Bedarf separat öffnen.</p>
+        <p className="mt-1">Verfügbare Projekte können geöffnet werden. Bekannte Zuordnungen bleiben erhalten; nicht durchsuchte Unterordner bei Bedarf separat öffnen.</p>
       </aside>}
       {mode === "specs" ? <WorkspaceBoardView key={workspace.id} workspaceId={workspace.id} revision={workspace.revision} /> : <>
       <form onSubmit={event => { event.preventDefault(); void edit({ kind: "group", repository_ids: selected, name: groupName }); }} data-tone="violet" className="tone-surface flex flex-wrap items-center gap-2 rounded-lg border p-3">

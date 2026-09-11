@@ -8,6 +8,8 @@ use std::sync::Mutex;
 use std::time::{Duration, Instant};
 
 static STORE_LOCK: Mutex<()> = Mutex::new(());
+const DISCOVERY_MAX_DEPTH: usize = 16;
+const DISCOVERY_MAX_ENTRIES: usize = 20_000;
 const EXCLUDED: &[&str] = &[
     ".git",
     ".agent",
@@ -207,6 +209,7 @@ fn scan(root: &Path, max_entries: usize, max_depth: usize) -> Scan {
     let started = Instant::now();
     let mut entries_seen = 0;
     let mut dirs_seen = 0;
+    let mut depth_cutoffs = vec![];
     while let Some((dir, depth)) = queue.pop_front() {
         if !fs::symlink_metadata(&dir)
             .is_ok_and(|metadata| metadata.is_dir() && !metadata.file_type().is_symlink())
@@ -218,12 +221,18 @@ fn scan(root: &Path, max_entries: usize, max_depth: usize) -> Scan {
             ));
             continue;
         }
+        let relative_dir = if dir == root {
+            ".".to_owned()
+        } else {
+            display(dir.strip_prefix(root).unwrap_or(&dir))
+        };
         dirs_seen += 1;
         if dirs_seen > 2000 || started.elapsed() > Duration::from_secs(3) {
             result.partial = true;
-            result.warnings.push(
-                "Suchbudget erreicht; Ergebnis unvollständig. Unterordner separat öffnen.".into(),
-            );
+            result.warnings.push(format!(
+                "Suchbudget erreicht bei {}. Dieser und weitere ausstehende Ordner wurden nicht durchsucht.",
+                relative_dir
+            ));
             break;
         }
         let found_markers = markers(&dir);
@@ -263,9 +272,10 @@ fn scan(root: &Path, max_entries: usize, max_depth: usize) -> Scan {
             entries_seen += 1;
             if entries_seen > max_entries {
                 result.partial = true;
-                result
-                    .warnings
-                    .push("Dateianzahl-Limit erreicht; Ergebnis unvollständig.".into());
+                result.warnings.push(format!(
+                    "Dateianzahl-Limit erreicht bei {}. Dieser und weitere ausstehende Ordner wurden nicht vollständig durchsucht.",
+                    relative_dir
+                ));
                 queue.clear();
                 break;
             }
@@ -294,6 +304,7 @@ fn scan(root: &Path, max_entries: usize, max_depth: usize) -> Scan {
             if kind.is_dir() {
                 if depth >= max_depth {
                     result.partial = true;
+                    depth_cutoffs.push(entry.path());
                 } else {
                     children.push(entry.path());
                 }
@@ -305,10 +316,23 @@ fn scan(root: &Path, max_entries: usize, max_depth: usize) -> Scan {
         children.sort();
         queue.extend(children.into_iter().map(|path| (path, depth + 1)));
     }
-    if result.partial && result.warnings.is_empty() {
-        result
-            .warnings
-            .push("Maximale Suchtiefe erreicht; Unterordner separat öffnen.".into());
+    if !depth_cutoffs.is_empty() {
+        depth_cutoffs.sort();
+        let total = depth_cutoffs.len();
+        let paths = depth_cutoffs
+            .iter()
+            .take(8)
+            .map(|path| display(path.strip_prefix(root).unwrap_or(path)))
+            .collect::<Vec<_>>()
+            .join(", ");
+        let more = if total > 8 {
+            format!(" (und {} weitere)", total - 8)
+        } else {
+            String::new()
+        };
+        result.warnings.push(format!(
+            "Suchtiefe von {max_depth} Ebenen erreicht. Nicht durchsucht: {paths}{more}. Diese Unterordner bei Bedarf separat öffnen."
+        ));
     }
     if result.found.is_empty() {
         result.found.push(Found {
@@ -603,7 +627,7 @@ pub async fn workspace_list() -> Result<Vec<Workspace>, String> {
 pub async fn workspace_discover(path: String) -> Result<Workspace, String> {
     tauri::async_runtime::spawn_blocking(move || {
         let root = crate::project_cmd::resolve_project_root(&path)?;
-        let scan = scan(&root, 20000, 6);
+        let scan = scan(&root, DISCOVERY_MAX_ENTRIES, DISCOVERY_MAX_DEPTH);
         let _guard = STORE_LOCK.lock().map_err(|e| e.to_string())?;
         let path = store_path()?;
         let mut store = load(&path)?;
@@ -977,7 +1001,8 @@ mod tests {
             3
         );
         for entry in &board.specs {
-            let local = crate::project_cmd::project_board(entry.worktree_path.clone()).unwrap();
+            let local =
+                crate::project_cmd::read_project_board(entry.worktree_path.clone()).unwrap();
             assert_eq!(
                 serde_json::to_value(&entry.spec).unwrap(),
                 serde_json::to_value(&local[0]).unwrap()
@@ -1237,6 +1262,121 @@ mod tests {
         assert_eq!(fs::read_to_string(&file).unwrap(), "{broken");
         fs::write(&file, r#"{"version":99,"workspaces":[]}"#).unwrap();
         assert!(load(&file).is_err());
+    }
+
+    #[test]
+    #[ignore = "requires SPECCIFY_DISCOVERY_SMOKE_ROOT; reads a real local workspace"]
+    fn discovery_local_workspace_smoke() {
+        let path = std::env::var("SPECCIFY_DISCOVERY_SMOKE_ROOT")
+            .expect("set SPECCIFY_DISCOVERY_SMOKE_ROOT explicitly");
+        let root = crate::project_cmd::resolve_project_root(&path).unwrap();
+        let result = scan(&root, DISCOVERY_MAX_ENTRIES, DISCOVERY_MAX_DEPTH);
+        assert!(!result.partial, "{:?}", result.warnings);
+        assert!(result.warnings.is_empty(), "{:?}", result.warnings);
+        for found in &result.found {
+            println!(
+                "Found: {} (Git: {})",
+                display(found.path.strip_prefix(&root).unwrap()),
+                found.common.is_some()
+            );
+        }
+        println!(
+            "Complete: {} discovered roots, no warnings; no store or project writes",
+            result.found.len()
+        );
+    }
+
+    #[test]
+    fn discovery_default_handles_deep_sources_and_preserves_rescan_identity() {
+        let fixture = tempfile::tempdir().unwrap();
+        let root = fixture.path().canonicalize().unwrap();
+        for name in ["app", "infra", "portal"] {
+            repo(&root.join(name));
+        }
+        for path in [
+            "app/frontend/src/app/shared/ui/icons",
+            "infra/keycloak/provider/src/main/java/com/example/server/features",
+            "portal/docs/migration/originals/date/docs/migration/originals/date/specs",
+        ] {
+            fs::create_dir_all(root.join(path)).unwrap();
+        }
+        let mut store = empty_store();
+        let old = merge(&mut store, &root, scan(&root, DISCOVERY_MAX_ENTRIES, 6));
+        assert!(old.partial);
+        assert!(!old.warnings.is_empty());
+        let ids = old
+            .repositories
+            .iter()
+            .map(|repo| repo.id.clone())
+            .collect();
+        let grouped = store.workspaces.first_mut().unwrap();
+        edit(
+            grouped,
+            old.revision,
+            Edit::Group {
+                repository_ids: ids,
+                name: "Pilot".into(),
+            },
+        )
+        .unwrap();
+        let before = serde_json::to_value(&store.workspaces[0]).unwrap();
+        let result = scan(&root, DISCOVERY_MAX_ENTRIES, DISCOVERY_MAX_DEPTH);
+        assert!(!result.partial);
+        assert!(result.warnings.is_empty());
+        assert_eq!(result.found.len(), 3);
+        let current = merge(&mut store, &root, result);
+        assert!(!current.partial);
+        assert!(current.warnings.is_empty());
+        let after = serde_json::to_value(&current).unwrap();
+        for key in ["id", "projects", "repositories"] {
+            assert_eq!(before[key], after[key], "rescan changed {key}");
+        }
+        let nested = root.join("app/frontend/src/app/shared/ui/plugins/nested");
+        repo(&nested);
+        let result = scan(&root, DISCOVERY_MAX_ENTRIES, DISCOVERY_MAX_DEPTH);
+        assert!(!result.partial);
+        assert!(result.found.iter().any(|found| found.path == nested));
+    }
+
+    #[test]
+    fn discovery_real_depth_limits_name_skipped_paths_with_bounded_examples() {
+        let fixture = tempfile::tempdir().unwrap();
+        let root = fixture.path().canonicalize().unwrap();
+        let boundary = (0..DISCOVERY_MAX_DEPTH).fold(root.clone(), |path, _| path.join("level"));
+        fs::create_dir_all(&boundary).unwrap();
+        fs::write(boundary.join("speccify.yaml"), "{}\n").unwrap();
+        let complete = scan(&root, DISCOVERY_MAX_ENTRIES, DISCOVERY_MAX_DEPTH);
+        assert!(!complete.partial, "a leaf at the limit is fully scanned");
+        assert_eq!(complete.found[0].path, boundary);
+        for index in 0..12 {
+            fs::create_dir(boundary.join(format!("child-{index:02}"))).unwrap();
+        }
+        let result = scan(&root, DISCOVERY_MAX_ENTRIES, DISCOVERY_MAX_DEPTH);
+        assert!(result.partial);
+        assert_eq!(result.warnings.len(), 1);
+        let warning = &result.warnings[0];
+        assert!(warning.contains("16 Ebenen"));
+        assert!(warning.contains(&display(
+            &boundary.strip_prefix(&root).unwrap().join("child-00")
+        )));
+        assert!(warning.contains("child-07"));
+        assert!(!warning.contains("child-08"));
+        assert!(warning.contains("und 4 weitere"));
+        assert!(
+            !warning.contains(&display(&root)),
+            "diagnostics use relative paths"
+        );
+        // Entry count includes sixteen ancestors and the marker at the boundary.
+        let mixed = scan(&root, DISCOVERY_MAX_DEPTH + 5, DISCOVERY_MAX_DEPTH);
+        assert!(mixed.partial);
+        assert!(mixed
+            .warnings
+            .iter()
+            .any(|warning| warning.contains("Dateianzahl-Limit")));
+        assert!(mixed
+            .warnings
+            .iter()
+            .any(|warning| warning.contains("Nicht durchsucht:")));
     }
 
     #[test]

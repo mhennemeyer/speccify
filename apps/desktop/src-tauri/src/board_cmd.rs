@@ -861,7 +861,7 @@ mod tests {
         }
         let old_history = std::fs::read(dir.join(&old).with_file_name("history.jsonl")).unwrap();
         let board =
-            serde_json::to_value(crate::project_cmd::project_board(project.clone()).unwrap())
+            serde_json::to_value(crate::project_cmd::read_project_board(project.clone()).unwrap())
                 .unwrap();
         assert_eq!(board.as_array().unwrap().len(), 2);
         for (file, summary) in [(&active, "active history"), (&old, "old history")] {
@@ -937,7 +937,7 @@ mod tests {
         std::fs::write(folder.join("SPEC.md"), &text).unwrap();
         let project = dir.display().to_string();
         let entries =
-            serde_json::to_value(crate::project_cmd::project_board(project.clone()).unwrap())
+            serde_json::to_value(crate::project_cmd::read_project_board(project.clone()).unwrap())
                 .unwrap();
         assert_eq!(entries[0]["tasks_total"], 2);
         assert_eq!(entries[0]["tasks_done"], 1);

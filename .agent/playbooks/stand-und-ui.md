@@ -99,7 +99,8 @@ Speccify · Dashboard
 ├── Hauptnavigation / Inhaltsbereich
 │   ├── Projekte
 │   │   ├── Arbeitsordner eingeben / wählen → begrenzte Workspace-Erkennung
-│   │   ├── Gespeicherte Workspaces wählen · erneut erkennen · Suchlimit-/Fehlerhinweise
+│   │   ├── Gespeicherte Workspaces wählen · erneut erkennen (16 Ebenen)
+│   │   │   └── Echte Suchgrenzen: übersprungene Pfade · verfügbare Projekte weiter nutzbar
 │   │   ├── Repos auswählen → Projektgruppe benennen und speichern
 │   │   ├── Projektkarten → umbenennen · Repo aus Gruppe lösen
 │   │   │   └── Worktrees mit relativem Pfad/Markern/Verfügbarkeit → eigenes Projektfenster
@@ -390,8 +391,21 @@ Diese Tabelle verändert keine Station oder Reihenfolge.
 | [022 Dateien/Refactoring](../specs/022-dateiauswahl-und-refactoring/SPEC.md) | Backlog | Ordnerauswahl und Kontextmenü; später sicherer Move und sprachbezogene Refactorings |
 | [023 Landingpage-Bilder](../specs/023-landingpage-app-screenshots/SPEC.md) | Done | Landingpage/Features mit acht Motiven; lokale Variante vom Nutzer abgenommen, nicht veröffentlicht; Screenshot-Pflege verbindlich |
 | [024 Workspace-Spec-Board](../specs/024-workspace-spec-board/SPEC.md) | Doing · ready | Code/automatisierte Prüfungen und nativer Demo-Durchlauf grün; finaler Build offen, Q1 geschlossen; menschliche Abnahme offen |
+| [025 Workspace-Suchtiefe](../specs/025-workspace-suchtiefe/SPEC.md) | Doing · Q1 offen | Echter itsdcloud-Scanner erkennt drei Repos ohne Warnung; UI-Rescan und finaler Neubau durch erneuten Start-/Dateihalter-Befund blockiert |
 
 ## Verifikation und verbleibende Risiken
+
+**Nachtrag 025, 2026-09-11, 07:41 UTC:** 16 Ebenen und konkrete Limit-Pfade
+implementiert. Nativer Scanner liest das echte itsdcloud: app/infra/portal, keine
+Warnung, 0,03 s, keine Store-/Projekt-Schreibzugriffe. 84 Rust-Tests bestanden,
+3 ignoriert (davon manueller Smoke-Test separat bestanden), sieben UI-Suites,
+Typecheck/Formatierung und Website-Prüfungen grün. Acht Website-Bilder unverändert.
+Suchkorrektur lokal gebündelt, Start jedoch zweimal im synchronen Einzelprojekt-
+Board blockiert; Samples belegen `spec_dirs/read_dir` auf dem UI-Thread. Command
+zusätzlich entkoppelt und getestet. Abschließender Neubau durch tccd-Dateihalter
+verhindert; vorhandenen Build erneut geöffnet, PID 70212 auf 18768, Bedienbarkeit
+unbestätigt. Alte gespeicherte itsdcloud-Warnung bleibt bis zum UI-Rescan bestehen.
+Q1 fragt nach sichtbarem macOS-Dialog, ohne fehlende Freigabe zu behaupten.
 
 **Wiederaufnahme 024, 2026-09-11, 07:16 UTC:** Frühere Dateisperre nicht mehr
 vorhanden; eine fehlende macOS-Freigabe war nicht nachgewiesen. Finaler Neubau auf

@@ -43,7 +43,8 @@ export function installWorkspaceFixture(responses) {
     if (path.includes("missing")) throw Error("Kein Verzeichnis: missing");
     const entries = read(); const workspace = entries[0] ?? initial();
     if (entries.length) workspace.revision++;
-    if (path.includes("partial")) { workspace.partial = true; workspace.warnings = ["Maximale Suchtiefe erreicht"]; }
+    if (path.includes("partial")) { workspace.partial = true; workspace.warnings = ["Suchtiefe von 16 Ebenen erreicht. Nicht durchsucht: api/deep/project. Diese Unterordner bei Bedarf separat öffnen."]; }
+    else { workspace.partial = false; workspace.warnings = []; }
     write([workspace]); return workspace;
   };
   responses.workspace_edit = ({ expectedRevision, change }) => {

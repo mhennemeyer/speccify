@@ -31,7 +31,15 @@ files are read outside the selected root when a Git pointer requires it; do not
 enumerate or open external worktrees. Symlinks are skipped. Canonical common-dir
 identity deduplicates worktrees, not arbitrary clones sharing a remote.
 
-Bound depth, directory count, entry count and elapsed time. Skip known dependency,
+Bound depth (16 levels below the selected root), directory count (2,000), entry
+count (20,000) and elapsed time (three seconds best-effort between directories,
+not a hard filesystem I/O timeout). A leaf at the depth limit is fully scanned;
+only skipped child directories make the result partial. Depth diagnostics list
+up to eight sorted relative paths plus the remaining count, even if another
+budget also stops the scan. Entry/time/directory limits identify the current
+directory, not an exhaustive list of unread paths. Available projects remain
+usable. A complete rescan clears previous warnings without changing identities,
+names or groups (Spec 025). Skip known dependency,
 build and metadata directories; report scan limits, invalid Git pointers and read
 errors. A partial scan never removes old bindings. Missing bindings remain visible
 as unavailable; opening a worktree revalidates the path. No automatic Git init or
@@ -101,3 +109,9 @@ discover the printed root, group the two repos, restart, rescan and ungroup.
 Open `api-search` explicitly and verify the feature worktree's own project window.
 The script does not touch existing repos or use the network. Keep the temporary
 fixture while reviewing; it is not a permanent workspace or shared team register.
+
+For a read-only discovery smoke test against an explicitly selected real folder:
+`SPECCIFY_DISCOVERY_SMOKE_ROOT=/absolute/workspace cargo test -p speccify-desktop
+discovery_local_workspace_smoke -- --ignored --nocapture`. It uses production
+limits, reports discovered roots and requires a complete warning-free result.
+It does not persist the workspace or replace native UI/rescan acceptance.

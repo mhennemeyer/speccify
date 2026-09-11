@@ -57,7 +57,12 @@ try {
   assert.equal(await view.getByRole("heading", { name: /Stale name/ }).count(), 0);
   await view.getByLabel("Arbeitsordner", { exact: true }).fill("/private/tmp/partial");
   await view.getByRole("button", { name: "Workspace erkennen", exact: true }).click();
-  await view.getByText("Erkennung unvollständig", { exact: true }).waitFor();
+  await view.getByText("Suche begrenzt", { exact: true }).waitFor();
+  await view.getByText(/Nicht durchsucht: api\/deep\/project/).waitFor();
+  await view.getByText(/Verfügbare Projekte können geöffnet werden/).waitFor();
+  await view.getByRole("button", { name: "Erneut erkennen", exact: true }).click();
+  await view.getByText("Suche begrenzt", { exact: true }).waitFor({ state: "hidden" });
+  assert.equal(await view.locator("article[data-project-id]").count(), 2);
   await view.getByLabel("Arbeitsordner", { exact: true }).fill("/missing");
   await view.getByRole("button", { name: "Workspace erkennen", exact: true }).click();
   await view.getByText(/Kein Verzeichnis: missing/).waitFor();

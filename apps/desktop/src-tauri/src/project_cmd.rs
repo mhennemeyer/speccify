@@ -611,7 +611,13 @@ fn flat_truthy(fields: &[(String, String)], key: &str) -> bool {
 /// Fehlender Ordner ⇒ leere Liste; die Spalten-Sortierung (Backlog:
 /// order → created → id) macht das Frontend.
 #[tauri::command]
-pub fn project_board(project: String) -> Result<Vec<TicketEntry>, String> {
+pub async fn project_board(project: String) -> Result<Vec<TicketEntry>, String> {
+    tauri::async_runtime::spawn_blocking(move || read_project_board(project))
+        .await
+        .map_err(|error| error.to_string())?
+}
+
+pub(crate) fn read_project_board(project: String) -> Result<Vec<TicketEntry>, String> {
     let root = resolve_project_root(&project)?;
     let mut specs = Vec::new();
     for dir in spec_dirs(&root, true) {
@@ -1065,7 +1071,12 @@ mod tests {
         .unwrap();
         let project = dir.to_string_lossy().into_owned();
 
-        let specs = project_board(project.clone()).unwrap();
+        let specs = read_project_board(project.clone()).unwrap();
+        let async_specs = tauri::async_runtime::block_on(project_board(project.clone())).unwrap();
+        assert_eq!(
+            serde_json::to_value(&specs).unwrap(),
+            serde_json::to_value(async_specs).unwrap()
+        );
         assert_eq!(specs.len(), 2); // der Ordner ohne SPEC.md zählt nicht
         let first = &specs[0];
         assert_eq!(first.file, ".agent/specs/t-1/SPEC.md");
@@ -1208,7 +1219,7 @@ mod tests {
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
         let project = dir.to_string_lossy().into_owned();
-        assert!(project_board(project.clone()).unwrap().is_empty());
+        assert!(read_project_board(project.clone()).unwrap().is_empty());
         assert!(project_skills(project).unwrap().is_empty());
         let _ = std::fs::remove_dir_all(&dir);
     }

@@ -143,6 +143,17 @@ Durchgängige Herkunft in weiteren Bereichen und gemeinsame Team-Identitätsbind
 fehlen weiterhin. Die lokale Zuordnung ist kein gemeinsames Team-Register; 016
 bleibt der getrennte Sync-Pilot. Basis ist auch für itsdcloud und spätere Adapter erforderlich.
 
+**Team-Pilot itsdcloud, Spec 025:** Die Repo-Erkennung durchsucht jetzt 16 statt
+sechs Ebenen. Normale tiefe Source-/Dokumentationsstrukturen sollen keine
+scheinbare Fehlermeldung beim Einstieg erzeugen. Tatsächliche Suchgrenzen bleiben
+sichtbar, mit konkreten übersprungenen Pfaden und Hinweis auf nutzbare Projekte.
+Die übrigen Budgets/Ausschlüsse bleiben bestehen; vollständige erneute Erkennung
+bereinigt alte Warnungen und erhält IDs, Namen und Gruppen. Keine Sonderbehandlung
+für itsdcloud und keine Projektdatei-Änderungen.
+Direkter nativer Scan am echten Pilotordner geprüft: drei Git-Repos, keine
+Warnung. UI-Rescan bleibt wegen eines separaten Start-/Dateihalter-Problems offen
+(025/Q1); nicht als bereits nahtlos nutzbaren Teamstart ausweisen.
+
 ### V1-02 — Autoupdater für die Apps
 
 **Gewünscht:** Interne Nutzer bekommen neue Versionen ohne manuelles Neuinstallieren.

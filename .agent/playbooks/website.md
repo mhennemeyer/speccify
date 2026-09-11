@@ -134,3 +134,8 @@ workspace motif and public claims await review of this capability. No publicatio
 024 capture check: repeat capture matches all eight existing originals; marketing
 build and responsive landing/Features tests pass. Initial Skills raster variance
 did not persist. The dashboard preview is reviewed separately from public assets.
+
+025 capture check: discovery depth and diagnostics change only the dashboard.
+All eight project-window motifs were inspected and match existing assets on the
+repeat capture; initial Tools raster variance did not persist. Marketing build
+and responsive landing/Features checks pass. No new public claims or publication.
