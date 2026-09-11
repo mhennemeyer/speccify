@@ -19,6 +19,19 @@ export function installWorkspaceFixture(responses) {
   window.__SPECCIFY_MOCK__.workspaceOpened = [];
   window.__SPECCIFY_MOCK__.workspaceStale = false;
   responses.workspace_list = () => read();
+  responses.workspace_window_open = ({ workspaceId }) => { window.__SPECCIFY_MOCK__.workspaceOpened.push({ workspaceId, window: true }); };
+  responses.workspace_window_current = () => read()[0];
+  responses.workspace_resolve_target = ({ worktreeId }) => {
+    if (window.__SPECCIFY_MOCK__.missingTarget === worktreeId) throw Error("Worktree nicht verfügbar");
+    return read()[0].repositories.flatMap(repo => repo.worktrees).find(tree => tree.id === worktreeId).path;
+  };
+  const shell = new URLSearchParams(location.search).has("workspace-shell");
+  if (shell && !read().length) {
+    const workspace = initial();
+    workspace.projects.push({ id: "project-infra", name: "Infrastructure", repository_ids: ["repo-infra"] });
+    workspace.repositories.push({ id: "repo-infra", name: "Infra", common_dir: `${root}/infra/.git`, default_project_id: "project-infra", worktrees: [{ id: "tree-infra", path: `${root}/infra`, relative_path: "infra", available: true, markers: [] }] });
+    write([workspace]);
+  }
   responses.workspace_board = async ({ workspaceId }) => {
     const workspace = read().find(entry => entry.id === workspaceId);
     if (!workspace) throw Error("Workspace nicht gefunden");
@@ -68,4 +81,29 @@ export function installWorkspaceFixture(responses) {
   responses.ask_bo_pending = () => [];
   const settings = responses.get_settings;
   responses.get_settings = () => ({ ...settings(), theme: "dark", terminal_autostart_command: "" });
+  if (shell) {
+    const calls = window.__SPECCIFY_MOCK__.workspaceCalls = [];
+    const files = new Map();
+    responses.project_tree = ({ path }) => path ? [] : [{ name: "shared.txt", path: "shared.txt", is_dir: false, size: 20 }];
+    responses.project_read_file = ({ project, file }) => files.get(`${project}/${file}`) ?? `Only ${project}\n`;
+    responses.project_write_file = ({ project, file, content }) => { files.set(`${project}/${file}`, content); };
+    responses.terminal_open = ({ id, cwd }) => ({ cwd, startup: null });
+    const originalBoard = responses.workspace_board;
+    const done = new Set();
+    responses.workspace_board = async args => {
+      const snapshot = await originalBoard(args);
+      for (const entry of snapshot.specs) {
+        const review = done.has(entry.worktree_path);
+        entry.spec.tasks = [{ index: 0, text: "Tested", done: true }, { index: 1, text: "Review", done: review }];
+        entry.spec.tasks_done = review ? 2 : 1;
+        entry.spec.body = `Only ${entry.worktree_label}.\n\n- [x] Tested\n- [${review ? "x" : " "}] Review`;
+      }
+      return snapshot;
+    };
+    responses.project_board = async ({ project }) => (await responses.workspace_board({ workspaceId: "workspace-demo" })).specs.filter(entry => entry.worktree_path === project).map(entry => entry.spec);
+    responses.project_spec_toggle_task = ({ project, done: checked }) => { if (checked) done.add(project); else done.delete(project); };
+    for (const [command, handler] of Object.entries(responses)) {
+      responses[command] = args => { calls.push({ command, args: structuredClone(args ?? {}) }); return handler(args ?? {}); };
+    }
+  }
 }

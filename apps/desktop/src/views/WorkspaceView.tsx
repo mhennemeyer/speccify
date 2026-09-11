@@ -87,6 +87,12 @@ export default function WorkspaceView() {
           </select>
         </label>
         <button className={button} disabled={busy} onClick={() => void discover(workspace.root)}>Erneut erkennen</button>
+        <button data-tone="blue" className={`${button} tone-surface`} disabled={busy} onClick={async () => {
+          setBusy(true); setError(null);
+          try { await invoke("workspace_window_open", { workspaceId: workspace.id }); }
+          catch (e) { setError(String(e)); }
+          finally { setBusy(false); }
+        }}>Workspace öffnen ↗</button>
         <span className="text-xs text-slate-500">{workspace.repositories.length} Repos/Ordner · {workspace.repositories.reduce((sum, repo) => sum + repo.worktrees.length, 0)} Worktrees</span>
         <p className="w-full break-all font-mono text-xs text-slate-500">{workspace.root}</p>
       </div>

@@ -4,7 +4,8 @@
   "description": "Capability for the main window and project windows",
   "windows": [
     "main",
-    "project-*"
+    "project-*",
+    "workspace-*"
   ],
   "permissions": [
     "core:default",

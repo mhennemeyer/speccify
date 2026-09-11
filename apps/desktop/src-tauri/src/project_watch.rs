@@ -21,8 +21,8 @@ use tauri_plugin_notification::NotificationExt;
 
 const POLL_INTERVAL: std::time::Duration = std::time::Duration::from_secs(2);
 
-/// Fenster-Label → Stop-Flag des laufenden Watcher-Threads.
-pub struct ProjectWatchers(Mutex<HashMap<String, Arc<AtomicBool>>>);
+/// Fenster, Projektpfad und Lebenszyklus-ID → Stop-Flag des Watcher-Threads.
+pub struct ProjectWatchers(Mutex<HashMap<(String, String, String), Arc<AtomicBool>>>);
 
 impl Default for ProjectWatchers {
     fn default() -> Self {
@@ -164,6 +164,7 @@ fn changed_areas(
 
 #[derive(Clone, Serialize)]
 struct ProjectChanged {
+    project: String,
     areas: Vec<&'static str>,
 }
 
@@ -174,12 +175,30 @@ pub fn project_watch_start(
     window: tauri::WebviewWindow,
     state: State<ProjectWatchers>,
     project: String,
+    watcher_id: Option<String>,
 ) -> Result<(), String> {
     let root = resolve_project_root(&project)?;
     let label = window.label().to_string();
     let stop = Arc::new(AtomicBool::new(false));
-    if let Some(old) = state.0.lock().unwrap().insert(label.clone(), stop.clone()) {
-        old.store(true, Ordering::Relaxed);
+    let project = root.display().to_string();
+    {
+        let mut watchers = state.0.lock().unwrap();
+        watchers.retain(|(owner, path, _), old| {
+            if owner == &label && path == &project {
+                old.store(true, Ordering::Relaxed);
+                false
+            } else {
+                true
+            }
+        });
+        watchers.insert(
+            (
+                label.clone(),
+                project.clone(),
+                watcher_id.unwrap_or_default(),
+            ),
+            stop.clone(),
+        );
     }
     let app = window.app_handle().clone();
     std::thread::spawn(move || {
@@ -208,6 +227,7 @@ pub fn project_watch_start(
             let _ = window.emit(
                 "project-changed",
                 ProjectChanged {
+                    project: project.clone(),
                     areas: areas.clone(),
                 },
             );
@@ -237,15 +257,68 @@ pub fn project_watch_start(
 }
 
 #[tauri::command]
-pub fn project_watch_stop(window: tauri::WebviewWindow, state: State<ProjectWatchers>) {
-    if let Some(stop) = state.0.lock().unwrap().remove(window.label()) {
-        stop.store(true, Ordering::Relaxed);
-    }
+pub fn project_watch_stop(
+    window: tauri::WebviewWindow,
+    state: State<ProjectWatchers>,
+    project: Option<String>,
+    watcher_id: Option<String>,
+) {
+    stop_watchers(
+        &mut state.0.lock().unwrap(),
+        window.label(),
+        project.as_deref(),
+        watcher_id.as_deref(),
+    );
+}
+
+fn stop_watchers(
+    watchers: &mut HashMap<(String, String, String), Arc<AtomicBool>>,
+    window: &str,
+    project: Option<&str>,
+    lease: Option<&str>,
+) {
+    watchers.retain(|(owner, path, id), stop| {
+        if owner == window
+            && project.is_none_or(|value| value == path)
+            && lease.is_none_or(|value| value == id)
+        {
+            stop.store(true, Ordering::Relaxed);
+            false
+        } else {
+            true
+        }
+    });
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn stopping_a_workspace_watch_preserves_other_roots_windows_and_new_leases() {
+        let mut watchers = HashMap::new();
+        let flags: Vec<_> = (0..4).map(|_| Arc::new(AtomicBool::new(false))).collect();
+        for (index, (window, project, lease)) in [
+            ("workspace", "api", "old"),
+            ("workspace", "api", "new"),
+            ("workspace", "web", "web"),
+            ("single", "api", ""),
+        ]
+        .iter()
+        .enumerate()
+        {
+            watchers.insert(
+                (window.to_string(), project.to_string(), lease.to_string()),
+                flags[index].clone(),
+            );
+        }
+        stop_watchers(&mut watchers, "workspace", Some("api"), Some("old"));
+        assert!(flags[0].load(Ordering::Relaxed));
+        assert!(flags[1..].iter().all(|flag| !flag.load(Ordering::Relaxed)));
+        stop_watchers(&mut watchers, "workspace", None, None);
+        assert!(flags[..3].iter().all(|flag| flag.load(Ordering::Relaxed)));
+        assert!(!flags[3].load(Ordering::Relaxed));
+    }
 
     #[test]
     fn fingerprints_react_to_create_change_and_delete() {

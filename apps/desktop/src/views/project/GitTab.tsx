@@ -118,6 +118,8 @@ function CommitList({
   );
 }
 
+import { useProjectActivity } from "../../lib/projectActivity";
+
 export default function GitTab({
   project,
   refresh,
@@ -131,6 +133,7 @@ export default function GitTab({
   visible?: boolean;
 }) {
   const [status, setStatus] = useState<GitStatus | null>(null);
+  const projectActive = useProjectActivity();
   const [log, setLog] = useState<GitCommit[]>([]);
   const [branches, setBranches] = useState<GitBranch[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -325,6 +328,7 @@ export default function GitTab({
   useEffect(() => {
     const handler = (event: Event) => {
       const verb = (event as CustomEvent<string>).detail;
+      if (!projectActive.current) return;
       if (verb === "commit") openCommitPanel();
       else if (verb === "fetch" || verb === "pull" || verb === "push") void remote(verb);
     };

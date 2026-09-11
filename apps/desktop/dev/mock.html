@@ -355,7 +355,7 @@
       window.__TAURI_INTERNALS__ = {
         // ?dashboard=1 → Hauptfenster (Label "main") statt Projektfenster.
         metadata: (() => {
-          const label = new URLSearchParams(location.search).has("dashboard") ? "main" : "project-mock";
+          const label = new URLSearchParams(location.search).has("workspace-shell") ? "workspace-workspace-demo" : new URLSearchParams(location.search).has("dashboard") ? "main" : "project-mock";
           return {
             currentWindow: { label },
             currentWebview: { label, windowLabel: label },

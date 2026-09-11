@@ -46,11 +46,12 @@ einem angemeldeten Host auf den Zielplattformen steht aus.
 | Ausführung | `.agent/actions.json`, Exec-Allowlist und Interaktionen; nicht gleichbedeutend mit beliebigen Host-Berechtigungen |
 | Rechnerpräferenzen | globale Einstellungen/Quellen, lokale Checkouts; Fensterlayout, Entwürfe und Sitzungsmerker teilweise in lokalem UI-Speicher |
 
-Ein Projektfenster erhält weiterhin **einen Projektpfad**. Das Dashboard erkennt
-seit Spec 015 mehrere Repos/Worktrees in einem Arbeitsordner und speichert deren
-fachliche Projektgruppen lokal. Ein Worktree öffnet ein eigenes Projektfenster;
-Spec 024 ergänzt eine lesende aggregierte Spec-Sicht im Dashboard. Projekt-Badges
-in weiteren Bereichen und gemeinsames Team-Sync sind noch nicht enthalten.
+Ein Einzelprojektfenster erhält weiterhin **einen Projektpfad**. Das Dashboard
+erkennt seit Spec 015 mehrere Repos/Worktrees und speichert fachliche Gruppen lokal.
+Spec 024 ergänzt eine lesende aggregierte Spec-Sicht im Dashboard. Spec 026 öffnet
+zusätzlich alle Projekte in einem gemeinsamen Arbeitsfenster: gruppierte Navigation,
+gemeinsames bearbeitbares Board und unveränderliche Ziele pro Worktree. Gemeinsamer
+Team-Sync ist noch nicht enthalten.
 Speccify-Server starten und Host-Konfiguration anzeigen ersetzt nicht automatisch
 deren Einrichtung oder Verfügbarkeit im gewählten Agenten.
 
@@ -61,10 +62,10 @@ oder vollständige Plattformabnahme.
 
 | Fähigkeit | Ist-Stand | Grenze / Folgeschritt |
 |---|---|---|
-| Projekte/Workspaces | begrenzte Repo-/Worktree-Erkennung, lokale IDs, Gruppieren/Umbenennen/Entgruppieren, gezieltes eigenes Fenster; 024: lesendes gemeinsames Board mit Projektfilter und Herkunft | keine aggregierten Schreibaktionen, automatische Board-Aktualisierung, Team-Identitätsbindung oder automatische Pfadumzüge; weitere Schnitte V1-01 |
+| Projekte/Workspaces | begrenzte Erkennung, lokale IDs/Gruppen; 026: gemeinsames wiederherstellbares Arbeitsfenster, gruppierte Bereiche, gemeinsames Board mit herkunftsgebundener Bearbeitung und Watchern; eigene Fenster weiterhin möglich | kein Team-Sync, keine Cross-Repo-Git-Schreibaktion oder automatischen Pfadumzüge; PTYs nach App-Quit nicht automatisch fortgesetzt |
 | Specs | Gesamtliste links, Suche/Themenfilter, Backlog/Doing/Done, gemeinsamer Task-Vertrag, Fragen und pfadgenaue Historie; Altbestand lesbar, kein Archivierungsschritt | keine Sperre gegenüber externen Editoren; Team-/Branch-Sicht fehlt |
 | Workflow-Setup | Policy v5 ohne Archivierungsschritt, versionierte Skills, bekannte Vorlagen sicher migrieren, konkrete Link-/Anpassungsdiagnose | individuelle/neue unbekannte Vorlagen und fremde Links bleiben zur manuellen Prüfung erhalten |
-| Playbooks | Liste, Markdown lesen/bearbeiten, neu/löschen, als Prompt kopieren | keine Workspace-Herkunft oder Team-Verteilung |
+| Playbooks | Liste, Markdown lesen/bearbeiten, neu/löschen, als Prompt kopieren; im Workspace pro Projekt/Worktree gekennzeichnet | keine automatische Team-Verteilung |
 | Editor/Git | mehrere offene Dateien, Entwürfe, Suche, Dateioperationen, Diff, Staging auch pro Hunk, Commit, Branches, Remotes, Historie/Blame | echte IDE-Abnahme 002 offen; kein belegtes LSP-/Debugger-/Konfliktlösesystem |
 | Skills | Projektliste, Bibliotheken durchsuchen, globale/projekteigene Quellen, Import/Expand, Exportkommando | keine explizite Source-/Target-Rolle; Teile von 004 noch abnehmen |
 | Tools | Verträge, Plattformimplementierungen und Prüfstatus sichtbar | drei lokale Tool-Implementierungen fehlen laut Basisprüfung; 010 vereinheitlicht Meldungen |
@@ -101,6 +102,7 @@ Speccify · Dashboard
 │   │   ├── Arbeitsordner eingeben / wählen → begrenzte Workspace-Erkennung
 │   │   ├── Gespeicherte Workspaces wählen · erneut erkennen (16 Ebenen)
 │   │   │   └── Echte Suchgrenzen: übersprungene Pfade · verfügbare Projekte weiter nutzbar
+│   │   ├── Workspace öffnen → ein gemeinsames Arbeitsfenster (026)
 │   │   ├── Repos auswählen → Projektgruppe benennen und speichern
 │   │   ├── Projektkarten → umbenennen · Repo aus Gruppe lösen
 │   │   │   └── Worktrees mit relativem Pfad/Markern/Verfügbarkeit → eigenes Projektfenster
@@ -391,9 +393,57 @@ Diese Tabelle verändert keine Station oder Reihenfolge.
 | [022 Dateien/Refactoring](../specs/022-dateiauswahl-und-refactoring/SPEC.md) | Backlog | Ordnerauswahl und Kontextmenü; später sicherer Move und sprachbezogene Refactorings |
 | [023 Landingpage-Bilder](../specs/023-landingpage-app-screenshots/SPEC.md) | Done | Landingpage/Features mit acht Motiven; lokale Variante vom Nutzer abgenommen, nicht veröffentlicht; Screenshot-Pflege verbindlich |
 | [024 Workspace-Spec-Board](../specs/024-workspace-spec-board/SPEC.md) | Doing · ready | Code/automatisierte Prüfungen und nativer Demo-Durchlauf grün; finaler Build offen, Q1 geschlossen; menschliche Abnahme offen |
-| [025 Workspace-Suchtiefe](../specs/025-workspace-suchtiefe/SPEC.md) | Doing · Q1 offen | Echter itsdcloud-Scanner erkennt drei Repos ohne Warnung; UI-Rescan und finaler Neubau durch erneuten Start-/Dateihalter-Befund blockiert |
+| [025 Workspace-Suchtiefe](../specs/025-workspace-suchtiefe/SPEC.md) | Doing · ready | Nutzerbild und gespeicherte Revision 3 ohne Warnung; finale Board-Entkopplung im lokalen 026-Build enthalten, Q1 geschlossen; menschliche Abnahme offen |
+| [026 Workspace-Arbeitsfenster](../specs/026-workspace-arbeitsfenster/SPEC.md) | Doing · ready | Alle Projekte im selben Fenster, gemeinsames editierbares Board, isolierte Ziele/Zustände; acht UI-Suites und 86 Rust-Tests grün, itsdcloud nativ geöffnet und nach Neustart wiederhergestellt; menschliche Abnahme offen |
+
+### Gemeinsames Workspace-Arbeitsfenster (026)
+
+```text
+Workspace-Fenster · eigener Titel, bestehendes Fenster fokussieren
+├── Kopf: Workspace/Root · Aktualisieren
+├── Bereiche: Gemeinsames Board · Dateien · Git · Playbooks · Skills
+│             Tools · Aktionen · MCPs · Agent · Terminals
+├── Navigator: Projektgruppe → Repository → Worktree
+│   ├── Board: jeweilige Specs · + Spec mit explizitem Repo-Ziel
+│   ├── Dateien: je Worktree eigener Baum / Suche / Dateiliste
+│   ├── Git: je Worktree eigener Status / Änderungen / Historie
+│   ├── Wissen/Technik: vorhandene Listen pro Worktree
+│   └── Zielpfad · fehlende Bindung · gestartetes Terminal / laufende Aktion
+├── Mitte
+│   ├── Gemeinsames Board: Filter / Suche / Herkunftskarten / Snapshot aktualisieren
+│   └── Gewähltes Projekt: bestehender Editor, Git-Composer, Dokument oder Aktion
+├── Inspektor: Projekt / Repo / absoluter Worktree-Pfad
+│   ├── Vorhandene Detailaktionen; bei Specs Tasks / Fragen / Historie / Bearbeiten
+│   └── Projektbezogene Aktionsausgaben als Tabs · zum Terminal wechseln
+└── Terminal je Worktree: explizit starten; Ziel fest, Wechsel erhält Prozess
+```
+
+Die Projektkomponenten behalten beim Wechsel und Umgruppieren ihren Zustand.
+Keine aggregierte Git-Operation, kein automatischer Multi-Agenten-Start, kein
+fensterübergreifender Team-Sync. Fenster werden wiederhergestellt, laufende PTYs
+nach App-Quit nicht als fortgesetzt zugesagt. Dashboard-Board bleibt lesend.
 
 ## Verifikation und verbleibende Risiken
+
+**Nachtrag 026, 2026-09-11, 09:05 UTC:** Gemeinsames Arbeitsfenster implementiert
+und mit drei Repos plus Feature-Worktree automatisiert geprüft: Herkunft bei
+Spec-/Dateischreiben, gezieltes Git-/Terminal-Kommando, Entwürfe/Prozesse bei
+Wechsel und Umgruppierung, fehlende Ziele, kein unbeabsichtigtes Wiederöffnen des
+Spec-Dialogs. 86 Rust-Tests bestanden, 3 ignoriert; acht UI-Suites, Typecheck,
+Formatierung und Website-Prüfungen grün. Alle acht öffentlichen Motive visuell
+geprüft und im letzten Capture bytegleich, keine Publikation.
+Echtes itsdcloud nativ geöffnet: app/infra/portal, 66 Specs auf einem Board,
+Dateinavigation aller drei Projekte und Zielwechsel zu infra geprüft, keine
+Testschreibzugriffe in den Pilotordner. Finaler lokaler Neubau erfolgreich;
+App PID 27136 auf 18768 stellt das Workspace-Fenster und fünf bisherige Fenster
+wieder her und bleibt offen. Gespeicherte Revision 3 ohne Warnung bestätigt den
+Nutzerbefund und schließt 025/Q1; dessen asynchrone Board-Korrektur ist enthalten.
+Beim ersten Start dieses Schnitts verzögerte zusätzlich synchrones
+`project_board_kpis/spec_dirs/read_dir` das Laden, das danach selbstständig
+abschloss. Keine Systemdienste beendet oder Datenschutzfreigaben geändert;
+kein Beleg für generell verzögerungsfreien Start. Windows und menschliche Abnahme
+offen. Lange Projekt-Spec-Listen benötigen Scrollen; einklappbare Gruppen als
+UI-Feinschliff vorgemerkt. Team-Sync bleibt Spec 016.
 
 **Nachtrag 025, 2026-09-11, 07:41 UTC:** 16 Ebenen und konkrete Limit-Pfade
 implementiert. Nativer Scanner liest das echte itsdcloud: app/infra/portal, keine

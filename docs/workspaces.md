@@ -16,6 +16,9 @@ project ID), and worktree bindings (IDs/local paths/relative paths/observed mark
 Grouping and renaming only change metadata in this local store. This file is not
 a team register or a tracked project manifest; shared identity binding is Spec 016.
 Existing recent-project/open-window files and repository contents are untouched.
+Spec 026 adds an optional `window_open` preference (default false for existing
+stores) to each workspace. It is independent of mapping revisions. Workspace
+windows are restored at app launch and forgotten on explicit window close.
 
 Every repository starts in its own project. Grouping creates a logical project;
 ungrouping restores the repository's original project ID. Empty project identities
@@ -62,6 +65,46 @@ open an explicitly named worktree. Every opened worktree uses existing project
 window identity and its own terminal cwd. Workspace selection never retargets a
 running terminal, Git operation, action or editor. Spec 024 adds a read-only
 aggregated board; it does not merge `.agent` trees or grant cross-project writes.
+
+## Shared work window (Spec 026)
+
+Dashboard → **Workspace öffnen** opens/focuses one `workspace-<id>` window. Its
+binding comes from the native window label and local workspace store, never from
+an arbitrary URL path. Existing single-project windows are unaffected. Missing
+workspace data fails explicitly; missing individual worktrees remain visible.
+`workspace_resolve_target` revalidates each worktree path/common-directory binding
+before its pane is mounted and on explicit workspace refresh. This is not a new
+filesystem security sandbox: existing native per-project mutation checks still apply.
+
+The workspace shell groups navigation by logical project, repository and worktree.
+Its common board lists specs in those groups and retains independent card keys.
+Selection shows the original project's existing spec inspector, task toggles,
+questions/history and editor. New-spec buttons name the destination repository.
+There is no aggregate write command or cross-repository drag-and-drop; changes use
+the existing per-project APIs and trigger a fresh shared snapshot. The dashboard
+preview remains read-only. Snapshot refresh never changes the active project.
+
+Files, Git, playbooks, skills, tools, actions, MCP configuration and agent settings
+reuse existing project components with immutable worktree paths. Editors and
+commit drafts stay mounted while hidden; regrouping moves navigation portals, not
+the components holding processes and drafts. Spec editor dialogs are local to their
+selected worktree; external updates are subject to existing editor concurrency rules.
+Changing an actual path binding requires reopening; no live process is retargeted.
+
+Workspace terminals start only on an explicit click; empty command means a shell.
+Switching projects or sections preserves each started terminal and action output.
+There is no automatic multi-agent start or promise of terminal resumption after app
+quit. Every terminal instance has a UUID, including development lifecycle probes.
+Window-wide Git, action, file-open and type-command listeners are gated by active
+project context. Output/exit events remain matched to their unique execution IDs.
+Typing a command without a started terminal still requires starting that project's
+terminal and retrying; no invisible command queue or automatic execution is implied.
+
+Watchers are keyed by window, canonical worktree path and lease ID. A stale cleanup
+cannot stop a newer watcher or another root's watcher. `project-changed` includes
+the project path; workspace listeners route it to that pane and refresh the shared
+board for board changes. Mapping refresh is explicit. Existing project windows can
+still stop all their own watchers with the old no-argument stop call.
 
 ## Read-only board snapshot (Spec 024)
 

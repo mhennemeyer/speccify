@@ -620,7 +620,9 @@ function SpecDetail({
   );
 }
 
-export default function BoardTab({ project, refresh }: { project: string; refresh?: number }) {
+export default function BoardTab({ project, refresh, detailFile, detailOnly = false, onMutated, createRequest = 0 }: {
+  project: string; refresh?: number; detailFile?: string; detailOnly?: boolean; onMutated?: () => void; createRequest?: number;
+}) {
   const { data, loading, error, reload } = useAsync(
     () => invoke<SpecEntry[]>("project_board", { project }),
     `board:${project}`,
@@ -630,6 +632,7 @@ export default function BoardTab({ project, refresh }: { project: string; refres
     `board-kpis:${project}`,
   );
   const [selected, setSelectedState] = useState<string | null>(null);
+  useEffect(() => { if (detailFile) setSelectedState(detailFile); }, [detailFile, data]);
   // W7: das Spec-Detail wohnt im Inspektor; eine neue Auswahl holt den
   // Inspektor-Tab nach vorn (ohne die Seitenleiste ungefragt zu öffnen).
   const inspector = useInspector("board");
@@ -638,6 +641,7 @@ export default function BoardTab({ project, refresh }: { project: string; refres
     if (file) inspector.reveal();
   };
   const [sheet, setSheet] = useState<SheetState | null>(null);
+  useEffect(() => { if (createRequest) setSheet(emptySheet("Backlog")); }, [createRequest]);
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [showRuns, setShowRuns] = useState(false);
@@ -706,6 +710,7 @@ export default function BoardTab({ project, refresh }: { project: string; refres
     try {
       await action();
       await Promise.all([reload(), kpis.reload(), history.reload(), questions.reload()]);
+      onMutated?.();
       return true;
     } catch (e) {
       setActionError(String(e));
@@ -776,6 +781,7 @@ export default function BoardTab({ project, refresh }: { project: string; refres
   return (
     <LoadingBoundary loading={loading} error={error} label="Specs lesen…">
       <div className="flex h-full min-h-0 flex-col">
+        {!detailOnly && <>
         <NavigatorPortal tab="board" fallback={() => null}>
           {allSpecs.length === 0 ? (
             <NavEmpty
@@ -941,6 +947,8 @@ export default function BoardTab({ project, refresh }: { project: string; refres
             );
           })}
         </div>
+        </>}
+        {detailOnly && actionError && !sheet && <p role="alert" className="p-3 text-xs text-red-600">{actionError}</p>}
         {selectedSpec ? (
           <InspectorPortal tab="board">
             <SpecDetail

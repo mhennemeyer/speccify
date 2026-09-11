@@ -28,6 +28,7 @@ interface SearchHit {
 }
 import { fencedPrompt } from "../../lib/prompt";
 import { trackActivity } from "../../lib/activity";
+import { useProjectActivity } from "../../lib/projectActivity";
 import { clearDraft, draftKey, readDraft, writeDraft } from "../../lib/autosave";
 import {
   InspectorButton,
@@ -118,6 +119,7 @@ export default function FilesTab({
 }) {
   // Baum: Verzeichnis → Kinder; "" = Wurzel. Nur geladene Ordner sind offen.
   const [tree, setTree] = useState<Record<string, TreeEntry[]>>({});
+  const projectActive = useProjectActivity();
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set([""]));
   const [treeError, setTreeError] = useState<string | null>(null);
   const [filter, setFilter] = useState("");
@@ -261,6 +263,7 @@ export default function FilesTab({
   useEffect(() => {
     const handler = (event: Event) => {
       const raw = (event as CustomEvent<string>).detail;
+      if (!projectActive.current) return;
       if (!raw) return;
       // `pfad:zeile` (Terminal-Link, Suche) → Datei öffnen und Zeile anspringen.
       const at = /^(.*?):(\d+)$/.exec(raw);

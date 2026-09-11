@@ -3,8 +3,7 @@ station: Doing
 order: 8
 created: 2026-09-11
 needs_human: true
-ready: false
-open_question: Q1
+ready: true
 parent: 015-workspace-projekterkennung
 ---
 # Workspace-Erkennung für tiefe Projektstrukturen
@@ -45,6 +44,9 @@ Keine Projektdateien verändern, kein Team-Sync und kein automatisches Setup.
   im bestehenden synchronen `project_board → spec_dirs → read_dir` auf dem
   UI-Thread. Diesen einzelnen lesenden Command im selben Schnitt auf einen
   Hintergrundthread verschieben; Parser und Rückgabe bleiben unverändert.
+- D4, 2026-09-11: Nutzerbild beantwortet Q1 mit geladenem Workspace ohne Warnung.
+  Gespeicherte Revision 3 bestätigt app/infra/portal, `partial=false`, keine
+  Warnungen. Finaler Neubau einschließlich D3 im Schnitt 026 erfolgreich.
 
 ## Tasks
 
@@ -52,7 +54,7 @@ Keine Projektdateien verändern, kein Team-Sync und kein automatisches Setup.
 - [x] Regressionen für tiefe Strukturen, echte Limits und Warnungsbereinigung.
 - [x] (added) Belegte Board-Startblockade vom UI-Thread entkoppeln und
   Gleichheit der synchronen Lesehilfe und asynchronen Command-Rückgabe testen.
-- [ ] Native App aktualisieren und itsdcloud lesend erneut erkennen.
+- [x] Native App aktualisieren und itsdcloud lesend erneut erkennen.
 - [x] Vertrag, Playbooks und Verifikationsstand aktualisieren.
 
 ## Verification
@@ -95,9 +97,19 @@ Keine Projektdateien verändern, kein Team-Sync und kein automatisches Setup.
 
 ## Questions
 
-### Q1 · open · 2026-09-11T07:41:03Z
+### Q1 · answered · 2026-09-11T07:41:03Z
 
 Siehst Du einen macOS-Dialog zu Speccify oder nur leere App-Fenster? Die Erkennung
 ist am echten itsdcloud-Ordner geprüft. Für den finalen App-Neubau und UI-Rescan
 muss die vom macOS-Dienst offengehaltene App-Datei wieder frei sein. Ohne belegte
 Ursache keine pauschale Datenschutzänderung verlangen; keine Systemdienste beenden.
+
+### A1 · bo · 2026-09-11
+
+Nutzerbild zeigt das vollständig geladene itsdcloud-Dashboard mit drei Repos und
+ohne Warnung; die folgende Anfrage betrifft deren gemeinsames Öffnen (026).
+Lesende Gegenprüfung im 026-Lauf: Revision 3, app/infra/portal, keine Warnung.
+Finaler 026-Build enthält auch D3; native Fenster und das itsdcloud-Board mit
+66 Specs sind bedienbar. Beim ersten Start war zusätzlich `project_board_kpis`
+vorübergehend im Dateilesen blockiert; Laden schloss selbstständig ab. Dies ist
+kein Nachweis eines generell verzögerungsfreien Starts und keine menschliche Abnahme.

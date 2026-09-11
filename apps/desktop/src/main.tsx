@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import App from "./App";
 import ProjectShell from "./ProjectShell";
+import WorkspaceShell from "./WorkspaceShell";
 import "./index.css";
 
 // Ein Bundle, zwei Fenstertypen (Plan projektfenster.md, D15): das
@@ -12,6 +13,6 @@ const isProjectWindow = getCurrentWebviewWindow().label.startsWith("project-");
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
-    {isProjectWindow ? <ProjectShell /> : <App />}
+    {getCurrentWebviewWindow().label.startsWith("workspace-") ? <WorkspaceShell /> : isProjectWindow ? <ProjectShell /> : <App />}
   </React.StrictMode>,
 );

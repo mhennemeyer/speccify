@@ -26,6 +26,8 @@ interface TermOut {
 
 // Ohne `cwd`/`autostart` gelten die App-Settings (Dashboard); das
 // Projektfenster übergibt beides (cwd = Projektwurzel, Agent-Kommando).
+import { useProjectActivity } from "../lib/projectActivity";
+
 export default function TerminalPanel({
   visible,
   cwd: cwdProp,
@@ -38,10 +40,12 @@ export default function TerminalPanel({
   onOpened?: (command: string) => void;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const projectActive = useProjectActivity();
 
   // W6/D24: „ins Terminal tippen" von anderen Tabs (z. B. Skill-Import).
   useEffect(() => {
     const handler = (event: Event) => {
+      if (!projectActive.current) return;
       const data = (event as CustomEvent<string>).detail;
       if (idRef.current && data) {
         void invoke("terminal_write", { id: idRef.current, data });
@@ -69,10 +73,14 @@ export default function TerminalPanel({
   }, []);
 
   useEffect(() => {
+    let cleanup: (() => void) | undefined;
+    // A cancelled mount must not construct a terminal or open a PTY. This also
+    // keeps the development lifecycle probe out of xterm's deferred layout.
+    const initialization = requestAnimationFrame(() => {
     const container = containerRef.current;
     if (!container) return;
 
-    const id = `term-${Date.now()}-${generation}`;
+    const id = `term-${crypto.randomUUID()}`;
     idRef.current = id;
     setStatus("");
     setStartup(null);
@@ -205,7 +213,7 @@ export default function TerminalPanel({
     });
     observer.observe(container);
 
-    return () => {
+    cleanup = () => {
       disposed = true;
       if (idleTimer.current) clearTimeout(idleTimer.current);
       if (busyRef.current) endActivity(busyRef.current, "cancelled");
@@ -215,13 +223,17 @@ export default function TerminalPanel({
       unlisteners.forEach((unlisten) => unlisten());
       void invoke("terminal_kill", { id }).catch(() => {});
       terminal.dispose();
+      if (terminalRef.current === terminal) terminalRef.current = null;
+      if (fitRef.current === fit) fitRef.current = null;
     };
+    });
+    return () => { cancelAnimationFrame(initialization); cleanup?.(); };
   }, [generation]);
 
   // Beim Einblenden nachfitten (im hidden-Zustand ist die Breite 0).
   useEffect(() => {
     if (visible && fitRef.current && terminalRef.current) {
-      requestAnimationFrame(() => {
+      const frame = requestAnimationFrame(() => {
         fitRef.current?.fit();
         void invoke("terminal_resize", {
           id: idRef.current,
@@ -229,6 +241,7 @@ export default function TerminalPanel({
           rows: terminalRef.current?.rows ?? 24,
         }).catch(() => {});
       });
+      return () => cancelAnimationFrame(frame);
     }
   }, [visible]);
 

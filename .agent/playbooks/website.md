@@ -139,3 +139,12 @@ did not persist. The dashboard preview is reviewed separately from public assets
 All eight project-window motifs were inspected and match existing assets on the
 repeat capture; initial Tools raster variance did not persist. Marketing build
 and responsive landing/Features checks pass. No new public claims or publication.
+
+026 UI change check: the new shared workspace window is separate from the eight
+existing project-window motifs. Inspect those after changes to the shared project
+components and terminal lifecycle. A public workspace motif and corresponding
+feature claims await review of this capability; do not imply team-wide sync.
+All eight motifs inspected; final capture is byte-identical to the checked-in
+assets (minor earlier raster variation did not persist). Marketing build (93
+pages) and 1440/390/320 px/no-JavaScript checks pass. No publication or asset
+change required for this implementation.

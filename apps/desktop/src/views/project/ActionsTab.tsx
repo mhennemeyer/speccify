@@ -23,6 +23,7 @@ import {
   useInspector,
 } from "../../lib/panels";
 import { beginActivity, endActivity } from "../../lib/activity";
+import { useProjectActivity } from "../../lib/projectActivity";
 
 interface ActionInput {
   name: string;
@@ -345,6 +346,7 @@ export default function ActionsTab({
   );
   const [runs, setRuns] = useState<Record<string, RunState>>({});
   const runningIds = useRef(new Set<string>());
+  const projectActive = useProjectActivity();
   const listenersReady = useRef<Promise<unknown>>(Promise.resolve());
   // Streaming lines must not rerender the entire project shell.
   const outputTabsKey = JSON.stringify(Object.entries(runs).map(([id, run]) => ({
@@ -486,6 +488,7 @@ export default function ActionsTab({
   useEffect(() => {
     const handler = (event: Event) => {
       const command = (event as CustomEvent<string>).detail;
+      if (!projectActive.current) return;
       const action = actionsRef.current.find((entry) => entry.command === command);
       if (action && action.confirmed && runnable(action)) void startRef.current(action);
     };

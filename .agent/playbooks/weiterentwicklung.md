@@ -139,8 +139,8 @@ Native Prüfung am 2026-09-11 abgeschlossen; 024 ist zur menschlichen Abnahme be
 Der finale lokale Build enthält die asynchrone Workflow-Startdiagnose und bleibt
 geöffnet. Der vorübergehende macOS-Dateihalter erforderte keine nachgewiesene
 Änderung von Datenschutzfreigaben; Details im Bestandsplaybook.
-Durchgängige Herkunft in weiteren Bereichen und gemeinsame Team-Identitätsbindung
-fehlen weiterhin. Die lokale Zuordnung ist kein gemeinsames Team-Register; 016
+Durchgängige Herkunft in weiteren Bereichen folgt mit 026 (siehe unten), gemeinsame
+Team-Identitätsbindung fehlt weiterhin. Die lokale Zuordnung ist kein Team-Register; 016
 bleibt der getrennte Sync-Pilot. Basis ist auch für itsdcloud und spätere Adapter erforderlich.
 
 **Team-Pilot itsdcloud, Spec 025:** Die Repo-Erkennung durchsucht jetzt 16 statt
@@ -151,8 +151,25 @@ Die übrigen Budgets/Ausschlüsse bleiben bestehen; vollständige erneute Erkenn
 bereinigt alte Warnungen und erhält IDs, Namen und Gruppen. Keine Sonderbehandlung
 für itsdcloud und keine Projektdatei-Änderungen.
 Direkter nativer Scan am echten Pilotordner geprüft: drei Git-Repos, keine
-Warnung. UI-Rescan bleibt wegen eines separaten Start-/Dateihalter-Problems offen
-(025/Q1); nicht als bereits nahtlos nutzbaren Teamstart ausweisen.
+Warnung. Inzwischen zeigen Nutzerbild und gespeicherte Revision 3 denselben
+warnungsfreien Zustand. Die zusätzliche Board-Startkorrektur ist im lokalen
+026-Build enthalten; 025/Q1 ist damit beantwortet. Verzögertes Laden beim ersten
+Start bleibt als Betriebsbefund dokumentiert, nicht als fehlende Freigabe ausgelegt.
+
+**Umgesetzter beauftragter Schnitt, 026 (2026-09-11):** Der Nutzer will ausdrücklich
+alle Repos in einem Fenster bearbeiten. [Spec 026](../specs/026-workspace-arbeitsfenster/SPEC.md)
+ergänzt einen eigenen Workspace-Fenstertyp und den Dashboard-Knopf „Workspace
+öffnen“. Links Projekt → Repo → Worktree mit Dateien/Git/Wissen/Werkzeugen, in
+der Mitte ein gemeinsames Board, rechts der herkunftsgebundene Inspektor.
+Spec-Aufgaben/Fragen und Bearbeitung laufen über die vorhandenen Projektverträge.
+Einzelprojektfenster bleiben zusätzlich möglich. Projekt-/Bereichswechsel sowie
+Umgruppierung erhalten Editor-/Commit-Entwürfe und gestartete Terminals/Aktionen.
+Terminals nur explizit starten, keine automatische Mehrfach-Agenten-Sitzung.
+Der lokale Board-Überblick und die gemeinsamen Fenster sind weiterhin kein
+Team-Sync; 016 bleibt erforderlich. Umsetzung/automatisierte Prüfungen und native
+Wiederaufnahme stehen: itsdcloud mit allen drei Repos und 66 Specs geöffnet,
+nach Neustart automatisch wiederhergestellt. Menschliche Abnahme offen; Grenzen
+und Betriebsbefunde siehe Bestandsplaybook und Spec-Verifikation.
 
 ### V1-02 — Autoupdater für die Apps
 

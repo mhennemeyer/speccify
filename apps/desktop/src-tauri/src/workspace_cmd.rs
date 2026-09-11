@@ -6,6 +6,7 @@ use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 use std::time::{Duration, Instant};
+use tauri::Manager;
 
 static STORE_LOCK: Mutex<()> = Mutex::new(());
 const DISCOVERY_MAX_DEPTH: usize = 16;
@@ -66,6 +67,8 @@ pub struct Workspace {
     repositories: Vec<Repository>,
     warnings: Vec<String>,
     partial: bool,
+    #[serde(default)]
+    window_open: bool,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -450,6 +453,7 @@ fn merge(store: &mut Store, root: &Path, scan: Scan) -> Workspace {
                 repositories: vec![],
                 warnings: vec![],
                 partial: false,
+                window_open: false,
             });
             store.workspaces.len() - 1
         });
@@ -683,6 +687,121 @@ pub async fn workspace_open(
     .await
     .map_err(|e| e.to_string())??;
     crate::project_cmd::open_project_window(&app, &state, &path)
+}
+
+async fn workspace_snapshot(workspace_id: String) -> Result<Workspace, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let _guard = STORE_LOCK.lock().map_err(|e| e.to_string())?;
+        let store = load(&store_path()?)?;
+        let mut workspace = store
+            .workspaces
+            .into_iter()
+            .find(|entry| entry.id == workspace_id)
+            .ok_or("Workspace nicht gefunden")?;
+        for repo in &mut workspace.repositories {
+            for tree in &mut repo.worktrees {
+                tree.available = Path::new(&tree.path).is_dir();
+            }
+        }
+        Ok(workspace)
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
+fn remember_workspace_window(workspace_id: &str, open: bool) -> Result<(), String> {
+    let _guard = STORE_LOCK.lock().map_err(|e| e.to_string())?;
+    let path = store_path()?;
+    let mut store = load(&path)?;
+    let workspace = store
+        .workspaces
+        .iter_mut()
+        .find(|entry| entry.id == workspace_id)
+        .ok_or("Workspace nicht gefunden")?;
+    workspace.window_open = open;
+    save(&path, &store)
+}
+
+#[tauri::command]
+pub async fn workspace_window_current(window: tauri::WebviewWindow) -> Result<Workspace, String> {
+    let id = window
+        .label()
+        .strip_prefix("workspace-")
+        .ok_or("Kein Workspace-Fenster")?;
+    workspace_snapshot(id.to_owned()).await
+}
+
+#[tauri::command]
+pub async fn workspace_resolve_target(
+    workspace_id: String,
+    worktree_id: String,
+) -> Result<String, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let _guard = STORE_LOCK.lock().map_err(|e| e.to_string())?;
+        let store = load(&store_path()?)?;
+        let workspace = store
+            .workspaces
+            .iter()
+            .find(|entry| entry.id == workspace_id)
+            .ok_or("Workspace nicht gefunden")?;
+        resolve_worktree(workspace, &worktree_id)
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
+#[tauri::command]
+pub async fn workspace_window_open(
+    app: tauri::AppHandle,
+    workspace_id: String,
+) -> Result<(), String> {
+    let workspace = workspace_snapshot(workspace_id.clone()).await?;
+    let label = format!("workspace-{}", workspace.id);
+    if let Some(window) = app.get_webview_window(&label) {
+        window.set_focus().map_err(|e| e.to_string())?;
+        return Ok(());
+    }
+    let builder =
+        tauri::WebviewWindowBuilder::new(&app, &label, tauri::WebviewUrl::App("index.html".into()))
+            .title(format!("{} · Workspace — Speccify", workspace.name))
+            .inner_size(1500.0, 940.0)
+            .min_inner_size(1000.0, 650.0);
+    #[cfg(target_os = "macos")]
+    let builder = builder
+        .title_bar_style(tauri::TitleBarStyle::Overlay)
+        .hidden_title(true);
+    let window = builder.build().map_err(|e| e.to_string())?;
+    let close_id = workspace.id.clone();
+    window.on_window_event(move |event| {
+        if matches!(event, tauri::WindowEvent::CloseRequested { .. }) {
+            let id = close_id.clone();
+            tauri::async_runtime::spawn_blocking(move || {
+                if let Err(error) = remember_workspace_window(&id, false) {
+                    eprintln!("Workspace-Fenster: {error}");
+                }
+            });
+        }
+    });
+    tauri::async_runtime::spawn_blocking(move || remember_workspace_window(&workspace_id, true))
+        .await
+        .map_err(|e| e.to_string())??;
+    Ok(())
+}
+
+pub fn restore_workspace_windows(app: &tauri::AppHandle) {
+    let app = app.clone();
+    tauri::async_runtime::spawn(async move {
+        match workspace_list().await {
+            Ok(workspaces) => {
+                for workspace in workspaces.into_iter().filter(|entry| entry.window_open) {
+                    if let Err(error) = workspace_window_open(app.clone(), workspace.id).await {
+                        eprintln!("Workspace-Fenster nicht wiederhergestellt: {error}");
+                    }
+                }
+            }
+            Err(error) => eprintln!("Workspace-Fensterliste: {error}"),
+        }
+    });
 }
 
 #[derive(Serialize)]
@@ -1284,6 +1403,33 @@ mod tests {
             "Complete: {} discovered roots, no warnings; no store or project writes",
             result.found.len()
         );
+    }
+
+    #[test]
+    fn workspace_window_preference_migrates_and_survives_rescan_without_changing_bindings() {
+        let fixture = tempfile::tempdir().unwrap();
+        let root = fixture.path().canonicalize().unwrap();
+        let mut store = empty_store();
+        let workspace = merge(&mut store, &root, scan(&root, 20000, 6));
+        assert!(!workspace.window_open);
+        let mut old_format = serde_json::to_value(&workspace).unwrap();
+        old_format.as_object_mut().unwrap().remove("window_open");
+        assert!(
+            !serde_json::from_value::<Workspace>(old_format)
+                .unwrap()
+                .window_open
+        );
+        store.workspaces[0].window_open = true;
+        let next = merge(&mut store, &root, scan(&root, 20000, 6));
+        assert!(next.window_open);
+        assert_eq!(next.id, workspace.id);
+        assert_eq!(
+            next.repositories[0].worktrees[0].id,
+            workspace.repositories[0].worktrees[0].id
+        );
+        let path = root.join("store.json");
+        save(&path, &store).unwrap();
+        assert!(load(&path).unwrap().workspaces[0].window_open);
     }
 
     #[test]

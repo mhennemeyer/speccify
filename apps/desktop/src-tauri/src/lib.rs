@@ -234,6 +234,7 @@ pub fn run() {
             });
             // W7d: beim letzten Quit offene Projektfenster wieder öffnen.
             project_cmd::restore_open_windows(app.handle());
+            workspace_cmd::restore_workspace_windows(app.handle());
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -246,6 +247,9 @@ pub fn run() {
             workspace_cmd::workspace_edit,
             workspace_cmd::workspace_open,
             workspace_cmd::workspace_board,
+            workspace_cmd::workspace_window_open,
+            workspace_cmd::workspace_window_current,
+            workspace_cmd::workspace_resolve_target,
             project_cmd::project_current,
             project_cmd::project_recent,
             project_cmd::project_skills,
