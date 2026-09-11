@@ -389,9 +389,21 @@ Diese Tabelle verändert keine Station oder Reihenfolge.
 | [021 Git-Arbeitsbereich](../specs/021-git-arbeitsbereich/SPEC.md) | Doing, ready, needs_human | sichtbarer Composer mit Entwurf/Index-Vorschau, sichere lokale Branch-Verwaltung, Remote-/Tracking-Anzeige; 108 Rust-Tests/fünf UI-Suiten grün, App aktualisiert |
 | [022 Dateien/Refactoring](../specs/022-dateiauswahl-und-refactoring/SPEC.md) | Backlog | Ordnerauswahl und Kontextmenü; später sicherer Move und sprachbezogene Refactorings |
 | [023 Landingpage-Bilder](../specs/023-landingpage-app-screenshots/SPEC.md) | Done | Landingpage/Features mit acht Motiven; lokale Variante vom Nutzer abgenommen, nicht veröffentlicht; Screenshot-Pflege verbindlich |
-| [024 Workspace-Spec-Board](../specs/024-workspace-spec-board/SPEC.md) | Doing · Q1 | Code/automatisierte Prüfungen grün; native Abnahme durch macOS/tccd blockiert; noch nicht ready |
+| [024 Workspace-Spec-Board](../specs/024-workspace-spec-board/SPEC.md) | Doing · ready | Code/automatisierte Prüfungen und nativer Demo-Durchlauf grün; finaler Build offen, Q1 geschlossen; menschliche Abnahme offen |
 
 ## Verifikation und verbleibende Risiken
+
+**Wiederaufnahme 024, 2026-09-11, 07:16 UTC:** Frühere Dateisperre nicht mehr
+vorhanden; eine fehlende macOS-Freigabe war nicht nachgewiesen. Finaler Neubau auf
+Basis `4c2e149` einschließlich asynchroner Workflow-Diagnose erfolgreich; App PID
+26432 auf 18768, Dashboard und vier Projektfenster bedienbar wiederhergestellt.
+Nativer Demo-Lauf: drei gleiche Spec-IDs getrennt, API-Projektfilter 2/3,
+Feature-Worktree-Suche 1/3, genaue Vorschau, Aufgaben deaktiviert, Öffnen fokussiert
+api-search. Temporäre Änderung der Wegwerf-Spec erscheint nach Refresh; vollständig
+zurückgenommen. App bleibt offen. Erneut 82 Rust-Tests bestanden/2 ignoriert,
+Typecheck und Formatierung grün; keine Bild-/Produkt-UI-Änderung in diesem Lauf.
+Q1 geschlossen, 024 bereit zur menschlichen Abnahme. Terminal-Resume und Windows
+bleiben getrennte offene Prüfungen; keine allgemeine Wiederanlaufgarantie.
 
 **Nachtrag 024, 2026-09-11:** Lesendes Workspace-Board mit Herkunft/Liste/Filter
 implementiert; 82 Rust-Tests bestanden, 2 ignoriert, sieben Desktop-UI-Suites,

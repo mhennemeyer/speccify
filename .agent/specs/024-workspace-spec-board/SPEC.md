@@ -3,8 +3,7 @@ station: Doing
 order: 7
 created: 2026-09-11
 needs_human: true
-ready: false
-open_question: Q1
+ready: true
 parent: null
 ---
 # Workspace-Board mit eindeutiger Projekt- und Worktree-Herkunft
@@ -52,16 +51,20 @@ Skills/Playbooks sowie Dateien/Git bleiben im jeweils eigenen Projektfenster.
   Snapshot mit Zeitpunkt, explizitem Refresh und Herkunft. Kein Teamstatus-Versprechen.
 - D4: Öffnen führt ins Projektfenster; kein Versprechen, dort automatisch die
   ausgewählte Spec zu selektieren. Die genaue Datei ist vorher im Inspector sichtbar.
+- D5, 2026-09-11: Erneute Diagnose nach Nutzerfrage zeigt keinen tccd-Dateihalter
+  mehr und ein bedienbares Dashboard. Eine fehlende Datenschutzfreigabe war nicht
+  nachgewiesen; keine solche Nutzeränderung voraussetzen. Fortsetzungsauftrag
+  erlaubt finalen Neubau und nativen Prüflauf. Q1 durch Wegfall des Befunds geschlossen.
 
 ## Tasks
 
 - [x] Begrenzten Aggregationsvertrag und Parser-Wiederverwendung implementieren.
 - [x] Board, Liste, Filter, Suche und lesende Vorschau mit Herkunft ergänzen.
 - [x] Kollisionen, Worktrees, Gruppierung, Fehlergrenzen und UI-Wechsel testen.
-- [ ] Native Mac-App prüfen, Screenshot-Pflege sowie Playbooks/UI-Baum aktualisieren.
+- [x] Native Mac-App prüfen, Screenshot-Pflege sowie Playbooks/UI-Baum aktualisieren.
 - [x] (added) Beim nativen Start belegte Main-Thread-Blockade der lesenden
   Workflow-Diagnose durch asynchronen Aufruf beheben; Diagnose-/Schreibvertrag erhalten.
-  Code und Regression geprüft; nativer Neubau durch macOS-Datenschutzprüfung blockiert.
+  Code und Regression geprüft; finaler nativer Neubau inzwischen erfolgreich.
 
 ## Verification
 
@@ -102,11 +105,43 @@ Skills/Playbooks sowie Dateien/Git bleiben im jeweils eigenen Projektfenster.
   Workspace-Board, aber noch nicht die nachfolgende asynchrone Startkorrektur.
   Bedienbarkeit und nativer Board-Durchlauf bleiben unbestätigt. Windows ungeprüft.
 
+### Wiederaufnahme und nativer Prüflauf · 2026-09-11, 07:16 UTC
+
+- Ausgangscommit `4c2e149`, sauberer Arbeitsbaum. `lsof` zeigt nur die laufende App,
+  nicht mehr `tccd`. Reguläres Beenden, erfolgreicher finaler Build mit
+  `./scripts/dev.sh --app --prepared --ui-port=18768`, anschließend App offen.
+  Dieser Build enthält auch die asynchrone Workflow-Diagnose.
+- PID 26432 auf 18768: Dashboard und alle vier bisherigen Projektfenster
+  wiederhergestellt und UI bedienbar. Kein Force-Kill, keine Freigabe geändert.
+  Dieser gelungene Start beweist keine allgemeine Lösung aller macOS-/Sitzungsprobleme.
+- Gespeicherter Wegwerf-Workspace: drei getrennte Einträge mit derselben Spec-ID
+  `001-start`; Herkunft API, API/api-search und Customer Portal/Web sichtbar.
+  Projektfilter API zeigt 2/3, Suche `api-search` 1/3. Liste, Karte und Vorschau
+  stimmen überein; Vorschau nennt den genauen Worktree- und Spec-Dateipfad.
+- Native Vorschau-Aufgabe ist deaktiviert (`enabled: false`). Öffnen-Knopf
+  fokussiert nachweislich `api-search — Speccify`, kein anderes Projekt.
+- Wegwerf-Spec ausschließlich im Feature-Worktree vorübergehend Backlog → Doing
+  geändert: nach explizitem Refresh genau eine Doing-Karte. Datei danach vollständig
+  zurückgesetzt; Git-Arbeitsbäume vor Prüfung sauber, Feature-Worktree danach sauber.
+  Filter für Übergabe wieder auf alle Projekte gesetzt. Sichtprüfung mit schmalem
+  Inhalt neben Terminal; lokaler Prüfscreenshot, keine Veröffentlichung.
+- Desktop-Typecheck und Formatierung erneut grün. Erster Rust-Lauf parallel zum
+  nativen Build endet bei Doc-tests mit Fehler; isolierte Wiederholung nach Build
+  vollständig grün: 82 bestanden, 2 ignoriert, Doc-tests grün. Künftig diese
+  Cargo-Buildvarianten nacheinander ausführen.
+- Keine produktiven UI-/Bildänderungen in dieser Wiederaufnahme. Screenshot-
+  Prüfung und sieben UI-Suites vom vorigen Durchlauf bleiben gültig. Playbooks
+  mit aktuellem Abnahmestand nachgeführt. Menschliche Abnahme und Windows-Test offen.
+
 ## Questions
 
-### Q1 · open · 2026-09-11T05:45:37Z
+### Q1 · closed · 2026-09-11T05:45:37Z
 Bitte prüfe am Mac, ob eine Datenschutzfreigabe für Speccify aussteht, insbesondere
 für den Schreibtisch-/Projektordner, und bestätige die gewünschte Freigabe selbst.
 `tccd` hält derzeit die App-Binärdatei offen und der gestartete Build zeigt leere
 Fenster. Sobald die Prüfung freigegeben ist, finalen Build starten und das Board
 mit dem gespeicherten Demo-Workspace nativ abnehmen. Keine Systemfreigabe umgehen.
+
+Auflösung 2026-09-11: Dateihalter nicht mehr vorhanden; fehlende Freigabe nicht
+belegt. Nach Nutzerauftrag finaler Neubau und nativer Prüflauf erfolgreich,
+ohne eine Datenschutzfreigabe zu ändern. Kein weiterer Nutzereingriff nötig.

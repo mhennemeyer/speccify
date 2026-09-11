@@ -135,6 +135,10 @@ Spec 024 ergänzt ein lesendes Workspace-Board mit Liste, Projektfilter, Suche u
 Projekt-/Repo-/Worktree-Herkunft je Karte. Gleiche Spec-IDs bleiben getrennt.
 Aktualisierung ist ausdrücklich manuell, Bearbeitung erfolgt im eigenen
 Projektfenster. [Spec 024](../specs/024-workspace-spec-board/SPEC.md).
+Native Prüfung am 2026-09-11 abgeschlossen; 024 ist zur menschlichen Abnahme bereit.
+Der finale lokale Build enthält die asynchrone Workflow-Startdiagnose und bleibt
+geöffnet. Der vorübergehende macOS-Dateihalter erforderte keine nachgewiesene
+Änderung von Datenschutzfreigaben; Details im Bestandsplaybook.
 Durchgängige Herkunft in weiteren Bereichen und gemeinsame Team-Identitätsbindung
 fehlen weiterhin. Die lokale Zuordnung ist kein gemeinsames Team-Register; 016
 bleibt der getrennte Sync-Pilot. Basis ist auch für itsdcloud und spätere Adapter erforderlich.
@@ -581,6 +585,11 @@ Systemfreigabe umgehen oder einen erfolgreichen Neustart nur aus dem Port ableit
 Die gebündelte App braucht keinen Entwicklungsserver und bleibt während
 Codeänderungen/Tests offen. `--prepared` nur bei bereits eingerichteten,
 bekannt passenden Deps/Sidecars/Payload verwenden; sonst zuerst `--no-start`.
+Nativen App-Build und Desktop-Rust-Tests nacheinander ausführen: beim parallelen
+Lauf am 2026-09-11 scheiterte der Doc-test-Schritt, die isolierte Wiederholung
+war grün. Ein `tccd`-Dateihalter allein beweist keine fehlende Nutzerfreigabe;
+nach Ende einer vorübergehenden Prüfung den Zustand neu prüfen, bevor eine
+Änderung von macOS-Einstellungen verlangt wird.
 Seit der Präzisierung vom 2026-09-10 sind Neustarts für Updates ausdrücklich
 erlaubt und erwünscht: vorher kurz ankündigen, Entwürfe/laufende Arbeit beachten,
 anschließend die App wieder starten und Wiederaufnahme prüfen. Dafür nicht jedes
