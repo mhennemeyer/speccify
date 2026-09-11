@@ -92,7 +92,7 @@ if [[ "$MODE" == "open" ]]; then
     echo "Noch kein lokaler App-Build. Zuerst: ./scripts/dev.sh --app --ui-port=$UI_PORT" >&2
     exit 1
   fi
-  if ! lsof -t "$LOCAL_APP/Contents/MacOS/speccify-desktop" >/dev/null 2>&1; then
+  if ! desktop_app_running "$LOCAL_APP"; then
     desktop_require_free_port "$UI_PORT"
   fi
   # Ohne -n: vorhandene Instanz aktivieren, keine zweite erzwingen.
@@ -100,7 +100,7 @@ if [[ "$MODE" == "open" ]]; then
   open "$LOCAL_APP" --args "--desktop-ui-port=$UI_PORT"
   exit 0
 fi
-if [[ "$MODE" == "app" ]] && lsof -t "$LOCAL_APP/Contents/MacOS/speccify-desktop" >/dev/null 2>&1; then
+if [[ "$MODE" == "app" ]] && desktop_app_running "$LOCAL_APP"; then
   echo "Der lokale App-Build läuft. Mit --open aktivieren; vor Neubau bewusst mit ⌘Q beenden." >&2
   exit 1
 fi

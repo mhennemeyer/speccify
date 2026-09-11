@@ -412,15 +412,17 @@ Workspace-Fenster · eigener Titel, bestehendes Fenster fokussieren
 │   ├── Dateien: je Worktree eigener Baum / Suche / Dateiliste
 │   ├── Git: je Worktree eigener Status / Änderungen / Historie
 │   ├── Wissen/Technik: vorhandene Listen pro Worktree
-│   └── Zielpfad · fehlende Bindung · gestartetes Terminal / laufende Aktion
+│   └── Zielpfad · fehlende Bindung · laufende Aktion
 ├── Mitte
 │   ├── Gemeinsames Board: Filter / Suche / Herkunftskarten / Snapshot aktualisieren
 │   └── Gewähltes Projekt: bestehender Editor, Git-Composer, Dokument oder Aktion
 ├── Verstellbarer Inspektor: Projekt / Repo / Worktree (voller Pfad im Tooltip)
 │   ├── Vorhandene Detailaktionen; bei Specs Tasks / Fragen / Historie / Bearbeiten
 │   └── Projektbezogene Aktionsausgaben als Tabs · Stop / Ausgabe schließen
-└── Terminal je Worktree: unten/rechts andocken, explizit starten, Ziel fest
-    └── Projektwechsel, Ein-/Ausblenden und Docking erhalten den Prozess
+└── Ein Workspace-Terminal im Parent-Ordner: unten/rechts, ausdrücklich starten
+    ├── Gemeinsames Agent-Kommando / Presets (auch im Agent-Tab)
+    ├── Kontextvorschau / Kopieren: Gruppen, Repos, Worktrees, Anweisungseinstiege
+    └── Projektwechsel, Ein-/Ausblenden und Docking erhalten denselben Prozess
 ```
 
 Die Projektkomponenten behalten beim Wechsel und Umgruppieren ihren Zustand.
@@ -430,6 +432,29 @@ nach App-Quit nicht als fortgesetzt zugesagt. Dashboard-Board bleibt lesend.
 Breiten, Sichtbarkeit, Terminal-Dock und Toolbar-Präferenz werden pro Workspace
 lokal gespeichert; dieselben Defaults, Komponenten und Tastenkürzel wie im
 Einzelprojektfenster. Gleichnamige Projektaktionen haben getrennte Lauf-IDs.
+
+026 Parent-Agent: Native Ein-Instanz-Sperre einschließlich laufender Startprüfung.
+Kontextdatei temporär, keine AGENTS-/CLAUDE-/Projektdateien überschrieben. Normale
+Codex-/Claude-Presets erhalten die Struktur automatisch, eigene Kommandos benötigen
+manuelle Übergabe über Vorschau/Kopieren oder SPECCIFY_WORKSPACE_CONTEXT. Snapshot
+gilt bis Neustart; Preview zeigt die Zuordnung für den nächsten Start. Git-Aufträge
+nennen das Zielrepo, Skill-Kommandos setzen --project. Kein Beleg für automatische
+MCP-/Skill-Konfiguration aller Kinder oder aufgehobene Host-Berechtigungen.
+Fensterende und App-Quit räumen Sitzung und temporären Kontext explizit auf;
+verspätete Starts werden verworfen. Der beim Neustart erneut nachgewiesene synchrone
+Board-KPI-Scan läuft nun im Hintergrund, damit langsame Verzeichniszugriffe die
+native Fensterbedienung und Quit nicht mehr über diesen Pfad blockieren.
+Auch der gleichartig nachgewiesene Dateibaum-Aufruf liest jetzt im Hintergrund.
+Die beim Laden abgefragten Git-Daten (Status, Historie, Branchliste) ebenso;
+Git-Timeout und Schreiboperationen bleiben unverändert.
+Wiederhergestellte Dokumente werden über denselben Hintergrund-Lesepfad geladen;
+die vorhandene Traversal-Prüfung bleibt bestehen.
+
+026 Abschluss der Parent-Sitzung: finale App PID 31067 auf 18768 ohne Dev-Watcher,
+Workspace plus fünf vorherige Fenster nativ wiederhergestellt. Parent-cwd und drei
+Repo-Einstiege geprüft; reguläres Quit entfernt Test-Shell und Kontextdatei, erneutes
+Öffnen erfolgreich. 89 Rust-Tests, neun UI-Suites, neun Startskript-Tests grün.
+Host-Aufgabe mit angemeldetem Codex/Claude bleibt Teil der menschlichen Abnahme.
 
 ## Verifikation und verbleibende Risiken
 

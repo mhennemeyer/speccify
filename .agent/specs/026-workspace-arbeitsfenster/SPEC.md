@@ -18,9 +18,10 @@ Der Team-Alltag benötigt einen gemeinsamen Arbeitsbereich statt Fensterwechseln
 Ein explizit geöffnetes, wiederherstellbares Workspace-Fenster für beliebig viele
 erkannte Projekte/Repos (innerhalb der bestehenden Suchlimits). Gemeinsames Board
 mit Herkunft; Dateien, Git, Playbooks, Skills, Tools, Aktionen, MCP-Konfiguration
-und Terminals nach Projekt/Repo/Worktree gegliedert. Bestehende Editor-/Git-/Spec-
+nach Projekt/Repo/Worktree gegliedert; ein gemeinsamer Agent im Parent-Ordner.
+Bestehende Editor-/Git-/Spec-
 Verträge wiederverwenden. Projektwechsel erhält Entwürfe, Ausgaben und gestartete
-Terminals; keine stille Änderung ihrer Zielwurzel. Einzelprojektfenster bleiben.
+Workspace-Sitzung; keine stille Änderung ihrer Zielwurzel. Einzelprojektfenster bleiben.
 
 Kein Team-Sync, kein gemeinsamer Git-Index, keine Zusammenführung von Wissensdateien,
 kein automatischer Start mehrerer Agenten und keine Cross-Repo-Refactorings.
@@ -37,9 +38,12 @@ kein automatischer Start mehrerer Agenten und keine Cross-Repo-Refactorings.
   Gleiche Dateinamen/Skills/Spec-IDs bleiben getrennt und eindeutig gekennzeichnet.
 - Das Board zeigt alle Projekte gemeinsam; Aufgaben, Fragen und Spec-Bearbeitung
   verwenden genau die ausgewählte Herkunft und erscheinen anschließend im Board.
-- Editor- und Commit-Entwürfe überleben Projekt-/Bereichswechsel. Git, Aktionen
-  und Terminal-Eingaben erreichen ausschließlich das angezeigte Zielprojekt.
-- Gestartete Terminals/Aktionen behalten ihr Ziel beim Wechsel; Öffnen des
+- Editor- und Commit-Entwürfe überleben Projekt-/Bereichswechsel. Git und Aktionen
+  erreichen ausschließlich das angezeigte Zielprojekt; Terminal-Übergaben nennen ihr Repo.
+- Genau eine Workspace-Sitzung startet im Parent-Ordner und erhält die Struktur
+  aller Repos mit ihren Anweisungseinstiegen. Projektwechsel und Docking starten
+  keinen weiteren Agenten und ändern nicht dessen cwd. Host-Berechtigungen bleiben gültig.
+- Gestartete Sitzung/Aktionen behalten ihr Ziel beim Wechsel; Öffnen des
   Workspace startet keine Agenten automatisch in allen Repos.
 - Fehlende oder veränderte Pfadbindungen werden sichtbar; kein Ersatz durch eine
   ähnlich benannte Wurzel. Gruppierung und Identitäten bleiben erhalten.
@@ -78,9 +82,30 @@ kein automatischer Start mehrerer Agenten und keine Cross-Repo-Refactorings.
 - D9, 2026-09-11: Toolbar-Rückkehr legt Kollisionsrisiko gleichnamiger Aktionen
   offen. Workspace/Worktree-Namensraum für Run-/Output-/Stop-IDs; vorhandene
   Einzelprojekt-Aufrufe und Aktionsdefinitionen unverändert.
+- D10, 2026-09-11: Nutzer verlangt einen gemeinsamen Agenten im Parent-Ordner.
+  Ersetzt die Terminal-Anteile von D3/D5: eine native Reservierung pro Workspace,
+  gemeinsames Kommando und PTY unabhängig von Projektwahl. Strukturkontext mit
+  kanonischen Pfaden, Gruppen und Anweisungseinstiegen wird temporär übergeben;
+  keine Parent-/Kind-Anweisungsdateien anlegen oder überschreiben. Plain-Presets
+  Claude/Codex automatisch, freie Kommandos unverändert mit explizitem Fallback.
+  Host-Trust/Sandbox bleibt; kein automatisches Resume oder MCP-/Skill-Merging.
+  Git-/Skill-Übergaben müssen ihr Repo ausdrücklich adressieren.
+- D11, 2026-09-11: Abschlussprüfung findet zwei Lebenszyklusfehler: temporäre
+  Kontextdatei überlebt reguläres App-Quit ohne expliziten Exit-Cleanup; ein
+  synchroner Board-KPI-Scan blockiert native Fenster und Quit. Terminal-Cleanup
+  an Fensterende und App-Exit binden (auch gegen verspätete Starts), KPI-Lesen
+  wie Board-Lesen in spawn_blocking verlagern; kein geändertes Statistikmodell.
+- D12, 2026-09-11: Nach Prozessende meldet dev.sh weiter „App läuft“: tccd hält
+  nur lesende Handles auf das Binary, lsof liefert mit txt-Filter sogar Exit 0
+  ohne PID. Startprüfung verwendet nun ausschließlich nichtleere PID-Treffer
+  ausführbarer Mappings. Keine macOS-Prüfdienste beenden oder Rechte ändern.
 
 ## Tasks
 
+- [x] (added) Gemeinsame Parent-Sitzung und native Ein-Instanz-Sperre implementieren.
+- [x] (added) Strukturkontext automatisch für Presets, explizit für freie Hosts übergeben.
+- [x] (added) Projektbezogene Terminal-Übergaben, Regressionen, Playbooks und App aktualisieren.
+- [x] (added) Fenster-/Quit-Cleanup und nachgewiesene blockierende Start-Lesewege absichern.
 - [x] (added) Nutzerkorrektur: vertraute Projektoberfläche im Workspace wiederherstellen.
 - [x] (added) Titelleiste einschließlich Text verschiebbar machen und nativ prüfen.
 - [x] (added) Layout-/Docking-/Toolbar-Parität sowie bestehende Isolation regressionsprüfen.
@@ -149,6 +174,66 @@ kein automatischer Start mehrerer Agenten und keine Cross-Repo-Refactorings.
   18768. Workspace plus fünf vorherige Fenster wiederhergestellt, native Sichtprüfung
   bestätigt 66 Specs und vertrauten Fensteraufbau. App offen, UI-Testserver beendet.
   Lokale Dokumentationslinks und `git diff --check` grün. Menschliche Abnahme offen.
+
+### Verification · gemeinsamer Parent-Agent 2026-09-11
+
+- Skills spec-next/speccify: iteration 1, ok; bestehende native Workspace-Verträge
+  wiederverwendet, keine gefundene Library-Erweiterung nötig. OpenAI Docs für
+  unterstützten Codex-Startparameter verwendet; offizielle Codex-/Claude-Referenzen
+  im Workspace-Vertrag verlinkt. Freie/resumierende Kommandos bewusst nicht umgebaut.
+- Native Tests: 89 bestanden, 3 ignoriert. Neue Fälle für drei echte temporäre
+  Repos, unveränderte Anweisungsdateien, fehlende Wurzeln ohne Ersatz, gequotete
+  Preset-Übergabe, unveränderte freie Kommandos und Ein-Instanz-Reservierung.
+- Neun Browser-Suites grün. Workspace-Fälle belegen gemeinsames Kommando,
+  Kontextvorschau, genau eine Parent-PTY-Anforderung, erhaltene Sitzung bei Wechsel/
+  Umgruppieren/Docken und explizites Zielrepo im Commit-Auftrag. Fehlendes Kind
+  sperrt seine Projektaktionen, nicht die gemeinsame Sitzung. Typecheck grün.
+- Skill app-screenshots: acht Motive vollständig visuell geprüft und bytegleich;
+  Marketing-Build (93 Seiten), Desktop-/Mobilbreiten und Links ohne JS grün.
+- Native App PID 74722: itsdcloud mit drei Repos und 66 Specs wiederhergestellt.
+  Shell PID 77245 gestartet: lsof-cwd und Terminal-pwd bestätigen den Parent-Ordner.
+  SPECCIFY_WORKSPACE_ROOT identisch, SPECCIFY_WORKSPACE_CONTEXT zeigt private
+  temporäre Datei mit app/infra/portal, verfügbaren Pfaden und Anweisungseinstiegen.
+  Auswahl infra erhält exakt PID 77245 und Parent-cwd. Keine Repo-Testmutationen.
+- Beobachtung: Login-Shell meldet vorhandenen Verweis auf fehlende ~/.cargo/env;
+  Workspace-Start funktioniert trotzdem. Keine Benutzer-Shellprofile verändert.
+  Fenster waren zunächst nicht per Accessibility erreichbar, später vollständig
+  geladen. End-to-end-Aufgabe mit angemeldetem Claude/Codex und Windows bleibt
+  menschliche Praxisabnahme; Startkontext ist keine Garantie für Host-Verständnis,
+  alle MCP-Konfigurationen oder zusätzliche Schreibrechte.
+- Exit-Gegenprobe fand eine liegengebliebene private Kontextdatei trotz beendetem
+  Shell-Prozess. Testdatei entfernt; expliziter RunEvent::Exit-Cleanup und
+  Fenster-Destroy-Cleanup ergänzt. PTY-Test belegt geleerte Sessions/Reservierungen
+  und gelöschte Kontextdatei; Startup verwirft verspätete Ergebnisse nach Quit.
+- Sample von PID 86996 belegt erneut project_board_kpis → spec_dirs → read_dir →
+  open auf dem Hauptthread; reguläres Quit hing ebenfalls. Keine Kindprozesse,
+  gezielt per SIGTERM beendet. KPI-Command jetzt asynchron, unveränderte Berechnung
+  über spawn_blocking; bestehender Roundtrip-Test prüft den neuen async-Einstieg.
+  Gesamtsuite nach beiden Korrekturen: 89 bestanden, 3 ignoriert.
+- Startskript: rein lesender tccd-Dateizugriff und lsof-Erfolg ohne Ausgabe
+  werden nicht mehr als laufende App behandelt. Vorhandene Portbesitzer-Prüfung
+  bleibt bestehen; neun isolierte Startskript-Tests grün. Anschließender Build
+  startet trotz weiterhin vorhandener Lesehandles des unveränderten Systemdienstes.
+- Zweiter Sample (PID 2448) zeigt denselben Hauptthread-Block im Dateibaum
+  project_tree → list_dir → read_dir. Auch dieser Command liest jetzt in
+  spawn_blocking; bestehender Dateibaum-Test prüft den async-Einstieg. Blockierten
+  Prozess nach erfolglosem Quit und Prüfung auf fehlende Kindprozesse gezielt per
+  SIGTERM beendet, keine Systemdienste verändert. Rust-Gesamtsuite erneut grün.
+- Dritter Sample (PID 11432) lokalisiert einen weiteren Startblock im synchronen
+  Git-Status mit 30-Sekunden-Timeout. Die drei initialen lesenden Git-Abfragen
+  Status/Log/Branches laufen jetzt ebenfalls in spawn_blocking; Mutationen und
+  Timeout-Vertrag unverändert. Reale Git-Roundtrips prüfen die async-Einstiege.
+- Weitere native Gegenprobe (PID 20129): wiederhergestelltes Dokument blockiert
+  in project_read_file → read_to_string → open. Auch Dokument-Lesen läuft nun
+  im Hintergrund. Erfolgsfall und Traversal-Abweisung durch die bestehende
+  Testsuite am async-Einstieg geprüft; Schreib- und Pfadverträge unverändert.
+- Finaler nativer Build PID 28714: sechs Fenster wiederhergestellt und bedienbar.
+  Sichtbarer Parent-Terminal startet Shell PID 30397 in itsdcloud; Kontextdatei
+  vorhanden. Reguläres Quit beendet beide Prozesse und entfernt die Datei:
+  native Exit-Gegenprobe jetzt grün. Danach mit dev.sh --open wieder geöffnet;
+  finale App PID 31067 auf 18768, dieselben sechs Fenster nativ bestätigt.
+  App bleibt ohne Dev-Watcher offen; UI-Testserver beendet. Keine Publikation.
+  Git-Diff-/Format-/Typecheck-/Startskript-Prüfungen grün. Menschliche Abnahme offen.
 
 ## Questions
 

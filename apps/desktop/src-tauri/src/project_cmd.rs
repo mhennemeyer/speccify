@@ -424,7 +424,13 @@ pub(crate) fn safe_project_path(root: &Path, file: &str) -> Result<PathBuf, Stri
 
 /// Eine Datei unterhalb der Projektwurzel lesen (Pläne, SKILL.md, …).
 #[tauri::command]
-pub fn project_read_file(project: String, file: String) -> Result<String, String> {
+pub async fn project_read_file(project: String, file: String) -> Result<String, String> {
+    tauri::async_runtime::spawn_blocking(move || read_project_file(project, file))
+        .await
+        .map_err(|error| error.to_string())?
+}
+
+fn read_project_file(project: String, file: String) -> Result<String, String> {
     let root = resolve_project_root(&project)?;
     let path = safe_project_path(&root, &file)?;
     std::fs::read_to_string(&path).map_err(|e| format!("{}: {e}", path.display()))
@@ -1026,7 +1032,11 @@ mod tests {
         assert_eq!(origin.version.as_deref(), Some("1.0.0"));
         assert_eq!(origin.tools, vec!["verify-something".to_string()]);
 
-        let body = project_read_file(project, ".agent/plans/aktuell.md".into()).unwrap();
+        let body = tauri::async_runtime::block_on(project_read_file(
+            project,
+            ".agent/plans/aktuell.md".into(),
+        ))
+        .unwrap();
         assert!(body.contains("# Plan: Aktuell"));
 
         let _ = std::fs::remove_dir_all(&dir);
@@ -1037,7 +1047,9 @@ mod tests {
         let dir = project_fixture("escape");
         let project = dir.to_string_lossy().into_owned();
         for evil in ["../secrets.txt", "/etc/passwd", "a/../../b.md"] {
-            let error = project_read_file(project.clone(), evil.into()).unwrap_err();
+            let error =
+                tauri::async_runtime::block_on(project_read_file(project.clone(), evil.into()))
+                    .unwrap_err();
             assert!(error.contains("aus dem Projekt heraus"), "{evil} → {error}");
         }
         let _ = std::fs::remove_dir_all(&dir);

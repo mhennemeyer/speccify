@@ -165,7 +165,13 @@ pub struct KpiSummary {
 }
 
 #[tauri::command]
-pub fn project_board_kpis(project: String) -> Result<KpiSummary, String> {
+pub async fn project_board_kpis(project: String) -> Result<KpiSummary, String> {
+    tauri::async_runtime::spawn_blocking(move || read_board_kpis(project))
+        .await
+        .map_err(|error| error.to_string())?
+}
+
+fn read_board_kpis(project: String) -> Result<KpiSummary, String> {
     let root = resolve_project_root(&project)?;
     let mut runs: Vec<RunEntry> = Vec::new();
     for dir in crate::project_cmd::spec_dirs(&root, true) {
@@ -1188,7 +1194,7 @@ mod tests {
         assert_eq!(history[0].event_type, "agent_run"); // neueste zuerst
         assert!(history.iter().all(|event| event.spec_id == id));
 
-        let kpis = project_board_kpis(project.clone()).unwrap();
+        let kpis = tauri::async_runtime::block_on(project_board_kpis(project.clone())).unwrap();
         assert_eq!(kpis.run_count, 2);
         assert_eq!(kpis.tokens_in, 1010); // 100 + 900 cache_read + 10 — effektiv
         assert_eq!(kpis.tokens_out, 44);
@@ -1209,7 +1215,12 @@ mod tests {
             .join(&archived)
             .with_file_name("history.jsonl")
             .is_file());
-        assert_eq!(project_board_kpis(project.clone()).unwrap().run_count, 2);
+        assert_eq!(
+            tauri::async_runtime::block_on(project_board_kpis(project.clone()))
+                .unwrap()
+                .run_count,
+            2
+        );
         assert!(project_ticket_delete(project.clone(), archived.clone()).is_err());
         assert!(dir.join(&archived).exists());
         let evil = project_ticket_delete(project, ".agent/agent.md".into()).unwrap_err();

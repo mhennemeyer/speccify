@@ -21,6 +21,11 @@ Nachbauten; Parität ausdrücklich testen. Titel und Pfad sind Fenster-Ziehfläc
 interaktive Toolbar-Elemente bleiben klickbar. Dieses Prinzip gilt auch für künftige
 Funktionen, nicht nur als optische Nachbesserung dieses Schnitts.
 
+Workspace-Agent: genau eine Sitzung im Parent-Ordner. Auswahlmarkierung der
+Projektgruppe darf nicht suggerieren, dass sie das Terminal-Ziel wechselt.
+Parent-Pfad und gemeinsame Rolle am Terminal anzeigen; Kontextvorschau/Kopieren
+und Unterschiede zwischen automatischen Presets und freien Kommandos erklären.
+
 Eine aufgeräumte IDE mit farbigen Orientierungspunkten. Editor, Text, Diffs
 und Ausgaben behalten ruhige, überwiegend neutrale Flächen. Bereiche erhalten
 farbige Icons und leicht getönte Auswahlflächen; Status kommt als zusätzliche

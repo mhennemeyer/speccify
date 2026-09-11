@@ -15,7 +15,7 @@ try {
     await nav.getByRole("tablist", { name: "Bereiche", exact: true }).getByRole("tab", { name: group, exact: true }).click();
     if (group !== "Specs") await nav.getByRole("tablist", { name: group, exact: true }).getByRole("tab", { name: label, exact: true }).click();
   };
-  const terminal = id => page.getByRole("region", { name: `Terminal ${root}/${id}`, exact: true });
+  const terminal = id => page.getByRole("region", { name: `Terminal ${root}`, exact: true });
   const pane = id => page.locator(`[data-worktree-id="tree-${id}"]`);
   const area = id => page.getByRole("region", { name: `Arbeitsbereich ${root}/${id}`, exact: true });
   const inspector = id => page.getByRole("region", { name: `Inspektor ${root}/${id}`, exact: true });
@@ -59,22 +59,32 @@ try {
   assert.equal((await calls("project_action_run")).length, 1);
   assert.equal((await calls("project_action_run"))[0].args.project, `${root}/api`);
   // Terminal remains docked below the content.
+  await terminal().getByText("Workspace-Kontext · Vorschau für den nächsten Start").click();
+  await terminal().locator("pre").getByText(/repo-infra/).waitFor();
+  assert.match(await terminal().locator("pre").innerText(), /api-search/);
+  await terminal().getByText("Workspace-Kontext · Vorschau für den nächsten Start").click();
+  await terminal().getByRole("button", { name: "Codex", exact: true }).click();
+  await select("web", "Web web");
+  assert.equal(await terminal().getByLabel("Workspace-Terminal-Kommando").inputValue(), "codex", "command belongs to workspace, not selection");
   await terminal("api").getByRole("button", { name: "Agent-Terminal starten", exact: true }).click();
   await page.waitForFunction(() => window.__SPECCIFY_MOCK__.workspaceCalls.filter(call => call.command === "terminal_open").length === 1);
   await select("web", "Web web");
-  await terminal("web").getByRole("button", { name: "Agent-Terminal starten", exact: true }).click();
-  await page.waitForFunction(() => window.__SPECCIFY_MOCK__.workspaceCalls.filter(call => call.command === "terminal_open").length === 2);
-  assert.deepEqual((await calls("terminal_open")).map(call => call.args.cwd).sort(), [`${root}/api`, `${root}/web`]);
+  assert.equal((await calls("terminal_open")).length, 1, "project switch preserves one shared terminal");
+  assert.deepEqual((await calls("terminal_open")).map(call => call.args.cwd), [root]);
+  assert.ok((await calls("terminal_open"))[0].args.workspaceId);
+  assert.equal((await calls("terminal_open"))[0].args.autostart, "codex");
+  await area("web").getByRole("button", { name: "Commit-Auftrag ans Terminal", exact: true }).click();
+  assert.match((await calls("terminal_write")).at(-1).args.data, /Ziel-Repository: "\/private\/tmp\/demo-workspace\/web"/);
   const count = (await calls("terminal_write")).length;
   await page.evaluate(() => window.dispatchEvent(new CustomEvent("speccify:type-command", { detail: "only-web" })));
-  assert.equal((await calls("terminal_write")).length, count + 1, "only active terminal receives text");
-  const webTerminal = (await calls("terminal_open")).find(call => call.args.cwd.endsWith("/web")).args.id;
+  assert.equal((await calls("terminal_write")).length, count + 1, "shared terminal receives text exactly once");
+  const webTerminal = (await calls("terminal_open"))[0].args.id;
   assert.equal((await calls("terminal_write")).at(-1).args.id, webTerminal);
   const killedBeforeSwitch = (await calls("terminal_kill")).length;
   await activate("Skills");
-  assert.equal((await calls("terminal_kill")).length, killedBeforeSwitch, "switching retains both processes");
+  assert.equal((await calls("terminal_kill")).length, killedBeforeSwitch, "switching retains the shared process");
   const liveIds = new Set((await calls("terminal_open")).map(call => call.args.id));
-  assert.equal(liveIds.size, 2);
+  assert.equal(liveIds.size, 1);
   assert.ok((await calls("terminal_kill")).every(call => !liveIds.has(call.args.id)), "Strict Mode cleanup cannot kill a live terminal");
   for (const label of ["Playbooks", "Tools", "MCPs", "Agent", "Aktionen"]) {
     await activate(label);
@@ -102,9 +112,9 @@ try {
   await page.evaluate(() => { window.__SPECCIFY_MOCK__.missingTarget = "tree-web"; });
   await page.getByRole("button", { name: "Aktualisieren", exact: true }).click();
   await pane("web").getByText(/Worktree nicht verfügbar/).waitFor();
-  await page.evaluate(() => window.dispatchEvent(new CustomEvent("speccify:type-command", { detail: "must-not-reach-missing-target" })));
-  assert.equal((await calls("terminal_write")).length, count + 1);
+  await page.evaluate(() => window.dispatchEvent(new CustomEvent("speccify:type-command", { detail: "shared-terminal-still-available" })));
+  assert.equal((await calls("terminal_write")).length, count + 2, "missing child does not disable shared parent session");
   assert.deepEqual(await page.evaluate(() => window.__SPECCIFY_MOCK__.workspaceOpened), [], "no single-project windows opened");
   assert.deepEqual(errors, []);
-  console.log("PASS workspace shell: grouped roots, shared editable board, exact file/Git/terminal targets, drafts and processes retained, missing target inhibited, narrow themes");
+  console.log("PASS workspace shell: grouped roots, shared editable board, isolated files/Git, one parent terminal and command, context preview, drafts/session retained, missing child isolated, narrow themes");
 } finally { await browser.close(); }

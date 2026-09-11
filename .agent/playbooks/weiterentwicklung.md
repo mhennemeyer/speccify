@@ -163,8 +163,8 @@ ergänzt einen eigenen Workspace-Fenstertyp und den Dashboard-Knopf „Workspace
 der Mitte ein gemeinsames Board, rechts der herkunftsgebundene Inspektor.
 Spec-Aufgaben/Fragen und Bearbeitung laufen über die vorhandenen Projektverträge.
 Einzelprojektfenster bleiben zusätzlich möglich. Projekt-/Bereichswechsel sowie
-Umgruppierung erhalten Editor-/Commit-Entwürfe und gestartete Terminals/Aktionen.
-Terminals nur explizit starten, keine automatische Mehrfach-Agenten-Sitzung.
+Umgruppierung erhalten Editor-/Commit-Entwürfe, die gemeinsame Sitzung und Aktionen.
+Ein Workspace-Agent startet ausdrücklich im Parent-Ordner, nicht pro Worktree.
 Der lokale Board-Überblick und die gemeinsamen Fenster sind weiterhin kein
 Team-Sync; 016 bleibt erforderlich. Umsetzung/automatisierte Prüfungen und native
 Wiederaufnahme stehen: itsdcloud mit allen drei Repos und 66 Specs geöffnet,
@@ -178,6 +178,17 @@ gleiche Splitter/Layoutwerte, Inspektor-/Ausgabetabs, Terminal unten/rechts und
 Shortcuts; zusätzlich einklappbare Projektgruppen. Titel und Pfad müssen das
 Fenster bewegen können. Dieses Prinzip dauerhaft im UI-Playbook festgehalten;
 keine weitere eigenständige Workspace-Bedienlogik als Standard einführen.
+
+**Gemeinsamer Agent, Nutzerpräzisierung 026:** Eine Instanz im Parent-Ordner soll
+alle Repos samt fachlicher Zuordnung verstehen. Projektwahl steuert Dateien/Git/
+Aktionen, nicht Agent-cwd. Native Startkontext-Datei mit Gruppen, Pfaden, IDs und
+Einstiegsdateien; Codex-/Claude-Presets bekommen sie automatisch. Bestehende Parent-
+und Repo-Anweisungen bleiben unverändert, müssen vom Host beachtet werden.
+Freie Startkommandos einschließlich eigener Zusatzargumente erhalten Umgebungs-
+variablen und eine kopierbare Kontextvorschau; keine zugesagte automatische Übergabe.
+Neue Zuordnungen gelten beim expliziten Neustart, nicht als stiller Sitzungswechsel.
+Host-Trust/Sandbox bleibt bestehen; automatische projektübergreifende MCP-/Skill-
+Registrierung und itsdcloud-Projektgedächtnis sind weiterhin separate Arbeiten.
 
 ### V1-02 — Autoupdater für die Apps
 
@@ -611,6 +622,12 @@ Auftrag vom 2026-09-10; Umsetzung in
 # Neuer lokaler Build, nachdem Arbeit gesichert und die App bewusst beendet wurde:
 ./scripts/dev.sh --app --prepared --ui-port=18768
 ```
+
+026 Betriebsprüfung: „App läuft“ wird über ausführbare Binary-Mappings mit
+nichtleerer PID-Liste geprüft. Rein lesende Handles von macOS-Prüfdiensten zählen
+nicht als App-Instanz; auch lsof-Exit 0 ohne Ausgabe reicht nicht. Fremde Dienste
+nicht beenden. Der wiederholt nachgewiesene synchrone Board-KPI-Scan läuft jetzt
+im Hintergrund; Fenster- und App-Ende räumen Terminal-Kontextdateien explizit auf.
 
 Lokale neu gebaute Apps können erneut die macOS-Freigabe für den Ordner
 Schreibtisch verlangen (beobachtet bei Spec 008). Ein erreichbarer MCP-Port

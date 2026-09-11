@@ -94,7 +94,7 @@ export default function SettingsSheet({
               (<code>claude --continue</code> bzw. <code>codex resume --last</code>). Der
               Agent behält so seinen Kontext — auch bei Dev-Neustarts von Speccify.
             </span>
-          </label> : <p className="text-xs text-slate-500">Im Workspace startest Du Terminals pro Projekt ausdrücklich. Beim App-Neustart werden keine Sitzungen automatisch gestartet.</p>}
+          </label> : <p className="text-xs text-slate-500">Im Workspace startest Du eine gemeinsame Sitzung im Parent-Ordner ausdrücklich. Beim App-Neustart wird keine Sitzung automatisch gestartet.</p>}
         </section>
 
         <section className="mb-4">

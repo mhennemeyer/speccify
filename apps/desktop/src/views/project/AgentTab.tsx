@@ -25,8 +25,10 @@ export default function AgentTab({
   refresh,
   agentCommand,
   onAgentCommand,
+  commandRoot,
 }: {
   project: string;
+  commandRoot?: string;
   refresh?: number;
   agentCommand: string;
   onAgentCommand: (value: string) => void;
@@ -57,6 +59,7 @@ export default function AgentTab({
   return (
     <div className="flex h-full min-h-0 flex-col gap-4">
       <div className="max-w-md">
+        {commandRoot && <p className="mb-2 break-all text-xs text-slate-500">Gemeinsamer Workspace-Agent: {commandRoot}. Die Anweisungsdateien unten gehören weiterhin zu diesem Projekt.</p>}
         <label className="mb-1 block text-xs font-medium text-slate-500">
           Agent-Kommando (Terminal-Autostart, leer = nur Shell)
         </label>
@@ -83,7 +86,7 @@ export default function AgentTab({
           ))}
         </div>
       </div>
-      <AgentStartup project={project} command={agentCommand} />
+      <AgentStartup project={commandRoot ?? project} command={agentCommand} />
       <LoadingBoundary loading={files.loading} error={files.error} label="Agent-Dateien suchen…">
         {available.length === 0 ? (
           <>

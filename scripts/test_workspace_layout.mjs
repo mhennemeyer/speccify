@@ -72,7 +72,7 @@ try {
   await page.getByRole("region", { name: "Projektgruppe API", exact: true }).getByRole("button", { name: "API", exact: true }).click();
   assert.equal(await pane("api").isVisible(), true);
 
-  const terminal = page.getByRole("region", { name: `Terminal ${root}/api`, exact: true });
+  const terminal = page.getByRole("region", { name: `Terminal ${root}`, exact: true });
   await terminal.getByRole("button", { name: "Agent-Terminal starten", exact: true }).click();
   await page.waitForFunction(() => window.__SPECCIFY_MOCK__.workspaceCalls.some(call => call.command === "terminal_open"));
   const terminalId = (await calls("terminal_open"))[0].args.id;

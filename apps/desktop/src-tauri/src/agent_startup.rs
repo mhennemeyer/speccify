@@ -59,7 +59,7 @@ pub fn login_shell() -> String {
     }
 }
 
-fn quote(text: &str) -> String {
+pub(crate) fn quote(text: &str) -> String {
     if cfg!(windows) {
         format!("'{}'", text.replace('\'', "''"))
     } else {

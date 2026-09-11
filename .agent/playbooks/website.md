@@ -155,3 +155,8 @@ design. Native title/path dragging is tested separately from website screenshots
 After extracting shared navigation and correcting toolbar drag regions, all eight
 motifs inspected and byte-identical on repeat capture. No replacement, new public
 workspace claim or publication required.
+
+026 Parent-session check: one shared workspace terminal and context preview do not
+change the eight current project-window motifs. All eight recaptured, visually
+inspected and byte-identical. Marketing build and responsive/no-JavaScript checks
+pass. Keep the existing assets; no publication or new context-delivery claim.

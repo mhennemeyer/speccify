@@ -1,6 +1,14 @@
 #!/usr/bin/env bash
 # Read-only local startup diagnostics, sourced by dev.sh.
 
+desktop_app_running() {
+  local pids
+  # Only executable mappings, not read handles held by macOS inspection services.
+  # Some lsof versions return success with no matching PID; test output as well.
+  pids="$(lsof -a -d txt -t "$1/Contents/MacOS/speccify-desktop" 2>/dev/null || true)"
+  [[ -n "$pids" ]]
+}
+
 desktop_listener() {
   lsof -nP -iTCP:"$1" -sTCP:LISTEN 2>/dev/null || true
 }

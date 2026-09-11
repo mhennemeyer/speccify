@@ -168,7 +168,7 @@ export default function GitTab({
       stagedCount > 0
         ? "Bitte prüfe die gestageten Änderungen (git diff --cached), schreibe eine Conventional-Commit-Nachricht auf Deutsch und committe sie. Nicht pushen."
         : "Bitte sieh dir die Änderungen an (git status, git diff), stage was zusammengehört, schreibe eine Conventional-Commit-Nachricht auf Deutsch und committe. Nicht pushen.";
-    window.dispatchEvent(new CustomEvent("speccify:type-command", { detail: prompt }));
+    window.dispatchEvent(new CustomEvent("speccify:type-command", { detail: `Ziel-Repository: ${JSON.stringify(project)}. Ausschließlich dort arbeiten. ${prompt}` }));
     setNotice(
       "Auftrag ins Agent-Terminal getippt — dort mit Enter bestätigen. (Läuft kein Terminal, zuerst „Agent-Terminal starten“.)",
     );

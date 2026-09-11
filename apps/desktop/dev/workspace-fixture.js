@@ -21,6 +21,10 @@ export function installWorkspaceFixture(responses) {
   responses.workspace_list = () => read();
   responses.workspace_window_open = ({ workspaceId }) => { window.__SPECCIFY_MOCK__.workspaceOpened.push({ workspaceId, window: true }); };
   responses.workspace_window_current = () => read()[0];
+  responses.workspace_agent_context = () => {
+    const workspace = read()[0];
+    return { root: workspace.root, revision: workspace.revision, markdown: `# Workspace context\n${JSON.stringify(workspace, null, 2)}` };
+  };
   responses.workspace_resolve_target = ({ worktreeId }) => {
     if (window.__SPECCIFY_MOCK__.missingTarget === worktreeId) throw Error("Worktree nicht verfügbar");
     return read()[0].repositories.flatMap(repo => repo.worktrees).find(tree => tree.id === worktreeId).path;

@@ -208,7 +208,13 @@ fn entry(xy: &str, path: String, renamed_from: Option<String>) -> GitEntry {
 }
 
 #[tauri::command]
-pub fn project_git_status(project: String) -> Result<GitStatus, String> {
+pub async fn project_git_status(project: String) -> Result<GitStatus, String> {
+    tauri::async_runtime::spawn_blocking(move || read_git_status(project))
+        .await
+        .map_err(|error| error.to_string())?
+}
+
+fn read_git_status(project: String) -> Result<GitStatus, String> {
     let root = resolve_project_root(&project)?;
     let inside = git(&root, &["rev-parse", "--is-inside-work-tree"])?;
     if inside.code != 0 {
@@ -319,7 +325,13 @@ pub(crate) fn parse_log(text: &str) -> Vec<GitCommit> {
 }
 
 #[tauri::command]
-pub fn project_git_log(project: String, limit: u32) -> Result<Vec<GitCommit>, String> {
+pub async fn project_git_log(project: String, limit: u32) -> Result<Vec<GitCommit>, String> {
+    tauri::async_runtime::spawn_blocking(move || read_git_log(project, limit))
+        .await
+        .map_err(|error| error.to_string())?
+}
+
+fn read_git_log(project: String, limit: u32) -> Result<Vec<GitCommit>, String> {
     let root = resolve_project_root(&project)?;
     let count = format!("-n{}", limit.clamp(1, 200));
     let output = git(
@@ -490,7 +502,7 @@ pub fn project_git_discard(project: String, paths: Vec<String>) -> Result<(), St
     if paths.is_empty() {
         return Ok(());
     }
-    let status = project_git_status(project)?;
+    let status = read_git_status(project)?;
     let untracked: Vec<&str> = status
         .entries
         .iter()
@@ -622,7 +634,13 @@ pub struct GitBranch {
 }
 
 #[tauri::command]
-pub fn project_git_branches(project: String) -> Result<Vec<GitBranch>, String> {
+pub async fn project_git_branches(project: String) -> Result<Vec<GitBranch>, String> {
+    tauri::async_runtime::spawn_blocking(move || read_git_branches(project))
+        .await
+        .map_err(|error| error.to_string())?
+}
+
+fn read_git_branches(project: String) -> Result<Vec<GitBranch>, String> {
     let root = resolve_project_root(&project)?;
     let output = git(
         &root,
@@ -702,7 +720,7 @@ pub fn project_git_branch_rename(
     let root = resolve_project_root(&project)?;
     require_local_branch(&root, &branch)?;
     validate_branch(&root, &name)?;
-    if project_git_branches(project)?.iter().any(|entry| {
+    if read_git_branches(project)?.iter().any(|entry| {
         !entry.remote && entry.name == branch && !entry.current && entry.worktree.is_some()
     }) {
         return Err("Branch ist in einem anderen Worktree geöffnet.".into());
@@ -836,7 +854,7 @@ mod tests {
             std::fs::read_to_string(a.0.join("tracked.txt")).unwrap(),
             "a unstaged\n"
         );
-        assert!(project_git_status(a.project())
+        assert!(read_git_status(a.project())
             .unwrap()
             .entries
             .iter()
@@ -857,7 +875,7 @@ mod tests {
             "do not lose\n"
         );
         assert_eq!(
-            project_git_status(a.project()).unwrap().branch.as_deref(),
+            read_git_status(a.project()).unwrap().branch.as_deref(),
             Some("main")
         );
         assert!(git_ok(&a.0, &["stash", "list"]).unwrap().is_empty());
@@ -912,7 +930,7 @@ mod tests {
             ],
         )
         .unwrap();
-        let branches = project_git_branches(a.project()).unwrap();
+        let branches = read_git_branches(a.project()).unwrap();
         assert!(branches.iter().any(|b| b.remote && b.name == "origin/main"));
         assert!(!branches.iter().any(|b| b.name == "origin/HEAD"));
         assert!(project_git_switch(a.project(), "origin/main".into(), false).is_err());
@@ -931,7 +949,7 @@ mod tests {
             ],
         )
         .unwrap();
-        assert!(project_git_branches(a.project())
+        assert!(read_git_branches(a.project())
             .unwrap()
             .iter()
             .any(|b| b.name == "occupied" && b.worktree.is_some()));
@@ -999,33 +1017,30 @@ mod tests {
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
         let project = dir.to_string_lossy().into_owned();
-        let before = project_git_status(project.clone()).unwrap();
+        let before = tauri::async_runtime::block_on(project_git_status(project.clone())).unwrap();
         assert!(!before.repo);
         project_git_init(project.clone()).unwrap();
         git_ok(&dir, &["config", "user.email", "t@example.com"]).unwrap();
         git_ok(&dir, &["config", "user.name", "Test"]).unwrap();
         std::fs::write(dir.join("a.txt"), "hallo\n").unwrap();
-        let status = project_git_status(project.clone()).unwrap();
+        let status = read_git_status(project.clone()).unwrap();
         assert!(status.repo);
         assert_eq!(status.entries.len(), 1);
         assert!(status.entries[0].untracked);
         let diff = project_git_diff(project.clone(), "a.txt".into(), false).unwrap();
         assert!(diff.contains("+hallo"));
         project_git_stage(project.clone(), vec!["a.txt".into()], true).unwrap();
-        let staged = project_git_status(project.clone()).unwrap();
+        let staged = read_git_status(project.clone()).unwrap();
         assert_eq!(staged.entries[0].index, "A");
         project_git_stage(project.clone(), vec!["a.txt".into()], false).unwrap();
-        assert!(project_git_status(project.clone()).unwrap().entries[0].untracked);
+        assert!(read_git_status(project.clone()).unwrap().entries[0].untracked);
         project_git_stage(project.clone(), vec!["a.txt".into()], true).unwrap();
         let summary = project_git_commit(project.clone(), "erster".into()).unwrap();
         assert!(summary.contains("erster"));
-        let log = project_git_log(project.clone(), 10).unwrap();
+        let log = tauri::async_runtime::block_on(project_git_log(project.clone(), 10)).unwrap();
         assert_eq!(log.len(), 1);
         assert_eq!(log[0].subject, "erster");
-        assert!(project_git_status(project.clone())
-            .unwrap()
-            .entries
-            .is_empty());
+        assert!(read_git_status(project.clone()).unwrap().entries.is_empty());
 
         // I3: zwei getrennte Hunks, nur den ersten stagen.
         let lines: Vec<String> = (1..=12).map(|n| format!("zeile {n}")).collect();
@@ -1043,15 +1058,12 @@ mod tests {
         assert_eq!(hunks.len(), 2, "{diff}");
         let first = hunks[0].trim_end_matches("@@");
         project_git_apply_patch(project.clone(), format!("{header}{first}"), false).unwrap();
-        let status = project_git_status(project.clone()).unwrap();
+        let status = read_git_status(project.clone()).unwrap();
         let entry = status.entries.iter().find(|e| e.path == "b.txt").unwrap();
         assert_eq!((entry.index.as_str(), entry.worktree.as_str()), ("M", "M"));
         // … und wieder heraus.
         project_git_apply_patch(project.clone(), format!("{header}{first}"), true).unwrap();
-        let entry = project_git_status(project.clone())
-            .unwrap()
-            .entries
-            .remove(0);
+        let entry = read_git_status(project.clone()).unwrap().entries.remove(0);
         assert_eq!((entry.index.as_str(), entry.worktree.as_str()), (".", "M"));
 
         // Datei-Historie, Commit-Details, Diff eines Commits.
@@ -1079,22 +1091,20 @@ mod tests {
         // Verwerfen: versioniert zurück, unversioniert weg.
         std::fs::write(dir.join("neu.txt"), "x\n").unwrap();
         project_git_discard(project.clone(), vec!["b.txt".into(), "neu.txt".into()]).unwrap();
-        assert!(project_git_status(project.clone())
-            .unwrap()
-            .entries
-            .is_empty());
+        assert!(read_git_status(project.clone()).unwrap().entries.is_empty());
         assert!(!dir.join("neu.txt").exists());
 
         // Branches.
         let created = project_git_switch(project.clone(), "feature/x".into(), true).unwrap();
         assert_eq!(created, "feature/x");
-        let branches = project_git_branches(project.clone()).unwrap();
+        let branches =
+            tauri::async_runtime::block_on(project_git_branches(project.clone())).unwrap();
         assert!(branches.iter().any(|b| b.name == "feature/x" && b.current));
         assert_eq!(branches.iter().filter(|b| b.current).count(), 1);
         let main = branches.iter().find(|b| !b.current).unwrap().name.clone();
         project_git_switch(project.clone(), main.clone(), false).unwrap();
         assert_eq!(
-            project_git_status(project).unwrap().branch.as_deref(),
+            read_git_status(project).unwrap().branch.as_deref(),
             Some(main.as_str())
         );
         let _ = std::fs::remove_dir_all(&dir);

@@ -84,7 +84,13 @@ pub(crate) fn list_dir(root: &Path, dir: &str) -> Result<Vec<TreeEntry>, String>
 
 /// Direkte Kinder eines Projektverzeichnisses (`dir` relativ, `""` = Wurzel).
 #[tauri::command]
-pub fn project_tree(project: String, dir: String) -> Result<Vec<TreeEntry>, String> {
+pub async fn project_tree(project: String, dir: String) -> Result<Vec<TreeEntry>, String> {
+    tauri::async_runtime::spawn_blocking(move || read_project_tree(project, dir))
+        .await
+        .map_err(|error| error.to_string())?
+}
+
+fn read_project_tree(project: String, dir: String) -> Result<Vec<TreeEntry>, String> {
     let root = resolve_project_root(&project)?;
     list_dir(&root, &dir)
 }
@@ -326,11 +332,12 @@ mod tests {
     #[test]
     fn tree_hides_git_and_ignored_and_sorts_dirs_first() {
         let dir = fixture("tree");
-        let names: Vec<(String, bool)> = list_dir(&dir, "")
-            .unwrap()
-            .into_iter()
-            .map(|entry| (entry.name, entry.is_dir))
-            .collect();
+        let names: Vec<(String, bool)> =
+            tauri::async_runtime::block_on(project_tree(dir.display().to_string(), String::new()))
+                .unwrap()
+                .into_iter()
+                .map(|entry| (entry.name, entry.is_dir))
+                .collect();
         assert_eq!(
             names,
             vec![

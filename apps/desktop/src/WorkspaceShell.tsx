@@ -9,6 +9,7 @@ import { isDark, useTheme } from "./lib/theme";
 import { isMac } from "./lib/platform";
 import { ErrorBox } from "./components/ui";
 import TerminalPanel from "./components/TerminalPanel";
+import WorkspaceAgentContext from "./components/WorkspaceAgentContext";
 import Toolbar, { ToolbarButton, PanelIcon, GearIcon, SunIcon, MoonIcon, GitIcon, TerminalIcon, PlayIcon, type ToolbarItem } from "./components/Toolbar";
 import ProjectNavigation, { PROJECT_TABS, PROJECT_GROUPS, projectGroupOf, type ProjectTab } from "./components/ProjectNavigation";
 import SplitHandle from "./components/SplitHandle";
@@ -41,13 +42,13 @@ interface PaneToolbar { ready: boolean; actions: ToolbarAction[] }
 const button = "rounded border border-slate-300 px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-100 disabled:opacity-40";
 
 /** One immutable target per pane. Hiding never remounts editors or processes. */
-function WorktreePane({ workspaceId, tree, repo, group, tab, visited, active, choose, mainHost, inspectorHost, refresh, spec, changed, boardSlot, navHost, terminalHost, terminalVisible, terminalRequest, outputHost, outputTabsHost, layout, updateLayout, reportToolbar }: {
+function WorktreePane({ workspaceId, tree, repo, group, tab, visited, active, choose, mainHost, inspectorHost, refresh, spec, changed, boardSlot, navHost, agentRoot, command, updateCommand, outputHost, outputTabsHost, layout, updateLayout, reportToolbar }: {
   workspaceId: string; tree: Tree; repo: Repository; group: Project; tab: Tab; visited: Tab[];
   active: boolean; choose: () => void; mainHost: HTMLElement | null; inspectorHost: HTMLElement | null;
   refresh: number; spec: WorkspaceSpecEntry | null; changed: () => void;
   boardSlot: (id: string, node: HTMLElement | null) => void;
   navHost: HTMLElement | null;
-  terminalHost: HTMLElement | null; terminalVisible: boolean; terminalRequest: number;
+  agentRoot: string; command: string; updateCommand: (value: string) => void;
   outputHost: HTMLElement | null; outputTabsHost: HTMLElement | null; layout: ProjectLayout;
   updateLayout: (patch: Partial<ProjectLayout>) => void;
   reportToolbar: (id: string, value: PaneToolbar) => void;
@@ -57,10 +58,6 @@ function WorktreePane({ workspaceId, tree, repo, group, tab, visited, active, ch
   const [nav, setNav] = useState<Slots>({});
   const [inspector, setInspector] = useState<Slots>({});
   const [localRefresh, setLocalRefresh] = useState(0);
-  const [started, setStarted] = useState(false);
-  const [command, setCommand] = useState(() => {
-    try { return localStorage.getItem(`speccify.project.agentCommand:${tree.path}`) ?? ""; } catch { return ""; }
-  });
   const [outputSlot, setOutputSlot] = useState<HTMLDivElement | null>(null);
   const [outputs, setOutputs] = useState<ActionOutputTab[]>([]);
   const activeOutput = layout.rightTab.startsWith("output:") ? layout.rightTab.slice(7) : null;
@@ -94,15 +91,10 @@ function WorktreePane({ workspaceId, tree, repo, group, tab, visited, active, ch
     });
     return () => { disposed = true; void watching.then(() => invoke("project_watch_stop", { project: root, watcherId })); void listener.then(stop => stop()); };
   }, [root, changed]);
-  const updateCommand = (value: string) => {
-    setCommand(value);
-    try { localStorage.setItem(`speccify.project.agentCommand:${tree.path}`, value); } catch { /* Local editing remains available. */ }
-  };
   const revealOutput = useCallback((id: string) => { choose(); updateLayout({ rightShown: true, rightTab: `output:${id}` }); }, [choose, updateLayout]);
   const context = useMemo(() => ({ navigator: nav, inspector, reveal: () => updateLayout({ rightTab: "inspector" }) }), [nav, inspector, updateLayout]);
   const ownSpec = spec?.worktree_id === tree.id ? spec : null;
   const enabled = root !== null && error === null;
-  useEffect(() => { if (terminalRequest && enabled) setStarted(true); }, [terminalRequest, enabled]);
   useEffect(() => {
     let cancelled = false;
     reportToolbar(tree.id, { ready: enabled, actions: [] });
@@ -121,7 +113,6 @@ function WorktreePane({ workspaceId, tree, repo, group, tab, visited, active, ch
           <span className="mt-1 block break-all font-mono text-[10px]">{tree.relative_path || "."}</span>
           {!tree.available && <span className="block">Nicht verfügbar</span>}
           {outputs.some(output => output.running) && <span className="block">● Aktion läuft</span>}
-          {started && <span className="block">● Terminal gestartet</span>}
         </button>
         {error && <ErrorBox message={error} />}
         {!root && !error && <p className="p-2 text-xs text-slate-500">Ziel prüfen…</p>}
@@ -139,7 +130,7 @@ function WorktreePane({ workspaceId, tree, repo, group, tab, visited, active, ch
           {id === "skills" && <SkillsTab project={root} refresh={totalRefresh} />}
           {id === "tools" && <ToolsTab project={root} refresh={totalRefresh} />}
           {id === "mcps" && <McpsTab project={root} refresh={totalRefresh} />}
-          {id === "agent" && <AgentTab project={root} refresh={totalRefresh} agentCommand={command} onAgentCommand={updateCommand} />}
+          {id === "agent" && <AgentTab commandRoot={agentRoot} project={root} refresh={totalRefresh} agentCommand={command} onAgentCommand={updateCommand} />}
           {id === "actions" && <ActionsTab project={root} runNamespace={`workspace:${workspaceId}:${tree.id}`} refresh={totalRefresh} outputSlot={outputSlot} activeOutput={activeOutput} onOutputTabsChange={setOutputs} onRevealOutput={revealOutput} />}
         </div>)}
       </section>, mainHost)}
@@ -158,17 +149,7 @@ function WorktreePane({ workspaceId, tree, repo, group, tab, visited, active, ch
         </div>)}
       </div>, outputTabsHost)}
       {outputHost && createPortal(<div ref={setOutputSlot} aria-label={`Aktionsausgabe ${tree.relative_path}`} className={active && activeOutput ? "flex h-full min-h-0 flex-col" : "hidden"} />, outputHost)}
-      {terminalHost && root && createPortal(<section aria-label={`Terminal ${tree.path}`} className={active ? "flex min-h-0 flex-1 flex-col" : "hidden"} inert={!enabled}>
-        <p className="truncate px-3 py-1 font-mono text-[10px] text-slate-400" title={root}>Terminal-Ziel: {root}</p>
-        {started ? <TerminalPanel cwd={root} visible={active && terminalVisible} autostart={command} /> : <div className="flex min-h-0 flex-1 flex-col items-center gap-3 overflow-auto p-4">
-          <label className="w-full max-w-xs text-xs text-slate-400">Agent-Kommando (leer = nur Shell)
-            <input aria-label={`Terminal-Kommando ${tree.relative_path}`} value={command} onChange={event => updateCommand(event.target.value)} className="mt-1 block w-full rounded border border-slate-600 bg-slate-800 px-3 py-2 font-mono text-sm text-slate-100" />
-          </label>
-          <div className="flex flex-wrap justify-center gap-1.5">{AGENT_PRESETS.map(preset => <button key={preset.id} onClick={() => updateCommand(preset.command)} className="rounded bg-slate-800 px-2 py-1 text-xs text-slate-400 hover:text-slate-200">{preset.label}</button>)}</div>
-          {active && terminalVisible && <div className="w-full max-w-xs text-slate-400"><AgentStartup project={root} command={command} /></div>}
-          <button className="rounded bg-slate-700 px-4 py-2 text-sm text-slate-200" onClick={() => setStarted(true)} disabled={!enabled}>Agent-Terminal starten</button>
-        </div>}
-      </section>, terminalHost)}
+
       </div>
     </PanelsContext.Provider>
   </ProjectActivity.Provider>;
@@ -185,7 +166,6 @@ export default function WorkspaceShell() {
   const selectionRef = useRef("");
   const [mainHost, setMainHost] = useState<HTMLDivElement | null>(null);
   const [inspectorHost, setInspectorHost] = useState<HTMLElement | null>(null);
-  const [terminalHost, setTerminalHost] = useState<HTMLElement | null>(null);
   const [outputHost, setOutputHost] = useState<HTMLDivElement | null>(null);
   const [outputTabsHost, setOutputTabsHost] = useState<HTMLDivElement | null>(null);
   const [refresh, setRefresh] = useState(0);
@@ -196,7 +176,15 @@ export default function WorkspaceShell() {
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [layout, setLayout] = useState<ProjectLayout>({ ...DEFAULT_LAYOUT, resumeAgent: false });
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [terminalRequests, setTerminalRequests] = useState<Record<string, number>>({});
+  const [started, setStarted] = useState(false);
+  const [command, setCommand] = useState("");
+  useEffect(() => {
+    if (workspace) { try { setCommand(localStorage.getItem(`speccify.workspace.agentCommand:${workspace.id}`) ?? ""); } catch { /* Session-only fallback. */ } }
+  }, [workspace?.id]);
+  const updateCommand = (value: string) => {
+    setCommand(value);
+    if (workspace) { try { localStorage.setItem(`speccify.workspace.agentCommand:${workspace.id}`, value); } catch { /* Session-only fallback. */ } }
+  };
   const [paneToolbars, setPaneToolbars] = useState<Record<string, PaneToolbar>>({});
   const reportToolbar = useCallback((id: string, value: PaneToolbar) => setPaneToolbars(old => ({ ...old, [id]: value })), []);
   const layoutKey = workspace ? `workspace:${workspace.id}` : null;
@@ -279,9 +267,9 @@ export default function WorkspaceShell() {
   const defaults = [...DEFAULT_TOOLBAR_BUILTINS, ...toolbarActions.filter(action => action.toolbar).map(action => `action:${action.command}`)];
   const toolbarIds = layout.toolbar ?? defaults;
   const builtins: ToolbarItem[] = TOOLBAR_BUILTINS.map(item => ({
-    ...item, disabled: !activeToolbar?.ready, icon: item.id === "terminal" ? <TerminalIcon /> : <GitIcon />,
+    ...item, disabled: item.id === "terminal" ? !workspace : !activeToolbar?.ready, icon: item.id === "terminal" ? <TerminalIcon /> : <GitIcon />,
     onClick: () => {
-      if (item.id === "terminal") { showTerminal(); setTerminalRequests(old => ({ ...old, [selected]: (old[selected] ?? 0) + 1 })); }
+      if (item.id === "terminal") { showTerminal(); setStarted(true); }
       else { activate("git"); requestGit(item.id === "git-commit" ? "commit" : item.id === "git-pull" ? "pull" : "push"); }
     },
   }));
@@ -359,14 +347,29 @@ export default function WorkspaceShell() {
       <aside ref={setInspectorHost} aria-label="Workspace-Inspektor" className={`inspector-body ${rightShown && layout.rightTab === "inspector" ? "flex" : "hidden"} min-h-0 min-w-0 flex-col overflow-y-auto border-l border-slate-200 bg-white`} style={{ gridColumn: 5, gridRow: "3 / -1" }} />
       <section aria-label="Agent-Terminal" className={`keep-dark ${terminalVisible ? "flex" : "hidden"} min-h-0 min-w-0 flex-col bg-slate-900 ${terminalDock === "right" ? "border-l" : "border-t"} border-slate-700`} style={terminalDock === "right" ? { gridColumn: 5, gridRow: "3 / -1" } : { gridColumn: 3, gridRow: 5 }}>
         <div className="flex justify-end px-2 pt-1"><button onClick={toggleDock} title={terminalDock === "right" ? "Terminal nach unten legen" : "Terminal nach rechts legen"} className="rounded px-2 py-0.5 text-xs text-slate-500 hover:bg-slate-800 hover:text-slate-300">{terminalDock === "right" ? "⬓ nach unten" : "⬔ nach rechts"}</button></div>
-        <div ref={setTerminalHost} className="flex min-h-0 flex-1 flex-col" />
+        {workspace && <section aria-label={`Terminal ${workspace.root}`} className="flex min-h-0 flex-1 flex-col">
+          <div className="flex items-center justify-between gap-2 px-3 py-1">
+            <p className="truncate font-mono text-[10px] text-slate-400" title={workspace.root}>Workspace-Terminal · {workspace.root}</p>
+            {!started && <button className="shrink-0 rounded bg-slate-700 px-3 py-1 text-xs text-slate-200" onClick={() => setStarted(true)}>Agent-Terminal starten</button>}
+          </div>
+          <p className="px-3 text-[10px] text-slate-400">Eine gemeinsame Sitzung für alle Repos · Projektwechsel ändert das Terminal-Ziel nicht.</p>
+          <WorkspaceAgentContext revision={workspace.revision + refresh} />
+          {started ? <TerminalPanel workspaceId={workspace.id} cwd={workspace.root} visible={terminalVisible} autostart={command} /> : <div className="flex min-h-0 flex-1 flex-col items-center gap-3 overflow-auto p-4">
+            <label className="w-full max-w-md text-xs text-slate-400">Agent-Kommando (leer = nur Shell)
+              <input aria-label="Workspace-Terminal-Kommando" value={command} onChange={event => updateCommand(event.target.value)} className="mt-1 block w-full rounded border border-slate-600 bg-slate-800 px-3 py-2 font-mono text-sm text-slate-100" />
+            </label>
+            <div className="flex flex-wrap gap-1.5">{AGENT_PRESETS.map(preset => <button key={preset.id} onClick={() => updateCommand(preset.command)} className="rounded bg-slate-800 px-2 py-1 text-xs text-slate-400 hover:text-slate-200">{preset.label}</button>)}</div>
+            <p className="max-w-md text-xs text-slate-400">Die Presets Codex und Claude erhalten die Workspace-Struktur automatisch. Bei eigenen Kommandos: Kontextdatei aus SPECCIFY_WORKSPACE_CONTEXT an den Host übergeben. Repo-Anweisungen bleiben getrennt; Berechtigungen des Hosts gelten weiterhin.</p>
+            {terminalVisible && <div className="w-full max-w-md text-slate-400"><AgentStartup project={workspace.root} command={command} /></div>}
+          </div>}
+        </section>}
       </section>
     </div>
     {workspace?.repositories.flatMap(repo => repo.worktrees.map(tree => {
       const group = workspace.projects.find(group => group.repository_ids.includes(repo.id));
       return group && <WorktreePane key={`${tree.id}:${tree.path}`} workspaceId={workspace.id} tree={tree} repo={repo} group={group} tab={tab} visited={visited}
         active={selected === tree.id} choose={() => choose(tree.id)} mainHost={mainHost} inspectorHost={inspectorHost} refresh={refresh} spec={spec} changed={changed} boardSlot={boardSlot} navHost={groupSlots[group.id] ?? null}
-        terminalHost={terminalHost} terminalVisible={terminalVisible} terminalRequest={terminalRequests[tree.id] ?? 0} outputHost={outputHost} outputTabsHost={outputTabsHost} layout={layout} updateLayout={updateLayout} reportToolbar={reportToolbar} />;
+        agentRoot={workspace.root} command={command} updateCommand={updateCommand} outputHost={outputHost} outputTabsHost={outputTabsHost} layout={layout} updateLayout={updateLayout} reportToolbar={reportToolbar} />;
     }))}
     {settingsOpen && <SettingsSheet theme={theme} onTheme={next => void setTheme(next)} layout={layout}
       onDock={dock => updateLayout(dock === "bottom" ? { terminalDock: dock, bottomShown: true, rightTab: "inspector" } : { terminalDock: dock, rightShown: true, rightTab: "terminal" })}

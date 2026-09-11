@@ -45,9 +45,13 @@ interface BrowseSkill {
 
 /// `--source` ist die Quelle selbst (URL oder Ordner, D3): `add` merkt sie in
 /// speccify.yaml, danach finden lock/verify/expand den Skill ohne Angabe.
-function importCommand(skill: BrowseSkill, location: string): string | null {
+function quoteArgument(value: string): string {
+  return "'" + value.replace(/'/g, /Win/.test(navigator.platform) ? "''" : "'\"'\"'") + "'";
+}
+
+function importCommand(skill: BrowseSkill, location: string, project: string): string | null {
   if (!skill.id) return null;
-  return `speccify add ${skill.id} --source "${location}" && speccify expand ${skill.name}`;
+  return `speccify add ${quoteArgument(skill.id)} --source ${quoteArgument(location)} --project ${quoteArgument(project)} && speccify expand ${quoteArgument(skill.name)} --project ${quoteArgument(project)}`;
 }
 
 function SourceBrowser({ project }: { project: string }) {
@@ -78,7 +82,7 @@ function SourceBrowser({ project }: { project: string }) {
 
   const importSkill = (skill: BrowseSkill) => {
     if (!active?.path) return;
-    const command = importCommand(skill, active.location);
+    const command = importCommand(skill, active.location, project);
     if (!command) {
       setNotice(
         `${skill.name} hat kein metadata.speccify.scope — ohne Id kann speccify add nicht adressieren. Skill von Hand übernehmen oder scope ergänzen.`,
@@ -278,10 +282,12 @@ function SourceBrowser({ project }: { project: string }) {
 /// Quelle + Ordner wählen → `speccify export` ins Agent-Terminal (D4: die App
 /// committet nicht selbst; das macht der Git-Tab im Checkout oder der Agent).
 function ExportForm({
+  project,
   skill,
   sources,
   onDone,
 }: {
+  project: string;
   skill: string;
   sources: SourceInfo[];
   onDone: (message: string | null) => void;
@@ -299,7 +305,7 @@ function ExportForm({
     );
   }
   const folder = category.trim() || "skills";
-  const command = `speccify export ${skill} --to "${target.path}" --category "${folder}"`;
+  const command = `speccify export ${quoteArgument(skill)} --to ${quoteArgument(target.path!)} --category ${quoteArgument(folder)} --project ${quoteArgument(project)}`;
   return (
     <div className="space-y-2 rounded border border-slate-200 bg-slate-50 p-3 text-xs">
       <label className="block">
@@ -525,6 +531,7 @@ export default function SkillsTab({ project, refresh }: { project: string; refre
                       >
                         {exporting === skill.name ? (
                           <ExportForm
+                            project={project}
                             skill={skill.name}
                             sources={sources.data ?? []}
                             onDone={(message) => {

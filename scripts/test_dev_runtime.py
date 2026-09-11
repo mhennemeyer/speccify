@@ -40,6 +40,17 @@ class RuntimeTests(unittest.TestCase):
     def test_free_port_succeeds(self):
         self.assertEqual(self.run_shell("desktop_require_free_port 18768").returncode, 0)
 
+    def test_app_check_ignores_empty_success_and_requires_executable_mapping(self):
+        result = self.run_shell(
+            'lsof() { [[ "$*" == "-a -d txt -t '
+            '/tmp/demo.app/Contents/MacOS/speccify-desktop" ]] || echo wrong-filter; }; '
+            "desktop_app_running /tmp/demo.app"
+        )
+        self.assertEqual(result.returncode, 1)
+
+    def test_app_check_recognizes_matching_pid(self):
+        self.assertEqual(self.run_shell("desktop_app_running /tmp/demo.app", "1234").returncode, 0)
+
     def test_script_rejects_conflict_before_preparation(self):
         result = self.run_shell(
             'bash "${HELPER%/*}/dev.sh" --ui-port=8768',

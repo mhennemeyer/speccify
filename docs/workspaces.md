@@ -91,24 +91,57 @@ There is no aggregate write command or cross-repository drag-and-drop; changes u
 the existing per-project APIs and trigger a fresh shared snapshot. The dashboard
 preview remains read-only. Snapshot refresh never changes the active project.
 
-Files, Git, playbooks, skills, tools, actions, MCP configuration and agent settings
+Files, Git, playbooks, skills, tools, actions, MCP configuration and instruction files
 reuse existing project components with immutable worktree paths. Editors and
 commit drafts stay mounted while hidden; regrouping moves navigation portals, not
 the components holding processes and drafts. Spec editor dialogs are local to their
 selected worktree; external updates are subject to existing editor concurrency rules.
 Changing an actual path binding requires reopening; no live process is retargeted.
 
-Workspace terminals start only on an explicit click; empty command means a shell.
-Switching projects or sections preserves each started terminal and action output.
+One workspace terminal starts in the canonical parent directory on an explicit
+click; empty command means a shell. The command preference belongs to the workspace,
+not the selected repository. Switching projects, sections or dock positions preserves
+this single session and each project's separate action output. The native layer binds
+the parent cwd to the workspace window and reserves the single session before startup
+probing; failure and terminal cleanup release the reservation.
+Native window destruction stops its PTY even without a frontend unmount. Explicit
+app-exit cleanup removes sessions and temporary context files before process exit;
+late startup completions are rejected. A forced OS kill can still leave a private
+temporary file until system cleanup; it contains structure, not file contents.
 There is no automatic multi-agent start or promise of terminal resumption after app
 quit. Every terminal instance has a UUID, including development lifecycle probes.
-Window-wide Git, action, file-open and type-command listeners are gated by active
-project context. Output/exit events remain matched to their unique execution IDs.
+Window-wide Git, action and file-open listeners are gated by active project context.
+Type-command has one shared recipient; Git prompts name the repository and skill
+import/export commands use explicit `--project` arguments. Output/exit events remain
+matched to their unique execution IDs.
 Workspace action run IDs include workspace and worktree identity, including when
 two projects use the same command. Stream routing and stop use this qualified ID;
 the displayed action label and each project's action definitions remain unchanged.
-Typing a command without a started terminal still requires starting that project's
+Typing a command without a started terminal still requires starting the workspace
 terminal and retrying; no invisible command queue or automatic execution is implied.
+
+### Workspace startup context
+
+`workspace_agent_context` previews a bounded, read-only structural snapshot for the
+current window: workspace/revision, logical groups, repository/worktree identities,
+canonical paths, availability and instruction/spec/playbook/skill entry points.
+Native terminal startup revalidates it; missing or rebound repositories are marked
+unavailable, never substituted. Existing knowledge files are not concatenated or
+rewritten. Parent guidance and relevant child guidance must still be read explicitly.
+
+A private temporary Markdown file lives for the terminal lifetime. Its path is
+available as `SPECCIFY_WORKSPACE_CONTEXT`, with `SPECCIFY_WORKSPACE_ROOT` alongside.
+Plain Claude/Codex presets receive it automatically: Claude via
+`--append-system-prompt-file`, Codex via an initial read-only orientation prompt.
+This preserves normal host trust/sandbox rules; it does not grant unrestricted
+permissions or automatically configure every child's MCPs and skills in the host.
+Custom commands, including presets with extra arguments/resume flags, are left
+unchanged and require explicit context handoff. The UI explains this fallback and
+offers preview/copy. A running session keeps its snapshot; explicit restart loads
+the current mapping. Reopening the app does not automatically resume a conversation.
+
+Launch references: [Codex CLI reference](https://developers.openai.com/codex/cli/reference/)
+and [Claude Code CLI reference](https://code.claude.com/docs/en/cli-reference).
 
 Watchers are keyed by window, canonical worktree path and lease ID. A stale cleanup
 cannot stop a newer watcher or another root's watcher. `project-changed` includes

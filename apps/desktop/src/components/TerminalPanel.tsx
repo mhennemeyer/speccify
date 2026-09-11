@@ -32,11 +32,13 @@ export default function TerminalPanel({
   visible,
   cwd: cwdProp,
   autostart,
+  workspaceId,
   onOpened,
 }: {
   visible: boolean;
   cwd?: string;
   autostart?: string;
+  workspaceId?: string;
   onOpened?: (command: string) => void;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -180,7 +182,7 @@ export default function TerminalPanel({
         }
         setStatus("Startumgebung wird geprüft…");
         const opened = await invoke<{ cwd: string; startup: AgentStartupReport | null }>("terminal_open", {
-          id, cols: terminal.cols, rows: terminal.rows, cwd: cwdProp, autostart,
+          id, cols: terminal.cols, rows: terminal.rows, cwd: cwdProp, autostart, workspaceId,
         });
         if (disposed) {
           await invoke("terminal_kill", { id });

@@ -249,6 +249,7 @@ pub fn run() {
             workspace_cmd::workspace_board,
             workspace_cmd::workspace_window_open,
             workspace_cmd::workspace_window_current,
+            workspace_cmd::workspace_agent_context,
             workspace_cmd::workspace_resolve_target,
             project_cmd::project_current,
             project_cmd::project_recent,
@@ -352,8 +353,15 @@ pub fn run() {
     };
 
     builder
-        .run(context)
-        .expect("error while running tauri application");
+        .build(context)
+        .expect("error while building tauri application")
+        .run(|app, event| {
+            // Explicit cleanup before the runtime exits; managed-state Drop is
+            // not guaranteed on process exit, including temporary context files.
+            if matches!(event, tauri::RunEvent::Exit) {
+                app.state::<terminal::Terminals>().shutdown();
+            }
+        });
 }
 
 #[cfg(test)]
