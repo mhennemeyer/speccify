@@ -3,9 +3,11 @@ description: Lebende Bestandskarte mit Architektur, vollständigem funktionalem 
 ---
 # Speccify: aktueller Stand und UI-Baum
 
-Bestandsdatum: **2026-09-10**. Basiscommit `0fbfee3`, Desktop-Version im Repo
-`0.6.0`, **einschließlich lokaler, noch nicht committeter Änderungen an Specs 007/013**.
-Das ist kein Nachweis, dass diese Funktionen bereits als Release verteilt sind.
+Bestandsdatum: **2026-09-11**. Basiscommit `7c89469` (Spec 027), Desktop-Version
+im Repo `0.7.0` (Release-Vorbereitung; Tag setzt der BO). Der Baum unten wurde am
+2026-09-10 auf Basis `0fbfee3` aufgenommen und für Specs 019–027 nachgeführt.
+Das ist kein Nachweis, dass diese Funktionen bereits als Release verteilt sind;
+verteilt ist v0.6.0 vom 2026-09-10.
 
 Schnelleinstieg: [Fähigkeiten](#fähigkeiten-vorhanden-geprüft-offen) ·
 [UI-Baum](#vollständiger-funktionaler-ui-baum--ist) · [Specs](#stand-der-specs) ·

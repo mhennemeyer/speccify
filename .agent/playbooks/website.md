@@ -26,16 +26,19 @@ an actual app screenshot, explanatory copy and a deeper documentation link.
 | 1 | Reusable skills | SkillsTab: procedure, local guidance, source/version, related tools; source browsing, import/export terminal commands |
 | 2 | Tool contracts | ToolsTab: inputs/outputs/effects/examples, per-platform state; CLI/core tool check and verify |
 | 3 | Specs and acceptance | BoardTab: board/list, task inspector, questions/history, human review, measured run totals when recorded |
-| 4 | Living playbooks | PlaybooksTab: product direction, UI map, standing procedures, editing and prompt copy |
-| 5 | Agents and MCP | McpsTab: host-specific configuration, URLs/commands, allowlists; AgentTab/TerminalPanel startup and guidance; ServersView management |
-| 6 | Actions and output | ActionsTab: named commands, approval, toolbar, independent output tabs, stop, structured charts |
-| 7 | Files and editor | FilesTab: tree, file icons, tabs, code/Markdown, file operations/history; shell panels, theme/help/settings |
-| 8 | Git | GitWorkspace/GitTab: composer, staged index, file/hunk diffs, local branches, tracking, fetch/pull/push |
+| 4 | Workspaces | ProjectsView „Ordner öffnen“ (027) + WorkspaceShell (026): folder detection, grouped navigator, shared board, per-repo files/Git, one explicit parent terminal |
+| 5 | Living playbooks | PlaybooksTab: product direction, UI map, standing procedures, editing and prompt copy |
+| 6 | Agents and MCP | McpsTab: host-specific configuration, URLs/commands, allowlists; AgentTab/TerminalPanel startup and guidance; ServersView management |
+| 7 | Actions and output | ActionsTab: named commands, approval, toolbar, independent output tabs, stop, structured charts |
+| 8 | Files and editor | FilesTab: tree, file icons, tabs, code/Markdown, file operations/history; shell panels, theme/help/settings |
+| 9 | Git | GitWorkspace/GitTab: composer, staged index, file/hunk diffs, local branches, tracking, fetch/pull/push |
 
 Those are feature groups, not a screenshot of every dialog. Keep the functional UI
 tree in [Stand und UI](stand-und-ui.md) as the completeness cross-check. Do not
-advertise placeholder views, multi-repo workspaces, team-wide boards, semantic
-refactoring, universal profiling or planned integrations as shipping features.
+advertise placeholder views, team-wide boards, semantic refactoring, universal
+profiling or planned integrations as shipping features. Workspaces (row 4) are
+public since the 0.7.0 documentation pass (2026-09-11): local grouping, shared
+board and one explicit parent terminal — never team sync or a merged repository.
 Configuration screenshots do not prove a live MCP connection; mock tool statuses
 do not prove verification. Avoid guarantees about session resumption or context delivery.
 
@@ -56,9 +59,13 @@ not part of screenshot production.
 - `components/AppScreenshot.astro`: intrinsic dimensions, responsive WebP,
   first image eager/high, later images lazy; full-size links work without JS.
 - Originals in `src/assets/landing/`: board, skills, tools, playbooks, mcps,
-  actions, files, git. Keep existing documentation images in `assets/app/` separate.
+  actions, files, git, workspace. Keep existing documentation images in
+  `assets/app/` separate. `workspace.png` is also embedded by `/app/workspaces/`.
 - Public fixture: `apps/desktop/dev/marketing-fixture.js`, selected only by
   `dev/mock.html?marketing=1`. Fictional OrbitNotes, no personal files or sessions.
+  The workspace motif adds `&workspaces=1&workspace-shell=1`: `workspace-fixture.js`
+  then serves the public `/Users/demo/Projects` workspace (OrbitNotes + sync repo
+  grouped, website separate, nine specs) instead of its regression data.
 - Procedure: [app-screenshots](../skills/app-screenshots/SKILL.md). Extend this skill
   when adding motifs; do not duplicate it for each website page.
 
@@ -105,10 +112,12 @@ fixture, capture recipe, website and affected playbooks/spec in one change set.
 Backend-only work does not automatically require new images. Add future features
 where their distinctiveness warrants, keeping IDE essentials at the end.
 
-The user accepted the local visual direction on 2026-09-11. It remains **local only**;
-publication was not requested. No push or deployment:
-a push to main deploys the website. General standing permissions remain unchanged;
-the current local-only request governs this change. The app itself needs no restart.
+The user accepted the local visual direction on 2026-09-11 and, later that day,
+asked for the documentation update and a new release (0.7.0). The 0.7.0
+documentation pass adds the Workspaces group (`/features/#workspaces`), the
+`/app/workspaces/` chapter, "Opening a folder" in `/app/overview/`, and Git
+documentation matching Spec 021. Publication happens with the push to `main`
+that carries the version bump; the release tag remains the owner's action.
 
 Next review: does the skill image communicate reuse clearly? Is the full-width
 lead on Features worth the space? Are any details too small at the two-column size?

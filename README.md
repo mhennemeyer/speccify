@@ -64,8 +64,12 @@ and token counts from the agent's own `agent_run` log lines), skills and
 tool contracts with their per-platform verification status, project actions
 with live output and charts, and an
 agent terminal that already knows the project and resumes its session after
-a restart. The app watches files; the agent does the work. Everything shown is
-plain files, so it works with any agent and survives without the app.
+a restart. Open a folder and the app decides: a repository becomes a project
+window, a folder of repositories becomes a **workspace** — grouped projects,
+one shared spec board, one agent in the parent folder, every repository with
+its own files, Git and actions. The app watches files; the agent does the
+work. Everything shown is plain files, so it works with any agent and
+survives without the app.
 
 ## Repository layout
 

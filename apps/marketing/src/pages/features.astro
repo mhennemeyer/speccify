@@ -9,6 +9,7 @@ import mcps from "../assets/landing/mcps.png";
 import actions from "../assets/landing/actions.png";
 import files from "../assets/landing/files.png";
 import git from "../assets/landing/git.png";
+import workspace from "../assets/landing/workspace.png";
 
 const features = [
   {
@@ -33,35 +34,42 @@ const features = [
     caption: "Six specs, one selected task list, a terminal in context · Demo project", href: "/app/specs/", link: "Explore the spec workflow",
   },
   {
-    id: "playbooks", label: "Living playbooks", eyebrow: "04 / The memory beside the work", title: "Keep the why close to the how.",
+    id: "workspaces", label: "Workspaces", eyebrow: "04 / Several repositories, one place", title: "Open the folder. The app sorts out the rest.",
+    intro: "Products rarely live in one repository. Open the parent folder: Speccify finds the repositories inside, groups them into projects and shows their specs on one board — while every repository keeps its own files, Git and terminal target.",
+    points: ["Open a single folder: a Git repository opens as a project, a folder of repositories as a workspace.", "Group repositories into named projects. Grouping is local metadata; the repositories stay untouched.", "Follow every spec on one shared board, filter by project, and edit each spec in its own repository.", "Start one agent in the parent folder with a structure summary — on your click, never automatically. Files, Git and actions stay bound to their repository."],
+    image: workspace, alt: "Workspace window with three repositories grouped into two projects in the navigator, a shared spec board and the selected spec's tasks in the inspector",
+    caption: "Three repositories, one board · Demo workspace", href: "/app/workspaces/", link: "How workspaces work",
+  },
+  {
+    id: "playbooks", label: "Living playbooks", eyebrow: "05 / The memory beside the work", title: "Keep the why close to the how.",
     intro: "Specs finish. Your product vision, release procedure and working agreements keep evolving. Give that standing knowledge a home beside the project.",
     points: ["Create, read and edit Markdown playbooks without a task lifecycle.", "Keep product direction, UI maps, onboarding and release routines in the repository.", "Use the inspector to copy a playbook's path and content as a prompt.", "Keep edits and local drafts in the same workspace as the work they guide."],
     image: playbooks, alt: "Product playbook showing vision, working agreements, current focus and a UI map, with a release checklist in the navigator",
     caption: "Standing knowledge, not another ticket · Demo project", href: "/app/overview/", link: "Tour the project workspace",
   },
   {
-    id: "agents", label: "Agents & MCP", eyebrow: "05 / Your choice of agent", title: "One project. Your tools.",
+    id: "agents", label: "Agents & MCP", eyebrow: "06 / Your choice of agent", title: "One project. Your tools.",
     intro: "Use a terminal agent with your project's files and conventions. Speccify gives you a place to inspect the setup; it doesn't replace your host's permissions or account.",
     points: ["Run your chosen agent command in an integrated terminal and inspect startup diagnostics.", "Read project guidance and inspect project MCP entries for Claude Code and Codex.", "See server commands or URLs, configuration paths and Claude allowlists; copy configuration from the inspector.", "Use the CLI or Speccify MCP adapter over the same core. The dashboard also manages bundled MCP servers, logs and client configuration."],
     image: mcps, alt: "Project MCP view showing separate Claude and Codex configurations and a selected local speccify-exec endpoint",
     caption: "Project configuration made visible · Demo entries, not a connection health check", href: "/mcp/", link: "Read the MCP reference",
   },
   {
-    id: "actions", label: "Actions & output", eyebrow: "06 / A result you can inspect", title: "Give repeatable work a button.",
+    id: "actions", label: "Actions & output", eyebrow: "07 / A result you can inspect", title: "Give repeatable work a button.",
     intro: "Tests, previews and small checks belong within reach. Named project actions let you run them and keep their output beside the task you're reviewing.",
     points: ["Define actions in .agent/actions.json and pin useful ones to the toolbar.", "Review suggested actions and pending command approvals before use.", "Follow separate output tabs, inspect exit status and stop running actions.", "Structured output can render charts alongside text. General-purpose profiling workspaces remain a future direction."],
     image: actions, alt: "Project actions with a search benchmark and its separate output tab showing a synthetic latency chart and exit status",
     caption: "A benchmark action and structured chart output · Synthetic demo values", href: "/app/actions/", link: "Work with project actions",
   },
   {
-    id: "editor", label: "Files & editor", eyebrow: "07 / Familiar workspace essentials", title: "Make the change right here.",
+    id: "editor", label: "Files & editor", eyebrow: "08 / Familiar workspace essentials", title: "Make the change right here.",
     intro: "The everyday IDE capabilities are here to support the workflow: inspect the files, make a change and keep the surrounding project knowledge close.",
     points: ["Browse the project tree with file-type icons and open files in editor tabs.", "Edit code with syntax highlighting and inspect Markdown with a rendered preview.", "Create, rename and delete files; inspect file details and history.", "Resize or hide panels, dock the terminal and choose a light or dark theme. Integrated help and environment settings live in the app too."],
     image: files, alt: "Project file tree, TypeScript search function in the editor and file information in the inspector",
     caption: "The code behind the spec · Demo project", href: "/app/files-and-git/", link: "Files and editing",
   },
   {
-    id: "git", label: "Git workspace", eyebrow: "08 / Familiar workspace essentials", title: "Review exactly what goes into a commit.",
+    id: "git", label: "Git workspace", eyebrow: "09 / Familiar workspace essentials", title: "Review exactly what goes into a commit.",
     intro: "Git rounds out the workspace. Useful, familiar tools for reviewing and shipping the change — not the reason you need another IDE.",
     points: ["Inspect working-tree changes, diffs and file history; stage files or individual hunks.", "Write a commit subject and description in a visible composer with a saved local draft.", "Preview the staged index and manage local branches with checks before switching.", "Inspect tracking state, fetch, pull and push from the project."],
     image: git, alt: "Git workspace detail with a commit draft, two staged files, index preview and branch selector",
@@ -94,7 +102,7 @@ const features = [
     ))}
     <section class="py-16 text-center">
       <h2 class="text-3xl font-bold">Bring your next project.</h2>
-      <p class="mx-auto mb-6 mt-4 max-w-xl text-slate-400">Start with the local workflow. Multi-repo workspaces, shared team boards and new integrations are still being developed — they are not included in this feature tour.</p>
+      <p class="mx-auto mb-6 mt-4 max-w-xl text-slate-400">Start with the local workflow. Shared team boards and new integrations are still being developed — they are not included in this feature tour.</p>
       <a href="/download/" class="inline-block rounded-md bg-sky-500 px-6 py-3 font-medium text-white hover:bg-sky-400">Download Speccify</a>
     </section>
   </main>

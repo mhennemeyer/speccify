@@ -77,8 +77,9 @@ Workspace.
       auf den neuen Einstieg umstellen.
 - [x] Vertrag `docs/workspaces.md`, UI-Baum in `stand-und-ui.md`, In-App-Hilfe
       (`docs/app-bedienen.md`) anpassen.
-- [ ] Website-Doku: „Open a folder“ im neuen Workspace-Kapitel beschreiben
-      (added; läuft im Doku-Durchgang zum Release 0.7.0 mit).
+- [x] Website-Doku: „Open a folder“ im neuen Workspace-Kapitel beschreiben
+      (added; `/app/workspaces/` und „Opening a folder“ in `/app/overview/`,
+      Doku-Durchgang zum Release 0.7.0).
 - [x] Lokale App bündeln und neu starten; Wiederaufnahme prüfen.
 
 ## Verification
@@ -107,5 +108,19 @@ Workspace.
   läuft, Desktop-UI-MCP `initialize` antwortet 200 (`speccify-desktop-ui-mcp`).
 - Nicht geprüft: nativer Klick-Durchlauf mit echten Ordnern (der Desktop-UI-MCP
   bietet nur `ask_bo`); bleibt Teil der menschlichen Abnahme. Windows ungetestet.
+
+Doku-Durchgang 0.7.0 (2026-09-11, zweiter Commit):
+
+- Neues Motiv `workspace.png` über `pnpm screenshots:app` (öffentliche
+  OrbitNotes-Workspace-Fixture, `?marketing=1&workspaces=1&workspace-shell=1`);
+  visuell geprüft: drei Repos in zwei Gruppen, gemeinsames Board mit 9 Specs,
+  gewählte Spec mit Tasks im Inspektor, kein Terminal gestartet. Die acht
+  bestehenden Motive blieben byte-identisch.
+- `pnpm marketing:build`: 95 Seiten; `node scripts/test_landing_screenshots.mjs`
+  gegen die Vorschau: alle acht Prüfungen grün (Feature-Reihenfolge jetzt mit
+  `workspaces` an Position 4, 9 Screenshots auf `/features/`, alle unter 200 KB).
+- Workspace-Suiten (`shell`, `board`, `ui`, `layout`) mit erweiterter Fixture grün;
+  markdownlint-cli2 über die geänderten Markdown-Dateien: 0 Befunde.
+- Version 0.7.0 in Cargo.toml, tauri.conf.json, package.json, Cargo.lock.
 
 ## Questions

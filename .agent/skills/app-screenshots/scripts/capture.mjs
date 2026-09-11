@@ -121,8 +121,22 @@ try {
   await capture("git", page.getByRole("region", { name: "Git-Arbeitsbereich", exact: true }));
   assert.deepEqual(errors, []);
   assert.deepEqual(await page.evaluate(() => window.__SPECCIFY_MOCK__.gitCalls), []);
-  await mkdir(output, { recursive: true });
   assert.deepEqual(await page.evaluate(() => window.__SPECCIFY_MOCK__.actionStarts), ["pnpm bench:search"]);
+  // Workspace window (Specs 015/024/026): the public OrbitNotes demo workspace with
+  // three repositories in two project groups and one shared board. No terminal is
+  // started; the parent agent stays an explicit click.
+  await page.goto(`${address}dev/mock.html?marketing=1&workspaces=1&workspace-shell=1`);
+  const cards = page.locator("[data-workspace-spec]");
+  await cards.first().waitFor();
+  assert.equal(await cards.count(), 9, "six OrbitNotes specs, two sync specs, one website spec");
+  await cards.filter({ hasText: "Find the note you need" }).first().click();
+  await page.getByRole("region", { name: `Inspektor ${project}`, exact: true }).getByRole("tab", { name: "Tasks 2/3", exact: true }).click();
+  await page.keyboard.press("Meta+Shift+Y");
+  await page.getByRole("region", { name: "Agent-Terminal", exact: true }).waitFor({ state: "hidden" });
+  assert.equal(await page.getByRole("region", { name: `Terminal /Users/demo/Projects`, exact: true }).count(), 0, "workspace opens no terminal by itself");
+  await capture("workspace");
+  assert.deepEqual(errors, []);
+  await mkdir(output, { recursive: true });
   for (const [name, buffer] of captures) await writeFile(new URL(`${name}.png`, output), buffer);
   console.log(`PASS: ${[...captures.keys()].join(", ")} captured in ${fileURLToPath(output)} (real UI, isolated demo, no native mutations)`);
 } finally {

@@ -71,28 +71,45 @@ the full message, **Copy hash**, and **Diff as prompt**.
 
 ### Committing
 
-The commit panel lives in the inspector (the **Commit…** button in the
-branch header jumps there). Three ways:
+The **Git workspace** panel is always visible in the Git tab (the
+**Commit…** button in the branch header jumps to it; it stays reachable
+with the inspector hidden). It names the repository or worktree it acts
+on, and offers:
 
-- **Commit** — write a message, press the button or ⌘⏎; only staged
-  changes go in.
-- **Commit all** — stage everything first, then commit with your
-  message.
-- **Let the agent commit** — types a request into the agent terminal:
-  read the staged diff, write a Conventional Commit message, commit,
-  don't push. Confirm with Enter there, as with any prompt.
+- **A commit composer** — a subject line and an optional description.
+  The draft is saved locally per project, so switching files, diffs or
+  branches does not lose it. **Commit** (or ⌘⏎ / Ctrl+⏎) commits only
+  the staged index — the button says how many staged files go in, and
+  **Check index** lists them. An empty message or an empty index is
+  explained, not silently ignored. Nothing is staged for you and
+  nothing is pushed.
+- **Commit request to the terminal** — types a request into the agent
+  terminal: read the staged diff (or, with nothing staged, stage what
+  belongs together), write a Conventional Commit message, commit,
+  don't push. The request names the target repository. Confirm with
+  Enter there, as with any prompt.
 
-Next to the commit box, the **Branches** tab lists local branches with
-their upstreams: click one to switch, or type a name and **Create** to
-branch off. The last commits are listed under the diff. Without a
-repository, the navigator offers `git init`; with a clean tree it says
-so — what the agent changes appears here the moment it happens.
+Running state, success and errors of every Git action stay visible
+until the next one; a button never starts the same action twice.
+
+### Branches
+
+The branch button on the panel opens **branch management**: search
+your local branches, see each one's upstream and whether it is checked
+out in another worktree, and **switch**, **create**, **rename** or
+**delete** with a confirmation step that names the repository, the
+current and the target branch. Switching with local changes that would
+be lost stops and asks — nothing is discarded or stashed on its own.
+The current branch and branches that are not merged cannot be deleted
+by accident; there is no force-delete. Remote branches are listed
+read-only. Merge, rebase and conflict resolution stay in the terminal:
+conflicts are shown, not resolved.
+
+The last commits are listed under the diff. Without a repository, the
+navigator offers `git init`; with a clean tree it says so — what the
+agent changes appears here the moment it happens.
 
 The toolbar has **Pull**, **Push**, **Commit**, and **Agent** buttons
 built in, next to any action you mark for the toolbar; which of them
 show, and in what order, is set per project in the settings popover
 behind the gear.
-
-What the Git tab does not do, on purpose: hunk-level staging, branch
-switching, merge tooling. Conflicts are shown, not resolved — that is
-a job for the terminal.

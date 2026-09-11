@@ -38,6 +38,15 @@ versioned workflow block into `.agent/agent.md`, creates the
 `.agents/skills` to `.agent/skills` (a junction on Windows) — so
 both hosts see the same skills.
 
+## Opening a folder
+
+The dashboard's **Projects** tab asks for one thing: a folder. A Git
+repository opens as a project in its own window. A folder that holds
+several repositories opens as a [workspace](/app/workspaces/) — grouped
+projects, one shared board, one agent in the parent folder. A plain
+folder opens as a simple project. Windows you leave open come back on
+the next start.
+
 ## The window
 
 A project window follows the pattern of Xcode: a **navigator** on the
@@ -85,6 +94,9 @@ inspector, and terminal (Ctrl on Windows).
 - **[Specs](/app/specs/)** — one spec per piece of work in `Backlog`,
   `Doing`, `Done`; tasks as checkboxes; per-spec history; badges for
   specs that wait on you. Playbooks live next to them.
+- **[Workspaces](/app/workspaces/)** — several repositories in one
+  window: grouped projects, a shared spec board, one agent in the
+  parent folder.
 - **[Questions](/app/questions/)** — how the agent asks and how your
   answer reaches its next run.
 - **[Actions](/app/actions/)** — project commands the app runs itself,

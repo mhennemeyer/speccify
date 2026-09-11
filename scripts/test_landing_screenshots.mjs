@@ -14,10 +14,10 @@ try {
       assert.equal(await page.locator("html").getAttribute("lang"), "en");
       await page.getByRole("navigation", { name: "Main navigation", exact: true }).getByRole("link", { name: "Features", exact: true }).waitFor();
       const shots = page.locator(".app-screenshot img");
-      assert.equal(await shots.count(), route === "/" ? 2 : 8);
+      assert.equal(await shots.count(), route === "/" ? 2 : 9);
       if (route === "/features/") {
         assert.deepEqual(await page.locator("[data-feature]").evaluateAll(elements => elements.map(el => el.id)),
-          ["skills", "tools", "specs", "playbooks", "agents", "actions", "editor", "git"]);
+          ["skills", "tools", "specs", "workspaces", "playbooks", "agents", "actions", "editor", "git"]);
         for (const section of await page.locator("[data-feature]").all()) assert.equal(await section.locator(".app-screenshot").count(), 1);
         for (const link of await page.getByRole("navigation", { name: "Feature index" }).getByRole("link").all()) {
           const id = await link.getAttribute("href");

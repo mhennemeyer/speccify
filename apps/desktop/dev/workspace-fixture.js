@@ -1,8 +1,43 @@
 // Isolated UI contract fixture; never connected to the native workspace store.
+// With ?marketing=1 the public OrbitNotes demo workspace is used instead of the
+// regression data (app-screenshots skill); paths stay under /Users/demo.
 export function installWorkspaceFixture(responses) {
   const key = "speccify.test.workspaces";
-  const root = "/private/tmp/demo-workspace";
-  const initial = () => ({ id: "workspace-demo", name: "demo-workspace", root, revision: 1, partial: false, warnings: [],
+  const marketing = new URLSearchParams(location.search).has("marketing");
+  const root = marketing ? "/Users/demo/Projects" : "/private/tmp/demo-workspace";
+  const marketingInitial = () => ({ id: "workspace-orbit", name: "Projects", root, revision: 3, partial: false, warnings: [],
+    projects: [
+      { id: "project-orbit", name: "OrbitNotes", repository_ids: ["repo-app", "repo-sync"] },
+      { id: "project-sync", name: "orbitnotes-sync", repository_ids: [] },
+      { id: "project-site", name: "Website", repository_ids: ["repo-site"] },
+    ],
+    repositories: [
+      { id: "repo-app", name: "OrbitNotes", common_dir: `${root}/OrbitNotes/.git`, default_project_id: "project-orbit", worktrees: [
+        { id: "tree-app", path: `${root}/OrbitNotes`, relative_path: "OrbitNotes", markers: [".agent/agent.md", "speccify.yaml"], available: true },
+      ] },
+      { id: "repo-sync", name: "orbitnotes-sync", common_dir: `${root}/orbitnotes-sync/.git`, default_project_id: "project-sync", worktrees: [
+        { id: "tree-sync", path: `${root}/orbitnotes-sync`, relative_path: "orbitnotes-sync", markers: [".agent/agent.md"], available: true },
+      ] },
+      { id: "repo-site", name: "orbitnotes.app", common_dir: `${root}/orbitnotes.app/.git`, default_project_id: "project-site", worktrees: [
+        { id: "tree-site", path: `${root}/orbitnotes.app`, relative_path: "orbitnotes.app", markers: ["AGENTS.md"], available: true },
+      ] },
+    ],
+  });
+  const marketingSpecs = tree => {
+    const template = responses.project_board({ project: `${root}/OrbitNotes` })[0];
+    const spec = (number, slug, title, station, done, total, texts) => ({ ...template, id: `${String(number).padStart(3, "0")}-${slug}`, number,
+      file: `.agent/specs/${String(number).padStart(3, "0")}-${slug}/SPEC.md`, title, station, order: number, created: "2026-09-01", parent: null,
+      ready: false, needs_human: false, tasks_done: done, tasks_total: total,
+      tasks: texts.map((text, index) => ({ index, text, done: index < done })),
+      body: `## Why\n${title}.\n\n## Tasks\n${texts.map((text, index) => `- [${index < done ? "x" : " "}] ${text}`).join("\n")}` });
+    if (tree.id === "tree-app") return responses.project_board({ project: tree.path });
+    if (tree.id === "tree-sync") return [
+      spec(9, "sync-conflicts", "Resolve sync conflicts safely", "Doing", 1, 3, ["Detect concurrent edits", "Keep both versions", "Show a merge preview"]),
+      spec(10, "offline-queue", "Queue changes while offline", "Backlog", 0, 2, ["Persist the queue", "Replay in order"]),
+    ];
+    return [spec(2, "download-page", "Download page for all platforms", "Done", 3, 3, ["List installers", "Explain first launch", "Link release notes"])];
+  };
+  const initial = () => marketing ? marketingInitial() : ({ id: "workspace-demo", name: "demo-workspace", root, revision: 1, partial: false, warnings: [],
     projects: [{ id: "project-api", name: "API", repository_ids: ["repo-api"] }, { id: "project-web", name: "Web", repository_ids: ["repo-web"] }],
     repositories: [
       { id: "repo-api", name: "API", common_dir: `${root}/api/.git`, default_project_id: "project-api", worktrees: [
@@ -32,13 +67,23 @@ export function installWorkspaceFixture(responses) {
   const shell = new URLSearchParams(location.search).has("workspace-shell");
   if (shell && !read().length) {
     const workspace = initial();
-    workspace.projects.push({ id: "project-infra", name: "Infrastructure", repository_ids: ["repo-infra"] });
-    workspace.repositories.push({ id: "repo-infra", name: "Infra", common_dir: `${root}/infra/.git`, default_project_id: "project-infra", worktrees: [{ id: "tree-infra", path: `${root}/infra`, relative_path: "infra", available: true, markers: [] }] });
+    if (!marketing) {
+      workspace.projects.push({ id: "project-infra", name: "Infrastructure", repository_ids: ["repo-infra"] });
+      workspace.repositories.push({ id: "repo-infra", name: "Infra", common_dir: `${root}/infra/.git`, default_project_id: "project-infra", worktrees: [{ id: "tree-infra", path: `${root}/infra`, relative_path: "infra", available: true, markers: [] }] });
+    }
     write([workspace]);
   }
   responses.workspace_board = async ({ workspaceId }) => {
     const workspace = read().find(entry => entry.id === workspaceId);
     if (!workspace) throw Error("Workspace nicht gefunden");
+    if (marketing) {
+      const specs = workspace.repositories.flatMap(repo => repo.worktrees.flatMap(tree => {
+        const project = workspace.projects.find(project => project.repository_ids.includes(repo.id));
+        return marketingSpecs(tree).map(spec => ({ key: JSON.stringify([workspace.id, repo.id, tree.id, spec.file]), project_id: project.id, project_name: project.name,
+          repository_id: repo.id, repository_name: repo.name, worktree_id: tree.id, worktree_path: tree.path, worktree_label: tree.relative_path, spec }));
+      }));
+      return { workspace_id: workspace.id, revision: workspace.revision, captured_at: Date.parse("2026-09-01T10:00:00Z"), specs, partial: false, warnings: [] };
+    }
     const specs = workspace.repositories.flatMap(repo => repo.worktrees.map(tree => {
       const project = workspace.projects.find(project => project.repository_ids.includes(repo.id));
       const file = ".agent/specs/001-shared/SPEC.md";
@@ -93,7 +138,7 @@ export function installWorkspaceFixture(responses) {
   responses.ask_bo_pending = () => [];
   const settings = responses.get_settings;
   responses.get_settings = () => ({ ...settings(), theme: "dark", terminal_autostart_command: "" });
-  if (shell) {
+  if (shell && !marketing) {
     const calls = window.__SPECCIFY_MOCK__.workspaceCalls = [];
     const files = new Map();
     responses.project_tree = ({ path }) => path ? [] : [{ name: "shared.txt", path: "shared.txt", is_dir: false, size: 20 }];
