@@ -30,6 +30,7 @@ mod system_cmd;
 mod terminal;
 mod toolbox_cmd;
 mod workflow_setup;
+mod workspace_cmd;
 
 /// Laufende Kind-Prozesse des Spike-Supervisors. Drop killt alle Kinder,
 /// damit beim App-Quit nichts weiterläuft.
@@ -240,6 +241,10 @@ pub fn run() {
             spawn_process,
             kill_process,
             project_cmd::project_open,
+            workspace_cmd::workspace_list,
+            workspace_cmd::workspace_discover,
+            workspace_cmd::workspace_edit,
+            workspace_cmd::workspace_open,
             project_cmd::project_current,
             project_cmd::project_recent,
             project_cmd::project_skills,

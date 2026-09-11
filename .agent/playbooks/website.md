@@ -105,9 +105,22 @@ fixture, capture recipe, website and affected playbooks/spec in one change set.
 Backend-only work does not automatically require new images. Add future features
 where their distinctiveness warrants, keeping IDE essentials at the end.
 
-This iteration is **local only**, pending visual review. No push or deployment:
+The user accepted the local visual direction on 2026-09-11. It remains **local only**;
+publication was not requested. No push or deployment:
 a push to main deploys the website. General standing permissions remain unchanged;
 the current local-only request governs this change. The app itself needs no restart.
 
 Next review: does the skill image communicate reuse clearly? Is the full-width
 lead on Features worth the space? Are any details too small at the two-column size?
+
+UI change check, Spec 015: the new workspace entry changes the dashboard, not any
+of the eight current project-window motifs. Keep the current images; verify
+them with the capture recipe. Add a workspace image and update feature claims
+after the new capability is accepted, rather than implying that aggregated boards
+or team sync already exist. Screenshot upkeep is part of each visible UI change,
+not a separate optional cleanup task.
+
+Verification on 2026-09-11: all eight captures match the existing assets on the
+repeat run. The initial MCP capture showed a tiny raster-only difference; inspect
+such differences before replacing assets. Marketing build and responsive landing/
+Features checks pass. No website publication in this change.

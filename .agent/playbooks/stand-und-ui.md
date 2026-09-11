@@ -46,8 +46,10 @@ einem angemeldeten Host auf den Zielplattformen steht aus.
 | Ausführung | `.agent/actions.json`, Exec-Allowlist und Interaktionen; nicht gleichbedeutend mit beliebigen Host-Berechtigungen |
 | Rechnerpräferenzen | globale Einstellungen/Quellen, lokale Checkouts; Fensterlayout, Entwürfe und Sitzungsmerker teilweise in lokalem UI-Speicher |
 
-Ein Projektfenster erhält heute **einen Projektpfad**. Es gibt mehrere separat
-öffnbare Projekte, aber noch kein gemeinsames Workspace-/Multi-Repo-Domänenmodell.
+Ein Projektfenster erhält weiterhin **einen Projektpfad**. Das Dashboard erkennt
+seit Spec 015 mehrere Repos/Worktrees in einem Arbeitsordner und speichert deren
+fachliche Projektgruppen lokal. Ein Worktree öffnet ein eigenes Projektfenster;
+aggregiertes Board und durchgängige Projekt-Badges sind noch nicht enthalten.
 Speccify-Server starten und Host-Konfiguration anzeigen ersetzt nicht automatisch
 deren Einrichtung oder Verfügbarkeit im gewählten Agenten.
 
@@ -58,7 +60,7 @@ oder vollständige Plattformabnahme.
 
 | Fähigkeit | Ist-Stand | Grenze / Folgeschritt |
 |---|---|---|
-| Projekte | Ordner/Pfad öffnen, zuletzt verwendete Projekte, eigenes Fenster | keine automatische Verbunderkennung oder gemeinsame Board-Sicht; V1-01 |
+| Projekte/Workspaces | begrenzte Repo-/Worktree-Erkennung, lokale IDs, Gruppieren/Umbenennen/Entgruppieren, gezieltes eigenes Fenster; Einzelprojekte bleiben nutzbar | keine gemeinsame Board-Sicht, Team-Identitätsbindung oder automatische Pfadumzüge; weitere Schnitte V1-01 |
 | Specs | Gesamtliste links, Suche/Themenfilter, Backlog/Doing/Done, gemeinsamer Task-Vertrag, Fragen und pfadgenaue Historie; Altbestand lesbar, kein Archivierungsschritt | keine Sperre gegenüber externen Editoren; Team-/Branch-Sicht fehlt |
 | Workflow-Setup | Policy v5 ohne Archivierungsschritt, versionierte Skills, bekannte Vorlagen sicher migrieren, konkrete Link-/Anpassungsdiagnose | individuelle/neue unbekannte Vorlagen und fremde Links bleiben zur manuellen Prüfung erhalten |
 | Playbooks | Liste, Markdown lesen/bearbeiten, neu/löschen, als Prompt kopieren | keine Workspace-Herkunft oder Team-Verteilung |
@@ -95,9 +97,12 @@ Quelle: [App.tsx](../../apps/desktop/src/App.tsx),
 Speccify · Dashboard
 ├── Hauptnavigation / Inhaltsbereich
 │   ├── Projekte
-│   │   ├── Projektpfad eingeben → öffnen
-│   │   ├── Verzeichnisdialog → wählen und öffnen
-│   │   └── Zuletzt geöffnet → eigenes Projektfenster
+│   │   ├── Arbeitsordner eingeben / wählen → begrenzte Workspace-Erkennung
+│   │   ├── Gespeicherte Workspaces wählen · erneut erkennen · Suchlimit-/Fehlerhinweise
+│   │   ├── Repos auswählen → Projektgruppe benennen und speichern
+│   │   ├── Projektkarten → umbenennen · Repo aus Gruppe lösen
+│   │   │   └── Worktrees mit relativem Pfad/Markern/Verfügbarkeit → eigenes Projektfenster
+│   │   └── Einzelprojekt direkt öffnen / zuletzt geöffnet (aufklappbar)
 │   ├── Bibliothek
 │   │   ├── Globale Skill-Quellen
 │   │   │   ├── Git-URL oder lokaler Ordner hinzufügen
@@ -369,7 +374,7 @@ Diese Tabelle verändert keine Station oder Reihenfolge.
 | [012 Praxisabnahme](../specs/012-agent-terminal-praxisabnahme/SPEC.md) | Backlog | vollständiger Durchlauf im echten Agent-Terminal |
 | [013 Lokale App/Startdiagnose](../specs/013-lokale-app-und-startdiagnose/SPEC.md) | Doing, ready, needs_human | App ohne Watcher auf 18768 gestartet und offen gelassen; Sicht-/Terminal-Abnahme offen |
 | [014 MCP-Transportgrenzen](../specs/014-lokale-mcp-transportgrenzen/SPEC.md) | Done | gemeinsame HTTP-Grenzen implementiert; 97 Rust-Tests und 28 Vergleichsszenarien grün, App/Sidecars aktualisiert, Live-Smoke grün |
-| [015 Workspace/Projekterkennung](../specs/015-workspace-projekterkennung/SPEC.md) | Backlog | D-MR-01 bestätigt: Repos separat erkennen, frei gruppierbar; Umsetzung offen |
+| [015 Workspace/Projekterkennung](../specs/015-workspace-projekterkennung/SPEC.md) | Doing · ready | Erkennung, persistente Gruppierung und explizites Worktree-Öffnen implementiert; automatisiert und im Mac-Wegwerf-Workspace geprüft; menschliche Abnahme offen |
 | [016 Gemeinsames Spec-Register](../specs/016-gemeinsames-spec-register/SPEC.md) | Backlog | D-TEAM-01 bestätigt: separates Spec-Repo als Pilot; Umsetzung offen |
 | [017 Demoaktionen](../specs/017-projektaktionen-fuer-demo/SPEC.md) | Doing | fünf Projektaktionen und Tests-Knopf, Live-Dateiänderung ohne Neustart; Sichtabnahme offen |
 | [018 Ausgabetabs](../specs/018-aktionsausgabe-seitenleiste/SPEC.md) | Doing | Aktionsausgaben rechts neben Inspektor; UI-Tests grün, lokale App aktualisiert und Projektfenster wieder geöffnet; Sichtabnahme offen |
@@ -377,9 +382,21 @@ Diese Tabelle verändert keine Station oder Reihenfolge.
 | [020 Spec-Navigation](../specs/020-spec-navigation/SPEC.md) | Doing, ready, needs_human | Gesamtliste, Suche/Filter, Altbestand lesbar, pfadgenaue Historie und Policy v5; 107 Rust-Tests/vier UI-Suiten grün, lokale App aktualisiert |
 | [021 Git-Arbeitsbereich](../specs/021-git-arbeitsbereich/SPEC.md) | Doing, ready, needs_human | sichtbarer Composer mit Entwurf/Index-Vorschau, sichere lokale Branch-Verwaltung, Remote-/Tracking-Anzeige; 108 Rust-Tests/fünf UI-Suiten grün, App aktualisiert |
 | [022 Dateien/Refactoring](../specs/022-dateiauswahl-und-refactoring/SPEC.md) | Backlog | Ordnerauswahl und Kontextmenü; später sicherer Move und sprachbezogene Refactorings |
-| [023 Landingpage-Bilder](../specs/023-landingpage-app-screenshots/SPEC.md) | Doing, ready, needs_human | Landingpage mit Skill-Schwerpunkt und englische Features-Seite mit acht reproduzierbaren Motiven; lokal zur visuellen Abnahme, nicht veröffentlicht |
+| [023 Landingpage-Bilder](../specs/023-landingpage-app-screenshots/SPEC.md) | Done | Landingpage/Features mit acht Motiven; lokale Variante vom Nutzer abgenommen, nicht veröffentlicht; Screenshot-Pflege verbindlich |
 
 ## Verifikation und verbleibende Risiken
+
+**Nachtrag 015, 2026-09-11:** Dashboard → Projekte enthält jetzt den Workspace-
+Einstieg. Nativer Vertrag und Fixture-Anleitung in [docs/workspaces.md](../../docs/workspaces.md).
+Zwei Demo-Repos mit drei Worktrees erkannt, gruppiert, in eigener Projektansicht
+geöffnet und nach regulärem App-Neustart wiedergefunden; Rescan/Entgruppieren
+erhalten die IDs. Git-Arbeitsbäume unverändert. Desktop-Rust: 78 Tests bestanden,
+2 ignoriert; Typecheck, Formatierung, sechs UI-Suites sowie Website-Build und
+responsive Bildtests grün. Die acht Website-Motive bleiben nach Capture-Prüfung
+unverändert. Mac-App lokal aktualisiert, bisherige Projektfenster wieder geöffnet.
+Bestehender Dashboard-Resume meldet „No conversation found to continue“; nahtlose
+Terminal-Wiederaufnahme weiterhin nicht zugesagt (009). Windows nicht nativ
+geprüft. Gemeinsames Board, Herkunfts-Badges und Team-Register folgen separat.
 
 **Nachtrag 023, zweite Bilditeration, 2026-09-11:** Nutzer bestätigt den visuellen
 Ansatz und priorisiert unterscheidende Fähigkeiten vor IDE/Git. Landingpage zeigt

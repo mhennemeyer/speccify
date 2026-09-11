@@ -1,5 +1,5 @@
 ---
-station: Doing
+station: Done
 created: 2026-09-11
 needs_human: true
 ready: true
@@ -39,6 +39,9 @@ keine Domain-Migration und kein Deployment.
   sind Englisch; /de/ verweist zur englischen Landingpage.
 
 ## Decisions
+
+- D8, 2026-09-11: Nutzer nimmt die lokale visuelle Variante mit „Sieht gut aus!“
+  ab. Pflegepflicht für Screenshots bestätigt. Keine separate Veröffentlichung angefordert.
 
 - D5, 2026-09-11: Nutzer bestätigt den visuellen Ansatz, fordert aber Skills/Tools
   statt Git als Landingpage-Schwerpunkt und eine bebilderte Features-Seite,

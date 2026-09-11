@@ -5,6 +5,7 @@ import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 import { ActionButton, ErrorBox, useAsync } from "../components/ui";
+import WorkspaceView from "./WorkspaceView";
 
 export default function ProjectsView() {
   const [path, setPath] = useState("");
@@ -22,9 +23,13 @@ export default function ProjectsView() {
   };
 
   return (
-    <div className="max-w-xl space-y-4">
+    <div className="space-y-8">
+      <WorkspaceView />
+      <details className="max-w-xl rounded-lg border border-slate-200 p-4">
+      <summary className="cursor-pointer text-sm font-semibold text-slate-700">Einzelprojekt direkt öffnen / zuletzt geöffnet</summary>
+      <div className="mt-4 space-y-4">
       <p className="text-sm text-slate-600">
-        Öffnet ein Projekt in einem eigenen Fenster: links Board, Pläne, Skills
+        Öffnet ein Projekt in einem eigenen Fenster: links Specs, Playbooks, Skills
         und Tools des Projekts, rechts der Inspektor, unten ein Agent-Terminal im
         Projektverzeichnis.
       </p>
@@ -89,6 +94,8 @@ export default function ProjectsView() {
           </ul>
         </div>
       ) : null}
+      </div>
+      </details>
     </div>
   );
 }

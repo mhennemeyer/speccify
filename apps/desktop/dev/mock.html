@@ -5,6 +5,7 @@
     <title>Speccify — Layout-Attrappe</title>
     <script type="module">
       import { installMarketingFixture, marketingProject } from "./marketing-fixture.js";
+      import { installWorkspaceFixture } from "./workspace-fixture.js";
       // Attrappe der Tauri-Brücke für Layout-Prüfungen und Website-
       // Screenshots im Browser (Playwright gegen den Vite-Dev-Server,
       // http://localhost:1420/dev/mock.html). Kein Produktbestandteil.
@@ -350,6 +351,7 @@
       };
       let callbackId = 0;
       if (marketing) installMarketingFixture({ responses, tickets, base, gitState, branchState, emit });
+      if (new URLSearchParams(location.search).has("workspaces")) installWorkspaceFixture(responses);
       window.__TAURI_INTERNALS__ = {
         // ?dashboard=1 → Hauptfenster (Label "main") statt Projektfenster.
         metadata: (() => {

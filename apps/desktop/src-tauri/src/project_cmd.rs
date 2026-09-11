@@ -51,7 +51,7 @@ pub(crate) fn resolve_project_root(raw: &str) -> Result<PathBuf, String> {
 
 /// Windows-`canonicalize` liefert Verbatim-Pfade (`\\?\C:\…`) — fürs UI und
 /// als cwd-String unbrauchbar. Präfix abstreifen; anderswo ein No-op.
-fn strip_verbatim(path: PathBuf) -> PathBuf {
+pub(crate) fn strip_verbatim(path: PathBuf) -> PathBuf {
     let text = path.to_string_lossy();
     if let Some(rest) = text.strip_prefix(r"\\?\UNC\") {
         return PathBuf::from(format!(r"\\{rest}"));

@@ -3935,9 +3935,11 @@ dependencies = [
  "tauri-plugin-opener",
  "tauri-plugin-single-instance",
  "tauri-plugin-updater",
+ "tempfile",
  "time",
  "toml 0.8.2",
  "trash",
+ "uuid",
  "wait-timeout",
 ]
 
