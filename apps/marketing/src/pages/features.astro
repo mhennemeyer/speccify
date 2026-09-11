@@ -1,0 +1,110 @@
+---
+import MarketingLayout from "../layouts/MarketingLayout.astro";
+import AppScreenshot from "../components/AppScreenshot.astro";
+import skills from "../assets/landing/skills.png";
+import tools from "../assets/landing/tools.png";
+import board from "../assets/landing/board.png";
+import playbooks from "../assets/landing/playbooks.png";
+import mcps from "../assets/landing/mcps.png";
+import actions from "../assets/landing/actions.png";
+import files from "../assets/landing/files.png";
+import git from "../assets/landing/git.png";
+
+const features = [
+  {
+    id: "skills", label: "Reusable skills", eyebrow: "01 / Knowledge that travels", title: "Keep the hard-won parts.",
+    intro: "The next project shouldn't have to rediscover what the last one taught you. Turn that experience into a skill your agent can read, adapt and use.",
+    points: ["Browse project skills and libraries from Git repositories or local folders.", "Inspect a skill's source, version and related tools before using it.", "Expand into plain SKILL.md files; keep local details in an In this project section.", "Export reusable knowledge back to a library. Import and export commands go to your terminal for confirmation."],
+    image: skills, alt: "Skills view with a reusable Markdown export procedure, local project instructions and source and version in the inspector",
+    caption: "A shared procedure, adapted to OrbitNotes · Demo project", href: "/fundamentals/skills/", link: "How skills work",
+  },
+  {
+    id: "tools", label: "Tool contracts", eyebrow: "02 / Portable intent. Local execution.", title: "Share what a tool must do.",
+    intro: "A script that worked on one machine is not a guarantee on the next. Share the contract: inputs, outputs, effects and examples. Implement it for the project and platform that will actually run it.",
+    points: ["Read TOOL.md contracts alongside the skills that use them.", "See which platforms have verified, implemented or missing tools.", "Run speccify tool check to test implementations against the contract's examples.", "Use speccify verify to check recorded skill, bundle and expansion drift. A passing tool check is not a substitute for reviewing the result."],
+    image: tools, alt: "Tool contract with inputs, outputs, effects and examples, plus separate macOS verified and Windows missing states",
+    caption: "One contract, explicit platform states · Demo statuses, not live verification", href: "/fundamentals/tools/", link: "Inside a tool contract",
+  },
+  {
+    id: "specs", label: "Specs & acceptance", eyebrow: "03 / Work you can follow", title: "A visible path from intent to review.",
+    intro: "Keep the request, tasks, decisions and verification in one spec. The board makes that file-based workflow visible without making the app the only way to use it.",
+    points: ["Move specs through Backlog, Doing and Done; mark work ready for human acceptance.", "Search the complete spec list and filter by parent spec or work that needs you.", "Review Markdown, check tasks, answer open questions and inspect history.", "Copy spec context as a prompt. Recorded runs can show token and duration totals when those measurements exist."],
+    image: board, alt: "Spec board with Backlog, Doing and Done, a selected search spec's tasks and a project terminal",
+    caption: "Six specs, one selected task list, a terminal in context · Demo project", href: "/app/specs/", link: "Explore the spec workflow",
+  },
+  {
+    id: "playbooks", label: "Living playbooks", eyebrow: "04 / The memory beside the work", title: "Keep the why close to the how.",
+    intro: "Specs finish. Your product vision, release procedure and working agreements keep evolving. Give that standing knowledge a home beside the project.",
+    points: ["Create, read and edit Markdown playbooks without a task lifecycle.", "Keep product direction, UI maps, onboarding and release routines in the repository.", "Use the inspector to copy a playbook's path and content as a prompt.", "Keep edits and local drafts in the same workspace as the work they guide."],
+    image: playbooks, alt: "Product playbook showing vision, working agreements, current focus and a UI map, with a release checklist in the navigator",
+    caption: "Standing knowledge, not another ticket · Demo project", href: "/app/overview/", link: "Tour the project workspace",
+  },
+  {
+    id: "agents", label: "Agents & MCP", eyebrow: "05 / Your choice of agent", title: "One project. Your tools.",
+    intro: "Use a terminal agent with your project's files and conventions. Speccify gives you a place to inspect the setup; it doesn't replace your host's permissions or account.",
+    points: ["Run your chosen agent command in an integrated terminal and inspect startup diagnostics.", "Read project guidance and inspect project MCP entries for Claude Code and Codex.", "See server commands or URLs, configuration paths and Claude allowlists; copy configuration from the inspector.", "Use the CLI or Speccify MCP adapter over the same core. The dashboard also manages bundled MCP servers, logs and client configuration."],
+    image: mcps, alt: "Project MCP view showing separate Claude and Codex configurations and a selected local speccify-exec endpoint",
+    caption: "Project configuration made visible · Demo entries, not a connection health check", href: "/mcp/", link: "Read the MCP reference",
+  },
+  {
+    id: "actions", label: "Actions & output", eyebrow: "06 / A result you can inspect", title: "Give repeatable work a button.",
+    intro: "Tests, previews and small checks belong within reach. Named project actions let you run them and keep their output beside the task you're reviewing.",
+    points: ["Define actions in .agent/actions.json and pin useful ones to the toolbar.", "Review suggested actions and pending command approvals before use.", "Follow separate output tabs, inspect exit status and stop running actions.", "Structured output can render charts alongside text. General-purpose profiling workspaces remain a future direction."],
+    image: actions, alt: "Project actions with a search benchmark and its separate output tab showing a synthetic latency chart and exit status",
+    caption: "A benchmark action and structured chart output · Synthetic demo values", href: "/app/actions/", link: "Work with project actions",
+  },
+  {
+    id: "editor", label: "Files & editor", eyebrow: "07 / Familiar workspace essentials", title: "Make the change right here.",
+    intro: "The everyday IDE capabilities are here to support the workflow: inspect the files, make a change and keep the surrounding project knowledge close.",
+    points: ["Browse the project tree with file-type icons and open files in editor tabs.", "Edit code with syntax highlighting and inspect Markdown with a rendered preview.", "Create, rename and delete files; inspect file details and history.", "Resize or hide panels, dock the terminal and choose a light or dark theme. Integrated help and environment settings live in the app too."],
+    image: files, alt: "Project file tree, TypeScript search function in the editor and file information in the inspector",
+    caption: "The code behind the spec · Demo project", href: "/app/files-and-git/", link: "Files and editing",
+  },
+  {
+    id: "git", label: "Git workspace", eyebrow: "08 / Familiar workspace essentials", title: "Review exactly what goes into a commit.",
+    intro: "Git rounds out the workspace. Useful, familiar tools for reviewing and shipping the change — not the reason you need another IDE.",
+    points: ["Inspect working-tree changes, diffs and file history; stage files or individual hunks.", "Write a commit subject and description in a visible composer with a saved local draft.", "Preview the staged index and manage local branches with checks before switching.", "Inspect tracking state, fetch, pull and push from the project."],
+    image: git, alt: "Git workspace detail with a commit draft, two staged files, index preview and branch selector",
+    caption: "A supporting capability, not the headline · Demo project", href: "/app/files-and-git/", link: "Review changes with Git",
+  },
+];
+---
+<MarketingLayout title="Features — Speccify" description="Reusable skills, verified tool contracts and a file-based spec workflow. Explore Speccify's features, from project knowledge to the everyday editor, with real app views.">
+  <main class="mx-auto max-w-6xl px-6">
+    <section class="pb-10 pt-14 sm:pt-20">
+      <p class="mb-4 text-xs font-semibold uppercase tracking-widest text-violet-300">The product, up close</p>
+      <h1 class="max-w-3xl text-4xl font-bold tracking-tight sm:text-6xl">More knowledge.<br /><span class="text-sky-300">Less starting over.</span></h1>
+      <p class="mt-6 max-w-2xl text-lg leading-relaxed text-slate-300">Start with what makes Speccify different: reusable skills, locally verified tools and work you can follow. The familiar IDE essentials come after.</p>
+      <p class="mt-4 max-w-2xl text-sm text-slate-400">Real app views in the macOS layout, using a fictional project. Some app controls are still German; the website is English-first.</p>
+    </section>
+    <nav aria-label="Feature index" class="mb-8 flex flex-wrap gap-2 border-y border-slate-800 py-5">
+      {features.map((feature, index) => <a href={`#${feature.id}`} class="rounded-full border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-300 transition hover:border-sky-400 hover:text-white"><span class="mr-2 text-slate-500">{String(index + 1).padStart(2, "0")}</span>{feature.label}</a>)}
+    </nav>
+    {features.map((feature, index) => (
+      <section id={feature.id} data-feature={feature.id} class:list={["feature-section border-b border-slate-800 py-12 sm:py-16", { "feature-lead": index === 0 }]} aria-labelledby={`${feature.id}-title`}>
+        <div class="feature-copy">
+          <p class="mb-3 text-xs font-semibold uppercase tracking-widest text-violet-300">{feature.eyebrow}</p>
+          <h2 id={`${feature.id}-title`} class="mb-4 text-3xl font-bold tracking-tight">{feature.title}</h2>
+          <p class="mb-5 leading-relaxed text-slate-300">{feature.intro}</p>
+          <ul class="mb-6 space-y-3 text-sm leading-relaxed text-slate-400">{feature.points.map(point => <li class="flex gap-3"><span aria-hidden="true" class="text-sky-400">↳</span><span>{point}</span></li>)}</ul>
+          <a class="text-sm font-medium text-sky-300 underline underline-offset-4 hover:text-sky-200" href={feature.href}>{feature.link} →</a>
+        </div>
+        <AppScreenshot image={feature.image} hero={index === 0} alt={feature.alt} caption={feature.caption} />
+      </section>
+    ))}
+    <section class="py-16 text-center">
+      <h2 class="text-3xl font-bold">Bring your next project.</h2>
+      <p class="mx-auto mb-6 mt-4 max-w-xl text-slate-400">Start with the local workflow. Multi-repo workspaces, shared team boards and new integrations are still being developed — they are not included in this feature tour.</p>
+      <a href="/download/" class="inline-block rounded-md bg-sky-500 px-6 py-3 font-medium text-white hover:bg-sky-400">Download Speccify</a>
+    </section>
+  </main>
+</MarketingLayout>
+<style>
+  .feature-section { display: grid; align-items: center; gap: 2rem; scroll-margin-top: 2rem; }
+  .feature-copy { min-width: 0; }
+  @media (min-width: 1024px) {
+    .feature-section { grid-template-columns: 1fr 1.7fr; }
+    .feature-lead { grid-template-columns: 1fr; }
+    .feature-lead .feature-copy { max-width: 760px; }
+  }
+</style>

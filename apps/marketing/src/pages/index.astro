@@ -4,7 +4,7 @@
 import MarketingLayout from "../layouts/MarketingLayout.astro";
 import AppScreenshot from "../components/AppScreenshot.astro";
 import boardScreenshot from "../assets/landing/board.png";
-import gitScreenshot from "../assets/landing/git.png";
+import skillsScreenshot from "../assets/landing/skills.png";
 
 const title = "Speccify — share the contract, not the implementation";
 const description =
@@ -83,7 +83,7 @@ effects: [reads-filesystem]
       </h1>
       <p class="max-w-2xl text-lg text-slate-300">
         Reuse what you learn as <strong class="text-slate-100">skills and tool contracts</strong>.
-        Keep specs, files, Git and your agent together in one project window.
+        Turn project experience into knowledge your next project can use.
         Plain files. Shared over Git. Your choice of agent.
       </p>
       <div class="flex flex-wrap items-center justify-center gap-4">
@@ -191,23 +191,23 @@ effects: [reads-filesystem]
     <!-- The app -->
     <section class="grid items-center gap-8 py-16 lg:grid-cols-[1fr_1.7fr]">
       <div>
-      <p class="mb-3 text-xs font-semibold uppercase tracking-widest text-sky-400">From spec to commit</p>
-      <h2 class="mb-4 text-2xl font-bold">Keep the context.<br />See what ships.</h2>
+      <p class="mb-3 text-xs font-semibold uppercase tracking-widest text-violet-300">Learn once. Bring it with you.</p>
+      <h2 class="mb-4 text-2xl font-bold">Your next project<br />shouldn't start from zero.</h2>
       <p class="mb-6 text-slate-300">
-        Review changes, stage exactly what belongs together, and write your commit
-        without leaving the project. Your draft stays saved; the index stays explicit.
-        Specs, skills and playbooks remain plain files in <code class="text-sky-300">.agent/</code>.
+        Browse a skill, see where it came from, and adapt it to your project.
+        Keep the procedure reusable and the implementation local. Tool contracts
+        make the checks explicit; your agent puts them to work.
       </p>
       <a
-        href="/app/overview/"
+        href="/features/"
         class="inline-block rounded-md bg-sky-500 px-6 py-3 font-medium text-white transition hover:bg-sky-400"
       >
-        Tour the app
+        Explore all features
       </a>
       </div>
-      <AppScreenshot image={gitScreenshot}
-        alt="Git detail in Speccify: commit subject, optional description, two staged files and a branch selector"
-        caption="Git workspace · App detail with demo data" />
+      <AppScreenshot image={skillsScreenshot}
+        alt="Speccify Skills view: a Markdown export procedure, project-specific guidance, source version and its validate-note tool"
+        caption="Reusable knowledge, local context · App view with demo data" />
     </section>
   </main>
 </MarketingLayout>

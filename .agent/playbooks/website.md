@@ -1,49 +1,76 @@
 ---
-description: Landingpage, Produktbilder und wiederholbare visuelle Abnahme
+description: Website positioning, feature order and repeatable product screenshots
 ---
-# Website: Produkt sichtbar machen
+# Website: show what makes Speccify different
 
-Lebendes Playbook für `apps/marketing/`. Produktvision: [Weiterentwicklung](weiterentwicklung.md).
-Aktuelle Bilditeration: [Spec 023](../specs/023-landingpage-app-screenshots/SPEC.md).
+Living playbook for `apps/marketing/`. Product direction: [Weiterentwicklung](weiterentwicklung.md).
+Current work and verification: [Spec 023](../specs/023-landingpage-app-screenshots/SPEC.md).
 
-## Erste Bildvariante · 2026-09-11
+## Editorial decision · 2026-09-11
 
-Zwei Motive, kein Karussell. Erst das Produkt zeigen, dann Details erklären.
-Die Bildauswahl ist implementiert, aber noch nicht menschlich abgenommen.
+The first visual direction was received positively. The user explicitly rejected
+Git as a differentiating headline: it belongs near the end, with the other familiar
+IDE capabilities. Lead with reusable knowledge and locally verified tool contracts.
+MCP support connects that workflow to the chosen host; it is not the central promise.
 
-| Ort | Motiv | Darstellung / Zweck |
+The landing page keeps the large board image immediately after the hero. It shows
+the whole workspace. The lower product section now shows a selected skill, its
+source/version and related tool, with a link to **Features**. No carousel.
+
+The new `/features/` page is a product tour, grouped by capability and ordered by
+distinctiveness, not by implementation size or navigation order. Each group has
+an actual app screenshot, explanatory copy and a deeper documentation link.
+
+| Order | Feature group | Visible evidence / implementation source |
 | --- | --- | --- |
-| Direkt unter Hero und CTAs, vor Problem/Idee | Projektfenster: Board, ausgewählte Tasks, Terminal | bis 1104 CSS-px breit; drei Stationen und menschliche Abnahme sichtbar |
-| Unterer App-Abschnitt „Von der Spec zum Commit“ | Ausschnitt des tatsächlichen Git-Composers | ca. 675 CSS-px neben kurzem Text; mobil untereinander |
+| 1 | Reusable skills | SkillsTab: procedure, local guidance, source/version, related tools; source browsing, import/export terminal commands |
+| 2 | Tool contracts | ToolsTab: inputs/outputs/effects/examples, per-platform state; CLI/core tool check and verify |
+| 3 | Specs and acceptance | BoardTab: board/list, task inspector, questions/history, human review, measured run totals when recorded |
+| 4 | Living playbooks | PlaybooksTab: product direction, UI map, standing procedures, editing and prompt copy |
+| 5 | Agents and MCP | McpsTab: host-specific configuration, URLs/commands, allowlists; AgentTab/TerminalPanel startup and guidance; ServersView management |
+| 6 | Actions and output | ActionsTab: named commands, approval, toolbar, independent output tabs, stop, structured charts |
+| 7 | Files and editor | FilesTab: tree, file icons, tabs, code/Markdown, file operations/history; shell panels, theme/help/settings |
+| 8 | Git | GitWorkspace/GitTab: composer, staged index, file/hunk diffs, local branches, tracking, fetch/pull/push |
 
-Hero-Kopie bewusst kürzer, damit die App früher sichtbar ist. Beide Sprachfassungen
-verwenden dieselben deutschen App-Motive; die App selbst ist noch nicht durchgängig
-lokalisiert. Captions/Alt-Texte sind sprachbezogen. Kein Versprechen nahtloser
-Terminal-Wiederaufnahme, solange das nicht abgenommen ist.
+Those are feature groups, not a screenshot of every dialog. Keep the functional UI
+tree in [Stand und UI](stand-und-ui.md) as the completeness cross-check. Do not
+advertise placeholder views, multi-repo workspaces, team-wide boards, semantic
+refactoring, universal profiling or planned integrations as shipping features.
+Configuration screenshots do not prove a live MCP connection; mock tool statuses
+do not prove verification. Avoid guarantees about session resumption or context delivery.
 
-## Kanonische Quellen
+## English first
 
-- Landingpages: `apps/marketing/src/pages/index.astro` und `de/index.astro`.
-- Gemeinsame Bildkomponente: `apps/marketing/src/components/AppScreenshot.astro`.
-  Feste Bildmaße, responsive WebP-Varianten, erstes Bild eager/high, Detailbild lazy.
-  Vergrößern über einen normalen Bildlink: Tastatur und ohne JavaScript nutzbar.
-- Originale: `apps/marketing/src/assets/landing/board.png` und `git.png`.
-  Alte Dokumentationsbilder in `assets/app/` separat halten; sie haben andere
-  Motive und Bildunterschriften. Keine beiläufige Ersetzung durch Detailausschnitte.
-- Aufnahme-Skill: [app-screenshots](../skills/app-screenshots/SKILL.md).
-- Fiktives Projekt `OrbitNotes`: `apps/desktop/dev/marketing-fixture.js`.
-  Sechs Specs, ausgewählt `005-suche`, zwei von drei Tasks erledigt; eine weitere
-  Spec wartet auf menschliche Abnahme. Terminalausgabe ausdrücklich als Demo-Lauf.
+User decision: defer German localization. New marketing copy, captions, alt text
+and demo documents are English. `/de/` redirects to `/`; no duplicate DE Features
+page. Existing translated documentation remains reachable and is not deleted or
+translated further in this iteration. Full documentation-language cleanup is separate.
+The actual app still has German controls. Do not disguise them in screenshots:
+the Features introduction explains the current language mix. App localization is
+not part of screenshot production.
 
-Die Bilder stammen aus den echten React-Komponenten mit einer kontrollierten
-Tauri-Bridge im Browser auf macOS. Es sind **keine Aufnahmen nativer Fenster**.
-Die dekorativen macOS-Ampelpunkte entstehen ausschließlich im Website-Rahmen;
-Produktinhalte/Bedienelemente werden nicht nachgezeichnet oder nachträglich verändert.
-Weder echte Nutzerprojekte noch private Sessions noch reale Tests/Commits verwenden.
+## Canonical sources
 
-## Aufnahme und Prüfung
+- Pages: `apps/marketing/src/pages/index.astro`, `features.astro`, `de/index.astro`.
+- Shared navigation: `layouts/MarketingLayout.astro`, Features in header/footer.
+- `components/AppScreenshot.astro`: intrinsic dimensions, responsive WebP,
+  first image eager/high, later images lazy; full-size links work without JS.
+- Originals in `src/assets/landing/`: board, skills, tools, playbooks, mcps,
+  actions, files, git. Keep existing documentation images in `assets/app/` separate.
+- Public fixture: `apps/desktop/dev/marketing-fixture.js`, selected only by
+  `dev/mock.html?marketing=1`. Fictional OrbitNotes, no personal files or sessions.
+- Procedure: [app-screenshots](../skills/app-screenshots/SKILL.md). Extend this skill
+  when adding motifs; do not duplicate it for each website page.
 
-Am Repo-Root, macOS mit installiertem Chrome:
+These are captures of the real React components through an isolated development
+bridge on macOS, **not native-window captures**. Website-only traffic lights are
+decorative framing. No redrawn product controls or post-processed UI text.
+The board uses six specs and a selected search task list. Skills/Tools use a
+Markdown export example. The benchmark chart contains explicitly synthetic values.
+
+## Capture and review
+
+From the repo root, macOS with Chrome installed:
 
 ```sh
 pnpm install --frozen-lockfile
@@ -53,36 +80,34 @@ pnpm marketing:preview --host 127.0.0.1 --port 4321
 node scripts/test_landing_screenshots.mjs
 ```
 
-Playwright ist als Entwicklungsabhängigkeit gepinnt. Der Skill beschreibt die
-Alternative mit gebündeltem Chromium. Das Aufnahmeskript startet und beendet seinen
-eigenen Vite-Server auf einem freien Loopback-Port; die persönliche App bleibt offen.
-Viewport 1344 × 840, Pixeldichte 2, Dark Theme, deutsche Locale, feste Demo-Uhr.
-Die Git-Aufnahme erfasst das echte `Git-Arbeitsbereich`-Element statt eines
-nachträglich ausgerechneten Pixel-Ausschnitts.
+Capture runs its own Vite server on a free loopback port and closes it afterward.
+The personal app stays open. Viewport 1344 × 840, DPR 2, dark theme, en-US locale,
+fixed demo clock. Board retains the terminal; feature details hide it for more
+document space. Git captures the actual workspace element rather than a pixel crop.
 
-Vor Freigabe:
+Before review:
 
-- Bilder selbst öffnen: richtige Auswahl, lesbare Texte, keine Lade-/Fehlerzustände,
-  privaten Pfade oder echten Sitzungsinhalte. Demodaten sind ausdrücklich gekennzeichnet.
-- Nach Änderungen am Aufnahmeverfahren zweimal aufnehmen und Hashes vergleichen;
-  Layout/Fonts/Browserupdates können eine bewusste Neufreigabe erfordern.
-- `/` und `/de/` bei 1440, 390 und 320 px prüfen: kein Überlauf, Bild früh sichtbar,
-  Vergrößerungslink und Tastaturfokus funktionieren. Pro ausgeliefertem Screenshot
-  unter 200 KB anstreben; Original-PNG wird nur beim Vergrößern geladen.
-- Ändert sich die gemeinsame Demo-Bridge, auch die fünf bestehenden Desktop-
-  Browser-Suiten ausführen. Keine Screenshot-spezifischen CSS-Hacks in der Produkt-UI.
-- Festgestellte Fehler im aktiven Spec-Protokoll halten und die Aufnahme erneut prüfen.
+- Open every image: correct feature and document, useful context, no private
+  remnants, no missing/loading states. Do not mistake automated success for approval.
+- Capture twice and compare hashes on the same browser/machine. Resolve cursors,
+  asynchronous loads and unstable metadata. Browser/font changes need visual review.
+- Check `/` and `/features/` at 1440, 390 and 320 px: no overflow, readable copy,
+  working section anchors, navigation, keyboard focus and full-size image links.
+- Check the deferred `/de/` landing redirect and all new internal documentation links.
+- Aim for under 200 KB per delivered WebP. Original PNG is only linked for enlargement.
+- When changing the shared mock bridge, run the existing desktop UI suites too.
+  Do not add screenshot-only CSS changes to the product UI.
 
-## Laufende Pflege und Veröffentlichung
+## Ongoing maintenance and publication
 
-Bei sichtbaren Änderungen an Board, Inspektor, Terminal oder Git zuerst die Motive
-gegen den neuen Produktstand prüfen. Nicht bei jedem Backend-Commit neu aufnehmen.
-Bild, Fixture, Aufnahme-Skill und betroffene Texte im selben Änderungssatz pflegen.
+When a visible feature changes, check its image and claims together. Update the
+fixture, capture recipe, website and affected playbooks/spec in one change set.
+Backend-only work does not automatically require new images. Add future features
+where their distinctiveness warrants, keeping IDE essentials at the end.
 
-Diese erste Designvariante zunächst lokal vergleichen/refinen; noch nicht deployen.
-Die allgemeine Commit-/Push-Erlaubnis bleibt bestehen. Ein Push auf `main` löst
-Website-Workflows aus und ist daher eine bewusste Veröffentlichung, keine Vorschau.
-Domain-/Sprachmigration aus 003 sowie Rechtstexte/DNS sind nicht Teil dieses Playbooks.
+This iteration is **local only**, pending visual review. No push or deployment:
+a push to main deploys the website. General standing permissions remain unchanged;
+the current local-only request governs this change. The app itself needs no restart.
 
-Nächste visuelle Fragen: Reicht das Board als einziges Motiv? Ist der Git-Ausschnitt
-hilfreich oder zu prominent? Braucht der Einstieg nach Rückmeldung mehr Bildfläche?
+Next review: does the skill image communicate reuse clearly? Is the full-width
+lead on Features worth the space? Are any details too small at the two-column size?

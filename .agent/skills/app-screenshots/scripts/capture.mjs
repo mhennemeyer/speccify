@@ -28,7 +28,7 @@ try {
   });
   browser = await chromium.launch({ channel: process.env.SCREENSHOT_BROWSER === "chromium" ? undefined : "chrome" });
   const context = await browser.newContext({ viewport: { width: 1344, height: 840 }, deviceScaleFactor: 2,
-    colorScheme: "dark", locale: "de-DE", timezoneId: "Europe/Berlin", reducedMotion: "reduce" });
+    colorScheme: "dark", locale: "en-US", timezoneId: "Europe/Berlin", reducedMotion: "reduce" });
   const errors = [];
   await context.route("**/*", route => {
     const target = new URL(route.request().url());
@@ -67,21 +67,64 @@ try {
     assert.ok(!visibleText.includes(privateFragment), `Private/stale fixture fragment: ${privateFragment}`);
   }
   assert.equal(await page.locator("html").getAttribute("data-theme"), "dark");
-  const board = await page.screenshot({ animations: "disabled" });
+  const captures = new Map();
+  const capture = async (name, target = page) => {
+    await page.locator("input:focus, textarea:focus, button:focus").evaluateAll(elements => elements.forEach(el => el.blur()));
+    await page.mouse.move(0, 839);
+    await page.evaluate(async () => { await document.fonts.ready; await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))); });
+    const text = await page.locator("body").innerText();
+    for (const fragment of ["mhennemeyer", "w1-projekt", "claude-501", "Beweisticket", "/Users/me/", "(leer)"]) {
+      assert.ok(!text.includes(fragment), `${name}: private or incomplete fixture: ${fragment}`);
+    }
+    captures.set(name, await target.screenshot({ animations: "disabled" }));
+  };
+  await capture("board");
+  await page.keyboard.press("Meta+Shift+Y");
+  const group = name => page.getByRole("tablist", { name: "Bereiche", exact: true }).getByRole("tab", { name, exact: true }).click();
+  await group("Orga");
+  await page.getByRole("tab", { name: "Skills", exact: true }).click();
+  await page.locator('[data-nav-slot="skills"]').getByRole("button", { name: /markdown-export/ }).click();
+  await page.getByRole("heading", { name: "Reliable Markdown export", exact: true }).waitFor();
+  await capture("skills");
+  await page.getByRole("tab", { name: "Playbooks", exact: true }).click();
+  await page.getByRole("button", { name: /Product direction Vision/ }).click();
+  await page.getByRole("heading", { name: "A quieter place for your notes", exact: true }).waitFor();
+  await capture("playbooks");
+  await group("Technik");
+  await page.getByRole("tab", { name: "Tools", exact: true }).click();
+  await page.locator('[data-nav-slot="tools"]').getByRole("button", { name: /validate-note/ }).click();
+  await page.getByRole("heading", { name: "Examples", exact: true }).waitFor();
+  await capture("tools");
+  await page.getByRole("tab", { name: "MCPs", exact: true }).click();
+  await page.locator('[data-nav-slot="mcps"]').getByRole("button", { name: /speccify-exec/ }).click();
+  await page.locator('[data-slot="mcps"]').getByText(".codex/config.toml", { exact: true }).waitFor();
+  await capture("mcps");
+  await page.getByRole("tab", { name: "Aktionen", exact: true }).click();
+  await page.locator('[data-action="pnpm bench:search"]').getByRole("button", { name: "Ausführen", exact: true }).click();
+  await page.getByLabel("Aktionsausgabe", { exact: true }).locator("svg").waitFor();
+  await page.getByText("exit 0 · 1s", { exact: true }).waitFor();
+  await capture("actions");
+  await page.getByRole("button", { name: "Inspektor", exact: true }).click();
   await page.getByRole("tablist", { name: "Bereiche", exact: true }).getByRole("tab", { name: "Dateien", exact: true }).click();
+  await page.getByRole("tablist", { name: "Dateien", exact: true }).getByRole("tab", { name: "Dateien", exact: true }).click();
+  await page.locator('[data-nav-slot="files"]').getByText("src", { exact: true }).click();
+  await page.locator('[data-nav-slot="files"]').getByText("search", { exact: true }).click();
+  await page.locator('[data-nav-slot="files"]').getByText("index.ts", { exact: true }).click();
+  await page.locator(".cm-content").filter({ hasText: "export interface Note" }).waitFor();
+  await capture("files");
   await page.getByRole("tab", { name: "Git", exact: true }).click();
-  await page.getByRole("textbox", { name: "Commit-Betreff", exact: true }).fill("feat: Notizen nach Titel und Inhalt durchsuchen");
-  await page.getByRole("textbox", { name: "Beschreibung (optional)", exact: true }).fill("Lokale Suche mit Vorschau. Tastaturbedienung folgt in Spec 005.");
+  await page.getByRole("textbox", { name: "Commit-Betreff", exact: true }).fill("feat: search note titles and content");
+  await page.getByRole("textbox", { name: "Beschreibung (optional)", exact: true }).fill("Local search with a preview. Keyboard review follows in Spec 005.");
   await page.getByRole("button", { name: /2 gestagete Datei/ }).waitFor();
   await page.locator("input:focus, textarea:focus").evaluateAll(elements => elements.forEach(el => el.blur()));
   await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
-  const git = await page.getByRole("region", { name: "Git-Arbeitsbereich", exact: true }).screenshot({ animations: "disabled" });
+  await capture("git", page.getByRole("region", { name: "Git-Arbeitsbereich", exact: true }));
   assert.deepEqual(errors, []);
   assert.deepEqual(await page.evaluate(() => window.__SPECCIFY_MOCK__.gitCalls), []);
   await mkdir(output, { recursive: true });
-  await writeFile(new URL("board.png", output), board);
-  await writeFile(new URL("git.png", output), git);
-  console.log(`PASS: board + Git detail captured in ${fileURLToPath(output)} (real UI, isolated demo, no native mutations)`);
+  assert.deepEqual(await page.evaluate(() => window.__SPECCIFY_MOCK__.actionStarts), ["pnpm bench:search"]);
+  for (const [name, buffer] of captures) await writeFile(new URL(`${name}.png`, output), buffer);
+  console.log(`PASS: ${[...captures.keys()].join(", ")} captured in ${fileURLToPath(output)} (real UI, isolated demo, no native mutations)`);
 } finally {
   await browser?.close();
   if (server.exitCode === null) { const exited = once(server, "exit"); server.kill("SIGTERM"); await exited; }

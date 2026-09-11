@@ -37,10 +37,11 @@ const plausibleEnabled = import.meta.env.PROD && Boolean(plausibleDomain);
   </head>
   <body class="min-h-screen bg-slate-950 text-slate-100 antialiased">
     <header
-      class="mx-auto flex max-w-5xl items-center justify-between px-6 py-5"
+      class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-6 py-5"
     >
       <a href="/" class="text-lg font-bold tracking-tight">Speccify</a>
-      <nav class="flex items-center gap-5 text-sm text-slate-300">
+      <nav aria-label="Main navigation" class="flex flex-wrap items-center gap-4 text-sm text-slate-300">
+        <a class="transition hover:text-white" href="/features/" aria-current={Astro.url.pathname === "/features/" ? "page" : undefined}>Features</a>
         <a class="transition hover:text-white" href="/tutorial/prerequisites/"
           >Docs</a
         >
@@ -58,6 +59,7 @@ const plausibleEnabled = import.meta.env.PROD && Boolean(plausibleDomain);
       <div class="flex flex-wrap items-center justify-between gap-4 border-t border-slate-800 pt-8">
         <p>© {year} Speccify · MIT License</p>
         <nav class="flex flex-wrap items-center gap-5">
+          <a class="transition hover:text-slate-300" href="/features/">Features</a>
           <a class="transition hover:text-slate-300" href="https://github.com/mhennemeyer/speccify"
             >GitHub</a
           >

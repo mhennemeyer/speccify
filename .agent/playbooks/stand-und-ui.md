@@ -310,11 +310,17 @@ und Starlight-Standardbedienung (Suche, Sprache, Theme, Inhaltsverzeichnis) komm
 
 ```text
 Website
-├── Landingpage Englisch (/), Deutsch (/de/)
+├── Gemeinsame Navigation: Features · Docs · Download · GitHub; Footer ergänzt Rechtliches
+├── Landingpage Englisch (/); /de/ leitet vorerst nach / weiter
 │   ├── Hero mit Tutorial / Download / GitHub
 │   ├── Board-Bild im macOS-Layout mit Demodaten → volle Bildgröße
 │   ├── Problem / Idee · Tool-Vertrag · Anwendungsfälle · CLI-Beispiel · Ablauf
-│   └── App-Abschnitt mit Git-Detailbild → volle Bildgröße / App-Dokumentation
+│   └── Skill-Abschnitt mit Herkunft/Tool-Bezug → volle Bildgröße / Features
+├── Features (/features/, Englisch; jede Gruppe mit Screenshot und Doku-Link)
+│   ├── Sprungnavigation zu acht Gruppen, nach Besonderheit sortiert
+│   ├── Skills → Tool-Verträge → Specs/Abnahme → Playbooks
+│   ├── Agenten/MCP → Aktionen/Ausgabe → Dateien/Editor → Git
+│   └── Demohinweise, Abgrenzung geplanter Funktionen, Download
 ├── Download (/download/)
 ├── Rechtliches: Impressum / Datenschutzerklärung
 └── Dokumentation (EN; DE teilweise übersetzt)
@@ -371,9 +377,17 @@ Diese Tabelle verändert keine Station oder Reihenfolge.
 | [020 Spec-Navigation](../specs/020-spec-navigation/SPEC.md) | Doing, ready, needs_human | Gesamtliste, Suche/Filter, Altbestand lesbar, pfadgenaue Historie und Policy v5; 107 Rust-Tests/vier UI-Suiten grün, lokale App aktualisiert |
 | [021 Git-Arbeitsbereich](../specs/021-git-arbeitsbereich/SPEC.md) | Doing, ready, needs_human | sichtbarer Composer mit Entwurf/Index-Vorschau, sichere lokale Branch-Verwaltung, Remote-/Tracking-Anzeige; 108 Rust-Tests/fünf UI-Suiten grün, App aktualisiert |
 | [022 Dateien/Refactoring](../specs/022-dateiauswahl-und-refactoring/SPEC.md) | Backlog | Ordnerauswahl und Kontextmenü; später sicherer Move und sprachbezogene Refactorings |
-| [023 Landingpage-Bilder](../specs/023-landingpage-app-screenshots/SPEC.md) | Doing, ready, needs_human | zwei reproduzierbare App-Motive, Website-Playbook und Aufnahme-Skill; lokal zur visuellen Abnahme, nicht veröffentlicht |
+| [023 Landingpage-Bilder](../specs/023-landingpage-app-screenshots/SPEC.md) | Doing, ready, needs_human | Landingpage mit Skill-Schwerpunkt und englische Features-Seite mit acht reproduzierbaren Motiven; lokal zur visuellen Abnahme, nicht veröffentlicht |
 
 ## Verifikation und verbleibende Risiken
+
+**Nachtrag 023, zweite Bilditeration, 2026-09-11:** Nutzer bestätigt den visuellen
+Ansatz und priorisiert unterscheidende Fähigkeiten vor IDE/Git. Landingpage zeigt
+jetzt Skills statt Git im unteren Abschnitt. Neue Features-Seite gruppiert die
+Fähigkeiten in acht bebilderte Abschnitte. Marketing Englisch-first, /de/ zur
+englischen Landingpage; DE-Dokumentationsbestand bleibt unverändert. Acht Motive
+mit englischen Demoinhalten, originale App-Labels unverändert. Aufnahme-Skill und
+Website-Playbook erweitert; kein App-Neustart und kein Deployment.
 
 **Nachtrag 023, 2026-09-11:** Landingpage EN/DE lokal um großes Board-Motiv nach
 dem Hero und Git-Detail im App-Abschnitt ergänzt. Reale Desktop-Komponenten mit
