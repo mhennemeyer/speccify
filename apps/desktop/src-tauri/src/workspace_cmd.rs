@@ -1171,10 +1171,18 @@ mod tests {
     use std::process::Command;
 
     fn git(root: &Path, args: &[&str]) {
+        // Git on Windows rejects verbatim `\\?\` paths for new worktrees; the
+        // fixtures are canonicalized, so hand Git the plain spelling.
+        let plain = |text: &str| {
+            crate::project_cmd::strip_verbatim(PathBuf::from(text))
+                .to_string_lossy()
+                .into_owned()
+        };
+        let args: Vec<String> = args.iter().map(|arg| plain(arg)).collect();
         let result = Command::new("git")
             .arg("-C")
-            .arg(root)
-            .args(args)
+            .arg(crate::project_cmd::strip_verbatim(root.to_path_buf()))
+            .args(&args)
             .env("GIT_CONFIG_NOSYSTEM", "1")
             .env(
                 "GIT_CONFIG_GLOBAL",
