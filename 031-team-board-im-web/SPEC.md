@@ -70,6 +70,10 @@ Diese drei sind Kandidaten für Folgeschnitte (siehe Decisions).
   Deployment, kein zweiter Pages-Pfad); der Build holt `origin/specs` lesend.
 - D4, 2026-09-12: Archivordner tragen Datumsnamen, keine laufende Nummer;
   das Board zeigt für Altbestand keine Nummer und klappt ihn ein.
+- D6, 2026-09-12: GitHub führt Push-Workflows nur aus, wenn die Datei im
+  gepushten Branch liegt. Deshalb liegt ein Mini-Workflow im Branch `specs`,
+  der den Deploy auf main per `workflow_dispatch` anstößt; `pages.yml` selbst
+  bleibt auf main und liest `origin/specs` nur.
 - D5, 2026-09-12: Folgeschnitte, nicht Teil dieser Spec: (a) mehrere Repos in
   einer Seite (Workspace-Sicht), (b) Browser-Client mit GitHub-Token für
   private Repos ohne CI, (c) Burn-up je Ober-Spec.
@@ -82,8 +86,11 @@ Diese drei sind Kandidaten für Folgeschnitte (siehe Decisions).
 - [x] Tests: Parser, Zusammenfassung, Seite (Core) und CLI.
 - [x] Pages-Workflow: Trigger auf `specs`, Board aus `origin/specs` bauen,
       Navigationslink „Board“, generierte Datei ignoriert.
-- [ ] Deploy beobachten: `speccify.io/board/` nach dem nächsten Push prüfen
+- [x] Deploy beobachten: `speccify.io/board/` nach dem nächsten Push prüfen
       (Link-Check der Site im PR-Workflow darf `/board/` nicht als tot werten).
+      Live mit `specs@2659f3a`; Docs-Workflow inkl. Link-Check grün.
+- [x] Trigger aus dem Register: `.github/workflows/board.yml` im Branch `specs`
+      stößt `pages.yml` auf main per `workflow_dispatch` an (added, D6).
 
 ## Verification
 
@@ -98,8 +105,11 @@ Diese drei sind Kandidaten für Folgeschnitte (siehe Decisions).
   Doing 20 · Done 3, Altbestand 32 eingeklappt; Screenshot geprüft (Kennzahlen,
   Aktivitätsbalken, Doing nach Person, drei Spalten mit Balken). Suche
   „register“ zeigt 2 Karten, Filter „bereit“ 18.
-- Nicht geprüft: der Deploy-Lauf auf GitHub Pages (erster Lauf folgt mit dem
-  Push dieser Spec) und der Link-Check im PR-Workflow. Deshalb `ready`.
+- Deploy geprüft: `Deploy site` und `Docs & Marketing Site` (mit Link-Check)
+  grün; `https://speccify.io/board/` antwortet 200 und nennt `specs@2659f3a`.
+  Der erste Push auf `specs` ohne Workflow-Datei im Branch löste keinen Lauf aus
+  → D6. Offen: der Lauf des Board-Triggers selbst (Sichtprüfung nach dem
+  nächsten Push) und Deine Sicht auf die Seite. Deshalb `ready`.
 
 ## Questions
 
