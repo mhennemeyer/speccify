@@ -1,9 +1,9 @@
 ---
-station: Backlog
+station: Doing
 order: 9
 created: 2026-09-12
 needs_human: true
-ready: false
+ready: true
 open_question: null
 parent: null
 ---
@@ -69,23 +69,55 @@ Merges, PR-Erstellung, Benachrichtigungen (030), Zeiterfassung.
 - D2, 2026-09-12: Branch-Konvention `spec/<NNN>-<slug>` als Vorschlag beim
   Übernehmen, frei änderbar; keine Erzwingung.
 - D3, 2026-09-12: Abweichungen anzeigen, nicht korrigieren (wie 015/026).
+- D4, 2026-09-12: `branches:` je Repo (Workspaces) erst mit einem Übernehmen im
+  Workspace-Board; im ersten Schnitt nur `branch`.
+- D5, 2026-09-12: Besitzer und Branch nur in Git-Repositories setzen (Identität
+  aus dem Checkout); Projekte ohne Git bleiben byte-stabil beim Drag. Das
+  lesende Workspace-Board (024) zeigt die Felder noch nicht — Folgeaufgabe.
 
 ## Tasks
 
-- [ ] Vertrag: Felder `owner`/`branch`/`branches`, Übernehmen/Abgeben,
+- [x] Vertrag: Felder `owner`/`branch`/`branches`, Übernehmen/Abgeben,
       Abweichungsregeln; Policy-Ergänzung.
-- [ ] Native Befehle: Übernehmen/Abgeben (Front Matter + History), Branch-
+      `docs/specs-register.md` Abschnitt „Besitzer und Branch“; Policy v7
+      „Owner and branch (team)“. `branches:` je Repo bleibt offen (D4).
+- [x] Native Befehle: Übernehmen/Abgeben (Front Matter + History), Branch-
       Beobachtung (`origin/<branch>`, letzter Autor/Datum, lokaler Branch).
-- [ ] Board: Karte mit Besitzer/Branch, Filter „meine“, Ansicht „Doing nach
+      `spec_owner.rs`: `project_spec_take/release/branches`; `project_board_move`
+      wendet die Regeln beim Drag an (`apply_move`).
+- [x] Board: Karte mit Besitzer/Branch, Filter „meine“, Ansicht „Doing nach
       Person“, Abweichungshinweise; Workspace-Board (024) übernimmt die Anzeige
       lesend.
-- [ ] Tests: Rust (Felder, Beobachtung mit Fixture-Remote), Mock/Browser-Suite
+      Workspace-Board zeigt die Felder noch nicht (nutzt eigene Karten) —
+      Folgeaufgabe, siehe Decisions D5.
+- [x] Tests: Rust (Felder, Beobachtung mit Fixture-Remote), Mock/Browser-Suite
       (Übernehmen, Konfliktanzeige, Filter, Hinweise).
-- [ ] Hilfe, Website-Doku, Stand-Playbook.
+- [x] Hilfe, Website-Doku, Stand-Playbook.
 
 ## Verification
 
-Noch nichts geprüft; Entwurf. Abhängig von 028 (Sync) für die Teamwirkung.
+2026-09-12:
+
+- `cargo test -p speccify-desktop`: 105 bestanden, 3 ignoriert. Neu:
+  `set_fields` byte-stabil (CRLF, Einfügen vor `---`, Entfernen), Übernehmen
+  auf main → `spec/012-demo`, auf Feature-Branch → dieser, History
+  „übernommen von … · Branch …“, Abgeben entfernt nur `owner`, Drag nach Doing
+  übernimmt, Doing → Backlog gibt ab, Done behält den Besitzer, Übernehmen mit
+  ausdrücklichem Branch; Beobachtung mit Bare-Remote und zweitem Klon (Kollege
+  pusht auf `spec/012-demo`: remote, Autor, E-Mail, 0 Tage; fehlender Branch;
+  Fetch höchstens einmal pro Minute; Checkout erkannt). Bestehender Test
+  „Move byte-stabil“ bleibt grün, weil Projekte ohne Git nichts setzen (D5).
+  `cargo fmt --check`, `pnpm typecheck` grün.
+- Browser-Suite `test_spec_owner` (Mock `?owner=none|me|other`): ohne
+  Identität keine Chips und kein Übernehmen; eigene Spec mit Initialen, Branch,
+  Filter „meine“, „Doing nach Person“, Hinweisen (Checkout auf main, Branch
+  fehlt), zweistufigem Wechseln, Abgeben; fremde Spec mit Beobachtung („zuletzt
+  Ben Kollege … 2026-09-01“, „seit 11 Tagen“) ohne Abgeben/Übernehmen;
+  Übernehmen einer besitzerlosen Spec ruft `project_spec_take`. Dazu
+  `workflow_ui`, `spec_navigation`, `workspace_board`, `spec_register`,
+  `ui_colors` grün.
+- Nicht geprüft: Klick-Durchlauf in der echten App, zwei Personen mit
+  gleichzeitiger Übernahme (Konflikt kommt aus 028), Windows. Deshalb `ready`.
 
 ## Questions
 
