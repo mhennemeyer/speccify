@@ -68,10 +68,13 @@ the **agent terminal** at the bottom, a **toolbar** on top.
   commit panel in the Git tab. Hide the inspector and the same panel
   appears above the content.
 - **Terminal.** The agent terminal sits under the content, resizable;
-  one click moves it into the right sidebar instead. A session that
-  was running when the app quit is **resumed on the next start**
-  (`claude --continue`, `codex resume --last`) — the agent reads its
-  own transcript and carries on.
+  one click moves it into the right sidebar instead. Claude starts
+  with an app-chosen session id, and exactly that session is
+  **resumed on the next start** (`claude --resume <id>`) — the agent
+  reads its own transcript and carries on. When no id is known (Codex
+  assigns its own) or the session is gone, nothing starts silently:
+  the terminal offers the host's own picker, its "most recent
+  session" convenience, or a fresh start.
 - **Toolbar.** The project name on the left; in the middle, the
   buttons you chose (Pull, Push, Commit, Agent, and actions you
   pinned there) and the **activity view** — what is running right now

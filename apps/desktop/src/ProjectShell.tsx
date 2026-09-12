@@ -12,7 +12,8 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import SettingsSheet from "./components/SettingsSheet";
 import SplitHandle from "./components/SplitHandle";
-import TerminalPanel from "./components/TerminalPanel";
+import TerminalPanel, { type TerminalOpened } from "./components/TerminalPanel";
+import SessionChoice, { useSessionState } from "./components/SessionChoice";
 import AgentStartup from "./components/AgentStartup";
 import ActivityView from "./components/ActivityView";
 import Toolbar, {
@@ -29,7 +30,15 @@ import { recordActivity } from "./lib/activity";
 import { isMac } from "./lib/platform";
 import HelpView from "./views/HelpView";
 import { ErrorBox, Spinner } from "./components/ui";
-import { AGENT_PRESETS, DEFAULT_AGENT_COMMAND, continueCommand } from "./lib/agents";
+import {
+  AGENT_PRESETS,
+  DEFAULT_AGENT_COMMAND,
+  hostOf,
+  loadSessionRecord,
+  saveSessionRecord,
+  type AgentSessionRecord,
+  type SessionRequest,
+} from "./lib/agents";
 import ProjectNavigation, { PROJECT_TABS as TABS, PROJECT_GROUPS as GROUPS, projectGroupOf as groupOf, type ProjectTab as TabId } from "./components/ProjectNavigation";
 import { PanelsContext, type Slots } from "./lib/panels";
 import {
@@ -79,29 +88,54 @@ export default function ProjectShell() {
   const [active, setActive] = useState<TabId>("board");
   const [agentCommand, setAgentCommand] = useState(DEFAULT_AGENT_COMMAND);
   const [terminalStarted, setTerminalStarted] = useState(false);
-  // Dogfooding (BO 2026-09-07): lief hier eine Agent-Sitzung, wird sie nach
-  // einem Neustart (Dev-Rebuild, Reload, Quit) automatisch fortgesetzt —
-  // `claude --continue` / `codex resume --last` statt frisch zu starten.
-  const [resumeSession, setResumeSession] = useState(false);
-  const [hadSession, setHadSession] = useState(false);
-  const startTerminal = (resume: boolean) => {
-    setResumeSession(resume);
+  // Dogfooding (BO 2026-09-07) → Spec 009: lief hier eine Agent-Sitzung mit
+  // bekannter Identität, wird genau sie nach einem Neustart (Dev-Rebuild,
+  // Reload, Quit) fortgesetzt. Ohne Identität oder bei verschwundener Sitzung
+  // zeigt die Startansicht das an und lässt ausdrücklich wählen.
+  const [sessionRequest, setSessionRequest] = useState<SessionRequest>({ mode: "new" });
+  const [sessionRecord, setSessionRecord] = useState<AgentSessionRecord | null>(null);
+  const [startError, setStartError] = useState<string | null>(null);
+  const sessionState = useSessionState(sessionRecord, agentCommand);
+  const autoResumed = useRef(false);
+  const startTerminal = (request: SessionRequest) => {
+    setStartError(null);
+    setSessionRequest(request);
     setTerminalStarted(true);
   };
-  const terminalOpened = (command: string) => {
-    if (project && command.trim()) {
-      try {
-        localStorage.setItem(agentSessionKey(project), "1");
-        setHadSession(true);
-      } catch {
-        // ohne Merker kein Fortsetzen — sonst egal
+  const terminalOpened = (opened: TerminalOpened) => {
+    if (project) {
+      const record: AgentSessionRecord | null = opened.session
+        ? { ...opened.session, command: agentCommand, startedAt: new Date().toISOString() }
+        : null;
+      saveSessionRecord(agentSessionKey(project), record);
+      setSessionRecord(record);
+      // Der Panel-Knopf „Neu starten“ nimmt danach dieselbe Sitzung wieder auf.
+      if (opened.session?.id) {
+        setSessionRequest({ mode: "resume", host: opened.session.host, id: opened.session.id });
       }
     }
     recordActivity("agent", "Terminal geöffnet", {
-      detail: command || "Nur Shell",
+      detail: opened.launch || "Nur Shell",
     });
   };
+  const terminalFailed = (error: string) => {
+    // Kein „fortgesetzt“: zurück zur Startansicht mit sichtbarem Fehler.
+    setStartError(error);
+    setTerminalStarted(false);
+    setSessionRequest({ mode: "new" });
+  };
   const [layout, setLayout] = useState<ProjectLayout>(DEFAULT_LAYOUT);
+  // Automatisch fortsetzen: nur die genau bekannte, vorhandene Sitzung.
+  useEffect(() => {
+    if (autoResumed.current || !project || !layout.resumeAgent || terminalStarted) return;
+    if (sessionState.kind === "exact" && hostOf(agentCommand)) {
+      autoResumed.current = true;
+      startTerminal({ mode: "resume", host: hostOf(agentCommand) ?? "", id: sessionState.id });
+    } else if (sessionState.kind !== "checking" && sessionState.kind !== "none") {
+      autoResumed.current = true; // sichtbar bleiben, nicht still ersetzen
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionState, project, layout.resumeAgent, terminalStarted]);
   const [navSlots, setNavSlots] = useState<Slots>({});
   const [inspectorSlots, setInspectorSlots] = useState<Slots>({});
   const [outputSlot, setOutputSlot] = useState<HTMLDivElement | null>(null);
@@ -130,12 +164,7 @@ export default function ProjectShell() {
         try {
           const command = localStorage.getItem(agentCommandKey(root));
           if (command !== null) setAgentCommand(command);
-          const session = localStorage.getItem(agentSessionKey(root)) === "1";
-          setHadSession(session);
-          if (session && stored.resumeAgent && (command ?? DEFAULT_AGENT_COMMAND).trim() !== "") {
-            setResumeSession(true);
-            setTerminalStarted(true);
-          }
+          setSessionRecord(loadSessionRecord(agentSessionKey(root)));
         } catch {
           // localStorage nicht verfügbar — Default bleibt.
         }
@@ -363,7 +392,7 @@ export default function ProjectShell() {
   // Toolbar (I3): eingebaute Knöpfe + Aktionen, Auswahl und Reihenfolge aus
   // dem Layout (`toolbar`), Default = Git-Knöpfe + Aktionen mit `toolbar: true`.
   const showTerminal = () => {
-    if (!terminalStarted) startTerminal(false);
+    if (!terminalStarted) startTerminal({ mode: "new" });
     updateLayout(
       terminalDock === "bottom"
         ? { bottomShown: true }
@@ -711,8 +740,10 @@ export default function ProjectShell() {
             <TerminalPanel
               visible={terminalVisible}
               cwd={project}
-              autostart={resumeSession ? continueCommand(agentCommand) : agentCommand}
+              autostart={agentCommand}
+              session={sessionRequest}
               onOpened={terminalOpened}
+              onFailed={terminalFailed}
             />
           ) : (
             <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6">
@@ -747,23 +778,13 @@ export default function ProjectShell() {
               <div className="w-full max-w-xs text-slate-400">
                 <AgentStartup project={project} command={agentCommand} />
               </div>
-              <div className="flex flex-wrap justify-center gap-2">
-                {hadSession && agentCommand.trim() !== "" ? (
-                  <button
-                    onClick={() => startTerminal(true)}
-                    className="rounded bg-emerald-700 px-4 py-2 text-sm text-white hover:bg-emerald-600"
-                    title={continueCommand(agentCommand)}
-                  >
-                    Letzte Sitzung fortsetzen
-                  </button>
-                ) : null}
-                <button
-                  onClick={() => startTerminal(false)}
-                  className="rounded bg-slate-700 px-4 py-2 text-sm text-slate-200 hover:bg-slate-600"
-                >
-                  {hadSession ? "Neu starten" : "Agent-Terminal starten"}
-                </button>
-              </div>
+              <SessionChoice
+                state={sessionState}
+                command={agentCommand}
+                record={sessionRecord}
+                error={startError}
+                onStart={startTerminal}
+              />
               <p className="max-w-xs text-center text-xs text-slate-500">
                 Startet im Projektverzeichnis — Skills leben unter{" "}
                 <code>.agent/skills</code> und werden für den gewählten Host verlinkt.

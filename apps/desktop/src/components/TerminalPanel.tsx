@@ -13,7 +13,15 @@ import "@xterm/xterm/css/xterm.css";
 import { beginActivity, endActivity } from "../lib/activity";
 import { showTab } from "../lib/panels";
 import type { AgentStartupReport } from "../lib/system";
+import type { AgentSession, SessionRequest } from "../lib/agents";
 import { StartupDetails } from "./AgentStartup";
+
+export interface TerminalOpened {
+  cwd: string;
+  startup: AgentStartupReport | null;
+  session: AgentSession | null;
+  launch: string;
+}
 
 /** Relativer Pfad mit Endung + `:zeile` (optional `:spalte`), wie Compiler
  *  und Test-Runner ihn ausgeben; absolute Pfade und URLs bleiben außen vor. */
@@ -33,13 +41,19 @@ export default function TerminalPanel({
   cwd: cwdProp,
   autostart,
   workspaceId,
+  session,
   onOpened,
+  onFailed,
 }: {
   visible: boolean;
   cwd?: string;
   autostart?: string;
   workspaceId?: string;
-  onOpened?: (command: string) => void;
+  /** Spec 009: was mit der Sitzung geschehen soll; Default = neue Sitzung. */
+  session?: SessionRequest;
+  onOpened?: (opened: TerminalOpened) => void;
+  /** Start abgelehnt oder gescheitert — die Eltern zeigen die Wahl statt „fortgesetzt“. */
+  onFailed?: (error: string) => void;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const projectActive = useProjectActivity();
@@ -67,6 +81,10 @@ export default function TerminalPanel({
   const [startup, setStartup] = useState<AgentStartupReport | null>(null);
   const onOpenedRef = useRef(onOpened);
   onOpenedRef.current = onOpened;
+  const onFailedRef = useRef(onFailed);
+  onFailedRef.current = onFailed;
+  const sessionRef = useRef(session);
+  sessionRef.current = session;
 
   const restart = useCallback(() => {
     const oldId = idRef.current;
@@ -181,8 +199,10 @@ export default function TerminalPanel({
           return;
         }
         setStatus("Startumgebung wird geprüft…");
-        const opened = await invoke<{ cwd: string; startup: AgentStartupReport | null }>("terminal_open", {
+        // Listeners above are live before this call: early PTY output is not lost.
+        const opened = await invoke<TerminalOpened>("terminal_open", {
           id, cols: terminal.cols, rows: terminal.rows, cwd: cwdProp, autostart, workspaceId,
+          session: sessionRef.current ?? { mode: "new" },
         });
         if (disposed) {
           await invoke("terminal_kill", { id });
@@ -191,11 +211,12 @@ export default function TerminalPanel({
         setCwd(opened.cwd);
         setStartup(opened.startup);
         setStatus("");
-        onOpenedRef.current?.(autostart ?? "");
+        onOpenedRef.current?.(opened);
       } catch (error) {
         if (!disposed) {
           setStatus(String(error));
           terminal.writeln(`\x1b[31m${String(error)}\x1b[0m`);
+          onFailedRef.current?.(String(error));
         }
       }
     })();

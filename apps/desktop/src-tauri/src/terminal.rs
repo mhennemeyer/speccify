@@ -16,6 +16,7 @@ use portable_pty::{native_pty_system, ChildKiller, CommandBuilder, MasterPty, Pt
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager, State};
 
+use crate::agent_session::{self, AgentSession, SessionRequest, Utf8Chunker};
 use crate::agent_startup::{self, login_shell, StartupReport};
 use crate::settings;
 
@@ -70,29 +71,74 @@ fn workspace_launch(command: &str, launch: &str, context: &std::path::Path) -> S
     }
 }
 
-/// Laufende Terminals; Drop killt die Shells beim App-Quit.
-pub struct Terminals(
-    Mutex<HashMap<String, TerminalSession>>,
-    Arc<Mutex<HashSet<String>>>,
-    AtomicBool,
-);
+/// Terminals eines Fensters: Ids plus ein Lebenszeichen, das der einmal je
+/// Fenster registrierte Destroyed-Listener löscht (Spec 009, D6 — kein
+/// Listener pro Start).
+struct WindowTerminals {
+    ids: HashSet<String>,
+    alive: Arc<AtomicBool>,
+}
 
-impl Default for Terminals {
-    fn default() -> Self {
-        Self(
-            Mutex::new(HashMap::new()),
-            Arc::new(Mutex::new(HashSet::new())),
-            AtomicBool::new(false),
-        )
-    }
+/// Laufende Terminals; Drop killt die Shells beim App-Quit.
+#[derive(Default)]
+pub struct Terminals {
+    sessions: Mutex<HashMap<String, TerminalSession>>,
+    workspace_claims: Arc<Mutex<HashSet<String>>>,
+    windows: Mutex<HashMap<String, WindowTerminals>>,
+    shutting_down: AtomicBool,
 }
 
 impl Terminals {
     pub fn shutdown(&self) {
-        self.2.store(true, Ordering::SeqCst);
-        if let Ok(mut sessions) = self.0.lock() {
+        self.shutting_down.store(true, Ordering::SeqCst);
+        if let Ok(mut sessions) = self.sessions.lock() {
             for (_, mut session) in sessions.drain() {
                 let _ = session.killer.kill();
+            }
+        }
+        if let Ok(mut windows) = self.windows.lock() {
+            windows.clear();
+        }
+    }
+
+    /// Registers the window's destroy listener once and records `id` for it.
+    /// Returns the window's liveness flag for the pending open.
+    fn track(&self, window: &tauri::WebviewWindow, id: &str) -> Result<Arc<AtomicBool>, String> {
+        let mut windows = self.windows.lock().map_err(|e| e.to_string())?;
+        let label = window.label().to_owned();
+        let entry = windows.entry(label.clone()).or_insert_with(|| {
+            let alive = Arc::new(AtomicBool::new(true));
+            let alive_event = alive.clone();
+            let app = window.app_handle().clone();
+            window.on_window_event(move |event| {
+                if matches!(event, tauri::WindowEvent::Destroyed) {
+                    alive_event.store(false, Ordering::SeqCst);
+                    let state = app.state::<Terminals>();
+                    let ids = state
+                        .windows
+                        .lock()
+                        .ok()
+                        .and_then(|mut windows| windows.remove(&label))
+                        .map(|entry| entry.ids)
+                        .unwrap_or_default();
+                    for id in ids {
+                        let _ = terminal_kill(app.state(), id);
+                    }
+                }
+            });
+            WindowTerminals {
+                ids: HashSet::new(),
+                alive,
+            }
+        });
+        entry.ids.insert(id.to_owned());
+        Ok(entry.alive.clone())
+    }
+
+    fn untrack(&self, id: &str) {
+        if let Ok(mut windows) = self.windows.lock() {
+            for entry in windows.values_mut() {
+                entry.ids.remove(id);
             }
         }
     }
@@ -119,6 +165,10 @@ struct TermExit {
 pub struct TerminalOpened {
     cwd: String,
     startup: Option<StartupReport>,
+    /// Identity the UI remembers for an exact resume (Spec 009, D4).
+    session: Option<AgentSession>,
+    /// The command line that was typed into the shell.
+    launch: String,
 }
 
 /// Öffnet ein Terminal und tippt den Autostart-Command vor. Ohne `cwd`/
@@ -136,6 +186,7 @@ pub async fn terminal_open(
     cwd: Option<String>,
     autostart: Option<String>,
     workspace_id: Option<String>,
+    session: Option<SessionRequest>,
 ) -> Result<TerminalOpened, String> {
     let window_workspace = window.label().strip_prefix("workspace-");
     if workspace_id
@@ -145,20 +196,12 @@ pub async fn terminal_open(
         return Err("Workspace passt nicht zum Terminal-Fenster.".into());
     }
     let claim = window_workspace
-        .map(|id| WorkspaceClaim::acquire(id.to_owned(), state.1.clone()))
+        .map(|id| WorkspaceClaim::acquire(id.to_owned(), state.workspace_claims.clone()))
         .transpose()?;
-    // Webview destruction does not guarantee a React cleanup. Use the immutable
-    // PTY id so an old window callback can never stop a replacement session.
-    let destroyed = Arc::new(AtomicBool::new(false));
-    let destroyed_event = destroyed.clone();
-    let close_app = app.clone();
-    let close_id = id.clone();
-    window.on_window_event(move |event| {
-        if matches!(event, tauri::WindowEvent::Destroyed) {
-            destroyed_event.store(true, Ordering::SeqCst);
-            let _ = terminal_kill(close_app.state(), close_id.clone());
-        }
-    });
+    // Webview destruction does not guarantee a React cleanup: the window's
+    // single destroy listener kills every terminal id recorded for it.
+    let alive = state.track(&window, &id)?;
+    let session = session.unwrap_or_default();
     let context = match window_workspace {
         Some(id) => Some(crate::workspace_cmd::context_for_terminal(id.to_owned()).await?),
         None => None,
@@ -219,9 +262,24 @@ pub async fn terminal_open(
             Ok(file)
         })
         .transpose()?;
-    if destroyed.load(Ordering::SeqCst) || state.2.load(Ordering::SeqCst) {
+    if !alive.load(Ordering::SeqCst) || state.shutting_down.load(Ordering::SeqCst) {
+        state.untrack(&id);
         return Err("Terminal-Fenster wurde geschlossen.".into());
     }
+    let launch_base = startup
+        .as_ref()
+        .map(|r| r.launch.as_str())
+        .unwrap_or(&autostart);
+    let launch_base = context_file
+        .as_ref()
+        .map(|file| workspace_launch(&autostart, launch_base, file.path()))
+        .unwrap_or_else(|| launch_base.to_owned());
+    // Exact resume or a fresh identity — checked before anything is spawned,
+    // so a missing session is an error, never a silently different session.
+    let home = settings::home_dir()?;
+    let (launch, identity) =
+        agent_session::session_launch(&autostart, &launch_base, &session, &home)
+            .inspect_err(|_| state.untrack(&id))?;
 
     let pty = native_pty_system()
         .openpty(PtySize {
@@ -267,53 +325,56 @@ pub async fn terminal_open(
             agent_startup::path_setup(report.runtime_dir.as_deref().map(std::path::Path::new))
         })
         .unwrap_or_default();
-    let launch = startup
-        .as_ref()
-        .map(|r| r.launch.as_str())
-        .unwrap_or(&autostart);
-    let launch = context_file
-        .as_ref()
-        .map(|file| workspace_launch(&autostart, launch, file.path()))
-        .unwrap_or_else(|| launch.to_owned());
     if !preamble.is_empty() || !launch.is_empty() {
         if let Err(error) = writer
             .write_all(format!("{preamble}{launch}\r").as_bytes())
             .and_then(|_| writer.flush())
         {
             let _ = killer.kill();
+            state.untrack(&id);
             return Err(format!(
                 "Terminal-Start konnte nicht geschrieben werden: {error}"
             ));
         }
     }
 
-    // Reader-Thread: PTY-Output als Events (lossy — Escape-Sequenzen sind
-    // Bytes, xterm.js verdaut UTF-8-Strings).
+    // Reader-Thread: PTY-Output als Events. Der Thread läuft, bevor diese
+    // Antwort das Frontend erreicht; das Frontend registriert seine Listener
+    // vor dem Aufruf, frühe Ausgabe geht also nicht verloren. UTF-8 wird über
+    // Blockgrenzen zusammengesetzt (D6); nach EOF wird das Kind abgewartet,
+    // damit kein Zombie zurückbleibt.
     let app_for_reader = app.clone();
     let id_for_reader = id.clone();
+    let mut child = child;
     std::thread::spawn(move || {
         let mut buffer = [0u8; 8192];
+        let mut chunker = Utf8Chunker::default();
+        let mut emit = |data: String| {
+            if !data.is_empty() {
+                let _ = app_for_reader.emit(
+                    "term-out",
+                    TermOut {
+                        id: id_for_reader.clone(),
+                        data,
+                    },
+                );
+            }
+        };
         loop {
             match reader.read(&mut buffer) {
                 Ok(0) | Err(_) => break,
-                Ok(count) => {
-                    let data = String::from_utf8_lossy(&buffer[..count]).into_owned();
-                    let _ = app_for_reader.emit(
-                        "term-out",
-                        TermOut {
-                            id: id_for_reader.clone(),
-                            data,
-                        },
-                    );
-                }
+                Ok(count) => emit(chunker.push(&buffer[..count])),
             }
         }
+        emit(chunker.finish());
+        let _ = child.wait();
         let _ = app_for_reader.emit("term-exit", TermExit { id: id_for_reader });
     });
 
-    let mut sessions = state.0.lock().map_err(|e| e.to_string())?;
-    if destroyed.load(Ordering::SeqCst) || state.2.load(Ordering::SeqCst) {
+    let mut sessions = state.sessions.lock().map_err(|e| e.to_string())?;
+    if !alive.load(Ordering::SeqCst) || state.shutting_down.load(Ordering::SeqCst) {
         let _ = killer.kill();
+        state.untrack(&id);
         return Err("Terminal-Fenster wurde geschlossen.".into());
     }
     sessions.insert(
@@ -329,12 +390,14 @@ pub async fn terminal_open(
     Ok(TerminalOpened {
         cwd: cwd.display().to_string(),
         startup,
+        session: identity,
+        launch,
     })
 }
 
 #[tauri::command]
 pub fn terminal_write(state: State<Terminals>, id: String, data: String) -> Result<(), String> {
-    let mut sessions = state.0.lock().unwrap();
+    let mut sessions = state.sessions.lock().unwrap();
     let session = sessions
         .get_mut(&id)
         .ok_or_else(|| format!("Kein Terminal: {id}"))?;
@@ -352,7 +415,7 @@ pub fn terminal_resize(
     cols: u16,
     rows: u16,
 ) -> Result<(), String> {
-    let sessions = state.0.lock().unwrap();
+    let sessions = state.sessions.lock().unwrap();
     let session = sessions
         .get(&id)
         .ok_or_else(|| format!("Kein Terminal: {id}"))?;
@@ -369,7 +432,8 @@ pub fn terminal_resize(
 
 #[tauri::command]
 pub fn terminal_kill(state: State<Terminals>, id: String) -> Result<bool, String> {
-    match state.0.lock().unwrap().remove(&id) {
+    state.untrack(&id);
+    match state.sessions.lock().unwrap().remove(&id) {
         Some(mut session) => {
             let _ = session.killer.kill();
             Ok(true)
@@ -476,8 +540,9 @@ mod tests {
         let context = tempfile::NamedTempFile::new().unwrap();
         let context_path = context.path().to_owned();
         let state = Terminals::default();
-        let claim = WorkspaceClaim::acquire("shutdown-test".into(), state.1.clone()).unwrap();
-        state.0.lock().unwrap().insert(
+        let claim = WorkspaceClaim::acquire("shutdown-test".into(), state.workspace_claims.clone())
+            .unwrap();
+        state.sessions.lock().unwrap().insert(
             "test".into(),
             TerminalSession {
                 writer,
@@ -488,9 +553,9 @@ mod tests {
             },
         );
         state.shutdown();
-        assert!(state.2.load(Ordering::SeqCst));
-        assert!(state.0.lock().unwrap().is_empty());
-        assert!(state.1.lock().unwrap().is_empty());
+        assert!(state.shutting_down.load(Ordering::SeqCst));
+        assert!(state.sessions.lock().unwrap().is_empty());
+        assert!(state.workspace_claims.lock().unwrap().is_empty());
         assert!(
             !context_path.exists(),
             "shutdown removes the private context before process exit"

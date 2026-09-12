@@ -81,7 +81,7 @@ pub fn path_setup(dir: Option<&Path>) -> String {
     }
 }
 
-fn known_host(command: &str) -> Option<Vec<String>> {
+pub(crate) fn known_host(command: &str) -> Option<Vec<String>> {
     if command.contains(['$', '`', ';', '|', '&', '<', '>', '\n', '\r']) {
         return None;
     }

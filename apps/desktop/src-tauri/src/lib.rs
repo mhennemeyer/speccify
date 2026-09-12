@@ -11,6 +11,7 @@ use tauri::{AppHandle, Emitter, Manager, State};
 
 mod actions_cmd;
 mod agent_config;
+mod agent_session;
 mod agent_startup;
 mod board_cmd;
 mod desktop_ui;
@@ -336,6 +337,7 @@ pub fn run() {
             system_cmd::python_list,
             system_cmd::python_install,
             system_cmd::kb_list,
+            agent_session::agent_session_check,
             terminal::terminal_open,
             terminal::terminal_write,
             terminal::terminal_resize,

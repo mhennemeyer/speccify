@@ -78,7 +78,7 @@ oder vollständige Plattformabnahme.
 | Aktionen | bestätigte Kommandos, Formulare, Allowlist-Freigabe, Live-Ausgabe, Stop, einfache Diagramme, Toolbar | `toolui:` und Parallels-Aktionsziele in dieser UI noch Platzhalter; V1-06 |
 | MCP | Serverübersicht/Supervisor, Client-Config, projektspezifische Claude-/Codex-Konfiguration, Allowlists | Portstatus ist kein erfolgreicher Handshake; kein itsdcloud-Adapter |
 | Lokale MCP-HTTP-Grenze | 014: gemeinsame Host-/Origin-/Methoden-/JSON-/1-MiB-Prüfung für Rust-MCPs, vor RPC und Exec-Stream | Keine Browserfreigaben oder Client-Authentifizierung; kein vollständiger DoS-/Konformitätsschutz; [Vertrag](../../docs/exec-mcp-contract.md) |
-| Terminal | native PTY, Host-Voreinstellungen/freies Kommando, Shell-only, Projekt-cwd, rechts/unten, Neustart | UTF-8-Chunking, genaue Sitzungsidentität und Roundtrip offen; 009/012 |
+| Terminal | native PTY, Host-Voreinstellungen/freies Kommando, Shell-only, Projekt-cwd, rechts/unten, Neustart; seit 009 inkrementelles UTF-8, Claude-Sitzungs-ID beim Start, exaktes `--resume <id>` nach Prüfung des Host-Speichers, sichtbare Wahl statt stiller Ersetzung | Codex ohne wählbare ID (Picker); echter Roundtrip 012; Windows ungeprüft |
 | Startdiagnose | Runtime-Auswahl, Host-/CLI-Probe, Fehler/Warnungen vor Start und im Terminal; lokal neu in 007 | Version/Startfähigkeit beweisen weder Anmeldung noch erfolgreiche Fortsetzung |
 | Lokaler Betrieb | 013: Status vor Build, expliziter Fragen-MCP-Port, gebündelte App ohne Watcher, Wiederöffnen und Schutz laufenden Bundles | macOS lokal geprüft; kein Autostart-Dienst oder gleichzeitiger Betrieb zweier App-Instanzen |
 | Repo-Demoaktionen | 017: Tests (Toolbar), Desktop-Tests, Typecheck, Git-Überblick, Live-Diagramm in `.agent/actions.json` | Prepared macOS-/Unix-venv; individuelle Toolbar-Auswahl kann Default übersteuern; kein App-Neustart erforderlich |
@@ -206,7 +206,8 @@ Projektfenster · ein Projektpfad (Startbereich: Specs)
 ├── Agent-Terminal (dieselbe Instanz, unten oder rechts)
 │   ├── vor Start: Kommando / Presets · leer = Shell-only
 │   ├── Startumgebung prüfen: Host, Pfad/Version, CLI/Quelle, Hinweise/Fehler
-│   ├── Starten / Neu starten / Letzte Sitzung fortsetzen (wenn Merker vorhanden)
+│   ├── Starten / Neu starten / Sitzung fortsetzen (genau bekannte Sitzung) ·
+│   │   Sitzung auswählen / Neueste Sitzung (ohne ID, verschwunden, Hostwechsel) · Startfehler sichtbar
 │   └── laufend: cwd · Startdetails · PTY · Neustart · Dock wechseln
 └── Splitter: Größen ändern/zurücksetzen; Layout pro Projekt gespeichert
 ```
@@ -387,7 +388,7 @@ Diese Tabelle verändert keine Station oder Reihenfolge.
 | [006 Bestandsaufnahme](../specs/006-bestandsaufnahme-agent-terminal/SPEC.md) | Done | geprüfter Ausgangspunkt, kein Beleg für beseitigte Befunde |
 | [007 Startumgebung](../specs/007-agent-startumgebung/SPEC.md) | Doing, ready, needs_human | lokal implementiert und automatisiert geprüft; reale Startwege offen |
 | [008 Workflow-Konsistenz](../specs/008-workflow-konsistenz/SPEC.md) | Doing, ready, needs_human | Aufgaben-/Setup-Vertrag geprüft, Repo v4/current; neuer App-Build läuft, Wiederaufnahme wartet auf macOS-Schreibtischfreigabe |
-| [009 Terminal/Sitzungen](../specs/009-terminal-und-sitzungen/SPEC.md) | Backlog | UTF-8 und eindeutige Fortsetzung; Listener-Reihenfolge teilweise in 007 vorgezogen |
+| [009 Terminal/Sitzungen](../specs/009-terminal-und-sitzungen/SPEC.md) | Doing, ready | UTF-8-Chunker, Sitzungsidentität (`agent_session.rs`), ein Destroyed-Listener je Fenster, Kind-Reaping; App-Abnahme offen |
 | [010 Prüfstatus](../specs/010-einheitlicher-pruefstatus/SPEC.md) | Backlog | identische Befunde für CLI/MCP/UI |
 | [011 Auftragskontext](../specs/011-auftragskontext/SPEC.md) | Backlog | strukturierte Übergabe mit Ziel, Revision und Empfangsbestätigung |
 | [012 Praxisabnahme](../specs/012-agent-terminal-praxisabnahme/SPEC.md) | Backlog | vollständiger Durchlauf im echten Agent-Terminal |
@@ -655,9 +656,12 @@ Noch relevante Befunde:
 - Aufgaben folgen nativ Markdown-Tasklisten, auch außerhalb Tasks; Codebeispiele
   werden ignoriert. Klick-Konflikte laden neu. Das ersetzt keine atomare Sperre
   gegenüber gleichzeitig schreibenden externen Programmen.
-- Sitzungsmerker ist keine Session-ID; `--last`/`--continue` beweisen nicht die
-  beabsichtigte Sitzung. Dashboard und Projektstart sind noch nicht gleich robust.
-- PTY-Ausgabe dekodiert UTF-8 derzeit pro Chunk; geteilte Zeichen bleiben ein Risiko.
+- Sitzungsmerker ist seit 009 `{host, id, command, startedAt}`; nur Claude liefert
+  eine ID (`--session-id`). Codex-Sitzungen werden über den Host-Picker gewählt;
+  `--last`/`--continue` bleiben gekennzeichnete Komfortfunktion ohne Automatik.
+  Dashboard und Projektfenster nutzen dieselbe Startansicht (`SessionChoice`).
+- PTY-Ausgabe wird seit 009 inkrementell dekodiert (`Utf8Chunker`); der Reader
+  wartet das Kind ab, Fenster-Ende killt alle Terminals des Fensters.
 - `verify`-Warnungen zu fehlenden Tools werden zwischen CLI/MCP/UI nicht vollständig
   gleich transportiert. Lock-Konsistenz ist nicht Plattform-Ausführbarkeit.
 - Fehlende Implementierungen im Basisbefund: `build-libgit2`, `verify-signatures`,

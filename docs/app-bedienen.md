@@ -21,7 +21,8 @@ Repository — wer etwas ändern will, ändert diese Datei.
    Claude Code und Codex an. Bestehendes wird nie überschrieben.
 3. **Agent starten.** In der Leiste unten das Agent-Terminal starten:
    `Claude`, `Codex` oder ein freies Kommando; leer = nur Shell. Lief hier
-   schon eine Sitzung, wird sie beim nächsten Öffnen von selbst fortgesetzt.
+   schon eine Claude-Sitzung, wird genau sie beim nächsten Öffnen von selbst
+   fortgesetzt; sonst fragt die Startansicht, welche Sitzung Du willst.
 4. **Spec schreiben, Agent arbeiten lassen.** Unter *Specs* eine Spec
    anlegen (**+ Spec**): Warum, Was, Akzeptanz, Tasks als Checkboxen. Sie
    von *Backlog* nach *Doing* ziehen — das ist Deine Freigabe — und dem
@@ -218,12 +219,22 @@ Fenster, auch im Dashboard unter *Settings*), Terminal-Position,
 „Agent-Sitzung nach Neustart fortsetzen", die **Toolbar-Knöpfe** (an- und
 abwählen, mit den Pfeilen sortieren) und „Layout zurücksetzen".
 
-**Die Agent-Sitzung überlebt den Neustart:** Lief in einem Fenster ein
-Agent, startet das Terminal beim nächsten Öffnen von selbst mit
-`claude --continue` bzw. `codex resume --last` — der Agent liest sein
-eigenes Protokoll und macht dort weiter, wo er war; nur ein gerade
-laufender Werkzeugaufruf ist verloren. Abgeschaltet bietet das Terminal
-*Letzte Sitzung fortsetzen* und *Neu starten*. Das Dashboard-Terminal
+**Die Agent-Sitzung überlebt den Neustart:** Speccify startet Claude mit
+einer eigenen Sitzungs-ID (`--session-id`) und merkt sie sich für das
+Fenster. Beim nächsten Öffnen setzt das Terminal genau diese Sitzung fort
+(`claude --resume <id>`) — der Agent liest sein eigenes Protokoll und macht
+dort weiter, wo er war; nur ein gerade laufender Werkzeugaufruf ist
+verloren. Vorher prüft die App, ob die Sitzung im Speicher des Hosts noch
+existiert. Fehlt sie, gehört sie zu einem anderen Host oder gibt es keine
+ID (Codex vergibt seine IDs selbst), startet nichts von allein: Die
+Startansicht sagt das und bietet *Sitzung auswählen* (die Auswahl des
+Hosts, `claude --resume` bzw. `codex resume`), *Neueste Sitzung*
+(`claude --continue` bzw. `codex resume --last` — die neueste Sitzung des
+Hosts, nicht zwingend die gemerkte) und *Neu starten*. Schlägt ein
+Fortsetzen fehl, steht der Fehler in der Startansicht; es gilt nichts als
+fortgesetzt. Freie Kommandos bekommen nie eine Resume-Option angehängt.
+Abgeschaltet (Einstellungen → „Agent-Sitzung") bietet das Terminal
+*Sitzung fortsetzen* und *Neu starten* von Hand. Das Dashboard-Terminal
 macht es genauso (*Settings → Agent-Sitzung*).
 
 ## Das Dashboard

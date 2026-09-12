@@ -112,9 +112,10 @@ export default function SettingsView() {
             className="mt-1"
           />
           <span>
-            Das Dashboard-Terminal setzt nach einem Neustart die letzte Sitzung fort
-            (<code>claude --continue</code> bzw. <code>codex resume --last</code>).
-            Projektfenster haben denselben Schalter in ihren Einstellungen.
+            Das Dashboard-Terminal setzt nach einem Neustart genau die gemerkte Sitzung
+            fort (<code>claude --resume &lt;id&gt;</code>). Ohne bekannte Sitzungs-ID fragt
+            die Seitenleiste ausdrücklich nach. Projektfenster haben denselben Schalter
+            in ihren Einstellungen.
           </span>
         </label>
       </section>

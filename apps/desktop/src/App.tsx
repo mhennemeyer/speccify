@@ -1,11 +1,18 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import AskBoPanel, { type AskBoInteraction } from "./components/AskBoPanel";
-import TerminalPanel from "./components/TerminalPanel";
+import TerminalPanel, { type TerminalOpened } from "./components/TerminalPanel";
+import SessionChoice, { useSessionState } from "./components/SessionChoice";
 import { useTheme } from "./lib/theme";
 import { isMac } from "./lib/platform";
-import { continueCommand } from "./lib/agents";
+import {
+  hostOf,
+  loadSessionRecord,
+  saveSessionRecord,
+  type AgentSessionRecord,
+  type SessionRequest,
+} from "./lib/agents";
 
 export const DASHBOARD_SESSION_KEY = "speccify.dashboard.agentSession";
 export const DASHBOARD_RESUME_KEY = "speccify.dashboard.resumeAgent";
@@ -44,40 +51,64 @@ export default function App() {
   const [interactions, setInteractions] = useState<AskBoInteraction[]>([]);
 
   // Dashboard-Terminal: dieselbe Sitzung nach einem Neustart fortsetzen
-  // (BO 2026-09-08 „gerne überall") — Merker + Fortsetz-Kommando wie im
-  // Projektfenster; das Kommando kommt aus den App-Settings.
-  const [resumeSession, setResumeSession] = useState(false);
-  const [dashboardCommand, setDashboardCommand] = useState<string | null>(null);
+  // (BO 2026-09-08 „gerne überall") → Spec 009 wie im Projektfenster: nur die
+  // genau bekannte Sitzung automatisch, sonst sichtbare Wahl in der Seitenleiste.
+  // Das Kommando kommt aus den App-Settings.
+  const [dashboardCommand, setDashboardCommand] = useState<string>("");
+  const [sessionRequest, setSessionRequest] = useState<SessionRequest>({ mode: "new" });
+  const [sessionRecord, setSessionRecord] = useState<AgentSessionRecord | null>(null);
+  const [startError, setStartError] = useState<string | null>(null);
+  const [resumeWanted, setResumeWanted] = useState(true);
+  const sessionState = useSessionState(sessionRecord, dashboardCommand);
+  const autoResumed = useRef(false);
   useEffect(() => {
     void invoke<{ terminal_autostart_command: string }>("get_settings")
       .then((settings) => {
-        const command = settings.terminal_autostart_command ?? "";
-        setDashboardCommand(command);
-        let flag = false;
-        let resume = true;
+        setDashboardCommand(settings.terminal_autostart_command ?? "");
         try {
-          flag = localStorage.getItem(DASHBOARD_SESSION_KEY) === "1";
-          resume = localStorage.getItem(DASHBOARD_RESUME_KEY) !== "0";
+          setSessionRecord(loadSessionRecord(DASHBOARD_SESSION_KEY));
+          setResumeWanted(localStorage.getItem(DASHBOARD_RESUME_KEY) !== "0");
         } catch {
           // kein Storage — kein Fortsetzen
-        }
-        if (flag && resume && command.trim() !== "") {
-          setResumeSession(true);
-          setTerminalStarted(true);
-          setSidebarVisible(true);
         }
       })
       .catch(() => {});
   }, []);
+  const startTerminal = (request: SessionRequest) => {
+    setStartError(null);
+    setSessionRequest(request);
+    setTerminalStarted(true);
+    setSidebarVisible(true);
+  };
+  useEffect(() => {
+    if (autoResumed.current || !resumeWanted || terminalStarted) return;
+    if (sessionState.kind === "exact" && hostOf(dashboardCommand)) {
+      autoResumed.current = true;
+      startTerminal({ mode: "resume", host: hostOf(dashboardCommand) ?? "", id: sessionState.id });
+    } else if (sessionState.kind !== "checking" && sessionState.kind !== "none") {
+      autoResumed.current = true;
+      setSidebarVisible(true); // die Wahl sichtbar machen, nicht still ersetzen
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionState, resumeWanted, terminalStarted]);
+  const terminalOpened = (opened: TerminalOpened) => {
+    const record: AgentSessionRecord | null = opened.session
+      ? { ...opened.session, command: dashboardCommand, startedAt: new Date().toISOString() }
+      : null;
+    saveSessionRecord(DASHBOARD_SESSION_KEY, record);
+    setSessionRecord(record);
+    if (opened.session?.id) {
+      setSessionRequest({ mode: "resume", host: opened.session.host, id: opened.session.id });
+    }
+  };
+  const terminalFailed = (error: string) => {
+    setStartError(error);
+    setTerminalStarted(false);
+    setSessionRequest({ mode: "new" });
+  };
 
   const toggleTerminal = () => {
-    setTerminalStarted(true);
     setSidebarVisible((current) => !current);
-    try {
-      localStorage.setItem(DASHBOARD_SESSION_KEY, "1");
-    } catch {
-      // dito
-    }
   };
 
   useEffect(() => {
@@ -206,18 +237,19 @@ export default function App() {
         {terminalStarted ? (
           <TerminalPanel
             visible={sidebarVisible}
-            autostart={
-              resumeSession && dashboardCommand ? continueCommand(dashboardCommand) : undefined
-            }
+            session={sessionRequest}
+            onOpened={terminalOpened}
+            onFailed={terminalFailed}
           />
         ) : (
-          <div className="flex flex-1 items-center justify-center">
-            <button
-              onClick={() => setTerminalStarted(true)}
-              className="rounded bg-slate-700 px-3 py-1.5 text-sm text-slate-200 hover:bg-slate-600"
-            >
-              Terminal starten
-            </button>
+          <div className="flex flex-1 items-center justify-center p-4">
+            <SessionChoice
+              state={sessionState}
+              command={dashboardCommand}
+              record={sessionRecord}
+              error={startError}
+              onStart={startTerminal}
+            />
           </div>
         )}
       </aside>

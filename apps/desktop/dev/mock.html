@@ -120,7 +120,20 @@
           if (listener.event === event) window[`_${listener.handler}`]({ event, id, payload });
         }
       };
-      window.__SPECCIFY_MOCK__ = { emit, actionStarts, failStart: false, failStop: false, taskCalls: [], staleTaskOnce: false, specs: tickets, workflowInstalls: 0 };
+      window.__SPECCIFY_MOCK__ = { emit, actionStarts, failStart: false, failStop: false, taskCalls: [], staleTaskOnce: false, specs: tickets, workflowInstalls: 0, terminalOpens: [], sessionChecks: [] };
+      const sessionDemo = new URLSearchParams(location.search).get("session");
+      if (sessionDemo) {
+        const key = new URLSearchParams(location.search).has("dashboard") ? "speccify.dashboard.agentSession" : `speccify.project.agentSession:${project}`;
+        const record = { exact: { host: "claude", id: "11111111-2222-4333-8444-555555555555", command: "claude", startedAt: "2026-09-12T07:00:00Z" },
+          reject: { host: "claude", id: "11111111-2222-4333-8444-555555555555", command: "claude", startedAt: "2026-09-12T07:00:00Z" },
+          missing: { host: "claude", id: "99999999-2222-4333-8444-555555555555", command: "claude", startedAt: "2026-09-12T07:00:00Z" },
+          codex: { host: "codex", id: null, command: "codex", startedAt: "2026-09-12T07:00:00Z" },
+          host: { host: "codex", id: null, command: "codex", startedAt: "2026-09-12T07:00:00Z" } }[sessionDemo];
+        localStorage.clear();
+        localStorage.setItem(key, sessionDemo === "legacy" ? "1" : JSON.stringify(record));
+        if (sessionDemo === "host") localStorage.setItem(`speccify.project.agentCommand:${project}`, "claude");
+        if (sessionDemo === "codex") localStorage.setItem(`speccify.project.agentCommand:${project}`, "codex");
+      }
       const gitState = {
         repo: true, branch: "main", upstream: "origin/main", ahead: 2, behind: 0, error: null,
         entries: [
@@ -331,7 +344,17 @@
         help_doc: () => "# Die App bedienen\n\nText.\n",
         get_settings: () => ({ working_dir: null, terminal_autostart_command: "claude", skill_library: null, theme: "light", skill_sources: SOURCES.filter((s) => s.scope === "global").map((s) => s.location) }),
         save_settings: () => null,
-        terminal_open: () => ({ cwd: project, startup: null }),
+        // Spec 009: ?session=exact|missing|legacy|codex|host|reject seeds the session marker.
+        terminal_open: (args) => {
+          window.__SPECCIFY_MOCK__.terminalOpens.push(args);
+          if (sessionDemo === "reject" && args?.session?.mode !== "new") throw new Error("mock: Die gemerkte Sitzung wurde im Speicher von claude nicht gefunden.");
+          const host = (args?.autostart ?? "").split(/\s+/)[0];
+          const session = args?.session?.mode === "resume" ? { host: args.session.host, id: args.session.id }
+            : host === "claude" ? { host, id: "aaaaaaaa-0000-4000-8000-000000000001" }
+            : host === "codex" ? { host, id: null } : null;
+          return { cwd: project, startup: null, launch: args?.autostart ?? "", session };
+        },
+        agent_session_check: ({ host, id }) => { window.__SPECCIFY_MOCK__.sessionChecks.push({ host, id }); return sessionDemo === "exact" || sessionDemo === "reject"; },
         project_agent_startup: () => ({ project, shell: "/bin/zsh", host: "agent", host_path: "/usr/local/bin/codex", host_version: "mock", host_ready: true, runtime_source: "workspace", runtime_dir: project + "/.venv/bin", shell_cli: "/usr/local/bin/speccify", effective_cli: project + "/.venv/bin/speccify", missing_commands: [], warnings: [], error: null }),
         terminal_write: () => null,
         terminal_resize: () => null,

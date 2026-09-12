@@ -90,9 +90,9 @@ export default function SettingsSheet({
               className="mt-0.5"
             />
             <span>
-              Nach einem Neustart der App die letzte Sitzung automatisch fortsetzen
-              (<code>claude --continue</code> bzw. <code>codex resume --last</code>). Der
-              Agent behält so seinen Kontext — auch bei Dev-Neustarts von Speccify.
+              Nach einem Neustart der App genau die gemerkte Sitzung automatisch fortsetzen
+              (<code>claude --resume &lt;id&gt;</code>). Ohne bekannte Sitzungs-ID (Codex,
+              verschwundene Sitzung) fragt die Startansicht ausdrücklich nach.
             </span>
           </label> : <p className="text-xs text-slate-500">Im Workspace startest Du eine gemeinsame Sitzung im Parent-Ordner ausdrücklich. Beim App-Neustart wird keine Sitzung automatisch gestartet.</p>}
         </section>

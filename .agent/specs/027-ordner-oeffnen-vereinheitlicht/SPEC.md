@@ -3,7 +3,7 @@ station: Doing
 order: 10
 created: 2026-09-11
 needs_human: true
-ready: false
+ready: true
 parent: null
 ---
 # Ein Ordner öffnen: Einzelprojekt oder Workspace erkennt die App
