@@ -3,7 +3,7 @@ station: Doing
 order: 8
 created: 2026-09-12
 needs_human: true
-ready: false
+ready: true
 open_question: null
 parent: null
 ---
@@ -119,7 +119,9 @@ Workspace-Board (024 liest weiter je Repo), Konflikteditor für Code.
       Branch überschreibt den Worktree → Zustand blockiert, kein Sync; Rückkehr
       auf main räumt ihn → Sync stellt aus `specs` wieder her, committet nie
       die Totalräumung (added).
-- [ ] Migration des eigenen Repos nach BO-Freigabe; Stand-Playbook und Hilfe.
+- [x] Migration des eigenen Repos nach BO-Freigabe; Stand-Playbook und Hilfe.
+      2026-09-12 auf `main` (Commit `ea481b0`), Register-Commit `fac75cb`, beide
+      gepusht; diese Spec liegt seitdem im Register.
 
 ## Verification
 
@@ -144,6 +146,17 @@ Umsetzung 2026-09-12 (Arbeitsbaum auf `326ea59`):
   abort) plus die elf bestehenden grün.
 - Policy v6 in `.agent/agent.md` gespiegelt; markdownlint über die geänderten
   Dokumente 0 Befunde (Vorlagen sind nicht im Lint-Umfang).
+
+Migration des eigenen Repos 2026-09-12 mit den dokumentierten Schritten
+(Orphan-Commit aus `HEAD:.agent/specs` + `.gitattributes`, `git rm`, Ignore-
+Regel, Commit `ea481b0` auf `main`, `git worktree add`, Push von `specs`
+(`fac75cb`) und `main`): Code-Checkout sauber, Worktree eingehängt (31 Einträge,
+`.git`-Datei), Register-Status sauber. Offene lokale Alt-Branches (`archive/*`,
+`dev`, `feat/oss-pivot`, `feature/landing-page`) tracken `.agent/specs` noch:
+ihr Checkout überschreibt den Worktree (Zustand blockiert, Rückkehr stellt
+wieder her) — vor einer Weiterarbeit auf ihnen rebasen. Nicht geprüft: Klick-
+Durchlauf im Projektfenster mit dem neuen Build und ein zweiter Rechner
+(Einhängen im frischen Klon) — menschliche Abnahme, daher `ready`.
 
 Probelauf 2026-09-12 (`probe-worktree.sh` neben dieser Spec; Git lokal, zwei
 Klone A/B gegen ein Bare-Remote): Migration per Orphan-Branch und `git rm` +
