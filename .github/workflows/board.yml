@@ -1,0 +1,23 @@
+# Spec 031: a push to the register branch `specs` redeploys the website so
+# speccify.io/board/ shows the new state. GitHub runs push workflows from the
+# pushed branch, so this small file lives here; the real build is pages.yml
+# on main (workflow_dispatch), which fetches origin/specs read-only.
+name: Board trigger
+
+on:
+  push:
+    branches: [specs]
+
+permissions:
+  actions: write
+
+jobs:
+  redeploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Dispatch the site deploy on main
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: gh workflow run pages.yml --ref main
