@@ -1,9 +1,9 @@
 ---
-station: Backlog
+station: Doing
 order: 11
 created: 2026-09-12
 needs_human: true
-ready: false
+ready: true
 open_question: null
 parent: null
 ---
@@ -55,18 +55,49 @@ möglicher zweiter Schnitt notiert, nicht Teil dieser Spec.
 - D1, 2026-09-12: Kein eigener Nachrichtendienst; Git-Commits sind die
   Ereignisquelle, Webhook nur ausgehend und optional.
 - D2, 2026-09-12: Adressierung über E-Mail der Git-Identität (029 D1).
+- D3, 2026-09-12: Webhook nur für Ereignisse, die auf diesem Rechner entstehen
+  (im Register: uncommittete Dateien der Spec zum Zeitpunkt der Erkennung),
+  damit nicht jedes Teammitglied dieselbe Nachricht nach dem Sync erneut
+  sendet. Ereignisse werden im Watcher aus dem Board-Diff abgeleitet, nicht
+  aus den App-Aktionen — so zählen auch Agentenänderungen.
+- D4, 2026-09-12: „gesehen“-Merker je Spec im lokalen UI-Speicher; ohne Merker
+  gelten fremde Commits der letzten sieben Tage als neu.
 
 ## Tasks
 
-- [ ] Vertrag: Markierungsregeln, Fragen-Adressierung, Webhook-Nutzlast.
-- [ ] Native Befehle: Änderungsliste seit letztem gesehenen Commit je Spec;
+- [x] Vertrag: Markierungsregeln, Fragen-Adressierung, Webhook-Nutzlast.
+      `docs/specs-register.md` Abschnitt „Teamsignale“; Policy v8 (`· an: <email>`).
+- [x] Native Befehle: Änderungsliste seit letztem gesehenen Commit je Spec;
       Webhook-Versand mit Fehleranzeige.
-- [ ] Board: Markierung, Hinweis „Fragen an Dich“, Einstellungsseite Webhook.
-- [ ] Tests mit Fixture-Remote und Mock; Hilfe und Stand-Playbook.
+      `team_signals.rs`: `project_register_changes(since)`, `project_webhook_test`,
+      Board-Diff + `locally_originated` im Watcher, Konflikt-Flanke aus dem
+      Register-Sync, Ereignis `webhook-error`; `webhook_url` in den App-Settings.
+- [x] Board: Markierung, Hinweis „Fragen an Dich“, Einstellungsseite Webhook.
+      Chips „neu · n von Person“ mit Bestätigen, „Frage an Dich“ auf Karte und
+      als Zähler, *braucht mich* berücksichtigt es; Projekt-Zahnrad → Teamsignale
+      (Schalter, Testnachricht), Dashboard-Settings → Webhook-URL.
+- [x] Tests mit Fixture-Remote und Mock; Hilfe und Stand-Playbook.
 
 ## Verification
 
-Noch nichts geprüft; Entwurf, abhängig von 028 und 029.
+2026-09-12:
+
+- `cargo test -p speccify-desktop`: 108 bestanden, 3 ignoriert. Neu: Board-Diff
+  (Stationswechsel, `ready`-Flanke, neue Frage, keine Meldung für neue Specs
+  oder Unverändertes), Ereignistext und Webhook-Konfiguration (Default alle vier
+  Ereignisse, `events` aus `.agent/settings.json`), fremde Register-Commits je
+  Spec mit zwei Klonen (B committet als „ben“, A sieht `001-x`/`002-y` mit Autor
+  und Betreff; eigene Commits zählen nicht; nach dem Sync nichts Uncommittetes →
+  nicht lokal entstanden). `cargo fmt --check`, `pnpm typecheck` grün.
+- Browser-Suite `test_team_signals` (Mock `?changes=1`, `?question=me|other`):
+  Markierung „neu · 2 von Ben Kollege“ mit Commit-Betreffs, Klick bestätigt und
+  überlebt Reload, ohne Merker erneut markiert; „Frage an Dich“ nur beim
+  Adressaten, Zähler im Kopf, *braucht mich* filtert; Webhook-Schalter im
+  Projekt-Zahnrad ruft `project_settings_set`, Testnachricht ruft
+  `project_webhook_test`. Dazu `spec_owner`, `spec_register`, `workflow_ui`,
+  `spec_navigation`, `ui_colors`, `action_output`, `workspace_layout` grün.
+- Nicht geprüft: echter Webhook-Empfänger (Slack/Teams), Klick-Durchlauf in der
+  App, zwei Rechner. Deshalb `ready`.
 
 ## Questions
 

@@ -158,9 +158,10 @@ wieder her) — vor einer Weiterarbeit auf ihnen rebasen. Nicht geprüft: Klick-
 Durchlauf im Projektfenster mit dem neuen Build und ein zweiter Rechner
 (Einhängen im frischen Klon) — menschliche Abnahme, daher `ready`.
 
-Gebündelte App mit diesem Build läuft (Port 18768); ohne offenes Projektfenster
-für dieses Repo läuft kein Watcher, deshalb ist der automatische Sync hier noch
-nicht beobachtet (diese Zeile wurde von Hand committet). Zur Abnahme: Projekt-
+Gebündelte App mit diesem Build läuft (Port 18768). Der automatische Sync ist
+in der echten App beobachtet: die Änderung an Spec 029 hat der Watcher der App
+selbst committet und gepusht (`702084d spec(029-…): aktualisiert`), ein
+Hand-Commit fand nichts mehr vor. Zur Abnahme: Projekt-
 fenster öffnen, Register-Kopf prüfen, eine Task ticken, Commit auf `specs`
 abwarten.
 
