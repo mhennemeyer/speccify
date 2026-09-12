@@ -158,6 +158,12 @@ wieder her) — vor einer Weiterarbeit auf ihnen rebasen. Nicht geprüft: Klick-
 Durchlauf im Projektfenster mit dem neuen Build und ein zweiter Rechner
 (Einhängen im frischen Klon) — menschliche Abnahme, daher `ready`.
 
+Gebündelte App mit diesem Build läuft (Port 18768); ohne offenes Projektfenster
+für dieses Repo läuft kein Watcher, deshalb ist der automatische Sync hier noch
+nicht beobachtet (diese Zeile wurde von Hand committet). Zur Abnahme: Projekt-
+fenster öffnen, Register-Kopf prüfen, eine Task ticken, Commit auf `specs`
+abwarten.
+
 Probelauf 2026-09-12 (`probe-worktree.sh` neben dieser Spec; Git lokal, zwei
 Klone A/B gegen ein Bare-Remote): Migration per Orphan-Branch und `git rm` +
 Ignore auf `main`; Worktree in A und B; Tick auf Code-Branch `spec/001-x` in A
