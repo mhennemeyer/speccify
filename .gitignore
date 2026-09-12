@@ -90,3 +90,6 @@ apps/composer/playwright-report/
 
 # Spec-Register: Worktree des Branch specs (Spec 028)
 .agent/specs/
+
+# Spec 031: team board generated from the specs branch at deploy time
+apps/marketing/public/board/

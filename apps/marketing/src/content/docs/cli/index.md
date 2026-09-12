@@ -11,6 +11,7 @@ hat eine eigene Referenzseite:
 | Command | Beschreibung |
 | --- | --- |
 | [`speccify add`](/cli/add/) | Add a playbook dependency and update the lockfile. |
+| [`speccify board`](/cli/board/) | Render progress from the spec register into one static HTML page. |
 | [`speccify check`](/cli/check/) | Check whether skills are still current: source age, dead links, best practice. |
 | [`speccify expand`](/cli/expand/) | Turn locked skills into normal, project-specific skills under .agent/. |
 | [`speccify export`](/cli/export/) | Copy a project skill into a library as a general skill — the reverse of expand. |

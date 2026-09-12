@@ -13,13 +13,18 @@ name: Deploy site
 
 on:
   push:
-    branches: [main]
+    branches: [main, specs]
     paths:
       - "apps/marketing/**"
       - "docs/**"
       - "scripts/sync_docs_to_site.py"
       - "scripts/gen_cli_docs.py"
       - ".github/workflows/pages.yml"
+      - "core/src/speccify_core/board.py"
+      # Spec 031: the team board is rebuilt on every push to the `specs`
+      # branch, whose files live at the root (`<NNN-slug>/SPEC.md`).
+      - "*/SPEC.md"
+      - "*/history.jsonl"
   workflow_dispatch:
 
 permissions:
@@ -39,8 +44,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
+      # The site is always built from main, whichever branch triggered the run.
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: main
 
       - name: Install uv
         uses: astral-sh/setup-uv@v3
@@ -60,6 +68,18 @@ jobs:
         run: |
           uv run python scripts/sync_docs_to_site.py --check
           uv run python scripts/gen_cli_docs.py --check
+
+      # Spec 031: team board from the shared spec register (branch `specs`).
+      # Read-only; a missing branch yields no page, never a failed deploy.
+      - name: Team board from the specs branch
+        run: |
+          if git fetch --depth=1 origin specs 2>/dev/null; then
+            rm -rf /tmp/specs && git worktree add /tmp/specs FETCH_HEAD
+            uv run speccify board --specs /tmp/specs --out apps/marketing/public/board/index.html \
+              --title Speccify --source "specs@$(git -C /tmp/specs rev-parse --short HEAD)"
+          else
+            echo "no specs branch — board skipped"
+          fi
 
       - name: Set up pnpm
         uses: pnpm/action-setup@v4

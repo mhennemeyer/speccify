@@ -82,6 +82,19 @@ jobs:
       - name: Install site dependencies
         run: pnpm install --frozen-lockfile
 
+      # Spec 031: the navigation links /board/; build it here too so the
+      # offline link check below sees the page. Missing branch = no page.
+      - name: Team board from the specs branch
+        run: |
+          if git fetch --depth=1 origin specs 2>/dev/null; then
+            rm -rf /tmp/specs && git worktree add /tmp/specs FETCH_HEAD
+            uv run speccify board --specs /tmp/specs --out apps/marketing/public/board/index.html \
+              --title Speccify --source "specs@$(git -C /tmp/specs rev-parse --short HEAD)"
+          else
+            mkdir -p apps/marketing/public/board
+            echo '<!doctype html><title>Board</title><p>No specs branch yet.</p>' > apps/marketing/public/board/index.html
+          fi
+
       - name: Build marketing site
         run: pnpm --filter speccify-marketing build
 
