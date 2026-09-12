@@ -87,3 +87,6 @@ apps/composer/playwright-report/
 
 # Private Schluessel/Zertifikate niemals ins Repo (Export liegt in ~/.speccify/)
 *.p12
+
+# Spec-Register: Worktree des Branch specs (Spec 028)
+.agent/specs/
