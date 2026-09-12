@@ -1,6 +1,5 @@
 ---
 station: Backlog
-order: 8
 created: 2026-09-10
 needs_human: true
 ready: false
@@ -9,6 +8,11 @@ parent: null
 # Gemeinsames Spec-Register unabhängig von Code-Branches erproben
 
 ## Why
+
+> **Abgelöst 2026-09-12 durch [028](../028-spec-branch-als-register/SPEC.md):**
+> Register als Branch `specs` im selben Repo statt separates Repo (Vorschlag
+> D-TEAM-02 im Visionsplaybook). Diese Spec bleibt als Abwägung erhalten und
+> sortiert ohne `order` als Idee.
 
 Das Team braucht eine gemeinsame Spec-Sicht, auch bei Arbeit in Feature-Branches.
 Bestätigte Entscheidung D-TEAM-01 zu V1-09 im
@@ -53,6 +57,10 @@ und dessen vereinbarte Zugriffs-/Review-Regeln.
   dürfen vor einem externen Remote mit Wegwerf-Repositories geprüft werden.
 - D3: Der Pilot entscheidet nicht automatisch über Veröffentlichung privater Specs.
 - D4: Vor realer Einführung Sync-/Review-Konventionen dokumentieren und zustimmen lassen.
+- D5, 2026-09-12: Pilot nicht als separates Repo, sondern als Branch im Code-Repo
+  (028). Grund: gleiche Rechte und Remote, ein Ordner zum Öffnen, derselbe Pfad
+  für Agenten, Probelauf mit zwei Klonen erfolgreich; separates Repo bleibt
+  Option, falls Specs über Repo-Grenzen hinweg geführt werden müssen.
 
 ## Tasks
 

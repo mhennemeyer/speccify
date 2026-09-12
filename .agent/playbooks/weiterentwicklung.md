@@ -481,10 +481,78 @@ mehrere Arbeitsbäume pro Repo; die Board-Semantik ist unser zusätzlicher Vertr
 nicht etwas, das Git automatisch löst.
 ([Git-Worktree-Dokumentation](https://git-scm.com/docs/git-worktree))
 
+**Vertiefung 2026-09-12 (Vorschlag D-TEAM-02, Bestätigung durch BO offen):**
+Das Register ist ein **eigener Branch `specs` im selben Code-Repository**, als
+Git-Worktree unter `.agent/specs` eingehängt — nicht ein separates Metadaten-Repo.
+Der Pfad bleibt für Menschen und Agenten derselbe, das Board liest weiter dieselben
+Dateien, aber Commits in `.agent/specs` landen auf `specs`, unabhängig davon,
+welcher Code-Branch im Projekt ausgecheckt ist. Kein zweites Repo, keine zweiten
+Zugriffsrechte, keine Bindungskonfiguration; in Multi-Repo-Workspaces trägt jedes
+Repo seinen eigenen `specs`-Branch und das Workspace-Board (024) aggregiert wie
+bisher. Lokaler Probelauf mit zwei Klonen (2026-09-12, Skript `probe-worktree.sh`
+neben Spec 028): Migration per Orphan-Branch, Worktree in beiden Klonen, Tick auf
+einem Feature-Branch ist nach `pull --rebase` im anderen Klon sichtbar, ohne
+Code-Merge; `history.jsonl` mit `merge=union` (`.gitattributes` im Branch) mergt
+beidseitige Anhänge konfliktfrei (4 Zeilen aus 2+2); dieselbe Front-Matter-Zeile
+(`station`) in beiden Klonen erzeugt einen echten Git-Konflikt, der sichtbar
+bleibt und abbrechbar ist; der äußere Code-Checkout bleibt bei alldem sauber.
+Bekannte Falle: ein alter Branch mit noch getracktem `.agent/specs` lässt sich mit
+eingehängtem Worktree nicht mehr auschecken („untracked working tree files would
+be overwritten“) — offene Branches müssen vor der Migration auf `main` rebased
+werden.
+
+Was von D-TEAM-01 bleibt: Statuswahrheit getrennt vom Code-Branch, keine zweite
+frei editierbare Kopie, kein pauschaler `.agent`-Merge, kein Force-Push, PR offen
+≠ Done. Was sich ändert: Ort des Registers (Branch statt Repo) und dadurch die
+Einrichtung (ein Knopf, `git worktree add`, keine Remote-Wahl).
+
+**Wer arbeitet woran, in welchem Branch:** die Spec sagt es selbst. `owner`
+(Git-Identität der Person, `user.name`/`user.email` des Checkouts) und `branch`
+(Konvention `spec/<NNN>-<slug>`, in Workspaces je Repo) werden beim Übernehmen
+(Backlog → Doing) gesetzt und mit dem Register synchronisiert; jede Karte zeigt
+beides, ein Filter „meine“ und eine Liste „Doing nach Person“ folgen daraus.
+Zwei gleichzeitige Übernahmen kollidieren auf derselben Zeile und werden beim Sync
+als Konflikt sichtbar — genau die gewünschte Erkennung. Beobachtete Wahrheit
+ergänzt die erklärte: `git branch -r` und `git log origin/<branch> -1` zeigen, ob
+der Branch existiert und wer zuletzt darauf gepusht hat; Abweichungen (Spec sagt
+Branch A, Checkout steht auf B; Branch hat seit Tagen keine Bewegung; jemand
+anders pusht auf den Branch der Spec) werden angezeigt, nicht korrigiert.
+
+**Braucht es ein Messaging-System?** Für Phase 1 nein. Was ein Team wirklich
+braucht — „etwas hat sich geändert“, „Frage an Dich“, „X hat Spec 12 übernommen“ —
+sind Ereignisse, die alle schon als Commits auf `specs` existieren. Ein
+periodischer `git fetch` des Registers (Minutenraster, ohne Watcher-Zwang) plus
+Markierungen „neu seit letztem Sync“ auf dem Board und eine Adressierung von
+Fragen an Personen (`an:` in der Frage, Hervorhebung beim Adressaten) decken das
+ab. Was Git nicht gut kann, ist Echtzeit und Gespräch; dafür haben Teams bereits
+Slack/Teams/Mattermost. Deshalb allenfalls ein **ausgehender Webhook** (Station-
+wechsel, `ready`, neue Frage) als abschaltbare Option — kein eigener Dienst,
+keine eingehende Abhängigkeit, Offline-Kern unverändert. Ein eigenes Chat- oder
+Kommentarsystem erst, wenn der Pilot zeigt, dass Fragen in der Spec nicht reichen.
+
+**Regeln für Agenten (Policy-Ergänzung, kommt mit 028/029):** Specs nur unter
+`.agent/specs` bearbeiten; das Register nicht selbst committen, solange die App
+läuft (sie synchronisiert), sonst `git -C .agent/specs commit/pull --rebase/push`
+ohne Force; Branch der Spec nicht still wechseln, sondern Abweichung melden;
+Spec-ID und Branch im Commit-Body; fehlt `.agent/specs` in einem frischen Klon,
+den Worktree per `git worktree add .agent/specs origin/specs` anlegen (die App
+bietet denselben Schritt unter „Einrichten“).
+
+**Schnitt:** [028](../specs/028-spec-branch-als-register/SPEC.md) Register-Branch,
+Worktree, Sync und Konflikte (ersetzt den Pilot aus 016);
+[029](../specs/029-uebernahme-besitzer-branch/SPEC.md) Übernahme mit Besitzer und
+Branch auf dem Board; [030](../specs/030-teamsignale-ueber-git/SPEC.md) Fetch-
+Raster, „neu seit Sync“, Fragen an Personen, optionaler Webhook. Reihenfolge so;
+028 ohne 029 ist bereits nützlich (gemeinsames Board), 029 ohne 028 nicht (Besitzer
+nur lokal sichtbar). Zum Release wird der Commit des `specs`-Branch im Release-
+Playbook notiert, damit Anforderungsstände reproduzierbar bleiben.
+
 Konkreter vorgeschlagener Ablauf:
 
 1. Spec mit stabiler ID im gemeinsamen Register anlegen und synchronisieren;
-   Nummer ist Anzeige, keine global kollisionsfreie Identität.
+   Nummer ist Anzeige, keine global kollisionsfreie Identität. Im Branch-Modell
+   (D-TEAM-02) ist das Register `.agent/specs` selbst; die Nummernvergabe
+   prüft vor dem Anlegen gegen `origin/specs`.
 2. Übernahme/Doing mit Person, Projekt und betroffenen Repos sichtbar machen.
    Zwei gleichzeitige Übernahmen über erwartete Revision erkennen, nicht still überbügeln.
 3. Feature-Branches/Worktrees arbeiten gegen diese ID und eine nachvollziehbare
