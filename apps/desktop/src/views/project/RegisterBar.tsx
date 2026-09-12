@@ -44,6 +44,11 @@ export default function RegisterBar({
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
+  const [webhookError, setWebhookError] = useState<string | null>(null);
+  useEffect(() => {
+    const unlisten = listen<string>("webhook-error", (event) => setWebhookError(event.payload));
+    return () => { void unlisten.then((dispose) => dispose()); };
+  }, []);
 
   const apply = (next: RegisterStatus) => {
     setStatus(next);
@@ -154,6 +159,7 @@ export default function RegisterBar({
         <span aria-label="Register-Stand">· {parts.join(" · ")}</span>
         {status.last_sync ? <span className="text-slate-400" title={status.last_sync}>· Sync {status.last_sync.slice(11, 16)} UTC</span> : null}
         {status.last_error ? <span className="text-red-700">· {status.last_error}</span> : null}
+        {webhookError ? <span className="text-red-700" data-webhook-error>· Webhook: {webhookError}</span> : null}
         {status.reason && !status.rebasing ? <span className="text-amber-700">· {status.reason}</span> : null}
         <button className={quiet} disabled={busy !== null} onClick={() => void run("Spec-Register synchronisieren", "project_register_sync")}>
           {busy ? "Läuft…" : "Sync"}

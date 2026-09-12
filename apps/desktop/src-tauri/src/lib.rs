@@ -30,6 +30,7 @@ mod spec_owner;
 mod spec_register;
 mod spec_tasks;
 mod system_cmd;
+mod team_signals;
 mod terminal;
 mod toolbox_cmd;
 mod workflow_setup;
@@ -291,6 +292,8 @@ pub fn run() {
             spec_owner::project_spec_take,
             spec_owner::project_spec_release,
             spec_owner::project_spec_branches,
+            team_signals::project_register_changes,
+            team_signals::project_webhook_test,
             spec_register::project_register_status,
             spec_register::project_register_setup,
             spec_register::project_register_sync,

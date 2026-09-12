@@ -19,7 +19,7 @@ use diagnostics::{collect_issues, file_state, policy_state, protected_path};
 /// v1 = Board/Ticket-Workflow (2026-08-31), v2 = Spec-Workflow
 /// (Plan spec-workflow.md, 2026-09-09): der Block in agent.md wird beim
 /// Einrichten ersetzt, angepasste Texte außerhalb der Marker bleiben.
-pub const WORKFLOW_VERSION: u32 = 7; // v7: owner and branch per spec (Spec 029)
+pub const WORKFLOW_VERSION: u32 = 8; // v8: questions addressed to a person (Spec 030)
 
 const POLICY: &str = include_str!("../templates/workflow-policy.md");
 const BEGIN_PREFIX: &str = "<!-- speccify:workflow:begin v";
@@ -37,6 +37,10 @@ const TICKET_SKILLS: &[(&str, &str)] = &[
 ];
 
 const PREVIOUS_POLICY: &[(u32, &str)] = &[
+    (
+        7,
+        include_str!("../templates/history/workflow-policy-v7.md"),
+    ),
     (
         6,
         include_str!("../templates/history/workflow-policy-v6.md"),
@@ -518,7 +522,7 @@ mod tests {
                 policy_block().replace("## Spec workflow", "## Custom workflow"),
                 "customized",
             ),
-            (policy_block().replace("begin v7", "begin v99"), "newer"),
+            (policy_block().replace("begin v8", "begin v99"), "newer"),
             (policy_block().replace(END_MARKER, ""), "malformed"),
             (format!("{}{}", policy_block(), policy_block()), "malformed"),
         ] {
@@ -702,7 +706,7 @@ mod tests {
         assert!(dir.join("AGENTS.md").is_file());
         let agent_md = std::fs::read_to_string(dir.join(".agent/agent.md")).unwrap();
         assert!(agent_md.contains("## Spec workflow"));
-        assert!(agent_md.contains("speccify:workflow:begin v7"));
+        assert!(agent_md.contains("speccify:workflow:begin v8"));
 
         // Zweiter Lauf ist ein No-op auf Byte-Ebene.
         let first = std::fs::read_to_string(dir.join(".agent/agent.md")).unwrap();

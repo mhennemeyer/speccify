@@ -153,6 +153,14 @@ export default function ProjectShell() {
   const [toolbarActions, setToolbarActions] = useState<ToolbarAction[]>([]);
   // Spec 028: Konflikt-Specs aus dem Register fürs Board.
   const [registerConflicts, setRegisterConflicts] = useState<string[]>([]);
+  // Spec 030: Webhook je Projekt aus `.agent/settings.json` (`webhook.enabled`).
+  const [webhookEnabled, setWebhookEnabled] = useState(false);
+  useEffect(() => {
+    if (!project) return;
+    void invoke<Record<string, unknown>>("project_settings_get", { project })
+      .then((settings) => setWebhookEnabled(Boolean((settings.webhook as { enabled?: boolean } | undefined)?.enabled)))
+      .catch(() => {});
+  }, [project]);
 
   useEffect(() => {
     void invoke<string | null>("project_current")
@@ -822,6 +830,14 @@ export default function ProjectShell() {
           onToolbar={(ids) => updateLayout({ toolbar: ids })}
           onResetLayout={() => updateLayout({ ...DEFAULT_LAYOUT, toolbar: undefined })}
           onClose={() => setSettingsOpen(false)}
+          webhook={{
+            enabled: webhookEnabled,
+            onToggle: (value) => {
+              setWebhookEnabled(value);
+              void invoke("project_settings_set", { project, key: "webhook.enabled", value }).catch(() => setWebhookEnabled(!value));
+            },
+            onTest: () => invoke<string>("project_webhook_test", { project }),
+          }}
         />
       ) : null}
     </PanelsContext.Provider>

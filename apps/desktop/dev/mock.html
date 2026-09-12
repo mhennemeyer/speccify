@@ -37,6 +37,7 @@
         order: null,
         parent: "aufraeumen",
         open_question: null,
+        open_question_to: null,
         tasks_done: 0,
         tasks_total: 0,
         tasks: [],
@@ -128,6 +129,12 @@
       };
       window.__SPECCIFY_MOCK__ = { emit, actionStarts, failStart: false, failStop: false, taskCalls: [], staleTaskOnce: false, specs: tickets, workflowInstalls: 0, terminalOpens: [], sessionChecks: [], ownerCalls: [] };
       if (doingOwner) { const doing = tickets.find(s => s.station === "Doing"); doing.owner = doingOwner; doing.branch = `spec/${doing.id}`; }
+      window.__SPECCIFY_MOCK__.projectSettings = {};
+      const questionTo = new URLSearchParams(location.search).get("question");
+      if (questionTo === "me" || questionTo === "other") {
+        const asked = tickets.find(s => s.open_question);
+        asked.open_question_to = questionTo === "me" ? "demo@example.invalid" : "ben@example.invalid";
+      }
       let registerMode = new URLSearchParams(location.search).get("register") ?? "none";
       window.__SPECCIFY_MOCK__.registerCalls = [];
       const registerStatus = () => {
@@ -197,6 +204,17 @@
         project_register_sync: () => { window.__SPECCIFY_MOCK__.registerCalls.push("sync"); return { ...registerStatus(), last_sync: "2026-09-12T12:34:00Z" }; },
         project_register_resolve: ({ file, choice }) => { window.__SPECCIFY_MOCK__.registerCalls.push(`resolve:${choice}:${file}`); registerMode = "mounted"; return registerStatus(); },
         project_register_abort: () => { window.__SPECCIFY_MOCK__.registerCalls.push("abort"); registerMode = "mounted"; return { ...registerStatus(), ahead: 1, behind: 1 }; },
+        // Spec 030: ?changes=1 liefert fremde Register-Commits; Fragen mit `to` per ?question=me.
+        project_register_changes: () => new URLSearchParams(location.search).has("changes") ? ({
+          head: "beef0001", me: "demo@example.invalid",
+          specs: [{ spec_id: tickets[0].id, file: tickets[0].file, latest: "c0ffee02", commits: [
+            { hash: "c0ffee02", author: "Ben Kollege", email: "ben@example.invalid", date: "2026-09-12T10:05:00Z", subject: `spec(${tickets[0].id}): Task 2` },
+            { hash: "c0ffee01", author: "Ben Kollege", email: "ben@example.invalid", date: "2026-09-12T09:30:00Z", subject: `spec(${tickets[0].id}): Doing` },
+          ] }],
+        }) : { head: null, me: null, specs: [] },
+        project_webhook_test: () => { window.__SPECCIFY_MOCK__.ownerCalls.push("webhook-test"); return "Testnachricht gesendet an https://hooks.example.invalid/…"; },
+        project_settings_get: () => window.__SPECCIFY_MOCK__.projectSettings,
+        project_settings_set: ({ key, value }) => { window.__SPECCIFY_MOCK__.ownerCalls.push(`settings:${key}=${value}`); const s = window.__SPECCIFY_MOCK__.projectSettings; if (key === "webhook.enabled") s.webhook = { ...(s.webhook ?? {}), enabled: value }; return s; },
         project_spec_take: ({ file, branch }) => {
           const spec = tickets.find(s => s.file === file);
           window.__SPECCIFY_MOCK__.ownerCalls.push(`take:${file}:${branch ?? ""}`);

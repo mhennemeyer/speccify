@@ -605,6 +605,8 @@ pub struct TicketQuestion {
     pub number: u32,
     pub open: bool,
     pub asked_at: Option<String>,
+    /// Spec 030: Adressat (`· an: <email>` in der Kopfzeile).
+    pub to: Option<String>,
     pub text: String,
     pub answer: Option<String>,
     pub answered_at: Option<String>,
@@ -630,21 +632,31 @@ fn parse_entry_head(head: &str) -> Option<(bool, u32, Option<String>)> {
     Some((is_question, number, timestamp))
 }
 
+/// Spec 030: `· an: <email>` in der Kopfzeile adressiert eine Person.
+pub(crate) fn parse_addressee(head: &str) -> Option<String> {
+    let lower = head.to_ascii_lowercase();
+    let start = lower.find("an:")?;
+    let rest = &head[start + 3..];
+    let value = rest.split(['·', '|']).next()?.trim();
+    (!value.is_empty()).then(|| value.trim_matches(['<', '>']).to_ascii_lowercase())
+}
+
 /// Fragen samt Antworten aus einem Ticket-Body, älteste zuerst.
 pub(crate) fn parse_questions(body: &str) -> Vec<TicketQuestion> {
     let mut questions: Vec<TicketQuestion> = Vec::new();
     let mut answers: Vec<(u32, String, Option<String>)> = Vec::new();
     let mut in_section = false;
-    let mut current: Option<(bool, u32, Option<String>, Vec<String>)> = None;
+    let mut current: Option<(bool, u32, Option<String>, Option<String>, Vec<String>)> = None;
 
-    let mut finish = |entry: Option<(bool, u32, Option<String>, Vec<String>)>| {
-        if let Some((is_question, number, timestamp, lines)) = entry {
+    let mut finish = |entry: Option<(bool, u32, Option<String>, Option<String>, Vec<String>)>| {
+        if let Some((is_question, number, timestamp, to, lines)) = entry {
             let text = lines.join("\n").trim().to_string();
             if is_question {
                 questions.push(TicketQuestion {
                     number,
                     open: true,
                     asked_at: timestamp,
+                    to,
                     text,
                     answer: None,
                     answered_at: None,
@@ -670,12 +682,18 @@ pub(crate) fn parse_questions(body: &str) -> Vec<TicketQuestion> {
         if let Some(head) = trimmed.strip_prefix("###") {
             finish(current.take());
             if let Some((is_question, number, timestamp)) = parse_entry_head(head.trim()) {
-                current = Some((is_question, number, timestamp, Vec::new()));
+                current = Some((
+                    is_question,
+                    number,
+                    timestamp,
+                    parse_addressee(head),
+                    Vec::new(),
+                ));
             }
             continue;
         }
         if let Some(entry) = current.as_mut() {
-            entry.3.push(line.to_string());
+            entry.4.push(line.to_string());
         }
     }
     finish(current.take());
@@ -794,6 +812,8 @@ pub fn project_ticket_answer(
 pub struct OpenQuestion {
     pub spec_id: String,
     pub title: String,
+    /// Spec 030: adressierte Person (E-Mail), falls angegeben.
+    pub to: Option<String>,
     /// Dedupe-Schlüssel `<spec>|Q<n>` — nie zweimal melden.
     pub key: String,
     pub text: String,
@@ -818,16 +838,15 @@ pub(crate) fn scan_open_questions(root: &Path) -> Vec<OpenQuestion> {
         };
         let spec_id = crate::project_cmd::spec_id_of(root, &path);
         let title = heading_title(body).unwrap_or_else(|| spec_id.clone());
-        let question_text = parse_questions(body)
+        let question = parse_questions(body)
             .into_iter()
-            .find(|question| question.number == number && question.open)
-            .map(|question| question.text)
-            .unwrap_or_default();
+            .find(|question| question.number == number && question.open);
         open.push(OpenQuestion {
             key: format!("{spec_id}|Q{number}"),
             spec_id,
             title,
-            text: question_text,
+            to: question.as_ref().and_then(|q| q.to.clone()),
+            text: question.map(|question| question.text).unwrap_or_default(),
         });
     }
     open

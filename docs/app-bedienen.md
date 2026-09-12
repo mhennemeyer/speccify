@@ -218,6 +218,14 @@ einem anderen Branch steht, der Branch auf origin fehlt oder jemand anderes
 zuletzt gepusht hat — und wechselt nur nach Bestätigung. *Abgeben* legt die
 Spec zurück ins Backlog.
 
+**Was sich im Team getan hat:** Karten, die Kolleginnen seit Deinem letzten
+Blick geändert haben, tragen „neu · n von Person“ (Tooltip mit den Commits);
+ein Klick bestätigt. Eine Frage mit `an: deine@mail` erscheint als *Frage an
+Dich*. Optional schickt ein **Webhook** Stationswechsel, *bereit*, neue Fragen
+und Register-Konflikte aus diesem Rechner an Slack, Teams oder Mattermost:
+URL im Dashboard unter *Settings → Teamsignale* (oder
+`SPECCIFY_WEBHOOK_URL`), einschalten je Projekt im Zahnrad.
+
 ### Hilfe
 
 Diese Anleitung und die weiteren eingebauten Dokumente; der Inspektor

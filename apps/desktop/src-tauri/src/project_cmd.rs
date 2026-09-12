@@ -554,7 +554,7 @@ pub struct TicketEntry {
     /// Relativ zur Projektwurzel (Schlüssel für `project_board_move`).
     pub(crate) file: String,
     pub(crate) id: String,
-    title: String,
+    pub(crate) title: String,
     pub(crate) station: String,
     assignee: Option<String>,
     /// Spec 029: `Name <email>` der Person, die die Spec übernommen hat.
@@ -562,19 +562,21 @@ pub struct TicketEntry {
     /// Spec 029: Code-Branch der Arbeit (Konvention `spec/<NNN>-<slug>`).
     pub(crate) branch: Option<String>,
     created: Option<String>,
-    ready: bool,
+    pub(crate) ready: bool,
     needs_human: bool,
     /// Backlog-Sortierung: `order` → `created` → `id`; ohne `order` = Idee.
     order: Option<i64>,
     /// Ober-Spec (Thema) — treibt Filter und Done-Gruppierung.
     parent: Option<String>,
     /// `open_question: Q<n>` — älteste offene Rückfrage an den Menschen.
-    open_question: Option<String>,
+    pub(crate) open_question: Option<String>,
+    /// Spec 030: Adressat dieser Frage (`an: <email>`), falls angegeben.
+    pub(crate) open_question_to: Option<String>,
     /// `- [x]` von `- [ ]`+`- [x]` im Body.
     tasks_done: u32,
     tasks_total: u32,
     tasks: Vec<crate::spec_tasks::SpecTask>,
-    archived: bool,
+    pub(crate) archived: bool,
     /// Laufende Nummer aus dem Ordnernamen (`012-slug`), wenn vergeben.
     number: Option<u32>,
     body: String,
@@ -659,6 +661,18 @@ pub(crate) fn spec_from_text(root: &Path, path: &Path, text: &str) -> Option<Tic
             }
         });
     let tasks = crate::spec_tasks::parse_tasks(body);
+    let open_question = flat_lookup(&fields, "open_question")
+        .filter(|q| !q.is_empty() && *q != "null")
+        .map(str::to_string);
+    let open_question_to = open_question
+        .as_deref()
+        .and_then(|marker| marker.trim_start_matches(['Q', 'q']).parse::<u32>().ok())
+        .and_then(|number| {
+            crate::board_cmd::parse_questions(body)
+                .into_iter()
+                .find(|question| question.number == number && question.open)
+                .and_then(|question| question.to)
+        });
     let tasks_done = tasks.iter().filter(|task| task.done).count() as u32;
     let tasks_total = tasks.len() as u32;
     let number = spec_number_of(&id);
@@ -687,9 +701,8 @@ pub(crate) fn spec_from_text(root: &Path, path: &Path, text: &str) -> Option<Tic
         parent: flat_lookup(&fields, "parent")
             .filter(|p| !p.is_empty() && *p != "null")
             .map(str::to_string),
-        open_question: flat_lookup(&fields, "open_question")
-            .filter(|q| !q.is_empty() && *q != "null")
-            .map(str::to_string),
+        open_question,
+        open_question_to,
         tasks_done,
         tasks_total,
         tasks,

@@ -7,6 +7,7 @@
 
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 import Markdown from "../../components/Markdown";
 import { LoadingBoundary, useAsync } from "../../components/ui";
 import { copyPrompt } from "../../lib/prompt";
@@ -35,6 +36,8 @@ export interface SpecEntry {
   order: number | null;
   parent: string | null;
   open_question: string | null;
+  /** Spec 030: Adressat der offenen Frage (`an: <email>`). */
+  open_question_to: string | null;
   tasks_done: number;
   tasks_total: number;
   tasks: Task[];
@@ -169,6 +172,29 @@ function branchHints(spec: SpecEntry, report: BranchReport | null): string[] {
   return hints;
 }
 
+/** Spec 030: fremde Register-Commits je Spec seit dem letzten „gesehen“. */
+interface SpecChanges {
+  spec_id: string;
+  file: string;
+  commits: { hash: string; author: string; email: string; date: string; subject: string }[];
+  latest: string;
+}
+interface ChangesReport {
+  head: string | null;
+  me: string | null;
+  specs: SpecChanges[];
+}
+function seenKey(project: string) {
+  return `speccify.register.seen:${project}`;
+}
+function loadSeen(project: string): Record<string, string> {
+  try {
+    return JSON.parse(localStorage.getItem(seenKey(project)) ?? "{}") as Record<string, string>;
+  } catch {
+    return {};
+  }
+}
+
 interface Task {
   index: number;
   text: string;
@@ -252,6 +278,9 @@ function SpecCard({
   spec,
   selected,
   conflict = false,
+  changes = null,
+  forMe = false,
+  onSeen,
   onSelect,
   onEdit,
 }: {
@@ -259,6 +288,11 @@ function SpecCard({
   selected: boolean;
   /** Spec 028: im Register steht ein unentschiedener Konflikt. */
   conflict?: boolean;
+  /** Spec 030: fremde Änderungen seit dem letzten Bestätigen. */
+  changes?: SpecChanges | null;
+  /** Spec 030: die offene Frage ist an mich adressiert. */
+  forMe?: boolean;
+  onSeen?: () => void;
   onSelect: () => void;
   /** Doppelklick öffnet den Editor (BO 2026-09-08). */
   onEdit: () => void;
@@ -305,9 +339,25 @@ function SpecCard({
               Konflikt
             </span>
           ) : null}
+          {forMe ? (
+            <span className="rounded bg-orange-100 px-1.5 py-0.5 font-semibold text-orange-800" title={`Frage ${spec.open_question ?? ""} ist an Dich adressiert`}>
+              Frage an Dich
+            </span>
+          ) : null}
           {spec.archived ? <span>Altbestand · nur lesen</span> : null}
         </div>
       </button>
+      {changes ? (
+        <button
+          type="button"
+          onClick={(event) => { event.stopPropagation(); onSeen?.(); }}
+          data-spec-new={spec.id}
+          title={`Neu vom Team — Klick bestätigt:\n${changes.commits.map((commit) => `${commit.date.slice(0, 16).replace("T", " ")} ${commit.author}: ${commit.subject}`).join("\n")}`}
+          className="mt-1 rounded bg-sky-600 px-1.5 py-0.5 text-[10px] font-semibold text-white hover:bg-sky-700"
+        >
+          neu · {changes.commits.length} von {[...new Set(changes.commits.map((commit) => commit.author))].join(", ")}
+        </button>
+      ) : null}
     </div>
   );
 }
@@ -773,11 +823,37 @@ export default function BoardTab({ project, refresh, detailFile, detailOnly = fa
   );
   const report = branches.data ?? null;
   const myEmail = report?.me?.email.toLowerCase() ?? null;
+  // Spec 030: fremde Commits im Register seit „gesehen“; Merker je Spec lokal.
+  const [seen, setSeen] = useState<Record<string, string>>(() => loadSeen(project));
+  const changes = useAsync(
+    () => invoke<ChangesReport>("project_register_changes", { project, since: null }).catch(() => null),
+    `register-changes:${project}`,
+  );
+  useEffect(() => {
+    const unlisten = listen<{ project: string }>("register-changed", (event) => {
+      if (event.payload.project === project) { void changes.reload(); void branches.reload(); }
+    });
+    return () => { void unlisten.then((dispose) => dispose()); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [project]);
+  const changesFor = (spec: SpecEntry): SpecChanges | null => {
+    const entry = changes.data?.specs.find((item) => item.spec_id === spec.id);
+    return entry && seen[spec.id] !== entry.latest ? entry : null;
+  };
+  const markSeen = (spec: SpecEntry) => {
+    const entry = changes.data?.specs.find((item) => item.spec_id === spec.id);
+    if (!entry) return;
+    const next = { ...seen, [spec.id]: entry.latest };
+    setSeen(next);
+    try { localStorage.setItem(seenKey(project), JSON.stringify(next)); } catch { /* ohne Merker bleibt die Markierung */ }
+  };
+  const forMe = (spec: SpecEntry) => !!spec.open_question_to && !!myEmail && spec.open_question_to.toLowerCase() === myEmail;
+  const questionsForMe = (data ?? []).filter((spec) => !spec.archived && forMe(spec)).length;
   const isMine = (spec: SpecEntry) => !!spec.owner && !!myEmail && ownerEmail(spec.owner) === myEmail;
 
   const allSpecs = data ?? [];
   const live = allSpecs.filter((spec) => !spec.archived);
-  const needsAttention = (spec: SpecEntry) => spec.open_question !== null || spec.needs_human;
+  const needsAttention = (spec: SpecEntry) => spec.open_question !== null || spec.needs_human || forMe(spec);
   const parents = [...new Set(allSpecs.map((spec) => spec.parent).filter((p): p is string => Boolean(p)))].sort();
   const query = search.trim().toLocaleLowerCase();
   const specs = allSpecs.filter(
@@ -821,7 +897,7 @@ export default function BoardTab({ project, refresh, detailFile, detailOnly = fa
   }, [selected]);
 
   useEffect(() => {
-    if (refresh) void branches.reload();
+    if (refresh) { void branches.reload(); void changes.reload(); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refresh]);
   useEffect(() => {
@@ -993,6 +1069,11 @@ export default function BoardTab({ project, refresh, detailFile, detailOnly = fa
             >
               meine
             </button>
+            {questionsForMe > 0 ? (
+              <span className="rounded-full bg-orange-100 px-2.5 py-1 text-[11px] font-semibold text-orange-800" data-questions-for-me={questionsForMe}>
+                {questionsForMe} {questionsForMe === 1 ? "Frage" : "Fragen"} an Dich
+              </span>
+            ) : null}
             <button
               onClick={() => setByPerson((previous) => !previous)}
               className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${
@@ -1078,6 +1159,9 @@ export default function BoardTab({ project, refresh, detailFile, detailOnly = fa
                 key={spec.file}
                 spec={spec}
                 conflict={conflictIds.includes(spec.id)}
+                changes={changesFor(spec)}
+                forMe={forMe(spec)}
+                onSeen={() => markSeen(spec)}
                 selected={selected === spec.file}
                 onSelect={() => setSelected(selected === spec.file ? null : spec.file)}
                 onEdit={() => {

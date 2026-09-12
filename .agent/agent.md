@@ -109,7 +109,7 @@ vor einer Implementierung verstanden sein. Prüfe Implementierungen mit
 `speccify tool check <name>`; ändere den Status in `expansions.yaml` nie von
 Hand. `speccify verify` prüft Lock-, Bundle-, Expansions- und Tool-Drift.
 
-<!-- speccify:workflow:begin v7 -->
+<!-- speccify:workflow:begin v8 -->
 ## Spec workflow
 
 The human owns priorities, authorization and acceptance; you implement the
@@ -189,7 +189,8 @@ The question, one paragraph.
 ```
 
 and set `open_question: Q1` in the front matter (always the oldest open
-question). When the human answers (`### A1 · bo · <ts>`), copy the outcome
+question). To address one person, append `· an: <email>` to the heading
+(`### Q1 · open · <ts> · an: mh@example.com`); their board highlights it. When the human answers (`### A1 · bo · <ts>`), copy the outcome
 into `## Decisions` and clear or advance `open_question`. Question numbers
 are never reused. `needs_human` stays untouched by answers — it marks human
 acceptance, not an open question.

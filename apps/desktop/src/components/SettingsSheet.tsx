@@ -1,3 +1,4 @@
+import { useState } from "react";
 // Einstellungen des Projektfensters (W7c): Erscheinungsbild (global),
 // Terminal-Position und Layout-Reset (pro Projekt). Das Agent-Kommando
 // bleibt im Agent-Tab und am Terminal-Start.
@@ -17,6 +18,7 @@ export default function SettingsSheet({
   onToolbar,
   onResetLayout,
   onClose,
+  webhook,
 }: {
   theme: ThemePref;
   onTheme: (next: ThemePref) => void;
@@ -29,7 +31,10 @@ export default function SettingsSheet({
   onToolbar: (ids: string[]) => void;
   onResetLayout: () => void;
   onClose: () => void;
+  /** Spec 030: Webhook je Projekt (nur im Projektfenster). */
+  webhook?: { enabled: boolean; onToggle: (value: boolean) => void; onTest: () => Promise<string>; };
 }) {
+  const [testResult, setTestResult] = useState<string | null>(null);
   return (
     // Popover unter dem Zahnrad, ohne Abdunkeln — ein dunkler Schleier
     // liest sich wie ein Moduswechsel (BO-Finding 2026-09-04).
@@ -164,6 +169,28 @@ export default function SettingsSheet({
           </ul>
         </section>
 
+        {webhook ? (
+          <section className="mb-4">
+            <h3 className="mb-1 text-xs font-semibold text-slate-500">Teamsignale</h3>
+            <label className="flex items-start gap-2 text-xs text-slate-600">
+              <input type="checkbox" checked={webhook.enabled} onChange={(event) => webhook.onToggle(event.target.checked)} className="mt-0.5" />
+              <span>
+                Webhook für dieses Projekt: Stationswechsel, <em>bereit</em>, neue Frage und Register-Konflikt,
+                die hier entstehen, als Nachricht senden (Slack/Teams/Mattermost). Die URL steht nur in
+                <code>SPECCIFY_WEBHOOK_URL</code> oder in den Dashboard-Settings, nie im Projekt.
+              </span>
+            </label>
+            <div className="mt-2 flex items-center gap-2">
+              <button
+                className="rounded border border-slate-300 px-2.5 py-1 text-xs text-slate-700 hover:bg-slate-100"
+                onClick={() => void webhook.onTest().then(setTestResult).catch((error: unknown) => setTestResult(String(error)))}
+              >
+                Testnachricht senden
+              </button>
+              {testResult ? <span className="text-xs text-slate-500">{testResult}</span> : null}
+            </div>
+          </section>
+        ) : null}
         <section>
           <h3 className="mb-1 text-xs font-semibold text-slate-500">Layout</h3>
           <p className="mb-2 text-xs text-slate-500">

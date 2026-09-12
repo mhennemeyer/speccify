@@ -91,6 +91,26 @@ Minute `git fetch --prune origin`.
 Zwei gleichzeitige Übernahmen ändern dieselbe `owner`-Zeile und werden beim
 Sync des Registers als Konflikt sichtbar.
 
+## Teamsignale (Spec 030)
+
+- **Neu vom Team:** Nach jedem Sync listet die App fremde Commits des
+  Registers (Autor ≠ eigene Git-E-Mail) je Spec. Die Karte trägt „neu · n von
+  Person“; der Tooltip zeigt Zeit, Person und Commit-Betreff. Ein Klick
+  bestätigt (Merker je Spec im lokalen UI-Speicher); eigene Änderungen
+  markieren nie.
+- **Fragen an Personen:** `### Q1 · open · <ts> · an: <email>` adressiert eine
+  Frage. Beim Adressaten zeigt die Karte „Frage an Dich“, der Board-Kopf zählt,
+  *braucht mich* filtert darauf. `open_question` bleibt wie gehabt.
+- **Webhook (ausgehend, optional):** Projekt-Einstellungen → *Teamsignale*
+  schaltet ihn je Projekt ein (`webhook.enabled`, optional `webhook.events`
+  in `.agent/settings.json`); die URL steht nur in `SPECCIFY_WEBHOOK_URL` oder
+  in den Dashboard-Settings, nie im Projekt. Gesendet werden Stationswechsel,
+  *bereit*, neue Frage und Register-Konflikt — und nur, wenn sie **hier**
+  entstanden sind (im Register: noch nicht committete Dateien der Spec). Was
+  der Sync vom Team hereinholt, löst keine Nachricht aus. Nutzlast ist JSON
+  mit `text` (Slack/Teams/Mattermost-kompatibel) sowie `event`, `spec_id`,
+  `title`, `person`, `project`, `path`. Fehler erscheinen im Board-Kopf.
+
 ## Nummern
 
 Neue Specs nehmen die nächste freie Nummer über lokale Ordner **und**

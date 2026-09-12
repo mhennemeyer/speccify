@@ -130,6 +130,17 @@ branch is missing on origin, someone else pushed last, no movement for
 days — and only says so; switching branches needs your confirmation.
 **Release** puts the spec back into the Backlog.
 
+## What changed while you were away
+
+Cards that teammates changed since you last looked carry a *new* mark
+with author and commit subjects; one click confirms. A question
+addressed with `an: your@mail` shows up as *question for you* and counts
+in the board header. Optionally, an outgoing webhook posts station
+changes, *ready*, new questions and register conflicts that originate on
+your machine to Slack, Teams or Mattermost — the URL lives in the
+dashboard settings or an environment variable, never in the project; the
+switch is per project.
+
 ## History: the spec's memory
 
 Each spec folder has an append-only `history.jsonl` — one JSON line per

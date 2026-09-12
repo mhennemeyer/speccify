@@ -77,8 +77,7 @@ The question, one paragraph.
 ```
 
 and set `open_question: Q1` in the front matter (always the oldest open
-question). To address one person, append `· an: <email>` to the heading
-(`### Q1 · open · <ts> · an: mh@example.com`); their board highlights it. When the human answers (`### A1 · bo · <ts>`), copy the outcome
+question). When the human answers (`### A1 · bo · <ts>`), copy the outcome
 into `## Decisions` and clear or advance `open_question`. Question numbers
 are never reused. `needs_human` stays untouched by answers — it marks human
 acceptance, not an open question.

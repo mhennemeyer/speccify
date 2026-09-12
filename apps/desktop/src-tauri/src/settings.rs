@@ -23,6 +23,10 @@ pub struct AppSettings {
     /// Eintrag migriert und bleibt als Feld für ältere Stände.
     #[serde(default)]
     pub skill_sources: Vec<String>,
+    /// Spec 030: ausgehender Webhook (Slack/Teams/Mattermost). Nur hier oder
+    /// in `SPECCIFY_WEBHOOK_URL` — nie in getrackten Projektdateien.
+    #[serde(default)]
+    pub webhook_url: Option<String>,
 }
 
 fn default_theme() -> String {
@@ -36,6 +40,7 @@ impl Default for AppSettings {
             skill_library: None,
             theme: default_theme(),
             skill_sources: Vec::new(),
+            webhook_url: None,
             terminal_autostart_command: if cfg!(windows) {
                 "claude.cmd".into()
             } else {

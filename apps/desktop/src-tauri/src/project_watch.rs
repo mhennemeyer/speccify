@@ -224,6 +224,15 @@ pub fn project_watch_start(
         // Register-Sync (028): fällig nach Board-Ruhe oder im Periodenraster.
         let mut register_due: Option<std::time::Instant> = None;
         let mut register_last = std::time::Instant::now();
+        // Teamsignale (030): Board-Stand für lokale Ereignisse, Konflikt-Flanke.
+        let mut board_snapshot = crate::team_signals::snapshot(&root);
+        let mut was_rebasing = false;
+        let webhook_error = {
+            let window = window.clone();
+            move |message: String| {
+                let _ = window.emit("webhook-error", message);
+            }
+        };
         loop {
             std::thread::sleep(POLL_INTERVAL);
             if stop.load(Ordering::Relaxed) {
@@ -240,6 +249,20 @@ pub fn project_watch_start(
                     register_due = None;
                     register_last = now;
                     if let Ok(status) = crate::spec_register::sync(&root) {
+                        if status.rebasing && !was_rebasing {
+                            for conflict in &status.conflicts {
+                                let event = crate::team_signals::event(
+                                    "conflict",
+                                    &root,
+                                    &conflict.spec_id,
+                                    &conflict.spec_id,
+                                    &conflict.file,
+                                    "",
+                                );
+                                crate::team_signals::dispatch(&root, event, webhook_error.clone());
+                            }
+                        }
+                        was_rebasing = status.rebasing;
                         let _ = window.emit(
                             "register-changed",
                             RegisterChanged {
@@ -260,6 +283,28 @@ pub fn project_watch_start(
             }
             if areas.contains(&"board") && crate::spec_register::is_mounted(&root) {
                 register_due = Some(std::time::Instant::now() + REGISTER_DEBOUNCE);
+            }
+            if areas.contains(&"board") {
+                // Webhook nur für Ereignisse, die hier entstanden sind — nicht
+                // für das, was der Sync vom Team hereinholt.
+                let next_snapshot = crate::team_signals::snapshot(&root);
+                for (kind, spec, detail) in
+                    crate::team_signals::diff(&board_snapshot, &next_snapshot)
+                {
+                    if !crate::team_signals::locally_originated(&root, &spec.spec_id) {
+                        continue;
+                    }
+                    let event = crate::team_signals::event(
+                        &kind,
+                        &root,
+                        &spec.spec_id,
+                        &spec.title,
+                        &spec.file,
+                        &detail,
+                    );
+                    crate::team_signals::dispatch(&root, event, webhook_error.clone());
+                }
+                board_snapshot = next_snapshot;
             }
             let _ = window.emit(
                 "project-changed",

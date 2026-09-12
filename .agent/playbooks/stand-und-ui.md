@@ -158,6 +158,7 @@ Speccify · Dashboard
 │   ├── Settings
 │   │   ├── Erscheinungsbild: System / Hell / Dunkel (fensterübergreifend)
 │   │   ├── Agent-Sitzung: Dashboard-Fortsetzung nach Neustart
+│   │   ├── Teamsignale: Webhook-URL (030)
 │   │   ├── Working Dir: Pfad / Verzeichnisdialog
 │   │   ├── Skill-Quellen: Anzahl / Verweis auf Bibliothek
 │   │   ├── Terminal-Agent: Autostart-Kommando / Presets
@@ -189,6 +190,7 @@ Projektfenster · ein Projektpfad (Startbereich: Specs)
 │       ├── Erscheinungsbild: System / Hell / Dunkel
 │       ├── Agent-Terminal: Unten / Rechts
 │       ├── Agent-Sitzung: automatisch fortsetzen
+│       ├── Teamsignale: Webhook je Projekt · Testnachricht (030)
 │       ├── Toolbar: Knöpfe aktivieren/deaktivieren · Reihenfolge ändern
 │       └── Layout zurücksetzen · Schließen
 ├── Navigator links: Bereichsgruppen → Unter-Tabs → tabbezogene Liste
@@ -304,6 +306,7 @@ Navigator · fünf Gruppen, zehn Tabs
 │   ├── Filter über Board: Suche (Titel/Nummer/Pfad) · Ober-Spec · braucht mich · zurücksetzen
 │   ├── Lauf-Kennzahlen → Liste jüngster Läufe (wenn History Daten enthält)
 │   ├── unnummerierte Specs nummerieren (falls vorhanden)
+│   ├── neu-Chips je Karte (030, Klick bestätigt) · Frage an Dich (Karte + Zähler im Kopf)
 │   ├── Filter meine · Doing nach Person (029); Karten mit Initialen/Branch; Inspektor: Besitz/Branch/Hinweise · Übernehmen · Abgeben · Branch wechseln (bestätigt)
 │   ├── Register-Kopf (028): Einrichten… → Bestätigung → Jetzt einrichten · Einhängen · blockiert (Grund)
 │   │   └── eingehängt: Stand (aktuell / n nicht gesendet / n zu pushen / n neu vom Team) · Sync · Konflikte je Datei (Team / Meine / bearbeitet / Abbrechen)
@@ -415,7 +418,7 @@ Diese Tabelle verändert keine Station oder Reihenfolge.
 | [026 Workspace-Arbeitsfenster](../specs/026-workspace-arbeitsfenster/SPEC.md) | Doing · ready | Alle Projekte im selben Fenster, gemeinsames editierbares Board, isolierte Ziele/Zustände; acht UI-Suites und 86 Rust-Tests grün, itsdcloud nativ geöffnet und nach Neustart wiederhergestellt; menschliche Abnahme offen |
 | [028 Spec-Branch als Register](../specs/028-spec-branch-als-register/SPEC.md) | Doing · ready | D-TEAM-02: `spec_register.rs` (Status/Migration/Einhängen/Sync/Konflikt), Watcher-Sync, `RegisterBar`, Policy v6, Suite `test_spec_register`; **eigenes Repo seit 2026-09-12 migriert** (`.agent/specs` = Worktree von `specs`); Klick-Abnahme offen |
 | [029 Übernahme/Besitzer/Branch](../specs/029-uebernahme-besitzer-branch/SPEC.md) | Doing · ready | `spec_owner.rs` (Übernehmen/Abgeben, Drag-Regeln, Branch-Beobachtung), Chips, Filter „meine“, „Doing nach Person“, Inspektor-Hinweise, Policy v7, Suite `test_spec_owner`; Klick-Abnahme offen |
-| [030 Teamsignale über Git](../specs/030-teamsignale-ueber-git/SPEC.md) | Backlog | „neu seit Sync“, Fragen an Personen, optionaler Webhook; kein eigener Dienst; Entwurf |
+| [030 Teamsignale über Git](../specs/030-teamsignale-ueber-git/SPEC.md) | Doing · ready | `team_signals.rs` (fremde Commits je Spec, Webhook nur für lokal entstandene Ereignisse, Board-Diff im Watcher), „neu“-Chips, „Frage an Dich“, Webhook-Einstellungen (Dashboard-URL, Projekt-Schalter), Policy v8, Suite `test_team_signals`; Klick-Abnahme und echter Webhook-Empfänger offen |
 
 ### Gemeinsames Workspace-Arbeitsfenster (026)
 

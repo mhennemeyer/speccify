@@ -19,6 +19,8 @@ interface AppSettings {
   /** Globale Skill-Quellen — gepflegt in der Bibliothek, hier nur durchgereicht. */
   skill_sources: string[];
   theme: string;
+  /** Spec 030: Webhook-URL für Teamsignale — nur hier oder in SPECCIFY_WEBHOOK_URL. */
+  webhook_url?: string | null;
 }
 
 interface BriefingStatus {
@@ -121,6 +123,21 @@ export default function SettingsView() {
       </section>
 
       <section>
+        <h3 className="mb-2 text-sm font-semibold text-slate-700">Teamsignale</h3>
+        <p className="mb-2 text-sm text-slate-600">
+          Webhook-URL (Slack, Teams, Mattermost) für Nachrichten aus Projekten, die den Webhook in
+          ihren Einstellungen aktiviert haben. Bleibt auf diesem Rechner; alternativ die
+          Umgebungsvariable <code>SPECCIFY_WEBHOOK_URL</code>.
+        </p>
+        <input
+          aria-label="Webhook-URL"
+          value={settings.webhook_url ?? ""}
+          onChange={(e) => setSettings({ ...settings, webhook_url: e.target.value || null })}
+          onBlur={() => void save(settings)}
+          placeholder="https://hooks.slack.com/services/…"
+          className="mb-6 w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm"
+          spellCheck={false}
+        />
         <h3 className="mb-2 text-sm font-semibold text-slate-700">Working Dir</h3>
         <p className="mb-2 text-sm text-slate-600">
           Hier landen eigene Tools/MCPs (<code>.speccify/toolbox/</code>) und
