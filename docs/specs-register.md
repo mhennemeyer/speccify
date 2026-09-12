@@ -126,6 +126,17 @@ läuft; sonst `add`/`commit`/`pull --rebase`/`push` ohne Force; gestoppte
 Rebases melden, nicht auflösen; in frischen Klonen den Worktree einhängen;
 `.agent/specs` nie in einen Code-Branch committen.
 
+## Team-Board im Web (Spec 031)
+
+`speccify board --project <repo> --out board.html` rendert den Stand des
+Registers als eine statische, in sich geschlossene HTML-Seite: Kennzahlen,
+Aktivität der letzten 30 Tage, „Doing nach Person“, Board mit Fortschritt,
+Besitzer, Branch und Flags, Suche und Filter. Für Speccify selbst baut der
+Pages-Workflow die Seite aus `origin/specs` (`speccify.io/board/`); ein Push
+auf `specs` löst den Deploy über `.github/workflows/board.yml` im Branch
+`specs` aus. Private Teams lassen denselben Befehl in ihrer CI laufen und legen
+die Datei auf einen internen Host — kein Dienst, kein Login, keine Datenbank.
+
 ## Release
 
 Zum Release den Commit des Branch `specs` in den Release-Notizen nennen

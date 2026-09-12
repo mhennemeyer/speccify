@@ -13,7 +13,7 @@ name: Deploy site
 
 on:
   push:
-    branches: [main, specs]
+    branches: [main]
     paths:
       - "apps/marketing/**"
       - "docs/**"
@@ -21,10 +21,9 @@ on:
       - "scripts/gen_cli_docs.py"
       - ".github/workflows/pages.yml"
       - "core/src/speccify_core/board.py"
-      # Spec 031: the team board is rebuilt on every push to the `specs`
-      # branch, whose files live at the root (`<NNN-slug>/SPEC.md`).
-      - "*/SPEC.md"
-      - "*/history.jsonl"
+  # Spec 031: pushes to the `specs` branch dispatch this workflow through the
+  # tiny `.github/workflows/board.yml` that lives on that branch (GitHub runs
+  # push workflows from the pushed branch, so it cannot live here).
   workflow_dispatch:
 
 permissions:
