@@ -23,8 +23,14 @@
           path: "/Users/me/.speccify/sources/github.com-mhennemeyer-speccify-skills", state: "ready", detail: null },
       ];
       // Specs (Plan spec-workflow.md): `.agent/specs/<slug>/SPEC.md`.
+      // Spec 029: ?owner=me|other|none steuert Besitzer der Doing-Spec und Branch-Beobachtung.
+      const ownerDemo = new URLSearchParams(location.search).get("owner") ?? "none";
+      const meIdentity = { name: "Demo Person", email: "demo@example.invalid" };
+      const doingOwner = ownerDemo === "me" ? "Demo Person <demo@example.invalid>" : ownerDemo === "other" ? "Ben Kollege <ben@example.invalid>" : null;
       const base = {
         assignee: null,
+        owner: null,
+        branch: null,
         created: "2026-08-31",
         ready: false,
         needs_human: false,
@@ -120,7 +126,8 @@
           if (listener.event === event) window[`_${listener.handler}`]({ event, id, payload });
         }
       };
-      window.__SPECCIFY_MOCK__ = { emit, actionStarts, failStart: false, failStop: false, taskCalls: [], staleTaskOnce: false, specs: tickets, workflowInstalls: 0, terminalOpens: [], sessionChecks: [] };
+      window.__SPECCIFY_MOCK__ = { emit, actionStarts, failStart: false, failStop: false, taskCalls: [], staleTaskOnce: false, specs: tickets, workflowInstalls: 0, terminalOpens: [], sessionChecks: [], ownerCalls: [] };
+      if (doingOwner) { const doing = tickets.find(s => s.station === "Doing"); doing.owner = doingOwner; doing.branch = `spec/${doing.id}`; }
       let registerMode = new URLSearchParams(location.search).get("register") ?? "none";
       window.__SPECCIFY_MOCK__.registerCalls = [];
       const registerStatus = () => {
@@ -190,6 +197,26 @@
         project_register_sync: () => { window.__SPECCIFY_MOCK__.registerCalls.push("sync"); return { ...registerStatus(), last_sync: "2026-09-12T12:34:00Z" }; },
         project_register_resolve: ({ file, choice }) => { window.__SPECCIFY_MOCK__.registerCalls.push(`resolve:${choice}:${file}`); registerMode = "mounted"; return registerStatus(); },
         project_register_abort: () => { window.__SPECCIFY_MOCK__.registerCalls.push("abort"); registerMode = "mounted"; return { ...registerStatus(), ahead: 1, behind: 1 }; },
+        project_spec_take: ({ file, branch }) => {
+          const spec = tickets.find(s => s.file === file);
+          window.__SPECCIFY_MOCK__.ownerCalls.push(`take:${file}:${branch ?? ""}`);
+          spec.station = "Doing"; spec.owner = "Demo Person <demo@example.invalid>"; spec.branch = branch ?? spec.branch ?? `spec/${spec.id}`;
+          return { owner: spec.owner, branch: spec.branch };
+        },
+        project_spec_release: ({ file }) => {
+          const spec = tickets.find(s => s.file === file);
+          window.__SPECCIFY_MOCK__.ownerCalls.push(`release:${file}`);
+          spec.station = "Backlog"; spec.owner = null;
+          return null;
+        },
+        project_spec_branches: () => ({
+          current: ownerDemo === "none" ? null : "main", me: ownerDemo === "none" ? null : meIdentity, fetched: true,
+          specs: tickets.filter(s => s.station === "Doing" && s.branch).map(s => ({
+            file: s.file, spec_id: s.id, branch: s.branch, local: false, remote: ownerDemo === "other",
+            last_author: ownerDemo === "other" ? "Ben Kollege" : null, last_email: ownerDemo === "other" ? "ben@example.invalid" : null,
+            last_date: ownerDemo === "other" ? "2026-09-01T10:00:00Z" : null, stale_days: ownerDemo === "other" ? 11 : null, current: false,
+          })),
+        }),
         project_workflow_status: workflowStatus,
         project_workflow_install: () => { window.__SPECCIFY_MOCK__.workflowInstalls++; return workflowStatus(); },
         project_board: () => orEmpty(tickets),

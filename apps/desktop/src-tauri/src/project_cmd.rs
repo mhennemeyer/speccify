@@ -552,11 +552,15 @@ pub(crate) fn heading_title(body: &str) -> Option<String> {
 #[derive(Serialize)]
 pub struct TicketEntry {
     /// Relativ zur Projektwurzel (Schlüssel für `project_board_move`).
-    file: String,
-    id: String,
+    pub(crate) file: String,
+    pub(crate) id: String,
     title: String,
-    station: String,
+    pub(crate) station: String,
     assignee: Option<String>,
+    /// Spec 029: `Name <email>` der Person, die die Spec übernommen hat.
+    pub(crate) owner: Option<String>,
+    /// Spec 029: Code-Branch der Arbeit (Konvention `spec/<NNN>-<slug>`).
+    pub(crate) branch: Option<String>,
     created: Option<String>,
     ready: bool,
     needs_human: bool,
@@ -670,6 +674,12 @@ pub(crate) fn spec_from_text(root: &Path, path: &Path, text: &str) -> Option<Tic
         id,
         station,
         assignee: flat_lookup(&fields, "assignee").map(str::to_string),
+        owner: flat_lookup(&fields, "owner")
+            .filter(|v| !v.is_empty() && *v != "null")
+            .map(str::to_string),
+        branch: flat_lookup(&fields, "branch")
+            .filter(|v| !v.is_empty() && *v != "null")
+            .map(str::to_string),
         created: flat_lookup(&fields, "created").map(str::to_string),
         ready: flat_truthy(&fields, "ready"),
         needs_human: flat_truthy(&fields, "needs_human"),
@@ -746,12 +756,20 @@ pub fn project_board_move(project: String, file: String, station: String) -> Res
                 .map(|stem| stem.to_string_lossy().into_owned())
                 .unwrap_or_default()
         });
+    // Spec 029: Übernehmen/Abgeben hängt am Stationswechsel.
+    let (out, ownership) = crate::spec_owner::apply_move(
+        &root,
+        &spec_id_of(&root, &path),
+        &out,
+        &old_station,
+        &station,
+    )?;
     std::fs::write(&path, out).map_err(|e| format!("{}: {e}", path.display()))?;
     crate::board_cmd::log_user_event(
         &root,
         &ticket_id,
         "station_changed",
-        format!("{old_station} -> {station}"),
+        format!("{old_station} -> {station}{ownership}"),
     );
     Ok(())
 }

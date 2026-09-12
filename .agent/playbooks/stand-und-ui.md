@@ -304,6 +304,7 @@ Navigator · fünf Gruppen, zehn Tabs
 │   ├── Filter über Board: Suche (Titel/Nummer/Pfad) · Ober-Spec · braucht mich · zurücksetzen
 │   ├── Lauf-Kennzahlen → Liste jüngster Läufe (wenn History Daten enthält)
 │   ├── unnummerierte Specs nummerieren (falls vorhanden)
+│   ├── Filter meine · Doing nach Person (029); Karten mit Initialen/Branch; Inspektor: Besitz/Branch/Hinweise · Übernehmen · Abgeben · Branch wechseln (bestätigt)
 │   ├── Register-Kopf (028): Einrichten… → Bestätigung → Jetzt einrichten · Einhängen · blockiert (Grund)
 │   │   └── eingehängt: Stand (aktuell / n nicht gesendet / n zu pushen / n neu vom Team) · Sync · Konflikte je Datei (Team / Meine / bearbeitet / Abbrechen)
 │   ├── Board: Backlog / Doing / Done (v1: Slate / Blau / Grün; getönte Flächen)
@@ -413,7 +414,7 @@ Diese Tabelle verändert keine Station oder Reihenfolge.
 | [025 Workspace-Suchtiefe](../specs/025-workspace-suchtiefe/SPEC.md) | Doing · ready | Nutzerbild und gespeicherte Revision 3 ohne Warnung; finale Board-Entkopplung im lokalen 026-Build enthalten, Q1 geschlossen; menschliche Abnahme offen |
 | [026 Workspace-Arbeitsfenster](../specs/026-workspace-arbeitsfenster/SPEC.md) | Doing · ready | Alle Projekte im selben Fenster, gemeinsames editierbares Board, isolierte Ziele/Zustände; acht UI-Suites und 86 Rust-Tests grün, itsdcloud nativ geöffnet und nach Neustart wiederhergestellt; menschliche Abnahme offen |
 | [028 Spec-Branch als Register](../specs/028-spec-branch-als-register/SPEC.md) | Doing · ready | D-TEAM-02: `spec_register.rs` (Status/Migration/Einhängen/Sync/Konflikt), Watcher-Sync, `RegisterBar`, Policy v6, Suite `test_spec_register`; **eigenes Repo seit 2026-09-12 migriert** (`.agent/specs` = Worktree von `specs`); Klick-Abnahme offen |
-| [029 Übernahme/Besitzer/Branch](../specs/029-uebernahme-besitzer-branch/SPEC.md) | Backlog | `owner`/`branch` je Spec, Filter „meine“, Abweichungen sichtbar; Entwurf |
+| [029 Übernahme/Besitzer/Branch](../specs/029-uebernahme-besitzer-branch/SPEC.md) | Doing · ready | `spec_owner.rs` (Übernehmen/Abgeben, Drag-Regeln, Branch-Beobachtung), Chips, Filter „meine“, „Doing nach Person“, Inspektor-Hinweise, Policy v7, Suite `test_spec_owner`; Klick-Abnahme offen |
 | [030 Teamsignale über Git](../specs/030-teamsignale-ueber-git/SPEC.md) | Backlog | „neu seit Sync“, Fragen an Personen, optionaler Webhook; kein eigener Dienst; Entwurf |
 
 ### Gemeinsames Workspace-Arbeitsfenster (026)

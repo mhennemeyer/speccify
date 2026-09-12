@@ -109,7 +109,7 @@ vor einer Implementierung verstanden sein. Prüfe Implementierungen mit
 `speccify tool check <name>`; ändere den Status in `expansions.yaml` nie von
 Hand. `speccify verify` prüft Lock-, Bundle-, Expansions- und Tool-Drift.
 
-<!-- speccify:workflow:begin v6 -->
+<!-- speccify:workflow:begin v7 -->
 ## Spec workflow
 
 The human owns priorities, authorization and acceptance; you implement the
@@ -230,6 +230,16 @@ markers in a `SPEC.md` is a human decision: report it, do not resolve it
 silently. In a fresh clone without the worktree, mount it with
 `git worktree add .agent/specs origin/specs` (the app offers the same under
 "Einrichten"). Never add `.agent/specs` to a code branch commit.
+
+### Owner and branch (team)
+
+A spec in `Doing` may carry `owner: Name <email>` (the Git identity of the
+person who took it) and `branch: spec/<NNN>-<slug>` (the code branch of that
+work). Read both before you start: do not take or work a spec owned by
+someone else unless the human asked you to. Do not switch branches silently;
+if the checkout is not on the spec's branch, say so and ask. Name the spec id
+and the branch in commit message bodies. Never invent these fields — the app
+sets them on take-over (Backlog → Doing) and clears `owner` on release.
 
 ### Rules
 

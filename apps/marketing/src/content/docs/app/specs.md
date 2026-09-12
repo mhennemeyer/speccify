@@ -118,6 +118,18 @@ line, both versions are shown side by side and you decide; nothing is
 lost. A fresh clone mounts the register with one click. Projects without
 a register keep their specs in the code branch as before.
 
+## Who works on what, in which branch
+
+Moving a spec to Doing — by drag or with **Take over** in the inspector —
+records the person (your Git identity) as `owner` and the code branch as
+`branch`, suggesting `spec/012-slug` when you are on main. Cards show
+initials and branch; **mine** filters to your specs and **Doing by
+person** lists who has what in which branch. The inspector compares the
+declared branch with what Git shows — your checkout is elsewhere, the
+branch is missing on origin, someone else pushed last, no movement for
+days — and only says so; switching branches needs your confirmation.
+**Release** puts the spec back into the Backlog.
+
 ## History: the spec's memory
 
 Each spec folder has an append-only `history.jsonl` — one JSON line per

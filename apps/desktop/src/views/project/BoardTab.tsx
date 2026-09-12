@@ -25,6 +25,10 @@ export interface SpecEntry {
   title: string;
   station: string;
   assignee: string | null;
+  /** Spec 029: `Name <email>` der Person, die die Spec übernommen hat. */
+  owner: string | null;
+  /** Spec 029: Code-Branch der Arbeit. */
+  branch: string | null;
   created: string | null;
   ready: boolean;
   needs_human: boolean;
@@ -112,6 +116,57 @@ function stripQuestions(body: string): string {
     if (!inQuestions) out.push(line);
   }
   return out.join("\n").trim();
+}
+
+/** Spec 029: Anzeige von `Name <email>`. */
+function ownerName(owner: string): string {
+  return owner.replace(/\s*<[^>]*>\s*$/, "").trim() || owner;
+}
+function ownerEmail(owner: string): string {
+  const match = owner.match(/<([^>]+)>\s*$/);
+  return (match ? match[1] : owner).trim().toLowerCase();
+}
+function initials(owner: string): string {
+  const parts = ownerName(owner).split(/\s+/).filter(Boolean);
+  return parts.slice(0, 2).map((part) => part[0]?.toUpperCase() ?? "").join("") || "?";
+}
+
+export interface BranchObservation {
+  file: string;
+  spec_id: string;
+  branch: string;
+  local: boolean;
+  remote: boolean;
+  last_author: string | null;
+  last_email: string | null;
+  last_date: string | null;
+  stale_days: number | null;
+  current: boolean;
+}
+export interface BranchReport {
+  current: string | null;
+  me: { name: string; email: string } | null;
+  fetched: boolean;
+  specs: BranchObservation[];
+}
+
+/** Abweichungen zwischen erklärter Spec und beobachtetem Git — nur Text, keine Korrektur. */
+function branchHints(spec: SpecEntry, report: BranchReport | null): string[] {
+  if (!spec.branch || spec.station !== "Doing" || !report) return [];
+  const seen = report.specs.find((entry) => entry.file === spec.file);
+  const hints: string[] = [];
+  if (report.current && report.current !== spec.branch) {
+    hints.push(`Du stehst auf ${report.current}, die Spec gehört zu ${spec.branch}.`);
+  }
+  if (seen) {
+    if (!seen.remote && !seen.local) hints.push(`Branch ${spec.branch} existiert weder lokal noch auf origin.`);
+    else if (!seen.remote) hints.push(`Branch ${spec.branch} ist noch nicht auf origin.`);
+    if (seen.last_email && report.me && seen.last_email.toLowerCase() !== report.me.email.toLowerCase()) {
+      hints.push(`Zuletzt hat ${seen.last_author ?? seen.last_email} auf diesen Branch gepusht${seen.last_date ? ` (${seen.last_date.slice(0, 10)})` : ""}.`);
+    }
+    if (seen.stale_days !== null && seen.stale_days >= 3) hints.push(`Seit ${seen.stale_days} Tagen keine Bewegung auf ${spec.branch}.`);
+  }
+  return hints;
 }
 
 interface Task {
@@ -237,6 +292,12 @@ function SpecCard({
             {spec.number !== null ? spec.id.replace(/^\d+-/, "") : spec.id}
           </span>
           {spec.parent ? <span>· {spec.parent}</span> : null}
+          {spec.owner ? (
+            <span className="rounded-full bg-sky-100 px-1.5 py-0.5 text-[10px] font-semibold text-sky-800" title={spec.owner} data-owner={ownerEmail(spec.owner)}>
+              {initials(spec.owner)}
+            </span>
+          ) : null}
+          {spec.branch ? <span className="font-mono text-[10px] text-slate-500" title={`Branch ${spec.branch}`}>⎇ {spec.branch}</span> : null}
           <Progress spec={spec} compact />
           <SpecBadges spec={spec} />
           {conflict ? (
@@ -507,6 +568,10 @@ function SpecDetail({
   onEdit,
   onClose,
   inInspector,
+  report = null,
+  onTake,
+  onRelease,
+  onSwitchBranch,
 }: {
   spec: SpecEntry;
   history: HistoryEvent[];
@@ -519,12 +584,50 @@ function SpecDetail({
   /** Im Inspektor (W7) füllt das Detail die Seitenleiste; inline ist es
    *  ein Panel unter dem Board (Fallback ohne Seitenleiste). */
   inInspector: boolean;
+  /** Spec 029: Beobachtung der Branches und Übernehmen/Abgeben. */
+  report?: BranchReport | null;
+  onTake?: () => void;
+  onRelease?: () => void;
+  onSwitchBranch?: (branch: string, create: boolean) => void;
 }) {
   const shown = history.slice(0, 100);
   const tasks = spec.tasks;
+  const [switchArmed, setSwitchArmed] = useState(false);
+  useEffect(() => setSwitchArmed(false), [spec.file]);
+  const hints = branchHints(spec, report ?? null);
+  const seen = report?.specs.find((entry) => entry.file === spec.file);
+  const me = report?.me?.email.toLowerCase() ?? null;
+  const ownedByMe = !!spec.owner && !!me && ownerEmail(spec.owner) === me;
+  const canTake = !spec.archived && !!report?.me && !spec.owner && spec.station !== "Done";
+  const canRelease = !spec.archived && ownedByMe && spec.station === "Doing";
+  const canSwitch = !spec.archived && !!spec.branch && !!report && report.current !== spec.branch && !!onSwitchBranch;
+  const ownership = (spec.owner || spec.branch || hints.length > 0 || canTake) ? (
+    <div className="mb-3 rounded-lg border border-slate-200 bg-slate-50 p-2 text-xs text-slate-700" role="region" aria-label="Besitz und Branch">
+      <p>
+        <span className="font-semibold">Besitz:</span> {spec.owner ? `${ownerName(spec.owner)}${ownedByMe ? " (ich)" : ""}` : "niemand"}
+        {spec.branch ? <> · <span className="font-semibold">Branch:</span> <code>{spec.branch}</code></> : null}
+        {seen?.last_date ? <span className="text-slate-500"> · zuletzt {seen.last_date.slice(0, 10)} von {seen.last_author ?? "?"}</span> : null}
+      </p>
+      {hints.map((hint) => <p key={hint} className="mt-1 text-amber-700">⚠ {hint}</p>)}
+      <div className="mt-2 flex flex-wrap gap-2">
+        {canTake ? <InspectorButton onClick={() => onTake?.()} title="Station Doing, Besitzer = Deine Git-Identität, Branch-Vorschlag spec/<id>">Übernehmen</InspectorButton> : null}
+        {canRelease ? <InspectorButton onClick={() => onRelease?.()} title="Zurück ins Backlog, Besitzer entfernen; Branch bleibt als Spur">Abgeben</InspectorButton> : null}
+        {canSwitch && !switchArmed ? <InspectorButton onClick={() => setSwitchArmed(true)}>Zu {spec.branch} wechseln…</InspectorButton> : null}
+        {canSwitch && switchArmed ? (
+          <>
+            <InspectorButton onClick={() => { setSwitchArmed(false); onSwitchBranch?.(spec.branch!, !(seen?.local ?? false)); }}>
+              {seen?.local ? "Jetzt wechseln" : "Branch anlegen und wechseln"}
+            </InspectorButton>
+            <InspectorButton onClick={() => setSwitchArmed(false)}>Doch nicht</InspectorButton>
+          </>
+        ) : null}
+      </div>
+    </div>
+  ) : null;
   const overview = (
     <>
       {spec.archived ? <p className="mb-2 text-xs text-slate-500">Altbestand · nur lesen. Datei und Historie bleiben am ursprünglichen Ort erhalten.</p> : null}
+      {ownership}
       <QuestionsSection questions={questions} onAnswer={onAnswer} busy={busy || spec.archived} />
       {stripQuestions(spec.body) ? (
         <Markdown text={stripQuestions(spec.body)} />
@@ -545,6 +648,8 @@ function SpecDetail({
       subtitle={`${spec.id} · ${spec.file}`}
       meta={[
         { label: "Station", value: spec.station },
+        ...(spec.owner ? [{ label: "Besitz", value: ownerName(spec.owner) }] : []),
+        ...(spec.branch ? [{ label: "Branch", value: spec.branch }] : []),
         { label: "Ober-Spec", value: spec.parent ?? "—" },
         {
           label: "Tasks",
@@ -657,8 +762,18 @@ export default function BoardTab({ project, refresh, detailFile, detailOnly = fa
   const [showRuns, setShowRuns] = useState(false);
   // Bewusst nicht persistiert: ein Blickfilter, kein Modus.
   const [needsMe, setNeedsMe] = useState(false);
+  // Spec 029: „meine“ = Besitzer ist meine Git-Identität; „nach Person“ listet Doing gruppiert.
+  const [mine, setMine] = useState(false);
+  const [byPerson, setByPerson] = useState(false);
   const [parentFilter, setParentFilter] = useState("");
   const [search, setSearch] = useState("");
+  const branches = useAsync(
+    () => invoke<BranchReport>("project_spec_branches", { project }).catch(() => null),
+    `spec-branches:${project}`,
+  );
+  const report = branches.data ?? null;
+  const myEmail = report?.me?.email.toLowerCase() ?? null;
+  const isMine = (spec: SpecEntry) => !!spec.owner && !!myEmail && ownerEmail(spec.owner) === myEmail;
 
   const allSpecs = data ?? [];
   const live = allSpecs.filter((spec) => !spec.archived);
@@ -668,6 +783,7 @@ export default function BoardTab({ project, refresh, detailFile, detailOnly = fa
   const specs = allSpecs.filter(
     (spec) =>
       (!needsMe || needsAttention(spec)) &&
+      (!mine || isMine(spec)) &&
       (!parentFilter || spec.parent === parentFilter || spec.id === parentFilter) &&
       (!query || `${spec.number ?? ""} ${spec.title} ${spec.id} ${spec.file}`.toLocaleLowerCase().includes(query)),
   );
@@ -695,7 +811,7 @@ export default function BoardTab({ project, refresh, detailFile, detailOnly = fa
   useEffect(() => {
     // Hidden by a filter or removed by the watcher: never leave stale details.
     if (selected && !specs.some(spec => spec.file === selected)) setSelectedState(null);
-  }, [selected, data, search, parentFilter, needsMe]);
+  }, [selected, data, search, parentFilter, needsMe, mine]);
 
   useEffect(() => {
     if (!selected) return;
@@ -704,6 +820,10 @@ export default function BoardTab({ project, refresh, detailFile, detailOnly = fa
     card?.scrollIntoView({ block: "nearest", inline: "nearest" });
   }, [selected]);
 
+  useEffect(() => {
+    if (refresh) void branches.reload();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refresh]);
   useEffect(() => {
     if (refresh) {
       void reload();
@@ -837,8 +957,8 @@ export default function BoardTab({ project, refresh, detailFile, detailOnly = fa
             <option value="">Alle Themen</option>
             {parents.map(parent => <option key={parent} value={parent}>{parent}</option>)}
           </select>
-          {search || parentFilter || needsMe ? <button className="text-xs text-slate-600 underline"
-            onClick={() => { setSearch(""); setParentFilter(""); setNeedsMe(false); }}>Filter zurücksetzen</button> : null}
+          {search || parentFilter || needsMe || mine ? <button className="text-xs text-slate-600 underline"
+            onClick={() => { setSearch(""); setParentFilter(""); setNeedsMe(false); setMine(false); }}>Filter zurücksetzen</button> : null}
         </div>
         <div className="mb-2 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
@@ -863,6 +983,24 @@ export default function BoardTab({ project, refresh, detailFile, detailOnly = fa
             >
               braucht mich
             </button>
+            <button
+              onClick={() => setMine((previous) => !previous)}
+              disabled={!myEmail}
+              title={myEmail ? `Specs, die ${myEmail} übernommen hat` : "Keine Git-Identität im Projekt"}
+              className={`rounded-full px-2.5 py-1 text-[11px] font-medium disabled:opacity-40 ${
+                mine ? "bg-sky-700 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+              }`}
+            >
+              meine
+            </button>
+            <button
+              onClick={() => setByPerson((previous) => !previous)}
+              className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${
+                byPerson ? "bg-slate-700 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+              }`}
+            >
+              Doing nach Person
+            </button>
             {unnumbered > 0 ? (
               <button
                 onClick={() => void numberSpecs()}
@@ -884,6 +1022,39 @@ export default function BoardTab({ project, refresh, detailFile, detailOnly = fa
             + Spec
           </button>
         </div>
+        {byPerson ? (
+          <div className="mb-2 max-h-48 overflow-y-auto rounded-lg border border-slate-200 bg-white p-3" role="region" aria-label="Doing nach Person">
+            {(() => {
+              const doing = live.filter((spec) => spec.station === "Doing");
+              const groups = new Map<string, SpecEntry[]>();
+              for (const spec of doing) {
+                const key = spec.owner ?? "";
+                groups.set(key, [...(groups.get(key) ?? []), spec]);
+              }
+              if (doing.length === 0) return <p className="text-xs text-slate-400">Nichts in Doing.</p>;
+              return [...groups.entries()].sort(([a], [b]) => (a === "" ? 1 : b === "" ? -1 : a.localeCompare(b))).map(([owner, group]) => (
+                <div key={owner || "—"} className="mb-2 last:mb-0">
+                  <p className="text-[11px] font-semibold text-slate-700">{owner ? ownerName(owner) : "ohne Besitzer"}{owner && myEmail && ownerEmail(owner) === myEmail ? " (ich)" : ""}</p>
+                  <ul className="mt-0.5 space-y-0.5 text-[11px] text-slate-600">
+                    {group.map((spec) => {
+                      const seen = report?.specs.find((entry) => entry.file === spec.file);
+                      return (
+                        <li key={spec.file} className="flex flex-wrap gap-x-2">
+                          <button className="underline-offset-2 hover:underline" onClick={() => setSelected(spec.file)}>
+                            {spec.number !== null ? `#${spec.number} ` : ""}{spec.title}
+                          </button>
+                          {spec.branch ? <span className="font-mono text-slate-500">⎇ {spec.branch}</span> : <span className="text-slate-400">kein Branch</span>}
+                          {seen?.last_date ? <span className="text-slate-400">· zuletzt {seen.last_date.slice(0, 10)} von {seen.last_author ?? "?"}</span> : null}
+                          {branchHints(spec, report).length > 0 ? <span className="text-amber-700">· {branchHints(spec, report).length} Hinweis{branchHints(spec, report).length === 1 ? "" : "e"}</span> : null}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              ));
+            })()}
+          </div>
+        ) : null}
         {showRuns && kpi ? (
           <div className="mb-2 max-h-40 overflow-y-auto rounded-lg border border-slate-200 bg-white p-3">
             <ul className="space-y-0.5 font-mono text-[11px] text-slate-600">
@@ -985,6 +1156,10 @@ export default function BoardTab({ project, refresh, detailFile, detailOnly = fa
               onEdit={() => setSheet(sheetFor(selectedSpec))}
               onClose={() => setSelected(null)}
               inInspector={inspector.slot !== null}
+              report={report}
+              onTake={() => void run(async () => { await invoke("project_spec_take", { project, file: selectedSpec.file }); await branches.reload(); })}
+              onRelease={() => void run(() => invoke("project_spec_release", { project, file: selectedSpec.file }))}
+              onSwitchBranch={(branch, create) => void run(async () => { await invoke("project_git_switch", { project, branch, create }); await branches.reload(); })}
             />
           </InspectorPortal>
         ) : null}

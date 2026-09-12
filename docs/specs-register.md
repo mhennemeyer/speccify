@@ -70,6 +70,27 @@ auseinander stehen, bis es erneut versucht wird. Solange ein Konflikt offen
 ist, wird nicht synchronisiert; eine `SPEC.md` mit Konfliktmarkern erscheint
 bis dahin nicht auf dem Board, wohl aber in der Konfliktliste.
 
+## Besitzer und Branch (Spec 029)
+
+Beim Übernehmen (Backlog → Doing per Drag oder Knopf *Übernehmen* im
+Inspektor) trägt die App `owner: Name <email>` (Git-Identität des Checkouts)
+und `branch:` ein — den aktuellen Feature-Branch oder den Vorschlag
+`spec/<NNN>-<slug>`; `main`/`master` gelten nicht als Arbeitsbranch. *Abgeben*
+(oder Drag zurück ins Backlog) entfernt `owner`, `branch` bleibt als Spur.
+Done behält beide als Nachweis. Projekte ohne Git setzen nichts.
+
+Karten zeigen Initialen (Tooltip Name) und Branch. Über dem Board filtert
+**meine** nach der eigenen E-Mail; **Doing nach Person** listet alle
+Doing-Specs gruppiert mit Branch und letzter Bewegung. Der Inspektor zeigt
+Besitz, Branch und Abweichungen, die die App aus Git beobachtet, aber nie
+korrigiert: Checkout steht woanders (Wechseln erst nach Bestätigung, ggf. mit
+Anlegen), Branch fehlt lokal oder auf origin, zuletzt hat jemand anderes
+gepusht, seit N Tagen keine Bewegung. Die Beobachtung holt höchstens einmal pro
+Minute `git fetch --prune origin`.
+
+Zwei gleichzeitige Übernahmen ändern dieselbe `owner`-Zeile und werden beim
+Sync des Registers als Konflikt sichtbar.
+
 ## Nummern
 
 Neue Specs nehmen die nächste freie Nummer über lokale Ordner **und**

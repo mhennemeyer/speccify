@@ -209,6 +209,15 @@ er beide Fassungen und lässt Dich entscheiden; nichts geht verloren.
 Frische Klone hängen das Register mit einem Klick ein. Details, Migration
 und Regeln: `docs/specs-register.md`.
 
+**Wer arbeitet woran:** Ziehst Du eine Spec nach Doing oder klickst im
+Inspektor *Übernehmen*, trägt die App Dich als **Besitzer** (Git-Identität)
+und den **Branch** ein (Vorschlag `spec/012-slug`). Karten zeigen Initialen
+und Branch, *meine* filtert auf Deine Specs, *Doing nach Person* listet, wer
+gerade was in welchem Branch hat. Der Inspektor sagt, wenn Dein Checkout auf
+einem anderen Branch steht, der Branch auf origin fehlt oder jemand anderes
+zuletzt gepusht hat — und wechselt nur nach Bestätigung. *Abgeben* legt die
+Spec zurück ins Backlog.
+
 ### Hilfe
 
 Diese Anleitung und die weiteren eingebauten Dokumente; der Inspektor

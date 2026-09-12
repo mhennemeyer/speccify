@@ -119,16 +119,6 @@ silently. In a fresh clone without the worktree, mount it with
 `git worktree add .agent/specs origin/specs` (the app offers the same under
 "Einrichten"). Never add `.agent/specs` to a code branch commit.
 
-### Owner and branch (team)
-
-A spec in `Doing` may carry `owner: Name <email>` (the Git identity of the
-person who took it) and `branch: spec/<NNN>-<slug>` (the code branch of that
-work). Read both before you start: do not take or work a spec owned by
-someone else unless the human asked you to. Do not switch branches silently;
-if the checkout is not on the spec's branch, say so and ask. Name the spec id
-and the branch in commit message bodies. Never invent these fields — the app
-sets them on take-over (Backlog → Doing) and clears `owner` on release.
-
 ### Rules
 
 - Never write secrets into `.agent/settings.json`, `.mcp.json`,
