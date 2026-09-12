@@ -377,6 +377,10 @@ alle beschriebenen Durchläufe mit der heutigen App erneut funktioniert haben.
 
 ## Stand der Specs
 
+Seit 2026-09-12 liegen die Specs dieses Repos im Register-Branch `specs`
+(Worktree `.agent/specs`, Spec 028); `main` trackt sie nicht mehr. Links in
+dieser Tabelle zeigen auf den eingehängten Worktree.
+
 Momentaufnahme; für Aufgaben und spätere Statusänderungen die jeweilige Spec lesen.
 Diese Tabelle verändert keine Station oder Reihenfolge.
 
@@ -408,7 +412,7 @@ Diese Tabelle verändert keine Station oder Reihenfolge.
 | [024 Workspace-Spec-Board](../specs/024-workspace-spec-board/SPEC.md) | Doing · ready | Code/automatisierte Prüfungen und nativer Demo-Durchlauf grün; finaler Build offen, Q1 geschlossen; menschliche Abnahme offen |
 | [025 Workspace-Suchtiefe](../specs/025-workspace-suchtiefe/SPEC.md) | Doing · ready | Nutzerbild und gespeicherte Revision 3 ohne Warnung; finale Board-Entkopplung im lokalen 026-Build enthalten, Q1 geschlossen; menschliche Abnahme offen |
 | [026 Workspace-Arbeitsfenster](../specs/026-workspace-arbeitsfenster/SPEC.md) | Doing · ready | Alle Projekte im selben Fenster, gemeinsames editierbares Board, isolierte Ziele/Zustände; acht UI-Suites und 86 Rust-Tests grün, itsdcloud nativ geöffnet und nach Neustart wiederhergestellt; menschliche Abnahme offen |
-| [028 Spec-Branch als Register](../specs/028-spec-branch-als-register/SPEC.md) | Doing | D-TEAM-02 bestätigt: `spec_register.rs` (Status/Migration/Einhängen/Sync/Konflikt), Watcher-Sync, `RegisterBar`, Policy v6, Suite `test_spec_register`; Migration des eigenen Repos und Abnahme offen |
+| [028 Spec-Branch als Register](../specs/028-spec-branch-als-register/SPEC.md) | Doing · ready | D-TEAM-02: `spec_register.rs` (Status/Migration/Einhängen/Sync/Konflikt), Watcher-Sync, `RegisterBar`, Policy v6, Suite `test_spec_register`; **eigenes Repo seit 2026-09-12 migriert** (`.agent/specs` = Worktree von `specs`); Klick-Abnahme offen |
 | [029 Übernahme/Besitzer/Branch](../specs/029-uebernahme-besitzer-branch/SPEC.md) | Backlog | `owner`/`branch` je Spec, Filter „meine“, Abweichungen sichtbar; Entwurf |
 | [030 Teamsignale über Git](../specs/030-teamsignale-ueber-git/SPEC.md) | Backlog | „neu seit Sync“, Fragen an Personen, optionaler Webhook; kein eigener Dienst; Entwurf |
 
