@@ -20,6 +20,11 @@ use crate::project_cmd::resolve_project_root;
 use tauri_plugin_notification::NotificationExt;
 
 const POLL_INTERVAL: std::time::Duration = std::time::Duration::from_secs(2);
+/// Spec 028: Board-Änderungen werden gebündelt ins Register committet …
+const REGISTER_DEBOUNCE: std::time::Duration = std::time::Duration::from_secs(3);
+/// … und das Register holt in diesem Raster fremde Änderungen, auch ohne
+/// lokale Bewegung.
+const REGISTER_PERIOD: std::time::Duration = std::time::Duration::from_secs(60);
 
 /// Fenster, Projektpfad und Lebenszyklus-ID → Stop-Flag des Watcher-Threads.
 pub struct ProjectWatchers(Mutex<HashMap<(String, String, String), Arc<AtomicBool>>>);
@@ -168,6 +173,12 @@ struct ProjectChanged {
     areas: Vec<&'static str>,
 }
 
+#[derive(Clone, Serialize)]
+struct RegisterChanged {
+    project: String,
+    status: crate::spec_register::RegisterStatus,
+}
+
 /// Startet den Poll fürs aufrufende Fenster (ersetzt einen laufenden).
 /// Der Thread endet, sobald das Fenster verschwindet oder `stop` gesetzt ist.
 #[tauri::command]
@@ -210,6 +221,9 @@ pub fn project_watch_start(
                 .into_iter()
                 .map(|question| question.key)
                 .collect();
+        // Register-Sync (028): fällig nach Board-Ruhe oder im Periodenraster.
+        let mut register_due: Option<std::time::Instant> = None;
+        let mut register_last = std::time::Instant::now();
         loop {
             std::thread::sleep(POLL_INTERVAL);
             if stop.load(Ordering::Relaxed) {
@@ -218,11 +232,34 @@ pub fn project_watch_start(
             let Some(window) = app.get_webview_window(&label) else {
                 break; // Fenster zu → Watcher stirbt mit.
             };
+            if crate::spec_register::is_mounted(&root) {
+                let now = std::time::Instant::now();
+                let due = register_due.is_some_and(|at| at <= now)
+                    || now.duration_since(register_last) >= REGISTER_PERIOD;
+                if due {
+                    register_due = None;
+                    register_last = now;
+                    if let Ok(status) = crate::spec_register::sync(&root) {
+                        let _ = window.emit(
+                            "register-changed",
+                            RegisterChanged {
+                                project: project.clone(),
+                                status,
+                            },
+                        );
+                    }
+                    // Der Sync selbst kann Dateien ändern (Rebase); das
+                    // meldet der nächste Fingerprint-Vergleich regulär.
+                }
+            }
             let next = area_fingerprints(&root);
             let areas = changed_areas(&previous, &next);
             previous = next;
             if areas.is_empty() {
                 continue;
+            }
+            if areas.contains(&"board") && crate::spec_register::is_mounted(&root) {
+                register_due = Some(std::time::Instant::now() + REGISTER_DEBOUNCE);
             }
             let _ = window.emit(
                 "project-changed",

@@ -349,7 +349,7 @@ pub async fn terminal_open(
     std::thread::spawn(move || {
         let mut buffer = [0u8; 8192];
         let mut chunker = Utf8Chunker::default();
-        let mut emit = |data: String| {
+        let emit = |data: String| {
             if !data.is_empty() {
                 let _ = app_for_reader.emit(
                     "term-out",

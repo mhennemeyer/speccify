@@ -69,7 +69,7 @@ oder vollständige Plattformabnahme.
 | Fähigkeit | Ist-Stand | Grenze / Folgeschritt |
 |---|---|---|
 | Projekte/Workspaces | begrenzte Erkennung, lokale IDs/Gruppen; 026: gemeinsames wiederherstellbares Arbeitsfenster, gruppierte Bereiche, gemeinsames Board mit herkunftsgebundener Bearbeitung und Watchern; eigene Fenster weiterhin möglich | kein Team-Sync, keine Cross-Repo-Git-Schreibaktion oder automatischen Pfadumzüge; PTYs nach App-Quit nicht automatisch fortgesetzt |
-| Specs | Gesamtliste links, Suche/Themenfilter, Backlog/Doing/Done, gemeinsamer Task-Vertrag, Fragen und pfadgenaue Historie; Altbestand lesbar, kein Archivierungsschritt | keine Sperre gegenüber externen Editoren; Team-/Branch-Sicht fehlt |
+| Specs | Gesamtliste links, Suche/Themenfilter, Backlog/Doing/Done, gemeinsamer Task-Vertrag, Fragen und pfadgenaue Historie; Altbestand lesbar, kein Archivierungsschritt; seit 028 gemeinsames Register (Branch `specs` als Worktree) mit Sync und Konfliktentscheidung | keine Sperre gegenüber externen Editoren; Besitzer/Branch je Spec (029) und Teamsignale (030) fehlen |
 | Workflow-Setup | Policy v5 ohne Archivierungsschritt, versionierte Skills, bekannte Vorlagen sicher migrieren, konkrete Link-/Anpassungsdiagnose | individuelle/neue unbekannte Vorlagen und fremde Links bleiben zur manuellen Prüfung erhalten |
 | Playbooks | Liste, Markdown lesen/bearbeiten, neu/löschen, als Prompt kopieren; im Workspace pro Projekt/Worktree gekennzeichnet | keine automatische Team-Verteilung |
 | Editor/Git | mehrere offene Dateien, Entwürfe, Suche, Dateioperationen, Diff, Staging auch pro Hunk, Commit, Branches, Remotes, Historie/Blame | echte IDE-Abnahme 002 offen; kein belegtes LSP-/Debugger-/Konfliktlösesystem |
@@ -304,6 +304,8 @@ Navigator · fünf Gruppen, zehn Tabs
 │   ├── Filter über Board: Suche (Titel/Nummer/Pfad) · Ober-Spec · braucht mich · zurücksetzen
 │   ├── Lauf-Kennzahlen → Liste jüngster Läufe (wenn History Daten enthält)
 │   ├── unnummerierte Specs nummerieren (falls vorhanden)
+│   ├── Register-Kopf (028): Einrichten… → Bestätigung → Jetzt einrichten · Einhängen · blockiert (Grund)
+│   │   └── eingehängt: Stand (aktuell / n nicht gesendet / n zu pushen / n neu vom Team) · Sync · Konflikte je Datei (Team / Meine / bearbeitet / Abbrechen)
 │   ├── Board: Backlog / Doing / Done (v1: Slate / Blau / Grün; getönte Flächen)
 │   │   ├── Karten: Nummer/ID · Titel · Status-Badges · Aufgabenfortschritt
 │   │   ├── Drag-and-drop zwischen Stationen
@@ -406,7 +408,7 @@ Diese Tabelle verändert keine Station oder Reihenfolge.
 | [024 Workspace-Spec-Board](../specs/024-workspace-spec-board/SPEC.md) | Doing · ready | Code/automatisierte Prüfungen und nativer Demo-Durchlauf grün; finaler Build offen, Q1 geschlossen; menschliche Abnahme offen |
 | [025 Workspace-Suchtiefe](../specs/025-workspace-suchtiefe/SPEC.md) | Doing · ready | Nutzerbild und gespeicherte Revision 3 ohne Warnung; finale Board-Entkopplung im lokalen 026-Build enthalten, Q1 geschlossen; menschliche Abnahme offen |
 | [026 Workspace-Arbeitsfenster](../specs/026-workspace-arbeitsfenster/SPEC.md) | Doing · ready | Alle Projekte im selben Fenster, gemeinsames editierbares Board, isolierte Ziele/Zustände; acht UI-Suites und 86 Rust-Tests grün, itsdcloud nativ geöffnet und nach Neustart wiederhergestellt; menschliche Abnahme offen |
-| [028 Spec-Branch als Register](../specs/028-spec-branch-als-register/SPEC.md) | Backlog | Vorschlag D-TEAM-02: Branch `specs` als Worktree unter `.agent/specs`, Sync/Konflikte; Probelauf mit zwei Klonen dokumentiert, keine Umsetzung |
+| [028 Spec-Branch als Register](../specs/028-spec-branch-als-register/SPEC.md) | Doing | D-TEAM-02 bestätigt: `spec_register.rs` (Status/Migration/Einhängen/Sync/Konflikt), Watcher-Sync, `RegisterBar`, Policy v6, Suite `test_spec_register`; Migration des eigenen Repos und Abnahme offen |
 | [029 Übernahme/Besitzer/Branch](../specs/029-uebernahme-besitzer-branch/SPEC.md) | Backlog | `owner`/`branch` je Spec, Filter „meine“, Abweichungen sichtbar; Entwurf |
 | [030 Teamsignale über Git](../specs/030-teamsignale-ueber-git/SPEC.md) | Backlog | „neu seit Sync“, Fragen an Personen, optionaler Webhook; kein eigener Dienst; Entwurf |
 

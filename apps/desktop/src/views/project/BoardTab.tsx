@@ -196,11 +196,14 @@ function Progress({ spec, compact = false }: { spec: SpecEntry; compact?: boolea
 function SpecCard({
   spec,
   selected,
+  conflict = false,
   onSelect,
   onEdit,
 }: {
   spec: SpecEntry;
   selected: boolean;
+  /** Spec 028: im Register steht ein unentschiedener Konflikt. */
+  conflict?: boolean;
   onSelect: () => void;
   /** Doppelklick öffnet den Editor (BO 2026-09-08). */
   onEdit: () => void;
@@ -236,6 +239,11 @@ function SpecCard({
           {spec.parent ? <span>· {spec.parent}</span> : null}
           <Progress spec={spec} compact />
           <SpecBadges spec={spec} />
+          {conflict ? (
+            <span className="rounded bg-amber-100 px-1.5 py-0.5 font-semibold text-amber-800" title="Register-Konflikt: oben entscheiden">
+              Konflikt
+            </span>
+          ) : null}
           {spec.archived ? <span>Altbestand · nur lesen</span> : null}
         </div>
       </button>
@@ -620,8 +628,10 @@ function SpecDetail({
   );
 }
 
-export default function BoardTab({ project, refresh, detailFile, detailOnly = false, onMutated, createRequest = 0 }: {
+export default function BoardTab({ project, refresh, detailFile, detailOnly = false, onMutated, createRequest = 0, conflictIds = [] }: {
   project: string; refresh?: number; detailFile?: string; detailOnly?: boolean; onMutated?: () => void; createRequest?: number;
+  /** Spec 028: Spec-IDs mit offenem Register-Konflikt. */
+  conflictIds?: string[];
 }) {
   const { data, loading, error, reload } = useAsync(
     () => invoke<SpecEntry[]>("project_board", { project }),
@@ -896,6 +906,7 @@ export default function BoardTab({ project, refresh, detailFile, detailOnly = fa
               <SpecCard
                 key={spec.file}
                 spec={spec}
+                conflict={conflictIds.includes(spec.id)}
                 selected={selected === spec.file}
                 onSelect={() => setSelected(selected === spec.file ? null : spec.file)}
                 onEdit={() => {

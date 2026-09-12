@@ -1,5 +1,5 @@
 ---
-station: Backlog
+station: Doing
 order: 8
 created: 2026-09-12
 needs_human: true
@@ -90,27 +90,60 @@ Workspace-Board (024 liest weiter je Repo), Konflikteditor für Code.
   `*.jsonl`. Kein automatisches Auflösen von `SPEC.md`-Konflikten.
 - D3, 2026-09-12: Branchname `specs`, Worktree-Pfad `.agent/specs`; beides
   fest, keine Konfiguration im ersten Schnitt.
+- D5, 2026-09-12: BO bestätigt D-TEAM-02 („Leg los“); Umsetzung gestartet.
 - D4, 2026-09-12: Die Migration des Speccify-Repos selbst ist Teil dieser
   Spec, läuft aber erst nach BO-Freigabe (offene Branches rebasen; prüfen, ob
   CI oder Website Specs aus dem Code-Branch lesen).
 
 ## Tasks
 
-- [ ] Vertrag `docs/specs-register.md`: Branch, Worktree, Sync, Konflikte,
+- [x] Vertrag `docs/specs-register.md`: Branch, Worktree, Sync, Konflikte,
       Offline, Einrichten-Zustände, Policy-Ergänzung (Vorlage
-      `workflow-policy.md`, v6-Entwurf).
-- [ ] Native Befehle: Registerstatus (Branch/Worktree/ahead/behind/Konflikte),
+      `workflow-policy.md` v6, Abschnitt „Shared spec register“; v5 im
+      Vorlagen-Archiv).
+- [x] Native Befehle: Registerstatus (Branch/Worktree/ahead/behind/Konflikte),
       Einrichten (Migration, Worktree), Sync (commit → fetch → rebase → push),
       Konflikt lesen/entscheiden; Nummernvergabe gegen `origin/specs`.
-- [ ] Watcher: Registeränderungen gebündelt committen; periodischer Fetch.
-- [ ] UI: Sync-Status in Toolbar/Board (aktuell, n ungesendet, Konflikt),
+      `spec_register.rs`: `project_register_status/setup/sync/resolve/abort`;
+      `next_spec_number` zählt `origin/specs` mit.
+- [x] Watcher: Registeränderungen gebündelt committen; periodischer Fetch.
+      `project_watch.rs`: Sync 3 s nach Board-Ruhe und jede Minute, Ereignis
+      `register-changed`.
+- [x] UI: Sync-Status in Toolbar/Board (aktuell, n ungesendet, Konflikt),
       Konfliktansicht je Spec, „Einrichten“ mit den drei Zuständen.
-- [ ] Rust-Tests mit zwei Klonen (Sync, Union, Konflikt, Offline, frischer Klon,
+      `RegisterBar.tsx` über dem Board; Karten mit Badge „Konflikt“.
+- [x] Rust-Tests mit zwei Klonen (Sync, Union, Konflikt, Offline, frischer Klon,
       Migrationsverweigerung); Mock-Fixture und Browser-Suite für die UI.
-- [ ] Release-Playbook: Commit des `specs`-Branch im Release notieren.
+- [x] Release-Playbook: Commit des `specs`-Branch im Release notieren.
+- [x] Schutz vor Git-Verhalten „ignorierte Dateien sind entbehrlich“: alter
+      Branch überschreibt den Worktree → Zustand blockiert, kein Sync; Rückkehr
+      auf main räumt ihn → Sync stellt aus `specs` wieder her, committet nie
+      die Totalräumung (added).
 - [ ] Migration des eigenen Repos nach BO-Freigabe; Stand-Playbook und Hilfe.
 
 ## Verification
+
+Umsetzung 2026-09-12 (Arbeitsbaum auf `326ea59`):
+
+- `cargo test -p speccify-desktop`: 102 bestanden, 3 ignoriert. Neue Tests in
+  `spec_register.rs` mit echten Git-Repos (Bare-Remote, Klone A/B): Migration
+  baut `specs`, Code-Checkout sauber, Ignore-Regel, Worktree, Push; Verweigerung
+  auf Feature-Branch, bei uncommitteten Specs und ohne Remote; zwei Klone
+  synchronisieren ohne Code-Merge (A auf `spec/001-x`, B auf `main`), Commit-
+  Betreff `spec(001-x): aktualisiert`, Union-Merge der History (4 Zeilen),
+  Konflikt auf `station` mit beiden Fassungen, Entscheidung Team/Meine,
+  Abbrechen, `remote_max_number`; Offline (Remote-URL ungültig) hält Commits
+  lokal, kein Doppel-Commit, nach Rückkehr alles gepusht; alter Branch →
+  `blocked`, Rückkehr → Wiederherstellung ohne Löschungs-Commit. Befund dabei:
+  Git überschreibt **ignorierte** Dateien beim Checkout (anders als
+  untracked im Probelauf) — deshalb der Schutz in Task 7. `cargo fmt --check`,
+  `pnpm typecheck` grün.
+- Browser-Suiten gegen `dev/mock.html`: neue Suite `test_spec_register`
+  (none/migratable mit Bestätigung/detached/blocked/mounted mit Sync und
+  Live-Ereignis/conflict mit beiden Fassungen, Karten-Badge, Entscheidung/
+  abort) plus die elf bestehenden grün.
+- Policy v6 in `.agent/agent.md` gespiegelt; markdownlint über die geänderten
+  Dokumente 0 Befunde (Vorlagen sind nicht im Lint-Umfang).
 
 Probelauf 2026-09-12 (`probe-worktree.sh` neben dieser Spec; Git lokal, zwei
 Klone A/B gegen ein Bare-Remote): Migration per Orphan-Branch und `git rm` +

@@ -26,6 +26,7 @@ mod settings;
 mod sidecar;
 mod skill_sources;
 mod sources_cmd;
+mod spec_register;
 mod spec_tasks;
 mod system_cmd;
 mod terminal;
@@ -286,6 +287,11 @@ pub fn run() {
             project_cmd::project_platform,
             project_cmd::project_mcps,
             project_cmd::project_agent_files,
+            spec_register::project_register_status,
+            spec_register::project_register_setup,
+            spec_register::project_register_sync,
+            spec_register::project_register_resolve,
+            spec_register::project_register_abort,
             workflow_setup::project_workflow_status,
             workflow_setup::project_workflow_install,
             workflow_setup::project_settings_get,

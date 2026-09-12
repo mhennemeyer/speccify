@@ -481,7 +481,7 @@ mehrere Arbeitsbäume pro Repo; die Board-Semantik ist unser zusätzlicher Vertr
 nicht etwas, das Git automatisch löst.
 ([Git-Worktree-Dokumentation](https://git-scm.com/docs/git-worktree))
 
-**Vertiefung 2026-09-12 (Vorschlag D-TEAM-02, Bestätigung durch BO offen):**
+**Vertiefung 2026-09-12 (D-TEAM-02, vom BO bestätigt am 2026-09-12: „Klingt sehr vernünftig. Leg los!“):**
 Das Register ist ein **eigener Branch `specs` im selben Code-Repository**, als
 Git-Worktree unter `.agent/specs` eingehängt — nicht ein separates Metadaten-Repo.
 Der Pfad bleibt für Menschen und Agenten derselbe, das Board liest weiter dieselben

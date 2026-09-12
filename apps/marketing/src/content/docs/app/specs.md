@@ -103,6 +103,21 @@ including when the navigator is hidden. The **needs me** filter shows
 only specs waiting on you, and Done is grouped by parent so finished
 work stays legible.
 
+## One register for the whole team
+
+Working in feature branches does not have to mean everyone sees a
+different board. Above the board the app offers to turn `.agent/specs`
+into a **shared register**: a branch called `specs` in the same
+repository, mounted as a Git worktree at `.agent/specs`. The path stays
+the same for people and agents, but commits there land on `specs`
+regardless of which code branch is checked out. The app commits and
+syncs the register by itself — commit, fetch, rebase, push, never force
+— and shows the state in the board header: *up to date*, *n unsent*,
+*n new from the team*, or a conflict. When two people change the same
+line, both versions are shown side by side and you decide; nothing is
+lost. A fresh clone mounts the register with one click. Projects without
+a register keep their specs in the code branch as before.
+
 ## History: the spec's memory
 
 Each spec folder has an append-only `history.jsonl` — one JSON line per

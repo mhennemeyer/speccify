@@ -17,22 +17,34 @@ use crate::project_cmd::resolve_project_root;
 
 const GIT_TIMEOUT: Duration = Duration::from_secs(30);
 
-struct GitOutput {
-    code: i32,
-    stdout: Vec<u8>,
-    stderr: String,
+pub(crate) struct GitOutput {
+    pub(crate) code: i32,
+    pub(crate) stdout: Vec<u8>,
+    pub(crate) stderr: String,
 }
 
-fn git(root: &Path, args: &[&str]) -> Result<GitOutput, String> {
+pub(crate) fn git(root: &Path, args: &[&str]) -> Result<GitOutput, String> {
     git_with_input(root, args, None)
 }
 
 /// Wie `git`, optional mit Text auf stdin (`git apply -` für Hunks).
 fn git_with_input(root: &Path, args: &[&str], input: Option<&str>) -> Result<GitOutput, String> {
+    git_run(root, args, &[], input)
+}
+
+/// Vollständige Variante: zusätzliche Umgebungsvariablen (z. B. `GIT_EDITOR`
+/// für `rebase --continue`, `GIT_INDEX_FILE` für einen temporären Index).
+pub(crate) fn git_run(
+    root: &Path,
+    args: &[&str],
+    envs: &[(&str, &str)],
+    input: Option<&str>,
+) -> Result<GitOutput, String> {
     let mut command = Command::new("git");
     command
         .args(args)
         .current_dir(root)
+        .envs(envs.iter().copied())
         .env("GIT_TERMINAL_PROMPT", "0")
         .env("LC_ALL", "C")
         .stdin(if input.is_some() {
@@ -92,8 +104,16 @@ fn git_with_input(root: &Path, args: &[&str], input: Option<&str>) -> Result<Git
     })
 }
 
-fn git_ok(root: &Path, args: &[&str]) -> Result<String, String> {
-    let output = git(root, args)?;
+pub(crate) fn git_ok(root: &Path, args: &[&str]) -> Result<String, String> {
+    git_ok_env(root, args, &[])
+}
+
+pub(crate) fn git_ok_env(
+    root: &Path,
+    args: &[&str],
+    envs: &[(&str, &str)],
+) -> Result<String, String> {
+    let output = git_run(root, args, envs, None)?;
     if output.code != 0 {
         let message = output.stderr.trim();
         return Err(if message.is_empty() {

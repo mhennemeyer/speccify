@@ -109,7 +109,7 @@ vor einer Implementierung verstanden sein. Prüfe Implementierungen mit
 `speccify tool check <name>`; ändere den Status in `expansions.yaml` nie von
 Hand. `speccify verify` prüft Lock-, Bundle-, Expansions- und Tool-Drift.
 
-<!-- speccify:workflow:begin v5 -->
+<!-- speccify:workflow:begin v6 -->
 ## Spec workflow
 
 The human owns priorities, authorization and acceptance; you implement the
@@ -215,6 +215,21 @@ token/duration measurements only when actually available; do not invent them.
 the app. You may propose one by appending `{"name": …, "command": …,
 "description": …, "source": "agent", "confirmed": false}`. Commands are argv
 without a shell — no `&&`, pipes or `$(…)`; put chains into a script.
+
+### Shared spec register (team)
+
+When `.agent/specs` is a Git worktree of the branch `specs` (a `.git` *file*
+inside it), the specs are the team's shared register: the same path for
+everyone, independent of the code branch. Edit specs there as usual. The
+Speccify app commits and syncs the register (commit → fetch → rebase → push,
+never force). Do not commit inside `.agent/specs` yourself while the app is
+running; without the app, run `git -C .agent/specs add -A && git -C
+.agent/specs commit -m "spec(<id>): …" && git -C .agent/specs pull --rebase
+&& git -C .agent/specs push`, never `--force`. A stopped rebase with conflict
+markers in a `SPEC.md` is a human decision: report it, do not resolve it
+silently. In a fresh clone without the worktree, mount it with
+`git worktree add .agent/specs origin/specs` (the app offers the same under
+"Einrichten"). Never add `.agent/specs` to a code branch commit.
 
 ### Rules
 

@@ -198,6 +198,17 @@ Der Filter **braucht mich** zeigt Arbeit, die auf Dich wartet. Vorhandener
 Altbestand bleibt mit Herkunftshinweis lesbar, seine Spec-Aktionen sind
 schreibgeschützt. Die Kopfzeile zeigt Läufe und Token-Verbrauch.
 
+**Im Team, mit Feature-Branches:** Über dem Board bietet die App an, die
+Specs als **gemeinsames Register** zu führen — ein Branch `specs` im selben
+Repository, als Git-Worktree unter `.agent/specs` eingehängt. Danach sieht
+jeder nach dem Sync dasselbe Board, egal auf welchem Code-Branch er steht;
+die App committet und synchronisiert von selbst (nie mit Force). Der
+Board-Kopf zeigt den Stand (*aktuell*, *n nicht gesendet*, *n neu vom
+Team*) und einen *Sync*-Knopf. Ändern zwei Personen dieselbe Zeile, zeigt
+er beide Fassungen und lässt Dich entscheiden; nichts geht verloren.
+Frische Klone hängen das Register mit einem Klick ein. Details, Migration
+und Regeln: `docs/specs-register.md`.
+
 ### Hilfe
 
 Diese Anleitung und die weiteren eingebauten Dokumente; der Inspektor

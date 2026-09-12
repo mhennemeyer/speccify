@@ -517,12 +517,14 @@ pub(crate) fn spec_number_of(id: &str) -> Option<u32> {
 
 /// Nächste freie Nummer über aktive und archivierte Specs.
 pub(crate) fn next_spec_number(root: &Path) -> u32 {
-    spec_dirs(root, true)
+    let local = spec_dirs(root, true)
         .iter()
         .filter_map(|dir| spec_number_of(&spec_id_of(root, &dir.join("SPEC.md"))))
         .max()
-        .unwrap_or(0)
-        + 1
+        .unwrap_or(0);
+    // Spec 028: im Team-Register zählt auch, was auf `origin/specs` schon vergeben ist.
+    let remote = crate::spec_register::remote_max_number(root).unwrap_or(0);
+    local.max(remote) + 1
 }
 
 /// Guard: relativer Pfad, unterhalb von `.agent/specs/`, Dateiname SPEC.md.

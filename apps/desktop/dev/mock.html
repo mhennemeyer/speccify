@@ -121,6 +121,19 @@
         }
       };
       window.__SPECCIFY_MOCK__ = { emit, actionStarts, failStart: false, failStop: false, taskCalls: [], staleTaskOnce: false, specs: tickets, workflowInstalls: 0, terminalOpens: [], sessionChecks: [] };
+      let registerMode = new URLSearchParams(location.search).get("register") ?? "none";
+      window.__SPECCIFY_MOCK__.registerCalls = [];
+      const registerStatus = () => {
+        const base = { mode: "mounted", branch: "specs", remote: true, code_branch: "spec/013-live-test", tracked_in_code: false, ahead: 0, behind: 0, unsent: 0, rebasing: false, conflicts: [], last_sync: "2026-09-12T12:00:00Z", last_error: null, reason: null };
+        switch (registerMode) {
+          case "none": return { ...base, mode: "none", remote: false, last_sync: null };
+          case "migratable": return { ...base, mode: "migratable", code_branch: "main", tracked_in_code: true, last_sync: null, reason: "Specs liegen im Code-Branch. Einrichten verschiebt sie in den Branch `specs` (Worktree `.agent/specs`), committet die Ignore-Regel und pusht das Register." };
+          case "detached": return { ...base, mode: "detached", last_sync: null, reason: "Register `specs` vorhanden, aber nicht eingehängt. Einrichten legt den Worktree `.agent/specs` an." };
+          case "blocked": return { ...base, mode: "blocked", code_branch: "feature/alt", tracked_in_code: true, reason: "Der Branch `feature/alt` trackt `.agent/specs` noch, obwohl das Register `specs` existiert. Branch auf main rebasen; erst dann lässt sich der Worktree einhängen." };
+          case "conflict": return { ...base, rebasing: true, ahead: 1, behind: 1, reason: "Konflikt: dieselben Zeilen wurden im Team und hier geändert. Bitte je Datei entscheiden.", conflicts: [{ file: tickets.find(t => !t.file.includes("/archive/")).file, spec_id: tickets.find(t => !t.file.includes("/archive/")).id, team: "---\nstation: Done\n---\n# Live-Test\n", mine: "---\nstation: Backlog\n---\n# Live-Test\n" }] };
+          default: return { ...base, unsent: 2, behind: 1 };
+        }
+      };
       const sessionDemo = new URLSearchParams(location.search).get("session");
       if (sessionDemo) {
         const key = new URLSearchParams(location.search).has("dashboard") ? "speccify.dashboard.agentSession" : `speccify.project.agentSession:${project}`;
@@ -171,6 +184,12 @@
         project_current: () => project,
         project_watch_start: () => null,
         project_watch_stop: () => null,
+        // Spec 028: ?register=migratable|detached|blocked|mounted|conflict steuert das Register.
+        project_register_status: () => registerStatus(),
+        project_register_setup: () => { window.__SPECCIFY_MOCK__.registerCalls.push("setup"); registerMode = "mounted"; return registerStatus(); },
+        project_register_sync: () => { window.__SPECCIFY_MOCK__.registerCalls.push("sync"); return { ...registerStatus(), last_sync: "2026-09-12T12:34:00Z" }; },
+        project_register_resolve: ({ file, choice }) => { window.__SPECCIFY_MOCK__.registerCalls.push(`resolve:${choice}:${file}`); registerMode = "mounted"; return registerStatus(); },
+        project_register_abort: () => { window.__SPECCIFY_MOCK__.registerCalls.push("abort"); registerMode = "mounted"; return { ...registerStatus(), ahead: 1, behind: 1 }; },
         project_workflow_status: workflowStatus,
         project_workflow_install: () => { window.__SPECCIFY_MOCK__.workflowInstalls++; return workflowStatus(); },
         project_board: () => orEmpty(tickets),

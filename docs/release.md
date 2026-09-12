@@ -15,6 +15,10 @@ Prozess-Supervisor starten beliebige CLI-Befehle, das ginge sandboxed nicht.
 
 ## Der normale Weg: ein Tag
 
+Seit Spec 028: Läuft das Projekt mit gemeinsamem Spec-Register, den Commit des
+Branch `specs` in den Release-Notizen nennen (`git -C .agent/specs rev-parse HEAD`),
+damit der Anforderungsstand zum Code reproduzierbar bleibt.
+
 `.github/workflows/release.yml` baut auf jedem `v*`-Tag: Sidecars,
 Engine-Payload, `tauri build`, und legt einen **Entwurfs-Release** an. Der
 letzte Blick auf das, was Nutzer bekommen, ist ein Mensch, der die

@@ -64,6 +64,7 @@ import PlaybooksTab from "./views/project/PlaybooksTab";
 import SkillsTab from "./views/project/SkillsTab";
 import ToolsTab from "./views/project/ToolsTab";
 import WorkflowBanner from "./views/project/WorkflowBanner";
+import RegisterBar, { type RegisterStatus } from "./views/project/RegisterBar";
 
 
 /** Aktion aus actions.json, soweit die Toolbar sie braucht. */
@@ -150,6 +151,8 @@ export default function ProjectShell() {
   };
   // W7d: Aktionen mit `toolbar: true` als Knöpfe in der Toolbar.
   const [toolbarActions, setToolbarActions] = useState<ToolbarAction[]>([]);
+  // Spec 028: Konflikt-Specs aus dem Register fürs Board.
+  const [registerConflicts, setRegisterConflicts] = useState<string[]>([]);
 
   useEffect(() => {
     void invoke<string | null>("project_current")
@@ -569,9 +572,17 @@ export default function ProjectShell() {
           style={{ gridColumn: 3, gridRow: "2 / 4" }}
         >
           <WorkflowBanner project={project} />
+          <div className={active === "board" ? "" : "hidden"}>
+            <RegisterBar
+              project={project}
+              onStatus={(status: RegisterStatus) =>
+                setRegisterConflicts(status.conflicts.map((conflict) => conflict.spec_id))
+              }
+            />
+          </div>
           {/* Tabs bleiben gemountet (nur versteckt): Wechsel sofortig, Fetch-State erhalten. */}
           <div className={active === "board" ? "min-h-0 flex-1" : "hidden"}>
-            <BoardTab project={project} refresh={refresh.board} />
+            <BoardTab project={project} refresh={refresh.board} conflictIds={registerConflicts} />
           </div>
           <div className={active === "files" ? "min-h-0 flex-1" : "hidden"}>
             {/* Der Baum reagiert auf jede Watcher-Meldung (Summe aller Bereiche). */}
