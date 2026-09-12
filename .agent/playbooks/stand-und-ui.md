@@ -419,6 +419,7 @@ Diese Tabelle verändert keine Station oder Reihenfolge.
 | [028 Spec-Branch als Register](../specs/028-spec-branch-als-register/SPEC.md) | Doing · ready | D-TEAM-02: `spec_register.rs` (Status/Migration/Einhängen/Sync/Konflikt), Watcher-Sync, `RegisterBar`, Policy v6, Suite `test_spec_register`; **eigenes Repo seit 2026-09-12 migriert** (`.agent/specs` = Worktree von `specs`); Klick-Abnahme offen |
 | [029 Übernahme/Besitzer/Branch](../specs/029-uebernahme-besitzer-branch/SPEC.md) | Doing · ready | `spec_owner.rs` (Übernehmen/Abgeben, Drag-Regeln, Branch-Beobachtung), Chips, Filter „meine“, „Doing nach Person“, Inspektor-Hinweise, Policy v7, Suite `test_spec_owner`; Klick-Abnahme offen |
 | [030 Teamsignale über Git](../specs/030-teamsignale-ueber-git/SPEC.md) | Doing · ready | `team_signals.rs` (fremde Commits je Spec, Webhook nur für lokal entstandene Ereignisse, Board-Diff im Watcher), „neu“-Chips, „Frage an Dich“, Webhook-Einstellungen (Dashboard-URL, Projekt-Schalter), Policy v8, Suite `test_team_signals`; Klick-Abnahme und echter Webhook-Empfänger offen |
+| [031 Team-Board im Web](../specs/031-team-board-im-web/SPEC.md) | Doing · ready | `speccify board` (Core `board.py`) rendert eine statische Seite aus dem Register; Pages-/Docs-Workflow bauen sie aus `origin/specs`, Nav-Link „Board“; erster Deploy und Link-Check offen |
 
 ### Gemeinsames Workspace-Arbeitsfenster (026)
 
