@@ -1,0 +1,2 @@
+{"timestamp": "2026-09-13T07:30:00Z", "spec_id": "032-web-board-dienst", "event_type": "spec_created", "actor": "project", "summary": "Angelegt aus Nutzerauftrag „Web-Board pro Projekt/Ordner/Gruppe, beliebig viele Repos, lesen/darstellen/aktualisieren, Docker“"}
+{"timestamp": "2026-09-13T07:31:00Z", "spec_id": "032-web-board-dienst", "event_type": "station_changed", "actor": "project", "summary": "Backlog → Doing (Nutzerauftrag)"}
