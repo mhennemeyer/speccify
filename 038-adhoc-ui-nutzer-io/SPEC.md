@@ -84,7 +84,11 @@ Web-Board oder itsdcloud.
 - [x] Tests: Rust (Validierung, Warten, `show`, Datei, Timeout), Browser-Suite
       `test_agent_ui` (Tailwind wirksam, Werte, data-answer, show/close, Dashboard).
 - [x] Hilfe, Playbook V1-06, UI-Baum.
-- [ ] App neu bündeln und mit echtem Agenten prüfen (`show_ui` aus dem Terminal).
+- [x] App neu bündeln und mit echtem Agenten prüfen (`show_ui` aus dem Terminal).
+      Gebündelt und gestartet; `tools/list` des Desktop-UI-MCP nennt `show_ui`/`ui_result`,
+      ein echter `show_ui`-Aufruf (Modus `show`, Tabelle „Testlauf 038“) wurde
+      angenommen und liegt in der App zur Sichtprüfung. Aufruf aus einem
+      Claude/Codex-Terminal mit Formularantwort bleibt Deine Prüfung.
 
 ## Verification
 
@@ -102,8 +106,11 @@ Web-Board oder itsdcloud.
   liefert `{closed:true}` und „geschlossen“; Dashboard rendert dieselbe Karte.
 - Befund: Vite kann `@tailwindcss/browser/dist/index.global.js` nicht per
   Unterpfad laden (Exports); daher vendorierte Kopie unter `src/assets/`.
-- Nicht geprüft: echter Aufruf aus einem Claude/Codex-Terminal in der
-  gebündelten App (Task 6). Deshalb `ready`.
+- Gebündelte App (neuer Build) läuft; Desktop-UI-MCP auf 18768 listet
+  `show_ui`/`ui_result`; `show_ui` mit `mode: show` antwortet
+  `{shown: true, interaction_id}` — die Karte „Testlauf 038“ steht in der App.
+- Nicht geprüft: Formularantwort aus einem echten Claude/Codex-Terminal und
+  die Sicht auf die Karte (BO). Deshalb `ready`.
 
 ## Questions
 
