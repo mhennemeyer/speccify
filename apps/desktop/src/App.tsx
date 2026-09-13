@@ -122,7 +122,7 @@ export default function App() {
           const known = new Set(current.map((interaction) => interaction.id));
           const fresh = pending.filter((interaction) => !known.has(interaction.id));
           if (fresh.length === 0) return current;
-          setSidebarVisible(true);
+          if (fresh.some((interaction) => interaction.kind !== "html")) setSidebarVisible(true);
           return [...current, ...fresh];
         });
       } catch {
@@ -140,7 +140,8 @@ export default function App() {
             ? current
             : [...current, { ...event.payload }],
         );
-        setSidebarVisible(true);
+        // HTML-Fragen öffnen ihr eigenes Popup; nur klassische Karten holen die Seitenleiste.
+        if (event.payload.kind !== "html") setSidebarVisible(true);
       }),
       // Beantwortet (egal von wo): Element einfrieren.
       listen<{ id: string; selected_options: string[]; field_values: string[]; values?: Record<string, unknown> }>(
@@ -180,18 +181,19 @@ export default function App() {
   };
 
   return (
-    <div className="flex h-screen bg-slate-50 text-slate-900">
-      <nav
-        className="flex w-48 flex-col border-r border-slate-200 bg-white p-3"
-        style={{ paddingTop: isMac ? 40 : 12 }}
+    <div className="flex h-screen flex-col bg-slate-50 text-slate-900">
+      {/* Durchgehende Zieh-Leiste (BO-Finding 2026-09-13: das Dashboard ließ sich
+          nicht bewegen — nur die kleine Überschrift war Drag-Region). Auf macOS
+          liegt die Ampel links darüber. */}
+      <div
+        data-tauri-drag-region
+        className="flex shrink-0 items-center border-b border-slate-200 bg-white text-sm font-bold tracking-wide text-slate-500"
+        style={{ height: isMac ? 38 : 30, paddingLeft: isMac ? 84 : 12 }}
       >
-        {/* Auf macOS liegt die Ampel über dieser Ecke; die Kopfzeile ist Drag-Region. */}
-        <h1
-          data-tauri-drag-region
-          className="mb-4 px-2 text-sm font-bold tracking-wide text-slate-500"
-        >
-          Speccify
-        </h1>
+        Speccify
+      </div>
+      <div className="flex min-h-0 flex-1">
+      <nav className="flex w-48 flex-col border-r border-slate-200 bg-white p-3">
         {SECTIONS.map((s) => (
           <button
             key={s.id}
@@ -254,6 +256,7 @@ export default function App() {
           </div>
         )}
       </aside>
+      </div>
     </div>
   );
 }

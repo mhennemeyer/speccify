@@ -212,7 +212,12 @@ pub fn run() {
             }
         }))
         // Fenstergröße und -position je Fensterlabel merken (BO-Finding 2026-09-13).
-        .plugin(tauri_plugin_window_state::Builder::default().build())
+        .plugin(
+            tauri_plugin_window_state::Builder::default()
+                // Frage-Popups (Spec 038) haben je Frage ein Label — kein Merken.
+                .with_filter(|label| !label.starts_with("ask-"))
+                .build(),
+        )
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_dialog::init())

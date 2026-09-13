@@ -32,13 +32,16 @@ export interface AskBoInteraction {
 interface AskBoPanelProps {
   interactions: AskBoInteraction[];
   onAnswer: (id: string, selectedOptions: string[], fieldValues: string[]) => void;
+  /** Spec 038: HTML-Fragen leben im Popup-Fenster; in Seitenleisten nur mit `htmlInline`. */
+  htmlInline?: boolean;
 }
 
-export default function AskBoPanel({ interactions, onAnswer }: AskBoPanelProps) {
+export default function AskBoPanel({ interactions: all, onAnswer, htmlInline = false }: AskBoPanelProps) {
+  const interactions = htmlInline ? all : all.filter((interaction) => interaction.kind !== "html");
   if (interactions.length === 0) return null;
   const lastOpen = [...interactions].reverse().find((entry) => !entry.answered);
   return (
-    <div className="max-h-[45%] shrink-0 space-y-2 overflow-y-auto border-b border-slate-700 bg-slate-800 p-2">
+    <div className={`${htmlInline ? "" : "max-h-[45%] border-b"} shrink-0 space-y-2 overflow-y-auto border-slate-700 bg-slate-800 p-2`}>
       {interactions.map((interaction) =>
         interaction.kind === "html" ? (
           <HtmlInteractionCard key={interaction.id} interaction={interaction} />

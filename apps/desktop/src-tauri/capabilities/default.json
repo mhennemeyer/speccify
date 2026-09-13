@@ -16,6 +16,7 @@
     "opener:default",
     "updater:default",
     "window-state:default",
+    "core:window:allow-close",
     {
       "identifier": "opener:allow-open-path",
       "allow": [

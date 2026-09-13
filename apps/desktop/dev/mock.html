@@ -131,6 +131,23 @@
       if (doingOwner) { const doing = tickets.find(s => s.station === "Doing"); doing.owner = doingOwner; doing.branch = `spec/${doing.id}`; }
       window.__SPECCIFY_MOCK__.projectSettings = {};
       window.__SPECCIFY_MOCK__.uiAnswers = [];
+      window.__SPECCIFY_MOCK__.windowCloses = [];
+      // ?askwin=<form|answer|show>: das Popup-Fenster ask-1 mit einer wartenden Frage.
+      const askwin = new URLSearchParams(location.search).get("askwin");
+      const askHtml = {
+        form: `<form class="space-y-2"><p class="text-sm">Wohin?</p>
+          <label class="block"><input type="radio" name="target" value="staging" checked> staging</label>
+          <label class="block"><input type="radio" name="target" value="prod"> prod</label>
+          <label class="block"><input type="checkbox" name="services" value="api" checked> api</label>
+          <label class="block"><input type="checkbox" name="services" value="web"> web</label>
+          <input name="note" value="v1.4">
+          <button id="go" name="action" value="deploy" class="rounded bg-emerald-600 px-3 py-1.5 text-white">Los</button></form>`,
+        answer: `<button data-answer="yes" class="mr-2">Ja</button><button data-answer="no">Nein</button>`,
+        show: `<table class="w-full text-sm"><tr><td>Tests</td><td class="text-emerald-700">108 passed</td></tr></table>`,
+      };
+      if (askwin && askHtml[askwin]) {
+        window.__SPECCIFY_MOCK__.pendingAsk = [{ id: "ask-1", kind: "html", prompt: "Deploy?", title: "Deploy planen", mode: askwin === "show" ? "show" : "ask", options: [], fields: [], html: askHtml[askwin] }];
+      }
       window.__SPECCIFY_MOCK__.askUi = (payload) => emit("ask-bo", { options: [], fields: [], ...payload });
       const questionTo = new URLSearchParams(location.search).get("question");
       if (questionTo === "me" || questionTo === "other") {
@@ -218,7 +235,8 @@
         project_settings_get: () => window.__SPECCIFY_MOCK__.projectSettings,
         project_settings_set: ({ key, value }) => { window.__SPECCIFY_MOCK__.ownerCalls.push(`settings:${key}=${value}`); const s = window.__SPECCIFY_MOCK__.projectSettings; if (key === "webhook.enabled") s.webhook = { ...(s.webhook ?? {}), enabled: value }; return s; },
         // Spec 038: Agent-Fragen. ?askui=1 spielt eine Ad-hoc-UI ein.
-        ask_bo_pending: () => [],
+        ask_bo_pending: () => window.__SPECCIFY_MOCK__.pendingAsk ?? [],
+        "plugin:window|close": ({ label }) => { window.__SPECCIFY_MOCK__.windowCloses.push(label ?? "ask-1"); return null; },
         ask_bo_answer: ({ id, selectedOptions, fieldValues }) => { window.__SPECCIFY_MOCK__.uiAnswers.push({ id, selectedOptions, fieldValues }); emit("ask-bo-answered", { id, selected_options: selectedOptions, field_values: fieldValues }); return null; },
         ui_answer: ({ id, values }) => { window.__SPECCIFY_MOCK__.uiAnswers.push({ id, values }); emit("ask-bo-answered", { id, selected_options: [], field_values: [], values }); return null; },
         project_spec_take: ({ file, branch }) => {
@@ -448,7 +466,7 @@
       window.__TAURI_INTERNALS__ = {
         // ?dashboard=1 → Hauptfenster (Label "main") statt Projektfenster.
         metadata: (() => {
-          const label = new URLSearchParams(location.search).has("workspace-shell") ? "workspace-workspace-demo" : new URLSearchParams(location.search).has("dashboard") ? "main" : "project-mock";
+          const label = new URLSearchParams(location.search).has("askwin") ? "ask-1" : new URLSearchParams(location.search).has("workspace-shell") ? "workspace-workspace-demo" : new URLSearchParams(location.search).has("dashboard") ? "main" : "project-mock";
           return {
             currentWindow: { label },
             currentWebview: { label, windowLabel: label },

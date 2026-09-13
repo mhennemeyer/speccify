@@ -236,9 +236,9 @@ nennt die Quelldatei im Repository.
 **Fragen mit eigener Oberfläche:** Der Agent kann statt einer Textfrage eine
 kleine Oberfläche zeigen — Ja/Nein-Knöpfe, Auswahl, Mehrfachauswahl, eine
 Liste von Fragen oder nur eine Anzeige (Tabelle, Fortschritt). Sie erscheint
-über dem Terminal des Projektfensters (und im Dashboard in der Seitenleiste),
-läuft abgeschottet in einem Rahmen und schickt Deine Antwort direkt an den
-Agenten zurück; danach friert die Karte ein und zeigt die Antwort. Wie der
+als eigenes kleines Fenster, egal aus welchem Projekt der Agent fragt, läuft
+abgeschottet in einem Rahmen und schickt Deine Antwort direkt an den Agenten
+zurück; danach zeigt das Fenster kurz die Antwort und schließt sich von selbst. Wie der
 Agent solche Oberflächen baut und als Skill ablegt, steht im Skill
 `agent-ui`, den *Einrichten* anlegt.
 

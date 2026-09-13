@@ -98,8 +98,50 @@ impl AskBoRegistry {
                 answer: None,
             },
         );
-        self.emit("ask-bo", event);
+        self.emit("ask-bo", event.clone());
+        self.open_popup(&id, &event);
         id
+    }
+
+    /// Spec 038 (BO-Finding): jede Frage bekommt ein eigenes kleines Fenster
+    /// `ask-<n>`, das die SPA als Frage-Popup rendert und nach der Antwort
+    /// schließt. Fensterbau gehört auf den Main-Thread.
+    fn open_popup(&self, id: &str, payload: &Value) {
+        let Some(app) = self.0.app.lock().unwrap().clone() else {
+            return;
+        };
+        let label = id.to_string();
+        let title = payload
+            .get("title")
+            .and_then(Value::as_str)
+            .filter(|t| !t.is_empty())
+            .or_else(|| payload.get("prompt").and_then(Value::as_str))
+            .unwrap_or("Agent fragt")
+            .to_string();
+        let html = payload.get("kind").and_then(Value::as_str) == Some("html");
+        let app_for_build = app.clone();
+        let _ = app.run_on_main_thread(move || {
+            let builder = tauri::WebviewWindowBuilder::new(
+                &app_for_build,
+                label,
+                tauri::WebviewUrl::App("index.html".into()),
+            )
+            .title(format!("{title} — Speccify"))
+            .inner_size(
+                if html { 620.0 } else { 460.0 },
+                if html { 560.0 } else { 360.0 },
+            )
+            .min_inner_size(360.0, 240.0)
+            .center()
+            .focused(true);
+            #[cfg(target_os = "macos")]
+            let builder = builder
+                .title_bar_style(tauri::TitleBarStyle::Overlay)
+                .hidden_title(true);
+            if let Err(error) = builder.build() {
+                eprintln!("Frage-Popup: {error}");
+            }
+        });
     }
 
     /// Alle noch unbeantworteten Interaktionen (UI-Sync beim Mount/Poll).

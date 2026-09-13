@@ -210,7 +210,7 @@ Projektfenster · ein Projektpfad (Startbereich: Specs)
 │   ├── Startumgebung prüfen: Host, Pfad/Version, CLI/Quelle, Hinweise/Fehler
 │   ├── Starten / Neu starten / Sitzung fortsetzen (genau bekannte Sitzung) ·
 │   │   Sitzung auswählen / Neueste Sitzung (ohne ID, verschwunden, Hostwechsel) · Startfehler sichtbar
-│   ├── Agent-Fragen über dem Terminal (038): ask_bo-Karten · Ad-hoc-UI (iframe, Formular/data-answer, Anzeige mit Schließen)
+│   ├── Agent-Fragen (038): ask_bo-Karten über dem Terminal · Ad-hoc-UI als eigenes Popup-Fenster `ask-<n>` (iframe, Formular/data-answer, Anzeige mit Schließen), schließt nach Antwort
 │   └── laufend: cwd · Startdetails · PTY · Neustart · Dock wechseln
 └── Splitter: Größen ändern/zurücksetzen; Layout pro Projekt gespeichert
 ```
