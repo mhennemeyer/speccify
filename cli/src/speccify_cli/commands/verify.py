@@ -18,8 +18,8 @@ from speccify_core import (
     bundle_sha256,
 )
 
-from speccify_cli.commands._context import ProjectContext, fetch_bundle
 from speccify_cli.commands import expand as expand_module
+from speccify_cli.commands._context import ProjectContext, fetch_bundle
 from speccify_cli.commands.expand import (
     Expansions,
     ExpansionStatus,
