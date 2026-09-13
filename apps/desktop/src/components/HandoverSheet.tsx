@@ -1,0 +1,165 @@
+// Auftrags-Vorschau (Spec 011): zeigt, was der Agent bekommt, liest die Datei
+// beim Öffnen und noch einmal vor der Zustellung, meldet Abweichungen und das
+// Zustellergebnis. Kein Auftrag ohne Klick; Enter im Terminal bleibt beim Menschen.
+
+import { useEffect, useMemo, useState } from "react";
+import { invoke } from "@tauri-apps/api/core";
+import {
+  buildHandover,
+  copyHandover,
+  deliverToTerminal,
+  kindsFor,
+  KIND_LABELS,
+  terminalReady,
+  type HandoverItem,
+  type HandoverKind,
+} from "../lib/handover";
+import { InspectorButton } from "../lib/panels";
+
+export function HandoverButton({ project, item, known }: { project: string; item: HandoverItem; known?: string | null }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <InspectorButton title="Auftrag mit Projekt, Pfad und Absicht ans Agent-Terminal übergeben oder kopieren" onClick={() => setOpen(true)}>
+        Auftrag…
+      </InspectorButton>
+      {open ? <HandoverSheet project={project} item={item} known={known ?? null} onClose={() => setOpen(false)} /> : null}
+    </>
+  );
+}
+
+export default function HandoverSheet({
+  project,
+  item,
+  known,
+  onClose,
+}: {
+  project: string;
+  item: HandoverItem;
+  /** Inhalt, wie ihn die Ansicht zuletzt kannte — für den Abweichungshinweis. */
+  known: string | null;
+  onClose: () => void;
+}) {
+  const kinds = kindsFor(item.type);
+  const [kind, setKind] = useState<HandoverKind>(kinds[0]);
+  const [content, setContent] = useState<string | null>(null);
+  const [readError, setReadError] = useState<string | null>(null);
+  const [edited, setEdited] = useState<string | null>(null);
+  const [result, setResult] = useState<string | null>(null);
+  const [tone, setTone] = useState<"ok" | "warn" | "error">("ok");
+  const [ready, setReady] = useState(terminalReady());
+
+  const read = async (): Promise<string | null> => {
+    try {
+      const text = await invoke<string>("project_read_file", { project, file: item.path });
+      setContent(text);
+      setReadError(null);
+      return text;
+    } catch (error) {
+      setReadError(String(error));
+      return null;
+    }
+  };
+  useEffect(() => {
+    void read();
+    const timer = setInterval(() => setReady(terminalReady()), 1000);
+    return () => clearInterval(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [item.path]);
+
+  const stripFrontMatter = (text: string) => {
+    if (!text.startsWith("---")) return text;
+    const end = text.indexOf("\n---", 3);
+    return end === -1 ? text : text.slice(text.indexOf("\n", end + 1) + 1);
+  };
+  const changed =
+    known !== null &&
+    content !== null &&
+    stripFrontMatter(known).trimEnd() !== stripFrontMatter(content).trimEnd();
+  const preview = useMemo(
+    () => (edited !== null ? edited : content !== null ? buildHandover(project, item, kind, content) : ""),
+    [edited, content, project, item, kind],
+  );
+
+  const deliver = async () => {
+    // Vor der Übergabe die aktuelle Datei lesen — nie einen alten Stand zustellen.
+    const fresh = await read();
+    if (fresh === null) {
+      setTone("error");
+      setResult("Datei konnte nicht gelesen werden — nichts zugestellt.");
+      return;
+    }
+    const text = edited !== null ? edited : buildHandover(project, item, kind, fresh);
+    const outcome = await deliverToTerminal(text);
+    if (outcome.status === "delivered") {
+      setTone("ok");
+      setResult("Eingefügt — im Terminal mit Enter absenden.");
+    } else if (outcome.status === "no-terminal") {
+      setTone("warn");
+      setResult("Kein Agent-Terminal bereit — Auftrag kopieren oder Terminal starten.");
+    } else {
+      setTone("error");
+      setResult(`Zustellung fehlgeschlagen: ${outcome.message}`);
+    }
+  };
+
+  const copy = async () => {
+    const fresh = content ?? (await read());
+    const text = edited !== null ? edited : fresh !== null ? buildHandover(project, item, kind, fresh) : "";
+    await copyHandover(text);
+    setTone("ok");
+    setResult("In die Zwischenablage kopiert.");
+  };
+
+  const button = "rounded bg-slate-800 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-700 disabled:opacity-50";
+  const quiet = "rounded border border-slate-300 px-2.5 py-1 text-xs text-slate-700 hover:bg-slate-100";
+  return (
+    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/20" onClick={onClose}>
+      <div role="dialog" aria-label="Auftrag" onClick={(event) => event.stopPropagation()} className="flex max-h-[85vh] w-[720px] max-w-[95vw] flex-col rounded-xl border border-slate-200 bg-white p-4 shadow-xl">
+        <div className="mb-2 flex items-center gap-2">
+          <h2 className="text-sm font-semibold text-slate-800">Auftrag an den Agenten</h2>
+          <span className="truncate font-mono text-[11px] text-slate-500" title={item.path}>{item.path}</span>
+          <button onClick={onClose} className="ml-auto text-xs text-slate-400 hover:text-slate-700">Schließen</button>
+        </div>
+        <div className="mb-2 flex flex-wrap items-center gap-2 text-xs text-slate-600">
+          <span>Absicht:</span>
+          {kinds.map((option) => (
+            <button
+              key={option}
+              onClick={() => { setKind(option); setEdited(null); }}
+              className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${kind === option ? "bg-slate-800 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+            >
+              {KIND_LABELS[option]}
+            </button>
+          ))}
+          <span className="ml-auto" data-terminal-ready={ready}>{ready ? "Agent-Terminal bereit" : "kein Agent-Terminal"}</span>
+        </div>
+        {changed ? (
+          <p className="mb-2 rounded border border-amber-200 bg-amber-50 px-2 py-1 text-xs text-amber-800" role="status">
+            Die Datei hat sich seit der Auswahl geändert — die Vorschau zeigt den aktuellen Inhalt.
+          </p>
+        ) : null}
+        {readError ? <p className="mb-2 text-xs text-red-700">{readError}</p> : null}
+        <textarea
+          aria-label="Auftragstext"
+          value={preview}
+          onChange={(event) => setEdited(event.target.value)}
+          spellCheck={false}
+          className="min-h-0 flex-1 resize-none rounded border border-slate-300 bg-slate-50 p-2 font-mono text-[11px] leading-snug text-slate-800"
+          style={{ minHeight: 240 }}
+        />
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <button className={button} disabled={content === null} onClick={() => void deliver()}>Ins Terminal einfügen</button>
+          <button className={quiet} onClick={() => void copy()}>Kopieren</button>
+          {!ready ? (
+            <button className={quiet} onClick={() => window.dispatchEvent(new CustomEvent("speccify:show-terminal"))}>Terminal starten</button>
+          ) : null}
+          {edited !== null ? <button className={quiet} onClick={() => setEdited(null)}>Vorlage wiederherstellen</button> : null}
+          {result ? (
+            <span role="status" className={`text-xs ${tone === "ok" ? "text-emerald-700" : tone === "warn" ? "text-amber-700" : "text-red-700"}`}>{result}</span>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+}

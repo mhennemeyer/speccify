@@ -7,6 +7,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { deliverToTerminal } from "../../lib/handover";
 import { listen } from "@tauri-apps/api/event";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import DiffView from "../../components/DiffView";
@@ -168,9 +169,14 @@ export default function GitTab({
       stagedCount > 0
         ? "Bitte prüfe die gestageten Änderungen (git diff --cached), schreibe eine Conventional-Commit-Nachricht auf Deutsch und committe sie. Nicht pushen."
         : "Bitte sieh dir die Änderungen an (git status, git diff), stage was zusammengehört, schreibe eine Conventional-Commit-Nachricht auf Deutsch und committe. Nicht pushen.";
-    window.dispatchEvent(new CustomEvent("speccify:type-command", { detail: `Ziel-Repository: ${JSON.stringify(project)}. Ausschließlich dort arbeiten. ${prompt}` }));
-    setNotice(
-      "Auftrag ins Agent-Terminal getippt — dort mit Enter bestätigen. (Läuft kein Terminal, zuerst „Agent-Terminal starten“.)",
+    void deliverToTerminal(`Ziel-Repository: ${JSON.stringify(project)}. Ausschließlich dort arbeiten. ${prompt}`).then((outcome) =>
+      setNotice(
+        outcome.status === "delivered"
+          ? "Auftrag ins Agent-Terminal eingefügt — dort mit Enter bestätigen."
+          : outcome.status === "no-terminal"
+            ? "Kein Agent-Terminal bereit — zuerst „Agent-Terminal starten“, dann erneut."
+            : `Zustellung fehlgeschlagen: ${outcome.message}`,
+      ),
     );
   };
 

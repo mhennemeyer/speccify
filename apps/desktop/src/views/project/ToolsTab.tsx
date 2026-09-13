@@ -8,7 +8,6 @@ import { invoke } from "@tauri-apps/api/core";
 import Markdown, { stripFrontmatter } from "../../components/Markdown";
 import { LoadingBoundary, useAsync } from "../../components/ui";
 import {
-  InspectorButton,
   InspectorPanel,
   InspectorPortal,
   NavEmpty,
@@ -17,7 +16,7 @@ import {
   showTab,
   useInspector,
 } from "../../lib/panels";
-import { copyPrompt } from "../../lib/prompt";
+import { HandoverButton } from "../../components/HandoverSheet";
 
 interface ToolPlatform {
   name: string;
@@ -157,13 +156,7 @@ export default function ToolsTab({ project, refresh }: { project: string; refres
                       },
                     ]}
                     actions={
-                      <InspectorButton
-                        title="TOOL.md als Prompt in die Zwischenablage — z. B. für „implementiere das für diese Plattform“"
-                        disabled={spec.data === null}
-                        onClick={() => void copyPrompt(selectedTool.file, spec.data ?? "")}
-                      >
-                        Als Prompt kopieren
-                      </InspectorButton>
+                      <HandoverButton project={project} item={{ type: "tool", path: selectedTool.file, title: selectedTool.name }} known={spec.data} />
                     }
                   >
                     {hereStatus(selectedTool) === null && here ? (

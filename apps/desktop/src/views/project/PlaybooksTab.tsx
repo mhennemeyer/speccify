@@ -7,7 +7,7 @@
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import Markdown, { stripFrontmatter } from "../../components/Markdown";
-import { copyPrompt } from "../../lib/prompt";
+import { HandoverButton } from "../../components/HandoverSheet";
 import {
   InspectorButton,
   InspectorPanel,
@@ -306,13 +306,7 @@ export default function PlaybooksTab({
                     ]}
                     actions={
                       <>
-                        <InspectorButton
-                          title="Pfad + Inhalt als Markdown-Prompt in die Zwischenablage"
-                          disabled={body.data === null}
-                          onClick={() => void copyPrompt(selectedPlaybook.file, body.data ?? "")}
-                        >
-                          Als Prompt kopieren
-                        </InspectorButton>
+                        <HandoverButton project={project} item={{ type: "playbook", path: selectedPlaybook.file, title: selectedPlaybook.title }} known={body.data} />
                         <InspectorButton
                           disabled={body.loading || body.data === null}
                           onClick={() => setEditing(true)}

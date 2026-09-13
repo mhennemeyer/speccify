@@ -159,6 +159,12 @@ export default function ProjectShell() {
   // eine neue Frage holt das Terminal nach vorn (Hook vor jedem frühen Return).
   const showTerminalRef = useRef<() => void>(() => {});
   const askBo = useAskBo(() => showTerminalRef.current());
+  // Spec 011: eine Zustellung oder „Terminal starten“ holt das Terminal nach vorn.
+  useEffect(() => {
+    const handler = () => showTerminalRef.current();
+    window.addEventListener("speccify:show-terminal", handler);
+    return () => window.removeEventListener("speccify:show-terminal", handler);
+  }, []);
   // Spec 030: Webhook je Projekt aus `.agent/settings.json` (`webhook.enabled`).
   const [webhookEnabled, setWebhookEnabled] = useState(false);
   useEffect(() => {

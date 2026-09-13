@@ -131,6 +131,7 @@
       if (doingOwner) { const doing = tickets.find(s => s.station === "Doing"); doing.owner = doingOwner; doing.branch = `spec/${doing.id}`; }
       window.__SPECCIFY_MOCK__.projectSettings = {};
       window.__SPECCIFY_MOCK__.uiAnswers = [];
+      window.__SPECCIFY_MOCK__.terminalWrites = [];
       window.__SPECCIFY_MOCK__.windowCloses = [];
       // ?askwin=<form|answer|show>: das Popup-Fenster ask-1 mit einer wartenden Frage.
       const askwin = new URLSearchParams(location.search).get("askwin");
@@ -283,7 +284,11 @@
           return null;
         },
         project_specs_number: () => ["013-live-test", "014-notizen-ordner"],
-        project_read_file: ({ file }) => files[file] ?? `# ${file}\n\n(leer)\n`,
+        project_read_file: ({ file }) => {
+          const spec = tickets.find(t => t.file === file);
+          if (spec) return `---\nstation: ${spec.station}\n---\n${spec.body}`;
+          return files[file] ?? `# ${file}\n\n(leer)\n`;
+        },
         project_write_file: () => null,
         project_tree: ({ dir }) => {
           const all = Object.keys(files).concat(["notes/zahlen.md", "src/main.py", "README.md"],
@@ -444,7 +449,7 @@
         },
         agent_session_check: ({ host, id }) => { window.__SPECCIFY_MOCK__.sessionChecks.push({ host, id }); return sessionDemo === "exact" || sessionDemo === "reject"; },
         project_agent_startup: () => ({ project, shell: "/bin/zsh", host: "agent", host_path: "/usr/local/bin/codex", host_version: "mock", host_ready: true, runtime_source: "workspace", runtime_dir: project + "/.venv/bin", shell_cli: "/usr/local/bin/speccify", effective_cli: project + "/.venv/bin/speccify", missing_commands: [], warnings: [], error: null }),
-        terminal_write: () => null,
+        terminal_write: (args) => { window.__SPECCIFY_MOCK__.terminalWrites.push(args); return null; },
         terminal_resize: () => null,
         terminal_kill: () => null,
         "plugin:event|emit": () => null,

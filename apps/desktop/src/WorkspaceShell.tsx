@@ -233,11 +233,11 @@ export default function WorkspaceShell() {
     const files = () => activate("files");
     window.addEventListener("speccify:show-tab", handler);
     window.addEventListener("speccify:open-file", files);
-    window.addEventListener("speccify:type-command", showTerminal);
+    window.addEventListener("speccify:show-terminal", showTerminal);
     return () => {
       window.removeEventListener("speccify:show-tab", handler);
       window.removeEventListener("speccify:open-file", files);
-      window.removeEventListener("speccify:type-command", showTerminal);
+      window.removeEventListener("speccify:show-terminal", showTerminal);
     };
   }, [activate, showTerminal]);
   useEffect(() => {

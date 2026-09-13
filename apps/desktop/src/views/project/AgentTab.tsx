@@ -9,7 +9,6 @@ import Markdown, { stripFrontmatter } from "../../components/Markdown";
 import { LoadingBoundary, useAsync } from "../../components/ui";
 import { AGENT_PRESETS } from "../../lib/agents";
 import {
-  InspectorButton,
   InspectorPanel,
   InspectorPortal,
   NavEmpty,
@@ -17,7 +16,7 @@ import {
   NavRow,
   inlineInspector,
 } from "../../lib/panels";
-import { copyPrompt } from "../../lib/prompt";
+import { HandoverButton } from "../../components/HandoverSheet";
 import AgentStartup from "../../components/AgentStartup";
 
 export default function AgentTab({
@@ -129,13 +128,7 @@ export default function AgentTab({
                     { label: "Terminal-Kommando", value: agentCommand || "nur Shell" },
                   ]}
                   actions={
-                    <InspectorButton
-                      title="Pfad + Inhalt als Markdown-Prompt in die Zwischenablage"
-                      disabled={body.data === null}
-                      onClick={() => void copyPrompt(current, body.data ?? "")}
-                    >
-                      Als Prompt kopieren
-                    </InspectorButton>
+                    <HandoverButton project={project} item={{ type: "file", path: current }} known={body.data} />
                   }
                 />
               </InspectorPortal>

@@ -10,7 +10,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import Markdown from "../../components/Markdown";
 import { LoadingBoundary, useAsync } from "../../components/ui";
-import { copyPrompt } from "../../lib/prompt";
+import { HandoverButton } from "../../components/HandoverSheet";
 import {
   InspectorButton,
   InspectorPanel,
@@ -609,6 +609,7 @@ function QuestionsSection({
 }
 
 function SpecDetail({
+  project,
   spec,
   history,
   questions,
@@ -623,6 +624,7 @@ function SpecDetail({
   onRelease,
   onSwitchBranch,
 }: {
+  project: string;
   spec: SpecEntry;
   history: HistoryEvent[];
   questions: SpecQuestion[];
@@ -709,12 +711,11 @@ function SpecDetail({
       ]}
       actions={
         <>
-          <InspectorButton
-            title="Pfad + Inhalt als Markdown-Prompt in die Zwischenablage"
-            onClick={() => void copyPrompt(spec.file, spec.body)}
-          >
-            Als Prompt kopieren
-          </InspectorButton>
+          <HandoverButton
+            project={project}
+            item={{ type: "spec", path: spec.file, id: spec.id, title: spec.title, station: spec.station }}
+            known={spec.body}
+          />
           {!spec.archived ? <InspectorButton onClick={onEdit}>Bearbeiten</InspectorButton> : null}
           <InspectorButton onClick={onClose}>Schließen</InspectorButton>
         </>
@@ -1218,6 +1219,7 @@ export default function BoardTab({ project, refresh, detailFile, detailOnly = fa
         {selectedSpec ? (
           <InspectorPortal tab="board">
             <SpecDetail
+              project={project}
               spec={selectedSpec}
               history={history.data ?? []}
               questions={questions.data ?? []}

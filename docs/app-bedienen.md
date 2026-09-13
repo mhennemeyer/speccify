@@ -231,6 +231,19 @@ URL im Dashboard unter *Settings → Teamsignale* (oder
 Diese Anleitung und die weiteren eingebauten Dokumente; der Inspektor
 nennt die Quelldatei im Repository.
 
+## Aufträge an den Agenten
+
+Im Inspektor einer Spec, eines Playbooks, Skills, Tool-Vertrags oder einer
+Agent-Datei öffnet **Auftrag…** eine Vorschau: Projekt, Pfad, bei Specs
+Nummer und Station, die Absicht (*Umsetzen*, *Prüfen*, *Lesen*,
+*Bearbeiten*) und der aktuelle Dateiinhalt als Markdown-Block. Der Text
+lässt sich anpassen. **Ins Terminal einfügen** übergibt ihn als eine
+zusammenhängende Eingabe an das Agent-Terminal dieses Fensters — abgeschickt
+wird erst mit Enter dort. Läuft kein Terminal, sagt die Vorschau das und
+bietet *Kopieren* oder *Terminal starten*. Hat sich die Datei seit der
+Auswahl geändert, zeigt die Vorschau den aktuellen Stand und sagt es. Eine
+Auswahl oder ein Verschieben auf dem Board schickt nie von allein etwas.
+
 ## Fragen beantworten
 
 **Fragen mit eigener Oberfläche:** Der Agent kann statt einer Textfrage eine

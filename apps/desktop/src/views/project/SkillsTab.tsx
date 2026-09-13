@@ -21,7 +21,8 @@ import {
   showTab,
   useInspector,
 } from "../../lib/panels";
-import { copyPrompt } from "../../lib/prompt";
+import { HandoverButton } from "../../components/HandoverSheet";
+import { deliverToTerminal } from "../../lib/handover";
 
 export interface SkillEntry {
   name: string;
@@ -89,9 +90,14 @@ function SourceBrowser({ project }: { project: string }) {
       );
       return;
     }
-    window.dispatchEvent(new CustomEvent("speccify:type-command", { detail: command }));
-    setNotice(
-      `Kommando ins Agent-Terminal getippt (Enter dort bestätigt): ${skill.name} importieren.`,
+    void deliverToTerminal(command).then((outcome) =>
+      setNotice(
+        outcome.status === "delivered"
+          ? `Kommando ins Agent-Terminal eingefügt (Enter dort bestätigt): ${skill.name} importieren.`
+          : outcome.status === "no-terminal"
+            ? `Kein Agent-Terminal bereit — zuerst starten, dann erneut: ${command}`
+            : `Zustellung fehlgeschlagen: ${outcome.message}`,
+      ),
     );
   };
 
@@ -343,9 +349,12 @@ function ExportForm({
       <div className="flex gap-2">
         <button
           onClick={() => {
-            window.dispatchEvent(new CustomEvent("speccify:type-command", { detail: command }));
-            onDone(
-              `Kommando ins Agent-Terminal getippt (Enter dort bestätigt): ${skill} nach ${target.name} exportieren.`,
+            void deliverToTerminal(command).then((outcome) =>
+              onDone(
+                outcome.status === "delivered"
+                  ? `Kommando ins Agent-Terminal eingefügt (Enter dort bestätigt): ${skill} nach ${target.name} exportieren.`
+                  : `Kein Agent-Terminal bereit — Kommando: ${command}`,
+              ),
             );
           }}
           className="rounded bg-slate-800 px-3 py-1.5 text-white hover:bg-slate-700"
@@ -505,13 +514,7 @@ export default function SkillsTab({ project, refresh }: { project: string; refre
                         }
                         actions={
                           <>
-                            <InspectorButton
-                              title="Pfad + Inhalt als Markdown-Prompt in die Zwischenablage"
-                              disabled={body.data === null}
-                              onClick={() => void copyPrompt(skill.file, body.data ?? "")}
-                            >
-                              Als Prompt kopieren
-                            </InspectorButton>
+                            <HandoverButton project={project} item={{ type: "skill", path: skill.file, title: skill.name }} known={body.data} />
                             {skill.origin && skill.origin.tools.length > 0 ? (
                               <InspectorButton onClick={() => showTab("tools")}>
                                 Tools ansehen

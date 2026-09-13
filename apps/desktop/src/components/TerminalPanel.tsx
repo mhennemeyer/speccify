@@ -15,6 +15,7 @@ import { showTab } from "../lib/panels";
 import type { AgentStartupReport } from "../lib/system";
 import type { AgentSession, SessionRequest } from "../lib/agents";
 import { StartupDetails } from "./AgentStartup";
+import { deliverToTerminal, registerTerminalWriter } from "../lib/handover";
 
 export interface TerminalOpened {
   cwd: string;
@@ -58,14 +59,13 @@ export default function TerminalPanel({
   const containerRef = useRef<HTMLDivElement>(null);
   const projectActive = useProjectActivity();
 
-  // W6/D24: „ins Terminal tippen" von anderen Tabs (z. B. Skill-Import).
+  // W6/D24 → Spec 011: „ins Terminal tippen" läuft über die bestätigte
+  // Zustellung; das alte Event bleibt für Aufrufer ohne Rückmeldung.
   useEffect(() => {
     const handler = (event: Event) => {
       if (!projectActive.current) return;
       const data = (event as CustomEvent<string>).detail;
-      if (idRef.current && data) {
-        void invoke("terminal_write", { id: idRef.current, data });
-      }
+      if (data) void deliverToTerminal(data);
     };
     window.addEventListener("speccify:type-command", handler);
     return () => window.removeEventListener("speccify:type-command", handler);
@@ -173,6 +173,7 @@ export default function TerminalPanel({
 
     const unlisteners: UnlistenFn[] = [];
     let disposed = false;
+    let unregisterWriter: (() => void) | null = null;
 
     void (async () => {
       try {
@@ -211,6 +212,11 @@ export default function TerminalPanel({
         setCwd(opened.cwd);
         setStartup(opened.startup);
         setStatus("");
+        // Spec 011: nur ein laufendes Terminal nimmt Aufträge an — nur das aktive Projekt.
+        unregisterWriter = registerTerminalWriter(async (data) => {
+          if (!projectActive.current) throw new Error("Terminal gehört zu einem anderen Projekt.");
+          await invoke("terminal_write", { id, data });
+        });
         // BO-Finding: nach Start/Neustart soll die Eingabe sofort im Terminal landen.
         if (container.clientWidth > 0) terminal.focus();
         onOpenedRef.current?.(opened);
@@ -240,6 +246,7 @@ export default function TerminalPanel({
 
     cleanup = () => {
       disposed = true;
+      unregisterWriter?.();
       if (idleTimer.current) clearTimeout(idleTimer.current);
       if (busyRef.current) endActivity(busyRef.current, "cancelled");
       busyRef.current = null;

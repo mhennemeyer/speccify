@@ -308,6 +308,7 @@ Navigator · fünf Gruppen, zehn Tabs
 │   ├── Lauf-Kennzahlen → Liste jüngster Läufe (wenn History Daten enthält)
 │   ├── unnummerierte Specs nummerieren (falls vorhanden)
 │   ├── neu-Chips je Karte (030, Klick bestätigt) · Frage an Dich (Karte + Zähler im Kopf)
+│   ├── Inspektor-Aktion „Auftrag…“ (011): Vorschau mit Projekt/Pfad/Station/Absicht, Einfügen (Bracketed Paste, ohne Enter) · Kopieren · Terminal starten · Abweichungshinweis
 │   ├── Filter meine · Doing nach Person (029); Karten mit Initialen/Branch; Inspektor: Besitz/Branch/Hinweise · Übernehmen · Abgeben · Branch wechseln (bestätigt)
 │   ├── Register-Kopf (028): Einrichten… → Bestätigung → Jetzt einrichten · Einhängen · blockiert (Grund)
 │   │   └── eingehängt: Stand (aktuell / n nicht gesendet / n zu pushen / n neu vom Team) · Sync · Konflikte je Datei (Team / Meine / bearbeitet / Abbrechen)
@@ -400,6 +401,7 @@ Diese Tabelle verändert keine Station oder Reihenfolge.
 | [007 Startumgebung](../specs/007-agent-startumgebung/SPEC.md) | Doing, ready, needs_human | lokal implementiert und automatisiert geprüft; reale Startwege offen |
 | [008 Workflow-Konsistenz](../specs/008-workflow-konsistenz/SPEC.md) | Doing, ready, needs_human | Aufgaben-/Setup-Vertrag geprüft, Repo v4/current; neuer App-Build läuft, Wiederaufnahme wartet auf macOS-Schreibtischfreigabe |
 | [009 Terminal/Sitzungen](../specs/009-terminal-und-sitzungen/SPEC.md) | Doing, ready | UTF-8-Chunker, Sitzungsidentität (`agent_session.rs`), ein Destroyed-Listener je Fenster, Kind-Reaping; App-Abnahme offen |
+| [011 Auftragskontext](../specs/011-auftragskontext/SPEC.md) | Doing · ready | `lib/handover.ts` + `HandoverSheet`: ein Übergabeweg für Specs/Playbooks/Skills/Tools/Dateien mit bestätigter Zustellung; Klick-Abnahme mit echtem Terminal offen |
 | [010 Prüfstatus](../specs/010-einheitlicher-pruefstatus/SPEC.md) | Done | `VerifyReport` (ok/ready/platform/tools/notes) für `speccify verify --json` und MCP `verify`; UI-Anschluss in 004 offen |
 | [011 Auftragskontext](../specs/011-auftragskontext/SPEC.md) | Backlog | strukturierte Übergabe mit Ziel, Revision und Empfangsbestätigung |
 | [012 Praxisabnahme](../specs/012-agent-terminal-praxisabnahme/SPEC.md) | Backlog | vollständiger Durchlauf im echten Agent-Terminal |
