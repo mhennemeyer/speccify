@@ -48,4 +48,5 @@ Noch nichts geprüft.
 ## Questions
 
 ### Q1 · open · 2026-09-13T08:00:00Z
+
 Welches Jira (Cloud oder Server), welcher Zugang (persönlicher Token, itsdcloud-Provider) und wer pflegt die Zuordnung?
