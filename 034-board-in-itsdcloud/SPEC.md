@@ -55,6 +55,11 @@ wenn ausgewählt), Jira (036), Echtzeit-Aktualisierung der Ansicht (Reload).
   Lesepfad über `board.json`.
 - D2, 2026-09-13: Speccify-Spec hält Vertrag und Anleitung; die
   itsdcloud-Umsetzung wird als itsdcloud-Spec geführt und hier verlinkt.
+- D3, 2026-09-13 (BO): Stufe B bekommt eine eigene Oberfläche in itsdcloud und
+  wird zuerst in einem Feature-Branch des itsdcloud-Repos erprobt. Sie ist der
+  Prototyp für ein allgemeines Muster — MCP-Server mit strukturierten Daten
+  visuell darstellen —, das nach der Abnahme als eigene itsdcloud-Spec
+  generalisiert wird. Leitlinien im Playbook, Abschnitt „Oberfläche in itsdcloud“.
 
 ## Tasks
 
