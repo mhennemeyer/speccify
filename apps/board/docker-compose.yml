@@ -1,6 +1,6 @@
 # Example: one board for a team. Copy board.example.yaml to board.yaml,
 # list your repositories, then `docker compose up -d` and open
-# http://localhost:8765/. Private repos: put a token in the environment
+# http://localhost:8790/. Private repos: put a token in the environment
 # (`GIT_TOKEN`, referenced as ${GIT_TOKEN} in board.yaml) or mount an SSH key.
 services:
   board:
@@ -9,7 +9,7 @@ services:
       dockerfile: apps/board/Dockerfile
     image: speccify-board
     ports:
-      - "8765:8765"
+      - "8790:8790"
     environment:
       GIT_TOKEN: ${GIT_TOKEN:-}
       BOARD_PASSWORD: ${BOARD_PASSWORD:-}

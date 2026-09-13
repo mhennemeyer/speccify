@@ -12,7 +12,7 @@ def main() -> int:
     parser.add_argument("--config", default=os.environ.get("BOARD_CONFIG", "board.yaml"))
     parser.add_argument("--data", default=os.environ.get("BOARD_DATA", "./board-data"))
     parser.add_argument("--host", default=os.environ.get("BOARD_HOST", "0.0.0.0"))
-    parser.add_argument("--port", type=int, default=int(os.environ.get("BOARD_PORT", "8765")))
+    parser.add_argument("--port", type=int, default=int(os.environ.get("BOARD_PORT", "8790")))
     args = parser.parse_args()
 
     import uvicorn

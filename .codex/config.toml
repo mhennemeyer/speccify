@@ -2,3 +2,7 @@
 command = "uv"
 args = ["run", "speccify-mcp", "--project", "."]
 cwd = "."
+
+# App-gehosteter Desktop-UI-MCP (ask_bo, show_ui) — lokale gebündelte App auf 18768.
+[mcp_servers.speccify-desktop-ui]
+url = "http://127.0.0.1:18768"

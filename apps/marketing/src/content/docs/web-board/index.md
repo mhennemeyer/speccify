@@ -16,7 +16,7 @@ ein vorsichtiger Schreiber davon, kein zweiter Speicher.
 
 ```bash
 # aus dem Speccify-Checkout
-uv run speccify-board --config board.yaml --data ./board-data --port 8765
+uv run speccify-board --config board.yaml --data ./board-data --port 8790
 
 # als Container (Beispiel-Compose liegt in apps/board/)
 cd apps/board && cp board.example.yaml board.yaml && docker compose up -d
@@ -74,7 +74,7 @@ Entscheidung der App. Lokale `path`-Einträge werden direkt geschrieben.
 ## MCP-Server (Spec 033): das Board für itsdcloud und andere Agenten
 
 Jedes Web-Board ist zugleich ein MCP-Server: Streamable HTTP unter
-`http://<board>:8765/mcp`, JSON-Antworten, zustandslos, geschützt durch
+`http://<board>:8790/mcp`, JSON-Antworten, zustandslos, geschützt durch
 `Authorization: Bearer <BOARD_MCP_TOKEN>` (Umgebungsvariable; ohne sie offen,
 das Seiten-Passwort gilt hier nicht). Tools, alle mit `{ok, …}`-Antwort und
 Fehlercode statt Ausnahme:
