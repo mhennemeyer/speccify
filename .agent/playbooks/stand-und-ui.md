@@ -682,6 +682,11 @@ Noch relevante Befunde:
   eine ID (`--session-id`). Codex-Sitzungen werden über den Host-Picker gewählt;
   `--last`/`--continue` bleiben gekennzeichnete Komfortfunktion ohne Automatik.
   Dashboard und Projektfenster nutzen dieselbe Startansicht (`SessionChoice`).
+- Startdiagnose (2026-09-13): unlesbare `speccify --help`-Ausgabe wird als „CLI startet
+  nicht (Fehlerzeile)“ gemeldet; versteckte `.pth`-Dateien im Projekt-venv (macOS,
+  nach `uv sync`) repariert die App selbst und prüft erneut. Terminal fokussiert
+  nach Start/Neustart die Eingabe; Fenstergröße/-position je Fensterlabel bleiben
+  erhalten (Window-State-Plugin).
 - PTY-Ausgabe wird seit 009 inkrementell dekodiert (`Utf8Chunker`); der Reader
   wartet das Kind ab, Fenster-Ende killt alle Terminals des Fensters.
 - `verify`-Warnungen zu fehlenden Tools werden zwischen CLI/MCP/UI nicht vollständig

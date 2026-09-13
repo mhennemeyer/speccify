@@ -117,7 +117,7 @@ fn probe_script(dir: Option<&Path>, host: Option<&str>) -> String {
         "speccify_probe_host=$(command -v {host} 2>/dev/null); speccify_probe_version=$({host} --version 2>/dev/null); speccify_probe_code=$?; ", host = quote(host)
     )).unwrap_or_else(|| "speccify_probe_host=''; speccify_probe_version=''; speccify_probe_code=0; ".into());
     format!(
-        "speccify_probe_original=$(command -v speccify 2>/dev/null); {setup}speccify_probe_cli=$(command -v speccify 2>/dev/null); speccify_probe_help=$(command speccify --help 2>/dev/null); {host_probe}printf '\\036SPECCIFY_START\\000%s\\000%s\\000%s\\000%s\\000%s\\000%s\\000' \"$speccify_probe_original\" \"$speccify_probe_cli\" \"$speccify_probe_help\" \"$speccify_probe_host\" \"$speccify_probe_version\" \"$speccify_probe_code\""
+        "speccify_probe_original=$(command -v speccify 2>/dev/null); {setup}speccify_probe_cli=$(command -v speccify 2>/dev/null); speccify_probe_help=$(command speccify --help 2>&1); {host_probe}printf '\\036SPECCIFY_START\\000%s\\000%s\\000%s\\000%s\\000%s\\000%s\\000' \"$speccify_probe_original\" \"$speccify_probe_cli\" \"$speccify_probe_help\" \"$speccify_probe_host\" \"$speccify_probe_version\" \"$speccify_probe_code\""
     )
 }
 
@@ -220,8 +220,18 @@ fn parse_report(
     }
     if report.effective_cli.is_none() {
         report.warnings.push("Speccify-CLI fehlt. Im Speccify-Checkout `uv sync --all-packages` ausführen oder im Umgebungs-Tab die App-Engine installieren. Bereits eingerichtete MCPs können separat genutzt werden.".into());
+    } else if !help_readable(fields[2]) {
+        let first = fields[2]
+            .lines()
+            .rev()
+            .map(str::trim)
+            .find(|l| !l.is_empty())
+            .unwrap_or("keine Ausgabe");
+        report.warnings.push(format!(
+            "Speccify-CLI startet nicht ({first}). Workspace synchronisieren (`uv sync --all-packages`, danach `scripts/fix-venv-hidden.sh`) bzw. App-Engine aktualisieren."
+        ));
     } else if !report.missing_commands.is_empty() {
-        report.warnings.push(format!("Speccify-CLI unvollständig: {} fehlen oder die Hilfe konnte nicht gelesen werden. Workspace synchronisieren bzw. App-Engine aktualisieren.", report.missing_commands.join(", ")));
+        report.warnings.push(format!("Speccify-CLI unvollständig: {} fehlen. Workspace synchronisieren bzw. App-Engine aktualisieren.", report.missing_commands.join(", ")));
     }
     if report.shell_cli.is_some() && report.shell_cli != report.effective_cli {
         report.warnings.push(
@@ -229,6 +239,54 @@ fn parse_report(
         );
     }
     Ok(report)
+}
+
+/// `speccify --help` hat geantwortet, wenn eine Usage-Zeile dabei ist.
+fn help_readable(help: &str) -> bool {
+    help.to_ascii_lowercase().contains("usage")
+}
+
+/// macOS-Befund: `uv sync`/`uv run` setzen `UF_HIDDEN` auf die `.pth`-Dateien
+/// des venv; Python liest sie dann nicht („No module named 'speccify_cli'").
+/// Dasselbe wie `scripts/fix-venv-hidden.sh`: Flag entfernen. Liefert die
+/// Zahl der reparierten Dateien.
+fn unhide_venv_pth(runtime_dir: &Path) -> usize {
+    if !cfg!(target_os = "macos") {
+        return 0;
+    }
+    let Some(venv) = runtime_dir.parent() else {
+        return 0;
+    };
+    let mut files = Vec::new();
+    if let Ok(libs) = std::fs::read_dir(venv.join("lib")) {
+        for lib in libs.flatten() {
+            let site = lib.path().join("site-packages");
+            if let Ok(entries) = std::fs::read_dir(site) {
+                files.extend(
+                    entries
+                        .flatten()
+                        .map(|e| e.path())
+                        .filter(|p| p.extension().is_some_and(|x| x == "pth")),
+                );
+            }
+        }
+    }
+    if files.is_empty() {
+        return 0;
+    }
+    let ok = Command::new("chflags")
+        .arg("nohidden")
+        .args(&files)
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .status()
+        .map(|s| s.success())
+        .unwrap_or(false);
+    if ok {
+        files.len()
+    } else {
+        0
+    }
 }
 
 fn diagnose(
@@ -263,7 +321,39 @@ fn diagnose(
         .env("NO_COLOR", "1")
         .env("COLUMNS", "160");
     let output = capture(probe)?;
-    parse_report(&output, project, shell, command, dir.as_deref(), source)
+    let mut report = parse_report(&output, project, shell, command, dir.as_deref(), source)?;
+    // Versteckte .pth-Dateien einmal reparieren und erneut prüfen.
+    if let Some(runtime) = dir.as_deref() {
+        let broken = report
+            .warnings
+            .iter()
+            .any(|w| w.contains("No module named"));
+        if broken && source == "workspace" && unhide_venv_pth(runtime) > 0 {
+            let mut retry = Command::new(shell);
+            if cfg!(windows) {
+                retry.args(["-NoLogo", "-NonInteractive", "-Command", &script]);
+            } else {
+                retry.args(["-lic", &script]);
+            }
+            retry
+                .current_dir(project)
+                .env("PATH", crate::augmented_path())
+                .env("TERM", "xterm-256color")
+                .env("NO_COLOR", "1")
+                .env("COLUMNS", "160");
+            if let Ok(output) = capture(retry) {
+                if let Ok(mut fixed) =
+                    parse_report(&output, project, shell, command, dir.as_deref(), source)
+                {
+                    fixed.warnings.push(
+                        "Versteckte .pth-Dateien im Projekt-venv repariert (macOS-Befund nach `uv sync`).".into(),
+                    );
+                    report = fixed;
+                }
+            }
+        }
+    }
+    Ok(report)
 }
 
 pub fn prepare(app: &AppHandle, project: &Path, command: &str) -> Result<StartupReport, String> {
@@ -289,6 +379,33 @@ pub async fn project_agent_startup(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn unreadable_help_is_reported_as_broken_cli_not_missing_commands() {
+        let traceback = "Traceback (most recent call last):\n  File \".venv/bin/speccify\", line 4\nModuleNotFoundError: No module named 'speccify_cli'";
+        let output = format!("{MARKER}/p/.venv/bin/speccify\0/p/.venv/bin/speccify\0{traceback}\0/usr/local/bin/claude\02.1.0\00\0");
+        let report = parse_report(
+            &output,
+            Path::new("/project"),
+            "/bin/zsh",
+            "claude",
+            None,
+            "workspace",
+        )
+        .unwrap();
+        assert!(report.host_ready);
+        let warning = report
+            .warnings
+            .iter()
+            .find(|w| w.contains("startet nicht"))
+            .expect("Startfehler statt Fehlliste");
+        assert!(
+            warning.contains("No module named 'speccify_cli'"),
+            "{warning}"
+        );
+        assert!(!report.warnings.iter().any(|w| w.contains("unvollständig")));
+        assert!(help_readable("Usage: speccify [OPTIONS] COMMAND") && !help_readable(traceback));
+    }
 
     #[test]
     fn missing_host_and_incomplete_cli_are_not_ready() {

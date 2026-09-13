@@ -211,6 +211,8 @@ export default function TerminalPanel({
         setCwd(opened.cwd);
         setStartup(opened.startup);
         setStatus("");
+        // BO-Finding: nach Start/Neustart soll die Eingabe sofort im Terminal landen.
+        if (container.clientWidth > 0) terminal.focus();
         onOpenedRef.current?.(opened);
       } catch (error) {
         if (!disposed) {
@@ -258,6 +260,7 @@ export default function TerminalPanel({
     if (visible && fitRef.current && terminalRef.current) {
       const frame = requestAnimationFrame(() => {
         fitRef.current?.fit();
+        terminalRef.current?.focus();
         void invoke("terminal_resize", {
           id: idRef.current,
           cols: terminalRef.current?.cols ?? 80,
