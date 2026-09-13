@@ -356,6 +356,7 @@ pub fn run() {
             terminal::terminal_resize,
             terminal::terminal_kill,
             desktop_ui::ask_bo_answer,
+            desktop_ui::ui_answer,
             desktop_ui::ask_bo_pending,
             updater_status
         ]);

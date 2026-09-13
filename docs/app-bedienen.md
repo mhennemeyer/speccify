@@ -233,6 +233,15 @@ nennt die Quelldatei im Repository.
 
 ## Fragen beantworten
 
+**Fragen mit eigener Oberfläche:** Der Agent kann statt einer Textfrage eine
+kleine Oberfläche zeigen — Ja/Nein-Knöpfe, Auswahl, Mehrfachauswahl, eine
+Liste von Fragen oder nur eine Anzeige (Tabelle, Fortschritt). Sie erscheint
+über dem Terminal des Projektfensters (und im Dashboard in der Seitenleiste),
+läuft abgeschottet in einem Rahmen und schickt Deine Antwort direkt an den
+Agenten zurück; danach friert die Karte ein und zeigt die Antwort. Wie der
+Agent solche Oberflächen baut und als Skill ablegt, steht im Skill
+`agent-ui`, den *Einrichten* anlegt.
+
 Wenn der Agent eine Entscheidung braucht und der Lauf endet, schreibt er
 die Frage in die Spec. Die App meldet das als System-Benachrichtigung, die
 Karte bekommt ein orangefarbenes **?**, und im Inspektor steht die Frage

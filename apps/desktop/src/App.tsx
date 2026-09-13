@@ -143,7 +143,7 @@ export default function App() {
         setSidebarVisible(true);
       }),
       // Beantwortet (egal von wo): Element einfrieren.
-      listen<{ id: string; selected_options: string[]; field_values: string[] }>(
+      listen<{ id: string; selected_options: string[]; field_values: string[]; values?: Record<string, unknown> }>(
         "ask-bo-answered",
         (event) => {
           setInteractions((current) =>
@@ -154,6 +154,7 @@ export default function App() {
                     answered: {
                       selectedOptions: event.payload.selected_options,
                       fieldValues: event.payload.field_values,
+                      values: event.payload.values,
                     },
                   }
                 : interaction,

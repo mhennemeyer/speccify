@@ -410,6 +410,20 @@ versionierte Ereignisse mit Run-ID, Projekt/Repo, Sequenz, Zeitstempel, Einheit
 und Update-/Append-Semantik; Limits, Pufferung, Downsampling und Abbruch regeln.
 Keine beliebigen nachgeladenen Skripte mit Tauri-Rechten als Standard.
 
+**Nutzer-I/O über Ad-hoc-UI (BO 2026-09-13, Spec 038):** Der Agent im
+Terminal fragt und zeigt über eine vom ihm selbst gebaute Oberfläche —
+HTML mit Tailwind-Klassen, ad hoc oder als Datei in einem Skill gespeichert.
+Der Desktop-UI-MCP bekommt dafür `show_ui` (Modus `ask` wartet auf ein
+Formular oder einen `data-answer`-Klick und liefert die Werte, Modus `show`
+zeigt nur an) neben dem bestehenden `ask_bo` für schnelle Ja/Nein-,
+Auswahl-, Mehrfachauswahl- und Fragenlisten. Die App rendert das Fragment
+in einem sandboxed iframe mit eingebettetem Tailwind (offline), über dem
+Terminal des Projektfensters und in der Dashboard-Seitenleiste; der Skill
+`agent-ui` liefert Muster. Das ist der erste Schritt des hier vorgeschlagenen
+Panel-Systems: Nutzerdialoge zuerst, Live-Zeitreihen für Aktionen später
+über denselben Rendering-Weg; nachgeladene Skripte mit Tauri-Rechten bleiben
+ausgeschlossen (Sandbox ohne Same-Origin).
+
 **Abnahme:** Ein Profiling-Fixture aktualisiert dieselbe Zeitreihe live, lässt
 sich stoppen und exportieren; hohe Ereignisrate, kaputte Daten, Prozessende und
 Panelwechsel blockieren weder UI noch Prozessverwaltung. Ausgaben bleiben diagnostizierbar.

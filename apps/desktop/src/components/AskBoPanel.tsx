@@ -9,6 +9,7 @@
 // Space toggelt, Enter sendet. form: Enter springt weiter / sendet am Ende.
 
 import { useEffect, useRef, useState } from "react";
+import HtmlInteractionCard from "./HtmlInteractionCard";
 
 export interface AskBoField {
   label: string;
@@ -17,11 +18,15 @@ export interface AskBoField {
 
 export interface AskBoInteraction {
   id: string;
-  kind: "buttons" | "multi_select" | "form" | string;
+  kind: "buttons" | "multi_select" | "form" | "html" | string;
   prompt: string;
   options: string[];
   fields: AskBoField[];
-  answered?: { selectedOptions: string[]; fieldValues: string[] };
+  /** Spec 038: Ad-hoc-UI (`show_ui`). */
+  title?: string;
+  html?: string;
+  mode?: "ask" | "show";
+  answered?: { selectedOptions: string[]; fieldValues: string[]; values?: Record<string, unknown> };
 }
 
 interface AskBoPanelProps {
@@ -34,14 +39,18 @@ export default function AskBoPanel({ interactions, onAnswer }: AskBoPanelProps) 
   const lastOpen = [...interactions].reverse().find((entry) => !entry.answered);
   return (
     <div className="max-h-[45%] shrink-0 space-y-2 overflow-y-auto border-b border-slate-700 bg-slate-800 p-2">
-      {interactions.map((interaction) => (
-        <InteractionCard
-          key={interaction.id}
-          interaction={interaction}
-          autoFocus={interaction.id === lastOpen?.id}
-          onAnswer={onAnswer}
-        />
-      ))}
+      {interactions.map((interaction) =>
+        interaction.kind === "html" ? (
+          <HtmlInteractionCard key={interaction.id} interaction={interaction} />
+        ) : (
+          <InteractionCard
+            key={interaction.id}
+            interaction={interaction}
+            autoFocus={interaction.id === lastOpen?.id}
+            onAnswer={onAnswer}
+          />
+        ),
+      )}
     </div>
   );
 }

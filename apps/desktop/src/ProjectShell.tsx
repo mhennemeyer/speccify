@@ -13,6 +13,8 @@ import { listen } from "@tauri-apps/api/event";
 import SettingsSheet from "./components/SettingsSheet";
 import SplitHandle from "./components/SplitHandle";
 import TerminalPanel, { type TerminalOpened } from "./components/TerminalPanel";
+import AskBoPanel from "./components/AskBoPanel";
+import { useAskBo } from "./lib/askBo";
 import SessionChoice, { useSessionState } from "./components/SessionChoice";
 import AgentStartup from "./components/AgentStartup";
 import ActivityView from "./components/ActivityView";
@@ -153,6 +155,10 @@ export default function ProjectShell() {
   const [toolbarActions, setToolbarActions] = useState<ToolbarAction[]>([]);
   // Spec 028: Konflikt-Specs aus dem Register fürs Board.
   const [registerConflicts, setRegisterConflicts] = useState<string[]>([]);
+  // Spec 038: Agent-Fragen (ask_bo / show_ui) erscheinen über dem Terminal;
+  // eine neue Frage holt das Terminal nach vorn (Hook vor jedem frühen Return).
+  const showTerminalRef = useRef<() => void>(() => {});
+  const askBo = useAskBo(() => showTerminalRef.current());
   // Spec 030: Webhook je Projekt aus `.agent/settings.json` (`webhook.enabled`).
   const [webhookEnabled, setWebhookEnabled] = useState(false);
   useEffect(() => {
@@ -410,6 +416,7 @@ export default function ProjectShell() {
         : { rightShown: true, rightTab: "terminal" },
     );
   };
+  showTerminalRef.current = showTerminal;
   const builtinItems: Record<string, ToolbarItem> = Object.fromEntries(
     TOOLBAR_BUILTINS.map((item) => [
       item.id,
@@ -755,6 +762,7 @@ export default function ProjectShell() {
               {dockLabel}
             </button>
           </div>
+          <AskBoPanel interactions={askBo.interactions} onAnswer={askBo.answer} />
           {terminalStarted ? (
             <TerminalPanel
               visible={terminalVisible}

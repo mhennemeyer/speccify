@@ -210,6 +210,7 @@ Projektfenster · ein Projektpfad (Startbereich: Specs)
 │   ├── Startumgebung prüfen: Host, Pfad/Version, CLI/Quelle, Hinweise/Fehler
 │   ├── Starten / Neu starten / Sitzung fortsetzen (genau bekannte Sitzung) ·
 │   │   Sitzung auswählen / Neueste Sitzung (ohne ID, verschwunden, Hostwechsel) · Startfehler sichtbar
+│   ├── Agent-Fragen über dem Terminal (038): ask_bo-Karten · Ad-hoc-UI (iframe, Formular/data-answer, Anzeige mit Schließen)
 │   └── laufend: cwd · Startdetails · PTY · Neustart · Dock wechseln
 └── Splitter: Größen ändern/zurücksetzen; Layout pro Projekt gespeichert
 ```
@@ -426,6 +427,7 @@ Diese Tabelle verändert keine Station oder Reihenfolge.
 | [035 itsdcloud im Terminal](../specs/035-itsdcloud-gedaechtnis-im-terminal/SPEC.md) | Backlog | `speccify-itsdcloud`-MCP, Ereignispuffer, Panel; braucht itsdcloud-Tokenweg |
 | [036 Jira-Zuordnung](../specs/036-jira-zuordnung/SPEC.md) | Backlog (Idee) | TBD, Q1 offen |
 | [037 Rückkanal nach itsdcloud](../specs/037-rueckkanal-spec-stand-nach-itsdcloud/SPEC.md) | Backlog (Idee) | TBD |
+| [038 Ad-hoc-UI für Nutzer-I/O](../specs/038-adhoc-ui-nutzer-io/SPEC.md) | Doing · ready | Desktop-UI-MCP `show_ui`/`ui_result`, sandboxed iframe mit eingebettetem Tailwind, Panel im Projektfenster + Dashboard, Skill `agent-ui`, Policy v9, Suite `test_agent_ui`; Klick-Abnahme mit echtem Agenten offen |
 
 ### Gemeinsames Workspace-Arbeitsfenster (026)
 

@@ -130,6 +130,18 @@ if the checkout is not on the spec's branch, say so and ask. Name the spec id
 and the branch in commit message bodies. Never invent these fields — the app
 sets them on take-over (Backlog → Doing) and clears `owner` on release.
 
+### Asking through the app UI
+
+When the Speccify app runs, the `speccify-desktop-ui` MCP lets you ask the
+human directly instead of guessing: `ask_bo` for a quick choice
+(buttons), checkboxes (multi_select) or a short question list (form);
+`show_ui` for anything richer — an HTML fragment with Tailwind classes that
+the app renders (previews, tables, custom forms). A `<form>` submit or a
+click on an element with `data-answer` returns the values to you. Reusable
+UIs live in a skill under `.agent/skills/<name>/ui/*.html` and are shown
+with `file`. See the skill `agent-ui`. Never block on a question the human
+already answered in the spec or in the chat.
+
 ### Rules
 
 - Never write secrets into `.agent/settings.json`, `.mcp.json`,

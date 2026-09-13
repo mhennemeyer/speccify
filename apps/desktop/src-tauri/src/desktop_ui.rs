@@ -45,11 +45,15 @@ pub fn render_endpoint(template: &str, port: u16) -> String {
 }
 const DEFAULT_TIMEOUT_SECONDS: f64 = 300.0;
 const KINDS: &[&str] = &["buttons", "multi_select", "form"];
+/// Spec 038: Obergrenze für Ad-hoc-HTML (inline oder aus Datei).
+const MAX_HTML_BYTES: usize = 512 * 1024;
 
 #[derive(Clone)]
 pub struct Answer {
     pub selected_options: Vec<String>,
     pub field_values: Vec<String>,
+    /// Spec 038: Formularwerte einer Ad-hoc-UI (`show_ui`), sonst `Null`.
+    pub values: Value,
 }
 
 struct Entry {
@@ -144,6 +148,29 @@ impl AskBoRegistry {
         selected_options: Vec<String>,
         field_values: Vec<String>,
     ) -> Result<(), String> {
+        self.resolve(
+            id,
+            Answer {
+                selected_options,
+                field_values,
+                values: Value::Null,
+            },
+        )
+    }
+
+    /// Spec 038: Antwort einer Ad-hoc-UI — beliebiges JSON-Objekt aus dem Formular.
+    pub fn answer_values(&self, id: &str, values: Value) -> Result<(), String> {
+        self.resolve(
+            id,
+            Answer {
+                selected_options: Vec::new(),
+                field_values: Vec::new(),
+                values,
+            },
+        )
+    }
+
+    fn resolve(&self, id: &str, answer: Answer) -> Result<(), String> {
         {
             let mut entries = self.0.entries.lock().unwrap();
             let entry = entries
@@ -152,18 +179,16 @@ impl AskBoRegistry {
             if entry.answer.is_some() {
                 return Err(format!("Interaktion {id} ist schon beantwortet."));
             }
-            entry.answer = Some(Answer {
-                selected_options: selected_options.clone(),
-                field_values: field_values.clone(),
-            });
+            entry.answer = Some(answer.clone());
         }
         self.0.condvar.notify_all();
         self.emit(
             "ask-bo-answered",
             json!({
                 "id": id,
-                "selected_options": selected_options,
-                "field_values": field_values,
+                "selected_options": answer.selected_options,
+                "field_values": answer.field_values,
+                "values": answer.values,
             }),
         );
         Ok(())
@@ -175,6 +200,7 @@ fn answer_json(answer: &Answer) -> Value {
         "answered": true,
         "selected_options": answer.selected_options,
         "field_values": answer.field_values,
+        "values": answer.values,
     })
 }
 
@@ -267,6 +293,100 @@ impl DesktopUiMcp {
         }
     }
 
+    /// Spec 038: Ad-hoc-UI aus HTML (Tailwind-Klassen erlaubt) — `ask` wartet auf
+    /// das Formular, `show` zeigt nur an.
+    fn show_ui(&self, arguments: &Map<String, Value>) -> Value {
+        let title = arguments
+            .get("title")
+            .and_then(Value::as_str)
+            .map(str::trim)
+            .filter(|t| !t.is_empty())
+            .unwrap_or("Agent fragt");
+        let mode = arguments
+            .get("mode")
+            .and_then(Value::as_str)
+            .unwrap_or("ask");
+        if mode != "ask" && mode != "show" {
+            return error_result(
+                "show_ui: 'mode' ist 'ask' (wartet auf Antwort) oder 'show' (nur anzeigen).",
+            );
+        }
+        let inline = arguments
+            .get("html")
+            .and_then(Value::as_str)
+            .map(str::trim)
+            .filter(|h| !h.is_empty())
+            .map(str::to_string);
+        let html = match (inline, arguments.get("file").and_then(Value::as_str)) {
+            (Some(html), _) => html,
+            (None, Some(file)) => {
+                let path = std::path::Path::new(file);
+                if !path.is_absolute() {
+                    return error_result("show_ui: 'file' muss ein absoluter Pfad sein (z. B. <projekt>/.agent/skills/<skill>/ui/frage.html).");
+                }
+                match std::fs::metadata(path) {
+                    Ok(meta) if meta.is_file() && meta.len() as usize <= MAX_HTML_BYTES => {
+                        match std::fs::read_to_string(path) {
+                            Ok(text) => text,
+                            Err(error) => return error_result(format!("show_ui: {file}: {error}")),
+                        }
+                    }
+                    Ok(meta) if meta.is_file() => {
+                        return error_result(format!(
+                            "show_ui: {file} ist größer als {} KB.",
+                            MAX_HTML_BYTES / 1024
+                        ))
+                    }
+                    _ => return error_result(format!("show_ui: keine Datei: {file}")),
+                }
+            }
+            (None, None) => {
+                return error_result(
+                    "show_ui benötigt 'html' (String) oder 'file' (absoluter Pfad).",
+                )
+            }
+        };
+        if html.len() > MAX_HTML_BYTES {
+            return error_result(format!(
+                "show_ui: HTML ist größer als {} KB.",
+                MAX_HTML_BYTES / 1024
+            ));
+        }
+        let payload = json!({
+            "kind": "html",
+            "prompt": title,
+            "title": title,
+            "html": html,
+            "mode": mode,
+            "options": [],
+            "fields": [],
+        });
+        let id = self.registry.create(&payload);
+        if mode == "show" {
+            return text_result(
+                json!({"shown": true, "interaction_id": id, "hint": "Die Anzeige bleibt offen, bis die Person sie schließt; ui_result liefert dann {closed: true}."}).to_string(),
+                false,
+            );
+        }
+        let timeout = arguments
+            .get("timeout_seconds")
+            .and_then(Value::as_f64)
+            .filter(|seconds| *seconds > 0.0)
+            .unwrap_or(DEFAULT_TIMEOUT_SECONDS);
+        match self.registry.wait(&id, Duration::from_secs_f64(timeout)) {
+            Some(answer) => text_result(answer_json(&answer).to_string(), false),
+            None => text_result(
+                json!({
+                    "answered": false,
+                    "interaction_id": id,
+                    "hint": "Noch keine Antwort — die Oberfläche bleibt in der App offen. Später mit ui_result nachfragen; nicht erneut zeigen.",
+                })
+                .to_string(),
+                false,
+            ),
+        }
+    }
+
     fn ask_bo_result(&self, arguments: &Map<String, Value>) -> Value {
         let id = arguments
             .get("interaction_id")
@@ -310,6 +430,29 @@ impl ToolServer for DesktopUiMcp {
                 },
             }),
             json!({
+                "name": "show_ui",
+                "description": "Show the project owner an ad-hoc user interface in the Speccify app: a fragment of HTML (Tailwind utility classes work, no external scripts). mode 'ask' (default) blocks until the owner submits a <form> or clicks an element with data-answer=\"…\" and returns {answered, values} where values are the form fields by name (checkboxes with the same name become arrays; the submit button's name/value is included). mode 'show' just displays it (tables, progress, previews) and returns at once. Use 'html' for inline markup or 'file' (absolute path) for a UI saved in a skill (.agent/skills/<name>/ui/*.html). Blocks until answered or timeout_seconds (default 300); on timeout poll ui_result instead of showing again.",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "title": {"type": "string", "description": "Heading shown above the UI."},
+                        "html": {"type": "string", "description": "HTML fragment (body content)."},
+                        "file": {"type": "string", "description": "Absolute path to an HTML file instead of 'html'."},
+                        "mode": {"type": "string", "enum": ["ask", "show"]},
+                        "timeout_seconds": {"type": "number"},
+                    },
+                },
+            }),
+            json!({
+                "name": "ui_result",
+                "description": "Fetch the answer of an earlier show_ui interaction that timed out or was shown ({answered:false} until the owner responds or closes it).",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {"interaction_id": {"type": "string"}},
+                    "required": ["interaction_id"],
+                },
+            }),
+            json!({
                 "name": "ask_bo_result",
                 "description": "Fetch the answer of an earlier ask_bo interaction that timed out (answered=false until the owner responds).",
                 "inputSchema": {
@@ -324,7 +467,8 @@ impl ToolServer for DesktopUiMcp {
     fn call_tool(&self, name: Option<&str>, arguments: &Map<String, Value>) -> Value {
         match name {
             Some("ask_bo") => self.ask_bo(arguments),
-            Some("ask_bo_result") => self.ask_bo_result(arguments),
+            Some("ask_bo_result") | Some("ui_result") => self.ask_bo_result(arguments),
+            Some("show_ui") => self.show_ui(arguments),
             other => error_result(format!("Unbekanntes Tool: {}", other.unwrap_or("(none)"))),
         }
     }
@@ -339,6 +483,12 @@ pub fn ask_bo_answer(
     field_values: Vec<String>,
 ) -> Result<(), String> {
     registry.answer(&id, selected_options, field_values)
+}
+
+/// Spec 038: Antwort einer Ad-hoc-UI (Formularwerte als JSON-Objekt).
+#[tauri::command]
+pub fn ui_answer(registry: State<AskBoRegistry>, id: String, values: Value) -> Result<(), String> {
+    registry.answer_values(&id, values)
 }
 
 /// Offene Interaktionen abholen (Robustheit: Events sind flüchtig).
@@ -480,5 +630,83 @@ mod tests {
             )["isError"],
             true
         );
+    }
+
+    #[test]
+    fn show_ui_waits_for_form_values_and_supports_show_and_files() {
+        let registry = AskBoRegistry::default();
+        let server = DesktopUiMcp::new(registry.clone());
+        // Validierung.
+        assert_eq!(call(&server, "show_ui", json!({}))["isError"], true);
+        assert_eq!(
+            call(
+                &server,
+                "show_ui",
+                json!({"html": "<p>x</p>", "mode": "later"})
+            )["isError"],
+            true
+        );
+        assert_eq!(
+            call(&server, "show_ui", json!({"file": "relative.html"}))["isError"],
+            true
+        );
+        assert_eq!(
+            call(&server, "show_ui", json!({"file": "/nonexistent/x.html"}))["isError"],
+            true
+        );
+        // ask: blockiert bis ui_answer.
+        let answering = registry.clone();
+        std::thread::spawn(move || {
+            std::thread::sleep(std::time::Duration::from_millis(150));
+            let pending = answering.pending();
+            let id = pending[0]["id"].as_str().unwrap().to_string();
+            assert_eq!(pending[0]["kind"], "html");
+            answering
+                .answer_values(&id, json!({"deploy": "yes", "targets": ["a", "b"]}))
+                .unwrap();
+        });
+        let result = call(
+            &server,
+            "show_ui",
+            json!({"title": "Deploy?", "html": "<form><button name='deploy' value='yes'>Ja</button></form>", "timeout_seconds": 10}),
+        );
+        let body = content_json(&result);
+        assert_eq!(body["answered"], true);
+        assert_eq!(body["values"]["deploy"], "yes");
+        assert_eq!(body["values"]["targets"], json!(["a", "b"]));
+        // show: kehrt sofort zurück, ui_result meldet später das Schließen.
+        let shown = content_json(&call(
+            &server,
+            "show_ui",
+            json!({"html": "<table></table>", "mode": "show"}),
+        ));
+        assert_eq!(shown["shown"], true);
+        let id = shown["interaction_id"].as_str().unwrap().to_string();
+        assert_eq!(
+            content_json(&call(&server, "ui_result", json!({"interaction_id": id})))["answered"],
+            false
+        );
+        registry
+            .answer_values(&id, json!({"closed": true}))
+            .unwrap();
+        assert_eq!(
+            content_json(&call(&server, "ui_result", json!({"interaction_id": id})))["values"]
+                ["closed"],
+            true
+        );
+        // file: absoluter Pfad wird gelesen; Timeout lässt die UI offen.
+        let dir = tempfile::tempdir().unwrap();
+        let file = dir.path().join("frage.html");
+        std::fs::write(&file, "<p class='font-bold'>Aus Datei</p>").unwrap();
+        let timed_out = content_json(&call(
+            &server,
+            "show_ui",
+            json!({"file": file.to_string_lossy(), "timeout_seconds": 0.2}),
+        ));
+        assert_eq!(timed_out["answered"], false);
+        let open = registry.pending();
+        assert!(open
+            .iter()
+            .any(|entry| entry["html"] == "<p class='font-bold'>Aus Datei</p>"));
     }
 }

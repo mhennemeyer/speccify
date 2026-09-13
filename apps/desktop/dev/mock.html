@@ -130,6 +130,8 @@
       window.__SPECCIFY_MOCK__ = { emit, actionStarts, failStart: false, failStop: false, taskCalls: [], staleTaskOnce: false, specs: tickets, workflowInstalls: 0, terminalOpens: [], sessionChecks: [], ownerCalls: [] };
       if (doingOwner) { const doing = tickets.find(s => s.station === "Doing"); doing.owner = doingOwner; doing.branch = `spec/${doing.id}`; }
       window.__SPECCIFY_MOCK__.projectSettings = {};
+      window.__SPECCIFY_MOCK__.uiAnswers = [];
+      window.__SPECCIFY_MOCK__.askUi = (payload) => emit("ask-bo", { options: [], fields: [], ...payload });
       const questionTo = new URLSearchParams(location.search).get("question");
       if (questionTo === "me" || questionTo === "other") {
         const asked = tickets.find(s => s.open_question);
@@ -215,6 +217,10 @@
         project_webhook_test: () => { window.__SPECCIFY_MOCK__.ownerCalls.push("webhook-test"); return "Testnachricht gesendet an https://hooks.example.invalid/…"; },
         project_settings_get: () => window.__SPECCIFY_MOCK__.projectSettings,
         project_settings_set: ({ key, value }) => { window.__SPECCIFY_MOCK__.ownerCalls.push(`settings:${key}=${value}`); const s = window.__SPECCIFY_MOCK__.projectSettings; if (key === "webhook.enabled") s.webhook = { ...(s.webhook ?? {}), enabled: value }; return s; },
+        // Spec 038: Agent-Fragen. ?askui=1 spielt eine Ad-hoc-UI ein.
+        ask_bo_pending: () => [],
+        ask_bo_answer: ({ id, selectedOptions, fieldValues }) => { window.__SPECCIFY_MOCK__.uiAnswers.push({ id, selectedOptions, fieldValues }); emit("ask-bo-answered", { id, selected_options: selectedOptions, field_values: fieldValues }); return null; },
+        ui_answer: ({ id, values }) => { window.__SPECCIFY_MOCK__.uiAnswers.push({ id, values }); emit("ask-bo-answered", { id, selected_options: [], field_values: [], values }); return null; },
         project_spec_take: ({ file, branch }) => {
           const spec = tickets.find(s => s.file === file);
           window.__SPECCIFY_MOCK__.ownerCalls.push(`take:${file}:${branch ?? ""}`);
