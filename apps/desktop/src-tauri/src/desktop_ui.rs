@@ -13,7 +13,7 @@ use std::time::{Duration, Instant};
 
 use serde_json::{json, Map, Value};
 use speccify_mcp_core::{error_result, text_result, ToolServer};
-use tauri::{AppHandle, Emitter, State};
+use tauri::{AppHandle, Emitter, Manager, State};
 
 pub const DEFAULT_PORT: u16 = 8768;
 
@@ -233,7 +233,26 @@ impl AskBoRegistry {
                 "values": answer.values,
             }),
         );
+        self.close_popup(id);
         Ok(())
+    }
+
+    /// Das Popup schließt sich nach der Antwort — von hier aus, damit es nicht
+    /// von Frontend-Berechtigungen abhängt (BO-Finding: Fenster blieb stehen).
+    fn close_popup(&self, id: &str) {
+        let Some(app) = self.0.app.lock().unwrap().clone() else {
+            return;
+        };
+        let label = id.to_string();
+        std::thread::spawn(move || {
+            std::thread::sleep(Duration::from_millis(700));
+            let app_for_close = app.clone();
+            let _ = app.run_on_main_thread(move || {
+                if let Some(window) = app_for_close.get_webview_window(&label) {
+                    let _ = window.close();
+                }
+            });
+        });
     }
 }
 

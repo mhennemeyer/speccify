@@ -1,11 +1,12 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Capability for the main window and project windows",
+  "description": "Capability for the main window, project, workspace and question popup windows",
   "windows": [
     "main",
     "project-*",
-    "workspace-*"
+    "workspace-*",
+    "ask-*"
   ],
   "permissions": [
     "core:default",
