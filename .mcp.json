@@ -1,0 +1,20 @@
+{
+  "mcpServers": {
+    "speccify-discovery": {
+      "type": "http",
+      "url": "http://127.0.0.1:8767"
+    },
+    "speccify-exec": {
+      "type": "http",
+      "url": "http://127.0.0.1:8765"
+    },
+    "speccify-desktop-ui": {
+      "type": "http",
+      "url": "http://127.0.0.1:18768"
+    },
+    "playwright": {
+      "command": "npx",
+      "args": ["@playwright/mcp@latest"]
+    }
+  }
+}
