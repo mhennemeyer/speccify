@@ -3,7 +3,7 @@ station: Doing
 order: 5
 created: 2026-09-10
 needs_human: true
-ready: false
+ready: true
 open_question: null
 parent: null
 ---
@@ -53,17 +53,44 @@ Keine automatische Agent-Orchestrierung, kein Upload des gesamten Projekts.
 
 ## Tasks
 
-- [ ] Gemeinsames Kontextformat und Auftragsarten festlegen.
-- [ ] Vorschau aus aktuellen Dateien und Projektregeln bilden.
-- [ ] Einfügen/Kopieren über einen bestätigten Übergabeweg vereinheitlichen.
-- [ ] Spec-/Playbook-/Skill-/Datei-Aktionen an diesen Weg anschließen.
-- [ ] Zwei Fenster, fehlendes Terminal, Shell-Modus und mehrzeilige Eingabe prüfen.
+- [x] Gemeinsames Kontextformat und Auftragsarten festlegen.
+      `lib/handover.ts`: Kopf (Projekt, Art/ID/Station, Pfad als Quelle der
+      Wahrheit, Auftrag, Regelverweis) + Datei als Zaun; Absichten
+      `implement`/`review`/`read` (Specs) und `read`/`edit` (Rest).
+- [x] Vorschau aus aktuellen Dateien und Projektregeln bilden.
+      `HandoverSheet`: liest die Datei beim Öffnen und erneut vor der Zustellung,
+      Abweichungshinweis gegen den zuletzt angezeigten Stand, Text editierbar.
+- [x] Einfügen/Kopieren über einen bestätigten Übergabeweg vereinheitlichen.
+      `registerTerminalWriter`/`deliverToTerminal` mit Ergebnis
+      (delivered/no-terminal/error); mehrzeilig als Bracketed Paste ohne
+      abschließendes Enter; `speccify:type-command` läuft über denselben Weg.
+- [x] Spec-/Playbook-/Skill-/Datei-Aktionen an diesen Weg anschließen.
+      „Auftrag…“ ersetzt „Als Prompt kopieren“ in Board, Playbooks, Skills,
+      Tools und Agent-Dateien; Skill-Import/-Export und Commit-Auftrag melden
+      Zustellung oder fehlendes Terminal.
+- [x] Zwei Fenster, fehlendes Terminal, Shell-Modus und mehrzeilige Eingabe prüfen.
+      Zwei Fenster: der Schreiber ist je Fenster registriert (JS-Kontext), im
+      Workspace nur für das aktive Projekt (Fehler statt Fremdzustellung).
 
 ## Verification
 
-F9 in [006](../006-bestandsaufnahme-agent-terminal/SPEC.md), `lib/prompt.ts`,
-`BoardTab.tsx` und der `speccify:type-command`-Listener in `TerminalPanel.tsx`.
-Umsetzung und echte Zustellprüfung noch nicht durchgeführt.
+Ausgangsbefund F9 in [006](../006-bestandsaufnahme-agent-terminal/SPEC.md):
+Board kopierte Pfad+Body, andere Tabs feuerten `speccify:type-command` ohne
+Rückmeldung.
+
+2026-09-13:
+
+- `pnpm typecheck` grün. Browser-Suite `test_handover` gegen den Mock:
+  Vorschau nennt Projektwurzel, Spec-ID mit Station, Pfad, Auftrag „Arbeite
+  diese Spec…“ und Regelverweis; ohne Terminal keine Eingabe, Hinweis und
+  „Terminal starten“; nach Start „bereit“; Absicht „Prüfen“ ändert den
+  Auftrag; Zustellung ist genau ein Bracketed-Paste-Block ohne `\r`;
+  nachträglich geänderte Datei → Hinweis und aktueller Inhalt; Auswahl und
+  Boardwechsel schicken nichts. Die 14 übrigen Suiten (u. a. Workspace-Shell
+  mit Commit-Auftrag ans geteilte Terminal, Git-Workspace) bleiben grün.
+- Nicht geprüft: echte Zustellung an Claude/Codex in der gebündelten App
+  (Bracketed Paste im Host; in zsh/bash ≥ 5.1 Standard) und Shell-Modus mit
+  altem Shell ohne Bracketed Paste. Deshalb `ready`.
 
 ## Questions
 
