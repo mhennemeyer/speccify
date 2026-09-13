@@ -20,3 +20,5 @@ speccify verify [OPTIONS]
 | `--project`, `-p` | Project directory (default: current directory). |
 | `--library` | Local playbook library (default: from the manifest). |
 | `--offline`, `--no-offline` | Only read cached git sources, never the network. |
+| `--platform` | Judge tool implementations for this platform (default: current). |
+| `--json` | Print the full report as JSON (same fields as the MCP `verify` tool). |

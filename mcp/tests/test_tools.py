@@ -104,6 +104,35 @@ def test_verify_reports_drift_as_a_result(project: Path) -> None:
     assert any("bundle hash drift" in problem for problem in verified.problems)
 
 
+def test_verify_carries_the_same_report_as_the_cli(project: Path) -> None:
+    """Spec 010: the MCP adapter returns the CLI's full report, field for field."""
+    import json
+
+    from speccify_cli.__main__ import app
+    from speccify_mcp.tools import run_expand
+    from typer.testing import CliRunner
+
+    (project / "speccify.yaml").write_text(
+        f"schema_version: 1\ndependencies:\n  '{MAIN}': ^1.0\n", encoding="utf-8"
+    )
+    assert run_lock(project).ok
+    assert run_expand(project, platform="macos").ok
+    result = run_verify(project, platform="macos")
+    assert result.ok and not result.ready
+    assert result.platform == "macos"
+    assert result.tools == [{"name": "verify-signatures", "state": "missing"}]
+    assert result.notes == ["tool 'verify-signatures' has no implementation for macos yet."]
+    cli = CliRunner().invoke(
+        app, ["verify", "--project", str(project), "--platform", "macos", "--json"]
+    )
+    assert cli.exit_code == 0, cli.output
+    cli_report = json.loads(cli.output)
+    for key in ("ok", "ready", "platform", "problems", "tools", "notes"):
+        assert result.to_dict()[key] == cli_report[key], key
+    missing = run_verify(project / "nowhere")
+    assert not missing.ok and missing.code == "verify_failed"
+
+
 def test_playbook_asset_returns_the_script(project: Path) -> None:
     from speccify_mcp.tools import run_skill_asset
 

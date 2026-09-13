@@ -449,6 +449,84 @@ def test_tool_check_verifies_an_implementation_and_records_it(
     assert "no implementation" not in verified.output
 
 
+def test_verify_json_tells_missing_unverified_and_verified_tools_apart(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Spec 010: one report for CLI text, CLI JSON and MCP — `ok` stays
+    'consistent', `ready` adds 'tools implemented and verified'."""
+    import json
+
+    monkeypatch.setattr("speccify_cli.commands.expand.current_platform", lambda: "macos")
+    monkeypatch.setattr("speccify_core.tool_check.current_platform", lambda: "macos")
+    project = _expanded_project(tmp_path)
+    args = ["verify", "--project", str(project), "--library", str(LIBRARY), "--platform", "macos"]
+
+    # Consistent lock, tool missing: ok but not ready; text and JSON agree.
+    result = runner.invoke(app, [*args, "--json"])
+    assert result.exit_code == 0, result.output
+    report = json.loads(result.output)
+    assert report["ok"] is True and report["ready"] is False
+    assert report["platform"] == "macos" and report["problems"] == []
+    assert report["tools"] == [{"name": "verify-signatures", "state": "missing"}]
+    assert report["notes"] == ["tool 'verify-signatures' has no implementation for macos yet."]
+    text = runner.invoke(app, args)
+    assert "agree (macos)" in text.output and "no implementation for macos" in text.output
+
+    # Implemented but unverified is a distinct state.
+    tool_dir = project / ".agent" / "tools" / "verify-signatures"
+    (tool_dir / "macos.py").write_text(FAKE_VERIFY_SIGNATURES)
+    (tool_dir / "TOOL.md").write_text(
+        (tool_dir / "TOOL.md").read_text().replace("requires: codesign\n", "")
+    )
+    report = json.loads(runner.invoke(app, [*args, "--json"]).output)
+    assert report["tools"] == [{"name": "verify-signatures", "state": "unverified"}]
+    assert report["ready"] is False and "not yet checked" in report["notes"][0]
+
+    # Verified: ready. verify itself never runs examples or writes a status.
+    record_before = _record(project)
+    assert (
+        runner.invoke(
+            app, ["tool", "check", "--project", str(project), "--platform", "macos"]
+        ).exit_code
+        == 0
+    )
+    report = json.loads(runner.invoke(app, [*args, "--json"]).output)
+    assert report["tools"] == [{"name": "verify-signatures", "state": "verified"}]
+    assert report["ready"] is True and report["notes"] == []
+    assert record_before["tools"]["verify-signatures"]["platforms"].get("macos") is None
+    assert (
+        _record(project)["tools"]["verify-signatures"]["platforms"]["macos"]["status"] == "verified"
+    )
+    verified_record = _record(project)
+    runner.invoke(app, [*args, "--json"])
+    assert _record(project) == verified_record, "verify writes nothing"
+
+    # Drift is an error and hides no green tool: ok false, ready false, tool still listed.
+    skill = LIBRARY / "macos-notarize-tauri" / "SKILL.md"
+    original = skill.read_text()
+    try:
+        skill.write_text(original + "\n## 6 — Drift\n")
+        assert (
+            runner.invoke(
+                app, ["lock", "--project", str(project), "--library", str(LIBRARY)]
+            ).exit_code
+            == 0
+        )
+        result = runner.invoke(app, [*args, "--json"])
+        assert result.exit_code == 1
+        report = json.loads(result.output)
+        assert report["ok"] is False and report["ready"] is False
+        assert any("changed since it was expanded" in p for p in report["problems"])
+        assert report["tools"][0]["state"] == "verified"
+    finally:
+        skill.write_text(original)
+
+    # Broken project: JSON carries the error instead of a traceback.
+    broken = runner.invoke(app, ["verify", "--project", str(tmp_path / "nowhere"), "--json"])
+    assert broken.exit_code == 1
+    assert json.loads(broken.output)["error"]
+
+
 def test_tool_check_failure_names_the_example_and_demotes_the_tool(tmp_path: Path) -> None:
     project = _expanded_project(tmp_path)
     tool_dir = project / ".agent" / "tools" / "verify-signatures"

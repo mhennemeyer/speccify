@@ -400,7 +400,7 @@ Diese Tabelle verändert keine Station oder Reihenfolge.
 | [007 Startumgebung](../specs/007-agent-startumgebung/SPEC.md) | Doing, ready, needs_human | lokal implementiert und automatisiert geprüft; reale Startwege offen |
 | [008 Workflow-Konsistenz](../specs/008-workflow-konsistenz/SPEC.md) | Doing, ready, needs_human | Aufgaben-/Setup-Vertrag geprüft, Repo v4/current; neuer App-Build läuft, Wiederaufnahme wartet auf macOS-Schreibtischfreigabe |
 | [009 Terminal/Sitzungen](../specs/009-terminal-und-sitzungen/SPEC.md) | Doing, ready | UTF-8-Chunker, Sitzungsidentität (`agent_session.rs`), ein Destroyed-Listener je Fenster, Kind-Reaping; App-Abnahme offen |
-| [010 Prüfstatus](../specs/010-einheitlicher-pruefstatus/SPEC.md) | Backlog | identische Befunde für CLI/MCP/UI |
+| [010 Prüfstatus](../specs/010-einheitlicher-pruefstatus/SPEC.md) | Done | `VerifyReport` (ok/ready/platform/tools/notes) für `speccify verify --json` und MCP `verify`; UI-Anschluss in 004 offen |
 | [011 Auftragskontext](../specs/011-auftragskontext/SPEC.md) | Backlog | strukturierte Übergabe mit Ziel, Revision und Empfangsbestätigung |
 | [012 Praxisabnahme](../specs/012-agent-terminal-praxisabnahme/SPEC.md) | Backlog | vollständiger Durchlauf im echten Agent-Terminal |
 | [013 Lokale App/Startdiagnose](../specs/013-lokale-app-und-startdiagnose/SPEC.md) | Doing, ready, needs_human | App ohne Watcher auf 18768 gestartet und offen gelassen; Sicht-/Terminal-Abnahme offen |
@@ -689,8 +689,9 @@ Noch relevante Befunde:
   erhalten (Window-State-Plugin).
 - PTY-Ausgabe wird seit 009 inkrementell dekodiert (`Utf8Chunker`); der Reader
   wartet das Kind ab, Fenster-Ende killt alle Terminals des Fensters.
-- `verify`-Warnungen zu fehlenden Tools werden zwischen CLI/MCP/UI nicht vollständig
-  gleich transportiert. Lock-Konsistenz ist nicht Plattform-Ausführbarkeit.
+- Seit 010 liefern `speccify verify --json` und MCP `verify` denselben Bericht:
+  `ok` (konsistent) getrennt von `ready` (Tools implementiert und geprüft) mit
+  `tools[].state`; die App zeigt ihn noch nicht (Spec 004, offener UI-Rest).
 - Fehlende Implementierungen im Basisbefund: `build-libgit2`, `verify-signatures`,
   `verify-stream`. Keine Signierungs- oder Tool-Reparatur durch dieses Playbook.
 - Neue Multi-Repo-Sicht darf diese lokalen Zustände nicht fälschlich als gemeinsame

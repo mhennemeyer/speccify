@@ -353,14 +353,20 @@ def build_server(config: ServerConfig, **fastmcp_settings: Any) -> FastMCP:
     @server.tool(
         name="verify",
         description=(
-            "Check that the lockfile still matches the manifest and the actual "
-            "bundles — version drift, bundle-hash drift and moved tags. Drift is a "
-            "structured result (`{ok: false, problems}`), not an error. Mirrors "
-            "`speccify verify`."
+            "Check that the lockfile still matches the manifest, the actual bundles "
+            "and the expanded skills — version drift, bundle-hash drift, moved tags, "
+            "upstream drift. `ok` means consistent; `ready` means consistent AND every "
+            "recorded tool has an implementation for `platform` that passed its examples "
+            "(`tools: [{name, state: missing|unverified|verified}]`, `notes` explain). "
+            "Drift is a structured result (`{ok: false, problems}`), not an error. "
+            "Same fields as `speccify verify --json`."
         ),
     )
     def verify(
-        library_path: str | None = None, offline: bool = False, project: str | None = None
+        library_path: str | None = None,
+        offline: bool = False,
+        platform: str | None = None,
+        project: str | None = None,
     ) -> dict[str, Any]:
         root = _resolve_root(config, project)
         if isinstance(root, dict):
@@ -369,6 +375,7 @@ def build_server(config: ServerConfig, **fastmcp_settings: Any) -> FastMCP:
             root,
             library_path=Path(library_path) if library_path else None,
             offline=offline,
+            platform=platform,
         ).to_dict()
 
     @server.tool(

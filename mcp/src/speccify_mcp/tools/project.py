@@ -130,20 +130,57 @@ def run_expand(
     )
 
 
+@dataclass(frozen=True)
+class VerifyResult:
+    """The CLI's `VerifyReport`, unchanged (Spec 010): `ok` = consistent,
+    `ready` = consistent and every tool implemented and verified for `platform`."""
+
+    ok: bool
+    ready: bool = False
+    platform: str = ""
+    problems: list[str] = field(default_factory=list)
+    tools: list[dict[str, Any]] = field(default_factory=list)
+    notes: list[str] = field(default_factory=list)
+    code: str = ""
+    message: str = ""
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "ok": self.ok,
+            "ready": self.ready,
+            "platform": self.platform,
+            "problems": list(self.problems),
+            "tools": [dict(t) for t in self.tools],
+            "notes": list(self.notes),
+            "code": self.code,
+            "message": self.message,
+        }
+
+
 def run_verify(
     project_root: Path,
     *,
     library_path: Path | None = None,
     offline: bool = False,
-) -> ProjectResult:
-    from speccify_cli.commands.verify import run_verify as cli_verify
-    from speccify_core import LockfileError
+    platform: str | None = None,
+) -> VerifyResult:
+    from speccify_cli.commands.verify import run_verify_report
 
-    try:
-        problems = cli_verify(project_root, library_override=library_path, offline=offline)
-    except (LockfileError, FileNotFoundError) as exc:
-        return ProjectResult(ok=False, code="verify_failed", message=str(exc))
-    return ProjectResult(ok=not problems, problems=problems)
+    report = run_verify_report(
+        project_root, library_override=library_path, offline=offline, platform=platform
+    )
+    if report.error is not None:
+        return VerifyResult(
+            ok=False, platform=report.platform, code="verify_failed", message=report.error
+        )
+    return VerifyResult(
+        ok=report.ok,
+        ready=report.ready,
+        platform=report.platform,
+        problems=report.problems,
+        tools=report.tools,
+        notes=report.notes,
+    )
 
 
 @dataclass(frozen=True)
