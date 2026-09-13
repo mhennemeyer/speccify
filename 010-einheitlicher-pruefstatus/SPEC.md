@@ -1,9 +1,9 @@
 ---
-station: Doing
+station: Done
 order: 4
 created: 2026-09-10
 needs_human: false
-ready: false
+ready: true
 open_question: null
 parent: null
 ---
@@ -49,18 +49,42 @@ Keine Implementierung der drei Bibliotheks-Tools als Nebenaufgabe.
 
 ## Tasks
 
-- [ ] Statusschema und Kompatibilität festlegen.
-- [ ] Gemeinsamen Verify-Bericht aus vorhandenen Daten bereitstellen.
-- [ ] CLI-JSON und MCP auf denselben Bericht führen.
-- [ ] Matrix konsistent/fehlend/ungeprüft/geprüft/Drift mit vorhandenen Fixtures testen.
-- [ ] Dokumentation und Anschlussvertrag für Spec 004 aktualisieren.
+- [x] Statusschema und Kompatibilität festlegen.
+      `VerifyReport`: `ok` (unverändert: Lock/Manifest/Bundles/Expansions
+      konsistent), `ready` (ok und jedes Tool für `platform` implementiert und
+      geprüft), `platform`, `problems`, `tools: [{name, state:
+      missing|unverified|verified}]`, `notes`, `error`.
+- [x] Gemeinsamen Verify-Bericht aus vorhandenen Daten bereitstellen.
+      `run_verify_report` in `speccify_cli.commands.verify` über
+      `run_verify_with_status` + `ExpansionStatus` + `expansions.yaml`.
+- [x] CLI-JSON und MCP auf denselben Bericht führen.
+      `speccify verify --json --platform`, MCP `verify(platform)` liefert
+      `VerifyResult` mit denselben Feldern (+ `code`/`message`).
+- [x] Matrix konsistent/fehlend/ungeprüft/geprüft/Drift mit vorhandenen Fixtures testen.
+- [x] Dokumentation und Anschlussvertrag für Spec 004 aktualisieren.
+      CLI-Referenz regeneriert; Spec 004 kann `tools[].state` und `ready` für
+      die Quellversions-UI lesen (Vertrag hier, kein zweites Update-System).
 
 ## Verification
 
-F8 in [006](../006-bestandsaufnahme-agent-terminal/SPEC.md).
-`cli/commands/verify.py:run_verify` verwirft den zweiten Rückgabewert von
-`run_verify_with_status`; `mcp/tools/project.py:run_verify` nutzt genau diesen
-reduzierten Weg. Umsetzung noch nicht geprüft.
+Ausgangsbefund F8 in [006](../006-bestandsaufnahme-agent-terminal/SPEC.md):
+`run_verify` verwarf den `ExpansionStatus`; MCP nutzte genau diesen Weg.
+
+2026-09-13:
+
+- `pytest` (alle Pakete) grün. Neu: CLI-Test über die Matrix mit der
+  Notarize-Fixture (Plattform macos gepinnt): konsistent + Tool fehlend → `ok`
+  true, `ready` false, `tools=[missing]`, Text nennt Plattform und Hinweis;
+  Implementierung ohne Prüfung → `unverified`; nach `tool check` → `verified`,
+  `ready` true, `notes` leer; `verify` schreibt nichts in `expansions.yaml`
+  und führt keine Beispiele aus (Record vor/nach identisch); Upstream-Drift →
+  `ok` false, `ready` false, Tool bleibt als `verified` gelistet (kein
+  Verdecken); kaputtes Projekt → JSON mit `error`, Exit 1. MCP-Test: `verify`
+  liefert dieselben Felder wie `speccify verify --json` (Feld für Feld
+  verglichen), Fehlerfall `code: verify_failed`.
+- `ruff check`/`format`, CLI-Referenz-Drift grün.
+- Nicht geprüft: die Anzeige in der App (Spec 004 offener UI-Rest) — dort
+  gehört der Anschluss hin; Windows-Plattformwerte in der Matrix.
 
 ## Questions
 
