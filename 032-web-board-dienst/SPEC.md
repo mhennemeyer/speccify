@@ -83,7 +83,7 @@ Spec-Text, Anlegen neuer Specs, Aggregation über mehrere Board-Instanzen.
 - Wenn `BOARD_PASSWORD` gesetzt ist, dann verlangen alle Seiten und die API
   HTTP Basic; ohne Variable ist das Board offen (für interne Netze).
 - Wenn `docker compose up` mit der Beispielkonfiguration läuft, dann antwortet
-  `http://localhost:8765/` mit dem Board.
+  `http://localhost:8790/` mit dem Board.
 
 ## Decisions
 

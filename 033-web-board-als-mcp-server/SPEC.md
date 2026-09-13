@@ -96,7 +96,7 @@ Nicht enthalten: Anlegen von Specs, Textbearbeitung, itsdcloud-seitige
   Keycloak-Dev-Realm) gegen ein lokales Web-Board (`path:` auf den
   itsdcloud-Ordner, 67 Specs, `BOARD_MCP_TOKEN` gesetzt): Projekt angelegt,
   Integration `mcp` als „Speccify Board“ installiert, Credentials
-  `url=http://127.0.0.1:8765/mcp` + Token → `status: connected`; `resources`
+  `url=http://127.0.0.1:8790/mcp` + Token → `status: connected`; `resources`
   liefert die acht Tools; Tool-Auswahl auf die sechs lesenden Tools gesetzt,
   Konfiguration übernommen. Ohne Token antwortet `/mcp` mit 401. Offen bleibt
   die Chat-Frage mit echtem Modell (Infisical-Login/Bedrock-Key nötig).
