@@ -119,8 +119,9 @@ Web-Board oder itsdcloud.
   D5, Popup-Fenster je Frage. Suite `test_agent_ui` prüft seitdem das Popup
   (`ask-1`: Formular, data-answer, Anzeige/Schließen, Fenster schließt sich) und
   dass Projektfenster und Dashboard HTML-Fragen nicht mehr selbst rendern.
-- Nicht geprüft: Formularantwort aus einem echten Claude/Codex-Terminal mit
-  dem Popup (BO). Deshalb `ready`.
+- BO 2026-09-13: Popup öffnet und schließt sich nach der Antwort („jetzt hat es
+  geklappt“); Dashboard lässt sich bewegen. Formularantwort aus einem echten
+  Agenten-Terminal bleibt Deine Prüfung. Deshalb `ready`.
 
 ## Questions
 
