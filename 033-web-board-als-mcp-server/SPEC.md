@@ -3,7 +3,7 @@ station: Doing
 order: 14
 created: 2026-09-13
 needs_human: true
-ready: false
+ready: true
 open_question: null
 parent: null
 ---
@@ -63,15 +63,33 @@ Nicht enthalten: Anlegen von Specs, Textbearbeitung, itsdcloud-seitige
 
 ## Tasks
 
-- [ ] MCP-Server im Board-Dienst: Tools, Ressourcen, Fehlercodes, Bearer-Prüfung.
-- [ ] Mount unter `/mcp` neben den Seiten; CLI/Env `BOARD_MCP_TOKEN`; Docker/Compose ergänzt.
-- [ ] Tests: Handshake, `tools/list`, `list_specs`/`get_spec`, Schreib-Tools mit Commit, 401.
-- [ ] `docs/web-board.md` und Playbook-Vertrag abgleichen; itsdcloud-Einrichtung Schritt für Schritt.
+- [x] MCP-Server im Board-Dienst: Tools, Ressourcen, Fehlercodes, Bearer-Prüfung.
+      `apps/board/src/speccify_board/mcp_server.py` (FastMCP, acht Tools, zwei
+      Ressourcen); Token-Prüfung in der App-Middleware nur für `/mcp`.
+- [x] Mount unter `/mcp` neben den Seiten; CLI/Env `BOARD_MCP_TOKEN`; Docker/Compose ergänzt.
+- [x] Tests: Handshake, `tools/list`, `list_specs`/`get_spec`, Schreib-Tools mit Commit, 401.
+- [x] `docs/web-board.md` und Playbook-Vertrag abgleichen; itsdcloud-Einrichtung Schritt für Schritt.
 - [ ] Manuell: Board als MCP-Integration in einem itsdcloud-Projekt installieren, Frage im Chat stellen.
+      Braucht eine laufende itsdcloud-Instanz (nicht gestartet) — BO/Team.
 
 ## Verification
 
-Noch nichts geprüft.
+2026-09-13:
+
+- `pytest apps/board`: 11 bestanden. Neu `test_mcp.py` mit dem echten
+  MCP-Client (`streamablehttp_client` + `ClientSession`) gegen einen
+  uvicorn-Thread: `initialize` und `tools/list` (acht Tools),
+  `board_summary`, `list_specs` mit `station`/`repo`/`query`/`owner` und
+  `unknown_repo`, `get_spec` (Tasks mit Index, History, Body, `not_found`),
+  `who_works_on_what`, Ressourcen `board://summary` und `board://app/001-login`;
+  `move_station` + `toggle_task` erzeugen die beiden Register-Commits
+  „(Web-Board)“ im Bare-Remote, `rejected`/`unknown_repo` als Fehlercodes;
+  ohne oder mit falschem Token schlägt der Handshake fehl (401).
+- `ruff check`/`format` grün; Docs-Sync-Drift grün.
+- Container: Image neu gebaut, `POST /mcp initialize` mit Bearer-Token
+  antwortet, ohne Token 401 (siehe unten).
+- Nicht geprüft: Installation in einem laufenden itsdcloud-Projekt und die
+  Chat-Antwort (keine Instanz gestartet). Deshalb `ready`.
 
 ## Questions
 
