@@ -3,7 +3,7 @@ station: Doing
 order: 13
 created: 2026-09-13
 needs_human: true
-ready: false
+ready: true
 open_question: null
 parent: null
 ---
@@ -100,17 +100,43 @@ Spec-Text, Anlegen neuer Specs, Aggregation über mehrere Board-Instanzen.
 
 ## Tasks
 
-- [ ] Core: `repo` je Spec, Repo-Filter und -Kennzahlen, `editable`-Steuerung.
-- [ ] `apps/board`: Konfiguration, Quellen (url/path/Workspace), Registry mit
+- [x] Core: `repo` je Spec, Repo-Filter und -Kennzahlen, `editable`-Steuerung.
+- [x] `apps/board`: Konfiguration, Quellen (url/path/Workspace), Registry mit
       Auffrischung, FastAPI-Routen, Schreiben mit Commit/Push/Retry, Basic Auth.
-- [ ] Tests mit Bare-Remotes: Klonen, Auffrischen, Schreiben, Push-Nachholen,
+- [x] Tests mit Bare-Remotes: Klonen, Auffrischen, Schreiben, Push-Nachholen,
       Fehler je Repo, Auth.
-- [ ] Dockerfile, compose-Beispiel, Beispielkonfiguration, README, Doku-Seite.
-- [ ] Lokaler Lauf gegen das Speccify-Repo plus ein zweites Repo; Docker-Build.
+- [x] Dockerfile, compose-Beispiel, Beispielkonfiguration, README, Doku-Seite
+      (`docs/web-board.md`, auf der Website gespiegelt).
+- [x] Lokaler Lauf gegen das Speccify-Repo plus ein zweites Repo; Docker-Build.
 
 ## Verification
 
-Noch nichts geprüft.
+2026-09-13:
+
+- `pytest` (alle Pakete) grün; neu `apps/board/tests/test_board_service.py`
+  über echte Bare-Remotes: Konfiguration (Env-Ersetzung, relative Pfade,
+  Fehlerfälle), byte-stabile Edit-Helfer (CRLF, Code-Blöcke), zwei Klone +
+  lokaler Ordner auf `/`, `/r/<name>/`, `/api/board.json`, `/healthz`;
+  Auffrischen holt fremden Commit; Stationswechsel landet als Commit
+  `spec(001-login): Doing -> Done (Web-Board)` mit Autor aus der Konfiguration
+  und History-Zeile `actor: board`; nach zwischenzeitlichem Fremd-Push wird
+  nachgeholt und erneut gepusht, der fremde Commit bleibt; lokaler Ordner wird
+  direkt geschrieben; unbekannte Spec/Station 409, unbekanntes Repo 404;
+  kaputtes Repo wird gemeldet, andere laufen; Workspace-Ordner bindet alle
+  Unterprojekte (`ws/alpha`); Basic Auth schützt Seiten und API, `/healthz`
+  bleibt offen. Core: Multi-Repo-Zusammenfassung und `editable`-Bedienelemente
+  (Altbestand ohne). `ruff check`/`format`, Docs-Sync-Drift grün.
+- Lokaler Lauf: `speccify-board` mit `url: github.com/mhennemeyer/speccify`
+  und `path:` auf denselben Checkout → beide Repos je 32 Karten, Repo-Filter
+  „lokal/speccify“, 64 Bedienboxen, `/r/speccify/` 32 Karten, Screenshot
+  geprüft (Kennzahlen, Aktivität, Doing nach Person mit Repo-Kennung).
+- Docker: `docker build -f apps/board/Dockerfile` (python:3.12-slim + git),
+  Container mit `board.example.yaml` klont den Register-Branch von GitHub und
+  meldet `ok: true` mit 64 Specs. Befund: `VOLUME` muss nach dem `chown`
+  stehen, sonst gehört `/data` root (behoben).
+- Nicht geprüft: Schreiben aus dem Browser gegen das echte Speccify-Register
+  (nur gegen Test-Remotes), SSH-Schlüssel im Container, Betrieb hinter einem
+  Reverse-Proxy. Deshalb `ready`.
 
 ## Questions
 
