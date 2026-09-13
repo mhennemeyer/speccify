@@ -57,7 +57,9 @@ pub(crate) fn identity(root: &Path) -> Option<Identity> {
     Some(Identity { name, email })
 }
 
-/// E-Mail aus `Name <email>`; ohne Klammern der ganze Text.
+/// E-Mail aus `Name <email>`; ohne Klammern der ganze Text (Frontend-Regel,
+/// hier nur im Test gespiegelt).
+#[cfg(test)]
 pub(crate) fn email_of(owner: &str) -> String {
     owner
         .rsplit_once('<')
