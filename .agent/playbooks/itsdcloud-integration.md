@@ -17,10 +17,16 @@ Specs [033](../specs/033-web-board-als-mcp-server/SPEC.md),
   einer Minute im Projekt-Chat geschrieben hat, kennt Entscheidungen, offene
   Punkte und Dokumente — ohne Copy/Paste, mit sichtbarer Herkunft und Aktualität.
 - **In itsdcloud** sieht der PO, wer an welchen Aufgaben arbeitet: das
-  Spec-Board (Stationen, Fortschritt, Besitzer, Branch), fragt den Chat-Agenten
-  danach, später mit Jira-Zuordnung je Spec (Link, Status) und einem
-  Rückkanal, über den Speccify Spec-Stand und zugeordnete Jira-Tickets
-  aktualisiert.
+  Spec-Board (Stationen, Fortschritt, Besitzer, Branch) als eigene Oberfläche
+  im Projekt, fragt den Chat-Agenten danach, später mit Jira-Zuordnung je Spec
+  (Link, Status) und einem Rückkanal, über den Speccify Spec-Stand und
+  zugeordnete Jira-Tickets aktualisiert.
+- **Die Oberfläche ist der Prototyp eines allgemeinen Musters** (BO
+  2026-09-13): MCP-Server, die strukturierte Daten liefern, bekommen in
+  itsdcloud eine visuelle Darstellung statt nur einer Chat-Antwort. Die
+  Speccify-Ansicht wird zuerst in einem Feature-Branch des itsdcloud-Repos
+  gebaut und erprobt; danach wird das Konzept generalisiert (Abschnitt
+  „Oberfläche in itsdcloud“).
 
 ## Was beide Seiten heute können (Befund 2026-09-13, nur gelesen)
 
@@ -84,7 +90,8 @@ Keycloak-Bearer, Speccify-Workflow v5 mit Specs 0001–0039):
 | Phase | Ergebnis | Spec | Ort |
 |---|---|---|---|
 | 1 | Web-Board stellt MCP bereit (Streamable HTTP unter `/mcp`, Bearer-Token) | 033 | Speccify |
-| 2 | itsdcloud zeigt das Board: Katalogeintrag „Speccify Board“, Chat-Agent nutzt die Tools, Board-Ansicht im Projekt | 034 | itsdcloud (+ Vertrag hier) |
+| 2 | itsdcloud zeigt das Board: Katalogeintrag „Speccify Board“, Chat-Agent nutzt die Tools, Board-Ansicht im Projekt — zuerst als Feature-Branch in itsdcloud | 034 | itsdcloud (+ Vertrag hier) |
+| 2b | Generalisierung: visuelle Darstellung für MCP-Server mit strukturierten Daten (Muster aus der Board-Ansicht) | itsdcloud-Spec, TBD | itsdcloud |
 | 3 | Speccify-Agent hat itsdcloud-Gedächtnis und Chat live: `speccify-itsdcloud`-MCP, Ereignispuffer, Panel | 035 | Speccify (+ itsdcloud-API) |
 | 4 | Jira-Zuordnung je Spec (Front Matter, Links, Anzeige überall) | 036 | Speccify, TBD |
 | 5 | Rückkanal: Spec-Stand und Jira-Updates aus Speccify | 037 | beide, TBD |
@@ -126,6 +133,38 @@ Beschreibung, empfohlene Tool-Auswahl) und eine Board-Ansicht im Projekt, die
 `board_summary`/`list_specs` rendert (Stationen, Fortschritt, Personen), mit
 Link auf das Web-Board. Vertrag ist der Board-MCP; die Ansicht braucht keinen
 zweiten Datenpfad.
+
+### Oberfläche in itsdcloud (Phase 2, Stufe B, und Phase 2b)
+
+Auftrag BO 2026-09-13: Die Speccify-Integration bekommt eine eigene
+Oberfläche in itsdcloud. Sie wird zuerst in einem Feature-Branch des
+itsdcloud-Repos gebaut und dort mit einem laufenden Web-Board erprobt, bevor
+sie nach master geht. Das Konzept wird danach generalisiert: MCP-Server, die
+strukturierte Daten liefern, sollen in itsdcloud visuell dargestellt werden,
+nicht nur als Text im Chat.
+
+Leitlinien für den Prototyp, damit die Generalisierung später trägt:
+
+- **Ein Datenpfad.** Die Ansicht ruft dieselben MCP-Tools wie der Chat-Agent
+  (`board_summary`, `list_specs`, `get_spec`) über die bestehende
+  Projekt-Integration aus Spec 0030 auf; kein zweiter Client, keine eigene
+  Board-URL in der Ansicht.
+- **Darstellung an der Integration, nicht am Tool.** Die Zuordnung „dieser
+  installierte MCP-Server hat eine Ansicht“ liegt am Katalogeintrag
+  (`installed:<slug>` oder Katalog-ID). Der Prototyp ist die Ansicht „Board“
+  für den Eintrag „Speccify Board“; die Generalisierung macht daraus einen
+  Katalog-Vertrag: ein Eintrag benennt Tools, deren Ergebnisse als Tabelle,
+  Karten oder Kennzahlen gerendert werden, und ein Schema dazu.
+- **Fehler und Aktualität sichtbar.** Stand je Repo (Commit, Zeit), „nicht
+  verbunden“ statt leerer Ansicht, Reload statt Echtzeit im ersten Schnitt.
+- **Lesend zuerst.** Schreiben aus der Ansicht (Station, Tasks) kommt erst,
+  wenn die Tool-Auswahl der Integration es zulässt und die Personenidentität
+  geklärt ist (033, D3).
+- **Nachweis.** Stichprobe gleicher Zahlen je Station gegen das Web-Board;
+  Prüfung mit abgewählten Schreib-Tools und mit nicht erreichbarem Board.
+
+Die Umsetzung wird als itsdcloud-Spec im app-Repo geführt (Prinzip 7), die
+Generalisierung als eigene itsdcloud-Spec, sobald der Prototyp abgenommen ist.
 
 ### itsdcloud im Terminal (Phase 3, Spec 035)
 
