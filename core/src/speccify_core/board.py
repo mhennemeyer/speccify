@@ -66,6 +66,8 @@ class BoardSpec:
     parent: str | None = None
     created: str | None = None
     archived: bool = False
+    # Spec 032: Herkunft, wenn ein Board mehrere Repos zeigt.
+    repo: str | None = None
     tasks: list[Task] = field(default_factory=list)
     history: list[HistoryEvent] = field(default_factory=list)
 
@@ -127,6 +129,7 @@ class BoardSpec:
             "parent": self.parent,
             "created": self.created,
             "archived": self.archived,
+            "repo": self.repo,
             "tasks_done": self.tasks_done,
             "tasks_total": self.tasks_total,
             "progress": round(self.progress, 4),
@@ -233,7 +236,9 @@ def load_history(path: Path) -> list[HistoryEvent]:
     return events
 
 
-def load_spec(spec_file: Path, *, root: Path, archived: bool = False) -> BoardSpec | None:
+def load_spec(
+    spec_file: Path, *, root: Path, archived: bool = False, repo: str | None = None
+) -> BoardSpec | None:
     text = spec_file.read_text(encoding="utf-8", errors="replace")
     fields, body = parse_front_matter(text)
     spec_id = spec_file.parent.name
@@ -260,12 +265,15 @@ def load_spec(spec_file: Path, *, root: Path, archived: bool = False) -> BoardSp
         parent=_optional(fields.get("parent")),
         created=_optional(fields.get("created")),
         archived=archived,
+        repo=repo,
         tasks=parse_tasks(body),
         history=load_history(spec_file.parent / "history.jsonl"),
     )
 
 
-def load_specs(specs_dir: Path, *, include_archive: bool = True) -> list[BoardSpec]:
+def load_specs(
+    specs_dir: Path, *, include_archive: bool = True, repo: str | None = None
+) -> list[BoardSpec]:
     """Every `<slug>/SPEC.md` under `specs_dir` (plus `archive/` when asked)."""
     specs: list[BoardSpec] = []
     roots = [(specs_dir, False)]
@@ -275,7 +283,7 @@ def load_specs(specs_dir: Path, *, include_archive: bool = True) -> list[BoardSp
         if not base.is_dir():
             continue
         for spec_file in sorted(base.glob("*/SPEC.md")):
-            spec = load_spec(spec_file, root=specs_dir, archived=archived)
+            spec = load_spec(spec_file, root=specs_dir, archived=archived, repo=repo)
             if spec is not None:
                 specs.append(spec)
     return specs
@@ -321,8 +329,19 @@ def summarize(
         }
         for key in day_keys
     ]
+    repos: dict[str, dict[str, int]] = {}
+    for spec in live:
+        if spec.repo:
+            bucket = repos.setdefault(
+                spec.repo, {"specs": 0, "doing": 0, "tasks_done": 0, "tasks_total": 0}
+            )
+            bucket["specs"] += 1
+            bucket["doing"] += 1 if spec.station == "Doing" else 0
+            bucket["tasks_done"] += spec.tasks_done
+            bucket["tasks_total"] += spec.tasks_total
     return {
         "generated_at": now.isoformat(timespec="seconds"),
+        "repos": repos,
         "specs": len(live),
         "archived": len(specs) - len(live),
         "stations": {name: stations.get(name, 0) for name in STATIONS},
@@ -371,6 +390,7 @@ h1{font-size:20px;margin:0 0 4px}h2{font-size:13px;text-transform:uppercase;lett
 .card .row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:6px;font-size:11px;color:var(--muted)}
 .card .bar{margin-top:8px}
 .badge{border-radius:99px;padding:1px 7px;font-size:10px;font-weight:600}
+.badge.repo{background:#ede9fe;color:#5b21b6}.edit{margin-top:8px;font-size:11px;color:var(--muted)}.edit select{font:inherit;padding:2px 4px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--ink)}.edit details{margin-top:4px}.edit ul{margin:4px 0 0;padding-left:16px}
 .badge.ready{background:#dcfce7;color:#166534}.badge.human{background:#fef3c7;color:#92400e}.badge.ask{background:#ffedd5;color:#9a3412}.badge.idea{background:var(--bar);color:var(--muted)}
 .av{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:#e0f2fe;color:#075985;font-size:10px;font-weight:700}
 .branch{font-family:ui-monospace,Menlo,monospace}
@@ -413,7 +433,7 @@ footer{margin-top:32px;color:var(--muted);font-size:11px}
 <h2>Doing nach Person</h2>
 <div class="people">
 {% for name, ids in summary.people.items() %}
-  <div class="person"><b>{{ name }}</b><ul>{% for spec in specs if spec.id in ids %}<li>{% if spec.number is not none %}#{{ spec.number }} {% endif %}{{ spec.title }}{% if spec.branch %} <span class="branch">⎇ {{ spec.branch }}</span>{% endif %} · {{ spec.tasks_done }}/{{ spec.tasks_total }}</li>{% endfor %}</ul></div>
+  <div class="person"><b>{{ name }}</b><ul>{% for spec in specs if spec.id in ids %}<li>{% if spec.repo and repo_names|length > 1 %}<span class="badge repo">{{ spec.repo }}</span> {% endif %}{% if spec.number is not none %}#{{ spec.number }} {% endif %}{{ spec.title }}{% if spec.branch %} <span class="branch">⎇ {{ spec.branch }}</span>{% endif %} · {{ spec.tasks_done }}/{{ spec.tasks_total }}</li>{% endfor %}</ul></div>
 {% else %}
   <p class="meta">Nichts in Doing.</p>
 {% endfor %}
@@ -423,6 +443,7 @@ footer{margin-top:32px;color:var(--muted);font-size:11px}
 <div class="filters">
   <input id="q" type="search" placeholder="Suche · Titel, Nummer, Person, Branch" aria-label="Suche">
   <select id="person" aria-label="Person"><option value="">Alle Personen</option>{% for name in people_names %}<option>{{ name }}</option>{% endfor %}</select>
+  {% if repo_names|length > 1 %}<select id="repo" aria-label="Repo"><option value="">Alle Repos</option>{% for name in repo_names %}<option>{{ name }}</option>{% endfor %}</select>{% endif %}
   <button class="chip" data-flag="ready" aria-pressed="false">bereit</button>
   <button class="chip" data-flag="ask" aria-pressed="false">Frage offen</button>
   <button class="chip" data-flag="human" aria-pressed="false">braucht Abnahme</button>
@@ -432,9 +453,10 @@ footer{margin-top:32px;color:var(--muted);font-size:11px}
 {% for station in lanes %}
   <section class="lane" data-station="{{ station }}"><h3>{{ station }} <span data-lane-count></span></h3>
   {% for spec in specs if spec.station == station and not spec.archived %}
-    <article class="card" data-search="{{ spec.search }}" data-person="{{ spec.owner_name or '' }}" data-flags="{{ spec.flags }}">
+    <article class="card" data-search="{{ spec.search }}" data-person="{{ spec.owner_name or '' }}" data-flags="{{ spec.flags }}" data-repo="{{ spec.repo or '' }}" data-spec="{{ spec.id }}">
       <div><span class="n">{% if spec.number is not none %}#{{ spec.number }}{% else %}{{ spec.id }}{% endif %}</span><span class="t">{{ spec.title }}</span></div>
       <div class="row">
+        {% if spec.repo and repo_names|length > 1 %}<span class="badge repo">{{ spec.repo }}</span>{% endif %}
         {% if spec.owner %}<span class="av" title="{{ spec.owner }}">{{ spec.initials }}</span>{% endif %}
         {% if spec.branch %}<span class="branch">⎇ {{ spec.branch }}</span>{% endif %}
         {% if spec.parent %}<span>· {{ spec.parent }}</span>{% endif %}
@@ -447,6 +469,13 @@ footer{margin-top:32px;color:var(--muted);font-size:11px}
       </div>
       {% if spec.tasks_total %}<div class="bar" title="{{ spec.tasks_done }}/{{ spec.tasks_total }} Tasks"><i class="{% if spec.station == 'Done' %}done{% endif %}" style="width:{{ (spec.progress*100)|round(1) }}%"></i></div>
       <div class="row">{{ spec.tasks_done }}/{{ spec.tasks_total }} Tasks</div>{% endif %}
+      {% if editable and not spec.archived %}
+      <div class="edit" data-repo="{{ spec.repo or '' }}" data-spec="{{ spec.id }}">
+        <label>Station <select data-station>{% for s in ['Backlog','Doing','Done'] %}<option{% if s == spec.station %} selected{% endif %}>{{ s }}</option>{% endfor %}</select></label>
+        {% if spec.tasks %}<details><summary>Tasks</summary><ul>{% for task in spec.tasks %}<li><label><input type="checkbox" data-task="{{ loop.index0 }}"{% if task.done %} checked{% endif %}> {{ task.text }}</label></li>{% endfor %}</ul></details>{% endif %}
+        <span class="meta" data-edit-status></span>
+      </div>
+      {% endif %}
     </article>
   {% endfor %}
   </section>
@@ -457,24 +486,38 @@ footer{margin-top:32px;color:var(--muted);font-size:11px}
 <ul class="meta">{% for spec in archived %}<li>{{ spec.title }} <span class="n">{{ spec.id }}</span> · {{ spec.station }}{% if spec.tasks_total %} · {{ spec.tasks_done }}/{{ spec.tasks_total }}{% endif %}</li>{% endfor %}</ul>
 </details>
 {% endif %}
-<footer>Erzeugt von <code>speccify board</code> aus dem Spec-Register (Spec 031). Diese Seite ist eine Momentaufnahme; die Wahrheit sind die Dateien im Branch <code>specs</code>.</footer>
+<footer>{% if editable %}Speccify Web-Board (Spec 032): Änderungen werden in den Branch <code>specs</code> des jeweiligen Repos committet und gepusht.{% else %}Erzeugt von <code>speccify board</code> aus dem Spec-Register (Spec 031). Diese Seite ist eine Momentaufnahme; die Wahrheit sind die Dateien im Branch <code>specs</code>.{% endif %}</footer>
 </main>
 <script>
 (function(){
-  var q=document.getElementById('q'),person=document.getElementById('person'),count=document.getElementById('count');
+  var q=document.getElementById('q'),person=document.getElementById('person'),repo=document.getElementById('repo'),count=document.getElementById('count');
   var flags={};
   document.querySelectorAll('.chip').forEach(function(chip){chip.addEventListener('click',function(){var on=chip.getAttribute('aria-pressed')!=='true';chip.setAttribute('aria-pressed',on?'true':'false');flags[chip.dataset.flag]=on;apply();});});
   function apply(){
     var text=(q.value||'').toLowerCase(),who=person.value,shown=0;
     document.querySelectorAll('.card').forEach(function(card){
-      var ok=(!text||card.dataset.search.indexOf(text)>=0)&&(!who||card.dataset.person===who);
+      var ok=(!text||card.dataset.search.indexOf(text)>=0)&&(!who||card.dataset.person===who)&&(!repo||!repo.value||card.dataset.repo===repo.value);
       for(var f in flags){if(flags[f]&&card.dataset.flags.split(' ').indexOf(f)<0)ok=false;}
       card.hidden=!ok;if(ok)shown++;
     });
     document.querySelectorAll('.lane').forEach(function(lane){lane.querySelector('[data-lane-count]').textContent='('+lane.querySelectorAll('.card:not([hidden])').length+')';});
     count.textContent=shown+' sichtbar';
   }
-  q.addEventListener('input',apply);person.addEventListener('change',apply);apply();
+  q.addEventListener('input',apply);person.addEventListener('change',apply);if(repo)repo.addEventListener('change',apply);apply();
+  // Spec 032: Bedienelemente rufen die API des Web-Boards; die Seite lädt danach neu.
+  document.querySelectorAll('.edit').forEach(function(box){
+    var status=box.querySelector('[data-edit-status]');
+    function send(path,body){
+      status.textContent='…';
+      fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
+        .then(function(r){return r.json().then(function(j){if(!r.ok)throw new Error(j.detail||r.status);return j;});})
+        .then(function(){status.textContent='gespeichert';location.reload();})
+        .catch(function(e){status.textContent='Fehler: '+e.message;});
+    }
+    var base='/api/r/'+encodeURIComponent(box.dataset.repo)+'/specs/'+encodeURIComponent(box.dataset.spec);
+    box.querySelector('[data-station]').addEventListener('change',function(e){send(base+'/station',{station:e.target.value});});
+    box.querySelectorAll('[data-task]').forEach(function(cb){cb.addEventListener('change',function(e){send(base+'/tasks/'+cb.dataset.task,{done:e.target.checked});});});
+  });
 })();
 </script>
 </body>
@@ -488,8 +531,13 @@ def render_board(
     title: str,
     source: str = ".agent/specs",
     now: datetime | None = None,
+    editable: bool = False,
 ) -> str:
-    """Self-contained HTML page; no external requests, works from file://."""
+    """Self-contained HTML page; no external requests, works from file://.
+
+    `editable` adds station/task controls that call the Web-Board API
+    (Spec 032); the static export never sets it.
+    """
     now = now or datetime.now(UTC)
     summary = summarize(specs, now=now)
     activity = summary["activity"]
@@ -532,6 +580,8 @@ def render_board(
                 "branch": spec.branch,
                 "parent": spec.parent,
                 "archived": spec.archived,
+                "repo": spec.repo,
+                "tasks": spec.tasks,
                 "tasks_done": spec.tasks_done,
                 "tasks_total": spec.tasks_total,
                 "progress": spec.progress,
@@ -548,6 +598,7 @@ def render_board(
                             spec.owner_name or "",
                             spec.branch or "",
                             spec.parent or "",
+                            spec.repo or "",
                         ],
                     )
                 ).lower(),
@@ -560,6 +611,7 @@ def render_board(
     )
     archived = [row for row in rows if row["archived"]]
     people_names = sorted({spec.owner_name for spec in specs if spec.owner_name})
+    repo_names = sorted({spec.repo for spec in specs if spec.repo})
     environment = Environment(autoescape=True)
     template = environment.from_string(_TEMPLATE)
     return template.render(
@@ -571,4 +623,6 @@ def render_board(
         archived=archived,
         lanes=lanes,
         people_names=people_names,
+        repo_names=repo_names,
+        editable=editable,
     )

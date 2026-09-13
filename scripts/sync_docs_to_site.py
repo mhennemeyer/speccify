@@ -45,6 +45,7 @@ DOC_MAPPINGS: tuple[DocMapping, ...] = (
     # (Plan projektfenster.md, P6a) — die Site erzählt jetzt die
     # Skills/Tools/App-Geschichte aus eigenen Quellen.
     DocMapping("git-sources.md", "git-sources/index.md", "/git-sources/"),
+    DocMapping("web-board.md", "web-board/index.md", "/web-board/"),
 )
 
 # Basename → Site-URL für das Umschreiben relativer Markdown-Links.

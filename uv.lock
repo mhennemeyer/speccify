@@ -9,6 +9,7 @@ resolution-markers = [
 
 [manifest]
 members = [
+    "speccify-board",
     "speccify-cli",
     "speccify-core",
     "speccify-mcp",
@@ -973,6 +974,25 @@ wheels = [
 ]
 
 [[package]]
+name = "speccify-board"
+version = "0.0.0"
+source = { editable = "apps/board" }
+dependencies = [
+    { name = "fastapi" },
+    { name = "pyyaml" },
+    { name = "speccify-core" },
+    { name = "uvicorn", extra = ["standard"] },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "fastapi", specifier = ">=0.115,<1.0" },
+    { name = "pyyaml", specifier = ">=6.0" },
+    { name = "speccify-core", editable = "core" },
+    { name = "uvicorn", extras = ["standard"], specifier = ">=0.30,<1.0" },
+]
+
+[[package]]
 name = "speccify-cli"
 version = "0.0.0"
 source = { editable = "cli" }
@@ -1055,6 +1075,7 @@ dev = [
     { name = "mypy" },
     { name = "pytest" },
     { name = "ruff" },
+    { name = "speccify-board" },
     { name = "speccify-cli" },
     { name = "speccify-core" },
     { name = "speccify-mcp" },
@@ -1070,6 +1091,7 @@ dev = [
     { name = "mypy", specifier = ">=1.10" },
     { name = "pytest", specifier = ">=8.0" },
     { name = "ruff", specifier = ">=0.6" },
+    { name = "speccify-board", editable = "apps/board" },
     { name = "speccify-cli", editable = "cli" },
     { name = "speccify-core", editable = "core" },
     { name = "speccify-mcp", editable = "mcp" },

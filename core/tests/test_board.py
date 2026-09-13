@@ -158,3 +158,23 @@ def test_render_is_self_contained_and_shows_progress(tmp_path: Path) -> None:
         and 'data-station="Done"' in page
     )
     assert "<script" in page and "Quelle: specs@abc123" in page
+    assert 'class="edit"' not in page and 'id="repo"' not in page
+
+
+def test_render_multi_repo_and_editable(tmp_path: Path) -> None:
+    specs = load_specs(_fixture(tmp_path), repo="app")
+    other = tmp_path / "other" / "specs"
+    _spec(other, "003-portal", "station: Doing", "# Portal\n\n- [ ] x\n")
+    specs += load_specs(other, repo="portal")
+    assert {spec.repo for spec in specs} == {"app", "portal"}
+    summary = summarize(specs, now=NOW)
+    assert summary["repos"] == {
+        "app": {"specs": 4, "doing": 2, "tasks_done": 3, "tasks_total": 5},
+        "portal": {"specs": 1, "doing": 1, "tasks_done": 0, "tasks_total": 1},
+    }
+    page = render_board(specs, title="Team", editable=True, now=NOW)
+    assert 'id="repo"' in page and "<option>portal</option>" in page
+    assert 'class="badge repo">app' in page and 'data-repo="portal"' in page
+    assert page.count('class="edit"') == 5, "Altbestand bekommt keine Bedienelemente"
+    assert 'data-task="1"' in page and "<option selected>Doing</option>" in page
+    assert "/api/r/" in page

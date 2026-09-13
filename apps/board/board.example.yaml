@@ -1,0 +1,18 @@
+# Speccify Web-Board — which repositories belong on this board.
+# Each `url` entry is cloned shallowly on its register branch (`specs`, see
+# docs/specs-register.md) and refreshed every `refresh_seconds`; each `path`
+# entry is read in place (a project with .agent/specs, or a folder of such
+# projects). Nothing secret belongs here: tokens come from the environment.
+title: Team Alpha
+refresh_seconds: 60
+author: Speccify Board <board@example.com>
+repos:
+  - name: speccify
+    url: https://github.com/mhennemeyer/speccify.git
+  # - name: app
+  #   url: https://oauth2:${GIT_TOKEN}@gitlab.example.com/team/app.git
+  # - name: portal
+  #   url: git@github.com:org/portal.git
+  #   branch: specs
+  # - name: workspace
+  #   path: /projects

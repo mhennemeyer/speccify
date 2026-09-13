@@ -7,7 +7,7 @@ license = { text = "MIT" }
 authors = [{ name = "Matthias Hennemeyer" }]
 
 [tool.uv.workspace]
-members = ["core", "cli", "mcp", "apps/web/backend"]
+members = ["core", "cli", "mcp", "apps/web/backend", "apps/board"]
 
 [dependency-groups]
 dev = [
@@ -20,6 +20,7 @@ dev = [
     "speccify-cli",
     "speccify-mcp",
     "speccify-web-backend",
+    "speccify-board",
 ]
 
 [tool.uv.sources]
@@ -27,6 +28,7 @@ speccify-core = { workspace = true }
 speccify-cli = { workspace = true }
 speccify-mcp = { workspace = true }
 speccify-web-backend = { workspace = true }
+speccify-board = { workspace = true }
 
 [tool.ruff]
 line-length = 100
@@ -45,7 +47,7 @@ strict = false
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
-testpaths = ["core", "cli", "mcp", "apps/web/backend", "tests"]
+testpaths = ["core", "cli", "mcp", "apps/web/backend", "apps/board", "tests"]
 # Link checks need the network and are opt-in: `pytest -m links`.
 addopts = "-q -m \"not links\""
 markers = [

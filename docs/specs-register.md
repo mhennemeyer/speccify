@@ -137,6 +137,9 @@ auf `specs` löst den Deploy über `.github/workflows/board.yml` im Branch
 `specs` aus. Private Teams lassen denselben Befehl in ihrer CI laufen und legen
 die Datei auf einen internen Host — kein Dienst, kein Login, keine Datenbank.
 
+Ein eigener Dienst für beliebig viele Repos mit Rückschreiben von Station und
+Tasks: `docs/web-board.md` (Spec 032).
+
 ## Release
 
 Zum Release den Commit des Branch `specs` in den Release-Notizen nennen
