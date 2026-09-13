@@ -19,10 +19,10 @@ from speccify_core import (
 )
 
 from speccify_cli.commands._context import ProjectContext, fetch_bundle
+from speccify_cli.commands import expand as expand_module
 from speccify_cli.commands.expand import (
     Expansions,
     ExpansionStatus,
-    current_platform,
     expansion_status,
     expansions_path,
 )
@@ -79,7 +79,8 @@ def run_verify_report(
     platform: str | None = None,
 ) -> VerifyReport:
     """The shared computation behind `speccify verify --json` and the MCP tool."""
-    platform = platform or current_platform()
+    # Über das Modul, nicht per Name: Tests pinnen `expand.current_platform`.
+    platform = platform or expand_module.current_platform()
     try:
         problems, status = run_verify_with_status(
             project_dir, library_override=library_override, offline=offline, platform=platform

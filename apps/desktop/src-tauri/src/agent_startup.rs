@@ -383,7 +383,15 @@ mod tests {
     #[test]
     fn unreadable_help_is_reported_as_broken_cli_not_missing_commands() {
         let traceback = "Traceback (most recent call last):\n  File \".venv/bin/speccify\", line 4\nModuleNotFoundError: No module named 'speccify_cli'";
-        let output = format!("{MARKER}/p/.venv/bin/speccify\0/p/.venv/bin/speccify\0{traceback}\0/usr/local/bin/claude\02.1.0\00\0");
+        // Absoluter Host-Pfad je Plattform — sonst gilt der Host als Alias.
+        let host = if cfg!(windows) {
+            r"C:\tools\claude.cmd"
+        } else {
+            "/usr/local/bin/claude"
+        };
+        let output = format!(
+            "{MARKER}/p/.venv/bin/speccify\0/p/.venv/bin/speccify\0{traceback}\0{host}\02.1.0\00\0"
+        );
         let report = parse_report(
             &output,
             Path::new("/project"),
