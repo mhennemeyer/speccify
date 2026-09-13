@@ -71,6 +71,12 @@ Web-Board oder itsdcloud.
   Frame eingebettet, damit es offline und ohne CSP-Ausnahme läuft.
 - D3, 2026-09-13: Antwortkanal = postMessage mit Interaktions-ID; die App
   ruft `ui_answer`. Nur die erste Antwort zählt.
+- D5, 2026-09-13 (BO-Finding beim Ausprobieren aus itsdcloud): HTML-Fragen
+  erscheinen als eigenes kleines Fenster `ask-<n>` (zentriert, fokussiert),
+  nicht in der Dashboard-Seitenleiste oder über dem Terminal; nach Antwort
+  oder Schließen schließt sich das Fenster. Klassische `ask_bo`-Karten bleiben
+  in Seitenleiste/Terminalbereich. Fenstergrößen der Popups werden nicht
+  gemerkt (Window-State-Filter).
 - D4, 2026-09-13: Skill `agent-ui` als Workflow-Skill (Einrichten legt ihn an);
   gespeicherte UIs liegen als HTML-Dateien neben dem Skill und werden per
   absolutem `file` gezeigt.
@@ -109,8 +115,12 @@ Web-Board oder itsdcloud.
 - Gebündelte App (neuer Build) läuft; Desktop-UI-MCP auf 18768 listet
   `show_ui`/`ui_result`; `show_ui` mit `mode: show` antwortet
   `{shown: true, interaction_id}` — die Karte „Testlauf 038“ steht in der App.
-- Nicht geprüft: Formularantwort aus einem echten Claude/Codex-Terminal und
-  die Sicht auf die Karte (BO). Deshalb `ready`.
+- BO-Probe aus itsdcloud: `show_ui` funktionierte, landete aber im Dashboard →
+  D5, Popup-Fenster je Frage. Suite `test_agent_ui` prüft seitdem das Popup
+  (`ask-1`: Formular, data-answer, Anzeige/Schließen, Fenster schließt sich) und
+  dass Projektfenster und Dashboard HTML-Fragen nicht mehr selbst rendern.
+- Nicht geprüft: Formularantwort aus einem echten Claude/Codex-Terminal mit
+  dem Popup (BO). Deshalb `ready`.
 
 ## Questions
 
