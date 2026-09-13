@@ -14,6 +14,7 @@ from pydantic import BaseModel
 from speccify_core.board import render_board, summarize
 
 from speccify_board.config import BoardConfig
+from speccify_board.mcp_server import build_mcp
 from speccify_board.registry import Registry
 from speccify_board.sources import SourceError
 
@@ -35,9 +36,12 @@ def create_app(
     data_dir: Path,
     *,
     password: str | None = None,
+    mcp_token: str | None = None,
     background: bool = True,
 ) -> FastAPI:
     registry = Registry(config, data_dir)
+    mcp = build_mcp(registry, config)
+    mcp_app = mcp.streamable_http_app()
 
     @asynccontextmanager
     async def lifespan(_: FastAPI):
@@ -45,11 +49,13 @@ def create_app(
             registry.start()
         else:
             registry.refresh_all()
-        yield
+        async with mcp.session_manager.run():
+            yield
         registry.stop()
 
     app = FastAPI(title="speccify-board", version="0.0.0", lifespan=lifespan)
     app.state.registry = registry
+    app.state.mcp = mcp
 
     def require_auth(
         credentials: Annotated[HTTPBasicCredentials | None, Depends(_basic)],
@@ -142,8 +148,21 @@ def create_app(
 
     @app.middleware("http")
     async def no_cache(request: Request, call_next):  # type: ignore[no-untyped-def]
+        # Spec 033: /mcp is guarded by its own bearer token, not by the page password.
+        if request.url.path.startswith("/mcp") and mcp_token:
+            header = request.headers.get("authorization", "")
+            given = header[7:] if header.lower().startswith("bearer ") else ""
+            if not secrets.compare_digest(given.encode(), mcp_token.encode()):
+                return JSONResponse(
+                    {"detail": "Bearer-Token nötig (BOARD_MCP_TOKEN)."},
+                    status_code=401,
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
         response = await call_next(request)
         response.headers["Cache-Control"] = "no-store"
         return response
 
+    # Mounted at the root so `/mcp` answers directly (a Mount at "/mcp" would
+    # redirect POST /mcp → /mcp/, which not every MCP client follows).
+    app.mount("/", mcp_app)
     return app

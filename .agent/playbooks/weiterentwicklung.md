@@ -272,6 +272,16 @@ Cross-Project-Leaks, ungewollte Pfad-/Quellcodeübertragung und private Inhalte
 werden gezielt getestet. Bei Streamable HTTP sind außerdem Handshake,
 Session-Neuaufbau, JSON/SSE-Antworten, Timeouts und Origin-Prüfung Vertragsbestandteile.
 
+**Stand 2026-09-13 (BO-Auftrag):** itsdcloud und Speccify sind die Haupttools und
+werden mittelfristig beidseitig voll integriert. Die stehende Anleitung dazu ist
+das [Integrationsplaybook](itsdcloud-integration.md): Zielbild (Agent im
+Speccify-Terminal hat Gedächtnis und Chat aus itsdcloud live; der PO sieht in
+itsdcloud Board, Besitzer, Branch, später Jira), Prinzipien, Verträge und Phasen.
+Erster Schritt: die Web-Boards (032) stellen einen MCP bereit (Spec 033), den
+itsdcloud als Projekt-Integration anbindet und anzeigt (034); danach
+itsdcloud-Gedächtnis im Terminal (035), Jira-Zuordnung (036, TBD) und Rückkanal
+(037, TBD). Der Befund unten bleibt als Ausgangspunkt stehen.
+
 **Abnahme:** In einem lokalen Testprojekt bekommt ein neuer Agent-Auftrag ohne
 Copy/Paste das richtige freigegebene Gedächtnis. Ein erlaubtes Feature-Update
 erscheint nach bestätigtem Schreiben in itsdcloud und überlebt erneute

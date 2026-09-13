@@ -25,6 +25,7 @@ def main() -> int:
         config,
         Path(args.data),
         password=os.environ.get("BOARD_PASSWORD") or None,
+        mcp_token=os.environ.get("BOARD_MCP_TOKEN") or None,
     )
     uvicorn.run(app, host=args.host, port=args.port)
     return 0

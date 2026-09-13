@@ -40,6 +40,8 @@ select = ["E", "F", "I", "UP", "B"]
 [tool.ruff.lint.per-file-ignores]
 # Inline-HTML-Template mit langen Zeilen (Spec 031).
 "core/src/speccify_core/board.py" = ["E501"]
+# Tool-Beschreibungen für Agenten sind bewusst lange Sätze (Spec 033).
+"apps/board/src/speccify_board/mcp_server.py" = ["E501"]
 
 [tool.mypy]
 python_version = "3.12"

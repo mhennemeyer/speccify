@@ -14,6 +14,8 @@ docker run --rm -p 8765:8765 -v $PWD/apps/board/board.example.yaml:/config/board
 Open <http://localhost:8765/>. `GET /r/<name>/` shows one repository,
 `GET /api/board.json` the data, `POST /api/refresh` refreshes now,
 `GET /healthz` reports every repository's state. Set `BOARD_PASSWORD` for
-HTTP Basic auth (user name is ignored).
+HTTP Basic auth (user name is ignored). `/mcp` is an MCP server (Streamable
+HTTP) guarded by `BOARD_MCP_TOKEN` — install it in itsdcloud as an MCP
+integration (Spec 033).
 
 Details and the configuration format: `docs/web-board.md`.

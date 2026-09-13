@@ -13,6 +13,7 @@ services:
     environment:
       GIT_TOKEN: ${GIT_TOKEN:-}
       BOARD_PASSWORD: ${BOARD_PASSWORD:-}
+      BOARD_MCP_TOKEN: ${BOARD_MCP_TOKEN:-}
     volumes:
       - ./board.yaml:/config/board.yaml:ro
       - board-data:/data

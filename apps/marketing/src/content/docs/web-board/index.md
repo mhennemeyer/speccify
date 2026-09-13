@@ -71,6 +71,36 @@ Push abgelehnt, weil das Register weitergelaufen ist, holt er nach, rebased
 und pusht erneut; bei einem echten Konflikt meldet er das und lässt die
 Entscheidung der App. Lokale `path`-Einträge werden direkt geschrieben.
 
+## MCP-Server (Spec 033): das Board für itsdcloud und andere Agenten
+
+Jedes Web-Board ist zugleich ein MCP-Server: Streamable HTTP unter
+`http://<board>:8765/mcp`, JSON-Antworten, zustandslos, geschützt durch
+`Authorization: Bearer <BOARD_MCP_TOKEN>` (Umgebungsvariable; ohne sie offen,
+das Seiten-Passwort gilt hier nicht). Tools, alle mit `{ok, …}`-Antwort und
+Fehlercode statt Ausnahme:
+
+| Tool | Eingabe | Ausgabe |
+|---|---|---|
+| `board_summary` | – | Kennzahlen gesamt und je Repo, Stand je Repo |
+| `list_repos` | – | Name, Art, Branch, Commit, Aktualität, Fehler |
+| `list_specs` | `repo?`, `station?`, `owner?`, `query?` | Specs mit Nummer, Titel, Station, Besitzer, Branch, Tasks, Flags, letzter Aktivität |
+| `get_spec` | `repo`, `spec_id`, `history_limit?` | Felder, Tasks mit Index, History, Markdown |
+| `who_works_on_what` | – | Doing-Specs je Person mit Branch und Fortschritt |
+| `move_station` | `repo`, `spec_id`, `station` | Commit |
+| `toggle_task` | `repo`, `spec_id`, `index`, `done` | Commit |
+| `refresh` | – | Stand je Repo |
+
+Ressourcen: `board://summary` (JSON) und `board://<repo>/<spec_id>` (Markdown).
+
+**In itsdcloud einbinden:** Projekt → Integrationen → „MCP-Server“ → URL
+`https://<board>/mcp` und den Token eintragen. itsdcloud prüft den Server und
+zeigt die Tools als wählbare Ressourcen; für PO-Projekte die schreibenden
+Tools (`move_station`, `toggle_task`) abwählen. Danach beantwortet der
+Projekt-Chat Fragen wie „Wer arbeitet gerade woran?“, „Was ist bereit zur
+Abnahme?“ oder „Was steht in Spec 12?“ mit den Daten des Boards. Die weiteren
+Schritte (Katalogeintrag, Board-Ansicht, Gedächtnis im Terminal) stehen im
+Integrationsplaybook `.agent/playbooks/itsdcloud-integration.md`.
+
 Nicht enthalten: Login je Person (ein gemeinsames Passwort), Bearbeiten von
 Spec-Text, Anlegen von Specs, Echtzeit-Push in den Browser (die Seite lädt
 nach Aktionen neu). Ein nicht erreichbares Repo wird oben auf der Seite und
