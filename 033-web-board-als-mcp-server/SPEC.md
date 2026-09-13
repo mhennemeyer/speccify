@@ -70,7 +70,9 @@ Nicht enthalten: Anlegen von Specs, Textbearbeitung, itsdcloud-seitige
 - [x] Tests: Handshake, `tools/list`, `list_specs`/`get_spec`, Schreib-Tools mit Commit, 401.
 - [x] `docs/web-board.md` und Playbook-Vertrag abgleichen; itsdcloud-Einrichtung Schritt für Schritt.
 - [ ] Manuell: Board als MCP-Integration in einem itsdcloud-Projekt installieren, Frage im Chat stellen.
-      Braucht eine laufende itsdcloud-Instanz (nicht gestartet) — BO/Team.
+      Installation geprüft (2026-09-13, lokale itsdcloud-Instanz, siehe Verification);
+      die Chat-Frage steht noch aus, weil die lokale Instanz mit dem `echo`-Provider
+      läuft und ohne LLM-Key keine Tools aufruft.
 
 ## Verification
 
