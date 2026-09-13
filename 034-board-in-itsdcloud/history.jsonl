@@ -1,1 +1,2 @@
 {"timestamp": "2026-09-13T08:00:00Z", "spec_id": "034-board-in-itsdcloud", "event_type": "spec_created", "actor": "project", "summary": "Angelegt aus BO-Auftrag itsdcloud ↔ Speccify (Integrationsplaybook)"}
+{"timestamp":"2026-09-13T06:57:30Z","spec_id":"034-board-in-itsdcloud","event_type":"spec_edited","actor":"project","summary":"D3 (BO): eigene Oberfläche in itsdcloud, zuerst im Feature-Branch erproben, danach Generalisierung für MCP-Server mit strukturierten Daten; Leitlinien im Integrationsplaybook."}
