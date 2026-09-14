@@ -721,9 +721,13 @@ nicht als App-Instanz; auch lsof-Exit 0 ohne Ausgabe reicht nicht. Fremde Dienst
 nicht beenden. Der wiederholt nachgewiesene synchrone Board-KPI-Scan läuft jetzt
 im Hintergrund; Fenster- und App-Ende räumen Terminal-Kontextdateien explizit auf.
 
-Lokale neu gebaute Apps können erneut die macOS-Freigabe für den Ordner
-Schreibtisch verlangen (beobachtet bei Spec 008). Ein erreichbarer MCP-Port
-beweist dann noch keine bedienbare Oberfläche. Dialog vom Nutzer bestätigen
+Lokale neu gebaute Apps verlangten bis 2026-09-14 bei jedem Build erneut die
+macOS-Freigabe für den Ordner Schreibtisch (beobachtet bei Spec 008 und 039):
+macOS knüpft Freigaben an die Code-Anforderung, und ad hoc signierte Builds
+bekommen je Bau einen neuen Hash. Seit Spec 039 signiert `dev.sh --app` den
+lokalen Build mit der Developer-ID aus dem Schlüsselbund (Opt-out
+`--unsigned`); die Freigabe bleibt dann über Builds hinweg stehen. Ein
+erreichbarer MCP-Port beweist trotzdem keine bedienbare Oberfläche. Dialog vom Nutzer bestätigen
 lassen und anschließend Projektfenster/Terminal-Wiederaufnahme prüfen; keine
 Systemfreigabe umgehen oder einen erfolgreichen Neustart nur aus dem Port ableiten.
 

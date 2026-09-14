@@ -24,6 +24,7 @@
 #   ./scripts/dev.sh --open         # vorhandenen lokalen App-Build öffnen
 #   ./scripts/dev.sh --ui-port=18768 # expliziter alternativer Fragen-MCP-Port
 #   ./scripts/dev.sh --app --qa-bridge=18769 # QA-Brücke (Spec 039) für Abnahmen mit speccify-qa
+#   ./scripts/dev.sh --app --unsigned # lokalen Build ad hoc signieren (Standard: Developer ID, wenn im Schlüsselbund)
 #   ./scripts/dev.sh --prepared     # vorhandene Deps/Sidecars/Payload verwenden
 #
 # Für das Web-System (Backend/Playground/Marketing) ist dev-up.sh
@@ -46,6 +47,7 @@ CHECK_ONLY=0
 STATUS_ONLY=0
 UI_PORT=8768
 QA_BRIDGE=""
+UNSIGNED=0
 PREPARED=0
 for arg in "$@"; do
   case "$arg" in
@@ -55,6 +57,7 @@ for arg in "$@"; do
     --status) STATUS_ONLY=1 ;;
     --ui-port=*) UI_PORT="${arg#*=}" ;;
     --qa-bridge=*) QA_BRIDGE="${arg#*=}" ;;
+    --unsigned) UNSIGNED=1 ;;
     --prepared) PREPARED=1 ;;
     --refresh|--force) REFRESH=1 ;;
     --no-start) START=0 ;;
@@ -281,7 +284,25 @@ fi
 
 if [[ "$MODE" == "app" ]]; then
   step "Lokale App ohne Watcher bauen"
-  pnpm --filter speccify-desktop tauri build --debug --bundles app --no-sign
+  # Signatur (Spec 039): macOS knüpft Freigaben (Ordner „Schreibtisch“,
+  # Bildschirmaufnahme) an die Code-Anforderung der App. Ad hoc signierte
+  # Builds bekommen bei jedem Bau einen neuen Hash → der Dialog kommt jedes
+  # Mal wieder. Mit der Developer-ID bleibt die Anforderung stabil.
+  SIGN_ARGS=(--no-sign)
+  if [[ "$UNSIGNED" -eq 0 ]]; then
+    if [[ -z "${APPLE_SIGNING_IDENTITY:-}" ]]; then
+      APPLE_SIGNING_IDENTITY="$(security find-identity -v -p codesigning 2>/dev/null \
+        | sed -n 's/.*"\(Developer ID Application: [^"]*\)".*/\1/p' | head -1)"
+    fi
+    if [[ -n "${APPLE_SIGNING_IDENTITY:-}" ]]; then
+      export APPLE_SIGNING_IDENTITY
+      SIGN_ARGS=()
+      echo "  Signatur: $APPLE_SIGNING_IDENTITY"
+    else
+      echo "  Keine Developer-ID im Schlüsselbund — ad hoc signiert (macOS fragt Freigaben je Build neu)."
+    fi
+  fi
+  pnpm --filter speccify-desktop tauri build --debug --bundles app ${SIGN_ARGS[@]+"${SIGN_ARGS[@]}"}
   step "Lokale Speccify.app öffnen (kein Vite/Watcher nötig)"
   echo "  Desktop-UI-MCP: http://127.0.0.1:$UI_PORT"
   open "$LOCAL_APP" --args "--desktop-ui-port=$UI_PORT" ${APP_EXTRA_ARGS[@]+"${APP_EXTRA_ARGS[@]}"}

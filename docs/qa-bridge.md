@@ -75,5 +75,13 @@ dem Startbefehl.
 ## Grenzen
 
 - Eine Brücke pro App-Instanz; die Single-Instance-Regel bleibt.
-- Screenshots brauchen auf macOS die Freigabe „Bildschirmaufnahme“ für die App.
+- Screenshots brauchen auf macOS die Freigabe „Bildschirmaufnahme“ für die App:
+  Systemeinstellungen → Datenschutz & Sicherheit → Bildschirm- &
+  Systemaudioaufnahme → „+“ → `target/debug/bundle/macos/Speccify.app`, danach
+  die App neu starten. Ohne Freigabe antwortet `/screenshot` mit einem
+  Fehlertext; die Tests brauchen sie nicht.
+- Freigaben hängen an der Signatur: `dev.sh --app` signiert den lokalen Build
+  mit der Developer-ID (falls im Schlüsselbund), damit die Freigaben für
+  „Schreibtisch“ und „Bildschirmaufnahme“ nicht bei jedem Build erneut
+  gefragt werden. Ein Wechsel ad hoc ↔ Developer-ID fragt einmal neu.
 - Kein Zugriff in sandboxed iframes (Ad-hoc-UI), keine Aufzeichnung.
