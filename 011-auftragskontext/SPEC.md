@@ -96,6 +96,23 @@ Rückmeldung.
   (Bracketed Paste im Host; in zsh/bash ≥ 5.1 Standard) und Shell-Modus mit
   altem Shell ohne Bracketed Paste. Deshalb `ready`.
 
+2026-09-14, Abnahme über die QA-Brücke (Spec 039, `speccify-qa`
+`test_auftrag_app.py`, gebündelte App mit `--qa-bridge=18769`):
+
+- Befund F-QA-1: Startet der Agent in einem Ordner, dem Claude Code noch nicht
+  vertraut, zeigt Claude erst die Frage „Is this a project you trust?“. Eine
+  Zustellung in diesem Moment meldet „Eingefügt — im Terminal mit Enter
+  absenden“, der Text landet aber im Auswahldialog und ist verloren. Die App
+  kann den Host-Zustand nicht sehen; Vorschlag: Hinweis in der Auftrags-Vorschau,
+  solange das Terminal jünger als wenige Sekunden ist, oder Nutzerhinweis in
+  `docs/app-bedienen.md`. Entscheidung BO.
+- Beobachtung: der Hinweis „seit der Auswahl geändert“ ist in der echten App
+  kaum zu sehen, weil der Datei-Watcher das Board vor dem Klick nachlädt; die
+  Vorschau zeigt den neuen Inhalt (geprüft). Der Hinweis bleibt über den Mock
+  abgesichert.
+- Beobachtung: der Puffer-Text des QA-Hakens musste umgebrochene Zeilen
+  zusammenfügen (`isWrapped`), sonst reißt ein langer Pfad in der Eingabezeile.
+
 ## Questions
 
 Keine blockierende Frage für den Entwurf.
