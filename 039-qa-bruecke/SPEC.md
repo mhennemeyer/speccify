@@ -116,6 +116,9 @@ Weg in die echte App.
 - Screenshot-Route: aus der Shell funktioniert `screencapture -R` mit dem
   Fensterrechteck, aus dem App-Prozess fehlt die Freigabe „Bildschirmaufnahme“
   → Fehlertext statt Bild. Dokumentiert, nicht blockierend.
+- Signierter Build (Developer-ID, `codesign --verify --deep --strict` ok):
+  Abnahme 011 erneut 6/6 grün; `/screenshot` weiterhin ohne Bild, solange die
+  Freigabe „Bildschirmaufnahme“ für die App fehlt (BO-Schritt, dokumentiert).
 - Jeder ad hoc signierte Debug-Build löste die macOS-Freigabe „Schreibtisch“
   neu aus; die Brücke meldet das als 503. BO-Entscheid 2026-09-14: `dev.sh
   --app` signiert jetzt mit der Developer-ID aus dem Schlüsselbund.
