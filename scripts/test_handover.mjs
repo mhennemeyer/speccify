@@ -42,6 +42,10 @@ try {
   await dialog.getByRole("button", { name: "Terminal starten", exact: true }).click();
   await page.waitForFunction(() => window.__SPECCIFY_MOCK__.terminalOpens.length === 1);
   await page.waitForFunction(() => window.__speccifyQa.terminalReady());
+  // F-QA-1: direkt nach dem Start warnt die Vorschau vor dem verlorenen Paste.
+  await dialog.locator("[data-fresh-terminal]").waitFor();
+  assert.match(await dialog.locator("[data-fresh-terminal]").textContent(), /gerade erst gestartet/);
+  console.log("PASS fresh terminal: warning right after start (F-QA-1)");
   assert.equal(typeof await page.evaluate(() => window.__speccifyQa.terminalText()), "string");
   console.log("PASS qa hooks: terminalReady and terminalText follow the terminal");
   await page.waitForFunction(() => document.querySelector("[data-terminal-ready]")?.getAttribute("data-terminal-ready") === "true");

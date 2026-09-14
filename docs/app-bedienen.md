@@ -244,6 +244,12 @@ bietet *Kopieren* oder *Terminal starten*. Hat sich die Datei seit der
 Auswahl geändert, zeigt die Vorschau den aktuellen Stand und sagt es. Eine
 Auswahl oder ein Verschieben auf dem Board schickt nie von allein etwas.
 
+**Direkt nach dem Terminalstart kurz warten:** Der Agent muss seine
+Eingabezeile zeigen, bevor Du einfügst. Claude fragt in einem neuen Ordner
+zuerst „Trust this folder?“ — ein Auftrag, der in diese Frage hineinfällt,
+geht verloren, obwohl die Vorschau „Eingefügt“ meldet. Die Vorschau warnt in
+den ersten Sekunden nach dem Start davor.
+
 ## Fragen beantworten
 
 **Fragen mit eigener Oberfläche:** Der Agent kann statt einer Textfrage eine

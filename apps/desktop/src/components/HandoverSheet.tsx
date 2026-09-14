@@ -10,6 +10,7 @@ import {
   deliverToTerminal,
   kindsFor,
   KIND_LABELS,
+  terminalIsFresh,
   terminalReady,
   type HandoverItem,
   type HandoverKind,
@@ -48,6 +49,7 @@ export default function HandoverSheet({
   const [result, setResult] = useState<string | null>(null);
   const [tone, setTone] = useState<"ok" | "warn" | "error">("ok");
   const [ready, setReady] = useState(terminalReady());
+  const [fresh, setFresh] = useState(terminalIsFresh());
 
   const read = async (): Promise<string | null> => {
     try {
@@ -62,7 +64,10 @@ export default function HandoverSheet({
   };
   useEffect(() => {
     void read();
-    const timer = setInterval(() => setReady(terminalReady()), 1000);
+    const timer = setInterval(() => {
+      setReady(terminalReady());
+      setFresh(terminalIsFresh());
+    }, 1000);
     return () => clearInterval(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [item.path]);
@@ -134,6 +139,11 @@ export default function HandoverSheet({
           ))}
           <span className="ml-auto" data-terminal-ready={ready}>{ready ? "Agent-Terminal bereit" : "kein Agent-Terminal"}</span>
         </div>
+        {ready && fresh ? (
+          <p className="mb-2 rounded border border-amber-200 bg-amber-50 px-2 py-1 text-xs text-amber-800" role="status" data-fresh-terminal>
+            Das Terminal ist gerade erst gestartet. Warte, bis der Agent seine Eingabezeile zeigt — Claude fragt bei neuen Ordnern zuerst „Trust this folder?“ — sonst geht der eingefügte Text verloren.
+          </p>
+        ) : null}
         {changed ? (
           <p className="mb-2 rounded border border-amber-200 bg-amber-50 px-2 py-1 text-xs text-amber-800" role="status">
             Die Datei hat sich seit der Auswahl geändert — die Vorschau zeigt den aktuellen Inhalt.

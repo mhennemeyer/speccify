@@ -81,17 +81,37 @@ export function buildHandover(
 
 type Writer = (data: string) => Promise<void>;
 let writer: Writer | null = null;
+let writerSince: number | null = null;
 
 /** Das Terminal dieses Fensters meldet sich an, solange es läuft. */
 export function registerTerminalWriter(write: Writer): () => void {
   writer = write;
+  writerSince = Date.now();
   return () => {
-    if (writer === write) writer = null;
+    if (writer === write) {
+      writer = null;
+      writerSince = null;
+    }
   };
 }
 
 export function terminalReady(): boolean {
   return writer !== null;
+}
+
+/** Wie lange das Terminal schon Aufträge annimmt (ms); `null` ohne Terminal. */
+export function terminalAgeMs(): number | null {
+  return writerSince === null ? null : Date.now() - writerSince;
+}
+
+/** Befund F-QA-1 (Spec 011): direkt nach dem Start zeigt der Host oft noch
+ *  keine Eingabezeile (Claude fragt bei neuen Ordnern erst „Trust this
+ *  folder?“); ein Paste in diesem Moment geht verloren. Solange warnen. */
+export const FRESH_TERMINAL_MS = 20_000;
+
+export function terminalIsFresh(): boolean {
+  const age = terminalAgeMs();
+  return age !== null && age < FRESH_TERMINAL_MS;
 }
 
 export type Delivery =
