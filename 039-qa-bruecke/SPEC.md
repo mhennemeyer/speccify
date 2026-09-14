@@ -67,20 +67,38 @@ Weg in die echte App.
 
 ## Tasks
 
-- [ ] Rust-Modul `qa_bridge.rs`: Konfiguration, Token, Discovery-Datei,
+- [x] Rust-Modul `qa_bridge.rs`: Konfiguration, Token, Discovery-Datei,
       tiny_http-Server, Routen, Eval-Register mit Condvar.
-- [ ] `lib.rs`: Registry verwalten, Server im Setup starten, Befehl
+      Fensterabfragen und `eval` über `run_on_main_thread` mit 5-s-Timeout
+      (added): ein blockierter Hauptthread liefert 503 statt zu hängen.
+- [x] `lib.rs`: Registry verwalten, Server im Setup starten, Befehl
       `qa_eval_result` registrieren.
-- [ ] Frontend: `lib/qa.ts` mit `window.__speccifyQa`; TerminalPanel meldet
+- [x] Frontend: `lib/qa.ts` mit `window.__speccifyQa`; TerminalPanel meldet
       den Puffer an.
-- [ ] `scripts/dev.sh --qa-bridge=<port>`.
-- [ ] Tests: Konfigurationsparser, Wrapper-JS, Auth-Ablehnung; Browser-Suite
+- [x] `scripts/dev.sh --qa-bridge=<port>`.
+- [x] Tests: Konfigurationsparser, Wrapper-JS, Auth-Ablehnung; Browser-Suite
       für den Frontend-Haken am Mock.
-- [ ] Playbooks (`stand-und-ui.md`, `weiterentwicklung.md`) und
+- [x] Playbooks (`stand-und-ui.md`, `weiterentwicklung.md`) und
       `docs/app-bedienen.md` ergänzen.
 - [ ] Gegenstück in speccify-qa (Adapter, Page-Objects, Abnahme 011 als
       Tests) — Spec 003 dort.
 
 ## Verification
+
+2026-09-14 (Build läuft, Klick-Abnahme steht aus):
+
+- `cargo test -p speccify-desktop`: 115 grün (fünf neue für Konfiguration,
+  Autorisierung, Wrapper-Skript, Eval-Register mit Timeout); `cargo fmt`,
+  `pnpm typecheck` grün. Mock-Suite `test_handover` grün, jetzt mit Prüfung
+  des QA-Hakens (`terminalReady`/`terminalText` folgen dem Terminal).
+- Gebündelte App mit `--qa-bridge=18769`: Discovery-Datei mit Rechten 0600,
+  `/health` ohne Token 401, mit Token `{ok, pid, version}`.
+- Befund: Der erste Build hing bei `/windows` und `/eval`, weil der neue
+  Build die macOS-Freigabe für den Ordner „Schreibtisch“ erneut erfragt und
+  der Systemdialog den Hauptthread blockiert. Seitdem laufen Fensterabfragen
+  und `eval` mit Timeout auf dem Hauptthread; die Brücke antwortet dann mit
+  `503 Der Hauptthread der App antwortet nicht (offener Systemdialog?)`.
+- Offen: Stufe-2-Lauf der Abnahme 011 aus `speccify-qa`, sobald der Dialog
+  bestätigt ist.
 
 ## Questions
