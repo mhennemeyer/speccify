@@ -1,5 +1,5 @@
 ---
-station: Doing
+station: Done
 order: 5
 created: 2026-09-10
 needs_human: true
@@ -71,6 +71,7 @@ Keine automatische Agent-Orchestrierung, kein Upload des gesamten Projekts.
 - [x] Zwei Fenster, fehlendes Terminal, Shell-Modus und mehrzeilige Eingabe prüfen.
       Zwei Fenster: der Schreiber ist je Fenster registriert (JS-Kontext), im
       Workspace nur für das aktive Projekt (Fehler statt Fremdzustellung).
+- [x] (added, F-QA-1, BO 2026-09-14 „beides“) Warnung in der Vorschau in den ersten 20 s nach Terminalstart (`terminalIsFresh`, `data-fresh-terminal`) und Absatz in `docs/app-bedienen.md`; Mock-Suite prüft die Warnung.
 
 ## Verification
 
@@ -118,6 +119,11 @@ Shell-Modus über die Einstellung. Befunde:
   abgesichert.
 - Beobachtung: der Puffer-Text des QA-Hakens musste umgebrochene Zeilen
   zusammenfügen (`isWrapped`), sonst reißt ein langer Pfad in der Eingabezeile.
+
+- 2026-09-14, BO-Abnahme: Checkliste aus speccify-qa 2/2 ja (Claude nimmt
+  den Auftrag als Block, Shell zeigt den Text ohne Ausführung), Tests 6/6
+  grün. F-QA-1 mit „beides“ umgesetzt; `pnpm typecheck` und `test_handover`
+  grün. BO: „alle done“.
 
 ## Questions
 
