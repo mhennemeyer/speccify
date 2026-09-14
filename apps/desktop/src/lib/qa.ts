@@ -31,9 +31,14 @@ export function registerQaTerminal(instance: Terminal): () => void {
 export function terminalText(): string | null {
   if (!terminal) return null;
   const buffer = terminal.buffer.active;
+  // Umgebrochene Zeilen (isWrapped) gehören zur vorigen: der Puffer liefert
+  // logische Zeilen, so wie der Text eingegeben oder ausgegeben wurde.
   const lines: string[] = [];
   for (let y = 0; y < buffer.length; y += 1) {
-    lines.push(buffer.getLine(y)?.translateToString(true) ?? "");
+    const line = buffer.getLine(y);
+    const text = line?.translateToString(true) ?? "";
+    if (line?.isWrapped && lines.length > 0) lines[lines.length - 1] += text;
+    else lines.push(text);
   }
   return lines.join("\n").replace(/\s+$/, "");
 }
