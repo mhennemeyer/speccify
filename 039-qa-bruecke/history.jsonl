@@ -1,0 +1,2 @@
+{"timestamp":"2026-09-14T09:00:00Z","spec_id":"039-qa-bruecke","event_type":"spec_created","actor":"project","summary":"Angelegt aus BO-Entscheid: automatisierte Abnahmen gegen die echte App statt Checkliste"}
+{"timestamp":"2026-09-14T09:00:30Z","spec_id":"039-qa-bruecke","event_type":"station_changed","actor":"project","summary":"Backlog → Doing (BO: „leg los“)"}
