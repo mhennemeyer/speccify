@@ -3,7 +3,7 @@ station: Doing
 order: 39
 created: 2026-09-14
 needs_human: true
-ready: false
+ready: true
 open_question: null
 parent: null
 ---
@@ -80,7 +80,7 @@ Weg in die echte App.
       für den Frontend-Haken am Mock.
 - [x] Playbooks (`stand-und-ui.md`, `weiterentwicklung.md`) und
       `docs/app-bedienen.md` ergänzen.
-- [ ] Gegenstück in speccify-qa (Adapter, Page-Objects, Abnahme 011 als
+- [x] Gegenstück in speccify-qa (Adapter, Page-Objects, Abnahme 011 als
       Tests) — Spec 003 dort.
 
 ## Verification
@@ -98,7 +98,25 @@ Weg in die echte App.
   der Systemdialog den Hauptthread blockiert. Seitdem laufen Fensterabfragen
   und `eval` mit Timeout auf dem Hauptthread; die Brücke antwortet dann mit
   `503 Der Hauptthread der App antwortet nicht (offener Systemdialog?)`.
-- Offen: Stufe-2-Lauf der Abnahme 011 aus `speccify-qa`, sobald der Dialog
-  bestätigt ist.
+- Nach BO-Bestätigung des Dialogs: Abnahme `speccify-011-auftrag` aus
+  `speccify-qa` gegen die gebündelte App (`abnahme run`): 6 Tests grün, zweimal
+  hintereinander (fünf Stufe 2 über die Brücke, einer Stufe 0 gegen den Mock).
+  Die Tests öffnen dieses QA-Repo als zweites Projektfenster mit reiner Shell
+  (Agent-Befehl leer per localStorage), stellen zu, kopieren, ändern eine Datei
+  und stellen sie wieder her, schließen das Fenster.
+- Befunde am Werkzeug, behoben: umgebrochene Terminalzeilen (`isWrapped`)
+  werden zusammengefügt; Page-Objects zählen nur sichtbare Elemente (die App
+  hält inaktive Bereiche mit `hidden` im DOM), schalten den Inspektor-Tab
+  zurück, wenn das Terminal rechts liegt, und klicken eine gewählte Karte nicht
+  erneut (das würde abwählen); ein Fenster schließt ohne Warten auf die Antwort.
+- Befund am Produkt (in Spec 011 als F-QA-1): Zustellung in Claudes
+  „Trust this folder“-Dialog geht verloren, die App meldet trotzdem „Eingefügt“.
+- Screenshot-Route: aus der Shell funktioniert `screencapture -R` mit dem
+  Fensterrechteck, aus dem App-Prozess fehlt die Freigabe „Bildschirmaufnahme“
+  → Fehlertext statt Bild. Dokumentiert, nicht blockierend.
+- Jeder lokale Debug-Build löst die macOS-Freigabe „Schreibtisch“ neu aus
+  (Ad-hoc-Signatur wechselt); die Brücke meldet das als 503. Vorschlag: lokalen
+  Build in `dev.sh` mit der Developer-ID signieren — BO-Entscheid, nicht Teil
+  dieser Spec.
 
 ## Questions

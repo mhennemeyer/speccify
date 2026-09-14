@@ -97,7 +97,13 @@ Rückmeldung.
   altem Shell ohne Bracketed Paste. Deshalb `ready`.
 
 2026-09-14, Abnahme über die QA-Brücke (Spec 039, `speccify-qa`
-`test_auftrag_app.py`, gebündelte App mit `--qa-bridge=18769`):
+`test_auftrag_app.py`, gebündelte App mit `--qa-bridge=18769`): 6/6 grün,
+zweimal hintereinander — Vorschau mit Projekt/Spec/Station/Pfad/Absicht und
+Absichtswechsel, Verweigerung ohne Terminal samt Start aus dem Dialog,
+Zustellung als ein Block in die Shell ohne Ausführung und ohne Escape-Reste,
+Kopieren in die Zwischenablage, geänderte Datei in der Vorschau. Menschlich
+bleiben nur Optik (Terminal nach vorn, Claude nimmt den Auftrag) und der
+Shell-Modus über die Einstellung. Befunde:
 
 - Befund F-QA-1: Startet der Agent in einem Ordner, dem Claude Code noch nicht
   vertraut, zeigt Claude erst die Frage „Is this a project you trust?“. Eine
