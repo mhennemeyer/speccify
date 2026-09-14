@@ -88,6 +88,10 @@ Rückmeldung.
   nachträglich geänderte Datei → Hinweis und aktueller Inhalt; Auswahl und
   Boardwechsel schicken nichts. Die 14 übrigen Suiten (u. a. Workspace-Shell
   mit Commit-Auftrag ans geteilte Terminal, Git-Workspace) bleiben grün.
+- Die Abnahme läuft als erste Aufgabe des neuen QA-Werkzeugs: Repo
+  `mhennemeyer/speccify-qa`, Abnahme `speccify-011-auftrag` (Stufe 0 gegen den
+  Mock grün, Stufe 3 als Checkliste mit fünf Schritten; Ergebnis per
+  `python -m speccify_qa.cli abnahme checkliste speccify-011-auftrag`).
 - Nicht geprüft: echte Zustellung an Claude/Codex in der gebündelten App
   (Bracketed Paste im Host; in zsh/bash ≥ 5.1 Standard) und Shell-Modus mit
   altem Shell ohne Bracketed Paste. Deshalb `ready`.
