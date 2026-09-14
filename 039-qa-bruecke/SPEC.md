@@ -82,6 +82,8 @@ Weg in die echte App.
       `docs/app-bedienen.md` ergänzen.
 - [x] Gegenstück in speccify-qa (Adapter, Page-Objects, Abnahme 011 als
       Tests) — Spec 003 dort.
+- [x] (added, BO 2026-09-14) `dev.sh --app` signiert den lokalen Build mit der
+      Developer-ID (Opt-out `--unsigned`), damit die macOS-Freigaben stehen bleiben.
 
 ## Verification
 
@@ -114,9 +116,8 @@ Weg in die echte App.
 - Screenshot-Route: aus der Shell funktioniert `screencapture -R` mit dem
   Fensterrechteck, aus dem App-Prozess fehlt die Freigabe „Bildschirmaufnahme“
   → Fehlertext statt Bild. Dokumentiert, nicht blockierend.
-- Jeder lokale Debug-Build löst die macOS-Freigabe „Schreibtisch“ neu aus
-  (Ad-hoc-Signatur wechselt); die Brücke meldet das als 503. Vorschlag: lokalen
-  Build in `dev.sh` mit der Developer-ID signieren — BO-Entscheid, nicht Teil
-  dieser Spec.
+- Jeder ad hoc signierte Debug-Build löste die macOS-Freigabe „Schreibtisch“
+  neu aus; die Brücke meldet das als 503. BO-Entscheid 2026-09-14: `dev.sh
+  --app` signiert jetzt mit der Developer-ID aus dem Schlüsselbund.
 
 ## Questions
