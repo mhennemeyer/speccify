@@ -22,6 +22,7 @@ mod help_docs;
 mod playbook_cmd;
 mod project_cmd;
 mod project_watch;
+mod qa_bridge;
 mod settings;
 mod sidecar;
 mod skill_sources;
@@ -201,6 +202,13 @@ pub fn run() {
         eprintln!("{error}");
         std::process::exit(2);
     });
+    // Spec 039: QA-Brücke nur auf ausdrückliches Flag; sonst kein Endpunkt.
+    let qa_bridge = qa_bridge::configured().unwrap_or_else(|error| {
+        eprintln!("{error}");
+        std::process::exit(2);
+    });
+    let qa_registry = qa_bridge::EvalRegistry::default();
+    let qa_registry_for_setup = qa_registry.clone();
 
     let builder = tauri::Builder::default()
         // Single-Instance zuerst (Plugin-Doku): eine zweite App-Instanz
@@ -228,7 +236,19 @@ pub fn run() {
         .manage(actions_cmd::ActionRuns::default())
         .manage(terminal::Terminals::default())
         .manage(ask_bo)
+        .manage(qa_registry)
         .setup(move |app| {
+            if let Some(config) = qa_bridge.clone() {
+                let app_handle = app.handle().clone();
+                let registry = qa_registry_for_setup.clone();
+                std::thread::spawn(move || {
+                    if let Err(error) =
+                        qa_bridge::serve(app_handle, registry, config, desktop_ui_port)
+                    {
+                        eprintln!("{error}");
+                    }
+                });
+            }
             // desktop-ui-MCP (ask_bo) im App-Prozess: Agents erreichen ihn
             // über http://127.0.0.1:8768 (.mcp.json im Working Dir).
             ask_bo_for_setup.set_app(app.handle().clone());
@@ -364,6 +384,7 @@ pub fn run() {
             terminal::terminal_kill,
             desktop_ui::ask_bo_answer,
             desktop_ui::ui_answer,
+            qa_bridge::qa_eval_result,
             desktop_ui::ask_bo_pending,
             updater_status
         ]);

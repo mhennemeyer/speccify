@@ -36,8 +36,14 @@ try {
   await dialog.getByRole("button", { name: "Ins Terminal einfügen", exact: true }).click();
   await dialog.getByRole("status").filter({ hasText: /Kein Agent-Terminal bereit/ }).waitFor();
   assert.deepEqual(await writes(), []);
+  // Spec 039: der QA-Haken liest die Terminal-Bereitschaft und den Puffer.
+  assert.equal(await page.evaluate(() => window.__speccifyQa.terminalReady()), false);
+  assert.equal(await page.evaluate(() => window.__speccifyQa.terminalText()), null);
   await dialog.getByRole("button", { name: "Terminal starten", exact: true }).click();
   await page.waitForFunction(() => window.__SPECCIFY_MOCK__.terminalOpens.length === 1);
+  await page.waitForFunction(() => window.__speccifyQa.terminalReady());
+  assert.equal(typeof await page.evaluate(() => window.__speccifyQa.terminalText()), "string");
+  console.log("PASS qa hooks: terminalReady and terminalText follow the terminal");
   await page.waitForFunction(() => document.querySelector("[data-terminal-ready]")?.getAttribute("data-terminal-ready") === "true");
   console.log("PASS no terminal: visible refusal, explicit start");
 

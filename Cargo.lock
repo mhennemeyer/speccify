@@ -4115,6 +4115,7 @@ dependencies = [
  "tauri-plugin-window-state",
  "tempfile",
  "time",
+ "tiny_http",
  "toml 0.8.2",
  "trash",
  "uuid",

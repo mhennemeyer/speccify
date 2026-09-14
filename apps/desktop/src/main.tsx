@@ -6,6 +6,10 @@ import ProjectShell from "./ProjectShell";
 import WorkspaceShell from "./WorkspaceShell";
 import AskWindow from "./AskWindow";
 import "./index.css";
+import { installQaHooks } from "./lib/qa";
+
+// Spec 039: lesende Haken für die QA-Brücke (ohne Brücke wirkungslos).
+installQaHooks();
 
 // Ein Bundle, zwei Fenstertypen (Plan projektfenster.md, D15): das
 // Dashboard ("main") und Projektfenster ("project-<hash>"), erkennbar am

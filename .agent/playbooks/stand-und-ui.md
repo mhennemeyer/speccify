@@ -210,6 +210,7 @@ Projektfenster · ein Projektpfad (Startbereich: Specs)
 │   ├── Startumgebung prüfen: Host, Pfad/Version, CLI/Quelle, Hinweise/Fehler
 │   ├── Starten / Neu starten / Sitzung fortsetzen (genau bekannte Sitzung) ·
 │   │   Sitzung auswählen / Neueste Sitzung (ohne ID, verschwunden, Hostwechsel) · Startfehler sichtbar
+│   ├── QA-Brücke (039): nur mit `--qa-bridge` — kein UI, Fenster/`eval`/`invoke`/Screenshot per HTTP; `window.__speccifyQa` liest Terminalpuffer und Bereitschaft
 │   ├── Agent-Fragen (038): ask_bo-Karten über dem Terminal · Ad-hoc-UI als eigenes Popup-Fenster `ask-<n>` (iframe, Formular/data-answer, Anzeige mit Schließen), schließt nach Antwort
 │   └── laufend: cwd · Startdetails · PTY · Neustart · Dock wechseln
 └── Splitter: Größen ändern/zurücksetzen; Layout pro Projekt gespeichert
@@ -430,6 +431,7 @@ Diese Tabelle verändert keine Station oder Reihenfolge.
 | [036 Jira-Zuordnung](../specs/036-jira-zuordnung/SPEC.md) | Backlog (Idee) | TBD, Q1 offen |
 | [037 Rückkanal nach itsdcloud](../specs/037-rueckkanal-spec-stand-nach-itsdcloud/SPEC.md) | Backlog (Idee) | TBD |
 | [038 Ad-hoc-UI für Nutzer-I/O](../specs/038-adhoc-ui-nutzer-io/SPEC.md) | Doing · ready | Desktop-UI-MCP `show_ui`/`ui_result`, sandboxed iframe mit eingebettetem Tailwind, Panel im Projektfenster + Dashboard, Skill `agent-ui`, Policy v9, Suite `test_agent_ui`; Klick-Abnahme mit echtem Agenten offen |
+| [039 QA-Brücke](../specs/039-qa-bruecke/SPEC.md) | Doing | Loopback-HTTP im App-Prozess nur mit `--qa-bridge=<port>` (Bearer-Token, Discovery-Datei im Temp-Ordner): Fenster, `eval`, `invoke`, Fokus, Screenshot; Frontend-Haken `window.__speccifyQa` (Terminalpuffer, Bereitschaft); Abnahme 011 in `speccify-qa` als Stufe-2-Tests statt Checkliste |
 
 ### Gemeinsames Workspace-Arbeitsfenster (026)
 

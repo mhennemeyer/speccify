@@ -50,3 +50,5 @@ tauri-plugin-updater = "2.10.1"
 # Spec 030: ausgehender Webhook (Updater bringt reqwest ohnehin mit)
 reqwest = { version = "0.13", default-features = false, features = ["rustls", "json", "blocking"] }
 tauri-plugin-window-state = "2"
+# Spec 039: QA-Brücke (nur mit --qa-bridge aktiv)
+tiny_http = "0.12"

@@ -305,6 +305,13 @@ macht es genauso (*Settings → Agent-Sitzung*).
 - **Settings** — Erscheinungsbild, Agent-Sitzung, Working Dir und
   Terminal-Autostart.
 
+## Abnahmen automatisieren
+
+Für Klick-Abnahmen gegen die echte App gibt es die QA-Brücke (Spec 039):
+Die App startet dafür bewusst mit `--qa-bridge=<port>`, und das Prüfwerkzeug
+`speccify-qa` klickt, liest und vergleicht über diesen Loopback-Endpunkt. Im
+Normalbetrieb ist die Brücke aus. Details: `docs/qa-bridge.md`.
+
 ## Wenn etwas nicht geht
 
 - **Der Banner sagt „CLAUDE.md verweist nicht auf .agent/agent.md".**

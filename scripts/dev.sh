@@ -23,6 +23,7 @@
 #   ./scripts/dev.sh --app          # lokale macOS-App ohne Watcher bauen + öffnen
 #   ./scripts/dev.sh --open         # vorhandenen lokalen App-Build öffnen
 #   ./scripts/dev.sh --ui-port=18768 # expliziter alternativer Fragen-MCP-Port
+#   ./scripts/dev.sh --app --qa-bridge=18769 # QA-Brücke (Spec 039) für Abnahmen mit speccify-qa
 #   ./scripts/dev.sh --prepared     # vorhandene Deps/Sidecars/Payload verwenden
 #
 # Für das Web-System (Backend/Playground/Marketing) ist dev-up.sh
@@ -44,6 +45,7 @@ SKIP_ENGINE=0
 CHECK_ONLY=0
 STATUS_ONLY=0
 UI_PORT=8768
+QA_BRIDGE=""
 PREPARED=0
 for arg in "$@"; do
   case "$arg" in
@@ -52,6 +54,7 @@ for arg in "$@"; do
     --open) MODE="open" ;;
     --status) STATUS_ONLY=1 ;;
     --ui-port=*) UI_PORT="${arg#*=}" ;;
+    --qa-bridge=*) QA_BRIDGE="${arg#*=}" ;;
     --prepared) PREPARED=1 ;;
     --refresh|--force) REFRESH=1 ;;
     --no-start) START=0 ;;
@@ -78,6 +81,13 @@ if ! desktop_validate_port "$UI_PORT"; then
   exit 2
 fi
 UI_PORT=$((10#$UI_PORT))
+if [[ -n "$QA_BRIDGE" ]] && ! desktop_validate_port "$QA_BRIDGE"; then
+  echo "Ungültiger --qa-bridge: erwartet 1–65535." >&2
+  exit 2
+fi
+# Zusätzliche App-Argumente (leer ohne QA-Brücke).
+APP_EXTRA_ARGS=()
+if [[ -n "$QA_BRIDGE" ]]; then APP_EXTRA_ARGS+=("--qa-bridge=$QA_BRIDGE"); fi
 LOCAL_APP="$REPO_ROOT/target/debug/bundle/macos/Speccify.app"
 if [[ "$STATUS_ONLY" -eq 1 ]]; then
   desktop_status "$UI_PORT" "$LOCAL_APP"
@@ -97,7 +107,7 @@ if [[ "$MODE" == "open" ]]; then
   fi
   # Ohne -n: vorhandene Instanz aktivieren, keine zweite erzwingen.
   echo "Öffnen: $LOCAL_APP (Port $UI_PORT gilt nur bei neuem Prozessstart)"
-  open "$LOCAL_APP" --args "--desktop-ui-port=$UI_PORT"
+  open "$LOCAL_APP" --args "--desktop-ui-port=$UI_PORT" ${APP_EXTRA_ARGS[@]+"${APP_EXTRA_ARGS[@]}"}
   exit 0
 fi
 if [[ "$MODE" == "app" ]] && desktop_app_running "$LOCAL_APP"; then
@@ -274,15 +284,15 @@ if [[ "$MODE" == "app" ]]; then
   pnpm --filter speccify-desktop tauri build --debug --bundles app --no-sign
   step "Lokale Speccify.app öffnen (kein Vite/Watcher nötig)"
   echo "  Desktop-UI-MCP: http://127.0.0.1:$UI_PORT"
-  open "$LOCAL_APP" --args "--desktop-ui-port=$UI_PORT"
+  open "$LOCAL_APP" --args "--desktop-ui-port=$UI_PORT" ${APP_EXTRA_ARGS[@]+"${APP_EXTRA_ARGS[@]}"}
 elif [[ "$MODE" == "release" ]]; then
   step "App bündeln (tauri build)"
   pnpm --filter speccify-desktop tauri build
   APP="$REPO_ROOT/target/release/bundle/macos/Speccify.app"
   step "Speccify.app öffnen"
   echo "  $APP"
-  open -a "$APP" --args "--desktop-ui-port=$UI_PORT"
+  open -a "$APP" --args "--desktop-ui-port=$UI_PORT" ${APP_EXTRA_ARGS[@]+"${APP_EXTRA_ARGS[@]}"}
 else
   step "App starten (tauri dev — Ctrl-C beendet sie)"
-  pnpm --filter speccify-desktop tauri dev -- -- "--desktop-ui-port=$UI_PORT"
+  pnpm --filter speccify-desktop tauri dev -- -- "--desktop-ui-port=$UI_PORT" ${APP_EXTRA_ARGS[@]+"${APP_EXTRA_ARGS[@]}"}
 fi

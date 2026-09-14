@@ -16,6 +16,7 @@ import type { AgentStartupReport } from "../lib/system";
 import type { AgentSession, SessionRequest } from "../lib/agents";
 import { StartupDetails } from "./AgentStartup";
 import { deliverToTerminal, registerTerminalWriter } from "../lib/handover";
+import { registerQaTerminal } from "../lib/qa";
 
 export interface TerminalOpened {
   cwd: string;
@@ -114,6 +115,8 @@ export default function TerminalPanel({
     const fit = new FitAddon();
     terminal.loadAddon(fit);
     terminal.open(container);
+    // Spec 039: die QA-Brücke darf den Puffer lesen.
+    const unregisterQa = registerQaTerminal(terminal);
     // I3: `pfad:zeile` in der Ausgabe (Compiler, Tests, grep) ist ein Link
     // in den Editor — ⌘/Strg-Klick wie in Terminals üblich, Hover zeigt es.
     terminal.registerLinkProvider({
@@ -247,6 +250,7 @@ export default function TerminalPanel({
     cleanup = () => {
       disposed = true;
       unregisterWriter?.();
+      unregisterQa();
       if (idleTimer.current) clearTimeout(idleTimer.current);
       if (busyRef.current) endActivity(busyRef.current, "cancelled");
       busyRef.current = null;

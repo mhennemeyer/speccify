@@ -757,6 +757,15 @@ Host/Port fest geprüft, POST nur JSON und höchstens 1 MiB Anfragekörper.
 Details und Restgrenzen: [HTTP-Vertrag](../../docs/exec-mcp-contract.md).
 Neue Browserintegrationen dürfen keine pauschale localhost-/CORS-Ausnahme einführen.
 
+**Automatisierte Abnahmen (2026-09-14, Spec 039):** Klick-Abnahmen gegen die
+gebündelte App laufen über die QA-Brücke und das Repo `speccify-qa`
+(tec-e2e-Muster: eine Abnahme ist eine Menge automatischer Tests, Skip statt
+Fail bei fehlender Umgebung). App dafür bewusst mit
+`./scripts/dev.sh --app --prepared --skip-engine --ui-port=18768 --qa-bridge=18769`
+starten; ohne Flag gibt es keinen Endpunkt. Menschliche Checklisten bleiben nur
+für Optik und technisch nicht automatisierbare Punkte (BO-Entscheid D2 in 039).
+Vertrag: [QA-Brücke](../../docs/qa-bridge.md).
+
 Bis zum Feedback-Panel: Rückmeldung mit Bereich, Ist/Soll, reproduzierbaren
 Schritten und Buildstand in der betroffenen Spec unter Questions/Verification
 festhalten; unabhängige Fehler als eigene Spec. Keine privaten Logs pauschal
