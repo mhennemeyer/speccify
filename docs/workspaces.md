@@ -34,12 +34,18 @@ files are read outside the selected root when a Git pointer requires it; do not
 enumerate or open external worktrees. Symlinks are skipped. Canonical common-dir
 identity deduplicates worktrees, not arbitrary clones sharing a remote.
 
-Bound depth (16 levels below the selected root), directory count (2,000), entry
+The global **Settings → Projekt-Erkennungstiefe** setting accepts integers 1–16,
+defaulting to **1**, including for existing settings files. The selected root is
+depth 0; its direct children are depth 1. A reference clone at
+`project/external/reference` requires depth 3. Save the setting, then refresh a
+workspace; use **Erneut erkennen** to discover additional projects. Folder opening
+uses the same setting. The root's own Speccify project context remains included.
+The local settings key is `project_discovery_depth`.
+
+The selected depth is an intentional scope: deeper directories are not read and
+do not generate partial-result warnings. Bound directory count (2,000), entry
 count (20,000) and elapsed time (three seconds best-effort between directories,
-not a hard filesystem I/O timeout). A leaf at the depth limit is fully scanned;
-only skipped child directories make the result partial. Depth diagnostics list
-up to eight sorted relative paths plus the remaining count, even if another
-budget also stops the scan. Entry/time/directory limits identify the current
+not a hard filesystem I/O timeout). Entry/time/directory limits identify the current
 directory, not an exhaustive list of unread paths. Available projects remain
 usable. A complete rescan clears previous warnings without changing identities,
 names or groups (Spec 025). Skip known dependency,
@@ -47,6 +53,12 @@ build and metadata directories; report scan limits, invalid Git pointers and rea
 errors. A partial scan never removes old bindings. Missing bindings remain visible
 as unavailable; opening a worktree revalidates the path. No automatic Git init or
 workflow setup. Plain roots and nested folders with Speccify markers stay usable.
+
+Saved bindings outside the configured depth are omitted from workspace navigation,
+the dashboard list, the aggregated board and the next terminal's workspace context.
+They remain in the metadata store, with their IDs, names and group memberships,
+and return when the depth increases. Already mounted editors/actions retain their
+bound targets and drafts while hidden; independent project windows are unaffected.
 
 ## Persistence and concurrency
 
@@ -190,10 +202,15 @@ deep link. Editing/acceptance stays in that window. There is no aggregate write 
 
 ## Fixture matrix
 
+With the local mock server on port 1421, run
+`node scripts/test_workspace_depth.mjs` for settings persistence and a nested
+project's draft surviving depth changes (3 → 1 → 3). Existing workspace UI and
+shell suites cover grouping, target isolation and refresh.
+
 Two independent repos; nested repo; linked worktree inside/outside scan root;
 submodule-style `.git` pointer; same-remote clones; plain root; Speccify-marked
 non-Git child; ignored dependency dirs; symlink loop; malformed/oversized pointer;
-depth/entry budget; corrupt store; revision conflict; rename/group/rescan/reload/
+configured depth/entry budget; corrupt store; revision conflict; rename/group/rescan/reload/
 ungroup with stable IDs; unavailable path. Compare repo/index bytes before/after.
 
 For native review, run `node scripts/create_workspace_fixture.mjs`. It prints a

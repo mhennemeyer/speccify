@@ -13,6 +13,7 @@ import ThemePicker from "../components/ThemePicker";
 import { DASHBOARD_RESUME_KEY } from "../App";
 
 interface AppSettings {
+  project_discovery_depth: number;
   working_dir: string | null;
   terminal_autostart_command: string;
   skill_library: string | null;
@@ -95,6 +96,19 @@ export default function SettingsView() {
           Projektfenster.
         </p>
         <ThemePicker value={theme} onChange={(next) => void setTheme(next)} />
+      </section>
+
+      <section>
+        <h3 className="mb-2 text-sm font-semibold text-slate-700">Projekt-Erkennung</h3>
+        <label className="block text-sm text-slate-600">Projekt-Erkennungstiefe
+          <select aria-label="Projekt-Erkennungstiefe" value={settings.project_discovery_depth ?? 1}
+            onChange={event => setSettings({ ...settings, project_discovery_depth: Number(event.target.value) })}
+            className="ml-3 rounded border border-slate-300 bg-white px-2 py-1 text-sm">
+            {Array.from({ length: 16 }, (_, i) => i + 1).map(depth => <option key={depth} value={depth}>{depth}</option>)}
+          </select>
+        </label>
+        <p className="mt-2 text-sm text-slate-500">Standard 1: geöffneter Ordner und direkte Unterordner. Tiefere Projekte werden ignoriert.
+          Nach dem Speichern den Workspace aktualisieren; für neu hinzugekommene Projekte „Erneut erkennen“ wählen.</p>
       </section>
 
       <section>

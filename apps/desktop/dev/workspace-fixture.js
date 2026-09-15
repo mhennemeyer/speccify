@@ -51,13 +51,22 @@ export function installWorkspaceFixture(responses) {
   });
   const read = () => JSON.parse(localStorage.getItem(key) ?? "[]");
   const write = value => localStorage.setItem(key, JSON.stringify(value));
+  const scope = workspace => {
+    if (!workspace) return workspace;
+    const result = structuredClone(workspace);
+    const depth = responses.get_settings().project_discovery_depth ?? 1;
+    for (const repo of result.repositories) repo.worktrees = repo.worktrees.filter(tree => tree.path.slice(result.root.length).split("/").filter(Boolean).length <= depth);
+    result.repositories = result.repositories.filter(repo => repo.worktrees.length);
+    for (const group of result.projects) group.repository_ids = group.repository_ids.filter(id => result.repositories.some(repo => repo.id === id));
+    return result;
+  };
   window.__SPECCIFY_MOCK__.workspaceOpened = [];
   window.__SPECCIFY_MOCK__.workspaceStale = false;
-  responses.workspace_list = () => read();
+  responses.workspace_list = () => read().map(scope);
   responses.workspace_window_open = ({ workspaceId }) => { window.__SPECCIFY_MOCK__.workspaceOpened.push({ workspaceId, window: true }); };
-  responses.workspace_window_current = () => read()[0];
+  responses.workspace_window_current = () => scope(read()[0]);
   responses.workspace_agent_context = () => {
-    const workspace = read()[0];
+    const workspace = scope(read()[0]);
     return { root: workspace.root, revision: workspace.revision, markdown: `# Workspace context\n${JSON.stringify(workspace, null, 2)}` };
   };
   responses.workspace_resolve_target = ({ worktreeId }) => {
@@ -74,7 +83,7 @@ export function installWorkspaceFixture(responses) {
     write([workspace]);
   }
   responses.workspace_board = async ({ workspaceId }) => {
-    const workspace = read().find(entry => entry.id === workspaceId);
+    const workspace = scope(read().find(entry => entry.id === workspaceId));
     if (!workspace) throw Error("Workspace nicht gefunden");
     if (marketing) {
       const specs = workspace.repositories.flatMap(repo => repo.worktrees.flatMap(tree => {
@@ -105,9 +114,9 @@ export function installWorkspaceFixture(responses) {
     if (path.includes("missing")) throw Error("Kein Verzeichnis: missing");
     const entries = read(); const workspace = entries[0] ?? initial();
     if (entries.length) workspace.revision++;
-    if (path.includes("partial")) { workspace.partial = true; workspace.warnings = ["Suchtiefe von 16 Ebenen erreicht. Nicht durchsucht: api/deep/project. Diese Unterordner bei Bedarf separat öffnen."]; }
+    if (path.includes("partial")) { workspace.partial = true; workspace.warnings = ["Suchbudget erreicht bei api/deep/project. Dieser und weitere ausstehende Ordner wurden nicht durchsucht."]; }
     else { workspace.partial = false; workspace.warnings = []; }
-    write([workspace]); return workspace;
+    write([workspace]); return scope(workspace);
   };
   responses.workspace_edit = ({ expectedRevision, change }) => {
     const [workspace] = read();

@@ -114,8 +114,8 @@ Speccify · Dashboard
 │   │   │   ├── Elternordner mit Repos/Projekten → Workspace speichern + Arbeitsfenster
 │   │   │   ├── Statusmeldung: erkannte Art, Repos/Worktrees · Fehler bei ungültigem Pfad
 │   │   │   └── Zuletzt geöffnete Projekte → derselbe Einstieg
-│   │   ├── Gespeicherte Workspaces wählen · erneut erkennen (16 Ebenen)
-│   │   │   └── Echte Suchgrenzen: übersprungene Pfade · verfügbare Projekte weiter nutzbar
+│   │   ├── Gespeicherte Workspaces wählen · erneut erkennen (globale Tiefe 1–16, Standard 1)
+│   │   │   └── Tiefere Projekte ausgeblendet; Budget-/Lesefehler bleiben sichtbar
 │   │   ├── Workspace öffnen → ein gemeinsames Arbeitsfenster (026)
 │   │   ├── Repos auswählen → Projektgruppe benennen und speichern
 │   │   ├── Projektkarten → umbenennen · Repo aus Gruppe lösen
@@ -160,6 +160,7 @@ Speccify · Dashboard
 │   │   ├── Codex: globale config.toml / AGENTS.md
 │   │   └── bekannte Datei auswählen → Text bearbeiten/speichern; fehlend anzeigen
 │   ├── Settings
+│   │   ├── Projekt-Erkennungstiefe 1–16 (Standard 1): Root + direkte Unterordner
 │   │   ├── Erscheinungsbild: System / Hell / Dunkel (fensterübergreifend)
 │   │   ├── Agent-Sitzung: Dashboard-Fortsetzung nach Neustart
 │   │   ├── Teamsignale: Webhook-URL (030)
@@ -435,6 +436,22 @@ Diese Tabelle verändert keine Station oder Reihenfolge.
 | [037 Rückkanal nach itsdcloud](../specs/037-rueckkanal-spec-stand-nach-itsdcloud/SPEC.md) | Backlog (Idee) | TBD |
 | [038 Ad-hoc-UI für Nutzer-I/O](../specs/038-adhoc-ui-nutzer-io/SPEC.md) | Done (BO 2026-09-14) | Desktop-UI-MCP `show_ui`/`ui_result`, sandboxed iframe mit eingebettetem Tailwind, Panel im Projektfenster + Dashboard, Skill `agent-ui`, Policy v9, Suite `test_agent_ui`; Klick-Abnahme mit echtem Agenten offen |
 | [039 QA-Brücke](../specs/039-qa-bruecke/SPEC.md) | Done (BO 2026-09-14) | Loopback-HTTP im App-Prozess nur mit `--qa-bridge=<port>` (Bearer-Token, Discovery-Datei im Temp-Ordner): Fenster, `eval`, `invoke`, Fokus, Screenshot; Frontend-Haken `window.__speccifyQa` (Terminalpuffer, Bereitschaft); Abnahme 011 in `speccify-qa` als Stufe-2-Tests statt Checkliste |
+
+### Konfigurierbare Projekt-Erkennung (040, 2026-09-15)
+
+Settings → Projekt-Erkennungstiefe: ganze Werte 1–16, Standard 1. Root und direkte
+Unterordner werden geprüft; tiefere Projekte erscheinen erst mit höherem Wert.
+Gespeicherte IDs/Gruppen bleiben erhalten, die Grenze gilt auch für Board und
+Startkontext. Geöffnete Arbeitsbereiche bleiben beim Ausblenden mit ihren Entwürfen
+gemountet. Nach dem Speichern aktualisieren, neue Projekte über „Erneut erkennen“.
+
+Prüfung: 117 Rust-Tests bestanden (3 opt-in ignoriert), Typecheck/fmt grün;
+Browserprüfungen Workspace-Verwaltung, Arbeitsfenster und Tiefe 3 → 1 → 3 mit
+erhaltenem Commit-Entwurf bestanden. Lokaler signierter Build ohne Watcher geöffnet,
+vier bisherige Fenster wiederhergestellt. AVC nativ: Tiefe 1 zeigt Root-Kontext und
+die drei Hauptrepos; Tiefe 3 zusätzlich die zwei externen Referenzklone mit bisherigen
+IDs. Board/Kontext bei 1 gefiltert, gespeicherte Gruppen/Bindungen byte-inhaltlich
+unverändert; Einstellung abschließend 1. Menschliche Abnahme offen.
 
 ### Gemeinsames Workspace-Arbeitsfenster (026)
 

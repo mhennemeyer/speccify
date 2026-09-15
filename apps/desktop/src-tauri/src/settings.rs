@@ -8,6 +8,11 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct AppSettings {
+    #[serde(
+        default = "default_project_discovery_depth",
+        deserialize_with = "deserialize_project_discovery_depth"
+    )]
+    pub project_discovery_depth: usize,
     pub working_dir: Option<String>,
     pub terminal_autostart_command: String,
     /// Default-Skill-Quelle (Work-Repo) — Projekte können sie überschreiben
@@ -33,9 +38,26 @@ fn default_theme() -> String {
     "system".into()
 }
 
+pub(crate) fn default_project_discovery_depth() -> usize {
+    1
+}
+
+fn deserialize_project_discovery_depth<'de, D: serde::Deserializer<'de>>(
+    deserializer: D,
+) -> Result<usize, D::Error> {
+    let depth = usize::deserialize(deserializer)?;
+    if !(1..=16).contains(&depth) {
+        return Err(serde::de::Error::custom(
+            "Projekt-Erkennungstiefe muss zwischen 1 und 16 liegen.",
+        ));
+    }
+    Ok(depth)
+}
+
 impl Default for AppSettings {
     fn default() -> Self {
         Self {
+            project_discovery_depth: default_project_discovery_depth(),
             working_dir: None,
             skill_library: None,
             theme: default_theme(),
@@ -85,6 +107,9 @@ pub(crate) fn migrate_skill_library(mut settings: AppSettings) -> AppSettings {
 
 #[tauri::command]
 pub fn save_settings(settings: AppSettings) -> Result<(), String> {
+    if !(1..=16).contains(&settings.project_discovery_depth) {
+        return Err("Projekt-Erkennungstiefe muss zwischen 1 und 16 liegen.".into());
+    }
     let path = settings_path()?;
     if let Some(parent) = path.parent() {
         std::fs::create_dir_all(parent).map_err(|e| format!("{}: {e}", parent.display()))?;
@@ -200,6 +225,41 @@ mod tests {
     use std::path::Path;
 
     use super::*;
+
+    #[test]
+    fn discovery_depth_defaults_migrates_and_validates() {
+        let mut old = serde_json::to_value(AppSettings::default()).unwrap();
+        old.as_object_mut()
+            .unwrap()
+            .remove("project_discovery_depth");
+        assert_eq!(
+            serde_json::from_value::<AppSettings>(old.clone())
+                .unwrap()
+                .project_discovery_depth,
+            1
+        );
+        for depth in [1, 3, 16] {
+            old["project_discovery_depth"] = depth.into();
+            let settings: AppSettings = serde_json::from_value(old.clone()).unwrap();
+            let stored = serde_json::to_string(&settings).unwrap();
+            assert_eq!(
+                serde_json::from_str::<AppSettings>(&stored)
+                    .unwrap()
+                    .project_discovery_depth,
+                depth as usize
+            );
+        }
+        for invalid in [
+            serde_json::json!(0),
+            serde_json::json!(17),
+            serde_json::json!(-1),
+            serde_json::json!(1.5),
+            serde_json::json!("3"),
+        ] {
+            old["project_discovery_depth"] = invalid;
+            assert!(serde_json::from_value::<AppSettings>(old.clone()).is_err());
+        }
+    }
 
     fn temp_dir() -> PathBuf {
         let dir =

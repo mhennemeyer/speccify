@@ -9,7 +9,8 @@ use std::time::{Duration, Instant};
 use tauri::Manager;
 
 static STORE_LOCK: Mutex<()> = Mutex::new(());
-const DISCOVERY_MAX_DEPTH: usize = 16;
+#[cfg(test)]
+const DISCOVERY_MAX_DEPTH: usize = 1;
 const DISCOVERY_MAX_ENTRIES: usize = 20_000;
 const EXCLUDED: &[&str] = &[
     ".git",
@@ -212,7 +213,6 @@ fn scan(root: &Path, max_entries: usize, max_depth: usize) -> Scan {
     let started = Instant::now();
     let mut entries_seen = 0;
     let mut dirs_seen = 0;
-    let mut depth_cutoffs = vec![];
     while let Some((dir, depth)) = queue.pop_front() {
         if !fs::symlink_metadata(&dir)
             .is_ok_and(|metadata| metadata.is_dir() && !metadata.file_type().is_symlink())
@@ -262,6 +262,10 @@ fn scan(root: &Path, max_entries: usize, max_depth: usize) -> Scan {
             Ok(None) => (),
             Err(error) => result.warnings.push(error),
         }
+        // The configured depth defines the search scope, not an incomplete scan.
+        if depth >= max_depth {
+            continue;
+        }
         let entries = match fs::read_dir(&dir) {
             Ok(entries) => entries,
             Err(e) => {
@@ -305,12 +309,7 @@ fn scan(root: &Path, max_entries: usize, max_depth: usize) -> Scan {
                 continue;
             }
             if kind.is_dir() {
-                if depth >= max_depth {
-                    result.partial = true;
-                    depth_cutoffs.push(entry.path());
-                } else {
-                    children.push(entry.path());
-                }
+                children.push(entry.path());
             }
         }
         if entries_seen > max_entries {
@@ -318,24 +317,6 @@ fn scan(root: &Path, max_entries: usize, max_depth: usize) -> Scan {
         }
         children.sort();
         queue.extend(children.into_iter().map(|path| (path, depth + 1)));
-    }
-    if !depth_cutoffs.is_empty() {
-        depth_cutoffs.sort();
-        let total = depth_cutoffs.len();
-        let paths = depth_cutoffs
-            .iter()
-            .take(8)
-            .map(|path| display(path.strip_prefix(root).unwrap_or(path)))
-            .collect::<Vec<_>>()
-            .join(", ");
-        let more = if total > 8 {
-            format!(" (und {} weitere)", total - 8)
-        } else {
-            String::new()
-        };
-        result.warnings.push(format!(
-            "Suchtiefe von {max_depth} Ebenen erreicht. Nicht durchsucht: {paths}{more}. Diese Unterordner bei Bedarf separat öffnen."
-        ));
     }
     if result.found.is_empty() {
         result.found.push(Found {
@@ -609,6 +590,41 @@ fn edit(workspace: &mut Workspace, expected: u64, change: Edit) -> Result<(), St
     Ok(())
 }
 
+fn discovery_depth() -> Result<usize, String> {
+    Ok(crate::settings::get_settings()?.project_discovery_depth)
+}
+
+/// Read projection only: retain all persisted identities and memberships for
+/// later wider scans and targets already open in a project pane.
+fn scoped_workspace(mut workspace: Workspace, depth: usize) -> Workspace {
+    let root = Path::new(&workspace.root);
+    for repo in &mut workspace.repositories {
+        repo.worktrees.retain(|tree| {
+            Path::new(&tree.path)
+                .strip_prefix(root)
+                .is_ok_and(|relative| relative.components().count() <= depth)
+        });
+    }
+    workspace
+        .repositories
+        .retain(|repo| !repo.worktrees.is_empty());
+    let ids: HashSet<_> = workspace
+        .repositories
+        .iter()
+        .map(|repo| repo.id.as_str())
+        .collect();
+    for project in &mut workspace.projects {
+        project
+            .repository_ids
+            .retain(|id| ids.contains(id.as_str()));
+    }
+    workspace
+}
+
+fn configured_workspace(workspace: Workspace) -> Result<Workspace, String> {
+    Ok(scoped_workspace(workspace, discovery_depth()?))
+}
+
 #[tauri::command]
 pub async fn workspace_list() -> Result<Vec<Workspace>, String> {
     tauri::async_runtime::spawn_blocking(|| {
@@ -621,7 +637,12 @@ pub async fn workspace_list() -> Result<Vec<Workspace>, String> {
                 }
             }
         }
-        Ok(store.workspaces)
+        let depth = discovery_depth()?;
+        Ok(store
+            .workspaces
+            .into_iter()
+            .map(|workspace| scoped_workspace(workspace, depth))
+            .collect())
     })
     .await
     .map_err(|e| e.to_string())?
@@ -631,13 +652,14 @@ pub async fn workspace_list() -> Result<Vec<Workspace>, String> {
 pub async fn workspace_discover(path: String) -> Result<Workspace, String> {
     tauri::async_runtime::spawn_blocking(move || {
         let root = crate::project_cmd::resolve_project_root(&path)?;
-        let scan = scan(&root, DISCOVERY_MAX_ENTRIES, DISCOVERY_MAX_DEPTH);
+        let depth = discovery_depth()?;
+        let scan = scan(&root, DISCOVERY_MAX_ENTRIES, depth);
         let _guard = STORE_LOCK.lock().map_err(|e| e.to_string())?;
         let path = store_path()?;
         let mut store = load(&path)?;
         let workspace = merge(&mut store, &root, scan);
         save(&path, &store)?;
-        Ok(workspace)
+        Ok(scoped_workspace(workspace, depth))
     })
     .await
     .map_err(|e| e.to_string())?
@@ -692,7 +714,8 @@ pub async fn folder_open(
         if root_is_repo {
             return Ok(FolderDecision::Project(root));
         }
-        let scan = scan(&root, DISCOVERY_MAX_ENTRIES, DISCOVERY_MAX_DEPTH);
+        let depth = discovery_depth()?;
+        let scan = scan(&root, DISCOVERY_MAX_ENTRIES, depth);
         if folder_kind(&root, root_is_repo, &scan) == FolderKind::Project {
             return Ok(FolderDecision::Project(root));
         }
@@ -701,7 +724,9 @@ pub async fn folder_open(
         let mut store = load(&path)?;
         let workspace = merge(&mut store, &root, scan);
         save(&path, &store)?;
-        Ok::<_, String>(FolderDecision::Workspace(workspace))
+        Ok::<_, String>(FolderDecision::Workspace(scoped_workspace(
+            workspace, depth,
+        )))
     })
     .await
     .map_err(|e| e.to_string())??;
@@ -735,7 +760,7 @@ pub async fn workspace_edit(
         edit(workspace, expected_revision, change)?;
         let result = workspace.clone();
         save(&path, &store)?;
-        Ok(result)
+        configured_workspace(result)
     })
     .await
     .map_err(|e| e.to_string())?
@@ -777,7 +802,7 @@ async fn workspace_snapshot(workspace_id: String) -> Result<Workspace, String> {
                 tree.available = Path::new(&tree.path).is_dir();
             }
         }
-        Ok(workspace)
+        configured_workspace(workspace)
     })
     .await
     .map_err(|e| e.to_string())?
@@ -1159,7 +1184,10 @@ pub async fn workspace_board(workspace_id: String) -> Result<WorkspaceBoard, Str
                 .find(|workspace| workspace.id == workspace_id)
                 .ok_or("Workspace nicht gefunden")?
         };
-        Ok(read_workspace_board(&workspace, 5000))
+        Ok(read_workspace_board(
+            &configured_workspace(workspace)?,
+            5000,
+        ))
     })
     .await
     .map_err(|e| e.to_string())?
@@ -1686,8 +1714,8 @@ mod tests {
         }
         let mut store = empty_store();
         let old = merge(&mut store, &root, scan(&root, DISCOVERY_MAX_ENTRIES, 6));
-        assert!(old.partial);
-        assert!(!old.warnings.is_empty());
+        assert!(!old.partial);
+        assert!(old.warnings.is_empty());
         let ids = old
             .repositories
             .iter()
@@ -1719,11 +1747,15 @@ mod tests {
         repo(&nested);
         let result = scan(&root, DISCOVERY_MAX_ENTRIES, DISCOVERY_MAX_DEPTH);
         assert!(!result.partial);
-        assert!(result.found.iter().any(|found| found.path == nested));
+        assert!(!result.found.iter().any(|found| found.path == nested));
+        assert!(scan(&root, DISCOVERY_MAX_ENTRIES, 16)
+            .found
+            .iter()
+            .any(|found| found.path == nested));
     }
 
     #[test]
-    fn discovery_real_depth_limits_name_skipped_paths_with_bounded_examples() {
+    fn discovery_scope_is_intentional_but_entry_budget_is_partial() {
         let fixture = tempfile::tempdir().unwrap();
         let root = fixture.path().canonicalize().unwrap();
         let boundary = (0..DISCOVERY_MAX_DEPTH).fold(root.clone(), |path, _| path.join("level"));
@@ -1736,31 +1768,74 @@ mod tests {
             fs::create_dir(boundary.join(format!("child-{index:02}"))).unwrap();
         }
         let result = scan(&root, DISCOVERY_MAX_ENTRIES, DISCOVERY_MAX_DEPTH);
-        assert!(result.partial);
-        assert_eq!(result.warnings.len(), 1);
-        let warning = &result.warnings[0];
-        assert!(warning.contains("16 Ebenen"));
-        assert!(warning.contains(&display(
-            &boundary.strip_prefix(&root).unwrap().join("child-00")
-        )));
-        assert!(warning.contains("child-07"));
-        assert!(!warning.contains("child-08"));
-        assert!(warning.contains("und 4 weitere"));
-        assert!(
-            !warning.contains(&display(&root)),
-            "diagnostics use relative paths"
-        );
-        // Entry count includes sixteen ancestors and the marker at the boundary.
-        let mixed = scan(&root, DISCOVERY_MAX_DEPTH + 5, DISCOVERY_MAX_DEPTH);
+        assert!(!result.partial);
+        assert!(result.warnings.is_empty());
+        let mixed = scan(&root, 5, 3);
         assert!(mixed.partial);
         assert!(mixed
             .warnings
             .iter()
             .any(|warning| warning.contains("Dateianzahl-Limit")));
-        assert!(mixed
-            .warnings
+        assert_eq!(mixed.warnings.len(), 1);
+    }
+
+    #[test]
+    fn depth_filters_saved_clones_and_context_without_losing_group_identity() {
+        let fixture = tempfile::tempdir().unwrap();
+        let root = fixture.path().canonicalize().unwrap();
+        repo(&root.join("main"));
+        repo(&root.join("main/external/reference"));
+        fs::create_dir(root.join(".agent")).unwrap();
+        fs::write(root.join(".agent/agent.md"), "Root context").unwrap();
+        let shallow_scan = scan(
+            &root,
+            DISCOVERY_MAX_ENTRIES,
+            crate::settings::default_project_discovery_depth(),
+        );
+        assert_eq!(shallow_scan.found.len(), 2);
+        assert!(!shallow_scan.partial);
+        let mut store = empty_store();
+        let full = merge(&mut store, &root, scan(&root, DISCOVERY_MAX_ENTRIES, 3));
+        assert_eq!(full.repositories.len(), 3);
+        let all_ids = full
+            .repositories
             .iter()
-            .any(|warning| warning.contains("Nicht durchsucht:")));
+            .map(|repo| repo.id.clone())
+            .collect();
+        edit(
+            &mut store.workspaces[0],
+            full.revision,
+            Edit::Group {
+                repository_ids: all_ids,
+                name: "Custom group".into(),
+            },
+        )
+        .unwrap();
+        let original = serde_json::to_value(&store.workspaces[0]).unwrap();
+        let shallow = scoped_workspace(store.workspaces[0].clone(), 1);
+        assert_eq!(shallow.repositories.len(), 2);
+        assert_eq!(
+            shallow
+                .projects
+                .iter()
+                .find(|p| p.name == "Custom group")
+                .unwrap()
+                .repository_ids
+                .len(),
+            2
+        );
+        let context = agent_context(&shallow).unwrap();
+        assert!(!context.markdown.contains("external/reference"));
+        assert_eq!(
+            serde_json::to_value(&store.workspaces[0]).unwrap(),
+            original
+        );
+        let rescanned = merge(&mut store, &root, shallow_scan);
+        let wider = scoped_workspace(rescanned, 3);
+        let after = serde_json::to_value(wider).unwrap();
+        for key in ["id", "projects", "repositories"] {
+            assert_eq!(after[key], original[key], "lost persisted {key}");
+        }
     }
 
     #[test]
@@ -1778,7 +1853,7 @@ mod tests {
         assert_eq!(result.found.len(), 1);
         assert_eq!(result.found[0].path, child);
         assert!(scan(&root, 0, 6).partial);
-        assert!(scan(&root, 20000, 0).partial);
+        assert!(!scan(&root, 20000, 0).partial);
         let current = merge(&mut store, &root, scan(&root, 20000, 6));
         let tree = current
             .repositories

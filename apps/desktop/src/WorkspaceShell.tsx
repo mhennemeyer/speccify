@@ -94,6 +94,9 @@ function WorktreePane({ workspaceId, tree, repo, group, tab, visited, active, ch
   const revealOutput = useCallback((id: string) => { choose(); updateLayout({ rightShown: true, rightTab: `output:${id}` }); }, [choose, updateLayout]);
   const context = useMemo(() => ({ navigator: nav, inspector, reveal: () => updateLayout({ rightTab: "inspector" }) }), [nav, inspector, updateLayout]);
   const ownSpec = spec?.worktree_id === tree.id ? spec : null;
+  const [retainedSpec, setRetainedSpec] = useState<WorkspaceSpecEntry | null>(null);
+  useEffect(() => { if (ownSpec) setRetainedSpec(ownSpec); }, [ownSpec]);
+  const detailSpec = ownSpec ?? retainedSpec;
   const enabled = root !== null && error === null;
   useEffect(() => {
     let cancelled = false;
@@ -137,8 +140,8 @@ function WorktreePane({ workspaceId, tree, repo, group, tab, visited, active, ch
       {inspectorHost && createPortal(<section hidden={!active} aria-label={`Inspektor ${tree.path}`} inert={!enabled} className="h-full min-h-0">
         <p className="truncate border-b border-slate-200 px-4 py-2 text-[11px] text-slate-500" title={tree.path}>{group.name} / {repo.name} · {tree.relative_path}</p>
         {tabs.map(([id]) => <div key={id} ref={inspectorRefs[id]} data-workspace-inspector={id} className={tab === id ? "min-h-0" : "hidden"} />)}
-        {(ownSpec || createRequest > 0) && root && enabled && <div className={tab === "board" ? "contents" : "hidden"}>
-          <BoardTab project={root} detailFile={ownSpec?.spec.file} detailOnly refresh={totalRefresh} onMutated={changed} createRequest={createRequest} />
+        {(detailSpec || createRequest > 0) && root && enabled && <div className={tab === "board" && (ownSpec || createRequest > 0) ? "contents" : "hidden"}>
+          <BoardTab project={root} detailFile={detailSpec?.spec.file} detailOnly refresh={totalRefresh} onMutated={changed} createRequest={createRequest} />
         </div>}
         {tab === "board" && !ownSpec && <p className="p-3 text-xs text-slate-500">Eine Spec im gemeinsamen Board auswählen.</p>}
       </section>, inspectorHost)}
@@ -158,6 +161,7 @@ function WorktreePane({ workspaceId, tree, repo, group, tab, visited, active, ch
 export default function WorkspaceShell() {
   const [theme, setTheme] = useTheme();
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
+  const [retainedPanes, setRetainedPanes] = useState<Record<string, { tree: Tree; repo: Repository; group: Project }>>({});
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>("board");
   const [lastTab, setLastTab] = useState<Record<string, Tab>>({});
@@ -221,7 +225,21 @@ export default function WorkspaceShell() {
     void invoke<Workspace>("workspace_window_current").then(value => {
       if (cancelled) return;
       setWorkspace(value); setError(null);
-      setSelected(old => old || value.repositories.flatMap(repo => repo.worktrees).find(tree => tree.available)?.id || "");
+      setRetainedPanes(old => {
+        const next = { ...old };
+        for (const repo of value.repositories) {
+          const group = value.projects.find(group => group.repository_ids.includes(repo.id));
+          if (group) for (const tree of repo.worktrees) next[tree.id] = { tree, repo, group };
+        }
+        return next;
+      });
+      setSelected(old => {
+        const trees = value.repositories.flatMap(repo => repo.worktrees);
+        const next = trees.some(tree => tree.id === old) ? old : trees.find(tree => tree.available)?.id || "";
+        selectionRef.current = next;
+        return next;
+      });
+      setSpec(old => old && value.repositories.some(repo => repo.worktrees.some(tree => tree.id === old.worktree_id)) ? old : null);
     }).catch(e => { if (!cancelled) setError(String(e)); });
     return () => { cancelled = true; };
   }, [refresh]);
@@ -365,12 +383,12 @@ export default function WorkspaceShell() {
         </section>}
       </section>
     </div>
-    {workspace?.repositories.flatMap(repo => repo.worktrees.map(tree => {
-      const group = workspace.projects.find(group => group.repository_ids.includes(repo.id));
-      return group && <WorktreePane key={`${tree.id}:${tree.path}`} workspaceId={workspace.id} tree={tree} repo={repo} group={group} tab={tab} visited={visited}
-        active={selected === tree.id} choose={() => choose(tree.id)} mainHost={mainHost} inspectorHost={inspectorHost} refresh={refresh} spec={spec} changed={changed} boardSlot={boardSlot} navHost={groupSlots[group.id] ?? null}
+    {workspace && Object.values(retainedPanes).map(({ tree, repo, group }) => {
+      const visible = workspace.repositories.some(repo => repo.worktrees.some(entry => entry.id === tree.id));
+      return <WorktreePane key={`${tree.id}:${tree.path}`} workspaceId={workspace.id} tree={tree} repo={repo} group={group} tab={tab} visited={visited}
+        active={visible && selected === tree.id} choose={() => choose(tree.id)} mainHost={mainHost} inspectorHost={inspectorHost} refresh={refresh} spec={spec} changed={changed} boardSlot={boardSlot} navHost={visible ? groupSlots[group.id] ?? null : null}
         agentRoot={workspace.root} command={command} updateCommand={updateCommand} outputHost={outputHost} outputTabsHost={outputTabsHost} layout={layout} updateLayout={updateLayout} reportToolbar={reportToolbar} />;
-    }))}
+    })}
     {settingsOpen && <SettingsSheet theme={theme} onTheme={next => void setTheme(next)} layout={layout}
       onDock={dock => updateLayout(dock === "bottom" ? { terminalDock: dock, bottomShown: true, rightTab: "inspector" } : { terminalDock: dock, rightShown: true, rightTab: "terminal" })}
       toolbar={toolbarIds} toolbarChoices={toolbarChoices} onToolbar={ids => updateLayout({ toolbar: ids })}

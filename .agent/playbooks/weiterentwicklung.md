@@ -144,14 +144,18 @@ Durchgängige Herkunft in weiteren Bereichen folgt mit 026 (siehe unten), gemein
 Team-Identitätsbindung fehlt weiterhin. Die lokale Zuordnung ist kein Team-Register; 016
 bleibt der getrennte Sync-Pilot. Basis ist auch für itsdcloud und spätere Adapter erforderlich.
 
-**Team-Pilot itsdcloud, Spec 025:** Die Repo-Erkennung durchsucht jetzt 16 statt
-sechs Ebenen. Normale tiefe Source-/Dokumentationsstrukturen sollen keine
-scheinbare Fehlermeldung beim Einstieg erzeugen. Tatsächliche Suchgrenzen bleiben
-sichtbar, mit konkreten übersprungenen Pfaden und Hinweis auf nutzbare Projekte.
+**Projekt-Erkennung, Spec 040 (2026-09-15):** Globale Einstellung in Settings,
+1–16 Ebenen mit Standard **1** (Root und direkte Unterordner). Ersetzt den festen
+Standard 16 aus Spec 025. Tiefere Referenzklone werden bewusst ignoriert und
+erzeugen keine Tiefenwarnung. Gespeicherte Bindungen außerhalb der Tiefe werden
+in Navigation, Board und Startkontext ausgeblendet; IDs/Gruppen und bereits
+geöffnete Entwürfe bleiben für eine spätere höhere Tiefe erhalten. Nach Speichern
+Workspace aktualisieren, für zusätzliche Projekte erneut erkennen.
+Tatsächliche Budgetgrenzen und Lesefehler bleiben sichtbar.
 Die übrigen Budgets/Ausschlüsse bleiben bestehen; vollständige erneute Erkennung
 bereinigt alte Warnungen und erhält IDs, Namen und Gruppen. Keine Sonderbehandlung
 für itsdcloud und keine Projektdatei-Änderungen.
-Direkter nativer Scan am echten Pilotordner geprüft: drei Git-Repos, keine
+Historische Prüfung Spec 025: direkter nativer Scan am echten Pilotordner, drei Git-Repos, keine
 Warnung. Inzwischen zeigen Nutzerbild und gespeicherte Revision 3 denselben
 warnungsfreien Zustand. Die zusätzliche Board-Startkorrektur ist im lokalen
 026-Build enthalten; 025/Q1 ist damit beantwortet. Verzögertes Laden beim ersten

@@ -435,8 +435,8 @@
           { slug: "toolkit", title: "Toolkit", description: "Werkzeuge", source_path: "docs/toolkit.md" },
         ]),
         help_doc: () => "# Die App bedienen\n\nText.\n",
-        get_settings: () => ({ working_dir: null, terminal_autostart_command: "claude", skill_library: null, theme: "light", skill_sources: SOURCES.filter((s) => s.scope === "global").map((s) => s.location) }),
-        save_settings: () => null,
+        get_settings: () => ({ working_dir: null, terminal_autostart_command: "claude", skill_library: null, theme: "light", skill_sources: SOURCES.filter((s) => s.scope === "global").map((s) => s.location), project_discovery_depth: 1, ...JSON.parse(localStorage.getItem("speccify.test.settings") ?? "{}") }),
+        save_settings: ({ settings }) => { localStorage.setItem("speccify.test.settings", JSON.stringify(settings)); },
         // Spec 009: ?session=exact|missing|legacy|codex|host|reject seeds the session marker.
         terminal_open: (args) => {
           window.__SPECCIFY_MOCK__.terminalOpens.push(args);
