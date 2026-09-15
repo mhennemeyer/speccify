@@ -40,15 +40,28 @@ Workspace-Ansichten berücksichtigen die Grenze, ohne Projektdateien zu ändern.
 
 ## Tasks
 
-- [ ] Native Einstellung, Suchgrenze und gefilterte Workspace-Verträge implementieren.
-- [ ] Einstellung in der UI und Erhalt geöffneter Entwürfe umsetzen.
-- [ ] Regressionen, Typecheck und Rust-Prüfungen durchführen.
-- [ ] Dokumentation/Playbooks aktualisieren; lokale App aktualisieren und AVC prüfen.
+- [x] Native Einstellung, Suchgrenze und gefilterte Workspace-Verträge implementieren.
+- [x] Einstellung in der UI und Erhalt geöffneter Entwürfe umsetzen.
+- [x] Regressionen, Typecheck und Rust-Prüfungen durchführen.
+- [x] Dokumentation/Playbooks aktualisieren; lokale App aktualisieren und AVC prüfen.
 - [ ] Mit Nutzeridentität committen und synchronisieren.
 
 ## Verification
 
-Ausstehend.
+- `cargo test -p speccify-desktop`: 117 bestanden, 3 opt-in ignoriert.
+- `cargo fmt --check`, `pnpm --filter speccify-desktop typecheck`, `git diff --check`: grün.
+- `node scripts/test_workspace_depth.mjs`: Standard 1, Einstellung speichern/reload,
+  verschachteltes Projekt 3 → 1 → 3 mit erhaltenem Commit-Entwurf.
+- `node scripts/test_workspace_shell.mjs`, `node scripts/test_workspace_ui.mjs`: grün.
+- Gebündelte lokale App aktualisiert, vier Fenster wiederhergestellt; PID 93486,
+  UI-Port 18768, QA-Port 18769, kein Vite auf 1420. Signatur außerhalb der
+  Ausführungssandbox mit `codesign --verify --deep --strict --verbose=4` gültig.
+- Native QA-Brücke: AVC zeigt bei 1 genau Root-Kontext, billi-ci, billi-legacy,
+  rekas. Bei 3 erscheinen beide externen billi-legacy-Klone mit denselben IDs.
+  Abschließend 1 gespeichert und erneut erkannt: keine Warnung, Board und
+  Startkontext ohne externe Klone. Projekte und Bindungen im Store unverändert.
+- Native Bildschirmaufnahme scheiterte am macOS-Aufnahme-Rechteck; sichtbare
+  Gruppen wurden stattdessen im DOM der laufenden App geprüft.
 
 ## Questions
 
