@@ -122,6 +122,9 @@ und keine Änderung fremder Projekte als Testnebenwirkung.
   vollständiger Lauf mit Freigabe bestanden. Nach Ergänzung der Runtime-Notiz
   nochmals `pytest tests/test_terminal_workflow.py`: **3 bestanden**.
   `ruff check .`, `ruff format --check .` grün.
+  `mypy core/src cli/src` grün (35 Quelldateien), Markdown-Links und Codezäune
+  der geänderten Dokumente geprüft. Ohne QA-Konfiguration werden beide nativen
+  Tests sauber übersprungen (Exit 0), nicht als bestanden ausgewiesen.
 - Core-/CLI-/MCP-Lauf: echtes `init → add → expand`; Host-Skill-Links erreichbar,
   relative Tool-Links korrekt. Fehlende Implementierung → missing; absichtlich
   falsche Großschreibung → Exit 1, konkrete `$.upper`-Abweichung; Reparatur →
@@ -155,6 +158,9 @@ und keine Änderung fremder Projekte als Testnebenwirkung.
 - Testgrenze: inaktive WKWebViews können `requestAnimationFrame` zurückstellen.
   Deshalb vor Terminal-Abnahme QA-`/focus`; Erreichbarkeit allein reicht nicht.
   UI-Vorprüfung und Bundle wurden in diesem Schnitt nicht optisch abgenommen.
+- Abschluss: Testfenster geschlossen, lokale App PID 39910 auf 18768 ohne
+  Entwicklungs-Watcher weiter geöffnet; Dashboard, drei bisherige Projektfenster
+  und itsdcloud-Workspace erhalten. Testdateien bleiben lokal für Nachprüfung.
 
 ### Pflichtmatrix und Rest
 
