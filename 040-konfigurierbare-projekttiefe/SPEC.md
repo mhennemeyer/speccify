@@ -1,5 +1,5 @@
 ---
-station: Doing
+station: Done
 order: 40
 needs_human: true
 ready: true
@@ -29,6 +29,9 @@ Workspace-Ansichten berücksichtigen die Grenze, ohne Projektdateien zu ändern.
 - Dateien, Board und Kontext verwenden denselben sichtbaren Projektumfang.
 
 ## Decisions
+
+4. 2026-09-15: Nutzerabnahme im Chat: „Sieht soweit gut aus.“ Anschließend
+   Veröffentlichung mit neuem Release und Website-/Doku-Aktualisierung beauftragt.
 
 1. 2026-09-15: Nutzerauftrag ersetzt den festen Standard aus Spec 025. Die Tiefe
    zählt vom geöffneten Root aus; dessen eigener Projektkontext bleibt erhalten.
