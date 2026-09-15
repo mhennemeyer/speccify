@@ -89,6 +89,16 @@ terminal position are remembered per project across restarts.
 Keyboard: ⌘1–⌘5 switch areas, ⌘0 / ⌥⌘0 / ⇧⌘Y toggle navigator,
 inspector, and terminal (Ctrl on Windows).
 
+## Hand a task to the terminal
+
+Select a spec, skill, tool or playbook and choose **Auftrag…**. The handover
+sheet names the project, lets you describe the task and choose its context,
+then shows the text before delivery. You can copy it or send it to the project's
+terminal, then press Enter there to submit it. Host permissions still apply.
+A warning on a newly started terminal reminds you to wait for the host's input
+prompt and handle any trust dialog before pasting. Speccify does not detect
+whether the terminal host is ready to receive the task.
+
 ## Where to go next
 
 - **[Files & Git](/app/files-and-git/)** — the project tree, a code

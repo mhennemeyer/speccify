@@ -29,14 +29,14 @@ const features = [
   {
     id: "specs", label: "Specs & acceptance", eyebrow: "03 / Work you can follow", title: "A visible path from intent to review.",
     intro: "Keep the request, tasks, decisions and verification in one spec. The board makes that file-based workflow visible without making the app the only way to use it.",
-    points: ["Move specs through Backlog, Doing and Done; mark work ready for human acceptance.", "Search the complete spec list and filter by parent spec or work that needs you.", "Review Markdown, check tasks, answer open questions and inspect history.", "Copy spec context as a prompt. Recorded runs can show token and duration totals when those measurements exist."],
+    points: ["Move specs through Backlog, Doing and Done; mark work ready for human acceptance. Finished specs stay in place.", "Share the spec register on its own Git branch; see owners, working branches and changes from teammates.", "Review Markdown, check tasks, answer open questions and inspect history.", "Preview a task handover with its selected context before sending it to the terminal. Recorded runs can show token and duration totals when those measurements exist."],
     image: board, alt: "Spec board with Backlog, Doing and Done, a selected search spec's tasks and a project terminal",
     caption: "Six specs, one selected task list, a terminal in context · Demo project", href: "/app/specs/", link: "Explore the spec workflow",
   },
   {
     id: "workspaces", label: "Workspaces", eyebrow: "04 / Several repositories, one place", title: "Open the folder. The app sorts out the rest.",
     intro: "Products rarely live in one repository. Open the parent folder: Speccify finds the repositories inside, groups them into projects and shows their specs on one board — while every repository keeps its own files, Git and terminal target.",
-    points: ["Open a single folder: a Git repository opens as a project, a folder of repositories as a workspace.", "Group repositories into named projects. Grouping is local metadata; the repositories stay untouched.", "Follow every spec on one shared board, filter by project, and edit each spec in its own repository.", "Start one agent in the parent folder with a structure summary — on your click, never automatically. Files, Git and actions stay bound to their repository."],
+    points: ["Open a single folder: a Git repository opens as a project, a folder of repositories as a workspace.", "Discover direct child projects by default. Set discovery depth from 1 to 16 in Settings when you need nested repositories.", "Group repositories into named projects and follow their specs on one board. Grouping stays local; each spec is edited in its own repository.", "Start one agent in the parent folder with a structure summary — on your click, never automatically. Files, Git, actions and drafts keep their repository targets."],
     image: workspace, alt: "Workspace window with three repositories grouped into two projects in the navigator, a shared spec board and the selected spec's tasks in the inspector",
     caption: "Three repositories, one board · Demo workspace", href: "/app/workspaces/", link: "How workspaces work",
   },
@@ -102,7 +102,7 @@ const features = [
     ))}
     <section class="py-16 text-center">
       <h2 class="text-3xl font-bold">Bring your next project.</h2>
-      <p class="mx-auto mb-6 mt-4 max-w-xl text-slate-400">Start with the local workflow. Shared team boards and new integrations are still being developed — they are not included in this feature tour.</p>
+      <p class="mx-auto mb-6 mt-4 max-w-xl text-slate-400">Start with a local project or workspace. Teams can share specs through Git and run the separate <a href="/web-board/" class="text-sky-300 underline underline-offset-4">self-hosted web board</a>.</p>
       <a href="/download/" class="inline-block rounded-md bg-sky-500 px-6 py-3 font-medium text-white hover:bg-sky-400">Download Speccify</a>
     </section>
   </main>

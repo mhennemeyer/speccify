@@ -4,7 +4,8 @@ description: Website positioning, feature order and repeatable product screensho
 # Website: show what makes Speccify different
 
 Living playbook for `apps/marketing/`. Product direction: [Weiterentwicklung](weiterentwicklung.md).
-Current work and verification: [Spec 023](../specs/023-landingpage-app-screenshots/SPEC.md).
+Current release work: [Spec 041](../specs/041-release-070-website/SPEC.md).
+Initial visual direction: [Spec 023](../specs/023-landingpage-app-screenshots/SPEC.md).
 
 ## Editorial decision · 2026-09-11
 
@@ -59,8 +60,8 @@ not part of screenshot production.
 - `components/AppScreenshot.astro`: intrinsic dimensions, responsive WebP,
   first image eager/high, later images lazy; full-size links work without JS.
 - Originals in `src/assets/landing/`: board, skills, tools, playbooks, mcps,
-  actions, files, git, workspace. Keep existing documentation images in
-  `assets/app/` separate. `workspace.png` is also embedded by `/app/workspaces/`.
+  actions, files, git, workspace, discovery-settings. Keep existing documentation images in
+  `assets/app/` separate. `/app/workspaces/` embeds the workspace and discovery-settings images.
 - Public fixture: `apps/desktop/dev/marketing-fixture.js`, selected only by
   `dev/mock.html?marketing=1`. Fictional OrbitNotes, no personal files or sessions.
   The workspace motif adds `&workspaces=1&workspace-shell=1`: `workspace-fixture.js`
@@ -117,7 +118,18 @@ asked for the documentation update and a new release (0.7.0). The 0.7.0
 documentation pass adds the Workspaces group (`/features/#workspaces`), the
 `/app/workspaces/` chapter, "Opening a folder" in `/app/overview/`, and Git
 documentation matching Spec 021. Publication happens with the push to `main`
-that carries the version bump; the release tag remains the owner's action.
+that carries the version bump. On 2026-09-15 the user explicitly requested
+publication: Spec 041 completes the prepared 0.7.0 release, including its tag.
+
+0.7.0 refresh (2026-09-15): discovery defaults to 1, configurable to 16 in
+Settings. The workspace chapter illustrates that setting and explains hidden
+saved bindings. Features now includes the shared spec register; the separate
+self-hosted web board is linked from the closing section. The landing page
+links the 0.7.0 release notes. Download assets distinguish Linux x86_64/arm64;
+signing flags are independent (`PUBLIC_MACOS_RELEASE_SIGNED` and
+`PUBLIC_WINDOWS_RELEASE_SIGNED`). macOS signing must not suppress Windows warnings.
+The workspace capture uses the same 240/320 px panels as the project captures
+and scrolls each board column to its top so all headings are visible.
 
 Next review: does the skill image communicate reuse clearly? Is the full-width
 lead on Features worth the space? Are any details too small at the two-column size?

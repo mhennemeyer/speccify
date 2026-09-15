@@ -451,7 +451,11 @@ erhaltenem Commit-Entwurf bestanden. Lokaler signierter Build ohne Watcher geöf
 vier bisherige Fenster wiederhergestellt. AVC nativ: Tiefe 1 zeigt Root-Kontext und
 die drei Hauptrepos; Tiefe 3 zusätzlich die zwei externen Referenzklone mit bisherigen
 IDs. Board/Kontext bei 1 gefiltert, gespeicherte Gruppen/Bindungen byte-inhaltlich
-unverändert; Einstellung abschließend 1. Menschliche Abnahme offen.
+unverändert; Einstellung abschließend 1. Nutzerabnahme am 2026-09-15.
+
+Release-/Website-Pflege in Spec 041: 0.7.0 abschließen, zehn öffentliche
+Demo-Aufnahmen mit neuer Tiefeneinstellung, Workspace-/Übergabe-Doku,
+Release-Notizen und getrennte Plattformhinweise auf der Downloadseite.
 
 ### Gemeinsames Workspace-Arbeitsfenster (026)
 

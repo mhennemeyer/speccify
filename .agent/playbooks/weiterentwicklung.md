@@ -144,7 +144,7 @@ Durchgängige Herkunft in weiteren Bereichen folgt mit 026 (siehe unten), gemein
 Team-Identitätsbindung fehlt weiterhin. Die lokale Zuordnung ist kein Team-Register; 016
 bleibt der getrennte Sync-Pilot. Basis ist auch für itsdcloud und spätere Adapter erforderlich.
 
-**Projekt-Erkennung, Spec 040 (2026-09-15):** Globale Einstellung in Settings,
+**Projekt-Erkennung, Spec 040 (abgenommen 2026-09-15):** Globale Einstellung in Settings,
 1–16 Ebenen mit Standard **1** (Root und direkte Unterordner). Ersetzt den festen
 Standard 16 aus Spec 025. Tiefere Referenzklone werden bewusst ignoriert und
 erzeugen keine Tiefenwarnung. Gespeicherte Bindungen außerhalb der Tiefe werden
@@ -152,6 +152,9 @@ in Navigation, Board und Startkontext ausgeblendet; IDs/Gruppen und bereits
 geöffnete Entwürfe bleiben für eine spätere höhere Tiefe erhalten. Nach Speichern
 Workspace aktualisieren, für zusätzliche Projekte erneut erkennen.
 Tatsächliche Budgetgrenzen und Lesefehler bleiben sichtbar.
+Spec 041 bündelt diesen Stand im vorbereiteten Release 0.7.0 und aktualisiert
+Website, öffentliche Demo-Bilder, Downloadhinweise und Dokumentation. Tag und
+Veröffentlichung sind mit dem Nutzerauftrag vom 2026-09-15 freigegeben.
 Die übrigen Budgets/Ausschlüsse bleiben bestehen; vollständige erneute Erkennung
 bereinigt alte Warnungen und erhält IDs, Namen und Gruppen. Keine Sonderbehandlung
 für itsdcloud und keine Projektdatei-Änderungen.

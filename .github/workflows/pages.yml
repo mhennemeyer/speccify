@@ -92,13 +92,12 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # PUBLIC_RELEASE_SIGNED is a repository *variable* (not a secret): set it
-      # to "true" once the releases are actually signed and notarized, and the
-      # download page drops its Gatekeeper/SmartScreen warning boxes. Unset or
-      # anything else means the honest default: warn.
+      # Signing status is independent per platform; macOS notarization does
+      # not establish Windows code signing. Unset values keep the warning.
       - name: Build
         env:
-          PUBLIC_RELEASE_SIGNED: ${{ vars.PUBLIC_RELEASE_SIGNED }}
+          PUBLIC_MACOS_RELEASE_SIGNED: ${{ vars.PUBLIC_MACOS_RELEASE_SIGNED }}
+          PUBLIC_WINDOWS_RELEASE_SIGNED: ${{ vars.PUBLIC_WINDOWS_RELEASE_SIGNED }}
         run: pnpm --filter speccify-marketing build
 
       - name: Upload artifact

@@ -27,15 +27,42 @@ it. The app looks at the folder before anything is stored:
   opens the shared workspace window described here.
 - **Anything else** — a plain folder — opens as a simple project.
 
-Discovery is bounded and read-only: 16 levels deep, no symlinks, no
+Discovery is bounded and read-only: **one level below the opened folder by default**, no symlinks, no
 dependency or build folders, no Git commands, no files written into
 your repositories. It recognizes `.git` folders, `.git` pointer files
 and linked worktrees, and Speccify markers such as `speccify.yaml` or
-`.agent/agent.md`. If a limit stops the scan, the workspace says which
-folders it skipped; open those separately if you need them.
+`.agent/agent.md`. Budget limits and read errors are reported separately.
 
 Recently opened projects stay listed under the entry. An invalid path
 opens nothing and stores nothing.
+
+## Choose the discovery depth
+
+In the dashboard, open **Settings → Projekt-Erkennungstiefe** (project
+discovery depth), choose **1–16** and save. This setting applies to all workspaces.
+The opened folder is depth 0; its direct children are depth 1.
+
+```text
+Projects/                          depth 0 · opened folder
+├── app/                           depth 1 · discovered by default
+│   └── external/
+│       └── reference/              depth 3 · requires depth 3
+└── website/                       depth 1 · discovered by default
+```
+
+![Dashboard Settings showing project discovery depth set to its default value of 1](../../../assets/landing/discovery-settings.png)
+
+After saving, click **Aktualisieren** in an open workspace. To find additional
+repositories, use **Erneut erkennen** in the dashboard's saved workspace section.
+Repositories beyond the selected depth are ignored without a depth warning.
+Previously discovered entries are hidden from the navigator, shared board and
+the next terminal's context. Their names, IDs and groups remain saved and return
+when you increase the depth. Open editor drafts and running actions keep their
+original targets while hidden; no repository files are deleted.
+
+An opened folder with its own Speccify guidance can still appear as a root
+project alongside its child repositories. Separate clones with the same name are
+separate repositories; linked Git worktrees share one repository identity.
 
 ## Saved workspaces
 

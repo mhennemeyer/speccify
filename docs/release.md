@@ -168,9 +168,11 @@ Download-Seite.
   ```
 
   Beim ersten Release (v0.4.0, 2026-09-05) so gelöst.
-- **Website umschalten**: `gh variable set PUBLIC_RELEASE_SIGNED --body true`
-  — die Download-Seite lässt die Gatekeeper/SmartScreen-Warnboxen weg
-  (greift beim nächsten Pages-Deploy).
+- **Website je Plattform umschalten**: nach verifiziertem macOS-Release
+  `gh variable set PUBLIC_MACOS_RELEASE_SIGNED --body true`; Windows separat
+  über `PUBLIC_WINDOWS_RELEASE_SIGNED` erst nach verifizierter Codesignatur.
+  Die Download-Seite lässt nur die jeweilige Warnbox weg (nächster Pages-Deploy).
+  Ein signierter Mac-Build sagt nichts über die Windows-Signatur aus.
 - **Release-Text**: Der Release-Body in `release.yml` erklärt derzeit die
   Warnungen unsignierter Builds — nach dem ersten signierten Release die
   Absätze dort entfernen (und im Draft-Release vor dem Veröffentlichen

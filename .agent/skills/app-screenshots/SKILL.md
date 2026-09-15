@@ -23,7 +23,9 @@ controls or use the user's live projects, terminal sessions, or filesystem data.
   Review font/rendering changes when switching browser or OS; published captures
   should be produced on macOS. The script requires macOS rather than disguising another OS.
 - Outputs in `apps/marketing/src/assets/landing/`: `board.png`, `skills.png`,
-  `tools.png`, `playbooks.png`, `mcps.png`, `actions.png`, `files.png`, `git.png`. Keep the
+  `tools.png`, `playbooks.png`, `mcps.png`, `actions.png`, `files.png`, `git.png`,
+  `workspace.png`, `discovery-settings.png`. The last image shows dashboard Settings
+  with project discovery depth 1; the workspace image uses the public grouped repos. Keep the
   existing documentation images under `assets/app/` untouched. Native title-bar
   decorations are not part of these images; website framing is presentation only.
   Astro delivers responsive WebP variants. Do not manually edit the bitmaps.

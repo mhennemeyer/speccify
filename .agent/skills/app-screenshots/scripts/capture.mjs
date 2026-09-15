@@ -38,10 +38,12 @@ try {
   });
   const project = "/Users/demo/Projects/OrbitNotes";
   await context.addInitScript(project => {
-    localStorage.setItem(`speccify.project.layout:${project}`, JSON.stringify({
+    const layout = JSON.stringify({
       navWidth: 240, navShown: true, rightWidth: 320, rightShown: true, rightTab: "inspector",
       bottomHeight: 210, bottomShown: true, terminalDock: "bottom", resumeAgent: false,
-    }));
+    });
+    localStorage.setItem(`speccify.project.layout:${project}`, layout);
+    localStorage.setItem("speccify.project.layout:workspace:workspace-orbit", layout);
     localStorage.setItem("speccify.theme", "dark");
   }, project);
   const page = await context.newPage();
@@ -134,7 +136,12 @@ try {
   await page.keyboard.press("Meta+Shift+Y");
   await page.getByRole("region", { name: "Agent-Terminal", exact: true }).waitFor({ state: "hidden" });
   assert.equal(await page.getByRole("region", { name: `Terminal /Users/demo/Projects`, exact: true }).count(), 0, "workspace opens no terminal by itself");
+  await page.locator('[aria-label^="Workspace-Spalte "]').evaluateAll(columns => columns.forEach(column => { column.scrollTop = 0; }));
   await capture("workspace");
+  await page.goto(`${address}dev/mock.html?marketing=1&dashboard=1`);
+  await page.getByRole("button", { name: "Settings", exact: true }).click();
+  assert.equal(await page.getByLabel("Projekt-Erkennungstiefe", { exact: true }).inputValue(), "1");
+  await capture("discovery-settings");
   assert.deepEqual(errors, []);
   await mkdir(output, { recursive: true });
   for (const [name, buffer] of captures) await writeFile(new URL(`${name}.png`, output), buffer);

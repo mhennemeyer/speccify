@@ -47,7 +47,8 @@ Neither blocks a launch, and the first is visible on the site as "not yet":
       the exact names. Until then the release is unsigned, and the download
       page says so plainly instead of letting people meet "Speccify is damaged"
       with no explanation. Set the repository variable
-      `PUBLIC_RELEASE_SIGNED=true` once signing is live to drop that notice.
+      `PUBLIC_MACOS_RELEASE_SIGNED=true` after macOS signing/notarization is
+      verified; `PUBLIC_WINDOWS_RELEASE_SIGNED=true` separately for Windows.
 - [ ] **Updater key.**
       `pnpm --filter speccify-desktop tauri signer generate -w ~/.speccify/updater.key`,
       then the private key as the secret `TAURI_SIGNING_PRIVATE_KEY` and the
