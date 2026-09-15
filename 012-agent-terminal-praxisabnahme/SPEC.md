@@ -1,5 +1,5 @@
 ---
-station: Backlog
+station: Doing
 order: 6
 created: 2026-09-10
 needs_human: true
@@ -61,6 +61,16 @@ und keine Änderung fremder Projekte als Testnebenwirkung.
 - D3 (2026-09-10): Host-Aufrufe können laufende Authentifizierung benötigen.
   Fehlende Zugangsdaten werden als konkrete Voraussetzung dokumentiert;
   ein Mock ersetzt diesen Nachweis nicht.
+- D4 (2026-09-15): Fortsetzungsauftrag nach Playbooks und Backlog-Reihenfolge;
+  Arbeit auf `main`, Ausgangscommit `9b08fba`. Zunächst der lokale macOS-Schnitt.
+  Zweiter Mac und Windows bleiben eigenständige, unbelegte Matrixfelder.
+- D5 (2026-09-15): Automatisierbare native Abläufe laufen nach Spec 039 über
+  die QA-Brücke. Das Fixture und Core-/CLI-/MCP-Regressionsprüfungen liegen
+  in diesem Repo; die vorhandenen Adapter aus `speccify-qa` werden für den
+  nativen Lauf wiederverwendet. Keine Änderung fremder Produktprojekte.
+- D6 (2026-09-15): Watcher-Abnahme ohne manuelles Neuladen, mit zehn Sekunden
+  äußerer Testfrist und gemessener tatsächlicher Dauer. `terminalReady`
+  belegt ein offenes PTY, keine Bereitschaft oder Anmeldung des Hosts.
 
 ## Tasks
 
