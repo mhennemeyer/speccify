@@ -2,7 +2,7 @@
 station: Doing
 order: 40
 needs_human: true
-ready: false
+ready: true
 ---
 
 # Konfigurierbare Projekt-Erkennungstiefe
@@ -44,7 +44,7 @@ Workspace-Ansichten berücksichtigen die Grenze, ohne Projektdateien zu ändern.
 - [x] Einstellung in der UI und Erhalt geöffneter Entwürfe umsetzen.
 - [x] Regressionen, Typecheck und Rust-Prüfungen durchführen.
 - [x] Dokumentation/Playbooks aktualisieren; lokale App aktualisieren und AVC prüfen.
-- [ ] Mit Nutzeridentität committen und synchronisieren.
+- [x] Mit Nutzeridentität committen und synchronisieren.
 
 ## Verification
 
@@ -62,6 +62,9 @@ Workspace-Ansichten berücksichtigen die Grenze, ohne Projektdateien zu ändern.
   Startkontext ohne externe Klone. Projekte und Bindungen im Store unverändert.
 - Native Bildschirmaufnahme scheiterte am macOS-Aufnahme-Rechteck; sichtbare
   Gruppen wurden stattdessen im DOM der laufenden App geprüft.
+- Commit `5c30726` auf `main`, Autor und Committer Matthias Hennemeyer
+  <mhennemeyer@me.com>; `git pull --ff-only origin main` aktuell,
+  anschließend `git push origin main` erfolgreich.
 
 ## Questions
 
