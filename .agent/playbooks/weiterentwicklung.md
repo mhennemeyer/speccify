@@ -538,6 +538,14 @@ frei editierbare Kopie, kein pauschaler `.agent`-Merge, kein Force-Push, PR offe
 ≠ Done. Was sich ändert: Ort des Registers (Branch statt Repo) und dadurch die
 Einrichtung (ein Knopf, `git worktree add`, keine Remote-Wahl).
 
+**AVC-Team-Pilot, 2026-09-15 (Spec 042):** Das Workspace-Board zeigt die
+bestehende Register-Bedienung pro verfügbarem Worktree. Repositoryname und Pfad
+stehen direkt bei Einrichtung, Einhängen, Sync und Konfliktentscheidung.
+Ausgeblendete oder nicht verfügbare Ziele bieten dort keine Schreibaktion.
+AVC selbst ist ein Parent-Ordner ohne Git; die Register gehören billi-ci und
+rekas. Deren Migration wird einzeln im vorhandenen Dialog bestätigt, nicht
+durch das Öffnen des Workspace ausgelöst. Die lokale Gruppierung bleibt separat.
+
 **Wer arbeitet woran, in welchem Branch:** die Spec sagt es selbst. `owner`
 (Git-Identität der Person, `user.name`/`user.email` des Checkouts) und `branch`
 (Konvention `spec/<NNN>-<slug>`, in Workspaces je Repo) werden beim Übernehmen

@@ -35,8 +35,14 @@ export interface RegisterStatus {
 export default function RegisterBar({
   project,
   onStatus,
+  contextLabel,
+  refresh = 0,
+  onChanged,
 }: {
   project: string;
+  contextLabel?: string;
+  refresh?: number;
+  onChanged?: () => void;
   /** Konflikt-Specs u. a. fürs Board. */
   onStatus?: (status: RegisterStatus) => void;
 }) {
@@ -45,6 +51,7 @@ export default function RegisterBar({
   const [error, setError] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
   const [webhookError, setWebhookError] = useState<string | null>(null);
+  const [retry, setRetry] = useState(0);
   useEffect(() => {
     const unlisten = listen<string>("webhook-error", (event) => setWebhookError(event.payload));
     return () => { void unlisten.then((dispose) => dispose()); };
@@ -57,6 +64,7 @@ export default function RegisterBar({
 
   useEffect(() => {
     let disposed = false;
+    setError(null);
     void invoke<RegisterStatus>("project_register_status", { project })
       .then((next) => {
         if (!disposed) apply(next);
@@ -65,14 +73,14 @@ export default function RegisterBar({
         if (!disposed) setError(String(e));
       });
     const unlisten = listen<{ project: string; status: RegisterStatus }>("register-changed", (event) => {
-      if (event.payload.project === project) apply(event.payload.status);
+      if (!disposed && event.payload.project === project) apply(event.payload.status);
     });
     return () => {
       disposed = true;
       void unlisten.then((dispose) => dispose());
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [project]);
+  }, [project, refresh, retry]);
 
   const run = async (label: string, command: string, args: Record<string, unknown> = {}) => {
     setBusy(label);
@@ -82,6 +90,7 @@ export default function RegisterBar({
         invoke<RegisterStatus>(command, { project, ...args }),
       );
       apply(next);
+      onChanged?.();
     } catch (e) {
       setError(String(e));
     } finally {
@@ -89,7 +98,17 @@ export default function RegisterBar({
     }
   };
 
-  if (!status || status.mode === "none") return null;
+  const context = contextLabel ? <p className="mb-2 min-w-0 text-xs">
+    <strong className="block break-words">{contextLabel}</strong>
+    <span className="block break-all font-mono text-[10px]">{project}</span>
+  </p> : null;
+
+  if (!status || status.mode === "none") return error ? (
+    <div role="alert" data-register="error" className="mb-3 rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-900">
+      {context}<p>Register-Status konnte nicht geladen werden: {error}</p>
+      <button className="mt-2 underline" onClick={() => setRetry(value => value + 1)}>Erneut prüfen</button>
+    </div>
+  ) : null;
 
   const button = "rounded bg-slate-800 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-700 disabled:opacity-50";
   const quiet = "rounded border border-slate-300 px-2.5 py-1 text-xs text-slate-700 hover:bg-slate-100 disabled:opacity-50";
@@ -97,8 +116,9 @@ export default function RegisterBar({
   if (status.mode === "migratable" || status.mode === "detached") {
     return (
       <div className="mb-3 rounded-lg border border-sky-200 bg-sky-50 px-4 py-3 text-xs text-sky-900" data-register={status.mode}>
-        <div className="flex items-start justify-between gap-4">
-          <div>
+        {context}
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0 flex-1 basis-64">
             <p className="font-semibold">
               {status.mode === "migratable"
                 ? "Specs als gemeinsames Team-Register führen?"
@@ -116,7 +136,8 @@ export default function RegisterBar({
             ) : null}
             {error ? <p className="mt-1 text-red-700">{error}</p> : null}
           </div>
-          <div className="flex shrink-0 gap-2">
+          <div className="flex shrink-0 flex-wrap gap-2">
+            {confirming && !busy && <button className={quiet} onClick={() => setConfirming(false)}>Abbrechen</button>}
             {status.mode === "migratable" && !confirming ? (
               <button className={button} onClick={() => setConfirming(true)}>
                 Register einrichten…
@@ -139,8 +160,10 @@ export default function RegisterBar({
   if (status.mode === "blocked") {
     return (
       <div className="mb-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-900" data-register="blocked">
+        {context}
         <p className="font-semibold">Spec-Register blockiert.</p>
         <p className="mt-1">{status.reason}</p>
+        {error && <p className="mt-1">{error}</p>}
       </div>
     );
   }
@@ -154,6 +177,7 @@ export default function RegisterBar({
 
   return (
     <div className="mb-3 text-xs" data-register="mounted" data-register-state={status.rebasing ? "conflict" : "ok"}>
+      {context}
       <div className="flex flex-wrap items-center gap-2 text-slate-600">
         <span className="font-semibold text-slate-700">Register <code>{status.branch}</code></span>
         <span aria-label="Register-Stand">· {parts.join(" · ")}</span>

@@ -29,6 +29,7 @@ import ActionsTab, { type ActionOutputTab } from "./views/project/ActionsTab";
 import McpsTab from "./views/project/McpsTab";
 import AgentTab from "./views/project/AgentTab";
 import BoardTab from "./views/project/BoardTab";
+import RegisterBar from "./views/project/RegisterBar";
 import WorkspaceBoardView, { type WorkspaceSpecEntry } from "./views/WorkspaceBoardView";
 
 interface Tree { id: string; path: string; relative_path: string; available: boolean }
@@ -42,9 +43,10 @@ interface PaneToolbar { ready: boolean; actions: ToolbarAction[] }
 const button = "rounded border border-slate-300 px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-100 disabled:opacity-40";
 
 /** One immutable target per pane. Hiding never remounts editors or processes. */
-function WorktreePane({ workspaceId, tree, repo, group, tab, visited, active, choose, mainHost, inspectorHost, refresh, spec, changed, boardSlot, navHost, agentRoot, command, updateCommand, outputHost, outputTabsHost, layout, updateLayout, reportToolbar }: {
+function WorktreePane({ workspaceId, tree, repo, group, tab, visited, active, choose, mainHost, registerHost, inspectorHost, refresh, spec, changed, boardSlot, navHost, agentRoot, command, updateCommand, outputHost, outputTabsHost, layout, updateLayout, reportToolbar }: {
   workspaceId: string; tree: Tree; repo: Repository; group: Project; tab: Tab; visited: Tab[];
   active: boolean; choose: () => void; mainHost: HTMLElement | null; inspectorHost: HTMLElement | null;
+  registerHost: HTMLElement | null;
   refresh: number; spec: WorkspaceSpecEntry | null; changed: () => void;
   boardSlot: (id: string, node: HTMLElement | null) => void;
   navHost: HTMLElement | null;
@@ -109,6 +111,10 @@ function WorktreePane({ workspaceId, tree, repo, group, tab, visited, active, ch
   return <ProjectActivity.Provider value={active && enabled}>
     <PanelsContext.Provider value={context}>
       <div onClickCapture={choose} onFocusCapture={choose}>
+      {registerHost && root && enabled && tree.available && createPortal(
+        <section aria-label={`Team-Register ${tree.path}`} data-register-project={tree.path}>
+          <RegisterBar project={root} contextLabel={repo.name} refresh={totalRefresh} onChanged={changed} />
+        </section>, registerHost)}
       {navHost && createPortal(<section aria-label={`Projektbereich ${group.name} / ${repo.name} / ${tree.relative_path}`} data-worktree-id={tree.id}
         onClickCapture={choose} onFocusCapture={choose} className="mb-2 min-w-0">
         <button aria-pressed={active} onClick={choose} data-tone="blue" className={`w-full rounded px-2 py-1 text-left text-xs ${active ? "tone-surface" : "text-slate-700 hover:bg-slate-100"}`}>
@@ -169,6 +175,7 @@ export default function WorkspaceShell() {
   const [selected, setSelected] = useState("");
   const selectionRef = useRef("");
   const [mainHost, setMainHost] = useState<HTMLDivElement | null>(null);
+  const [registerHost, setRegisterHost] = useState<HTMLDivElement | null>(null);
   const [inspectorHost, setInspectorHost] = useState<HTMLElement | null>(null);
   const [outputHost, setOutputHost] = useState<HTMLDivElement | null>(null);
   const [outputTabsHost, setOutputTabsHost] = useState<HTMLDivElement | null>(null);
@@ -349,8 +356,11 @@ export default function WorkspaceShell() {
         <p aria-label="Aktives Projektziel" className="mb-3 truncate text-[11px] text-slate-500" title={target?.path}>
           {tab === "board" ? "Gemeinsames Board" : "Aktives Ziel"} · {target?.path ?? "Kein verfügbares Projekt"}
         </p>
-        <div className={tab === "board" ? "min-h-0 flex-1 overflow-auto" : "hidden"}>
+        <div className={tab === "board" ? "flex min-h-0 flex-1 flex-col" : "hidden"}>
+          <div ref={setRegisterHost} aria-label="Team-Register im Workspace" className="max-h-[40%] shrink-0 overflow-y-auto" />
+          <div className="min-h-0 flex-1 overflow-auto">
           {workspace && <WorkspaceBoardView workspaceId={workspace.id} revision={workspace.revision} refresh={boardRefresh} onSelect={selectSpec} listSlots={boardSlots} />}
+          </div>
         </div>
         <div className={tab === "help" ? "min-h-0 flex-1" : "hidden"}>{visited.includes("help") && <HelpView />}</div>
         <div ref={setMainHost} className={tab === "board" || tab === "help" ? "hidden" : "min-h-0 flex-1 overflow-auto"} />
@@ -386,7 +396,7 @@ export default function WorkspaceShell() {
     {workspace && Object.values(retainedPanes).map(({ tree, repo, group }) => {
       const visible = workspace.repositories.some(repo => repo.worktrees.some(entry => entry.id === tree.id));
       return <WorktreePane key={`${tree.id}:${tree.path}`} workspaceId={workspace.id} tree={tree} repo={repo} group={group} tab={tab} visited={visited}
-        active={visible && selected === tree.id} choose={() => choose(tree.id)} mainHost={mainHost} inspectorHost={inspectorHost} refresh={refresh} spec={spec} changed={changed} boardSlot={boardSlot} navHost={visible ? groupSlots[group.id] ?? null : null}
+        active={visible && selected === tree.id} choose={() => choose(tree.id)} mainHost={mainHost} registerHost={visible ? registerHost : null} inspectorHost={inspectorHost} refresh={refresh} spec={spec} changed={changed} boardSlot={boardSlot} navHost={visible ? groupSlots[group.id] ?? null : null}
         agentRoot={workspace.root} command={command} updateCommand={updateCommand} outputHost={outputHost} outputTabsHost={outputTabsHost} layout={layout} updateLayout={updateLayout} reportToolbar={reportToolbar} />;
     })}
     {settingsOpen && <SettingsSheet theme={theme} onTheme={next => void setTheme(next)} layout={layout}

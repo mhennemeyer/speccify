@@ -168,6 +168,29 @@ export function installWorkspaceFixture(responses) {
     };
     responses.project_board = async ({ project }) => (await responses.workspace_board({ workspaceId: "workspace-demo" })).specs.filter(entry => entry.worktree_path === project).map(entry => entry.spec);
     responses.project_spec_toggle_task = ({ project, done: checked }) => { if (checked) done.add(project); else done.delete(project); };
+    if (new URLSearchParams(location.search).has("workspace-registers")) {
+      const statuses = window.__SPECCIFY_MOCK__.workspaceRegisters = Object.fromEntries([
+        ["api", "migratable"], ["api-search", "blocked"], ["web", "detached"], ["infra", "none"],
+      ].map(([name, mode]) => [`${root}/${name}`, {
+        mode, branch: "specs", remote: true, code_branch: "main", tracked_in_code: mode === "migratable" || mode === "blocked",
+        ahead: 0, behind: 0, unsent: 0, rebasing: false, conflicts: [], last_sync: null, last_error: null,
+        reason: mode === "blocked" ? "Alter Code-Branch trackt Specs noch." : "Register für dieses Repository einrichten.",
+      }]));
+      responses.project_register_status = ({ project }) => {
+        if (window.__SPECCIFY_MOCK__.registerStatusError === project) throw Error("Status nicht erreichbar");
+        return structuredClone(statuses[project]);
+      };
+      responses.project_register_setup = ({ project }) => {
+        if (window.__SPECCIFY_MOCK__.registerSetupError === project) throw Error("Push fehlgeschlagen");
+        Object.assign(statuses[project], { mode: "mounted", tracked_in_code: false, reason: null });
+        return structuredClone(statuses[project]);
+      };
+      responses.project_register_sync = ({ project }) => ({ ...statuses[project], last_sync: "2026-09-15T10:00:00Z" });
+      responses.project_register_resolve = ({ project }) => {
+        Object.assign(statuses[project], { rebasing: false, conflicts: [], ahead: 0, behind: 0 });
+        return structuredClone(statuses[project]);
+      };
+    }
     for (const [command, handler] of Object.entries(responses)) {
       responses[command] = args => { calls.push({ command, args: structuredClone(args ?? {}) }); return handler(args ?? {}); };
     }

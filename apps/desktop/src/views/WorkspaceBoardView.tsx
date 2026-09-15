@@ -68,7 +68,7 @@ export default function WorkspaceBoardView({ workspaceId, revision, refresh = 0,
       <button className={button} disabled={loading} onClick={() => setReload(value => value + 1)}>Board aktualisieren</button>
     </div>
     <p role="status" className="text-xs text-slate-500">{loading ? "Snapshot laden…" : `${visible.length} von ${data?.specs.length ?? 0} Specs`}
-      {data && ` · Stand ${new Date(data.captured_at).toLocaleTimeString()}`}. {onSelect ? "Gemeinsames lokales Board. Bearbeitung im Inspektor betrifft nur das gekennzeichnete Projekt; kein Team-Sync." : "Lesende lokale Übersicht, kein Team-Sync. Änderungen nach Aktualisieren sichtbar."}</p>
+      {data && ` · Stand ${new Date(data.captured_at).toLocaleTimeString()}`}. {onSelect ? "Bearbeitung im Inspektor betrifft das gekennzeichnete Projekt. Team-Sync erfolgt über die eingerichteten Register je Repository." : "Lesende lokale Übersicht. Änderungen nach Aktualisieren sichtbar."}</p>
     {error && <ErrorBox message={`${error}${data ? " · Letzten Snapshot anzeigen, möglicherweise veraltet." : ""}`} />}
     {data && data.revision !== revision && <p role="status" className="text-xs text-amber-700">Projektzuordnung inzwischen geändert. Board und Workspace erneut aktualisieren.</p>}
     {data?.partial && <aside role="status" data-tone="amber" className="tone-surface rounded border p-3 text-xs"><strong>Board unvollständig</strong><ul className="mt-1 list-inside list-disc break-all">{data.warnings.map((warning,index) => <li key={index}>{warning}</li>)}</ul></aside>}

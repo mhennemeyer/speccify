@@ -105,6 +105,26 @@ repository and worktree:
 
 Open workspace windows come back after a restart, like project windows.
 
+## Team registers in a workspace
+
+The workspace board shows each repository's **team register** above the specs,
+with its repository name and full worktree path. Existing specs tracked in a
+repository with an `origin` remote can be moved into a shared `specs` branch:
+choose **Register einrichten…**, review the affected repository and the Git
+changes, then confirm with **Jetzt einrichten**. This commits and pushes the
+migration for that repository. Opening a workspace does not start a migration.
+
+For a fresh clone with an existing register, **Einhängen** mounts it at
+`.agent/specs`. Mounted registers show pending changes, sync errors and conflict
+decisions in the same area. **Sync** applies to the named repository. Use
+**Aktualisieren** after changes made outside the app to check the status again.
+
+A parent folder such as `AVC/` does not need its own Git repository: its child
+repositories each carry their own register. A folder with no tracked specs has
+no migration offer. Unavailable worktrees and projects outside the discovery
+depth offer no register actions. Workspace names and groups remain local even
+when the contained registers are shared with your team.
+
 ## What a workspace is not
 
 - Not a shared team register: the grouping lives on your machine.

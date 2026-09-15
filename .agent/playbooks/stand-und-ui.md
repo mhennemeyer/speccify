@@ -60,8 +60,11 @@ ein Elternordner mit Repos/Projekten wird als Workspace gespeichert und im
 Arbeitsfenster geöffnet.
 Spec 024 ergänzt eine lesende aggregierte Spec-Sicht im Dashboard. Spec 026 öffnet
 zusätzlich alle Projekte in einem gemeinsamen Arbeitsfenster: gruppierte Navigation,
-gemeinsames bearbeitbares Board und unveränderliche Ziele pro Worktree. Gemeinsamer
-Team-Sync ist noch nicht enthalten.
+gemeinsames bearbeitbares Board und unveränderliche Ziele pro Worktree.
+Seit Spec 042 zeigt das Workspace-Board auch die Team-Register je verfügbarem
+Worktree mit Repositoryname und Pfad: Einrichtung mit Bestätigung, Einhängen,
+Sync-Status, Fehler und Konfliktentscheidung. Der vorhandene Register-Sync (028)
+läuft je Repository; Workspace-Gruppen bleiben lokale Metadaten.
 Speccify-Server starten und Host-Konfiguration anzeigen ersetzt nicht automatisch
 deren Einrichtung oder Verfügbarkeit im gewählten Agenten.
 
@@ -72,7 +75,7 @@ oder vollständige Plattformabnahme.
 
 | Fähigkeit | Ist-Stand | Grenze / Folgeschritt |
 |---|---|---|
-| Projekte/Workspaces | begrenzte Erkennung, lokale IDs/Gruppen; 026: gemeinsames wiederherstellbares Arbeitsfenster, gruppierte Bereiche, gemeinsames Board mit herkunftsgebundener Bearbeitung und Watchern; eigene Fenster weiterhin möglich | kein Team-Sync, keine Cross-Repo-Git-Schreibaktion oder automatischen Pfadumzüge; PTYs nach App-Quit nicht automatisch fortgesetzt |
+| Projekte/Workspaces | begrenzte Erkennung, lokale IDs/Gruppen; 026: gemeinsames wiederherstellbares Arbeitsfenster, gruppierte Bereiche, gemeinsames Board mit herkunftsgebundener Bearbeitung und Watchern; 042: Register-Einrichtung/Sync/Konflikte pro Worktree im Board; eigene Fenster weiterhin möglich | keine Team-Verteilung der Workspace-Gruppen, keine Cross-Repo-Git-Schreibaktion oder automatischen Pfadumzüge; PTYs nach App-Quit nicht automatisch fortgesetzt |
 | Specs | Gesamtliste links, Suche/Themenfilter, Backlog/Doing/Done, gemeinsamer Task-Vertrag, Fragen und pfadgenaue Historie; Altbestand lesbar, kein Archivierungsschritt; seit 028 gemeinsames Register (Branch `specs` als Worktree) mit Sync und Konfliktentscheidung | keine Sperre gegenüber externen Editoren; Besitzer/Branch je Spec (029) und Teamsignale (030) fehlen |
 | Workflow-Setup | Policy v5 ohne Archivierungsschritt, versionierte Skills, bekannte Vorlagen sicher migrieren, konkrete Link-/Anpassungsdiagnose | individuelle/neue unbekannte Vorlagen und fremde Links bleiben zur manuellen Prüfung erhalten |
 | Playbooks | Liste, Markdown lesen/bearbeiten, neu/löschen, als Prompt kopieren; im Workspace pro Projekt/Worktree gekennzeichnet | keine automatische Team-Verteilung |

@@ -202,6 +202,13 @@ deep link. Editing/acceptance stays in that window. There is no aggregate write 
 
 ## Fixture matrix
 
+The workspace window also exposes `RegisterBar` for every resolved, available
+worktree in the current discovery scope. It uses the existing project register
+commands and watcher sync, with the repository name and full path at each
+control. Migration is confirmed per target; there is no aggregate write API.
+Status errors are visible and retryable. `node scripts/test_workspace_register.mjs`
+checks setup, mount, sync, conflicts and target isolation in the browser fixture.
+
 With the local mock server on port 1421, run
 `node scripts/test_workspace_depth.mjs` for settings persistence and a nested
 project's draft surviving depth changes (3 → 1 → 3). Existing workspace UI and
