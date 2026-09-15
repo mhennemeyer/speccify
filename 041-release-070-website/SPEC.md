@@ -38,7 +38,7 @@ Release-Notizen mit Referenz auf den Spec-Register-Commit erstellen.
 
 - [x] Release-Differenz und Website-Dokumentation prüfen und aktualisieren.
 - [x] Demo-Aufnahmen aktualisieren, zweimal erfassen und visuell prüfen.
-- [ ] Website bauen, Desktop/Mobil/Links prüfen; Release-Notizen vorbereiten.
+- [x] Website bauen, Desktop/Mobil/Links prüfen; Release-Notizen vorbereiten.
 - [ ] Mit Nutzeridentität committen/pushen, Tag setzen, Plattform-Builds prüfen.
 - [ ] Release veröffentlichen, Website/Downloads prüfen, Register abschließen.
 
@@ -52,7 +52,10 @@ Release-Notizen mit Referenz auf den Spec-Register-Commit erstellen.
 - Marketing-Build: 101 Seiten; Doku-Sync und `git diff --check` grün.
 - Website-Prüfung deckte zunächst einen nach unten gerückten Mobil-Einstieg und
   die normalisierte Starlight-URL auf. Release-Link unter das Leitbild gesetzt,
-  Doku-URL auf `/releases/0-7-0/` korrigiert; finale Wiederholung läuft.
+  Doku-URL auf `/releases/0-7-0/` korrigiert. Linux-Startoptionen auf der
+  Downloadseite umbrechen jetzt auch bei 320 px. Finale Prüfung vollständig grün:
+  Landing/Features 1440/390/320 px, Bildlinks ohne JS, DE-Weiterleitung,
+  Doku-/Release-Seiten und sechs getrennte Linux-Downloadlinks (x86_64/arm64).
 
 ## Questions
 
