@@ -4,7 +4,7 @@ order: 6
 created: 2026-09-10
 needs_human: true
 ready: false
-open_question: null
+open_question: Q1
 parent: null
 ---
 # Vollständige Arbeit im Agent-Terminal praktisch nachweisen
@@ -71,24 +71,115 @@ und keine Änderung fremder Projekte als Testnebenwirkung.
 - D6 (2026-09-15): Watcher-Abnahme ohne manuelles Neuladen, mit zehn Sekunden
   äußerer Testfrist und gemessener tatsächlicher Dauer. `terminalReady`
   belegt ein offenes PTY, keine Bereitschaft oder Anmeldung des Hosts.
+- D7 (2026-09-15): Im Fixture-Lauf entdeckt und im selben Schnitt behoben:
+  Bei nicht auflösbarer Bibliothek bzw. fehlendem Lockfile muss `verify` den
+  tatsächlichen lokalen Tool-Status behalten. Ein abgebrochener Resolver ist
+  kein Nachweis für `verified`; CLI und MCP nutzen weiter dieselbe Berechnung.
+- D8 (2026-09-15): Die Testantwort `teal` ist eine kontrollierte Eingabe des
+  Abnahmelaufs, keine BO-Abnahme. Codex-Fortsetzung erfolgte ausdrücklich über
+  den auf dieses Testprojekt begrenzten Host-Picker, nicht per „Neueste Sitzung“.
+- D9 (2026-09-15): Der zusätzliche Claude-Start wurde vor Ausführung durch
+  automatische Freigabeprüfung wegen möglicher Übertragung der Testdateien
+  und lokaler Runtime-Pfade abgelehnt. Auf ausdrückliche Egress-Zustimmung
+  warten; kein indirekter Start. Die übrigen Prüfungen sind davon unabhängig.
 
 ## Tasks
 
-- [ ] Isoliertes Testprojekt und deterministischen harmlosen Tool-Vertrag erstellen.
-- [ ] Wiederholbare Core-/Adapter-/Setup-Prüfungen an vorhandene CI anschließen.
-- [ ] Codex/macOS: frischer Start, Auftrag, Spec, Skill und Tool-Prüfung durchspielen.
-- [ ] Fehler, Rückfrage, zwei Sitzungen und App-Neustart praktisch prüfen.
+- [x] Isoliertes Testprojekt und deterministischen harmlosen Tool-Vertrag erstellen.
+      `scripts/create_terminal_fixture.py`, `tests/fixtures/terminal-workflow/`;
+      eigene Bibliothek, Regeln, vier Unicode-Beispiele und lokale Runtime-Notiz.
+- [x] Wiederholbare Core-/Adapter-/Setup-Prüfungen an vorhandene CI anschließen.
+      `tests/test_terminal_workflow.py` wird vom bestehenden Python-CI-Job erfasst;
+      `scripts/test_terminal_workflow_app.py` ist der optionale native Lauf.
+- [x] Codex/macOS: frischer Start, Auftrag, Spec, Skill und Tool-Prüfung durchspielen.
+- [x] Fehler, Rückfrage, zwei Sitzungen und App-Neustart praktisch prüfen.
+      Zwei getrennte Shell-PTYs nativ; echte Codex-Sitzung vor/nach App-Neustart.
 - [ ] Onboarding auf einem weiteren Mac und Host-/Windows-Matrix abarbeiten.
-- [ ] Ergebnisse, verbleibende Grenzen und menschliche Abnahme dokumentieren.
+- [x] Ergebnisse, verbleibende Grenzen und menschliche Abnahme dokumentieren.
+      Menschliche Gesamt-Abnahme offen; `ready: false` bis zur Pflichtmatrix.
+- [x] (added) Falsch grünen Tool-Status bei Resolver-Abbruch/fehlendem Lockfile
+      korrigieren und über CLI plus echtes MCP gegen Regression absichern.
 
 ## Verification
 
-Noch nicht durchgeführt. Ausgangsbasis: 216 Python- und 55 Desktop-Rust-Tests
-grün, Typecheck grün; siehe [006](../006-bestandsaufnahme-agent-terminal/SPEC.md).
-Das sind keine Ergebnisse der hier beschriebenen Praxisabnahme.
+### Lokaler Lauf 2026-09-15
+
+- Ausgangscommit: `9b08fba55b7e9abc46cac4dca1129feec0c07319`, Branch `main`.
+  macOS 27.0, Build 26A428, arm64; Python 3.12.13; Codex CLI 0.154.0,
+  vorhandene ChatGPT-Anmeldung. Claude CLI 2.1.272 vorhanden, Test nicht gestartet.
+- Tatsächlicher App-Build: vorhandene signierte
+  `target/debug/bundle/macos/Speccify.app`, Version 0.7.0,
+  Binary-SHA256 `f1030fe08e8a725e52ab4c2f905b558e010b71b85ef4ca7abf27182cb6aeb683`.
+  Desktop-UI-MCP 18768, QA-Brücke 18769. Vor Neustart PID 13813,
+  nach regulärem Quit/Wiederöffnen PID 39910. Keine neue native Binary oder
+  Engine-Payload gebaut; die Python-Korrektur ist gegen die Workspace-Runtime geprüft.
+- Globale CLI veraltet; `uv run --no-sync` versteckt erneut die `.pth`-Dateien.
+  Nach `scripts/fix-venv-hidden.sh` funktioniert `.venv/bin/speccify verify --offline`:
+  Lock/Manifest/Bundles konsistent, drei bekannte macOS-Tools fehlen. Das Fixture
+  verwendet den vorbereiteten Interpreter mit explizitem `PYTHONPATH`.
+- `uv run --frozen --no-sync pytest`: **269 bestanden**, einer abgewählt.
+  Zwei vorherige Fehler waren Sandbox-Schreibschutz des bestehenden Git-Caches;
+  vollständiger Lauf mit Freigabe bestanden. Nach Ergänzung der Runtime-Notiz
+  nochmals `pytest tests/test_terminal_workflow.py`: **3 bestanden**.
+  `ruff check .`, `ruff format --check .` grün.
+- Core-/CLI-/MCP-Lauf: echtes `init → add → expand`; Host-Skill-Links erreichbar,
+  relative Tool-Links korrekt. Fehlende Implementierung → missing; absichtlich
+  falsche Großschreibung → Exit 1, konkrete `$.upper`-Abweichung; Reparatur →
+  vier Beispiele bestanden und `verified`. CLI JSON und initialisiertes MCP
+  stdio melden dieselben sechs fachlichen Felder. `verify` verändert den
+  Prüfdatensatz nicht. Fehlende Bibliothek und fehlendes Lockfile bleiben
+  Fehler mit Tool-Zustand missing. Bestehender Fixture-Zielordner wird abgelehnt.
+- `SPECCIFY_QA_ROOT=../speccify-qa uv run pytest scripts/test_terminal_workflow_app.py -s`:
+  **2 bestanden**. Native Einrichtung erhält eigene Regeln und meldet Policy v9/current;
+  externe Änderung erscheint ohne Refresh in **1,672 s** (Watcherintervall 2 s,
+  Testfrist 10 s). Frage überlebt Schließen/Öffnen; kontrollierte Antwort bleibt
+  als Entscheidung, fertige Arbeit in Doing/ready. Zwei echte Shell-PTYs halten
+  `A-ä-🌍`/`B-ß-🌍` getrennt, Ctrl-C beendet `sleep`, zweite Shell bleibt nach
+  Ende der ersten funktionsfähig. Testfenster nach Lauf geschlossen.
+- Echte Codex-Arbeit unter `/private/tmp/speccify-012-host-20260915`:
+  Einrichtung, Codex-Preset, neuer Start und Trust-Dialog für das eigene Fixture;
+  danach Auftrag über den echten Spec-Dialog, als Block eingefügt, bewusst abgesendet.
+  Projektregel `RULE-LOCAL-012` und Skill `SKILL-UNICODE-012` aus Dateien gefunden.
+  Erste Implementierung falsch (3/4 Beispiele scheitern), repariert (4/4 grün),
+  echte CLI-/MCP-Parität geprüft; das Board zeigt Doing, 4/4, bereit, braucht BO.
+  Erste Ganzobjekt-Gleichheitsprüfung scheiterte nur an unterschiedlichen
+  Fehlerhüllen (`error` gegenüber `code/message`); fachliche Felder stimmen überein.
+- Persistenz: echte Testsitzung speichert Q1 (amber/teal), wartet; normales App-Quit
+  und Wiederöffnen erhält Frage, Spec, bisherige Projektfenster und Workspace.
+  Codex zeigt fehlende feste Sitzungs-ID und die ausdrückliche Auswahl an.
+  Nach Fokus des Testfensters zeigt der Host-Picker genau eine passende Sitzung;
+  Auswahl stellt den früheren Verlauf samt Q1 wieder her. Testantwort `teal`
+  wird als Entscheidung und Antwort gespeichert; kein erneutes Nachfragen,
+  `open_question` entfernt, Doing/ready/needs_human erhalten. Testantwort ist
+  ausdrücklich keine menschliche Abnahme, auch wenn der Host A1 mit `bo` beschriftet.
+- Testgrenze: inaktive WKWebViews können `requestAnimationFrame` zurückstellen.
+  Deshalb vor Terminal-Abnahme QA-`/focus`; Erreichbarkeit allein reicht nicht.
+  UI-Vorprüfung und Bundle wurden in diesem Schnitt nicht optisch abgenommen.
+
+### Pflichtmatrix und Rest
+
+| Umgebung | Ergebnis |
+| --- | --- |
+| Vorbereiteter Mac, Codex | Lokaler vollständiger Roundtrip und Wiederaufnahme bestanden |
+| Vorbereiteter Mac, Claude | Start durch automatische Freigabeprüfung blockiert; Q2 |
+| Weiterer Mac ohne Entwickler-Vorbereitung | Nicht geprüft; Verfügbarkeit Q1 |
+| Windows, unterstützte Hosts | Nicht nativ geprüft; Verfügbarkeit Q1 |
+| Menschliche Gesamt-Abnahme | Offen; Doing, ready false |
+
+Wiederholbare Anleitung: [Terminal-Abnahme](../../../docs/terminal-acceptance.md).
+Vision und Bestandsplaybook im selben Schnitt nachgeführt. Keine Release-Tags.
 
 ## Questions
 
-Vor dem plattformübergreifenden Abnahmelauf verfügbare Testgeräte und
-Host-Anmeldungen feststellen. Das blockiert nicht die vorherigen
-Implementierungsspecs.
+### Q1 · open · 2026-09-15T06:18:32Z
+
+Steht für die noch offene Pflichtmatrix ein zweiter Mac ohne vorbereitete
+Entwicklungsumgebung oder ein Windows-Rechner samt Host-Anmeldung zur Verfügung?
+Die Frage wurde im Chat gestellt; bislang liegt keine Antwort vor.
+
+### Q2 · open · 2026-09-15T06:18:32Z
+
+Darf die Claude-Abnahme mit den ausschließlich dafür angelegten Testdateien
+und lokalen Runtime-Pfaden erfolgen? Automatische Freigabeprüfung hat den Start
+wegen möglicher Übertragung an Claude abgelehnt und verlangt ausdrückliche
+Egress-Zustimmung. Im Chat gefragt; bis zur Antwort nicht erneut starten.
