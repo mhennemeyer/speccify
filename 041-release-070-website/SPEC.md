@@ -36,15 +36,23 @@ Release-Notizen mit Referenz auf den Spec-Register-Commit erstellen.
 
 ## Tasks
 
-- [ ] Release-Differenz und Website-Dokumentation prüfen und aktualisieren.
-- [ ] Demo-Aufnahmen aktualisieren, zweimal erfassen und visuell prüfen.
+- [x] Release-Differenz und Website-Dokumentation prüfen und aktualisieren.
+- [x] Demo-Aufnahmen aktualisieren, zweimal erfassen und visuell prüfen.
 - [ ] Website bauen, Desktop/Mobil/Links prüfen; Release-Notizen vorbereiten.
 - [ ] Mit Nutzeridentität committen/pushen, Tag setzen, Plattform-Builds prüfen.
 - [ ] Release veröffentlichen, Website/Downloads prüfen, Register abschließen.
 
 ## Verification
 
-Ausstehend.
+- CI zum App-Code `5c30726` vollständig grün: Rust, Python, Frontend sowie
+  Desktop-Tests/Build auf Windows und Linux (Lauf 34950294982).
+- Zehn öffentliche Demo-Aufnahmen visuell geprüft; nach Korrektur der normalen
+  Workspace-Panelgrößen passen alle drei Spalten samt Überschriften ins Bild.
+  Zwei finale Durchläufe bytegleich (SHA-256 für alle zehn Bilder).
+- Marketing-Build: 101 Seiten; Doku-Sync und `git diff --check` grün.
+- Website-Prüfung deckte zunächst einen nach unten gerückten Mobil-Einstieg und
+  die normalisierte Starlight-URL auf. Release-Link unter das Leitbild gesetzt,
+  Doku-URL auf `/releases/0-7-0/` korrigiert; finale Wiederholung läuft.
 
 ## Questions
 
