@@ -223,6 +223,9 @@ und keine Änderung fremder Projekte als Testnebenwirkung.
   AVC- und itsdcloud-Workspace bleiben geöffnet. Testdateien für Nachprüfung
   lokal erhalten. Keine Produktdateien außerhalb des Fixtures durch den Test
   geändert; Abnahmenotizen in diesem Repo separat nachgeführt.
+- Abnahmenotizen als `a6a90b1` auf main committed und gepusht; Autor und
+  Committer Matthias Hennemeyer `<mhennemeyer@me.com>`. Pull ff-only bereits
+  aktuell, Code-Arbeitsbaum sauber; Doku-Sync und Diff-Prüfung grün.
 
 ### Pflichtmatrix und Rest
 
