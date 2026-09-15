@@ -796,8 +796,12 @@ vorherigen Codex-Sitzung nach App-Neustart nachgewiesen. Ohne aufgezeichnete
 Codex-ID bleibt der Host-Picker der bewusste Wiederaufnahmeweg. Hintergrundfenster
 vor Terminalprüfungen über die QA-Fokusroute aktivieren: WKWebView kann die
 Initialisierung per `requestAnimationFrame` bis dahin zurückstellen.
-Zweiter Mac, Claude und Windows bleiben als eigene Matrixfelder offen;
-vollständige Spec-Abnahme ist daraus nicht abzuleiten.
+Nach ausdrücklicher BO-Freigabe ist auch der Claude-Roundtrip auf diesem Mac
+nachgewiesen: neuer Start im Wegwerfprojekt, Tool-Fehler/Reparatur, vier Beispiele,
+CLI/MCP-Parität, gespeicherte Testfrage und exakte Wiederaufnahme nach App-Neustart.
+Die kontrollierte Antwort beendet die Frage und erhält die ausstehende Abnahme.
+Zweiter Mac und Windows sind nach BO-Antwort vorerst zurückgestellt;
+die vollständige Spec-Abnahme bleibt offen.
 
 Bis zum Feedback-Panel: Rückmeldung mit Bereich, Ist/Soll, reproduzierbaren
 Schritten und Buildstand in der betroffenen Spec unter Questions/Verification

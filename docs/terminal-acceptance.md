@@ -81,3 +81,20 @@ latest conversation. Leave the main app open afterwards.
 Record OS, architecture, bundle version/build, host version, date, commands,
 observations and limitations in the spec. A prepared developer Mac does not
 prove onboarding on a second Mac or native Windows support.
+
+## Recorded local results — 2026-09-15
+
+On the prepared macOS 27.0 arm64 machine, both Codex CLI 0.154.0 and Claude
+Code 2.1.272 completed the disposable project through the bundled Speccify
+0.7.0 UI: project instructions and skill discovery, deliberate tool failure,
+repair, four passing examples, real CLI/MCP verification and an updated board.
+
+Both runs also preserved an open test question across an app restart and
+recorded the controlled answer without accepting the spec. Codex resumed
+through an explicit project-scoped session picker; Claude resumed the exact
+recorded session ID automatically. The Claude result was independently checked
+for CLI/MCP parity, an unchanged tool contract and the expected spec state.
+
+A second Mac and Windows are deferred because only this Mac is currently
+available for this acceptance run. These local results do not complete the
+cross-platform matrix or constitute human product acceptance.

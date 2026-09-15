@@ -28,11 +28,13 @@ Speccify hat bereits ein substanzielles Desktop-Arbeitsfenster: Spec-Board,
 Datei-Editor, Git, Skills/Quellen/Export, Playbooks, Tool-Verträge, Aktionen,
 MCP-Konfiguration und ein natives Agent-Terminal. Es ist keine bloße Konzept-App.
 
-**Der lokale Codex-Roundtrip ist belegt; die Plattformabnahme bleibt offen.**
+**Lokale Codex- und Claude-Roundtrips sind belegt; die Plattformabnahme bleibt offen.**
 Spec 012 weist am vorbereiteten Mac den Auftrag über das echte Projektfenster,
 Skill-/Tool-Arbeit, CLI-/MCP-Prüfung, Board-Aktualisierung und eine gespeicherte
 Rückfrage einschließlich Codex-Wiederaufnahme über den Host-Picker nach.
-Zweiter Mac, Claude und Windows sind damit nicht abgenommen. Details und
+Claude ist nach ausdrücklicher Testfreigabe ebenfalls nachgewiesen, inklusive
+exakter Sitzungswiederaufnahme und Verarbeitung der gespeicherten Testfrage.
+Zweiter Mac und Windows bleiben vorerst zurückgestellt. Details und
 Grenzen stehen in der Spec; vorhandene grüne Komponenten-Tests bleiben von
 diesem Praxisnachweis getrennt.
 
@@ -412,7 +414,7 @@ Diese Tabelle verändert keine Station oder Reihenfolge.
 | [009 Terminal/Sitzungen](../specs/009-terminal-und-sitzungen/SPEC.md) | Doing, ready | UTF-8-Chunker, Sitzungsidentität (`agent_session.rs`), ein Destroyed-Listener je Fenster, Kind-Reaping; App-Abnahme offen |
 | [011 Auftragskontext](../specs/011-auftragskontext/SPEC.md) | Done (BO 2026-09-14) | gemeinsamer Übergabeweg, native Abnahme 6/6 und BO-Checkliste bestätigt; frische-Terminal-Warnung ergänzt; Codex-Roundtrip zusätzlich in 012 |
 | [010 Prüfstatus](../specs/010-einheitlicher-pruefstatus/SPEC.md) | Done | `VerifyReport` (ok/ready/platform/tools/notes) für `speccify verify --json` und MCP `verify`; UI-Anschluss in 004 offen |
-| [012 Praxisabnahme](../specs/012-agent-terminal-praxisabnahme/SPEC.md) | Doing, nicht ready | Codex/macOS-Roundtrip samt echter stdio-MCP-Verifikation und Wiederaufnahme belegt; zwei native Tests grün; zweiter Mac, Claude, Windows und Gesamt-Abnahme offen |
+| [012 Praxisabnahme](../specs/012-agent-terminal-praxisabnahme/SPEC.md) | Doing, nicht ready | Codex und Claude auf macOS samt echter stdio-MCP-Verifikation, Rückfrage und Wiederaufnahme belegt; zwei native Tests grün; zweiter Mac/Windows zurückgestellt, Gesamt-Abnahme offen |
 | [013 Lokale App/Startdiagnose](../specs/013-lokale-app-und-startdiagnose/SPEC.md) | Doing, ready, needs_human | App ohne Watcher auf 18768 gestartet und offen gelassen; Sicht-/Terminal-Abnahme offen |
 | [014 MCP-Transportgrenzen](../specs/014-lokale-mcp-transportgrenzen/SPEC.md) | Done | gemeinsame HTTP-Grenzen implementiert; 97 Rust-Tests und 28 Vergleichsszenarien grün, App/Sidecars aktualisiert, Live-Smoke grün |
 | [015 Workspace/Projekterkennung](../specs/015-workspace-projekterkennung/SPEC.md) | Doing · ready | Erkennung, persistente Gruppierung und explizites Worktree-Öffnen implementiert; automatisiert und im Mac-Wegwerf-Workspace geprüft; menschliche Abnahme offen |
@@ -538,9 +540,13 @@ Neuer Codebefund behoben: Bei fehlender Bibliothek oder Lockdatei darf `verify`
 fehlende Tools nicht fälschlich als `verified` klassifizieren. Native Oberfläche
 in diesem Lauf unverändert; Python-Korrektur gegen Workspace-Runtime geprüft,
 keine neue gebündelte Engine verteilt. Wiederholung:
-[Terminal-Abnahme](../../docs/terminal-acceptance.md). Claude-Start durch automatische
-Freigabeprüfung bis zur ausdrücklichen Egress-Zustimmung blockiert; Verfügbarkeit
-eines zweiten Macs und eines Windows-Rechners noch ungeklärt. Spec 012 bleibt ohne `ready`.
+[Terminal-Abnahme](../../docs/terminal-acceptance.md). Nach ausdrücklicher Freigabe
+am 2026-09-15 auch Claude Code 2.1.272 im Wegwerfprojekt geprüft: Tool-Fehler und
+Reparatur, vier Beispiele, echte CLI/MCP-Parität, offene Testfrage und exakte
+Sitzungswiederaufnahme nach regulärem App-Neustart. Kontrollierte Antwort gespeichert,
+Frage geschlossen, Doing/ready im Fixture erhalten. Nur dieser vorbereitete Mac
+steht vorerst zur Verfügung; weiterer Mac und Windows zurückgestellt.
+Spec 012 bleibt wegen der offenen Gesamtmatrix ohne `ready`.
 
 **UI-Korrektur 026, 2026-09-11:** Nutzer lehnt separate Workspace-Bedienoberfläche
 ab. Gemeinsame Projekt-Navigation und Toolbar verwenden; Splitter, Docking,
