@@ -144,13 +144,21 @@ def run_verify_with_status(
     hashes: dict[str, str] = {}
     context = ProjectContext.load(project_dir, library_override=library_override, offline=offline)
     if not context.lockfile_path.is_file():
-        return [f"No lockfile in {project_dir}. Run `speccify lock` first."], ExpansionStatus()
+        return [f"No lockfile in {project_dir}. Run `speccify lock` first."], expansion_status(
+            project_dir, locked_hashes={}, platform=platform
+        )
     lockfile = Lockfile.load(context.lockfile_path)
 
     try:
         graph = Resolver(context.libraries).resolve(context.manifest)
     except (ResolverError, RegistryError) as exc:
-        return [str(exc)], ExpansionStatus()
+        # Resolution failure does not make unimplemented tools verified.
+        # Retain their local state; upstream consistency is unknown here.
+        return [str(exc)], expansion_status(
+            project_dir,
+            locked_hashes={entry.id: entry.bundle_sha256 for entry in lockfile.entries},
+            platform=platform,
+        )
 
     resolved = {r.playbook_id: r for r in graph.resolutions}
     locked = {e.id: e for e in lockfile.entries}

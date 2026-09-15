@@ -4,6 +4,7 @@ description: Lebende Produktvision, Ausbauphasen, Architekturvorschläge und Arb
 # Speccify: Produktvision und Weiterentwicklung
 
 Stand: **2026-09-10**. Lebendes Playbook, kein abzuhakender Implementierungsauftrag.
+Abnahme-Arbeitsweise nachgeführt am **2026-09-15** für Spec 012.
 
 Schnelleinstieg: [Leitbild](#leitbild) · [Phasen](#phasen-und-priorisierung) ·
 [Vision 1](#vision-1-bald-umsetzen) · [Vision 2](#vision-2-nach-breiter-interner-nutzung) ·
@@ -769,6 +770,19 @@ Fail bei fehlender Umgebung). App dafür bewusst mit
 starten; ohne Flag gibt es keinen Endpunkt. Menschliche Checklisten bleiben nur
 für Optik und technisch nicht automatisierbare Punkte (BO-Entscheid D2 in 039).
 Vertrag: [QA-Brücke](../../docs/qa-bridge.md).
+
+**Praxislauf 012, 2026-09-15:** Wiederholbares Wegwerfprojekt mit eigener
+Skill-Bibliothek und Unicode-Tool; CLI-/stdio-MCP-Regression in der normalen
+Python-CI, optionale native Tests mit den Adaptern aus `speccify-qa`.
+[Ausführung und Grenzen](../../docs/terminal-acceptance.md).
+Auf diesem vorbereiteten Mac sind Codex-Auftrag, Skill-/Tool-Fehler und Reparatur,
+Board-Watcher, zwei Shell-PTYs, gespeicherte Rückfrage und explizite Auswahl der
+vorherigen Codex-Sitzung nach App-Neustart nachgewiesen. Ohne aufgezeichnete
+Codex-ID bleibt der Host-Picker der bewusste Wiederaufnahmeweg. Hintergrundfenster
+vor Terminalprüfungen über die QA-Fokusroute aktivieren: WKWebView kann die
+Initialisierung per `requestAnimationFrame` bis dahin zurückstellen.
+Zweiter Mac, Claude und Windows bleiben als eigene Matrixfelder offen;
+vollständige Spec-Abnahme ist daraus nicht abzuleiten.
 
 Bis zum Feedback-Panel: Rückmeldung mit Bereich, Ist/Soll, reproduzierbaren
 Schritten und Buildstand in der betroffenen Spec unter Questions/Verification
