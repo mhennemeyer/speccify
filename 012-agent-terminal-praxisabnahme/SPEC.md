@@ -4,7 +4,7 @@ order: 6
 created: 2026-09-10
 needs_human: true
 ready: false
-open_question: Q1
+open_question: null
 parent: null
 ---
 # Vollständige Arbeit im Agent-Terminal praktisch nachweisen
@@ -91,6 +91,12 @@ und keine Änderung fremder Projekte als Testnebenwirkung.
   eigenen Git-Identität und ohne Herkunfts-/Co-Autoren-Zusätze. Q3 beantwortet;
   Q1 (weitere Geräte) und Q2 (Claude-Test) bleiben offen. Die globale Vorgabe
   zur Attribution und Git-Identität steht in `~/.codex/AGENTS.md`.
+- D12 (2026-09-15): BO beantwortet Q1: „Vorerst nur dieser Mac“. Zweiter
+  Mac und Windows bleiben für diese Abnahme zurückgestellt und ungeprüft.
+- D13 (2026-09-15): BO erlaubt den Claude-Test ausdrücklich mit den genannten
+  Testdateien und lokalen Runtime-Pfaden im ausschließlich dafür angelegten
+  Wegwerfprojekt. Q2 beantwortet; die Ablehnung aus D9 ist damit adressiert.
+  Commit/Push aus Q3 nochmals ausdrücklich bestätigt.
 
 ## Tasks
 
@@ -184,9 +190,9 @@ und keine Änderung fremder Projekte als Testnebenwirkung.
 | Umgebung | Ergebnis |
 | --- | --- |
 | Vorbereiteter Mac, Codex | Lokaler vollständiger Roundtrip und Wiederaufnahme bestanden |
-| Vorbereiteter Mac, Claude | Start durch automatische Freigabeprüfung blockiert; Q2 |
-| Weiterer Mac ohne Entwickler-Vorbereitung | Nicht geprüft; Verfügbarkeit Q1 |
-| Windows, unterstützte Hosts | Nicht nativ geprüft; Verfügbarkeit Q1 |
+| Vorbereiteter Mac, Claude | Test mit Fixture-Daten ausdrücklich freigegeben; Fortsetzung läuft |
+| Weiterer Mac ohne Entwickler-Vorbereitung | Zurückgestellt: vorerst nur dieser Mac verfügbar (A1) |
+| Windows, unterstützte Hosts | Nicht nativ geprüft; für diese Abnahme vorerst kein Gerät verfügbar (A1) |
 | Menschliche Gesamt-Abnahme | Offen; Doing, ready false |
 
 Wiederholbare Anleitung: [Terminal-Abnahme](../../../docs/terminal-acceptance.md).
@@ -194,18 +200,27 @@ Vision und Bestandsplaybook im selben Schnitt nachgeführt. Keine Release-Tags.
 
 ## Questions
 
-### Q1 · open · 2026-09-15T06:18:32Z
+### Q1 · answered · 2026-09-15T06:18:32Z
 
 Steht für die noch offene Pflichtmatrix ein zweiter Mac ohne vorbereitete
 Entwicklungsumgebung oder ein Windows-Rechner samt Host-Anmeldung zur Verfügung?
-Die Frage wurde im Chat gestellt; bislang liegt keine Antwort vor.
+Die Frage wurde im Chat gestellt.
 
-### Q2 · open · 2026-09-15T06:18:32Z
+### A1 · bo · 2026-09-15T18:30:51Z
+
+„Vorerst nur dieser Mac.“ Zusätzliche Geräte bleiben zurückgestellt.
+
+### Q2 · answered · 2026-09-15T06:18:32Z
 
 Darf die Claude-Abnahme mit den ausschließlich dafür angelegten Testdateien
 und lokalen Runtime-Pfaden erfolgen? Automatische Freigabeprüfung hat den Start
 wegen möglicher Übertragung an Claude abgelehnt und verlangt ausdrückliche
 Egress-Zustimmung. Im Chat gefragt; bis zur Antwort nicht erneut starten.
+
+### A2 · bo · 2026-09-15T18:30:51Z
+
+„Claude-Test mit diesen Testdaten erlauben.“ Freigabe gilt für das ausschließlich
+dafür angelegte Wegwerfprojekt, dessen Testdateien und lokale Runtime-Pfade.
 
 ### Q3 · answered · 2026-09-15T06:25:00Z
 
