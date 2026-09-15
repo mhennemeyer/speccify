@@ -82,6 +82,11 @@ und keine Änderung fremder Projekte als Testnebenwirkung.
   automatische Freigabeprüfung wegen möglicher Übertragung der Testdateien
   und lokaler Runtime-Pfade abgelehnt. Auf ausdrückliche Egress-Zustimmung
   warten; kein indirekter Start. Die übrigen Prüfungen sind davon unabhängig.
+- D10 (2026-09-15): Automatische Freigabeprüfung blockiert auch den regulären
+  Commit auf `main`. Die stehende Freigabe in der unveränderten, bereits in
+  HEAD enthaltenen `.agent/agent.md` wurde nachgewiesen, aber vom Prüfer nicht
+  anerkannt. Keine Änderung der Historie und kein Push ausgeführt; fertiger
+  Änderungssatz staged. Explizite Bestätigung im Chat angefragt (Q3).
 
 ## Tasks
 
@@ -125,6 +130,8 @@ und keine Änderung fremder Projekte als Testnebenwirkung.
   `mypy core/src cli/src` grün (35 Quelldateien), Markdown-Links und Codezäune
   der geänderten Dokumente geprüft. Ohne QA-Konfiguration werden beide nativen
   Tests sauber übersprungen (Exit 0), nicht als bestanden ausgewiesen.
+  Finale native Wiederholung nach dieser Skip-Korrektur: **2 bestanden**,
+  Watcher-Aktualisierung **1,337 s**.
 - Core-/CLI-/MCP-Lauf: echtes `init → add → expand`; Host-Skill-Links erreichbar,
   relative Tool-Links korrekt. Fehlende Implementierung → missing; absichtlich
   falsche Großschreibung → Exit 1, konkrete `$.upper`-Abweichung; Reparatur →
@@ -189,3 +196,10 @@ Darf die Claude-Abnahme mit den ausschließlich dafür angelegten Testdateien
 und lokalen Runtime-Pfaden erfolgen? Automatische Freigabeprüfung hat den Start
 wegen möglicher Übertragung an Claude abgelehnt und verlangt ausdrückliche
 Egress-Zustimmung. Im Chat gefragt; bis zur Antwort nicht erneut starten.
+
+### Q3 · open · 2026-09-15T06:25:00Z
+
+Darf der fertig geprüfte Spec-012-Änderungssatz auf `main` committet und gepusht
+werden (Push löst den vorhandenen Website-/Dokumentations-Workflow aus)?
+Automatische Freigabeprüfung erkennt die bestehende Projektfreigabe nicht an
+und verlangt eine ausdrückliche Bestätigung. Die Änderungen sind nur staged.
