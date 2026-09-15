@@ -87,6 +87,10 @@ und keine Änderung fremder Projekte als Testnebenwirkung.
   HEAD enthaltenen `.agent/agent.md` wurde nachgewiesen, aber vom Prüfer nicht
   anerkannt. Keine Änderung der Historie und kein Push ausgeführt; fertiger
   Änderungssatz staged. Explizite Bestätigung im Chat angefragt (Q3).
+- D11 (2026-09-15): BO bestätigt Commit, Push und Pull ausdrücklich mit der
+  eigenen Git-Identität und ohne Herkunfts-/Co-Autoren-Zusätze. Q3 beantwortet;
+  Q1 (weitere Geräte) und Q2 (Claude-Test) bleiben offen. Die globale Vorgabe
+  zur Attribution und Git-Identität steht in `~/.codex/AGENTS.md`.
 
 ## Tasks
 
@@ -168,6 +172,12 @@ und keine Änderung fremder Projekte als Testnebenwirkung.
 - Abschluss: Testfenster geschlossen, lokale App PID 39910 auf 18768 ohne
   Entwicklungs-Watcher weiter geöffnet; Dashboard, drei bisherige Projektfenster
   und itsdcloud-Workspace erhalten. Testdateien bleiben lokal für Nachprüfung.
+- Übergabe 2026-09-15, 08:17 UTC: Code-Commit `05c6a9e` auf `main` erstellt
+  und nach `origin/main` gepusht. Autor und Committer jeweils
+  `Matthias Hennemeyer <mhennemeyer@me.com>`, Commit-Nachricht ohne
+  Herkunftszusatz oder Co-Autoren-Trailer geprüft. `git pull --ff-only origin main`:
+  Already up to date; Code-Arbeitsbaum sauber. Lokale App weiterhin PID 39910
+  auf 18768. Globale Anweisungen zur Attribution und Git-Identität ergänzt.
 
 ### Pflichtmatrix und Rest
 
@@ -197,9 +207,15 @@ und lokalen Runtime-Pfaden erfolgen? Automatische Freigabeprüfung hat den Start
 wegen möglicher Übertragung an Claude abgelehnt und verlangt ausdrückliche
 Egress-Zustimmung. Im Chat gefragt; bis zur Antwort nicht erneut starten.
 
-### Q3 · open · 2026-09-15T06:25:00Z
+### Q3 · answered · 2026-09-15T06:25:00Z
 
 Darf der fertig geprüfte Spec-012-Änderungssatz auf `main` committet und gepusht
 werden (Push löst den vorhandenen Website-/Dokumentations-Workflow aus)?
 Automatische Freigabeprüfung erkennt die bestehende Projektfreigabe nicht an
 und verlangt eine ausdrückliche Bestätigung. Die Änderungen sind nur staged.
+
+### A3 · bo · 2026-09-15T08:17:07Z
+
+Committen, pushen und pullen ausdrücklich erlaubt; mit eigener Git-Identität,
+grundsätzlich ohne KI-/Agenten-Attribution. Die Vorgabe global hinterlegen.
+Ausgeführt: Commit `05c6a9e`, Push erfolgreich, Pull bereits aktuell.
