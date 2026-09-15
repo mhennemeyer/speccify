@@ -109,7 +109,10 @@ und keine Änderung fremder Projekte als Testnebenwirkung.
 - [x] Codex/macOS: frischer Start, Auftrag, Spec, Skill und Tool-Prüfung durchspielen.
 - [x] Fehler, Rückfrage, zwei Sitzungen und App-Neustart praktisch prüfen.
       Zwei getrennte Shell-PTYs nativ; echte Codex-Sitzung vor/nach App-Neustart.
-- [ ] Onboarding auf einem weiteren Mac und Host-/Windows-Matrix abarbeiten.
+- [x] (added) Claude auf diesem Mac: Auftrag, Tool-Fehler/Reparatur, CLI/MCP,
+      gespeicherte Frage und exakte Wiederaufnahme nach App-Neustart prüfen.
+- [ ] Onboarding auf einem weiteren Mac und Windows-Matrix abarbeiten.
+      Nach A1 zurückgestellt; derzeit kein zusätzliches Gerät für diese Abnahme.
 - [x] Ergebnisse, verbleibende Grenzen und menschliche Abnahme dokumentieren.
       Menschliche Gesamt-Abnahme offen; `ready: false` bis zur Pflichtmatrix.
 - [x] (added) Falsch grünen Tool-Status bei Resolver-Abbruch/fehlendem Lockfile
@@ -185,12 +188,48 @@ und keine Änderung fremder Projekte als Testnebenwirkung.
   Already up to date; Code-Arbeitsbaum sauber. Lokale App weiterhin PID 39910
   auf 18768. Globale Anweisungen zur Attribution und Git-Identität ergänzt.
 
+### Claude auf dem vorbereiteten Mac, 2026-09-15
+
+- Ausdrückliche BO-Freigabe aus A2 angewendet. Ausschließlich das vorbereitete
+  Wegwerfprojekt `/private/tmp/speccify-012-claude-20260915` geöffnet, Workflow
+  v9/current geprüft, Claude über das normale Preset gestartet und Trust für
+  diesen Ordner bestätigt. Auftrag über den echten Spec-Dialog eingefügt und
+  bewusst mit Enter abgesendet.
+- macOS 27.0 (26A428), arm64, Claude Code 2.1.272; Startanzeige Fable 5.1,
+  bestehende Claude-Max-Anmeldung und Auto-Modus. Speccify 0.7.0, Code-Stand
+  `4624b5e36676d6e5195be5d306028a6aca7885ad`, Binary-SHA256
+  `22ea6800206d5a417e914f27a9e6b7badbfb135c04fdae216e06f2d1bad98ac7`.
+  Dieselbe lokale signierte App genutzt, kein Neubau und kein Release.
+- Neue Sitzung `71b05035-21f6-42cf-be52-d42b666a2d73`: Projektregeln und
+  lokaler Skill aus Dateien gefunden, beide Marker in Verification.
+  Absichtlich falsche UTF-8-Bytezählung scheitert am Unicode-Beispiel
+  (Länge 12 statt 8). Reparatur zählt Zeichen; alle vier Beispiele bestehen.
+  Echter stdio-MCP liefert dieselben sechs fachlichen Verify-Felder wie CLI;
+  `tool_run` für `Straße 🌍` liefert `STRASSE 🌍` und Länge 8.
+- Unabhängig nachgeprüft: Quelle des Tool-Vertrags bytegleich, vier Tasks
+  erledigt, Doing/ready/needs_human erhalten, CLI/MCP-Parität grün. Board zeigt
+  ohne manuelles Neuladen 4/4, bereit, braucht BO. Hier keine zusätzliche
+  Watcher-Latenzmessung behauptet.
+- Kontrollierte Frage Q1 (amber/teal) gespeichert. Vor Neustart keine weiteren
+  laufenden Terminals oder markierten Entwürfe. Reguläres App-Quit und Öffnen
+  derselben Binary: PID 15577 → 92597, alle Fenster wiederhergestellt.
+  Testfenster fokussiert; derselbe Verlauf samt offener Frage sichtbar,
+  gespeicherte Claude-ID unverändert. Automatische exakte Wiederaufnahme.
+- Testantwort `teal` wird als kontrollierte Testantwort dokumentiert,
+  Q1 beantwortet, Entscheidung gespeichert, open_question null. Keine erneute
+  Farbfrage. Board entfernt Fragezeichen, bleibt Doing/4 von 4/bereit/braucht BO.
+  Keine menschliche Produktabnahme daraus abgeleitet.
+- Testfenster danach geschlossen; Dashboard, speccify-Projektfenster sowie
+  AVC- und itsdcloud-Workspace bleiben geöffnet. Testdateien für Nachprüfung
+  lokal erhalten. Keine Produktdateien außerhalb des Fixtures durch den Test
+  geändert; Abnahmenotizen in diesem Repo separat nachgeführt.
+
 ### Pflichtmatrix und Rest
 
 | Umgebung | Ergebnis |
 | --- | --- |
 | Vorbereiteter Mac, Codex | Lokaler vollständiger Roundtrip und Wiederaufnahme bestanden |
-| Vorbereiteter Mac, Claude | Test mit Fixture-Daten ausdrücklich freigegeben; Fortsetzung läuft |
+| Vorbereiteter Mac, Claude | Lokaler vollständiger Roundtrip, gespeicherte Testfrage und exakte Wiederaufnahme bestanden |
 | Weiterer Mac ohne Entwickler-Vorbereitung | Zurückgestellt: vorerst nur dieser Mac verfügbar (A1) |
 | Windows, unterstützte Hosts | Nicht nativ geprüft; für diese Abnahme vorerst kein Gerät verfügbar (A1) |
 | Menschliche Gesamt-Abnahme | Offen; Doing, ready false |
