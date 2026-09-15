@@ -41,7 +41,7 @@ die bestehende konkrete Einrichtung im UI.
 - [x] Register-Bedienung mit Zielkennzeichnung und Fehleranzeige integrieren.
 - [x] Mehrere Repositories, Einrichtung und Statuswechsel gezielt prüfen.
 - [x] Playbooks und Workspace-Dokumentation aktualisieren.
-- [ ] Lokale App aktualisieren und AVC-Anzeige prüfen; committen/pushen.
+- [x] Lokale App aktualisieren und AVC-Anzeige prüfen; committen/pushen.
 
 ## Verification
 
@@ -68,6 +68,9 @@ AVC-Workspace. Keine Änderungen an AVC vorgenommen.
   Bildschirmaufnahme über die native QA-Route war nicht verfügbar (HTTP 500);
   native Anzeige per DOM und echte Befehle geprüft, Optik mit Browser-Fixture.
 - Marketing-Build: 101 Seiten, Doku-Sync und `git diff --check` grün.
+- Commit `4624b5e` auf main gepusht, Autor/Committer Matthias Hennemeyer
+  `<mhennemeyer@me.com>`, Arbeitsbaum sauber. Lokale App mit Korrektur geöffnet,
+  temporärer Vite-Prüfserver beendet. Menschliche Abnahme steht aus.
 
 ## Questions
 
