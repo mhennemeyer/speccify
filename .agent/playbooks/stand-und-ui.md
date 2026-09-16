@@ -18,6 +18,24 @@ Schnelleinstieg: [Fähigkeiten](#fähigkeiten-vorhanden-geprüft-offen) ·
 [Prüfstand](#verifikation-und-verbleibende-risiken) ·
 [UI-Ausbau](#vorgeschlagener-ui-ausbau--nicht-implementiert).
 
+**0.8.x-Findings 051–055, 2026-09-16 (noch unveröffentlicht):** Terminal inklusive
+Bedienelementen folgt Hell/Dunkel/System; Schrift 8–32 px (Standard 14), live und
+fensterübergreifend. Rückfragen-Hinweise über OSC 9/777, Bell und bekannte
+Freigabeformulierungen; Popup außerhalb verborgener Terminalflächen, Sprung zur
+Quelle, optionale Systemmeldung bei inaktivem Fenster und Testknopf. Kein
+automatisches Beantworten; freie Fragen sind nicht zuverlässig aus Text erkennbar.
+Agent-Einstellungen im Dashboard sowie in Projekt-/Workspace-Settings und
+Agent-Tab: gruppierter, durchsuchbarer Schemakatalog mit Hilfe, JSON für komplexe
+Werte, vollständiger Quelltext, überprüfbarer Autonomie-Entwurf, Konfliktprüfung
+und Erhalt unbekannter Werte/TOML-Kommentare. Globale Benutzerdateien; tatsächliche
+Host-Version, Projekt-/Profil-/Admin-Overrides und abweichende Shell-Umgebungen
+bleiben maßgeblich. Acht Config-Tests, Terminal-/Settings-Browserprüfungen und
+native Wegwerfprojekt-Prüfung grün; Windows-/Linux-OS-Zustellung offen.
+Enter getrennt von Paste mit echtem zsh-PTY nachgewiesen; bestehende Übergaben
+senden weiterhin kein Enter. [Research](../../docs/terminal-enter-research.md),
+[Bedienhilfe](../../apps/marketing/src/content/docs/app/terminal-settings.md).
+Öffentlich bleibt 0.8.1; nächster Release nur auf Zuruf. 0.9.0/itsdcloud ist geparkt.
+
 **Umsetzungspaket 044–047, 2026-09-16:** Root-Dateien, gemeinsame Wissenslisten,
 portable Registerbindung und Draft-Playbooks implementiert. Lokaler signierter
 Build offen; 124 Rust-Tests, Python-Suite, Browser-Regressionen und native QA grün.
@@ -252,12 +270,16 @@ Speccify · Dashboard
 │   │       ├── Client-Config einblenden/kopieren
 │   │       └── Supervisor-Log / fehlendes Binary
 │   ├── Agents
+│   │   ├── Codex / Claude: Einstellungen und Anweisungsdateien
+│   │   ├── Suche / Themengruppen / Feldhilfe / vollständiger Quelltext
+│   │   └── Autonomieprofil als Entwurf / Speichern / Rücknahme / Konfliktanzeige
 │   │   ├── Claude: globale settings.json / CLAUDE.md
 │   │   ├── Codex: globale config.toml / AGENTS.md
 │   │   └── bekannte Datei auswählen → Text bearbeiten/speichern; fehlend anzeigen
 │   ├── Settings
 │   │   ├── Projekt-Erkennungstiefe 1–16 (Standard 1): Root + direkte Unterordner
 │   │   ├── Erscheinungsbild: System / Hell / Dunkel (fensterübergreifend)
+│   │   ├── Terminal: Schriftgröße 8–32 px · Popup-Hinweise · Systemmeldungen testen
 │   │   ├── Agent-Sitzung: Dashboard-Fortsetzung nach Neustart
 │   │   ├── Teamsignale: Webhook-URL (030)
 │   │   ├── Working Dir: Pfad / Verzeichnisdialog
@@ -307,6 +329,8 @@ Projektfenster · ein Projektpfad (Startbereich: Specs)
 │   │   └── Live-Text / Fortschritt / Diagramme / Exit / Dauer / Stop
 │   └── bei rechtem Terminal-Dock: zusätzlich Terminal-Tab
 ├── Agent-Terminal (dieselbe Instanz, unten oder rechts)
+│   ├── Hell/Dunkel/System · A− / A+ (8–32 px), ohne Prozessneustart
+│   ├── Rückfragen-Popup: Quelle · Zum Terminal · Schließen; optionale OS-Meldung
 │   ├── vor Start: Kommando / Presets · leer = Shell-only
 │   ├── Startumgebung prüfen: Host, Pfad/Version, CLI/Quelle, Hinweise/Fehler
 │   ├── Starten / Neu starten / Sitzung fortsetzen (genau bekannte Sitzung) ·

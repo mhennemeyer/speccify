@@ -20,6 +20,51 @@ use crate::agent_session::{self, AgentSession, SessionRequest, Utf8Chunker};
 use crate::agent_startup::{self, login_shell, StartupReport};
 use crate::settings;
 
+#[tauri::command]
+pub fn terminal_attention(
+    window: tauri::WebviewWindow,
+    state: State<'_, Terminals>,
+    id: String,
+) -> Result<(), String> {
+    let owned = state
+        .windows
+        .lock()
+        .map_err(|e| e.to_string())?
+        .get(window.label())
+        .is_some_and(|entry| entry.ids.contains(&id));
+    if !owned {
+        return Err("Terminal gehört nicht zu diesem Fenster.".into());
+    }
+    if !crate::terminal_preferences::terminal_preferences()?.system_notifications
+        || window.is_focused().map_err(|e| e.to_string())?
+    {
+        return Ok(());
+    }
+    let _ = window.request_user_attention(Some(tauri::UserAttentionType::Informational));
+    notify_terminal(
+        window.app_handle(),
+        "Ein Terminal wartet auf Deine Aufmerksamkeit. Öffne Speccify und wähle ‚Zum Terminal‘.",
+    )
+}
+
+fn notify_terminal(app: &AppHandle, body: &str) -> Result<(), String> {
+    use tauri_plugin_notification::NotificationExt;
+    app.notification()
+        .builder()
+        .title("Speccify · Terminal")
+        .body(body)
+        .show()
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub fn terminal_notification_test(app: AppHandle) -> Result<(), String> {
+    notify_terminal(
+        &app,
+        "Test: Rückfragen aus dem Terminal können hier angezeigt werden.",
+    )
+}
+
 struct TerminalSession {
     writer: Box<dyn Write + Send>,
     master: Box<dyn MasterPty + Send>,

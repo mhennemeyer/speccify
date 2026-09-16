@@ -5,6 +5,9 @@ sidebar:
   order: 5
 ---
 
+For terminal approval prompts and attention notices planned for the next 0.8.x
+update, see [Terminal & agent settings](../terminal-settings/).
+
 Some decisions are yours alone: scope, money, taste, anything
 irreversible. The workflow's rule for the agent:
 

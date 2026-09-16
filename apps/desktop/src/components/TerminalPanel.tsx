@@ -4,6 +4,7 @@
 // nur), damit die Shell weiterläuft.
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { invoke } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { readText, writeText } from "@tauri-apps/plugin-clipboard-manager";
@@ -17,6 +18,8 @@ import type { AgentSession, SessionRequest } from "../lib/agents";
 import { StartupDetails } from "./AgentStartup";
 import { deliverToTerminal, registerTerminalWriter } from "../lib/handover";
 import { registerQaTerminal } from "../lib/qa";
+import { terminalTheme, useTerminalPreferences } from "../lib/terminalPreferences";
+import { observeTerminalAttention, type TerminalAttention } from "../lib/terminalAttention";
 
 export interface TerminalOpened {
   cwd: string;
@@ -59,6 +62,11 @@ export default function TerminalPanel({
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const projectActive = useProjectActivity();
+  const { preferences, update: updatePreferences, error: preferencesError } = useTerminalPreferences();
+  const preferencesRef = useRef(preferences);
+  preferencesRef.current = preferences;
+  const [attention, setAttention] = useState<TerminalAttention | null>(null);
+  const [notificationError, setNotificationError] = useState("");
 
   // W6/D24 → Spec 011: „ins Terminal tippen" läuft über die bestätigte
   // Zustellung; das alte Event bleibt für Aufrufer ohne Rückmeldung.
@@ -105,16 +113,26 @@ export default function TerminalPanel({
     idRef.current = id;
     setStatus("");
     setStartup(null);
+    setAttention(null);
 
     const terminal = new Terminal({
-      fontSize: 12,
+      fontSize: preferencesRef.current.font_size,
       fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
       cursorBlink: true,
-      theme: { background: "#0f172a" },
+      theme: terminalTheme(document.documentElement.dataset.theme === "dark"),
+      minimumContrastRatio: 4.5,
     });
     const fit = new FitAddon();
     terminal.loadAddon(fit);
     terminal.open(container);
+    const syncTheme = () => {
+      const theme = terminalTheme(document.documentElement.dataset.theme === "dark");
+      terminal.options.theme = theme;
+      container.style.backgroundColor = theme.background ?? "";
+    };
+    syncTheme();
+    const themeObserver = new MutationObserver(syncTheme);
+    themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
     // Spec 039: die QA-Brücke darf den Puffer lesen.
     const unregisterQa = registerQaTerminal(terminal);
     // I3: `pfad:zeile` in der Ausgabe (Compiler, Tests, grep) ist ein Link
@@ -150,6 +168,12 @@ export default function TerminalPanel({
     fit.fit();
     terminalRef.current = terminal;
     fitRef.current = fit;
+    const stopAttention = observeTerminalAttention(terminal, notice => {
+      setAttention(notice);
+      if (preferencesRef.current.system_notifications) {
+        void invoke("terminal_attention", { id }).catch(error => setNotificationError(String(error)));
+      }
+    });
 
     // Kopieren/Einfügen (BO-Finding): ⌘C kopiert die Selektion (ohne
     // Selektion normal weiterreichen — ^C bleibt SIGINT), ⌘V fügt ein.
@@ -194,6 +218,7 @@ export default function TerminalPanel({
           }),
           await listen<TermOut>("term-exit", (event) => {
             if (event.payload.id === id) {
+              setAttention(null);
               terminal.writeln("\r\n\x1b[33m[Shell beendet — bitte 'Neu starten']\x1b[0m");
             }
           }),
@@ -233,6 +258,7 @@ export default function TerminalPanel({
     })();
 
     const dataListener = terminal.onData((data) => {
+      setAttention(null);
       void invoke("terminal_write", { id, data }).catch(() => {});
     });
 
@@ -255,6 +281,8 @@ export default function TerminalPanel({
       if (busyRef.current) endActivity(busyRef.current, "cancelled");
       busyRef.current = null;
       observer.disconnect();
+      themeObserver.disconnect();
+      stopAttention();
       dataListener.dispose();
       unlisteners.forEach((unlisten) => unlisten());
       void invoke("terminal_kill", { id }).catch(() => {});
@@ -265,6 +293,18 @@ export default function TerminalPanel({
     });
     return () => { cancelAnimationFrame(initialization); cleanup?.(); };
   }, [generation]);
+
+  useEffect(() => {
+    const terminal = terminalRef.current;
+    if (!terminal) return;
+    terminal.options.fontSize = preferences.font_size;
+    const frame = requestAnimationFrame(() => {
+      if (!containerRef.current?.clientWidth) return;
+      fitRef.current?.fit();
+      void invoke("terminal_resize", { id: idRef.current, cols: terminal.cols, rows: terminal.rows }).catch(() => {});
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [preferences.font_size]);
 
   // Beim Einblenden nachfitten (im hidden-Zustand ist die Breite 0).
   useEffect(() => {
@@ -286,6 +326,23 @@ export default function TerminalPanel({
   // nur der Terminal-Inhalt, damit AskBoPanel darüber wohnen kann.
   return (
     <div className="flex min-h-0 flex-1 flex-col">
+      {attention && preferences.popups && createPortal(
+        <aside role="alert" aria-label="Terminal braucht Aufmerksamkeit"
+          className="fixed bottom-5 right-5 z-[100] w-96 max-w-[calc(100vw-2rem)] rounded-xl border border-amber-400 bg-white p-4 text-slate-800 shadow-xl">
+          <h3 className="font-semibold">Terminal braucht Aufmerksamkeit</h3>
+          <p className="mt-1 text-sm">{attention.message}</p>
+          <p className="my-2 break-all font-mono text-xs">{cwd || cwdProp}</p>
+          {notificationError && <p className="text-xs text-amber-700">Systemmeldung: {notificationError}</p>}
+          <div className="flex gap-2">
+            <button className="rounded bg-slate-800 px-3 py-1 text-sm text-white" onClick={() => {
+              window.dispatchEvent(new CustomEvent("speccify:show-terminal"));
+              terminalRef.current?.scrollToBottom();
+              terminalRef.current?.focus();
+              setAttention(null);
+            }}>Zum Terminal</button>
+            <button className="rounded border px-3 py-1 text-sm" onClick={() => setAttention(null)}>Schließen</button>
+          </div>
+        </aside>, document.body) }
       {startup ? (
         <details className="max-h-40 overflow-y-auto border-b border-slate-700 px-3 py-2 text-slate-400">
           <summary className="cursor-pointer text-xs">Startumgebung{startup.warnings.length ? ` · ${startup.warnings.length} Hinweise` : ""}</summary>
@@ -294,6 +351,13 @@ export default function TerminalPanel({
       ) : null}
       <div className="flex items-center gap-2 border-b border-slate-700 px-3 py-1.5">
         <span className="text-xs font-semibold text-slate-300">Agent-Terminal</span>
+        <button aria-label="Terminal-Schrift verkleinern" disabled={preferences.font_size <= 8}
+          className="rounded border px-1 text-xs disabled:opacity-30"
+          onClick={() => void updatePreferences({ font_size: preferences.font_size - 1 })}>A−</button>
+        <span className="text-xs text-slate-500" aria-label="Aktuelle Terminal-Schriftgröße">{preferences.font_size} px</span>
+        <button aria-label="Terminal-Schrift vergrößern" disabled={preferences.font_size >= 32}
+          className="rounded border px-1 text-xs disabled:opacity-30"
+          onClick={() => void updatePreferences({ font_size: preferences.font_size + 1 })}>A+</button>
         <span className="truncate font-mono text-[10px] text-slate-500" title={cwd}>
           {cwd}
         </span>
@@ -305,6 +369,7 @@ export default function TerminalPanel({
         </button>
       </div>
       {status ? <p className="px-3 py-1 text-xs text-red-400">{status}</p> : null}
+      {preferencesError ? <p role="alert" className="px-3 text-xs text-red-400">{preferencesError}</p> : null}
       <div ref={containerRef} className="min-h-0 flex-1 p-1" />
     </div>
   );

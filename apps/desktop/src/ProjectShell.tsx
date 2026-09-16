@@ -752,7 +752,7 @@ export default function ProjectShell() {
 
         {/* Agent-Terminal: ein Element, zwei mögliche Grid-Zellen */}
         <section
-          className={`keep-dark ${terminalVisible ? "flex" : "hidden"} min-h-0 min-w-0 flex-col bg-slate-900 ${
+          className={`terminal-surface ${terminalVisible ? "flex" : "hidden"} min-h-0 min-w-0 flex-col bg-slate-900 ${
             terminalDock === "right" ? "border-l border-slate-700" : "border-t border-slate-700"
           }`}
           style={terminalCell}

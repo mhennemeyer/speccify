@@ -43,6 +43,11 @@ export default function App() {
   useTheme(); // Erscheinungsbild anwenden + auf Wechsel aus anderen Fenstern hören
   const [active, setActive] = useState<SectionId>("projects");
   const [sidebarVisible, setSidebarVisible] = useState(false);
+  useEffect(() => {
+    const show = () => setSidebarVisible(true);
+    window.addEventListener("speccify:show-terminal", show);
+    return () => window.removeEventListener("speccify:show-terminal", show);
+  }, []);
   // Terminal erst beim ersten Öffnen über den Toggle mounten (sonst liefe
   // der Autostart-Command schon beim App-Start); danach gemountet lassen —
   // die Shell überlebt das Ein-/Ausklappen. ask_bo öffnet nur die Sidebar,
@@ -234,7 +239,7 @@ export default function App() {
         ))}
       </main>
       <aside
-        className={`${sidebarVisible ? "flex" : "hidden"} w-[520px] shrink-0 flex-col border-l border-slate-700 bg-slate-900`}
+        className={`terminal-surface ${sidebarVisible ? "flex" : "hidden"} w-[520px] shrink-0 flex-col border-l border-slate-700 bg-slate-900`}
       >
         <AskBoPanel interactions={interactions} onAnswer={answerInteraction} />
         {terminalStarted ? (

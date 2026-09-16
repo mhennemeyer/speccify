@@ -10,6 +10,7 @@ import { ActionButton, ErrorBox } from "../components/ui";
 import { AGENT_PRESETS } from "../lib/agents";
 import { useTheme } from "../lib/theme";
 import ThemePicker from "../components/ThemePicker";
+import TerminalPreferencesEditor from "../components/TerminalPreferencesEditor";
 import { DASHBOARD_RESUME_KEY } from "../App";
 
 interface AppSettings {
@@ -96,6 +97,7 @@ export default function SettingsView() {
           Projektfenster.
         </p>
         <ThemePicker value={theme} onChange={(next) => void setTheme(next)} />
+        <TerminalPreferencesEditor />
       </section>
 
       <section>

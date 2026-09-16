@@ -33,6 +33,7 @@ mod spec_tasks;
 mod system_cmd;
 mod team_signals;
 mod terminal;
+mod terminal_preferences;
 mod toolbox_cmd;
 mod updates;
 mod workflow_setup;
@@ -359,6 +360,8 @@ pub fn run() {
             agent_config::agent_config_list,
             agent_config::agent_config_read,
             agent_config::agent_config_write,
+            agent_config::agent_config_parse,
+            agent_config::agent_config_patch,
             skill_sources::project_skill_sources,
             skill_sources::source_browse,
             skill_sources::source_skill_read,
@@ -374,6 +377,8 @@ pub fn run() {
             project_watch::project_watch_stop,
             settings::get_settings,
             settings::save_settings,
+            terminal_preferences::terminal_preferences,
+            terminal_preferences::terminal_preferences_update,
             settings::briefing_status,
             settings::create_briefing_file,
             toolbox_cmd::toolbox_list,
@@ -388,6 +393,8 @@ pub fn run() {
             system_cmd::kb_list,
             agent_session::agent_session_check,
             terminal::terminal_open,
+            terminal::terminal_attention,
+            terminal::terminal_notification_test,
             terminal::terminal_write,
             terminal::terminal_resize,
             terminal::terminal_kill,

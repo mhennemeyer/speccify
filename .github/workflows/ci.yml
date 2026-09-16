@@ -170,6 +170,16 @@ jobs:
         env:
           SPECCIFY_TEST_BROWSER: chromium
 
+      - name: Terminal appearance and attention prompts
+        run: node scripts/test_terminal_preferences.mjs
+        env:
+          SPECCIFY_TEST_BROWSER: chromium
+
+      - name: Agent settings drafts, validation and conflicts
+        run: node scripts/test_agent_settings.mjs
+        env:
+          SPECCIFY_TEST_BROWSER: chromium
+
       - name: Install pinned toolchain
         run: rustup show
 

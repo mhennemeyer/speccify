@@ -11,6 +11,7 @@ export interface QaHooks {
   terminalText: () => string | null;
   /** Ob ein Terminal Aufträge annimmt (Spec 011). */
   terminalReady: () => boolean;
+  terminalAppearance: () => { fontSize: number | undefined; background: string | undefined; cols: number; rows: number } | null;
 }
 
 declare global {
@@ -44,5 +45,7 @@ export function terminalText(): string | null {
 }
 
 export function installQaHooks(): void {
-  window.__speccifyQa = { terminalText, terminalReady };
+  window.__speccifyQa = { terminalText, terminalReady,
+    terminalAppearance: () => terminal ? { fontSize: terminal.options.fontSize, background: terminal.options.theme?.background, cols: terminal.cols, rows: terminal.rows } : null,
+  };
 }

@@ -4,6 +4,8 @@ import { useState } from "react";
 // bleibt im Agent-Tab und am Terminal-Start.
 
 import ThemePicker from "./ThemePicker";
+import TerminalPreferencesEditor from "./TerminalPreferencesEditor";
+import AgentSettingsDialog from "./AgentSettingsDialog";
 import type { ThemePref } from "../lib/theme";
 import type { ProjectLayout, TerminalDock } from "../lib/layout";
 
@@ -60,6 +62,8 @@ export default function SettingsSheet({
 
         <section className="mb-4">
           <h3 className="mb-1 text-xs font-semibold text-slate-500">Agent-Terminal</h3>
+          <TerminalPreferencesEditor />
+          <div className="mb-3"><AgentSettingsDialog /></div>
           <div role="radiogroup" className="inline-flex gap-0.5 rounded-full bg-slate-100 p-0.5">
             {(
               [

@@ -7,6 +7,19 @@ Stand: **2026-09-10**. Lebendes Playbook, kein abzuhakender Implementierungsauft
 Abnahme-Arbeitsweise nachgeführt am **2026-09-15** für Spec 012.
 Multi-Projekt-Zielbild und Playbook-Drafts verfeinert am **2026-09-16** (Spec 043).
 
+**Priorität 2026-09-16, BO-Auftrag 051–055:** Vor itsdcloud/0.9.0 die Terminal-
+Findings für 0.8.x fertigstellen: helles Terminal, globale Schriftgröße,
+sichtbare Rückfragen/Systemmeldungen und editierbare Agent-Einstellungen mit
+Hilfe und überprüfbarem Autonomieprofil. Globale Benutzerkonfiguration nur auf
+Speichern ändern, andere Schlüssel und neuere externe Änderungen erhalten.
+Sandbox, Approval-Policy, automatische Prüfung und Windows-Ersteinrichtung
+getrennt erklären; möglichst wenige Rückfragen sind keine Zusage unbegrenzter
+Berechtigungen. Implementiert und lokal geprüft, noch kein neuer Release.
+Native Windows-/Linux-Meldungsabnahme bleibt offen. Enter ist als separate
+PTY-Eingabe im Wegwerfprojekt belegt; ein neuer „Einfügen und senden“-Knopf
+bleibt Folgeentscheidung gemäß [Research](../../docs/terminal-enter-research.md).
+Bestehende Übergaben bleiben Paste ohne Enter. Nach Abnahme zurück zu 0.9.0.
+
 Schnelleinstieg: [Leitbild](#leitbild) · [Phasen](#phasen-und-priorisierung) ·
 [Vision 1](#vision-1-bald-umsetzen) · [Vision 2](#vision-2-nach-breiter-interner-nutzung) ·
 [Entscheidungen](#offene-produktentscheidungen) ·

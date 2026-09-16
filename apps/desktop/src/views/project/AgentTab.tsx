@@ -18,6 +18,7 @@ import {
 } from "../../lib/panels";
 import { HandoverButton } from "../../components/HandoverSheet";
 import AgentStartup from "../../components/AgentStartup";
+import AgentSettingsDialog from "../../components/AgentSettingsDialog";
 
 export default function AgentTab({
   project,
@@ -86,6 +87,7 @@ export default function AgentTab({
         </div>
       </div>
       <AgentStartup project={commandRoot ?? project} command={agentCommand} />
+      <div><AgentSettingsDialog /></div>
       <LoadingBoundary loading={files.loading} error={files.error} label="Agent-Dateien suchen…">
         {available.length === 0 ? (
           <>

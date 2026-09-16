@@ -414,7 +414,7 @@ export default function WorkspaceShell() {
       </div>
       <div ref={setOutputHost} aria-label="Aktionsausgabe" className={`${outputVisible ? "flex" : "hidden"} min-h-0 min-w-0 flex-col overflow-hidden`} style={{ gridColumn: 5, gridRow: "3 / -1" }} />
       <aside ref={setInspectorHost} aria-label="Workspace-Inspektor" className={`inspector-body ${rightShown && layout.rightTab === "inspector" ? "flex" : "hidden"} min-h-0 min-w-0 flex-col overflow-y-auto border-l border-slate-200 bg-white`} style={{ gridColumn: 5, gridRow: "3 / -1" }} />
-      <section aria-label="Agent-Terminal" className={`keep-dark ${terminalVisible ? "flex" : "hidden"} min-h-0 min-w-0 flex-col bg-slate-900 ${terminalDock === "right" ? "border-l" : "border-t"} border-slate-700`} style={terminalDock === "right" ? { gridColumn: 5, gridRow: "3 / -1" } : { gridColumn: 3, gridRow: 5 }}>
+      <section aria-label="Agent-Terminal" className={`terminal-surface ${terminalVisible ? "flex" : "hidden"} min-h-0 min-w-0 flex-col bg-slate-900 ${terminalDock === "right" ? "border-l" : "border-t"} border-slate-700`} style={terminalDock === "right" ? { gridColumn: 5, gridRow: "3 / -1" } : { gridColumn: 3, gridRow: 5 }}>
         <div className="flex justify-end px-2 pt-1"><button onClick={toggleDock} title={terminalDock === "right" ? "Terminal nach unten legen" : "Terminal nach rechts legen"} className="rounded px-2 py-0.5 text-xs text-slate-500 hover:bg-slate-800 hover:text-slate-300">{terminalDock === "right" ? "⬓ nach unten" : "⬔ nach rechts"}</button></div>
         {workspace && <section aria-label={`Terminal ${workspace.root}`} className="flex min-h-0 flex-1 flex-col">
           <div className="flex items-center justify-between gap-2 px-3 py-1">
