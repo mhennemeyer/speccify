@@ -45,13 +45,13 @@ Kein neues Release ohne gesonderten Zuruf; itsdcloud/0.9.0 bleibt geparkt.
 
 Abgeschlossen auf main, noch unveröffentlicht: 134 Rust-Tests bestanden (3 bestehende ignoriert), vollständige Python-Suite grün, TypeScript und Ruff/Format grün. Browser: Terminaldarstellung/-hinweise, Agent-Einstellungen, bestehende Auftragsübergabe und Sitzungswahl grün. Native gebündelte App: echte PTYs, UTF-8, Theme/Schrift ohne Prozessverlust, zwei Fenster, Popup, Paste ohne Enter, explizites CR, Ctrl-C, Exit/Neustart grün. Einstellungsdialog nativ geöffnet; macOS-Testnotification ohne API-Fehler. Developer-ID-Signatur inklusive Sidecars gültig. Vier bestehende Fenster nach Neustart wiederhergestellt. Lokale App bleibt offen; keine echte Host-Konfiguration für Tests verändert. Doku/Playbooks aktualisiert. Windows-/Linux-Systemzustellung und menschliche Sichtabnahme bleiben offen; kein neuer Tag.
 
-## Questions
-
 Nachtrag Verifikation: Commit `95a830b` mit Matthias Hennemeyer als Autor auf
 `main` gepusht. GitHub: Windows-Browserprüfungen einschließlich Terminal und
 Agent-Einstellungen sowie native Windows-Cargo-Tests erfolgreich; Linux-Job
 erfolgreich. Website-Deployment und Docs-Lauf erfolgreich. Öffentliche Hilfe
 unter https://speccify.io/app/terminal-settings/ erreichbar und als unveröffentlichte
 0.8.x-Vorschau markiert. Die echte OS-Zustellung in der Windows-VM bleibt offen.
+
+## Questions
 
 Keine.
