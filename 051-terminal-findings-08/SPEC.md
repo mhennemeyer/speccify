@@ -47,4 +47,11 @@ Abgeschlossen auf main, noch unveröffentlicht: 134 Rust-Tests bestanden (3 best
 
 ## Questions
 
+Nachtrag Verifikation: Commit `95a830b` mit Matthias Hennemeyer als Autor auf
+`main` gepusht. GitHub: Windows-Browserprüfungen einschließlich Terminal und
+Agent-Einstellungen sowie native Windows-Cargo-Tests erfolgreich; Linux-Job
+erfolgreich. Website-Deployment und Docs-Lauf erfolgreich. Öffentliche Hilfe
+unter https://speccify.io/app/terminal-settings/ erreichbar und als unveröffentlichte
+0.8.x-Vorschau markiert. Die echte OS-Zustellung in der Windows-VM bleibt offen.
+
 Keine.
