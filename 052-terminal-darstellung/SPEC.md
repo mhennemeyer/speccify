@@ -3,7 +3,7 @@ station: Doing
 order: 52
 created: 2026-09-16
 needs_human: true
-ready: false
+ready: true
 parent: 051-terminal-findings-08
 ---
 # Terminalfarben und Schriftgröße
@@ -33,11 +33,11 @@ Schriftgröße 8–32 px einstellbar und fensterübergreifend dauerhaft gespeich
 
 - [x] Native Preferences und Grenzen.
 - [x] Live-Thema, Schriftsteuerung und Größenanpassung.
-- [ ] Browser-/Native-Prüfung und Dokumentation.
+- [x] Browser-/Native-Prüfung und Dokumentation.
 
 ## Verification
 
-Browser-Suite `test_terminal_preferences.mjs` grün: Hell/Dunkel, UTF-8, 8–32 px, PTY-Resize ohne Neustart, Persistenz und fensterübergreifendes Event. Native Preferences-Test grün. Für die gemeinsame Prüfung der gebündelten App geparkt.
+`test_terminal_preferences.mjs` und nativer Preferences-Test grün. `test_terminal_settings_app.py` im finalen gebündelten Build grün: Light/Dark, globaler Größenwechsel in zwei Fenstern, kleinerer PTY-Spaltenwert, erhaltener Unicode-Text und Shell-Variable nach Änderung. Wiederanlauf nutzt gespeicherte Größe. Terminalrahmen und Bedienelemente folgen ebenfalls dem Theme. Dokumentiert in der neuen Bedienhilfe.
 
 ## Questions
 

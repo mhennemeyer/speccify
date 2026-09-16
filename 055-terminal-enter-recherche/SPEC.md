@@ -3,7 +3,7 @@ station: Doing
 order: 55
 created: 2026-09-16
 needs_human: true
-ready: false
+ready: true
 parent: 051-terminal-findings-08
 ---
 # Recherche: Einfügen und Enter im Terminal
@@ -33,11 +33,11 @@ auf automatisches Ausführen umstellen.
 ## Tasks
 
 - [x] Bestehende Schreib-/Pastepfade und Host-Verhalten prüfen.
-- [ ] Harmloser praktischer Test und Research-Ergebnis.
+- [x] Harmloser praktischer Test und Research-Ergebnis.
 
 ## Verification
 
-Noch ausstehend.
+`scripts/test_terminal_settings_app.py` im finalen gebündelten Build grün: zwei harmlose Shellzeilen per Bracketed Paste, Testdatei bleibt vor Enter absent; danach `terminal_write` mit separatem `\r`, Datei enthält genau `first-second`. Unicode, Ctrl-C und Neustart ebenfalls grün. Ergebnis und Grenzen für Codex/Claude in `docs/terminal-enter-research.md`: Transport möglich, Bereitschaft bzw. Besitz des Eingabefokus nicht zuverlässig aus dem PTY ableitbar. Kein zusätzlicher Codex-/Claude-Modellaufruf für diese Research-Prüfung. Bestehende Handover-Browserregression bestätigt weiterhin kein automatisches Enter.
 
 ## Questions
 

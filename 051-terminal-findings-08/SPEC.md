@@ -3,7 +3,7 @@ station: Doing
 order: 51
 created: 2026-09-16
 needs_human: true
-ready: false
+ready: true
 ---
 # Terminal und Agent-Bedienung für 0.8.x
 
@@ -35,16 +35,15 @@ Kein neues Release ohne gesonderten Zuruf; itsdcloud/0.9.0 bleibt geparkt.
 
 ## Tasks
 
-- [ ] 052 Terminaldarstellung.
-- [ ] 053 Rückfragen und Systemmeldungen.
-- [ ] 054 Editierbare Agent-Einstellungen und Hilfe.
-- [ ] 055 Enter-Recherche.
-- [ ] Zusammenhängende Prüfung, Playbooks/Doku und lokale App aktualisieren.
+- [x] 052 Terminaldarstellung.
+- [x] 053 Rückfragen und Systemmeldungen.
+- [x] 054 Editierbare Agent-Einstellungen und Hilfe.
+- [x] 055 Enter-Recherche.
+- [x] Zusammenhängende Prüfung, Playbooks/Doku und lokale App aktualisieren.
 
 ## Verification
 
-Ausgangsstand 0.8.1: Terminalfarbe fest #0f172a, Schrift 12 px; PTY-Schreiben
-kann Steuerzeichen übertragen, normale Übergabe nutzt ausschließlich Paste.
+Abgeschlossen auf main, noch unveröffentlicht: 134 Rust-Tests bestanden (3 bestehende ignoriert), vollständige Python-Suite grün, TypeScript und Ruff/Format grün. Browser: Terminaldarstellung/-hinweise, Agent-Einstellungen, bestehende Auftragsübergabe und Sitzungswahl grün. Native gebündelte App: echte PTYs, UTF-8, Theme/Schrift ohne Prozessverlust, zwei Fenster, Popup, Paste ohne Enter, explizites CR, Ctrl-C, Exit/Neustart grün. Einstellungsdialog nativ geöffnet; macOS-Testnotification ohne API-Fehler. Developer-ID-Signatur inklusive Sidecars gültig. Vier bestehende Fenster nach Neustart wiederhergestellt. Lokale App bleibt offen; keine echte Host-Konfiguration für Tests verändert. Doku/Playbooks aktualisiert. Windows-/Linux-Systemzustellung und menschliche Sichtabnahme bleiben offen; kein neuer Tag.
 
 ## Questions
 

@@ -3,7 +3,7 @@ station: Doing
 order: 53
 created: 2026-09-16
 needs_human: true
-ready: false
+ready: true
 parent: 051-terminal-findings-08
 ---
 # Rückfragen aus dem Terminal sichtbar machen
@@ -34,11 +34,11 @@ aus. Meldungen gruppieren/entprellen; keine automatische Freigabe von Befehlen.
 
 - [x] Host-Signale und bestehende Popup-/Notification-Wege prüfen.
 - [x] Meldungen, Einstellungen und Fokussierung implementieren.
-- [ ] Rückfragen-/Redraw-/Mehrfenster-Regressionen prüfen.
+- [x] Rückfragen-/Redraw-/Mehrfenster-Regressionen prüfen.
 
 ## Verification
 
-Browser-Suite grün: fragmentierte ANSI-Ausgabe, bekannte Freigabefrage bei verborgenem Terminal, OSC 9, Redraw-Deduplizierung, Sprung ohne PTY-Eingabe und deaktivierte Meldungen. Native OS-Prüfung folgt im gemeinsamen Build; Windows bleibt echte VM-Abnahme.
+Browser-Suite grün: fragmentierte ANSI-Ausgabe, bekannte englische/deutsche Freigabefrage, verborgenes Terminal, OSC 9, Deduplizierung, neue Meldung nach Benutzereingabe, deaktivierte Optionen und Löschen bei Prozessende. Native OSC-Meldung aus echtem PTY in genau einem von zwei Fenstern, Portal außerhalb versteckter Fläche und Sprung zum Terminal grün. Test-Systemmeldung unter macOS ohne API-Fehler gesendet; tatsächliche OS-Anzeige kann durch Systemeinstellungen unterdrückt werden. Windows/Linux nicht nativ geprüft. Keine automatischen Antworten oder Freigaben. Bedienhilfe erklärt Grenzen und OS-Test.
 
 ## Questions
 

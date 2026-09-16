@@ -3,7 +3,7 @@ station: Doing
 order: 54
 created: 2026-09-16
 needs_human: true
-ready: false
+ready: true
 parent: 051-terminal-findings-08
 ---
 # Agent-Einstellungen mit verständlicher Hilfe
@@ -40,11 +40,11 @@ Gültigkeitsbereich und notwendiger Terminal-Neustart sichtbar.
 - [x] Konfigurationsschema, Gültigkeitsbereich und verfügbare Hosts prüfen.
 - [x] Sichere Persistenz und Übergabe an den Host.
 - [x] Strukturierte UI, Hilfe, Auswahl und Autonomieprofil.
-- [ ] Roundtrip-/Start-/UI-Prüfung und Dokumentation.
+- [x] Roundtrip-/Start-/UI-Prüfung und Dokumentation.
 
 ## Verification
 
-Sechs native Config-Tests sowie Browser-Suite `test_agent_settings.mjs` grün. TOML-Kommentare, unbekannte Werte und Regeln erhalten; Syntax/Typ/Enum, parallele Änderungen, Entwurf, Suche, Hilfe, Rücknahme und Host-Wechsel geprüft. Installiert: Codex 0.154.0, Claude 2.1.273. Codex akzeptiert das Profil mit `features list`; keine echten Benutzerkonfigurationen geändert. Für gemeinsame native UI-Prüfung geparkt.
+Acht native Tests grün: TOML-Kommentare, unbekannte Schlüssel, Regeln, Enum/Typ/Null, Legacy-Werte, stale-editor-Konflikt, Symlink-Erhalt und Profile. Browser-Suite grün: Suche/Hilfe, Entwurfsprofil, Speichern/Rücknahme, ungültige Eingaben, Konflikt und Hostwechsel ohne stillen Entwurfsverlust. Native JSON/TOML-Parse/Patch mit Teststrings grün; echter modaler Einstellungsdialog schreibfrei geöffnet/geschlossen. Codex 0.154.0 akzeptiert das angebotene Profil über `features list`; Claude 2.1.273 vorhanden, Auto-Verfügbarkeit laut Konto/Modell/Policy erklärt. Keine Benutzerdatei für Tests geändert. Schema-Snapshots mit Apache-2.0-Lizenz und Referenzen; Quelltext erlaubt zusätzliche Schlüssel. Kein Versprechen effektiver Sitzungseinstellungen oder vollständiger CLI-Semantikvalidierung.
 
 ## Questions
 
