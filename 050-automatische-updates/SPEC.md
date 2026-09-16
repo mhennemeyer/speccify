@@ -2,7 +2,7 @@
 station: Doing
 order: 50
 needs_human: true
-ready: false
+ready: true
 open_question: null
 ---
 
@@ -55,8 +55,9 @@ GitHub Secrets; öffentlicher Prüfkey im App-Vertrag.
 - [x] Zustands-, Signatur-, Fehler- und UI-Regressionen prüfen; lokale App aktualisieren.
 - [x] Dokumentation/Playbooks nachführen, committen/pushen; zu 034 weitergehen.
   Commits `379ea42` und `dbdabc7` auf main gepusht; plattformübergreifende CI grün.
-- [ ] (added) Freigegebenes Release 0.8.1 bauen, Artefakte prüfen und veröffentlichen.
+- [x] (added) Freigegebenes Release 0.8.1 bauen, Artefakte prüfen und veröffentlichen.
   Tag auf `dbb1c03`; Workflow `35083774597`, Release zunächst als Entwurf.
+  Veröffentlicht 2026-09-16T10:43:36Z; Schlussprüfung `35086325249` erfolgreich.
 
 ## Verification
 
@@ -77,6 +78,29 @@ native Update-Zustand. Öffentlicher Endpoint liefert noch kein Manifest, daher
 erwarteter sichtbarer Suchfehler. Bootstrap-Release und tatsächliche N→N+1-
 Installation auf macOS/Windows/Linux noch ausstehend. Implementierung zur
 menschlichen Abnahme geparkt; danach Arbeit an 034.
+
+Release-Nachweis 2026-09-16: alle vier Plattform-Builds in `35083774597`
+erfolgreich. Beim ersten echten Release festgestellte Workflow-Lücken behoben:
+Entwurfs-Metadaten über Release-ID, temporäre GitHub-Downloadadressen strikt
+normalisiert, separates DMG-Ticket und Ubuntu 24.04 mit minisign für die Prüfung.
+Korrekturen `979a1fa`, `2fb8c25`, `00c0133`, `1493fff`; Tag unverändert.
+12 Manifesttests und actionlint grün; alle vier tatsächlich heruntergeladenen
+Pakete unabhängig auf Größe, SHA-256 und Signatur geprüft. Schlusslauf
+`35086325249` erfolgreich, Manifest identisch zu unabhängiger Prüfung.
+
+https://github.com/mhennemeyer/speccify/releases/tag/v0.8.1 veröffentlicht;
+öffentlicher latest.json-Endpoint liefert 0.8.1, alle vier Paket-URLs HTTP 200.
+macOS-App und alle Sidecars gültig signiert, App/DMG mit angeheftetem Ticket,
+Gatekeeper jeweils `accepted / Notarized Developer ID`.
+
+Echter lokaler Update-Vorgang: Entwicklungsbuild 0.8.0 mit vorhandenem Prüfkey
+erkennt 0.8.1 in vier Fenstern, lädt 30.347.602 Bytes signaturgeprüft, installiert
+per sichtbarem Knopf und startet neu. PID 63257, Version 0.8.1, alle vier Fenster
+wiederhergestellt, Zustand `current`, keine Fehler, installierte Signatur gültig.
+QA-Aufruf überschritt beim Download sein 10-Sekunden-Limit; nativer Download
+lief korrekt weiter und wurde vor Installation als `ready` bestätigt.
+Dies ist kein Upgrade-Nachweis für veröffentlichte 0.8.0 ohne Key. Windows-/Linux-
+Installation und Upgrade zwischen zwei veröffentlichten Updater-Versionen offen.
 
 ## Questions
 
