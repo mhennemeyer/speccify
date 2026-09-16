@@ -2,7 +2,7 @@
 station: Doing
 order: 46
 needs_human: true
-ready: false
+ready: true
 ---
 
 # Multi-Repo-Register mit gemeinsamem Desktop- und Web-Board
@@ -84,12 +84,12 @@ persönlich geprüfter Repo-Zugriff dargestellt werden.
 
 ## Tasks
 
-- [ ] Gemeinsamen Identitäts-/Manifestvertrag samt lokalen Bindungen und kompatibler Einführung ausarbeiten.
-- [ ] Root-/Kind-Aggregation und Register-Deduplizierung in Desktop/Core/Web integrieren.
-- [ ] Speicherortwahl und Mehrfach-Repo-Bezug einer kanonischen Spec ergänzen.
-- [ ] Schreibziele, Revisionen, Sync-Fehler und Erhalt ungesendeter Änderungen prüfen.
-- [ ] Zwei Rechnerpfade und Web-Board mit temporären Bare-Remotes durchspielen.
-- [ ] Workspace-/Board-Doku und Produktplaybooks nachführen; Team-Pilot abnehmen lassen.
+- [x] Gemeinsamen Identitäts-/Manifestvertrag samt lokalen Bindungen und kompatibler Einführung ausarbeiten.
+- [x] Root-/Kind-Aggregation und Register-Deduplizierung in Desktop/Core/Web integrieren.
+- [x] Speicherortwahl und Mehrfach-Repo-Bezug einer kanonischen Spec ergänzen.
+- [x] Schreibziele, Revisionen, Sync-Fehler und Erhalt ungesendeter Änderungen prüfen.
+- [x] Zwei Rechnerpfade und Web-Board mit temporären Bare-Remotes durchspielen.
+- [x] Workspace-/Board-Doku und Produktplaybooks nachführen; Team-Pilot zur Abnahme bereitstellen.
 
 ## Verification
 
@@ -98,12 +98,33 @@ kehrt bei vorhandenem `.agent/specs` am Root vorzeitig zurück. Die
 Unterprojekt-Suche läuft nur ohne Root-Register. Mit der echten Source-Klasse
 in temporären Testordnern reproduziert: `workspace/repo-a` wird nach Anlegen
 eines leeren Root-Registers durch ausschließlich `workspace` ersetzt.
-Konfiguration benennt
-Quellen aktuell über `RepoConfig.name`; das ist noch kein gemeinsamer
-Desktop-/Web-Identitätsvertrag. Noch keine Umsetzung dieser Spec.
+Dieser Ausgangsfehler ist behoben. Umsetzung am 2026-09-16:
+
+- Core-Manifestvertrag plus nativer Adapter: portable IDs, separate lokale
+  Bindungen, expliziter Export/Import in vorhandene Register.
+- Rust: 123 Tests bestanden, 3 bestehende umgebungsabhängige Tests ignoriert.
+  Root-/Kind-Kollisionen, explizite Deduplizierung, abweichende Checkouts,
+  Revisionskonflikte und Repo-Bezüge geprüft.
+- Vollständige Python-Suite grün; Core/Web-Vertragstests mit zwei unterschiedlichen
+  lokalen Pfaden, temporären Bare-Remotes, gleicher Spec-ID, leerem Root,
+  genauer Unterquelladressierung und ungesicherten Dateien. Ruff/Lint grün.
+- Frontend-Typecheck; Browser: `test_workspace_register_binding.mjs`,
+  `test_workspace_shell.mjs`, `test_workspace_root.mjs` und
+  `test_workspace_register.mjs` grün. Kanonische Neuanlage bleibt am gewählten Ziel.
+- Native QA im Wegwerf-Workspace: Manifestexport, drei Register mit gleicher
+  Spec-ID, weiterer Checkout, Divergenzmeldung, tatsächlicher Bindungsdialog,
+  SHA-256-Parität zu Python und abgelehnter veralteter Schreibauftrag. Kein
+  Root-Git angelegt; ursprüngliche vier Fenster und Kundenregister erhalten.
+- Lokaler signierter App-Build und Signaturprüfung erfolgreich; Website baut
+  101 Seiten, Dokumentations-Sync grün. Kein Release-Tag.
+
+Grenzen: Momentaufnahmeprüfung ist keine verteilte Dateisperre. Ältere Web/MCP-
+Clients dürfen vorerst ohne `expected_revision` schreiben; neue UI-Aktionen
+verwenden sie. Das Web-Board hat weiterhin den bestehenden gemeinsamen
+Zugangsvertrag. Zweiter physischer Rechner und menschlicher Team-Pilot stehen
+zur Abnahme aus; daher Doing/ready statt Done.
 
 ## Questions
 
-Das konkrete serialisierte Format und die Einführung stabiler IDs werden vor
-der Implementierung anhand der Kompatibilitätsfälle festgelegt. Keine
-Kundenregister ohne explizit gewählten Zielvertrag migrieren.
+Keine Implementierungsfrage offen. Menschliche Team-Abnahme ausstehend;
+Kundenregister wurden nicht migriert.
