@@ -3,7 +3,7 @@ station: Doing
 order: 56
 created: 2026-09-16
 needs_human: true
-ready: false
+ready: true
 parent: 051-terminal-findings-08
 ---
 # Shift+Enter im Agent-Terminal
@@ -38,12 +38,23 @@ Eingabeverhalten in Codex und Claude prüfen; keine globale Host-Konfiguration �
 
 - [x] Ursache und Host-Verarbeitung prüfen.
 - [x] Shift+Enter-Zustellung und Browser-Regression ergänzen.
-- [ ] Echte Host-Eingabe, Build, Doku und lokale App prüfen.
+- [x] Echte Host-Eingabe, Build, Doku und lokale App prüfen.
 
 ## Verification
 
 Quellcode: `@xterm/xterm/src/common/input/Keyboard.ts`, Enter sendet CR und
 wertet nur Alt aus. Installiert: Codex 0.154.0, Claude 2.1.273.
+
+- `node scripts/test_terminal_preferences.mjs`: bestanden; echte Browser-
+  Tastaturereignisse ergeben genau CSI-u, CR, Alt-CR bzw. Ctrl-C, ohne doppeltes CR.
+- `pnpm --filter speccify-desktop typecheck`: bestanden.
+- Lokales App-Bundle neu gebaut, gestartet und `codesign --verify --deep --strict`
+  bestanden. In zwei Wegwerfprojekten mit echten Codex-/Claude-PTYs: `SHIFT_FIRST`,
+  Shift+Enter, `SHIFT_SECOND` ergeben zwei Entwurfszeilen. Kein Auftrag abgesendet;
+  Ctrl-C entfernt beide Zeilen vollständig aus dem Eingabefeld. Testfenster geschlossen.
+- Bedienhilfe sowie beide Produkt-Playbooks ergänzt; Marketing-Build bestanden.
+- Native Windows-/Linux-Abnahme bleibt offen; Browser-Regression ist im bestehenden
+  Windows-CI-Lauf enthalten. Kein neuer Release, öffentliche Version bleibt 0.8.1.
 
 ## Questions
 
