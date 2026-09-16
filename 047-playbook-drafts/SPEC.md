@@ -1,5 +1,5 @@
 ---
-station: Backlog
+station: Doing
 order: 47
 needs_human: true
 ready: false
@@ -61,6 +61,8 @@ Aktivierung ist eine ausdrückliche Statusaktion, nicht Folge von Speichern,
    statusbewusste Speccify-Kontexte/Übergaben setzen den gewünschten Vertrag um.
 4. 2026-09-16: Der [Research-Draft](../../playbooks/speccify-web-app.md) nutzt die
    Konvention bereits mit sichtbarem Hinweis. UI-Unterstützung folgt erst hier.
+5. 2026-09-16: Durch „leg los“ autorisiert. Nach 044 vorgezogen, damit der
+   gemeinsame Wissenskatalog bereits statusbewusste Playbooks verwenden kann.
 
 ## Tasks
 
