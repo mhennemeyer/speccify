@@ -2,7 +2,7 @@
 station: Doing
 order: 43
 needs_human: true
-ready: false
+ready: true
 ---
 
 # Multi-Projekt-Refinement und Web-App-Recherche
@@ -55,7 +55,7 @@ und keine Veröffentlichung eines neuen Releases in diesem Refinement.
 - [x] Offizielle Codex-/Claude-Quellen und lokale Codex-CLI-Hilfe prüfen.
 - [x] Web-App-Research als Playbook-Draft mit nichtbindendem Status ablegen.
 - [x] Produktvision, Bestandsbuch und Repo-Draft-Regel aktualisieren.
-- [ ] Dokumente und Befunde verifizieren, Änderungen synchronisieren.
+- [x] Dokumente und Befunde verifizieren, Änderungen synchronisieren.
 
 ## Verification
 
@@ -76,6 +76,10 @@ Keine Implementierungsänderungen und kein Neustart erforderlich.
 - Neun Dokumente: lokale Markdown-Links, geschlossene Codeblöcke, YAML-Frontmatter
   und Pflichtabschnitte der Specs geprüft; `git diff --check` grün.
   Keine Code-Tests nötig, da ausschließlich Refinement/Dokumentation geändert.
+- Commit `080172c` auf `main` gepusht, Autor und Committer Matthias Hennemeyer
+  `<mhennemeyer@me.com>`. Folgespecs und Historien werden durch die laufende
+  App auf dem separaten `specs`-Branch synchronisiert. Refinement zur
+  menschlichen Prüfung bereit; 044–047 bleiben Backlog.
 
 Folgespecs: [044](../044-workspace-root-dateien/SPEC.md),
 [045](../045-workspace-wissenskatalog/SPEC.md),
