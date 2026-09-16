@@ -23,6 +23,7 @@ import {
 } from "../../lib/panels";
 import { HandoverButton } from "../../components/HandoverSheet";
 import { deliverToTerminal } from "../../lib/handover";
+import type { KnowledgeSelection } from "../../lib/workspaceKnowledge";
 
 export interface SkillEntry {
   name: string;
@@ -372,7 +373,7 @@ function ExportForm({
   );
 }
 
-export default function SkillsTab({ project, refresh }: { project: string; refresh?: number }) {
+export default function SkillsTab({ project, refresh, workspace = false, selection }: { project: string; refresh?: number; workspace?: boolean; selection?: KnowledgeSelection }) {
   const { data, loading, error, reload } = useAsync(
     () => invoke<SkillEntry[]>("project_skills", { project }),
     `skills:${project}`,
@@ -385,6 +386,7 @@ export default function SkillsTab({ project, refresh }: { project: string; refre
   const sources = useAsync(() => listSources(project), `skill-sources:${project}`);
   const [selected, setSelected] = useState<string | null>(null);
   const inspector = useInspector("skills");
+  useEffect(() => { if (selection) { setMode(selection.manage ? "browse" : "project"); if (!selection.manage) { setSelected(selection.name); setExporting(null); } } }, [selection?.request]);
   const skills = data ?? [];
   const skill = skills.find((entry) => entry.name === selected) ?? null;
   const body = useAsync(
@@ -451,7 +453,7 @@ export default function SkillsTab({ project, refresh }: { project: string; refre
             </>
           ) : (
             <div className="flex h-full min-h-0 gap-4">
-              <NavigatorPortal tab="skills">
+              {!workspace && <NavigatorPortal tab="skills">
               <ul className="space-y-1">
                 {skills.map((entry) => (
                   <li key={entry.name}>
@@ -480,7 +482,7 @@ export default function SkillsTab({ project, refresh }: { project: string; refre
                   </li>
                 ))}
               </ul>
-              </NavigatorPortal>
+              </NavigatorPortal>}
               <div className="min-w-0 flex-1 overflow-y-auto rounded-lg border border-slate-200 bg-white p-5">
                 {skill ? (
                   <>

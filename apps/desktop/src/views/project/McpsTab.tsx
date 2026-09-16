@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { LoadingBoundary, useAsync } from "../../components/ui";
+import type { KnowledgeSelection } from "../../lib/workspaceKnowledge";
 import {
   InspectorButton,
   InspectorPanel,
@@ -77,12 +78,13 @@ function AllowList({ title, entries }: { title: string; entries: string[] }) {
   );
 }
 
-export default function McpsTab({ project, refresh }: { project: string; refresh?: number }) {
+export default function McpsTab({ project, refresh, workspace = false, selection }: { project: string; refresh?: number; workspace?: boolean; selection?: KnowledgeSelection }) {
   const { data, loading, error, reload } = useAsync(
     () => invoke<McpInfo>("project_mcps", { project }),
     `mcps:${project}`,
   );
   const [selected, setSelected] = useState<string | null>(null);
+  useEffect(() => { if (selection) setSelected(selection.manage ? null : `${selection.host}:${selection.name}`); }, [selection?.request]);
   const [notice, setNotice] = useState<string | null>(null);
   const inspector = useInspector("mcps");
 
@@ -111,12 +113,13 @@ export default function McpsTab({ project, refresh }: { project: string; refresh
   const current = servers.find((entry) => entry.key === selected) ?? null;
 
   const copyAddPrompt = async () => {
-    await writeText(ADD_MCP_PROMPT);
+    await writeText(`Zielprojekt und cwd: ${project}\n${ADD_MCP_PROMPT}`);
     setNotice("Prompt in der Zwischenablage — ins Agent-Terminal einfügen.");
   };
 
   const navigator = (
     <NavigatorPortal tab="mcps">
+      {workspace && selection?.manage && <button className="rounded border px-2 py-1" onClick={() => void copyAddPrompt()}>MCP-Anlage für dieses Ziel kopieren</button>}
       {servers.length === 0 ? (
         <NavEmpty
           title="Keine projekteigenen MCPs"
@@ -129,7 +132,7 @@ export default function McpsTab({ project, refresh }: { project: string; refresh
         </NavEmpty>
       ) : (
         <div className="space-y-0.5">
-          {servers.map((entry) => (
+          {(workspace ? [] : servers).map((entry) => (
             <NavRow
               key={entry.key}
               selected={selected === entry.key}

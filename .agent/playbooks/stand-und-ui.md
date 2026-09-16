@@ -18,6 +18,13 @@ Schnelleinstieg: [Fähigkeiten](#fähigkeiten-vorhanden-geprüft-offen) ·
 [Prüfstand](#verifikation-und-verbleibende-risiken) ·
 [UI-Ausbau](#vorgeschlagener-ui-ausbau--nicht-implementiert).
 
+**Umsetzungspaket 044–047, 2026-09-16:** Root-Dateien, gemeinsame Wissenslisten,
+portable Registerbindung und Draft-Playbooks implementiert. Lokaler signierter
+Build offen; 124 Rust-Tests, Python-Suite, Browser-Regressionen und native QA grün.
+Echter Root-Roundtrip mit Skill aus A, relativem Tool und explizit konfiguriertem
+MCP aus B belegt; Root-cwd und Quellen erhalten. Details in den vier Specs.
+Menschliche Abnahme und Windows bleiben offen.
+
 Ziele und Ausbauentscheidungen stehen im
 [Playbook Produktvision und Weiterentwicklung](weiterentwicklung.md).
 Dieses Dokument beschreibt den Ist-Zustand; geplante Ergänzungen stehen getrennt
@@ -93,15 +100,16 @@ deren Einrichtung oder Verfügbarkeit im gewählten Agenten.
   Repository. Normale Ordner/Dateien und manuell aufgeklappte tiefere Inhalte
   bleiben erreichbar. Root-/Unterprojekteditoren prüfen vor dem Speichern
   den gelesenen Inhalt; ein Konflikt bewahrt den Entwurf.
-- Das gemeinsame bearbeitbare Workspace-Board aus 026 existiert. Die übrigen
-  Wissensbereiche bleiben in `WorkspaceShell.tsx` pro Worktree gebunden.
-  Ein gemeinsamer Katalog für Skills, Tools, MCPs und Playbooks samt Nutzung
-  vom Root aus ist noch nicht implementiert: [045](../specs/045-workspace-wissenskatalog/SPEC.md).
-- `apps/board` unterstützt bereits mehrere lokale/Remote-Register. Seine
-  lokale Ordnerquelle gibt bei vorhandenem Root-Register jedoch vorzeitig
-  zurück und lässt Unterprojekt-Register weg (`Source.specs_dirs`). Gemeinsame
-  stabile Quellidentität, Team-Workspace-Bindung und Desktop-/Web-Parität sind
-  noch offen: [046](../specs/046-multi-repo-register/SPEC.md). Ein Web-Board
+- [045](../specs/045-workspace-wissenskatalog/SPEC.md): Je eine gemeinsame
+  Skills-/Tools-/MCP-/Playbook-Liste mit Suche, Quellfilter und Herkunft.
+  Details/Editoren bleiben je Quelle gebunden; Neuanlage und Import verlangen
+  ein gewähltes Ziel. Root-Kontext enthält genaue Skill-/Tool-Pfade und cwd.
+  MCP-Namen/Hosts/Quellen sind unterscheidbar, ohne Zugangsdaten im Katalog.
+  Anbindungsauftrag ist explizit; tatsächliche Verfügbarkeit bestätigt der Host.
+- [046](../specs/046-multi-repo-register/SPEC.md): `apps/board` liest Root und
+  Kinder gemeinsam. Portable Register-IDs mit lokalen Checkout-Bindungen,
+  kanonischem Schreibziel, Divergenzmeldung und Desktop-/Web-Vertrag sind
+  implementiert. Ein Web-Board
   ersetzt keinen Server mit Benutzerkonten, Code-Checkouts und Agent-Terminals.
 - [047](../specs/047-playbook-drafts/SPEC.md) ergänzt den nativen Listenvertrag
   um active/draft/invalid. Liste, Detail, Editor, Neuanlage und Filter zeigen
@@ -127,12 +135,12 @@ oder vollständige Plattformabnahme.
 | Projekte/Workspaces | begrenzte Erkennung, lokale IDs/Gruppen; 026: gemeinsames wiederherstellbares Arbeitsfenster, gruppierte Bereiche, gemeinsames Board mit herkunftsgebundener Bearbeitung und Watchern; 042: Register-Einrichtung/Sync/Konflikte pro Worktree im Board; eigene Fenster weiterhin möglich | keine Team-Verteilung der Workspace-Gruppen, keine Cross-Repo-Git-Schreibaktion oder automatischen Pfadumzüge; PTYs nach App-Quit nicht automatisch fortgesetzt |
 | Specs | Gesamtliste links, Suche/Themenfilter, Backlog/Doing/Done, gemeinsamer Task-Vertrag, Fragen und pfadgenaue Historie; Altbestand lesbar, kein Archivierungsschritt; seit 028 gemeinsames Register (Branch `specs` als Worktree) mit Sync und Konfliktentscheidung | keine Sperre gegenüber externen Editoren; Besitzer/Branch je Spec (029) und Teamsignale (030) fehlen |
 | Workflow-Setup | Policy v5 ohne Archivierungsschritt, versionierte Skills, bekannte Vorlagen sicher migrieren, konkrete Link-/Anpassungsdiagnose | individuelle/neue unbekannte Vorlagen und fremde Links bleiben zur manuellen Prüfung erhalten |
-| Playbooks | Liste, Markdown lesen/bearbeiten, neu/löschen, als Prompt kopieren; 047: Draft-Status, Statusfilter, explizite Aktivierung, konfliktbewusstes Autosave und nichtbindende Draft-Übergabe | im Workspace noch pro Projekt/Worktree; gemeinsame Liste 045, keine automatische Team-Verteilung |
+| Playbooks | gemeinsame Workspace-Liste mit Herkunft/Filter; Markdown lesen/bearbeiten, neu/löschen, als Prompt kopieren; 047: Draft-Status, Statusfilter, explizite Aktivierung, konfliktbewusstes Autosave und nichtbindende Draft-Übergabe | keine automatische Team-Verteilung |
 | Editor/Git | mehrere offene Dateien, Entwürfe, Suche, Dateioperationen, Diff, Staging auch pro Hunk, Commit, Branches, Remotes, Historie/Blame | echte IDE-Abnahme 002 offen; kein belegtes LSP-/Debugger-/Konfliktlösesystem |
-| Skills | Projektliste, Bibliotheken durchsuchen, globale/projekteigene Quellen, Import/Expand, Exportkommando | keine explizite Source-/Target-Rolle; Teile von 004 noch abnehmen |
+| Skills | gemeinsame Workspace-Liste, Root-Katalog, Bibliotheken durchsuchen, globale/projekteigene Quellen, gezielter Import/Expand, Exportkommando | keine automatische Expansion; Teile von 004 noch abnehmen |
 | Tools | Verträge, Plattformimplementierungen und Prüfstatus sichtbar | drei lokale Tool-Implementierungen fehlen laut Basisprüfung; 010 vereinheitlicht Meldungen |
 | Aktionen | bestätigte Kommandos, Formulare, Allowlist-Freigabe, Live-Ausgabe, Stop, einfache Diagramme, Toolbar | `toolui:` und Parallels-Aktionsziele in dieser UI noch Platzhalter; V1-06 |
-| MCP | Serverübersicht/Supervisor, Client-Config, projektspezifische Claude-/Codex-Konfiguration, Allowlists | Portstatus ist kein erfolgreicher Handshake; kein itsdcloud-Adapter |
+| MCP | gemeinsame Liste mit Quelle/Host, expliziter Anbindungsauftrag; Serverübersicht/Supervisor, Client-Config, projektspezifische Claude-/Codex-Konfiguration, Allowlists | Katalogstatus ist kein Host-Handshake; keine automatische Root-Registrierung, kein itsdcloud-Adapter |
 | Lokale MCP-HTTP-Grenze | 014: gemeinsame Host-/Origin-/Methoden-/JSON-/1-MiB-Prüfung für Rust-MCPs, vor RPC und Exec-Stream | Keine Browserfreigaben oder Client-Authentifizierung; kein vollständiger DoS-/Konformitätsschutz; [Vertrag](../../docs/exec-mcp-contract.md) |
 | Terminal | native PTY, Host-Voreinstellungen/freies Kommando, Shell-only, Projekt-cwd, rechts/unten, Neustart; seit 009 inkrementelles UTF-8, Claude-Sitzungs-ID beim Start, exaktes `--resume <id>` nach Prüfung des Host-Speichers, sichtbare Wahl statt stiller Ersetzung | Codex ohne wählbare ID (Picker); echter Roundtrip 012; Windows ungeprüft |
 | Startdiagnose | Runtime-Auswahl, Host-/CLI-Probe, Fehler/Warnungen vor Start und im Terminal; lokal neu in 007 | Version/Startfähigkeit beweisen weder Anmeldung noch erfolgreiche Fortsetzung |

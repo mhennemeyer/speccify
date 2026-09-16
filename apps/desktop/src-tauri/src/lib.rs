@@ -286,6 +286,7 @@ pub fn run() {
             workspace_cmd::registers::workspace_registers,
             workspace_cmd::registers::workspace_register_save,
             workspace_cmd::registers::workspace_register_import,
+            workspace_cmd::knowledge::workspace_knowledge,
             board_cmd::project_spec_checked_action,
             project_cmd::project_current,
             project_cmd::project_recent,

@@ -161,9 +161,10 @@ function PlaybookEditor({
   );
 }
 
-function NewPlaybook({ project, onCreated }: { project: string; onCreated: (file: string) => void }) {
+function NewPlaybook({ project, onCreated, request = 0 }: { project: string; onCreated: (file: string) => void; request?: number }) {
   const [name, setName] = useState("");
   const [open, setOpen] = useState(false);
+  useEffect(() => { if (request) setOpen(true); }, [request]);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<"active" | "draft">("active");
 
@@ -216,9 +217,13 @@ function NewPlaybook({ project, onCreated }: { project: string; onCreated: (file
 export default function PlaybooksTab({
   project,
   refresh,
+  workspace = false,
+  selection,
 }: {
   project: string;
   refresh?: number;
+  workspace?: boolean;
+  selection?: import("../../lib/workspaceKnowledge").KnowledgeSelection;
 }) {
   const list = useAsync(
     () => invoke<PlaybookEntry[]>("project_playbooks", { project }),
@@ -226,6 +231,7 @@ export default function PlaybooksTab({
   );
   const [selected, setSelected] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
+  useEffect(() => { if (selection && !selection.manage && selection.file !== selected) { setSelected(selection.file); setEditing(false); } }, [selection?.request]);
   const [filter, setFilter] = useState("all");
   const [statusError, setStatusError] = useState<string | null>(null);
   const inspector = useInspector("playbooks");
@@ -266,12 +272,12 @@ export default function PlaybooksTab({
       <div className="flex h-full min-h-0 gap-4">
         <NavigatorPortal tab="playbooks">
         <div className="space-y-1">
-          <label className="block text-xs text-slate-500">Status
+          {!workspace && <label className="block text-xs text-slate-500">Status
             <select aria-label="Playbooks nach Status filtern" value={filter} onChange={event => setFilter(event.target.value)} className="ml-2 rounded border border-slate-300 bg-white p-1">
               <option value="all">Alle</option><option value="active">Aktiv</option><option value="draft">Draft</option><option value="invalid">Status prüfen</option>
             </select>
-          </label>
-          {playbooks.filter(entry => filter === "all" || (entry.status ?? "active") === filter).map((entry) => (
+          </label>}
+          {(workspace ? [] : playbooks).filter(entry => filter === "all" || (entry.status ?? "active") === filter).map((entry) => (
             <button
               key={entry.file}
               onClick={() => {
@@ -305,6 +311,7 @@ export default function PlaybooksTab({
           ))}
           <NewPlaybook
             project={project}
+            request={selection?.manage ? selection.request : 0}
             onCreated={(file) => {
               setSelected(file);
               setEditing(true);

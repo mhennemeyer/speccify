@@ -17,6 +17,8 @@ import {
   useInspector,
 } from "../../lib/panels";
 import { HandoverButton } from "../../components/HandoverSheet";
+import type { KnowledgeSelection } from "../../lib/workspaceKnowledge";
+import { copyHandover } from "../../lib/handover";
 
 interface ToolPlatform {
   name: string;
@@ -39,13 +41,14 @@ function statusTone(status: string | null | undefined) {
   return "bg-slate-200 text-slate-600";
 }
 
-export default function ToolsTab({ project, refresh }: { project: string; refresh?: number }) {
+export default function ToolsTab({ project, refresh, workspace = false, selection }: { project: string; refresh?: number; workspace?: boolean; selection?: KnowledgeSelection }) {
   const list = useAsync(
     () => invoke<ToolEntry[]>("project_tools", { project }),
     `tools:${project}`,
   );
   const platform = useAsync(() => invoke<string>("project_platform"), "platform");
   const [selected, setSelected] = useState<string | null>(null);
+  useEffect(() => { if (selection) setSelected(selection.manage ? null : selection.file); }, [selection?.request]);
   const inspector = useInspector("tools");
   const spec = useAsync(
     () =>
@@ -71,6 +74,7 @@ export default function ToolsTab({ project, refresh }: { project: string; refres
 
   return (
     <LoadingBoundary loading={list.loading} error={list.error} label="Tools lesen…">
+      {workspace && selection?.manage && <NavigatorPortal tab="tools"><button className="rounded border px-2 py-1 text-xs" onClick={() => void copyHandover(`Zielprojekt und cwd: ${project}\nBitte entwirf hier einen neuen Tool-Vertrag unter .agent/tools/<name>/TOOL.md. Lies zuerst die Projektregeln und kläre Zweck, Eingaben, Ausgaben und Seiteneffekte mit mir. Die Implementierung folgt dem geprüften Vertrag. Das gemeinsame Terminal bleibt im Workspace-Root.`)}>Tool-Anlage für dieses Ziel kopieren</button></NavigatorPortal>}
       {tools.length === 0 ? (
         <>
           <NavigatorPortal tab="tools" fallback={() => null}>
@@ -90,7 +94,7 @@ export default function ToolsTab({ project, refresh }: { project: string; refres
         </>
       ) : (
         <div className="flex h-full min-h-0 gap-4">
-          <NavigatorPortal tab="tools">
+          {!workspace && <NavigatorPortal tab="tools">
             <ul className="space-y-1">
               {tools.map((tool) => (
                 <li key={tool.file}>
@@ -115,7 +119,7 @@ export default function ToolsTab({ project, refresh }: { project: string; refres
                 </li>
               ))}
             </ul>
-          </NavigatorPortal>
+          </NavigatorPortal>}
           <div className="min-w-0 flex-1 overflow-y-auto rounded-lg border border-slate-200 bg-white p-5">
             {selectedTool ? (
               <>

@@ -32,6 +32,8 @@ import BoardTab from "./views/project/BoardTab";
 import RegisterBar from "./views/project/RegisterBar";
 import WorkspaceBoardView, { type WorkspaceSpecEntry } from "./views/WorkspaceBoardView";
 import WorkspaceRegisters from "./views/WorkspaceRegisters";
+import WorkspaceKnowledgeView from "./views/WorkspaceKnowledgeView";
+import { isKnowledge, type KnowledgeCatalog, type KnowledgeEntry, type KnowledgeKind, type KnowledgeSelection } from "./lib/workspaceKnowledge";
 
 interface Tree { id: string; path: string; relative_path: string; available: boolean }
 interface Repository { id: string; name: string; common_dir?: string | null; worktrees: Tree[] }
@@ -55,7 +57,7 @@ function rootPane(workspace: Workspace): Pane | null {
 const button = "rounded border border-slate-300 px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-100 disabled:opacity-40";
 
 /** One immutable target per pane. Hiding never remounts editors or processes. */
-function WorktreePane({ workspaceId, tree, repo, group, rootOnly = false, tab, visited, active, choose, mainHost, registerHost, inspectorHost, refresh, spec, changed, boardSlot, navHost, agentRoot, command, updateCommand, outputHost, outputTabsHost, layout, updateLayout, reportToolbar, externalCreate = 0 }: {
+function WorktreePane({ workspaceId, tree, repo, group, rootOnly = false, tab, visited, active, choose, mainHost, registerHost, inspectorHost, refresh, spec, changed, boardSlot, navHost, agentRoot, command, updateCommand, outputHost, outputTabsHost, layout, updateLayout, reportToolbar, externalCreate = 0, knowledgeSelections, knowledgeValid = true }: {
   workspaceId: string; tree: Tree; repo: Repository; group: Project; tab: Tab; visited: Tab[];
   active: boolean; choose: () => void; mainHost: HTMLElement | null; inspectorHost: HTMLElement | null;
   registerHost: HTMLElement | null;
@@ -68,6 +70,8 @@ function WorktreePane({ workspaceId, tree, repo, group, rootOnly = false, tab, v
   reportToolbar: (id: string, value: PaneToolbar) => void;
   rootOnly?: boolean;
   externalCreate?: number;
+  knowledgeSelections?: Partial<Record<KnowledgeKind, KnowledgeSelection>>;
+  knowledgeValid?: boolean;
 }) {
   const [root, setRoot] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -104,7 +108,7 @@ function WorktreePane({ workspaceId, tree, repo, group, rootOnly = false, tab, v
     const listener = listen<{ project?: string; areas: string[] }>("project-changed", event => {
       if (event.payload.project !== root) return;
       setLocalRefresh(value => value + 1);
-      if (event.payload.areas.includes("board")) changed();
+      changed();
     });
     return () => { disposed = true; void watching.then(() => invoke("project_watch_stop", { project: root, watcherId })); void listener.then(stop => stop()); };
   }, [root, changed]);
@@ -114,7 +118,7 @@ function WorktreePane({ workspaceId, tree, repo, group, rootOnly = false, tab, v
   const [retainedSpec, setRetainedSpec] = useState<WorkspaceSpecEntry | null>(null);
   useEffect(() => { if (ownSpec) setRetainedSpec(ownSpec); }, [ownSpec]);
   const detailSpec = ownSpec ?? retainedSpec;
-  const enabled = root !== null && error === null;
+  const enabled = root !== null && error === null && (!isKnowledge(tab) || knowledgeValid);
   useEffect(() => {
     let cancelled = false;
     reportToolbar(tree.id, { ready: enabled, actions: [] });
@@ -130,15 +134,16 @@ function WorktreePane({ workspaceId, tree, repo, group, rootOnly = false, tab, v
         <section aria-label={`Team-Register ${tree.path}`} data-register-project={tree.path}>
           <RegisterBar project={root} contextLabel={repo.name} refresh={totalRefresh} onChanged={changed} />
         </section>, registerHost)}
-      {navHost && createPortal(<section aria-label={`Projektbereich ${group.name} / ${repo.name} / ${tree.relative_path}`} data-worktree-id={tree.id}
+      {navHost && createPortal(<section hidden={isKnowledge(tab) && !active} aria-label={`Projektbereich ${group.name} / ${repo.name} / ${tree.relative_path}`} data-worktree-id={tree.id}
         onClickCapture={choose} onFocusCapture={choose} className="mb-2 min-w-0">
-        <button aria-pressed={active} onClick={choose} data-tone="blue" className={`w-full rounded px-2 py-1 text-left text-xs ${active ? "tone-surface" : "text-slate-700 hover:bg-slate-100"}`}>
+        <button hidden={isKnowledge(tab)} aria-pressed={active} onClick={choose} data-tone="blue" className={`w-full rounded px-2 py-1 text-left text-xs ${active ? "tone-surface" : "text-slate-700 hover:bg-slate-100"}`}>
           <span className="block font-semibold">{repo.name}{repo.worktrees.length > 1 ? ` · ${tree.relative_path}` : ""}</span>
           <span className="mt-1 block break-all font-mono text-[10px]">{tree.relative_path || "."}</span>
           {!tree.available && <span className="block">Nicht verfügbar</span>}
           {outputs.some(output => output.running) && <span className="block">● Aktion läuft</span>}
         </button>
         {error && <ErrorBox message={error} />}
+        {isKnowledge(tab) && active && <p className="break-all px-2 text-[11px]">Aktionen für: {tree.relative_path || "."}{!knowledgeValid ? " · Quelle/Eintrag nicht verfügbar" : ""}</p>}
         {!root && !error && <p className="p-2 text-xs text-slate-500">Ziel prüfen…</p>}
         <div inert={!enabled} className={!enabled ? "opacity-50" : ""}>
           {tabs.map(([id]) => <div key={id} ref={navRefs[id]} data-workspace-nav={id} className={tab === id ? "p-2" : "hidden"} />)}
@@ -147,17 +152,17 @@ function WorktreePane({ workspaceId, tree, repo, group, rootOnly = false, tab, v
       </section>, navHost)}
       {mainHost && root && createPortal(<section aria-label={`Arbeitsbereich ${tree.path}`} hidden={!active || tab === "board"} className="h-full min-h-0" inert={!enabled}>
         {error && <ErrorBox message={error} />}
-          {visited.filter(id => id !== "board" && (!rootOnly || id === "files")).map(id => <div key={id} className={tab === id ? "h-full min-h-0" : "hidden"}>
+          {visited.filter(id => id !== "board" && (!rootOnly || id === "files" || isKnowledge(id))).map(id => <div key={id} className={tab === id ? "h-full min-h-0" : "hidden"}>
           {id === "files" && <FilesTab project={root} refresh={totalRefresh} visible={active && tab === id} gitEnabled={repo.common_dir !== null} />}
           {id === "git" && (repo.common_dir !== null ? <GitTab project={root} refresh={totalRefresh} visible={active && tab === id} /> : <p>Dieser Ordner hat kein Git-Repository.</p>)}
-          {id === "playbooks" && <PlaybooksTab project={root} refresh={totalRefresh} />}
-          {id === "skills" && <SkillsTab project={root} refresh={totalRefresh} />}
-          {id === "tools" && <ToolsTab project={root} refresh={totalRefresh} />}
-          {id === "mcps" && <McpsTab project={root} refresh={totalRefresh} />}
+          {id === "playbooks" && <PlaybooksTab workspace selection={knowledgeSelections?.playbooks} project={root} refresh={totalRefresh} />}
+          {id === "skills" && <SkillsTab workspace selection={knowledgeSelections?.skills} project={root} refresh={totalRefresh} />}
+          {id === "tools" && <ToolsTab workspace selection={knowledgeSelections?.tools} project={root} refresh={totalRefresh} />}
+          {id === "mcps" && <McpsTab workspace selection={knowledgeSelections?.mcps} project={root} refresh={totalRefresh} />}
           {id === "agent" && <AgentTab commandRoot={agentRoot} project={root} refresh={totalRefresh} agentCommand={command} onAgentCommand={updateCommand} />}
           {id === "actions" && <ActionsTab project={root} runNamespace={`workspace:${workspaceId}:${tree.id}`} refresh={totalRefresh} outputSlot={outputSlot} activeOutput={activeOutput} onOutputTabsChange={setOutputs} onRevealOutput={revealOutput} />}
         </div>)}
-        {rootOnly && tab !== "files" && <p>Hier liegen die Dateien des Workspace-Ordners. Für Git ein Repository auswählen.</p>}
+        {rootOnly && tab !== "files" && !isKnowledge(tab) && <p>Hier liegen die Dateien des Workspace-Ordners. Für Git ein Repository auswählen.</p>}
       </section>, mainHost)}
       {inspectorHost && createPortal(<section hidden={!active} aria-label={`Inspektor ${tree.path}`} inert={!enabled} className="h-full min-h-0">
         <p className="truncate border-b border-slate-200 px-4 py-2 text-[11px] text-slate-500" title={tree.path}>{group.name} / {repo.name} · {tree.relative_path}</p>
@@ -200,6 +205,8 @@ export default function WorkspaceShell() {
   const [boardRefresh, setBoardRefresh] = useState(0);
   const [spec, setSpec] = useState<WorkspaceSpecEntry | null>(null);
   const [createSpec, setCreateSpec] = useState<{ id: string; request: number } | null>(null);
+  const [knowledgeCatalog, setKnowledgeCatalog] = useState<KnowledgeCatalog | null>(null);
+  const [knowledgeRequests, setKnowledgeRequests] = useState<Record<string, Partial<Record<KnowledgeKind, KnowledgeSelection>>>>({});
   const [boardSlots, setBoardSlots] = useState<Record<string, HTMLElement | null>>({});
   const [groupSlots, setGroupSlots] = useState<Record<string, HTMLElement | null>>({});
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
@@ -231,6 +238,16 @@ export default function WorkspaceShell() {
     setSelected(id);
     updateLayout(previous => previous.rightTab.startsWith("output:") ? { rightTab: "inspector" } : {});
   }, [updateLayout]);
+  const selectKnowledge = useCallback((entry: KnowledgeEntry) => {
+    choose(entry.worktree_id);
+    setKnowledgeRequests(old => ({ ...old, [entry.worktree_id]: { ...old[entry.worktree_id], [entry.kind]: { file: entry.file, name: entry.name, host: entry.host, request: Date.now() } } }));
+    updateLayout({ rightShown: true, rightTab: "inspector" });
+  }, [choose, updateLayout]);
+  const manageKnowledge = (id: string) => {
+    if (!isKnowledge(tab)) return;
+    choose(id);
+    setKnowledgeRequests(old => ({ ...old, [id]: { ...old[id], [tab]: { file: "", name: "", request: Date.now(), manage: true } } }));
+  };
   const groupRefs = useMemo(() => Object.fromEntries((workspace?.projects ?? []).map(group => [group.id, (node: HTMLDivElement | null) => setGroupSlots(old => old[group.id] === node ? old : { ...old, [group.id]: node })])), [workspace?.projects]);
   const boardSlot = useCallback((id: string, node: HTMLElement | null) => setBoardSlots(old => old[id] === node ? old : { ...old, [id]: node }), []);
   const changed = useCallback(() => setBoardRefresh(value => value + 1), []);
@@ -358,17 +375,18 @@ export default function WorkspaceShell() {
       <nav aria-label="Workspace-Projekte" className={`${navShown ? "flex" : "hidden"} min-h-0 flex-col border-r border-slate-200 bg-white`} style={{ gridColumn: 1, gridRow: "2 / -1" }}>
         <ProjectNavigation active={tab} lastTab={lastTab} activate={activate} />
         <div className="flex items-center justify-between border-b border-slate-200 px-3 py-1 text-[11px] text-slate-500">
-          <span>Projekte · {workspace?.repositories.length ?? 0}</span>
+          <span>{isKnowledge(tab) ? "Wissen im Workspace" : `Projekte · ${workspace?.repositories.length ?? 0}`}</span>
           <button title="Workspace-Zuordnung aktualisieren" onClick={() => { setRefresh(value => value + 1); changed(); }} className="rounded px-1 hover:bg-slate-100">Aktualisieren</button>
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-2">
-          <div ref={setRootNavHost} className={tab === "files" ? "mt-2" : "hidden"} />
+          {workspace && isKnowledge(tab) && <WorkspaceKnowledgeView key={`${workspace.id}:${tab}`} workspaceId={workspace.id} root={workspace.root} kind={tab} refresh={refresh + boardRefresh} onSelect={selectKnowledge} onManage={manageKnowledge} onSnapshot={setKnowledgeCatalog} />}
+          <div ref={setRootNavHost} className={tab === "files" || isKnowledge(tab) ? "mt-2" : "hidden"} />
           {workspace?.projects.filter(group => group.repository_ids.length).map(group => <section key={group.id} aria-label={`Projektgruppe ${group.name}`} className="mt-2">
-            <button aria-expanded={!collapsed[group.id]} onClick={() => setCollapsed(old => ({ ...old, [group.id]: !old[group.id] }))}
+            <button hidden={isKnowledge(tab)} aria-expanded={!collapsed[group.id]} onClick={() => setCollapsed(old => ({ ...old, [group.id]: !old[group.id] }))}
               className="flex w-full items-center gap-1 rounded px-1 py-1 text-left text-xs font-semibold text-slate-500 hover:bg-slate-100">
               <span aria-hidden="true">{collapsed[group.id] ? "▸" : "▾"}</span>{group.name}
             </button>
-            <div ref={groupRefs[group.id]} className={collapsed[group.id] ? "hidden" : ""} />
+            <div ref={groupRefs[group.id]} className={!isKnowledge(tab) && collapsed[group.id] ? "hidden" : ""} />
           </section>)}
         </div>
       </nav>
@@ -418,8 +436,11 @@ export default function WorkspaceShell() {
     </div>
     {workspace && Object.values(retainedPanes).map(({ tree, repo, group, rootOnly }) => {
       const visible = rootOnly ? rootPane(workspace)?.tree.id === tree.id : workspace.repositories.some(repo => repo.worktrees.some(entry => entry.id === tree.id));
+      const request = isKnowledge(tab) ? knowledgeRequests[tree.id]?.[tab] : undefined;
+      const source = knowledgeCatalog?.sources.find(source => source.id === tree.id);
+      const knowledgeValid = !!source?.available && !!request && (request.manage || !!knowledgeCatalog?.entries.some(entry => entry.worktree_id === tree.id && entry.kind === tab && entry.file === request.file && entry.name === request.name && entry.host === (request.host ?? null)));
       return <WorktreePane key={`${tree.id}:${tree.path}`} workspaceId={workspace.id} tree={tree} repo={repo} group={group} tab={tab} visited={visited}
-        rootOnly={rootOnly} externalCreate={createSpec?.id === tree.id ? createSpec.request : 0} active={visible && selected === tree.id} choose={() => choose(tree.id)} mainHost={mainHost} registerHost={visible ? registerHost : null} inspectorHost={inspectorHost} refresh={refresh} spec={spec} changed={changed} boardSlot={boardSlot} navHost={visible ? rootOnly ? rootNavHost : groupSlots[group.id] ?? null : null}
+        rootOnly={rootOnly} knowledgeSelections={knowledgeRequests[tree.id]} knowledgeValid={knowledgeValid} externalCreate={createSpec?.id === tree.id ? createSpec.request : 0} active={visible && selected === tree.id} choose={() => choose(tree.id)} mainHost={mainHost} registerHost={visible ? registerHost : null} inspectorHost={inspectorHost} refresh={refresh} spec={spec} changed={changed} boardSlot={boardSlot} navHost={visible ? rootOnly ? rootNavHost : groupSlots[group.id] ?? null : null}
         agentRoot={workspace.root} command={command} updateCommand={updateCommand} outputHost={outputHost} outputTabsHost={outputTabsHost} layout={layout} updateLayout={updateLayout} reportToolbar={reportToolbar} />;
     })}
     {settingsOpen && <SettingsSheet theme={theme} onTheme={next => void setTheme(next)} layout={layout}

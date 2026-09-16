@@ -1,6 +1,7 @@
 // Isolated UI contract fixture; never connected to the native workspace store.
 // With ?marketing=1 the public OrbitNotes demo workspace is used instead of the
 // regression data (app-screenshots skill); paths stay under /Users/demo.
+import { installWorkspaceKnowledgeFixture } from "./workspace-knowledge-fixture.js";
 export function installWorkspaceFixture(responses) {
   const key = "speccify.test.workspaces";
   const marketing = new URLSearchParams(location.search).has("marketing");
@@ -218,6 +219,7 @@ export function installWorkspaceFixture(responses) {
         return structuredClone(statuses[project]);
       };
     }
+    if (new URLSearchParams(location.search).has("workspace-knowledge")) installWorkspaceKnowledgeFixture(responses, root, () => scope(read()[0]));
     for (const [command, handler] of Object.entries(responses)) {
       responses[command] = args => { calls.push({ command, args: structuredClone(args ?? {}) }); return handler(args ?? {}); };
     }

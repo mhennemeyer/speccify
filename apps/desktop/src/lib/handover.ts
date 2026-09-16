@@ -75,6 +75,7 @@ export function buildHandover(
   const safeKind = restricted && kind !== "edit" ? "review" : kind;
   const head = [
     `Projekt: ${project}`,
+    `Quelle: ${project.replace(/[\\/]$/, "")}/${item.path}. Zielprojekt und Ausführungs-cwd: ${project}. Relative Tool-Abhängigkeiten dort auflösen; das gemeinsame Terminal behält seinen Root-cwd. Ein anderes Arbeitsziel muss ausdrücklich benannt werden.`,
     `${what(item)} — Datei: ${item.path} (Quelle der Wahrheit; Änderungen dort, nicht im Chat).`,
     order(safeKind, item),
     "Regeln: `.agent/agent.md` (Spec-Workflow, Commit-Rechte, Herkunft).",

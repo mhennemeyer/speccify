@@ -119,7 +119,12 @@ Das sind verfeinerte Anforderungen, keine bereits implementierten Fähigkeiten.
 Projektliste vorhanden. Normale Ordner bleiben bei Erkennungstiefe 1 manuell
 durchsuchbar; Speichern erkennt veraltete Inhalte auch zwischen Root- und
 Unterprojekteditor. Git bleibt an echte Repositories gebunden. Die übrigen
-Die gemeinsame Wissensnavigation 045 bleibt ein eigener Umsetzungsschritt.
+**Umsetzung 045, 2026-09-16:** Gemeinsame Listen für Skills, Tools, MCPs und
+Playbooks mit Suche, Herkunft, Quellfilter und explizitem Speicher-/Importziel.
+Bestehende Detailansichten bleiben am Quellpfad; Root-Kontext enthält auflösbare
+Katalogeinträge. Tool-Aufträge nennen Ziel und cwd. MCP-Definitionen bleiben
+ungeprüft, bis der Host die gezielt beauftragte Anbindung bestätigt; keine
+automatische Registrierung, Geheimnisübernahme oder Allowlist-Zusammenführung.
 
 **Umsetzung 046, 2026-09-16:** `workspace-registers.json` definiert portable
 Register-/Code-Repo-IDs, lokale Bindungen bleiben rechnerabhängig. Desktop und

@@ -161,6 +161,42 @@ the displayed action label and each project's action definitions remain unchange
 Typing a command without a started terminal still requires starting the workspace
 terminal and retrying; no invisible command queue or automatic execution is implied.
 
+### Common knowledge lists (Spec 045)
+
+Skills, tools, MCP definitions and playbooks each have **one workspace list**,
+including root knowledge and recognized non-Git knowledge folders within the
+configured discovery depth. Search, source filters and playbook status filters
+only change that list. Every row identifies its source; identical names retain
+distinct keys. Selection opens the existing source-bound detail view and editor.
+Filters and selection are stored locally; hidden editors retain their drafts.
+
+Choose **Speicher-/Importziel** before importing or creating knowledge. Skill
+imports keep explicit `--project` targets; playbook creation and tool/MCP setup
+requests identify the selected source. An unavailable or removed source disables
+its stale actions while other sources remain usable.
+
+`workspace_knowledge` is a native index over the existing project readers. It
+returns exact source paths, source/worktree IDs, playbook status and MCP host/name
+references. It omits MCP commands, arguments, URLs, environment values, headers
+and credentials. Malformed or unavailable sources are reported individually;
+linked knowledge directories are refused. Bounds: 100 sources, 1,000 entries per
+knowledge directory, 256 KiB per document and three seconds between source reads.
+These are best-effort limits, not a filesystem security sandbox.
+
+The root startup context includes this catalog. Skill/tool handovers name source,
+target and execution cwd; the terminal stays at the workspace root. Relative tool
+dependencies belong to the tool's project unless its contract says otherwise.
+
+MCP rows show **Host-Anbindung ungeprüft** (or **Im Host deaktiviert**), never a
+claim that a child server is already usable in the root session. A selected row
+can produce a scoped connection-review request. The host must load that exact
+definition under a distinct name and complete its own handshake/tool listing.
+The app does not merge host configs, credentials or allowlists or start servers
+from this list. Runtime confirmation remains in the host; the catalog does not
+persist a successful connection badge from a different process.
+For Codex, project-scoped configuration and per-server stdio `cwd` are documented
+in the [official MCP guide](https://learn.chatgpt.com/docs/extend/mcp?surface=cli).
+
 ### Workspace startup context
 
 `workspace_agent_context` previews a bounded, read-only structural snapshot for the

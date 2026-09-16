@@ -121,18 +121,29 @@ repository and worktree:
   tasks, read questions and history, edit the file. Creating a spec
   names the repository it will land in. There is no drag-and-drop
   between repositories; a spec belongs to the repository it lives in.
-- **Files, Git, playbooks, skills, tools, actions, MCPs** — per
-  repository. Switching between repositories keeps editor drafts,
-  commit messages and running action output where they were.
+- **Skills, tools, MCPs and playbooks** — one searchable list per area,
+  with a source label and optional source filter. Root knowledge is included.
+  Equal names remain separate. Select a storage/import target before creating
+  an item; editing and handover keep the original source. Playbooks can be
+  marked Draft without becoming workflow instructions.
+- **Files, Git and actions** — per repository, with root files available in
+  their own context. Switching sources retains editor drafts, commit messages
+  and running action output.
 - **One agent in the parent folder.** The workspace terminal starts
   your agent command in the folder above the repositories — on your
   click, never automatically — and hands it a structure summary of
-  the workspace: which repositories exist, where their guidance files
-  are, what the groups are. You can preview and copy that context
+  the workspace: repositories, guidance paths, groups and the knowledge catalog
+  with exact skill/tool paths and execution roots. You can preview and copy that context
   before starting. Each repository's actions and Git operations still
   run in that repository.
 
 Open workspace windows come back after a restart, like project windows.
+
+MCP definitions display **Host-Anbindung ungeprüft**; actual connection status
+is checked in the chosen host. The list itself does not connect servers. A scoped connection
+request identifies the source and root target; host configuration, credentials
+and allowlists are never silently combined. Confirm actual availability in the
+host after its handshake and tool listing.
 
 ## Team registers in a workspace
 
