@@ -252,12 +252,14 @@ macOS/Linux haben bedingte Update-Schritte, Windows noch nicht. Deshalb bleibt
 auch dieses Release beim manuellen Installer-Update. Die Nachfrage nach Tauri
 war eine Bestandsklärung; 050 setzt den anschließenden Auftrag zur Update-Kette um.
 
-**Release 0.8.1 ausdrücklich freigegeben (2026-09-16).** Veröffentlichung und
-Artefaktprüfung werden in 050 dokumentiert.
-**Noch auszuliefern/abzunehmen:** Bootstrap-Installer einmalig manuell installieren
-(0.8 hat keinen Prüfkey), danach reale N→N+1-Installation auf den Zielsystemen.
-Signatur-/Versionsprüfung und UI-Zustände sind separat mit Testdaten geprüft;
-das ersetzt keine tatsächliche Installation in der Windows-/Linux-VM.
+**Release 0.8.1 veröffentlicht (2026-09-16).** Alle Plattform-Builds, signierte
+Pakete und öffentlicher Feed geprüft; macOS-App und DMG notarisiert. Lokalen
+0.8.0-Entwicklungsbuild mit Prüfkey über den echten Updater auf 0.8.1 gebracht,
+Neustart und vier wiederhergestellte Fenster geprüft. Nachweise in 050.
+**Noch abzunehmen:** Veröffentlichte 0.8 einmalig per Bootstrap-Installer
+aktualisieren (kein Prüfkey), Windows-/Linux-Installation und später das Upgrade
+zwischen zwei veröffentlichten Updater-Versionen. Die vorhandenen Tests ersetzen
+keine tatsächliche Installation in der Windows-/Linux-VM.
 
 App, Sidecars und Python-Engine brauchen einen zusammenpassenden Versions- und
 Migrationsvertrag. Update-Signatur und OS-Codesign/Notarisierung sind verschiedene

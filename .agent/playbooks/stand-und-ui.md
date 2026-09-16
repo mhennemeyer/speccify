@@ -52,9 +52,13 @@ Alle Fenster bestätigen vor der Installation ihren Zustand; offene Editoren,
 bearbeitete Formulare, Entwürfe und aktive Terminals/Aktionen verhindern sie.
 Schlüssel und vier Plattform-Jobs eingerichtet; ein abschließender Job prüft
 Signaturen und SHA-256 aller Pakete, bevor er das vollständige Manifest anhängt.
-Bootstrap-Release 0.8.1 ist ausdrücklich freigegeben und vorbereitet; der
-Veröffentlichungsnachweis folgt in 050. Noch kein realer N→N+1-Nachweis auf
-allen Betriebssystemen. 0.8 benötigt einmalig den neuen Installer.
+Bootstrap-Release 0.8.1 am 2026-09-16 veröffentlicht; alle vier Pakete und das
+öffentliche Manifest geprüft. macOS-App und DMG signiert, notarisiert und von
+Gatekeeper akzeptiert. Lokaler Entwicklungsbuild 0.8.0 mit bereits eingebautem
+Prüfkey über den echten Updater auf 0.8.1 aktualisiert; vier Fenster nach Neustart
+wiederhergestellt. Veröffentlichte 0.8 benötigt einmalig den Installer.
+Windows-/Linux-Installationsabnahme sowie Upgrade zwischen zwei veröffentlichten
+Updater-Versionen bleiben offen. Nachweise in 050.
 
 ## Kurzurteil
 
@@ -179,7 +183,7 @@ oder vollständige Plattformabnahme.
 | Lokaler Betrieb | 013: Status vor Build, expliziter Fragen-MCP-Port, gebündelte App ohne Watcher, Wiederöffnen und Schutz laufenden Bundles | macOS lokal geprüft; kein Autostart-Dienst oder gleichzeitiger Betrieb zweier App-Instanzen |
 | Repo-Demoaktionen | 017: Tests (Toolbar), Desktop-Tests, Typecheck, Git-Überblick, Live-Diagramm in `.agent/actions.json` | Prepared macOS-/Unix-venv; individuelle Toolbar-Auswahl kann Default übersteuern; kein App-Neustart erforderlich |
 | Umgebung | Doctor, Python-Erkennung/Installation, gebündelte Python-Engine installieren/reparieren | Zielplattform und installierte Version jeweils praktisch prüfen |
-| Updates | gemeinsame Start-/Intervallsuche, Einstellungen, geprüfter Download/Abbruch, geschützter Neustart; signierte Release-Pakete | Bootstrap-Release und reale N→N+1-Abnahme ausstehend; Linux intern nur AppImage |
+| Updates | gemeinsame Start-/Intervallsuche, Einstellungen, geprüfter Download/Abbruch, geschützter Neustart; signierte Release-Pakete | 0.8.1 veröffentlicht, lokales macOS-Upgrade geprüft; Windows/Linux-Installation noch abzunehmen; Linux intern nur AppImage |
 | Knowledgebases | lokale Buch-/Indexliste, Metadaten, Bücher öffnen, Abfragekommandos kopieren | Legacy-`dotagent kb`-Bezug; kein automatisch geladener itsdcloud-Projektkontext |
 | Feedback/Integrationen | allgemeine technische Grundlagen vorhanden | kein Feedback-Tab, kein kontextsensitiver Feedback-Composer, keine itsdcloud-UI |
 | Hilfe/Tutorial | integrierte Hilfe, Website, EN/DE-Tutorial | Tutorial und Teile der deutschen App-Doku noch auf Plänen/Tickets |

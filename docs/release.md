@@ -368,9 +368,13 @@ aufbewahren. Nicht neu erzeugen: vorhandene Installationen vertrauen diesem Key.
 
 **0.8.0 und ältere Builds besitzen keinen Prüfkey.** Sie brauchen einmalig einen
 neuen Installer mit Updater. Ein Release allein kann diesen fehlenden Key nicht
-nachträglich in eine bereits installierte 0.8-App bringen. Der Bootstrap-Release
-ist gesondert freizugeben; Implementierung und Testfixtures sind kein
-Veröffentlichungs- oder N→N+1-Installationsnachweis.
+nachträglich in eine bereits installierte 0.8-App bringen. **0.8.1 ist der
+freigegebene und veröffentlichte Bootstrap-Release** (2026-09-16). Ein lokaler
+0.8.0-Entwicklungsbuild mit bereits eingebautem Prüfkey wurde über den echten
+Updater auf 0.8.1 aktualisiert, einschließlich Neustart und Wiederherstellung
+aller vier Fenster. Das ist kein Nachweis für eine veröffentlichte 0.8.0 ohne
+Prüfkey; Windows-/Linux-Installation und das Upgrade zwischen zwei
+veröffentlichten Updater-Versionen bleiben gesonderte Abnahmen.
 
 ### Vollständiger Release-Feed
 
