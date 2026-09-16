@@ -53,6 +53,8 @@ wertet nur Alt aus. Installiert: Codex 0.154.0, Claude 2.1.273.
   Shift+Enter, `SHIFT_SECOND` ergeben zwei Entwurfszeilen. Kein Auftrag abgesendet;
   Ctrl-C entfernt beide Zeilen vollständig aus dem Eingabefeld. Testfenster geschlossen.
 - Bedienhilfe sowie beide Produkt-Playbooks ergänzt; Marketing-Build bestanden.
+- `pytest -xq scripts/test_terminal_settings_app.py`: nativer Regressionstest
+  bestanden (Paste/Enter getrennt, laufende PTY, Ctrl-C und Neustart).
 - Native Windows-/Linux-Abnahme bleibt offen; Browser-Regression ist im bestehenden
   Windows-CI-Lauf enthalten. Kein neuer Release, öffentliche Version bleibt 0.8.1.
 
