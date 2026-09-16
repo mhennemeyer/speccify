@@ -2,7 +2,7 @@
 station: Doing
 order: 50
 needs_human: true
-ready: false
+ready: true
 ---
 
 # Signierte automatische Updates für Desktop-Plattformen
@@ -47,10 +47,10 @@ GitHub Secrets; öffentlicher Prüfkey im App-Vertrag.
 
 ## Tasks
 
-- [ ] Nativen Update-Koordinator und Schutz laufender Arbeit implementieren.
-- [ ] Appweite Anzeige, Einstellungen, Download/Abbruch/Installation ergänzen.
-- [ ] Signierung, Schlüsselablage und Release-Manifest für alle Plattformen einrichten.
-- [ ] Zustands-, Signatur-, Fehler- und UI-Regressionen prüfen; lokale App aktualisieren.
+- [x] Nativen Update-Koordinator und Schutz laufender Arbeit implementieren.
+- [x] Appweite Anzeige, Einstellungen, Download/Abbruch/Installation ergänzen.
+- [x] Signierung, Schlüsselablage und Release-Manifest für alle Plattformen einrichten.
+- [x] Zustands-, Signatur-, Fehler- und UI-Regressionen prüfen; lokale App aktualisieren.
 - [ ] Dokumentation/Playbooks nachführen, committen/pushen; zu 034 weitergehen.
 
 ## Verification
@@ -58,6 +58,20 @@ GitHub Secrets; öffentlicher Prüfkey im App-Vertrag.
 Ausgangsstand 0.8.0: Plugin und manueller Knopf vorhanden, Public Key leer,
 keine Update-Schlüssel in GitHub, Windows ohne Update-Artefakte. Offizielle
 Referenz: https://v2.tauri.app/plugin/updater/ (2026-09-16).
+
+2026-09-16: `cargo test -p speccify-desktop`: 126 passed, 3 ignored;
+`uv run pytest`: 282 passed, 1 deselected. Ruff lint/format, Cargo format,
+TypeScript-Prüfung grün. `test_updates.mjs` prüft Einstellungen, Offline/Retry,
+Fortschritt/Abbruch, Signaturfehler und Editor-/Prozessschutz. Echter Tauri-Client
+prüft signierte und manipulierte Daten gegen lokalen HTTP-Server; Manifesttests
+prüfen echte minisign-Signaturen. Mermaid-Regression grün.
+
+Lokaler App-Build mit Developer-ID signiert, `codesign --verify --deep --strict`
+grün; nach Neustart vier Fenster wiederhergestellt (PID 61854), überall derselbe
+native Update-Zustand. Öffentlicher Endpoint liefert noch kein Manifest, daher
+erwarteter sichtbarer Suchfehler. Bootstrap-Release und tatsächliche N→N+1-
+Installation auf macOS/Windows/Linux noch ausstehend. Implementierung zur
+menschlichen Abnahme geparkt; danach Arbeit an 034.
 
 ## Questions
 
