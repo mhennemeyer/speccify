@@ -67,9 +67,15 @@ Keine Implementierungsänderungen und kein Neustart erforderlich.
 - `WorkspaceShell.tsx`: gemeinsames Spec-Board vorhanden; Wissensbereiche
   weiterhin im Kontext einzelner Worktrees.
 - `Source.specs_dirs`: Root-Register bewirkt frühe Rückgabe vor Kind-Registern.
+  Mit der echten `Source`-/`RepoConfig`-Implementierung und temporären Ordnern
+  reproduziert: zunächst `workspace/repo-a`, nach Anlegen eines leeren
+  `.agent/specs` am Root ausschließlich `workspace`. Keine Remotes beteiligt.
 - `playbook_cmd.rs` / `PlaybooksTab.tsx`: kein fachliches Draft-Feld im Vertrag.
 - Quellen und Gültigkeitsgrenzen stehen im [Research-Draft](../../playbooks/speccify-web-app.md).
   Kein praktischer Browser-/Server-Login getestet.
+- Neun Dokumente: lokale Markdown-Links, geschlossene Codeblöcke, YAML-Frontmatter
+  und Pflichtabschnitte der Specs geprüft; `git diff --check` grün.
+  Keine Code-Tests nötig, da ausschließlich Refinement/Dokumentation geändert.
 
 Folgespecs: [044](../044-workspace-root-dateien/SPEC.md),
 [045](../045-workspace-wissenskatalog/SPEC.md),

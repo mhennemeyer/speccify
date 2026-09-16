@@ -88,7 +88,10 @@ persönlich geprüfter Repo-Zugriff dargestellt werden.
 
 Bestand: `apps/board/src/speccify_board/sources.py`, `Source.specs_dirs`,
 kehrt bei vorhandenem `.agent/specs` am Root vorzeitig zurück. Die
-Unterprojekt-Suche läuft nur ohne Root-Register. Konfiguration benennt
+Unterprojekt-Suche läuft nur ohne Root-Register. Mit der echten Source-Klasse
+in temporären Testordnern reproduziert: `workspace/repo-a` wird nach Anlegen
+eines leeren Root-Registers durch ausschließlich `workspace` ersetzt.
+Konfiguration benennt
 Quellen aktuell über `RepoConfig.name`; das ist noch kein gemeinsamer
 Desktop-/Web-Identitätsvertrag. Noch keine Umsetzung dieser Spec.
 
