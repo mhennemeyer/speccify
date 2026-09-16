@@ -80,7 +80,7 @@ try {
   console.log("PASS deferred DE landing, Features navigation and internal documentation links");
   for (const width of [1440, 320]) {
     const docs = await browser.newPage({ viewport: { width, height: 1000 } });
-    for (const route of ["/app/workspaces/", "/releases/0-7-0/"]) {
+    for (const route of ["/app/workspaces/", "/releases/0-7-0/", "/releases/0-8-0/"]) {
       assert.equal((await docs.goto(`${url}${route}`)).status(), 200);
       await docs.getByRole("heading", { level: 1 }).waitFor();
       for (const img of await docs.locator("main img").all()) {

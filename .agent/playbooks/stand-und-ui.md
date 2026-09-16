@@ -39,6 +39,12 @@ Unterstützung noch nicht; hierfür ist ein neuer App-Build erforderlich.
 Chromium-Prüfung einschließlich des gemeldeten Programm-Playbooks erfolgreich;
 Windows-VM-Abnahme bleibt offen. Kein externer Diagrammdienst erforderlich.
 
+**Release 049, 2026-09-16:** 0.8.0 zur Auslieferung von 042 und 044–048
+vorbereitet. Automatische Updates weiterhin nicht konfiguriert: Tauri-Plugin
+und manueller Such-/Installationsknopf bestehen, Signaturschlüssel fehlen in
+der Release-Konfiguration. Der Windows-Job benötigt zusätzlich die Schritte für
+signierte Update-Artefakte. Veröffentlichungsnachweis und Downloadprüfung in 049.
+
 ## Kurzurteil
 
 Speccify hat bereits ein substanzielles Desktop-Arbeitsfenster: Spec-Board,

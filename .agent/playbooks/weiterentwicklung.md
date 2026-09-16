@@ -241,6 +241,12 @@ Installation sowie bedingte Release-Artefakte bestehen. Der eingecheckte Public 
 ist leer; der Release-Workflow kann ihn beim Build ergänzen. Damit ist weder
 „Updater fehlt vollständig“ noch „Updates funktionieren in verteilten Apps“ belegt.
 
+Prüfung für Release 0.8.0 (049, 2026-09-16): In GitHub sind weder
+`TAURI_SIGNING_PRIVATE_KEY` noch `TAURI_UPDATER_PUBKEY` konfiguriert.
+macOS/Linux haben bedingte Update-Schritte, Windows noch nicht. Deshalb bleibt
+auch dieses Release beim manuellen Installer-Update. Die Nachfrage nach Tauri
+ist eine Bestandsklärung; die vollständige Update-Kette wird hier nicht aktiviert.
+
 **Ausbau:** Signierte Update-Kette für macOS und Windows praktisch nachweisen;
 Update-Suche beim Start und periodisch konfigurierbar machen; verfügbare Version,
 Release Notes, Fortschritt, Fehler und Wiederholen zeigen. Installation und
