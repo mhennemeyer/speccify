@@ -3,7 +3,7 @@ station: Doing
 order: 15
 created: 2026-09-13
 needs_human: true
-ready: false
+ready: true
 open_question: null
 parent: null
 ---
@@ -70,14 +70,37 @@ wenn ausgewählt), Jira (036), Echtzeit-Aktualisierung der Ansicht (Reload).
 
 ## Tasks
 
-- [ ] Einrichtungsanleitung Stufe A in `docs/web-board.md` (Screenshots aus itsdcloud).
-- [ ] Empfohlene Tool-Auswahl und Beispiel-Fragen dokumentieren; Prüfung im Chat.
-- [ ] itsdcloud-Spec für Katalogeintrag und Board-Ansicht (Stufe B) auf Ansage anlegen; Vertrag zitieren.
-- [ ] Nach Umsetzung: Stichprobe Zahlen Web-Board ↔ Ansicht.
+- [x] Einrichtungsanleitung Stufe A in `docs/web-board.md` (Screenshots aus itsdcloud).
+- [x] Empfohlene Tool-Auswahl und Beispiel-Fragen dokumentieren; Prüfung im Chat.
+  Deterministischer Chat-Tooltest; natürliche Modellantwort bleibt Abnahme.
+- [x] itsdcloud-Spec für Katalogeintrag und Board-Ansicht (Stufe B) auf Ansage anlegen; Vertrag zitieren.
+- [x] Nach Umsetzung: Stichprobe Zahlen Web-Board ↔ Ansicht.
 
 ## Verification
 
-Noch nichts geprüft.
+2026-09-16: itsdcloud Spec 0051 implementiert und als Commit `27d7b8f` auf
+[`feat/0051-speccify-board`](https://git.itsd-consulting.de/private-ai/app/-/tree/feat/0051-speccify-board)
+gepusht. `ci.skip` verhindert die bestehende Veröffentlichung von `latest`-
+Containern für jeden Feature-Branch; keine Zusammenführung oder Installation.
+
+8 Board-Backendtests, Integrationsregression und 200 Frontendtests bestanden;
+Produktionsbuild, Ruff und Übersetzungen geprüft. Vollständige Backendsuite:
+659 bestanden, 6 Fehler. Vier umgebungsabhängige Fehler mit bereinigten
+Provider-Einstellungen nachgeprüft (22 bestanden); zwei Teams-Katalogfehler
+identisch auf unverändertem master `ea54607` reproduziert.
+
+Echter HTTP-MCP-Test gegen Speccify mit zwei synthetischen Git-Registern:
+drei Specs, Stationen 1/1/1, Counts und Commit-Stände identisch zum Web-Board;
+Spec-Details gelesen. Chat-Testmodell ruft freigegebene Tools auf. Projekt-
+Mitgliedschaft, Tool-Auswahl, Offline und Registerwechsel während des Lesens
+geprüft. Browserprüfung de/en × dark/light, Detail, Offline/Retry, Mobilbreite
+und Tastaturfokus bestanden; alle vier Screenshots angesehen.
+
+Einrichtung und Screenshot in `docs/web-board.md`, reproduzierbare Vorschau in
+itsdcloud `docs/SPECCIFY_BOARD.md`. Site-Build einschließlich lokalem Bild und
+24 Doku-Tests grün. Prototyp zur menschlichen Abnahme bereit; natürliche
+Modellantwort und produktive Einrichtung bleiben offen. Generalisierung erst
+nach der Abnahme gemäß D3.
 
 ## Questions
 

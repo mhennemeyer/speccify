@@ -3,6 +3,7 @@ station: Doing
 order: 50
 needs_human: true
 ready: true
+open_question: Q1
 ---
 
 # Signierte automatische Updates für Desktop-Plattformen
@@ -52,7 +53,7 @@ GitHub Secrets; öffentlicher Prüfkey im App-Vertrag.
 - [x] Signierung, Schlüsselablage und Release-Manifest für alle Plattformen einrichten.
 - [x] Zustands-, Signatur-, Fehler- und UI-Regressionen prüfen; lokale App aktualisieren.
 - [x] Dokumentation/Playbooks nachführen, committen/pushen; zu 034 weitergehen.
-  Commit `379ea42` auf main gepusht; plattformübergreifende CI läuft.
+  Commits `379ea42` und `dbdabc7` auf main gepusht; plattformübergreifende CI grün.
 
 ## Verification
 
@@ -76,4 +77,9 @@ menschlichen Abnahme geparkt; danach Arbeit an 034.
 
 ## Questions
 
-Keine für die Implementierung.
+### Q1 · open · 2026-09-16T10:01:00Z
+
+Soll Speccify 0.8.1 mit dem neuen Updater für Windows, macOS und Linux
+veröffentlicht werden? Bestehende 0.8.0-Installationen benötigen einmalig den
+neuen Installer. Implementierung und CI sind geprüft; Tags bleiben gemäß
+`.agent/agent.md` eine ausdrückliche Freigabe. Im Chat bereits gestellt.
