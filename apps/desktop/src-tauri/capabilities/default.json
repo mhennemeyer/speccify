@@ -15,7 +15,6 @@
     "clipboard-manager:allow-write-text",
     "dialog:default",
     "opener:default",
-    "updater:default",
     "window-state:default",
     "core:window:allow-close",
     {

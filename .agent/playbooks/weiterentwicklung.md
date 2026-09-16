@@ -236,22 +236,26 @@ Registrierung und itsdcloud-Projektgedächtnis sind weiterhin separate Arbeiten.
 
 **Gewünscht:** Interne Nutzer bekommen neue Versionen ohne manuelles Neuinstallieren.
 
-**Bestand:** Tauri-Updater, manuelle Update-Suche unter „Umgebung“, Download und
-Installation sowie bedingte Release-Artefakte bestehen. Der eingecheckte Public Key
-ist leer; der Release-Workflow kann ihn beim Build ergänzen. Damit ist weder
-„Updater fehlt vollständig“ noch „Updates funktionieren in verteilten Apps“ belegt.
+**Bestand seit 050 (2026-09-16):** Ein nativer Koordinator für alle Fenster sucht
+beim Start und alle 6/24/168 Stunden (Default täglich; abschaltbar). Die Oberfläche
+zeigt Version, Notizen, Downloadfortschritt, Abbruch und wiederholbare Fehler.
+Erst der ausdrückliche Installationsklick startet die Prüfung aller Fenster und
+laufenden Prozesse. Offene Editoren/Formulare/Entwürfe verhindern den Neustart.
+Public Key im App-Vertrag, privater Schlüssel außerhalb des Repos und in GitHub
+Secrets. Alle vier Release-Jobs erzeugen signierte Pakete; der gemeinsame
+Manifest-Job prüft Vollständigkeit, SHA-256 und Signaturen. Linux: AppImage
+x64/arm64 intern; deb/rpm über den Paketmanager. macOS weiterhin Apple Silicon.
 
 Prüfung für Release 0.8.0 (049, 2026-09-16): In GitHub sind weder
 `TAURI_SIGNING_PRIVATE_KEY` noch `TAURI_UPDATER_PUBKEY` konfiguriert.
 macOS/Linux haben bedingte Update-Schritte, Windows noch nicht. Deshalb bleibt
 auch dieses Release beim manuellen Installer-Update. Die Nachfrage nach Tauri
-ist eine Bestandsklärung; die vollständige Update-Kette wird hier nicht aktiviert.
+war eine Bestandsklärung; 050 setzt den anschließenden Auftrag zur Update-Kette um.
 
-**Ausbau:** Signierte Update-Kette für macOS und Windows praktisch nachweisen;
-Update-Suche beim Start und periodisch konfigurierbar machen; verfügbare Version,
-Release Notes, Fortschritt, Fehler und Wiederholen zeigen. Installation und
-Neustart so koordinieren, dass ungespeicherte Entwürfe und laufende Arbeit nicht
-verloren gehen. Keine erzwungene Unterbrechung einer Sitzung.
+**Noch auszuliefern/abzunehmen:** Bootstrap-Installer einmalig manuell installieren
+(0.8 hat keinen Prüfkey), danach reale N→N+1-Installation auf den Zielsystemen.
+Signatur-/Versionsprüfung und UI-Zustände sind separat mit Testdaten geprüft;
+das ersetzt keine tatsächliche Installation in der Windows-/Linux-VM.
 
 App, Sidecars und Python-Engine brauchen einen zusammenpassenden Versions- und
 Migrationsvertrag. Update-Signatur und OS-Codesign/Notarisierung sind verschiedene

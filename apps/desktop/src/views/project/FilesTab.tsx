@@ -887,7 +887,7 @@ export default function FilesTab({
           current.loadFailed ? (
             <p className="p-5 text-sm text-red-600">{current.error}</p>
           ) : (
-            <div className="min-h-0 flex-1">
+            <div className="min-h-0 flex-1" data-update-dirty={open.some(file => file.text !== file.saved)}>
               <CodeEditor
                 key={current.path}
                 path={current.path}

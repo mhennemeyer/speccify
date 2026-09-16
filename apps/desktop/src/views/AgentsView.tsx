@@ -113,6 +113,7 @@ export default function AgentsView() {
               </div>
               {error ? <ErrorBox message={error} /> : null}
               <textarea
+                data-update-dirty={dirty}
                 value={content}
                 onChange={(event) => {
                   setContent(event.target.value);

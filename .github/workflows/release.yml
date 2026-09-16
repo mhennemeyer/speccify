@@ -11,11 +11,9 @@ name: Release desktop app
 #                  (scripts/build_engine_payload.sh)
 #   3. bundle    — `tauri build`
 #
-# Signing and the updater are OPTIONAL and driven entirely by secrets. With
-# none set, this produces an unsigned .dmg and no updater artifacts — which is
-# the honest first release rather than a pipeline that cannot run until an
-# Apple account exists. Add the secrets and the same workflow signs, notarizes
-# and publishes `latest.json`, with no change to this file:
+# Updater signatures are required on every platform. A final job verifies all
+# four packages before attaching the complete latest.json to the draft release.
+# Native Apple/Windows code signing is configured independently:
 #
 #   APPLE_CERTIFICATE            base64 of the Developer ID .p12
 #   APPLE_CERTIFICATE_PASSWORD   its password
@@ -24,7 +22,7 @@ name: Release desktop app
 #   TAURI_SIGNING_PRIVATE_KEY / ..._PASSWORD      for the updater
 #
 # Generate the updater key with:
-#   pnpm --filter speccify-desktop tauri signer generate -w ~/.speccify/updater.key
+#   pnpm --filter speccify-desktop tauri signer generate -w ~/.speccify/update-signing/updater.key
 
 # Tags are the trigger; `workflow_dispatch` re-runs an existing tag after a
 # failed build without moving it.
@@ -120,7 +118,8 @@ jobs:
             echo "updater=true" >> "$GITHUB_OUTPUT"
           else
             echo "updater=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::Updater stays inert — needs both the signing key and the public key."
+            echo "::error::Release requires both updater signing key and public key."
+            exit 1
           fi
 
       - name: Build sidecars (MCP binaries + pinned uv)
@@ -129,17 +128,14 @@ jobs:
       - name: Build engine payload (wheels + skills)
         run: ./scripts/build_engine_payload.sh
 
-      # The updater refuses to be half-wired: artifacts are only produced when
-      # there is a key to sign them with and a public key to verify them
-      # against. Without both, the app ships with the updater inert — which is
-      # what tauri.conf.json says out of the box.
+      # Keep the embedded public key stable across all platform builds.
       - name: Enable updater artifacts
         if: steps.caps.outputs.updater == 'true'
         env:
           CONF: apps/desktop/src-tauri/tauri.conf.json
           TAURI_UPDATER_PUBKEY: ${{ vars.TAURI_UPDATER_PUBKEY }}
         run: |
-          python3 -c 'import json, os; p = os.environ["CONF"]; c = json.load(open(p)); c.setdefault("bundle", {})["createUpdaterArtifacts"] = True; c.setdefault("plugins", {}).setdefault("updater", {})["pubkey"] = os.environ["TAURI_UPDATER_PUBKEY"]; json.dump(c, open(p, "w"), indent=2)'
+          python3 -c 'import json, os; p = os.environ["CONF"]; c = json.load(open(p)); assert c["plugins"]["updater"]["pubkey"] == os.environ["TAURI_UPDATER_PUBKEY"]; c["bundle"]["createUpdaterArtifacts"] = True; json.dump(c, open(p, "w"), indent=2)'
           echo "updater artifacts enabled"
 
       # Tauri decides whether to sign by the **presence** of these variables,
@@ -208,6 +204,7 @@ jobs:
           # human opening the release page, not a green pipeline.
           releaseDraft: true
           prerelease: false
+          includeUpdaterJson: false
 
   release-windows:
     name: Windows (x64)
@@ -333,6 +330,21 @@ jobs:
           done
           echo "Windows signing enabled (Azure Trusted Signing)"
 
+      - name: Enable signed Windows updates
+        shell: bash
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          TAURI_UPDATER_PUBKEY: ${{ vars.TAURI_UPDATER_PUBKEY }}
+        run: |
+          test -n "$TAURI_SIGNING_PRIVATE_KEY" && test -n "$TAURI_UPDATER_PUBKEY"
+          python3 -c 'import json, os; p="apps/desktop/src-tauri/tauri.conf.json"; c=json.load(open(p)); assert c["plugins"]["updater"]["pubkey"] == os.environ["TAURI_UPDATER_PUBKEY"]; c["bundle"]["createUpdaterArtifacts"]=True; json.dump(c,open(p,"w"),indent=2)'
+          for name in TAURI_SIGNING_PRIVATE_KEY TAURI_SIGNING_PRIVATE_KEY_PASSWORD; do
+            eval "value=\${$name:-}"
+            [ -n "$value" ] || continue
+            printf '%s<<__SPECCIFY_EOF__\n%s\n__SPECCIFY_EOF__\n' "$name" "$value" >> "$GITHUB_ENV"
+          done
+
       - name: Build and attach to release
         uses: tauri-apps/tauri-action@v0
         env:
@@ -343,6 +355,7 @@ jobs:
           releaseName: "Speccify __VERSION__"
           releaseDraft: true
           prerelease: false
+          includeUpdaterJson: false
 
   # Linux (IDE-Plan, BO 2026-09-08): ubuntu-22.04 statt -latest, damit das
   # AppImage gegen eine ältere glibc/WebKitGTK gelinkt ist und auch auf
@@ -411,7 +424,8 @@ jobs:
             echo "updater=true" >> "$GITHUB_OUTPUT"
           else
             echo "updater=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::Updater stays inert — needs both the signing key and the public key."
+            echo "::error::Release requires both updater signing key and public key."
+            exit 1
           fi
 
       - name: Build sidecars (MCP binaries + pinned uv)
@@ -426,7 +440,7 @@ jobs:
           CONF: apps/desktop/src-tauri/tauri.conf.json
           TAURI_UPDATER_PUBKEY: ${{ vars.TAURI_UPDATER_PUBKEY }}
         run: |
-          python3 -c 'import json, os; p = os.environ["CONF"]; c = json.load(open(p)); c.setdefault("bundle", {})["createUpdaterArtifacts"] = True; c.setdefault("plugins", {}).setdefault("updater", {})["pubkey"] = os.environ["TAURI_UPDATER_PUBKEY"]; json.dump(c, open(p, "w"), indent=2)'
+          python3 -c 'import json, os; p = os.environ["CONF"]; c = json.load(open(p)); assert c["plugins"]["updater"]["pubkey"] == os.environ["TAURI_UPDATER_PUBKEY"]; c["bundle"]["createUpdaterArtifacts"] = True; json.dump(c, open(p, "w"), indent=2)'
 
       - name: Stage updater credentials
         if: steps.caps.outputs.updater == 'true'
@@ -450,6 +464,7 @@ jobs:
           releaseName: "Speccify __VERSION__"
           releaseDraft: true
           prerelease: false
+          includeUpdaterJson: false
           args: --bundles appimage,deb,rpm
 
   # ARM64 (BO 2026-09-09): für Linux-VMs auf Apple Silicon und ARM-Notebooks —
@@ -516,7 +531,8 @@ jobs:
             echo "updater=true" >> "$GITHUB_OUTPUT"
           else
             echo "updater=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::Updater stays inert — needs both the signing key and the public key."
+            echo "::error::Release requires both updater signing key and public key."
+            exit 1
           fi
 
       - name: Build sidecars (MCP binaries + pinned uv)
@@ -531,7 +547,7 @@ jobs:
           CONF: apps/desktop/src-tauri/tauri.conf.json
           TAURI_UPDATER_PUBKEY: ${{ vars.TAURI_UPDATER_PUBKEY }}
         run: |
-          python3 -c 'import json, os; p = os.environ["CONF"]; c = json.load(open(p)); c.setdefault("bundle", {})["createUpdaterArtifacts"] = True; c.setdefault("plugins", {}).setdefault("updater", {})["pubkey"] = os.environ["TAURI_UPDATER_PUBKEY"]; json.dump(c, open(p, "w"), indent=2)'
+          python3 -c 'import json, os; p = os.environ["CONF"]; c = json.load(open(p)); assert c["plugins"]["updater"]["pubkey"] == os.environ["TAURI_UPDATER_PUBKEY"]; c["bundle"]["createUpdaterArtifacts"] = True; json.dump(c, open(p, "w"), indent=2)'
 
       - name: Stage updater credentials
         if: steps.caps.outputs.updater == 'true'
@@ -555,4 +571,27 @@ jobs:
           releaseName: "Speccify __VERSION__"
           releaseDraft: true
           prerelease: false
+          includeUpdaterJson: false
           args: --bundles appimage,deb,rpm
+
+  update-manifest:
+    name: Verify signatures and publish complete update manifest
+    needs: [release, release-windows, release-linux, release-linux-arm64]
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.tag || github.ref }}
+      - name: Install signature verifier
+        run: sudo apt-get update && sudo apt-get install -y minisign
+      - name: Verify all update packages
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ github.event.inputs.tag || github.ref_name }}
+        run: |
+          mkdir -p update-packages
+          gh api "repos/$GITHUB_REPOSITORY/releases/tags/$RELEASE_TAG" > update-release.json
+          gh release download "$RELEASE_TAG" --dir update-packages --pattern '*.sig' --pattern '*.app.tar.gz' --pattern '*-setup.exe' --pattern '*.AppImage'
+          python3 scripts/build_update_manifest.py update-release.json update-packages --output latest.json
+          gh release upload "$RELEASE_TAG" latest.json --clobber

@@ -45,7 +45,9 @@ jobs:
         run: uv run mypy core/src cli/src
 
       - name: Pytest
-        run: uv run pytest
+        run: |
+          sudo apt-get update && sudo apt-get install -y minisign
+          uv run pytest
 
       - name: speccify lint + check the shipped skills
         run: |
@@ -160,6 +162,11 @@ jobs:
 
       - name: Render Mermaid in Playbooks (Windows Chromium, no external requests)
         run: node scripts/test_markdown_mermaid.mjs --serve
+        env:
+          SPECCIFY_TEST_BROWSER: chromium
+
+      - name: Update UI, download cancellation and restart guards
+        run: node scripts/test_updates.mjs --serve
         env:
           SPECCIFY_TEST_BROWSER: chromium
 

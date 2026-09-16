@@ -7,6 +7,7 @@ import WorkspaceShell from "./WorkspaceShell";
 import AskWindow from "./AskWindow";
 import "./index.css";
 import { installQaHooks } from "./lib/qa";
+import UpdateUi from "./components/UpdateUi";
 
 // Spec 039: lesende Haken für die QA-Brücke (ohne Brücke wirkungslos).
 installQaHooks();
@@ -18,6 +19,7 @@ const isProjectWindow = getCurrentWebviewWindow().label.startsWith("project-");
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
+    <UpdateUi notifications={!getCurrentWebviewWindow().label.startsWith("ask-")} />
     {getCurrentWebviewWindow().label.startsWith("ask-") ? <AskWindow /> : getCurrentWebviewWindow().label.startsWith("workspace-") ? <WorkspaceShell /> : isProjectWindow ? <ProjectShell /> : <App />}
   </React.StrictMode>,
 );

@@ -34,6 +34,7 @@ mod system_cmd;
 mod team_signals;
 mod terminal;
 mod toolbox_cmd;
+mod updates;
 mod workflow_setup;
 mod workspace_cmd;
 
@@ -110,6 +111,7 @@ fn spawn_process(
     command: String,
     args: Vec<String>,
 ) -> Result<u32, String> {
+    let _permit = updates::begin_work(&app)?;
     // Gebündelte Sidecars gewinnen über den PATH (R5.1/D1) — in der
     // verteilten App gibt es kein `cargo install`.
     let binary = sidecar::command_for_spawn(&command);
@@ -235,6 +237,7 @@ pub fn run() {
         .manage(project_watch::ProjectWatchers::default())
         .manage(actions_cmd::ActionRuns::default())
         .manage(terminal::Terminals::default())
+        .manage(updates::Updates::default())
         .manage(ask_bo)
         .manage(qa_registry)
         .setup(move |app| {
@@ -266,6 +269,7 @@ pub fn run() {
             // W7d: beim letzten Quit offene Projektfenster wieder öffnen.
             project_cmd::restore_open_windows(app.handle());
             workspace_cmd::restore_workspace_windows(app.handle());
+            updates::start(app.handle().clone());
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -391,7 +395,14 @@ pub fn run() {
             desktop_ui::ui_answer,
             qa_bridge::qa_eval_result,
             desktop_ui::ask_bo_pending,
-            updater_status
+            updater_status,
+            updates::update_snapshot,
+            updates::update_preferences,
+            updates::update_check,
+            updates::update_download,
+            updates::update_cancel,
+            updates::update_guard_reply,
+            updates::update_install
         ]);
 
     // Updater erst anhängen, wenn ein Public Key hinterlegt ist — ohne

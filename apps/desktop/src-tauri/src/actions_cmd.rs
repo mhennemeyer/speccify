@@ -202,6 +202,16 @@ fn suggested_name(command: &str) -> String {
 /// Lauf-Id (= command) → Kind. Drop killt Reste beim App-Ende.
 pub struct ActionRuns(Mutex<HashMap<String, std::process::Child>>);
 
+impl ActionRuns {
+    pub(crate) fn has_active_work(&self) -> bool {
+        self.0
+            .lock()
+            .unwrap()
+            .values_mut()
+            .any(|child| child.try_wait().ok().flatten().is_none())
+    }
+}
+
 impl Default for ActionRuns {
     fn default() -> Self {
         Self(Mutex::new(HashMap::new()))
@@ -244,6 +254,7 @@ pub fn project_action_run(
     run_id: String,
     command_line: String,
 ) -> Result<(), String> {
+    let _permit = crate::updates::begin_work(window.app_handle())?;
     let root = resolve_project_root(&project)?;
     let argv = shell_words::split(&command_line).map_err(|e| format!("Kommandozeile: {e}"))?;
     let Some((program, args)) = argv.split_first() else {

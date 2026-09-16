@@ -28,17 +28,16 @@ Release-Seite öffnet — nicht eine grüne Pipeline.
 git tag v0.2.0 && git push origin v0.2.0
 ```
 
-Ohne hinterlegte Secrets baut die Pipeline **unsigniert** und der Updater
-bleibt inert. Das ist Absicht: eine Pipeline, die erst mit Apple-Konto läuft,
-ist eine Pipeline, die man erst beim Launch zum ersten Mal testet. Welche
-Secrets was freischalten, steht im Kopf des Workflows.
+Updater-Signaturen sind für alle Release-Plattformen verpflichtend. Fehlende
+Schlüssel oder unvollständige Update-Pakete lassen den Workflow fehlschlagen.
+Apple-/Windows-Codesigning ist davon unabhängig konfiguriert.
 
 Das lokale Skript unten bleibt für Tests und für den Fall, dass man ohne CI
 ausliefern will.
 
 ## Signierung scharf schalten — die Aktionsliste
 
-Beide Release-Jobs sind fertig verdrahtet; es fehlen nur die Schlüssel.
+Die vier Plattform-Jobs und die abschließende Manifest-Prüfung sind verdrahtet.
 Alle Secrets/Variablen entstehen **außerhalb des Repos** und werden mit
 `gh secret set <NAME>` bzw. `gh variable set <NAME>` hinterlegt (oder im
 GitHub-UI unter *Settings → Secrets and variables → Actions*). Kein Wert
@@ -76,11 +75,12 @@ gehört jemals in eine getrackte Datei.
    gh secret set APPLE_TEAM_ID     # die TEAMID aus der Klammer der Identity
    ```
 
-4. **Updater-Schlüssel** (optional, schaltet Auto-Updates frei):
+4. **Updater-Schlüssel** (seit Spec 050 eingerichtet; nicht neu erzeugen):
 
    ```bash
-   pnpm --filter speccify-desktop tauri signer generate -w ~/.speccify/updater.key
-   gh secret set TAURI_SIGNING_PRIVATE_KEY < ~/.speccify/updater.key
+   # Nur zur erstmaligen Einrichtung, niemals einen bestehenden Schlüssel ersetzen:
+   pnpm --filter speccify-desktop tauri signer generate -w ~/.speccify/update-signing/updater.key
+   gh secret set TAURI_SIGNING_PRIVATE_KEY < ~/.speccify/update-signing/updater.key
    gh secret set TAURI_SIGNING_PRIVATE_KEY_PASSWORD   # falls beim Generieren gesetzt
    gh variable set TAURI_UPDATER_PUBKEY --body "<der ausgegebene Public Key>"
    ```
@@ -341,85 +341,80 @@ xcrun notarytool log <submission-id> --apple-id "$APPLE_ID" --team-id "$APPLE_TE
 
 ## Updater
 
-Die App kann sich selbst aktualisieren (`tauri-plugin-updater`). Das ist
-**unabhängig von der Apple-Signatur**: Tauri signiert die Update-Artefakte
-zusätzlich mit einem eigenen minisign-Schlüsselpaar, damit niemand ein
-untergeschobenes Update einspielen kann.
+Die App sucht beim Start und danach im gewählten Intervall (6 Stunden, täglich,
+wöchentlich; Standard täglich). Unter **Umgebung → Updates** lassen sich Suche
+und Intervall einstellen und eine manuelle Suche starten. Ein verfügbarer Stand
+erscheint als Hinweis in den Fenstern. Download und Installation sind getrennte,
+ausdrückliche Aktionen; Fortschritt, Abbruch und Fehler bleiben sichtbar.
 
-### Schlüsselpaar erzeugen (einmalig)
+Ein nativer Koordinator teilt Zustand und Download zwischen allen Fenstern.
+Vor der Installation sperrt er die Oberflächen und verlangt eine Antwort von
+jedem Fenster. Offene Editoren, bearbeitete Formulare, gespeicherte Entwürfe und
+laufende Terminals/Aktionen blockieren den Neustart. Erst speichern, die
+betroffenen Ansichten schließen und Prozesse beenden; dann erneut installieren.
+Ein fehlgeschlagener Vorabcheck behält den geprüften Download. Ein App-Neustart
+verwirft den Download im Arbeitsspeicher, die Sucheinstellungen bleiben erhalten.
 
-```bash
-pnpm --filter speccify-desktop tauri signer generate -w ~/.speccify/updater.key
-```
+### Schlüssel und Bootstrap
 
-Das schreibt den **privaten** Schlüssel nach `~/.speccify/updater.key` (mit
-Passwort schützen, niemals ins Repo, nicht verlieren — ohne ihn kann keine
-bestehende Installation mehr aktualisiert werden) und gibt den **Public Key**
-aus. Diesen in `apps/desktop/src-tauri/tauri.conf.json` eintragen:
+Update-Signaturen (minisign) sind unabhängig vom OS-Codesigning. Der öffentliche
+Schlüssel ist in `apps/desktop/src-tauri/tauri.conf.json` versioniert und muss
+mit der GitHub-Variable `TAURI_UPDATER_PUBKEY` übereinstimmen. Der private
+Schlüssel liegt in `~/.speccify/update-signing/updater.key` (Dateimodus 0600,
+Ordner 0700) und im GitHub-Secret `TAURI_SIGNING_PRIVATE_KEY`. Er wurde ohne
+zusätzliches Schlüsselpasswort eingerichtet; Dateizugriff und GitHub-Secrets
+schützen ihn. Eine verschlüsselte externe Sicherung muss der Schlüsselinhaber
+aufbewahren. Nicht neu erzeugen: vorhandene Installationen vertrauen diesem Key.
 
-```jsonc
-"plugins": {
-  "updater": {
-    "endpoints": ["https://github.com/mhennemeyer/speccify/releases/latest/download/latest.json"],
-    "pubkey": "<hier der Public Key>"
-  }
-}
-```
+**0.8.0 und ältere Builds besitzen keinen Prüfkey.** Sie brauchen einmalig einen
+neuen Installer mit Updater. Ein Release allein kann diesen fehlenden Key nicht
+nachträglich in eine bereits installierte 0.8-App bringen. Der Bootstrap-Release
+ist gesondert freizugeben; Implementierung und Testfixtures sind kein
+Veröffentlichungs- oder N→N+1-Installationsnachweis.
 
-> Solange `pubkey` leer ist, hängt die App den Updater gar nicht erst ein und
-> der Umgebungs-Tab zeigt „Automatische Updates sind in diesem Build nicht
-> eingerichtet". Ein Build ohne Schlüssel bleibt damit voll funktionsfähig.
+### Vollständiger Release-Feed
 
-### Release mit Updater bauen
+Der Workflow verlangt signierte Pakete für alle unterstützten Update-Ziele:
 
-```bash
-export TAURI_SIGNING_PRIVATE_KEY="$(cat ~/.speccify/updater.key)"
-export TAURI_SIGNING_PRIVATE_KEY_PASSWORD="…"     # falls gesetzt
-./scripts/release_macos.sh
-```
+| Ziel | Update-Paket |
+| --- | --- |
+| macOS Apple Silicon | `Speccify_aarch64.app.tar.gz` |
+| Windows x64 | `Speccify_<version>_x64-setup.exe` |
+| Linux x64 | `Speccify_<version>_amd64.AppImage` |
+| Linux arm64 | `Speccify_<version>_aarch64.AppImage` |
 
-Ist der private Schlüssel gesetzt, schaltet das Skript
-`bundle.createUpdaterArtifacts` ein und es entstehen zusätzlich:
+Linux deb/rpm werden über den Paketmanager aktualisiert. macOS Intel ist noch
+kein Release-Ziel. Die Update-Signatur beseitigt keine Windows-SmartScreen-Warnung.
 
-```text
-target/release/bundle/macos/Speccify.app.tar.gz       # das Update-Paket
-target/release/bundle/macos/Speccify.app.tar.gz.sig   # dessen Signatur
-```
+Die Plattform-Jobs laden Pakete und `.sig` hoch, schreiben aber selbst kein
+Manifest. Erst nach allen vier erfolgreichen Jobs lädt `update-manifest` die
+Pakete erneut, prüft Uploadstatus, Dateigröße, SHA-256, Downloadziel und echte
+minisign-Signatur mit dem eingecheckten Public Key. Nur dann erzeugt
+`scripts/build_update_manifest.py` das vollständige `latest.json` und hängt
+es an den Release-Entwurf. Ein fehlendes oder beschädigtes Paket stoppt diesen
+Schritt. Vor Veröffentlichung müssen alle Jobs und das Manifest geprüft sein.
 
-Ohne Schlüssel wird bewusst **ohne** Updater-Artefakte gebaut (mit Hinweis) —
-und wenn der Schlüssel gesetzt, aber kein `pubkey` eingetragen ist, bricht der
-Preflight ab: sonst entstünden Updates, die keine Installation prüfen kann.
+Endpoint:
+`https://github.com/mhennemeyer/speccify/releases/latest/download/latest.json`.
+Das Manifest enthält Version ohne `v`, Release-Notizen, RFC-3339-Datum und pro
+Plattform Download-URL sowie vollständigen Signaturinhalt. Die App bietet nur
+neuere Versionen an. Offline- und Signaturfehler installieren nichts und lassen
+sich wiederholen. Der Download wird erst nach erfolgreicher Signaturprüfung zur
+Installation freigegeben.
 
-### `latest.json` auf speccify.io
+### Prüfung
 
-Der Endpoint muss dieses JSON liefern (Tauri-2-Format):
-
-```json
-{
-  "version": "0.2.0",
-  "notes": "Kurze Release-Notes, werden in der App angezeigt.",
-  "pub_date": "2026-08-01T10:00:00Z",
-  "platforms": {
-    "darwin-aarch64": {
-      "signature": "<kompletter Inhalt von Speccify.app.tar.gz.sig>",
-      "url": "https://github.com/mhennemeyer/speccify/releases/download/v0.2.0/Speccify_0.2.0_aarch64.app.tar.gz"
-    }
-  }
-}
-```
-
-- `version` **ohne** führendes `v`; die App vergleicht mit ihrer eigenen
-  Version aus `tauri.conf.json` und meldet nur höhere.
-- `signature` ist der Dateiinhalt der `.sig`, nicht deren Pfad.
-- `pub_date` ist RFC 3339.
-- Für Intel-Macs käme `darwin-x86_64` dazu (siehe unten).
-- Antwortet der Endpoint `204 No Content`, gilt das als „kein Update" —
-  praktisch, um Updates kurzfristig zu stoppen.
-
-Ablauf pro Release: bauen → `.app.tar.gz` und `.dmg` hochladen →
-`latest.json` mit neuer Version, URL und Signatur aktualisieren. In der App:
-Umgebungs-Tab → „Nach Updates suchen"; nach dem Einspielen muss Speccify
-einmal neu gestartet werden.
+- `cargo test -p speccify-desktop`: echter Tauri-Client gegen lokalen Testserver;
+  neuere/gleiche/ältere Version, signierte und manipulierte Nutzdaten, Offline-Fall,
+  fehlende Fensterantworten und Installationsblocker.
+- `uv run pytest tests/test_update_manifest.py`: Vollständigkeit, URL-Herkunft,
+  Versionsformat und echte minisign-Prüfung (minisign muss installiert sein).
+- `node scripts/test_updates.mjs` mit lokalem Vite-Testserver: persistierte
+  Einstellungen, Download/Abbruch/Fehler, Editor-/Prozessschutz und Installationsklick.
+  Native Installation ist in diesem Oberflächentest simuliert.
+- Zur Plattformabnahme: installierte Version N aktualisieren, Neustart und
+  wiederhergestellte Fenster prüfen. Dies auf macOS, Windows und Linux AppImage
+  separat nachweisen. Testfixtures allein erfüllen diese Abnahme nicht.
 
 ## Noch offen
 

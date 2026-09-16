@@ -89,6 +89,10 @@ pub struct Terminals {
 }
 
 impl Terminals {
+    pub(crate) fn has_active_work(&self) -> bool {
+        !self.sessions.lock().unwrap().is_empty()
+            || !self.workspace_claims.lock().unwrap().is_empty()
+    }
     pub fn shutdown(&self) {
         self.shutting_down.store(true, Ordering::SeqCst);
         if let Ok(mut sessions) = self.sessions.lock() {
@@ -188,6 +192,7 @@ pub async fn terminal_open(
     workspace_id: Option<String>,
     session: Option<SessionRequest>,
 ) -> Result<TerminalOpened, String> {
+    let _permit = crate::updates::begin_work(&app)?;
     let window_workspace = window.label().strip_prefix("workspace-");
     if workspace_id
         .as_deref()

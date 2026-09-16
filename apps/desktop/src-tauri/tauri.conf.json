@@ -14,7 +14,8 @@
       "endpoints": [
         "https://github.com/mhennemeyer/speccify/releases/latest/download/latest.json"
       ],
-      "pubkey": ""
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEMxNDUwRTlEQ0Q5NkI5NzcKUldSM3VaYk5uUTVGd1ROZ05HenFBczR4ajIvdlFBbTJHUXdpTTBwZVRkbk9hZVpOZ1RyUTliUG8K",
+      "windows": { "installMode": "passive" }
     }
   },
   "app": {

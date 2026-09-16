@@ -7,6 +7,7 @@
       import { installMarketingFixture, marketingProject } from "./marketing-fixture.js";
       import { installWorkspaceFixture } from "./workspace-fixture.js";
       import { installPlaybookFixture } from "./playbook-fixture.js";
+      import { installUpdateFixture } from "./update-fixture.js";
       // Attrappe der Tauri-Brücke für Layout-Prüfungen und Website-
       // Screenshots im Browser (Playwright gegen den Vite-Dev-Server,
       // http://localhost:1420/dev/mock.html). Kein Produktbestandteil.
@@ -470,6 +471,7 @@
       if (marketing) installMarketingFixture({ responses, tickets, base, gitState, branchState, emit });
       if (new URLSearchParams(location.search).has("workspaces")) installWorkspaceFixture(responses);
       if (new URLSearchParams(location.search).has("playbook-drafts")) installPlaybookFixture(responses);
+      if (new URLSearchParams(location.search).has("updates")) installUpdateFixture(responses, emit);
       window.__TAURI_INTERNALS__ = {
         // ?dashboard=1 → Hauptfenster (Label "main") statt Projektfenster.
         metadata: (() => {

@@ -45,6 +45,16 @@ und manueller Such-/Installationsknopf bestehen, Signaturschlüssel fehlen in
 der Release-Konfiguration. Der Windows-Job benötigt zusätzlich die Schritte für
 signierte Update-Artefakte. Veröffentlichungsnachweis und Downloadprüfung in 049.
 
+**Implementierung 050, 2026-09-16:** Appweiter nativer Update-Koordinator,
+automatische Start-/Intervallsuche (abschaltbar; 6/24/168 Stunden), Details,
+signaturgeprüfter Download mit Fortschritt/Abbruch und ausdrückliche Installation.
+Alle Fenster bestätigen vor der Installation ihren Zustand; offene Editoren,
+bearbeitete Formulare, Entwürfe und aktive Terminals/Aktionen verhindern sie.
+Schlüssel und vier Plattform-Jobs eingerichtet; ein abschließender Job prüft
+Signaturen und SHA-256 aller Pakete, bevor er das vollständige Manifest anhängt.
+Noch kein veröffentlichtes Bootstrap-Release und kein realer N→N+1-Nachweis auf
+allen Betriebssystemen. 0.8 benötigt einmalig den neuen Installer.
+
 ## Kurzurteil
 
 Speccify hat bereits ein substanzielles Desktop-Arbeitsfenster: Spec-Board,
@@ -161,7 +171,7 @@ oder vollständige Plattformabnahme.
 | Lokaler Betrieb | 013: Status vor Build, expliziter Fragen-MCP-Port, gebündelte App ohne Watcher, Wiederöffnen und Schutz laufenden Bundles | macOS lokal geprüft; kein Autostart-Dienst oder gleichzeitiger Betrieb zweier App-Instanzen |
 | Repo-Demoaktionen | 017: Tests (Toolbar), Desktop-Tests, Typecheck, Git-Überblick, Live-Diagramm in `.agent/actions.json` | Prepared macOS-/Unix-venv; individuelle Toolbar-Auswahl kann Default übersteuern; kein App-Neustart erforderlich |
 | Umgebung | Doctor, Python-Erkennung/Installation, gebündelte Python-Engine installieren/reparieren | Zielplattform und installierte Version jeweils praktisch prüfen |
-| Updates | bedingt aktiviertes Plugin, manuelle Suche + direkte Installation, Release-Konfiguration | Basisconfig ohne Public Key; Release-Secrets nicht geprüft; kein belegter automatischer Rollout |
+| Updates | gemeinsame Start-/Intervallsuche, Einstellungen, geprüfter Download/Abbruch, geschützter Neustart; signierte Release-Pakete | Bootstrap-Release und reale N→N+1-Abnahme ausstehend; Linux intern nur AppImage |
 | Knowledgebases | lokale Buch-/Indexliste, Metadaten, Bücher öffnen, Abfragekommandos kopieren | Legacy-`dotagent kb`-Bezug; kein automatisch geladener itsdcloud-Projektkontext |
 | Feedback/Integrationen | allgemeine technische Grundlagen vorhanden | kein Feedback-Tab, kein kontextsensitiver Feedback-Composer, keine itsdcloud-UI |
 | Hilfe/Tutorial | integrierte Hilfe, Website, EN/DE-Tutorial | Tutorial und Teile der deutschen App-Doku noch auf Plänen/Tickets |
