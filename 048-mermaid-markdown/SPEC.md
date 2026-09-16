@@ -41,7 +41,7 @@ keine externe Rendering-API, kein neuer Release-Tag ohne Nutzerauftrag.
 - [x] Renderer mit Theme, Fehlerdarstellung und lokalem Bundle integrieren.
 - [x] Diagramm aus betroffenem Playbook sowie Rendering-Regressionen prüfen.
 - [x] Produktplaybooks nachführen und lokale App aktualisieren.
-- [ ] Committen und pushen; Windows-CI mit Diagramm-Regression prüfen.
+- [x] Committen und pushen; Windows-CI mit Diagramm-Regression prüfen.
 
 ## Verification
 
@@ -70,6 +70,12 @@ Das gemeldete Playbook enthält einen Mermaid-Flowchart-Block. Nur lesend geprü
   nicht verfügbar; DOM-Prüfung erfolgreich. Keine Windows-WebView2-Abnahme behauptet.
 - Skill: `macos-notarize-tauri` für lokale Signaturprüfung; kein öffentlicher Release,
   keine neue Notarisierung oder Änderung der veröffentlichten Installer.
+- Commit `8d08f94` auf `main` gepusht, anschließendes `pull --ff-only` aktuell.
+  CI-Lauf `35066449760`: Windows-Frontend-Build und der neue Windows-Chromium-
+  Diagramm-Test erfolgreich. Die verbleibenden nativen Windows-/Linux-Schritte
+  waren bei diesem Eintrag noch in Arbeit. Website-Workflow `35066455904` grün.
+  Das ersetzt keine Abnahme im installierten Windows-WebView2. Zur menschlichen
+  Abnahme geparkt; der veröffentlichte Installer v0.7.0 bleibt unverändert.
 
 ## Questions
 
