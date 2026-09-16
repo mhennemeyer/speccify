@@ -42,6 +42,16 @@ diesem Praxisnachweis getrennt.
 
 ## Architektur und Datenhoheit
 
+**Ergänzung 046, 2026-09-16:** Im gemeinsamen Board gibt es jetzt
+`Registerquellen…` (Manifest, lokale Checkout-Bindung, Export/Import),
+`Neue Spec in` und `+ Übergreifende Spec`. Root-/Kind-Register werden gemeinsam
+gelesen. Gebundene Checkouts eines Registers liefern eine kanonische Karte;
+abweichende Stände melden einen Hinweis. Spec-Editor: zusätzliche Repo-/Branch-
+Bezüge; UI-Mutationen mit Revisionsprüfung. Das Web-Board liest denselben
+Identitätsvertrag, adressiert Unterquellen exakt und erhält ungesicherte Dateien
+bei Sync-Fehlern. Menschliche Team-Abnahme und zweiter physischer Rechner bleiben
+offen; Pfadwechsel werden mit getrennten temporären Checkouts geprüft.
+
 | Bereich | Aufgabe und kanonischer Ort |
 |---|---|
 | Python-Domäne | `core/`: Skill-Auflösung, Quellen, Lock/Bundle, Expand, Export, Verify, Tool-Prüfung |

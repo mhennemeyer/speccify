@@ -13,6 +13,7 @@ Aktivität (agent_run, station_changed, …).
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 from collections import Counter, defaultdict
@@ -68,6 +69,8 @@ class BoardSpec:
     archived: bool = False
     # Spec 032: Herkunft, wenn ein Board mehrere Repos zeigt.
     repo: str | None = None
+    revision: str = ""
+    repositories: list[str] = field(default_factory=list)
     tasks: list[Task] = field(default_factory=list)
     history: list[HistoryEvent] = field(default_factory=list)
 
@@ -130,6 +133,8 @@ class BoardSpec:
             "created": self.created,
             "archived": self.archived,
             "repo": self.repo,
+            "revision": self.revision,
+            "repositories": self.repositories,
             "tasks_done": self.tasks_done,
             "tasks_total": self.tasks_total,
             "progress": round(self.progress, 4),
@@ -239,7 +244,8 @@ def load_history(path: Path) -> list[HistoryEvent]:
 def load_spec(
     spec_file: Path, *, root: Path, archived: bool = False, repo: str | None = None
 ) -> BoardSpec | None:
-    text = spec_file.read_text(encoding="utf-8", errors="replace")
+    raw = spec_file.read_bytes()
+    text = raw.decode("utf-8", errors="replace")
     fields, body = parse_front_matter(text)
     spec_id = spec_file.parent.name
     number_match = _NUMBER_RE.match(spec_id)
@@ -266,6 +272,10 @@ def load_spec(
         created=_optional(fields.get("created")),
         archived=archived,
         repo=repo,
+        revision=hashlib.sha256(raw).hexdigest(),
+        repositories=[
+            value.strip() for value in fields.get("repositories", "").split(",") if value.strip()
+        ],
         tasks=parse_tasks(body),
         history=load_history(spec_file.parent / "history.jsonl"),
     )
@@ -283,6 +293,8 @@ def load_specs(
         if not base.is_dir():
             continue
         for spec_file in sorted(base.glob("*/SPEC.md")):
+            if base.is_symlink() or spec_file.parent.is_symlink() or spec_file.is_symlink():
+                continue
             spec = load_spec(spec_file, root=specs_dir, archived=archived, repo=repo)
             if spec is not None:
                 specs.append(spec)
@@ -459,6 +471,7 @@ footer{margin-top:32px;color:var(--muted);font-size:11px}
         {% if spec.repo and repo_names|length > 1 %}<span class="badge repo">{{ spec.repo }}</span>{% endif %}
         {% if spec.owner %}<span class="av" title="{{ spec.owner }}">{{ spec.initials }}</span>{% endif %}
         {% if spec.branch %}<span class="branch">⎇ {{ spec.branch }}</span>{% endif %}
+        {% if spec.repositories %}<span>Repos: {{ spec.repositories|join(', ') }}</span>{% endif %}
         {% if spec.parent %}<span>· {{ spec.parent }}</span>{% endif %}
         {% if spec.ready %}<span class="badge ready">bereit</span>{% endif %}
         {% if spec.needs_human %}<span class="badge human">braucht Abnahme</span>{% endif %}
@@ -470,7 +483,7 @@ footer{margin-top:32px;color:var(--muted);font-size:11px}
       {% if spec.tasks_total %}<div class="bar" title="{{ spec.tasks_done }}/{{ spec.tasks_total }} Tasks"><i class="{% if spec.station == 'Done' %}done{% endif %}" style="width:{{ (spec.progress*100)|round(1) }}%"></i></div>
       <div class="row">{{ spec.tasks_done }}/{{ spec.tasks_total }} Tasks</div>{% endif %}
       {% if editable and not spec.archived %}
-      <div class="edit" data-repo="{{ spec.repo or '' }}" data-spec="{{ spec.id }}">
+      <div class="edit" data-repo="{{ spec.repo or '' }}" data-spec="{{ spec.id }}" data-revision="{{ spec.revision }}">
         <label>Station <select data-station>{% for s in ['Backlog','Doing','Done'] %}<option{% if s == spec.station %} selected{% endif %}>{{ s }}</option>{% endfor %}</select></label>
         {% if spec.tasks %}<details><summary>Tasks</summary><ul>{% for task in spec.tasks %}<li><label><input type="checkbox" data-task="{{ loop.index0 }}"{% if task.done %} checked{% endif %}> {{ task.text }}</label></li>{% endfor %}</ul></details>{% endif %}
         <span class="meta" data-edit-status></span>
@@ -509,6 +522,7 @@ footer{margin-top:32px;color:var(--muted);font-size:11px}
     var status=box.querySelector('[data-edit-status]');
     function send(path,body){
       status.textContent='…';
+      body.expected_revision=box.dataset.revision;
       fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
         .then(function(r){return r.json().then(function(j){if(!r.ok)throw new Error(j.detail||r.status);return j;});})
         .then(function(){status.textContent='gespeichert';location.reload();})
@@ -581,6 +595,8 @@ def render_board(
                 "parent": spec.parent,
                 "archived": spec.archived,
                 "repo": spec.repo,
+                "revision": spec.revision,
+                "repositories": spec.repositories,
                 "tasks": spec.tasks,
                 "tasks_done": spec.tasks_done,
                 "tasks_total": spec.tasks_total,

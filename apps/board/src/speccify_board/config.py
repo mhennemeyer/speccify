@@ -8,6 +8,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 import yaml
+from speccify_core.workspace_registers import ManifestError, RegisterManifest, load_manifest
 
 _ENV_RE = re.compile(r"\$\{([A-Z0-9_]+)\}")
 
@@ -22,6 +23,7 @@ class RepoConfig:
     url: str | None = None
     path: Path | None = None
     branch: str = "specs"
+    register_only: bool = False
 
     @property
     def is_remote(self) -> bool:
@@ -35,6 +37,7 @@ class BoardConfig:
     author_name: str = "Speccify Board"
     author_email: str = "board@speccify.local"
     repos: tuple[RepoConfig, ...] = field(default_factory=tuple)
+    manifest: RegisterManifest | None = None
 
     @property
     def names(self) -> list[str]:
@@ -54,6 +57,26 @@ def parse_config(text: str, *, base_dir: Path | None = None) -> BoardConfig:
     raw = yaml.safe_load(text) or {}
     if not isinstance(raw, dict):
         raise ConfigError("Konfiguration muss ein Mapping sein.")
+    manifest = None
+    if raw.get("manifest"):
+        if raw.get("repos"):
+            raise ConfigError("Mit manifest ausschließlich lokale bindings verwenden.")
+        manifest_path = Path(str(raw["manifest"])).expanduser()
+        if not manifest_path.is_absolute():
+            manifest_path = (base_dir or Path.cwd()) / manifest_path
+        try:
+            manifest = load_manifest(manifest_path)
+        except (ManifestError, OSError) as exc:
+            raise ConfigError(str(exc)) from exc
+        bindings = raw.get("bindings", {})
+        if not isinstance(bindings, dict) or set(bindings) != {s.id for s in manifest.sources}:
+            raise ConfigError("bindings müssen genau die Register-IDs des Manifests enthalten.")
+        if any(
+            not isinstance(value, dict) or set(value) - {"path", "url", "branch"}
+            for value in bindings.values()
+        ):
+            raise ConfigError("Eine lokale Bindung enthält path oder url und optional branch.")
+        raw["repos"] = [{**bindings[source.id], "name": source.id} for source in manifest.sources]
     repos: list[RepoConfig] = []
     seen: set[str] = set()
     for index, entry in enumerate(raw.get("repos") or []):
@@ -84,6 +107,7 @@ def parse_config(text: str, *, base_dir: Path | None = None) -> BoardConfig:
                 url=_expand_env(str(url)) if url else None,
                 path=resolved_path,
                 branch=str(entry.get("branch") or "specs"),
+                register_only=manifest is not None,
             )
         )
     author = raw.get("author") or {}
@@ -95,11 +119,12 @@ def parse_config(text: str, *, base_dir: Path | None = None) -> BoardConfig:
     except (TypeError, ValueError) as exc:
         raise ConfigError("`refresh_seconds` muss eine Zahl sein.") from exc
     return BoardConfig(
-        title=str(raw.get("title") or "Speccify"),
+        title=str(raw.get("title") or (manifest.name if manifest else "Speccify")),
         refresh_seconds=max(5, refresh),
         author_name=str(author.get("name") or "Speccify Board"),
         author_email=str(author.get("email") or "board@speccify.local"),
         repos=tuple(repos),
+        manifest=manifest,
     )
 
 

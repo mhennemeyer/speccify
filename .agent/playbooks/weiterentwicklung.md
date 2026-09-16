@@ -119,7 +119,14 @@ Das sind verfeinerte Anforderungen, keine bereits implementierten Fähigkeiten.
 Projektliste vorhanden. Normale Ordner bleiben bei Erkennungstiefe 1 manuell
 durchsuchbar; Speichern erkennt veraltete Inhalte auch zwischen Root- und
 Unterprojekteditor. Git bleibt an echte Repositories gebunden. Die übrigen
-Refinement-Punkte 045–047 bleiben davon getrennte Umsetzungsschritte.
+Die gemeinsame Wissensnavigation 045 bleibt ein eigener Umsetzungsschritt.
+
+**Umsetzung 046, 2026-09-16:** `workspace-registers.json` definiert portable
+Register-/Code-Repo-IDs, lokale Bindungen bleiben rechnerabhängig. Desktop und
+Web lesen denselben Vertrag. Root plus Unterordner, explizites kanonisches
+Schreibziel, Vergleich weiterer Checkouts und Revisionen für UI-Schreibaktionen
+sind implementiert. Keine automatische Registermigration oder persönliche
+Web-Autorisierung; der bestehende Web-Board-Zugang bleibt der Zugangsvertrag.
 
 **Entschieden am 2026-09-10 (D-MR-01):** Erkannte Repos werden zunächst als eigene
 Projekte angeboten und können anschließend frei fachlich gruppiert werden.

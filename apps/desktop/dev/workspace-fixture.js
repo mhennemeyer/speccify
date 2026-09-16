@@ -65,6 +65,17 @@ export function installWorkspaceFixture(responses) {
   responses.workspace_list = () => read().map(scope);
   responses.workspace_window_open = ({ workspaceId }) => { window.__SPECCIFY_MOCK__.workspaceOpened.push({ workspaceId, window: true }); };
   responses.workspace_window_current = () => scope(read()[0]);
+  responses.workspace_registers = () => JSON.parse(localStorage.getItem(`${key}.registers`) ?? "null");
+  responses.workspace_register_save = ({ manifest, bindings }) => {
+    const value = { manifest: JSON.parse(manifest), bindings };
+    const seen = new Set();
+    for (const source of value.manifest.sources) {
+      if (!bindings[source.id]?.length) throw Error("Registerbindung fehlt");
+      for (const id of bindings[source.id]) { if (seen.has(id)) throw Error("Checkout darf nur einem Register zugeordnet sein"); seen.add(id); }
+    }
+    localStorage.setItem(`${key}.registers`, JSON.stringify(value)); return value;
+  };
+  responses.workspace_register_import = () => responses.workspace_registers()?.manifest;
   responses.workspace_agent_context = () => {
     const workspace = scope(read()[0]);
     return { root: workspace.root, revision: workspace.revision, markdown: `# Workspace context\n${JSON.stringify(workspace, null, 2)}` };
@@ -183,6 +194,7 @@ export function installWorkspaceFixture(responses) {
     };
     responses.project_board = async ({ project }) => (await responses.workspace_board({ workspaceId: "workspace-demo" })).specs.filter(entry => entry.worktree_path === project).map(entry => entry.spec);
     responses.project_spec_toggle_task = ({ project, done: checked }) => { if (checked) done.add(project); else done.delete(project); };
+    responses.project_ticket_create = () => ".agent/specs/002-shared-task/SPEC.md";
     if (new URLSearchParams(location.search).has("workspace-registers")) {
       const statuses = window.__SPECCIFY_MOCK__.workspaceRegisters = Object.fromEntries([
         ["api", "migratable"], ["api-search", "blocked"], ["web", "detached"], ["infra", "none"],

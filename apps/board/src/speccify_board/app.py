@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import secrets
 from contextlib import asynccontextmanager
+from html import escape
 from pathlib import Path
 from typing import Annotated, Any
 
@@ -25,10 +26,12 @@ _basic = HTTPBasic(auto_error=False)
 # resolves parameter annotations in the module namespace.
 class StationBody(BaseModel):
     station: str
+    expected_revision: str | None = None
 
 
 class TaskBody(BaseModel):
     done: bool
+    expected_revision: str | None = None
 
 
 def create_app(
@@ -83,7 +86,8 @@ def create_app(
         html = render_board(specs, title=title, source=registry.source_label(), editable=True)
         if errors:
             notice = "".join(
-                f'<p style="margin:0 0 8px;color:#b91c1c;font-size:12px">⚠ {e}</p>' for e in errors
+                f'<p style="margin:0 0 8px;color:#b91c1c;font-size:12px">⚠ {escape(e)}</p>'
+                for e in errors
             )
             html = html.replace("<main>", "<main>" + notice, 1)
         return HTMLResponse(html)
@@ -128,7 +132,9 @@ def create_app(
     def move_station(name: str, spec_id: str, body: Annotated[StationBody, Body()]) -> JSONResponse:
         source = source_for(name)
         try:
-            commit = source.move_station(spec_id, body.station)
+            commit = source.move_station(
+                spec_id, body.station, source=name, expected_revision=body.expected_revision
+            )
         except SourceError as exc:
             raise HTTPException(status_code=409, detail=str(exc)) from exc
         source.refresh()
@@ -140,7 +146,9 @@ def create_app(
     ) -> JSONResponse:
         source = source_for(name)
         try:
-            commit = source.toggle_task(spec_id, index, body.done)
+            commit = source.toggle_task(
+                spec_id, index, body.done, source=name, expected_revision=body.expected_revision
+            )
         except SourceError as exc:
             raise HTTPException(status_code=409, detail=str(exc)) from exc
         source.refresh()

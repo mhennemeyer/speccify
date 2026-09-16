@@ -12,7 +12,22 @@ without merging them and without a second copy of anything.
 
 ![Workspace window: three repositories grouped into two projects in the navigator, a shared spec board in the middle, the selected spec's tasks in the inspector](../../../assets/landing/workspace.png)
 
-## Opening a folder
+## Shared register bindings
+
+Use **Registerquellen…** on the board to give registers stable, shared IDs and
+bind them to local checkouts. Export `workspace-registers.json` into an existing
+register to share the same board definition with teammates and the Web-Board.
+Local paths and credentials stay outside that manifest. When comparing multiple
+checkouts of one register, choose the write target explicitly; differing snapshots
+produce a warning.
+
+**Neue Spec in** chooses where a cross-repository spec is stored. The editor's
+**Betroffene Code-Repos** field accepts comma-separated references such as
+`api@spec/048-login, web@spec/048-login`. Each spec still has one canonical file.
+Root knowledge is included alongside child registers, even without Git at the root.
+Stale desktop and browser edits are rejected using the displayed spec revision.
+
+## Folder discovery
 
 The dashboard's **Projects** tab has one entry: choose a folder and open
 it. The app looks at the folder before anything is stored:

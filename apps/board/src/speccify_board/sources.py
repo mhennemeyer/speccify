@@ -5,6 +5,7 @@ force (Spec 028/032)."""
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 import shutil
@@ -86,14 +87,21 @@ class Source:
             return [(self.name, self.clone_dir)]
         base = self.config.path
         assert base is not None
-        if (base / ".agent" / "specs").is_dir():
-            return [(self.name, base / ".agent" / "specs")]
+        root = base / ".agent" / "specs"
+        if base.is_symlink() or (base / ".agent").is_symlink() or root.is_symlink():
+            raise SourceError("Verlinkte Registerordner werden nicht geöffnet.")
+        if self.config.register_only:
+            return [(self.name, root if root.is_dir() else base)]
         if any(base.glob("*/SPEC.md")):
             return [(self.name, base)]
-        found = sorted(
+        found = ([(self.name, root)] if root.is_dir() else []) + sorted(
             (f"{self.name}/{child.name}", child / ".agent" / "specs")
             for child in base.iterdir()
-            if child.is_dir() and (child / ".agent" / "specs").is_dir()
+            if child.is_dir()
+            and not child.is_symlink()
+            and not (child / ".agent").is_symlink()
+            and not (child / ".agent" / "specs").is_symlink()
+            and (child / ".agent" / "specs").is_dir()
         )
         if not found:
             raise SourceError(f"Kein Spec-Ordner unter {base}")
@@ -146,7 +154,12 @@ class Source:
             git(self.clone_dir, "config", "user.name", self.author_name)
             git(self.clone_dir, "config", "user.email", self.author_email)
             return
-        git(self.clone_dir, "fetch", "--quiet", "--depth=1", "origin", branch)
+        if git(self.clone_dir, "status", "--porcelain").stdout.strip():
+            raise SourceError(
+                "Ungesicherte lokale Änderungen im Register; Sync pausiert. "
+                "Dateien bleiben erhalten."
+            )
+        git(self.clone_dir, "fetch", "--quiet", "origin", branch)
         # Unsent local commits (a failed push) are pushed first, never discarded.
         ahead = git(self.clone_dir, "rev-list", "--count", f"origin/{branch}..HEAD").stdout.strip()
         if ahead not in ("", "0"):
@@ -170,12 +183,37 @@ class Source:
             )
         git(self.clone_dir, "push", "--quiet", "origin", f"HEAD:{branch}")
 
-    def _folder_for(self, spec_id: str) -> tuple[str, Path]:
+    def _folder_for(self, spec_id: str, source: str | None = None) -> tuple[str, Path]:
+        if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", spec_id):
+            raise SourceError("Ungültige Spec-ID.")
+        matches = []
         for label, folder in self.specs_dirs():
+            if source is not None and label != source:
+                continue
             candidate = folder / spec_id / "SPEC.md"
-            if candidate.is_file():
-                return label, candidate
+            if (
+                candidate.is_file()
+                and not candidate.is_symlink()
+                and not candidate.parent.is_symlink()
+            ):
+                if (candidate.parent / "history.jsonl").is_symlink():
+                    raise SourceError("Verlinkte Historie ist nicht beschreibbar.")
+                matches.append((label, candidate))
+        if len(matches) > 1:
+            raise SourceError("Mehrdeutige Spec-ID; genaue Registerquelle angeben.")
+        if matches:
+            return matches[0]
         raise SourceError(f"Keine Spec {spec_id} in {self.name}")
+
+    def _read_for_write(self, spec_file: Path, expected_revision: str | None) -> str:
+        if self.config.is_remote and git(self.clone_dir, "status", "--porcelain").stdout.strip():
+            raise SourceError("Ungesicherte lokale Änderungen; zuerst Register prüfen.")
+        raw = spec_file.read_bytes()
+        if expected_revision is not None and hashlib.sha256(raw).hexdigest() != expected_revision:
+            raise SourceError(
+                "Spec wurde inzwischen geändert. Neu laden und Änderung erneut prüfen."
+            )
+        return raw.decode("utf-8")
 
     def _commit_and_push(self, subject: str) -> str | None:
         if not self.config.is_remote:
@@ -196,13 +234,20 @@ class Source:
         with (spec_file.parent / "history.jsonl").open("a", encoding="utf-8") as handle:
             handle.write(json.dumps(line, ensure_ascii=False) + "\n")
 
-    def move_station(self, spec_id: str, station: str) -> str | None:
+    def move_station(
+        self,
+        spec_id: str,
+        station: str,
+        *,
+        source: str | None = None,
+        expected_revision: str | None = None,
+    ) -> str | None:
         """Rewrite only the `station:` line, log, commit and push."""
         if station not in ("Backlog", "Doing", "Done"):
             raise SourceError(f"Unbekannte Station: {station}")
         with self.lock:
-            _label, spec_file = self._folder_for(spec_id)
-            text = spec_file.read_text(encoding="utf-8")
+            _label, spec_file = self._folder_for(spec_id, source)
+            text = self._read_for_write(spec_file, expected_revision)
             new_text, old_station = _replace_station(text, station)
             if old_station == station:
                 return self.state.commit
@@ -212,11 +257,19 @@ class Source:
             )
             return self._commit_and_push(f"spec({spec_id}): {old_station} -> {station} (Web-Board)")
 
-    def toggle_task(self, spec_id: str, index: int, done: bool) -> str | None:
+    def toggle_task(
+        self,
+        spec_id: str,
+        index: int,
+        done: bool,
+        *,
+        source: str | None = None,
+        expected_revision: str | None = None,
+    ) -> str | None:
         """Flip the n-th checkbox outside code fences, log, commit and push."""
         with self.lock:
-            _label, spec_file = self._folder_for(spec_id)
-            text = spec_file.read_text(encoding="utf-8")
+            _label, spec_file = self._folder_for(spec_id, source)
+            text = self._read_for_write(spec_file, expected_revision)
             new_text, task_text = _toggle_task(text, index, done)
             if new_text == text:
                 return self.state.commit

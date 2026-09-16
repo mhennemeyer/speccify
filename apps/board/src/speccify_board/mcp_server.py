@@ -139,11 +139,7 @@ def build_mcp(registry: Registry, config: BoardConfig) -> FastMCP:
     )
     def get_spec(repo: str, spec_id: str, history_limit: int = 20) -> dict[str, Any]:
         spec = next(
-            (
-                s
-                for s in registry.specs()
-                if s.id == spec_id and (s.repo == repo or (s.repo or "").startswith(repo + "/"))
-            ),
+            (s for s in registry.specs() if s.id == spec_id and s.repo == repo),
             None,
         )
         if spec is None:
@@ -152,11 +148,8 @@ def build_mcp(registry: Registry, config: BoardConfig) -> FastMCP:
         body = ""
         if source is not None:
             try:
-                for _label, folder in source.specs_dirs():
-                    candidate = folder / spec_id / "SPEC.md"
-                    if candidate.is_file():
-                        body = candidate.read_text(encoding="utf-8", errors="replace")
-                        break
+                _label, candidate = source._folder_for(spec_id, repo)
+                body = candidate.read_text(encoding="utf-8", errors="replace")
             except SourceError:
                 body = ""
         row = _spec_row(spec)
@@ -209,12 +202,16 @@ def build_mcp(registry: Registry, config: BoardConfig) -> FastMCP:
         name="move_station",
         description="Move a spec to Backlog, Doing or Done. Rewrites only the station line, logs a history event and commits/pushes to the register branch. Returns the commit.",
     )
-    def move_station(repo: str, spec_id: str, station: str) -> dict[str, Any]:
+    def move_station(
+        repo: str, spec_id: str, station: str, expected_revision: str | None = None
+    ) -> dict[str, Any]:
         source = _source(repo)
         if source is None:
             return _error("unknown_repo", f"Unbekanntes Repo: {repo}")
         try:
-            commit = source.move_station(spec_id, station)
+            commit = source.move_station(
+                spec_id, station, source=repo, expected_revision=expected_revision
+            )
         except SourceError as exc:
             return _error("rejected", str(exc))
         source.refresh()
@@ -224,12 +221,16 @@ def build_mcp(registry: Registry, config: BoardConfig) -> FastMCP:
         name="toggle_task",
         description="Tick (done=true) or untick one task by its 0-based index from get_spec. Commits/pushes to the register branch. Returns the commit.",
     )
-    def toggle_task(repo: str, spec_id: str, index: int, done: bool) -> dict[str, Any]:
+    def toggle_task(
+        repo: str, spec_id: str, index: int, done: bool, expected_revision: str | None = None
+    ) -> dict[str, Any]:
         source = _source(repo)
         if source is None:
             return _error("unknown_repo", f"Unbekanntes Repo: {repo}")
         try:
-            commit = source.toggle_task(spec_id, index, done)
+            commit = source.toggle_task(
+                spec_id, index, done, source=repo, expected_revision=expected_revision
+            )
         except SourceError as exc:
             return _error("rejected", str(exc))
         source.refresh()

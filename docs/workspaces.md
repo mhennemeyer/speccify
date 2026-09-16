@@ -220,6 +220,45 @@ reset the component and ignore late responses. Opening revalidates the worktree 
 the existing `workspace_open` command; it opens that project's window, not a spec
 deep link. Editing/acceptance stays in that window. There is no aggregate write API.
 
+## Shared register identities (Spec 046)
+
+The workspace board includes root knowledge and recognized child folders,
+including folders without Git. **Registerquellen…** binds logical register IDs to
+local checkout IDs. The first checkout is the explicit write target; additional
+checkouts are compared and produce a warning when their spec snapshots differ.
+Independent registers with the same spec number remain separate.
+
+The portable `workspace-registers.json` contract is version 1:
+
+```json
+{
+  "version": 1,
+  "id": "team-workspace",
+  "name": "Team workspace",
+  "sources": [{"id": "team-register", "name": "Team register"}],
+  "repositories": [{"id": "api", "name": "API"}, {"id": "web", "name": "Web"}],
+  "default_source": "team-register"
+}
+```
+
+Only IDs and display names are shared. Local bindings live alongside the local
+workspace store. Explicit export writes the manifest into an existing selected
+`.agent/specs` folder; mounted registers sync it through their existing Git workflow.
+Import reads that filename from a selected register and requires local checkout
+bindings. No specs are copied or migrated; the parent workspace does not need Git.
+The Web-Board uses this same manifest with its own local bindings.
+
+**Neue Spec in** selects the canonical register. Optional flat frontmatter
+`repositories: api@spec/048-login, web@spec/048-login` references affected code
+repos and branches. These are references, not branch-switch commands. Existing
+`owner` and `branch` fields retain their meaning.
+
+Desktop spec actions submit a SHA-256 revision of the displayed document. Stale
+writes are rejected and the editor stays open. This detects changed snapshots;
+it is not a distributed filesystem lock. Existing legacy commands remain available
+for older integrations. Register setup/sync/error controls still belong to each
+actual checkout. Unbound workspaces retain their checkout-specific identities.
+
 ## Fixture matrix
 
 The workspace window also exposes `RegisterBar` for every resolved, available

@@ -7,6 +7,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 use std::time::{Duration, Instant};
 use tauri::Manager;
+pub mod registers;
 
 static STORE_LOCK: Mutex<()> = Mutex::new(());
 #[cfg(test)]
@@ -192,6 +193,10 @@ fn markers(root: &Path) -> Vec<String> {
     [
         "speccify.yaml",
         ".agent/agent.md",
+        ".agent/specs",
+        ".agent/skills",
+        ".agent/tools",
+        ".agent/playbooks",
         "AGENTS.md",
         "CLAUDE.md",
         "openspec/config.yaml",
@@ -248,7 +253,7 @@ fn scan(root: &Path, max_entries: usize, max_depth: usize) -> Scan {
             Ok(None)
                 if found_markers.iter().any(|value| {
                     value == "speccify.yaml"
-                        || value == ".agent/agent.md"
+                        || value.starts_with(".agent/")
                         || value.starts_with("openspec/")
                         || value == ".specify"
                 }) =>
@@ -1191,10 +1196,28 @@ pub async fn workspace_board(workspace_id: String) -> Result<WorkspaceBoard, Str
                 .find(|workspace| workspace.id == workspace_id)
                 .ok_or("Workspace nicht gefunden")?
         };
-        Ok(read_workspace_board(
-            &configured_workspace(workspace)?,
-            5000,
-        ))
+        let workspace = registers::with_root(configured_workspace(workspace)?);
+        let mut board = read_workspace_board(&workspace, 5000);
+        match registers::load_binding(&workspace) {
+            Ok(Some(binding)) => {
+                for source in &binding.manifest.sources {
+                    for tree in &binding.bindings[&source.id] {
+                        if let Err(error) = resolve_worktree(&workspace, tree) {
+                            board
+                                .warnings
+                                .push(format!("Register {}: {error}", source.name));
+                        }
+                    }
+                }
+                registers::apply_binding(&mut board, &binding);
+            }
+            Ok(None) => (),
+            Err(error) => {
+                board.warnings.push(format!("Registerbindung: {error}"));
+                board.partial = true;
+            }
+        }
+        Ok(board)
     })
     .await
     .map_err(|e| e.to_string())?
@@ -1424,6 +1447,80 @@ mod tests {
         assert_eq!(
             serde_json::to_value(&item.spec).unwrap()["station"],
             "Review"
+        );
+    }
+
+    #[test]
+    fn register_binding_includes_root_and_deduplicates_only_explicit_checkouts() {
+        let fixture = tempfile::tempdir().unwrap();
+        let root = fixture.path().canonicalize().unwrap();
+        let file = ".agent/specs/001-shared/SPEC.md";
+        for path in [
+            &root,
+            &root.join("api"),
+            &root.join("copy"),
+            &root.join("web"),
+        ] {
+            board_fixture_spec(path, file, "Backlog");
+        }
+        let workspace =
+            registers::with_root(merge(&mut empty_store(), &root, scan(&root, 20000, 1)));
+        let tree_id = |path: &Path| {
+            workspace
+                .repositories
+                .iter()
+                .flat_map(|r| &r.worktrees)
+                .find(|t| t.path == display(path))
+                .unwrap()
+                .id
+                .clone()
+        };
+        let manifest: registers::Manifest = serde_json::from_value(serde_json::json!({
+            "version": 1, "id": "shared-team", "name": "Team",
+            "sources": [{"id":"root","name":"Root"},{"id":"api","name":"API"},{"id":"web","name":"Web"}],
+            "repositories": [{"id":"api-code","name":"API"}], "default_source":"root"
+        })).unwrap();
+        let binding = registers::Binding {
+            manifest,
+            bindings: [
+                ("root".into(), vec![tree_id(&root)]),
+                (
+                    "api".into(),
+                    vec![tree_id(&root.join("api")), tree_id(&root.join("copy"))],
+                ),
+                ("web".into(), vec![tree_id(&root.join("web"))]),
+            ]
+            .into_iter()
+            .collect(),
+        };
+        let mut board = read_workspace_board(&workspace, 5000);
+        assert_eq!(board.specs.len(), 4);
+        registers::apply_binding(&mut board, &binding);
+        assert_eq!(board.specs.len(), 3);
+        assert!(!board.partial, "{:?}", board.warnings);
+        assert_eq!(
+            board
+                .specs
+                .iter()
+                .map(|s| &s.key)
+                .collect::<HashSet<_>>()
+                .len(),
+            3
+        );
+        board_fixture_spec(&root.join("copy"), file, "Doing");
+        let mut board = read_workspace_board(&workspace, 5000);
+        registers::apply_binding(&mut board, &binding);
+        assert_eq!(board.specs.len(), 3);
+        assert!(board.warnings.iter().any(|w| w.contains("weichen ab")));
+        assert_eq!(
+            board
+                .specs
+                .iter()
+                .find(|s| s.repository_id == "api")
+                .unwrap()
+                .spec
+                .station,
+            "Backlog"
         );
     }
 

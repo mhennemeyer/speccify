@@ -24,6 +24,82 @@ use crate::project_cmd::{
 
 const SPEC_TEMPLATE: &str = include_str!("../templates/spec.md");
 
+pub(crate) fn spec_revision(text: &str) -> String {
+    use sha2::{Digest, Sha256};
+    format!("{:x}", Sha256::digest(text.as_bytes()))
+}
+
+#[derive(Deserialize)]
+#[serde(tag = "kind", rename_all = "snake_case")]
+pub enum CheckedAction {
+    Take,
+    Release,
+    Answer {
+        number: u32,
+        text: String,
+    },
+    Move {
+        station: String,
+    },
+    Save {
+        patch: TicketPatch,
+    },
+    Task {
+        index: usize,
+        done: bool,
+        expected_body: String,
+    },
+    Delete,
+}
+
+#[tauri::command]
+pub fn project_spec_checked_action(
+    project: String,
+    file: String,
+    expected_revision: String,
+    action: CheckedAction,
+) -> Result<(), String> {
+    static WRITES: std::sync::Mutex<()> = std::sync::Mutex::new(());
+    let _guard = WRITES.lock().map_err(|e| e.to_string())?;
+    let root = resolve_project_root(&project)?;
+    let path = writable_spec_path(&root, &file)?;
+    let text = std::fs::read_to_string(&path).map_err(|e| e.to_string())?;
+    if spec_revision(&text) != expected_revision {
+        return Err("SPEC_CHANGED: Spec wurde inzwischen geändert. Neu laden und erneut prüfen; der Entwurf bleibt offen.".into());
+    }
+    match action {
+        CheckedAction::Take => {
+            crate::spec_owner::project_spec_take(project, file, None).map(|_| ())
+        }
+        CheckedAction::Release => crate::spec_owner::project_spec_release(project, file),
+        CheckedAction::Answer { number, text } => {
+            project_ticket_answer(project, file, number, text)
+        }
+        CheckedAction::Move { station } => {
+            crate::project_cmd::project_board_move(project, file, station)
+        }
+        CheckedAction::Save { patch } => project_ticket_save(project, file, patch),
+        CheckedAction::Task {
+            index,
+            done,
+            expected_body,
+        } => project_spec_toggle_task(project, file, index, done, expected_body),
+        CheckedAction::Delete => project_ticket_delete(project, file),
+    }
+}
+
+fn repository_references(value: &str) -> Result<String, String> {
+    if value.contains(['\n', '\r']) || value.len() > 4096 {
+        return Err("Repo-Bezüge müssen eine einzelne Zeile sein".into());
+    }
+    Ok(value
+        .split(',')
+        .map(str::trim)
+        .filter(|v| !v.is_empty())
+        .collect::<Vec<_>>()
+        .join(", "))
+}
+
 fn now_iso() -> String {
     time::OffsetDateTime::now_utc()
         .replace_nanosecond(0)
@@ -330,6 +406,7 @@ pub fn project_ticket_create(
     needs_human: bool,
     parent: Option<String>,
     order: Option<i64>,
+    repositories: Option<String>,
 ) -> Result<String, String> {
     if !BOARD_STATIONS.contains(&station.as_str()) {
         return Err(format!("Unbekannte Station: {station}"));
@@ -355,6 +432,12 @@ pub fn project_ticket_create(
     }
 
     let mut frontmatter = vec![format!("station: {station}")];
+    if let Some(value) = repositories {
+        let value = repository_references(&value)?;
+        if !value.is_empty() {
+            frontmatter.push(format!("repositories: {value}"));
+        }
+    }
     if let Some(order) = order {
         frontmatter.push(format!("order: {order}"));
     }
@@ -508,6 +591,7 @@ pub fn project_specs_number(project: String) -> Result<Vec<String>, String> {
 
 #[derive(Deserialize)]
 pub struct TicketPatch {
+    repositories: Option<String>,
     title: String,
     station: String,
     ready: bool,
@@ -552,13 +636,17 @@ pub fn project_ticket_save(
         .to_string();
     let spec_id = crate::project_cmd::spec_id_of(&root, &path);
 
-    let updates: Vec<(&str, Option<String>)> = vec![
+    let mut updates: Vec<(&str, Option<String>)> = vec![
         ("title", None), // v1-Feld: der Titel steht in der Überschrift
         ("station", Some(patch.station.clone())),
         ("ready", patch.ready.then(|| "true".into())),
         ("needs_human", patch.needs_human.then(|| "true".into())),
         ("order", patch.order.map(|order| order.to_string())),
     ];
+    if let Some(value) = patch.repositories {
+        let value = repository_references(&value)?;
+        updates.push(("repositories", (!value.is_empty()).then_some(value)));
+    }
     let body = body_with_title(&patch.body, patch.title.trim());
     let updated = update_ticket_text(&text, &updates, Some(&body))?;
     if updated == text {
@@ -920,6 +1008,7 @@ mod tests {
             project.clone(),
             old.clone(),
             TicketPatch {
+                repositories: None,
                 title: "Changed".into(),
                 station: "Doing".into(),
                 ready: false,
@@ -972,6 +1061,51 @@ mod tests {
             std::fs::read_to_string(folder.join("SPEC.md")).unwrap(),
             text.replace("* [X] erledigt", "* [ ] erledigt")
         );
+        std::fs::remove_dir_all(dir).unwrap();
+    }
+
+    #[test]
+    fn checked_spec_actions_reject_metadata_changes_and_preserve_references() {
+        let dir = fixture("checked-specs");
+        let project = dir.display().to_string();
+        let file = project_ticket_create(
+            project.clone(),
+            "Shared".into(),
+            "Backlog".into(),
+            "# Shared\n- [ ] Task".into(),
+            true,
+            None,
+            None,
+            Some("api@spec/001, web@spec/001".into()),
+        )
+        .unwrap();
+        let original = std::fs::read_to_string(dir.join(&file)).unwrap();
+        assert!(original.contains("repositories: api@spec/001, web@spec/001"));
+        let changed = original.replace("station: Backlog", "station: Doing");
+        std::fs::write(dir.join(&file), &changed).unwrap();
+        assert!(project_spec_checked_action(
+            project.clone(),
+            file.clone(),
+            spec_revision(&original),
+            CheckedAction::Move {
+                station: "Done".into()
+            }
+        )
+        .unwrap_err()
+        .contains("SPEC_CHANGED"));
+        assert_eq!(std::fs::read_to_string(dir.join(&file)).unwrap(), changed);
+        project_spec_checked_action(
+            project,
+            file.clone(),
+            spec_revision(&changed),
+            CheckedAction::Move {
+                station: "Done".into(),
+            },
+        )
+        .unwrap();
+        let saved = std::fs::read_to_string(dir.join(file)).unwrap();
+        assert!(saved.contains("repositories: api@spec/001, web@spec/001"));
+        assert!(saved.contains("station: Done"));
         std::fs::remove_dir_all(dir).unwrap();
     }
 
@@ -1096,6 +1230,7 @@ mod tests {
             true,
             Some("projektfenster".into()),
             Some(1),
+            None,
         )
         .unwrap();
         assert_eq!(file, ".agent/specs/001-board-tab-bauen/SPEC.md");
@@ -1113,6 +1248,7 @@ mod tests {
             "Backlog".into(),
             String::new(),
             false,
+            None,
             None,
             None,
         )
@@ -1154,6 +1290,7 @@ mod tests {
             project.clone(),
             file.clone(),
             TicketPatch {
+                repositories: Some("api@spec/001, web@spec/001".into()),
                 title: "Board-Tab bauen".into(),
                 station: "Doing".into(),
                 ready: true,

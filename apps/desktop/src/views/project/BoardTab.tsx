@@ -30,6 +30,8 @@ export interface SpecEntry {
   owner: string | null;
   /** Spec 029: Code-Branch der Arbeit. */
   branch: string | null;
+  revision?: string;
+  repositories?: string[];
   created: string | null;
   ready: boolean;
   needs_human: boolean;
@@ -363,6 +365,8 @@ function SpecCard({
 }
 
 interface SheetState {
+  revision?: string;
+  repositories: string;
   file: string | null; // null = neue Spec
   title: string;
   station: string;
@@ -375,6 +379,7 @@ interface SheetState {
 
 function emptySheet(station: string): SheetState {
   return {
+    repositories: "",
     file: null,
     title: "",
     station,
@@ -388,6 +393,8 @@ function emptySheet(station: string): SheetState {
 
 function sheetFor(spec: SpecEntry): SheetState {
   return {
+    revision: spec.revision,
+    repositories: (spec.repositories ?? []).join(", "),
     file: spec.file,
     title: spec.title,
     station: spec.station,
@@ -488,6 +495,9 @@ function SpecSheet({
             braucht BO
           </label>
         </div>
+        <label className="text-xs">Betroffene Code-Repos (Repo-ID oder Repo-ID@Branch, mit Komma getrennt)
+          <input aria-label="Betroffene Code-Repos" value={sheet.repositories} onChange={e => onChange({ ...sheet, repositories: e.target.value })} className="mt-1 block w-full rounded border p-2 font-mono" placeholder="api@spec/048-login, web@spec/048-login" />
+        </label>
         <textarea
           value={sheet.body}
           onChange={(event) => onChange({ ...sheet, body: event.target.value })}
@@ -702,6 +712,7 @@ function SpecDetail({
         { label: "Station", value: spec.station },
         ...(spec.owner ? [{ label: "Besitz", value: ownerName(spec.owner) }] : []),
         ...(spec.branch ? [{ label: "Branch", value: spec.branch }] : []),
+        ...((spec.repositories?.length ?? 0) > 0 ? [{ label: "Code-Repos", value: spec.repositories!.join(", ") }] : []),
         { label: "Ober-Spec", value: spec.parent ?? "—" },
         {
           label: "Tasks",
@@ -928,8 +939,11 @@ export default function BoardTab({ project, refresh, detailFile, detailOnly = fa
     }
   };
 
+  const checked = (file: string, revision: string | undefined, action: Record<string, unknown>, legacy: string, args: Record<string, unknown>) => revision
+    ? invoke("project_spec_checked_action", { project, file, expectedRevision: revision, action })
+    : invoke(legacy, { project, file, ...args });
   const move = (file: string, station: string) =>
-    void run(() => invoke("project_board_move", { project, file, station }));
+    void run(() => checked(file, specs.find(spec => spec.file === file)?.revision, { kind: "move", station }, "project_board_move", { station }));
 
   const saveSheet = async () => {
     if (!sheet) return;
@@ -943,21 +957,20 @@ export default function BoardTab({ project, refresh, detailFile, detailOnly = fa
           needsHuman: sheet.needsHuman,
           parent: sheet.parent.trim() === "" ? null : sheet.parent.trim(),
           order: sheet.order === "" ? null : Number(sheet.order),
+          repositories: sheet.repositories,
         });
         setSelected(file);
       } else {
-        await invoke("project_ticket_save", {
-          project,
-          file: sheet.file,
-          patch: {
+        const patch = {
+            repositories: sheet.repositories,
             title: sheet.title,
             station: sheet.station,
             ready: sheet.ready,
             needs_human: sheet.needsHuman,
             order: sheet.order === "" ? null : Number(sheet.order),
             body: sheet.body,
-          },
-        });
+          };
+        await checked(sheet.file, sheet.revision, { kind: "save", patch }, "project_ticket_save", { patch });
       }
     });
     if (ok) setSheet(null);
@@ -967,7 +980,7 @@ export default function BoardTab({ project, refresh, detailFile, detailOnly = fa
     if (!sheet?.file) return;
     if (!window.confirm("Spec samt Ordner und History wirklich löschen?")) return;
     const file = sheet.file;
-    const ok = await run(() => invoke("project_ticket_delete", { project, file }));
+    const ok = await run(() => checked(file, sheet.revision, { kind: "delete" }, "project_ticket_delete", {}));
     if (ok) {
       setSheet(null);
       setSelected(null);
@@ -1225,17 +1238,12 @@ export default function BoardTab({ project, refresh, detailFile, detailOnly = fa
               questions={questions.data ?? []}
               onAnswer={(number, text) =>
                 void run(() =>
-                  invoke("project_ticket_answer", {
-                    project,
-                    file: selectedSpec.file,
-                    number,
-                    text,
-                  }),
+                  checked(selectedSpec.file, selectedSpec.revision, { kind: "answer", number, text }, "project_ticket_answer", { number, text }),
                 )
               }
               onToggleTask={(index, done) =>
                 void run(() =>
-                  invoke("project_spec_toggle_task", { project, file: selectedSpec.file, index, done, expectedBody: selectedSpec.body }),
+                  checked(selectedSpec.file, selectedSpec.revision, { kind: "task", index, done, expected_body: selectedSpec.body }, "project_spec_toggle_task", { index, done, expectedBody: selectedSpec.body }),
                 )
               }
               busy={busy}
@@ -1243,8 +1251,8 @@ export default function BoardTab({ project, refresh, detailFile, detailOnly = fa
               onClose={() => setSelected(null)}
               inInspector={inspector.slot !== null}
               report={report}
-              onTake={() => void run(async () => { await invoke("project_spec_take", { project, file: selectedSpec.file }); await branches.reload(); })}
-              onRelease={() => void run(() => invoke("project_spec_release", { project, file: selectedSpec.file }))}
+              onTake={() => void run(async () => { await checked(selectedSpec.file, selectedSpec.revision, { kind: "take" }, "project_spec_take", {}); await branches.reload(); })}
+              onRelease={() => void run(() => checked(selectedSpec.file, selectedSpec.revision, { kind: "release" }, "project_spec_release", {}))}
               onSwitchBranch={(branch, create) => void run(async () => { await invoke("project_git_switch", { project, branch, create }); await branches.reload(); })}
             />
           </InspectorPortal>

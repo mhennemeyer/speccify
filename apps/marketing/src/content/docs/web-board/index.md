@@ -53,6 +53,42 @@ Tokens und Schlüssel gehören in die Umgebung, nie in die Datei.
 
 ## Oberfläche und API
 
+### Gemeinsame Bindung mit dem Desktop (Spec 046)
+
+Ein im Desktop exportiertes `workspace-registers.json` enthält dieselben
+Register- und Code-Repo-IDs für alle Rechner. Der Server ordnet jede Register-ID
+genau einem Checkout oder Remote zu; die Pfade sind nur lokale Konfiguration:
+
+```yaml
+manifest: ./workspace-registers.json
+bindings:
+  team-register:
+    url: git@github.com:org/team.git
+    branch: specs
+```
+
+Alternativ `path: /srv/checkouts/team` für ein Projekt mit `.agent/specs` oder
+den Registerordner selbst. `manifest`/`bindings` ersetzen die bisherige `repos`-Liste.
+Alle Manifestquellen müssen gebunden sein. Zwei Register mit gleicher Spec-ID
+bleiben getrennt; es wird nicht nach Namen oder Nummer zusammengelegt.
+Das bisherige `repos`-Format bleibt nutzbar. Ein lokaler Workspace liest nun Root
+**und** unmittelbare Unterprojekt-Register, auch bei leerem Root-Register.
+
+Antworten enthalten pro Spec `revision` (SHA-256) und `repositories`, etwa
+`api@spec/048-login, web@spec/048-login`. Browseraktionen senden die Revision
+als `expected_revision`; Änderungen seit der Anzeige führen zu HTTP 409.
+MCP-Schreibtools akzeptieren dasselbe optionale Feld, und `get_spec` verlangt die
+exakte Quelle wie `team/api`. Ältere Clients ohne Revision bleiben kompatibel,
+haben aber keinen Schutz vor veralteten Eingaben. Neue Integrationen müssen die
+Revision aus `get_spec`/`board.json` mitsenden.
+
+Ungesicherte Dateien stoppen den Remote-Refresh vor einem Reset. Ungepushte
+Commits bleiben erhalten und werden beim nächsten Sync erneut gesendet. Fehler
+eines Registers verdecken die anderen Quellen nicht. Es gibt keinen Force-Push.
+Die Prüfung erkennt geänderte Momentaufnahmen; sie ist keine verteilte Dateisperre.
+Der bestehende gemeinsame Board-Zugang und MCP-Token sind weiterhin gültig;
+sie prüfen keine persönlichen Git-Rechte pro angemeldetem Teammitglied.
+
 | Weg | Inhalt |
 |---|---|
 | `GET /` | alle Repos: Kennzahlen (auch je Repo), Aktivität 30 Tage, Doing nach Person, Board mit Repo-Kennung und Repo-Filter |

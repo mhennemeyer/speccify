@@ -567,6 +567,8 @@ pub(crate) fn heading_title(body: &str) -> Option<String> {
 
 #[derive(Serialize)]
 pub struct TicketEntry {
+    pub(crate) revision: String,
+    pub(crate) repositories: Vec<String>,
     /// Relativ zur Projektwurzel (Schlüssel für `project_board_move`).
     pub(crate) file: String,
     pub(crate) id: String,
@@ -693,6 +695,14 @@ pub(crate) fn spec_from_text(root: &Path, path: &Path, text: &str) -> Option<Tic
     let tasks_total = tasks.len() as u32;
     let number = spec_number_of(&id);
     Some(TicketEntry {
+        revision: crate::board_cmd::spec_revision(text),
+        repositories: flat_lookup(&fields, "repositories")
+            .unwrap_or("")
+            .split(',')
+            .map(str::trim)
+            .filter(|v| !v.is_empty())
+            .map(str::to_string)
+            .collect(),
         file: path
             .strip_prefix(root)
             .unwrap_or(path)
