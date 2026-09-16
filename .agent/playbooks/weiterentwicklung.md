@@ -20,6 +20,11 @@ PTY-Eingabe im Wegwerfprojekt belegt; ein neuer „Einfügen und senden“-Knopf
 bleibt Folgeentscheidung gemäß [Research](../../docs/terminal-enter-research.md).
 Bestehende Übergaben bleiben Paste ohne Enter. Nach Abnahme zurück zu 0.9.0.
 
+**Ergänzung 056, 2026-09-16:** Shift+Enter als eigene modifizierte Taste an den
+Host weitergeben, damit mehrzeilige Prompts möglich sind. xterm 5.5 sendet sonst
+dasselbe CR wie Enter. Kein automatisches Absenden als Ersatz für Zeilenumbrüche;
+Host-Unterstützung und eigene Tastenzuordnungen bleiben maßgeblich.
+
 Schnelleinstieg: [Leitbild](#leitbild) · [Phasen](#phasen-und-priorisierung) ·
 [Vision 1](#vision-1-bald-umsetzen) · [Vision 2](#vision-2-nach-breiter-interner-nutzung) ·
 [Entscheidungen](#offene-produktentscheidungen) ·

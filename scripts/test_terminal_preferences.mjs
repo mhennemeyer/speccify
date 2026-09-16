@@ -75,6 +75,14 @@ try {
   assert.equal(await page.evaluate(()=>window.__SPECCIFY_MOCK__.terminalAttention.length),notifications,'System notifications remain off');
   await page.evaluate(()=>window.__SPECCIFY_MOCK__.emit('term-exit',{id:window.__SPECCIFY_MOCK__.terminalOpens[0].id,data:''}));
   await page.waitForFunction(()=>!document.querySelector('[aria-label="Terminal braucht Aufmerksamkeit"]'));
+  // Real browser key events must emit one distinct sequence, never a trailing CR.
+  await page.evaluate(()=>window.__SPECCIFY_MOCK__.terminalWrites.length=0);
+  const input=page.locator('.xterm-helper-textarea');
+  await input.press('Shift+Enter');
+  await input.press('Enter');
+  await input.press('Alt+Enter');
+  await input.press('Control+c');
+  assert.deepEqual(await page.evaluate(()=>window.__SPECCIFY_MOCK__.terminalWrites.map(w=>w.data)),['\x1b[13;2u','\r','\x1b\r','\x03']);
   assert.deepEqual(errors,[]);
   console.log('PASS terminal: themes, font/PTY resize, persistence, hidden-pane prompt, split/ANSI output, redraw dedupe, OSC notification, focus, no automatic answers, preferences');
 } finally {await browser?.close();server.kill();}

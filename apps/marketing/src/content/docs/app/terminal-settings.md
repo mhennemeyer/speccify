@@ -83,6 +83,13 @@ does not make an older CLI support new options. Existing rules and unrelated
 settings are preserved. Read the [Claude settings reference](https://code.claude.com/docs/en/settings)
 for configuration precedence and scope.
 
+## Multiline input
+
+Use **Shift+Enter** to insert a line break in a Codex or Claude prompt;
+**Enter** submits it. Speccify forwards Shift+Enter as a distinct modified key
+(`CSI-u`), so it requires support in the terminal application. Other shells or
+custom host key bindings may behave differently.
+
 ## Insert versus run
 
 Existing handover buttons paste text without submitting it. Sending an explicit

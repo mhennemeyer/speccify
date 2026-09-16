@@ -36,6 +36,14 @@ senden weiterhin kein Enter. [Research](../../docs/terminal-enter-research.md),
 [Bedienhilfe](../../apps/marketing/src/content/docs/app/terminal-settings.md).
 Öffentlich bleibt 0.8.1; nächster Release nur auf Zuruf. 0.9.0/itsdcloud ist geparkt.
 
+**Shift+Enter 056, 2026-09-16 (unveröffentlicht):** Terminal überträgt die
+Kombination als CSI-u statt wie bisher als normales Enter. Im lokalen signierten
+Build mit Codex 0.154.0 und Claude 2.1.273 geprüft: zwei getrennte Eingabezeilen,
+kein Absenden, beide Zeilen gemeinsam mit Ctrl-C verworfen. Browser-Regression
+prüft genau eine Sequenz sowie unverändertes Enter, Alt+Enter und Ctrl-C.
+Andere Shells/eigene Host-Tastenzuordnungen benötigen eine passende Bindung;
+native Windows-/Linux-Abnahme dieses Fixes steht aus.
+
 **Umsetzungspaket 044–047, 2026-09-16:** Root-Dateien, gemeinsame Wissenslisten,
 portable Registerbindung und Draft-Playbooks implementiert. Lokaler signierter
 Build offen; 124 Rust-Tests, Python-Suite, Browser-Regressionen und native QA grün.

@@ -180,6 +180,14 @@ export default function TerminalPanel({
     // Tauri-Clipboard-Plugin statt navigator.clipboard (WKWebView-sicher).
     terminal.attachCustomKeyEventHandler((event) => {
       if (event.type !== "keydown") return true;
+      // xterm 5.5 drops Shift on Enter. CSI-u preserves the modifier for
+      // host input editors without sending the CR that would submit a prompt.
+      if (event.key === "Enter" && event.shiftKey && !event.altKey && !event.ctrlKey
+        && !event.metaKey && !event.isComposing && event.keyCode !== 229) {
+        event.preventDefault();
+        terminal.input("\x1b[13;2u", true);
+        return false;
+      }
       const modifier = event.metaKey || (event.ctrlKey && event.shiftKey);
       if (!modifier) return true;
       const key = event.key.toLowerCase();
