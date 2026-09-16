@@ -252,6 +252,8 @@ macOS/Linux haben bedingte Update-Schritte, Windows noch nicht. Deshalb bleibt
 auch dieses Release beim manuellen Installer-Update. Die Nachfrage nach Tauri
 war eine Bestandsklärung; 050 setzt den anschließenden Auftrag zur Update-Kette um.
 
+**Release 0.8.1 ausdrücklich freigegeben (2026-09-16).** Veröffentlichung und
+Artefaktprüfung werden in 050 dokumentiert.
 **Noch auszuliefern/abzunehmen:** Bootstrap-Installer einmalig manuell installieren
 (0.8 hat keinen Prüfkey), danach reale N→N+1-Installation auf den Zielsystemen.
 Signatur-/Versionsprüfung und UI-Zustände sind separat mit Testdaten geprüft;

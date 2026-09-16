@@ -52,7 +52,8 @@ Alle Fenster bestätigen vor der Installation ihren Zustand; offene Editoren,
 bearbeitete Formulare, Entwürfe und aktive Terminals/Aktionen verhindern sie.
 Schlüssel und vier Plattform-Jobs eingerichtet; ein abschließender Job prüft
 Signaturen und SHA-256 aller Pakete, bevor er das vollständige Manifest anhängt.
-Noch kein veröffentlichtes Bootstrap-Release und kein realer N→N+1-Nachweis auf
+Bootstrap-Release 0.8.1 ist ausdrücklich freigegeben und vorbereitet; der
+Veröffentlichungsnachweis folgt in 050. Noch kein realer N→N+1-Nachweis auf
 allen Betriebssystemen. 0.8 benötigt einmalig den neuen Installer.
 
 ## Kurzurteil
