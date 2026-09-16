@@ -1,5 +1,5 @@
 ---
-station: Backlog
+station: Doing
 order: 44
 needs_human: true
 ready: false
@@ -52,6 +52,9 @@ Das gemeinsame Wissensmodell ist Gegenstand von 045; Registerbindungen von 046.
    Erkennung existieren; keine Vertiefung der Projektsuche als Umgehung.
 3. 2026-09-16: Vorhandene native Dateioperationen und deren Schutzgrenzen
    wiederverwenden. Root- und Unterprojektpfad bleiben beim UI-Wechsel stabil.
+4. 2026-09-16: Nutzerauftrag „leg los“ startet die Umsetzung. Root-Dateiziel
+   separat von der erkannten Projektliste halten. Speichern prüft den zuletzt
+   gelesenen Inhalt, damit Root-/Unterprojekteditoren einander nicht überschreiben.
 
 ## Tasks
 

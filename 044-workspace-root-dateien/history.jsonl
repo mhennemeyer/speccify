@@ -1,1 +1,2 @@
 {"timestamp":"2026-09-16T04:49:02Z","spec_id":"044-workspace-root-dateien","event_type":"spec_created","actor":"project","summary":"Refinement: dauerhafter Root-Dateikontext für normale Ordner und Dateien, unabhängig von der Projekterkennungstiefe; Backlog."}
+{"timestamp":"2026-09-16T05:29:19Z","spec_id":"044-workspace-root-dateien","event_type":"station_changed","actor":"project","summary":"Backlog → Doing auf Nutzerauftrag leg los; Root-Dateikontext und Konfliktprüfung beim Speichern."}
