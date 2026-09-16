@@ -38,6 +38,10 @@ on:
       tag:
         description: "Tag to build (must already exist)"
         required: true
+      verify_only:
+        description: "Verify existing packages and rebuild the update manifest without rebuilding installers"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -45,6 +49,7 @@ permissions:
 jobs:
   release:
     name: macOS (Apple Silicon)
+    if: ${{ !inputs.verify_only }}
     runs-on: macos-14
     timeout-minutes: 60
 
@@ -208,6 +213,7 @@ jobs:
 
   release-windows:
     name: Windows (x64)
+    if: ${{ !inputs.verify_only }}
     runs-on: windows-latest
     timeout-minutes: 60
     # Nach dem macOS-Job: der legt das Draft-Release an, dieser hier haengt
@@ -364,6 +370,7 @@ jobs:
   # nur mit den TAURI_SIGNING-Secrets.
   release-linux:
     name: Linux (x86_64)
+    if: ${{ !inputs.verify_only }}
     runs-on: ubuntu-22.04
     timeout-minutes: 60
 
@@ -471,6 +478,7 @@ jobs:
   # dieselben Schritte wie release-linux auf GitHubs ARM-Runner.
   release-linux-arm64:
     name: Linux (arm64)
+    if: ${{ !inputs.verify_only }}
     runs-on: ubuntu-22.04-arm
     timeout-minutes: 60
 
@@ -577,6 +585,11 @@ jobs:
   update-manifest:
     name: Verify signatures and publish complete update manifest
     needs: [release, release-windows, release-linux, release-linux-arm64]
+    if: >-
+      ${{ always() && !cancelled() &&
+          (inputs.verify_only ||
+           (needs.release.result == 'success' && needs.release-windows.result == 'success' &&
+            needs.release-linux.result == 'success' && needs.release-linux-arm64.result == 'success')) }}
     runs-on: ubuntu-22.04
     timeout-minutes: 15
     steps:
@@ -591,7 +604,8 @@ jobs:
           RELEASE_TAG: ${{ github.event.inputs.tag || github.ref_name }}
         run: |
           mkdir -p update-packages
-          gh api "repos/$GITHUB_REPOSITORY/releases/tags/$RELEASE_TAG" > update-release.json
+          release_id=$(gh release view "$RELEASE_TAG" --json databaseId --jq .databaseId)
+          gh api "repos/$GITHUB_REPOSITORY/releases/$release_id" > update-release.json
           gh release download "$RELEASE_TAG" --dir update-packages --pattern '*.sig' --pattern '*.app.tar.gz' --pattern '*-setup.exe' --pattern '*.AppImage'
           python3 scripts/build_update_manifest.py update-release.json update-packages --output latest.json
           gh release upload "$RELEASE_TAG" latest.json --clobber

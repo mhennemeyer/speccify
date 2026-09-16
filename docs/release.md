@@ -394,6 +394,14 @@ minisign-Signatur mit dem eingecheckten Public Key. Nur dann erzeugt
 es an den Release-Entwurf. Ein fehlendes oder beschädigtes Paket stoppt diesen
 Schritt. Vor Veröffentlichung müssen alle Jobs und das Manifest geprüft sein.
 
+GitHub liefert Entwurfs-Releases am REST-Tag-Endpunkt als 404. Deshalb zuerst
+mit `gh release view <tag> --json databaseId` die ID auflösen und die Metadaten
+über `/releases/<id>` lesen. Für eine erneute Manifest-Prüfung bereits gebauter
+Pakete kann der Workflow auf `main` mit `tag=<tag>` und `verify_only=true`
+gestartet werden. Dabei werden sämtliche Paket- und Signaturprüfungen erneut
+ausgeführt, ohne die Installer neu zu bauen. Vor Veröffentlichung zusätzlich
+die erfolgreichen Plattform-Builds des ursprünglichen Laufs prüfen.
+
 Endpoint:
 `https://github.com/mhennemeyer/speccify/releases/latest/download/latest.json`.
 Das Manifest enthält Version ohne `v`, Release-Notizen, RFC-3339-Datum und pro
