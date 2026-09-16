@@ -34,6 +34,13 @@ Beide sind auf ausdrücklichen BO-Entscheid parallel aktiv.
   (Spec `spec-workflow`); die alten Pläne liegen konvertiert im Archiv.
 - `.agent/playbooks/`: stehende Anleitungen (Release, Deploy, …) — anders
   als Specs werden sie nicht abgearbeitet, sondern wiederverwendet.
+  Dateien mit Frontmatter `status: draft` sind unverbindliche Entwürfe:
+  nicht als Arbeitsanweisung, Priorisierung oder Umsetzungsfreigabe behandeln.
+  Sie dürfen ausdrücklich recherchiert, besprochen und bearbeitet werden;
+  ihre Vorschläge erst nach einer ausdrücklichen Nutzerentscheidung übernehmen.
+  Ohne Statusfeld gilt der bisherige aktive Playbook-Vertrag. Die Kennzeichnung
+  gilt bereits für die Arbeit in diesem Repo; die App-Unterstützung folgt in
+  Spec 047. Einen Draft beim Bearbeiten nicht beiläufig aktivieren.
 - `.agent/actions.json`: benannte Projektaktionen.
 
 Agent-spezifische Ordner sind nur Adapter: `.claude/skills` und

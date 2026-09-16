@@ -5,6 +5,7 @@ description: Lebende Produktvision, Ausbauphasen, Architekturvorschläge und Arb
 
 Stand: **2026-09-10**. Lebendes Playbook, kein abzuhakender Implementierungsauftrag.
 Abnahme-Arbeitsweise nachgeführt am **2026-09-15** für Spec 012.
+Multi-Projekt-Zielbild und Playbook-Drafts verfeinert am **2026-09-16** (Spec 043).
 
 Schnelleinstieg: [Leitbild](#leitbild) · [Phasen](#phasen-und-priorisierung) ·
 [Vision 1](#vision-1-bald-umsetzen) · [Vision 2](#vision-2-nach-breiter-interner-nutzung) ·
@@ -94,10 +95,25 @@ kennzeichnen, den vollständigen Durchlauf aber gegen den stabilisierten Workflo
 
 ### V1-01 — Multi-Repo-Projekte und automatische Erkennung
 
-**Gewünscht:** Einen Ordner öffnen; Speccify erkennt enthaltene Projekte und
-Repositories. Jedes Projekt behält eigene Specs, Playbooks und Skills. Dateien,
-Git, Playbooks und Skills tragen ihre Projektzugehörigkeit; Board-Karten sind
-auch in einer gemeinsamen Übersicht eindeutig gekennzeichnet.
+**Gewünscht, verfeinert am 2026-09-16:** Einen Ordner öffnen; Speccify zeigt auch
+gewöhnliche Unterordner und Dateien direkt im Root. Die Projekterkennung
+(Default-Tiefe 1) begrenzt die automatische Projektaufnahme, nicht das manuelle
+Durchsuchen des Dateibaums. Ein Root ohne Git wird dadurch kein Repository.
+Dateien und Git behalten ihre konkreten Ordner-/Repositoryziele.
+
+Specs erscheinen standardmäßig auf **einem gemeinsamen Board**. Skills, Tools,
+MCPs und Playbooks erscheinen jeweils in einer gemeinsamen Liste mit Herkunft
+aus Root, Unterprojekt oder Ordner. Projektfilter sind optional; die Herkunft
+bleibt bei Lesen, Bearbeiten und Ausführen erhalten. Dateien werden dafür nicht
+umgezogen. Der Agent arbeitet vom Root aus und erhält einen auflösbaren
+Workspace-Katalog; die bloße Anzeige eines Skills oder MCPs stellt seine
+Verfügbarkeit im Host noch nicht her. Namenskollisionen und relative Tool-Pfade
+brauchen eindeutige Quell- und Ausführungsziele.
+
+Umsetzungsschnitte: [Root-Dateien 044](../specs/044-workspace-root-dateien/SPEC.md),
+[gemeinsame Wissenslisten 045](../specs/045-workspace-wissenskatalog/SPEC.md),
+[Multi-Repo-Register 046](../specs/046-multi-repo-register/SPEC.md).
+Das sind verfeinerte Anforderungen, keine bereits implementierten Fähigkeiten.
 
 **Entschieden am 2026-09-10 (D-MR-01):** Erkannte Repos werden zunächst als eigene
 Projekte angeboten und können anschließend frei fachlich gruppiert werden.
@@ -489,6 +505,19 @@ nicht deren bereits vorhandene Quellenverwaltung erneut planen.
 
 ### V1-09 — Team-Board trotz Feature-Branches
 
+**Refinement 2026-09-16:** Ein gemeinsames Board braucht mehrere eindeutig
+identifizierte Register als Quellen, keine Kopien ihrer Specs. Das bestehende
+Branch-Modell aus D-TEAM-02 bleibt Ausgangspunkt. Desktop und Web-Board sollen
+dieselbe freigegebene Quellmenge zeigen, inklusive gleichzeitig vorhandener
+Root- und Unterprojekt-Register. Mehrere Checkouts desselben Registers erzeugen
+keine mehrfachen Karten; gleiche Spec-Nummern verschiedener Register bleiben
+unterschiedlich. Lokale Pfade und Anzeigenamen sind keine Teamidentität.
+Repoübergreifende Specs erhalten einen kanonischen Speicherort und verweisen
+auf betroffene Repos. Für einen Root ohne Git muss eine explizite gemeinsame
+Registerbindung möglich sein; lokale Specs dürfen nicht als synchronisiert
+erscheinen. Vertrag, Konflikte, Rechte und Migration: [Spec 046](../specs/046-multi-repo-register/SPEC.md).
+Die vorhandenen Web-Board-Bausteine aus 032/033 werden weiterverwendet.
+
 **Problem:** Specs müssen allen über Backlog/Doing/Done sichtbar bleiben, während
 Code und zum Code passende Tool-/Skill-Stände in verschiedenen Branches liegen.
 Ein Branchwechsel darf weder Arbeit verstecken noch irrtümlich den Teamstatus ändern.
@@ -618,6 +647,25 @@ externen Angaben noch nicht; keine bestehenden Specs automatisch migrieren.
 **Abnahme:** Zwei Checkouts, zwei Feature-Branches, eine gemeinsame Spec: Fortschritt
 sichtbar ohne Code-Merge; parallele Änderung erzeugt Konflikthinweis; Offline und
 abgebrochener Branch lassen weder Arbeit verschwinden noch den Status fälschlich schließen.
+
+## Playbooks mit Draft-Status
+
+Nutzerwunsch 2026-09-16: Ideen sollen als versionierte Playbook-Entwürfe gesammelt
+werden können, ohne den Entwicklungsflow zu steuern. `status: draft` kennzeichnet
+diesen Zustand; bestehende Playbooks ohne Status bleiben aktiv. Lesen und
+Bearbeiten eines Entwurfs aktiviert ihn nicht. Die Repo-Arbeitsanweisung beachtet
+diese Konvention bereits; Statusanzeige, explizite Aktivierung, Filter und
+statusbewusste Übergabe an den Host sind Gegenstand von
+[Spec 047](../specs/047-playbook-drafts/SPEC.md). Diese kleine Funktion ist
+unabhängig von einer Entscheidung zur Web-App umsetzbar.
+
+### Rechercheentwurf: Speccify als Web-Anwendung
+
+[Speccify als Web-App](speccify-web-app.md) ist seit 2026-09-16 ein Playbook
+mit `status: draft`. Es untersucht Serverbetrieb, Anmeldung, Git-Rechte und
+Codex-/Claude-Anbindung. Es legt weder eine neue Produktphase noch eine
+Architektur oder Umsetzungsreihenfolge fest. Die Web-App ist damit nicht in
+Auftrag gegeben; das bestehende Web-Board bleibt ein eigener Produktbaustein.
 
 ## Vision 2: nach breiter interner Nutzung
 

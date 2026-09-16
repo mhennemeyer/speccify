@@ -4,6 +4,8 @@ description: Lebende Bestandskarte mit Architektur, vollständigem funktionalem 
 # Speccify: aktueller Stand und UI-Baum
 
 Nachgeführt: **2026-09-15**, Praxisabnahme 012 auf Codebasis `9b08fba`.
+Ergänzt: **2026-09-16**, Multi-Projekt-Refinement auf Codebasis `a6a90b1`;
+Quellcodeprüfung und Research, kein neuer App-Build.
 Historische Baumaufnahme: Basiscommit `7c89469` (Spec 027), Desktop-Version
 `0.7.0` (Tag setzt der BO). Der Baum unten wurde am
 2026-09-10 auf Basis `0fbfee3` aufgenommen und für Specs 019–027 nachgeführt.
@@ -71,6 +73,38 @@ Speccify-Server starten und Host-Konfiguration anzeigen ersetzt nicht automatisc
 deren Einrichtung oder Verfügbarkeit im gewählten Agenten.
 
 ## Fähigkeiten: vorhanden, geprüft, offen
+
+### Multi-Projekt-Befund vom 2026-09-16
+
+- Die Erkennung in `workspace_cmd.rs` nimmt Git-/Projektmarker auf und bietet
+  den Root nur als Fallback an, wenn keine Projekte gefunden wurden. Damit fehlt
+  im gemischten Parent-Ordner ein verlässliches Dateiziel für normale Ordner
+  und Root-Dateien. [044](../specs/044-workspace-root-dateien/SPEC.md) ergänzt
+  diesen Kontext unabhängig von der Projekterkennungstiefe.
+- Das gemeinsame bearbeitbare Workspace-Board aus 026 existiert. Die übrigen
+  Wissensbereiche bleiben in `WorkspaceShell.tsx` pro Worktree gebunden.
+  Ein gemeinsamer Katalog für Skills, Tools, MCPs und Playbooks samt Nutzung
+  vom Root aus ist noch nicht implementiert: [045](../specs/045-workspace-wissenskatalog/SPEC.md).
+- `apps/board` unterstützt bereits mehrere lokale/Remote-Register. Seine
+  lokale Ordnerquelle gibt bei vorhandenem Root-Register jedoch vorzeitig
+  zurück und lässt Unterprojekt-Register weg (`Source.specs_dirs`). Gemeinsame
+  stabile Quellidentität, Team-Workspace-Bindung und Desktop-/Web-Parität sind
+  noch offen: [046](../specs/046-multi-repo-register/SPEC.md). Ein Web-Board
+  ersetzt keinen Server mit Benutzerkonten, Code-Checkouts und Agent-Terminals.
+- Playbooks haben im nativen Listenvertrag nur Datei, Titel und Beschreibung.
+  `PlaybooksTab` kennt keinen fachlichen Draft-Status; seine Editorentwürfe
+  betreffen ungespeicherte Änderungen. Für die Arbeit in diesem Repository gilt
+  jetzt `status: draft` als unverbindlicher Inhalt. UI, Filter, Aktivierung und
+  Übergabe berücksichtigen das erst mit [047](../specs/047-playbook-drafts/SPEC.md).
+  Der [Web-App-Draft](speccify-web-app.md) trägt deshalb zusätzlich einen
+  sichtbaren Titel und Hinweis; keine bestehende Schaltfläche bietet schon
+  eine technische Ausführungssperre.
+
+Die Befunde und Folgespecs stehen in [Refinement 043](../specs/043-multiprojekt-refinement/SPEC.md).
+Es wurden keine Kunden-Repositories verändert und keine neuen Desktop-Funktionen
+oder Serverdienste eingerichtet.
+
+### Überblick
 
 „Vorhanden“ bezeichnet Code und erreichbare UI-Pfade, nicht pauschale Qualität
 oder vollständige Plattformabnahme.
