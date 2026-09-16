@@ -1,5 +1,5 @@
 ---
-station: Backlog
+station: Doing
 order: 45
 needs_human: true
 ready: false
@@ -65,6 +65,12 @@ Registeridentität und Team-Synchronisierung werden in 046 vertieft; Drafts in
    testen; unbekannte Host-Konfiguration nicht ungefragt umschreiben.
 4. 2026-09-16: Reihenfolge als Vorschlag: Root-Dateikontext 044, Listen/Identität,
    Host-Katalog. Gemeinsame Quell-IDs mit 046 abstimmen, kein paralleles Modell.
+5. 2026-09-16: Umsetzung nach geprüften 044/047/046. Katalogeinträge verwenden
+   Workspace-/Checkout-IDs und kanonische Quellpfade. Gemeinsame Listen steuern
+   bestehende quellgebundene Details. MCPs werden über Quelle, Host und Namen
+   referenziert; keine Zugangsdaten im Katalog und keine automatische Host-
+   Installation. Gezielte Anbindung erfolgt als expliziter Auftrag an den Host;
+   eine gelesene Konfiguration ist kein Nachweis eines erfolgreichen Handshakes.
 
 ## Tasks
 
