@@ -2,7 +2,7 @@
 station: Doing
 order: 48
 needs_human: true
-ready: false
+ready: true
 ---
 
 # Mermaid-Diagramme in Markdown anzeigen
@@ -38,15 +38,38 @@ keine externe Rendering-API, kein neuer Release-Tag ohne Nutzerauftrag.
 
 ## Tasks
 
-- [ ] Renderer mit Theme, Fehlerdarstellung und lokalem Bundle integrieren.
-- [ ] Diagramm aus betroffenem Playbook sowie Rendering-Regressionen prüfen.
-- [ ] Produktplaybooks nachführen, lokale App aktualisieren, committen und pushen.
+- [x] Renderer mit Theme, Fehlerdarstellung und lokalem Bundle integrieren.
+- [x] Diagramm aus betroffenem Playbook sowie Rendering-Regressionen prüfen.
+- [x] Produktplaybooks nachführen und lokale App aktualisieren.
+- [ ] Committen und pushen; Windows-CI mit Diagramm-Regression prüfen.
 
 ## Verification
 
 Ausgangsbefund: `Markdown.tsx` nutzt nur react-markdown und remark-gfm;
 Mermaid ist weder im Code noch in den App-Abhängigkeiten von 0.7 vorhanden.
 Das gemeldete Playbook enthält einen Mermaid-Flowchart-Block. Nur lesend geprüft.
+
+2026-09-16:
+
+- Typecheck und Produktions-Frontend-Build grün; bekannte Chunk-Größenwarnung.
+- `test_markdown_mermaid.mjs`: Flowchart mit Subgraph/mehrzeiligen Labels,
+  Sequenzdiagramm, Syntaxfehler mit Quelltext, Theme-Wechsel, Navigation,
+  eindeutige SVG-IDs, deaktivierte Callbacks und unveränderte Text-Codeblöcke grün.
+  Externe Requests während dieser Tests blockiert; keine aufgetreten.
+- Optionales lokales Reproduktionsdokument: das konkrete Programm-Playbook
+  gerendert; kein Kundeninhalt in getrackte Testdaten übernommen.
+- `test_playbook_drafts.mjs` und `test_handover.mjs` grün.
+- Selbststartender Testserver (`--serve`) separat erfolgreich geprüft;
+  Diagramm-Test in den Windows-CI-Job aufgenommen.
+- Lokaler signierter Bundle-Build erfolgreich; `codesign --verify --deep --strict`
+  erfolgreich. PID 68087, dieselben vier Fenster wieder offen, keine laufenden
+  Terminals oder ungesicherten Entwürfe beendet. Kein App-Watcher.
+- Native QA im tatsächlichen AVC-Workspace: Programm-Playbook ausgewählt,
+  SVG-Geometrie und Beschriftungen geprüft, Datei-Hash unverändert. Ein zusätzlicher
+  nativer Screenshot war wegen `screencapture: could not create image from rect`
+  nicht verfügbar; DOM-Prüfung erfolgreich. Keine Windows-WebView2-Abnahme behauptet.
+- Skill: `macos-notarize-tauri` für lokale Signaturprüfung; kein öffentlicher Release,
+  keine neue Notarisierung oder Änderung der veröffentlichten Installer.
 
 ## Questions
 
