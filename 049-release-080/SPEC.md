@@ -37,7 +37,7 @@ Updater-Bestand erklären; keine ungeprüfte automatische Update-Kette aktiviere
 
 ## Tasks
 
-- [ ] Versionen, Release-Notizen und Website nachführen und prüfen.
+- [x] Versionen, Release-Notizen und Website nachführen und prüfen.
 - [ ] Release-Commit und Tag pushen; Plattform-Builds prüfen.
 - [ ] Artefakte prüfen, Release veröffentlichen, öffentliche Downloads nachweisen.
 - [ ] Updater-Stand dokumentieren, lokale App erhalten, Register abschließen.
@@ -48,6 +48,13 @@ Vorbereitung: kompletter CI-Lauf `35066449760` zum Mermaid-Fix erfolgreich,
 einschließlich Windows-Rendering-Regression. Lokale App PID 68087 offen.
 GitHub-Konfiguration nur anhand der Namen geprüft: Apple-Signing vorhanden,
 keine Tauri-Updater-Schlüssel konfiguriert.
+
+Release-Vorbereitung: Frontend-Build, Marketing-Build (103 Seiten), Doku-Sync,
+`git diff --check` und Website-Regression für 1440/390/320 px erfolgreich.
+Commit `a9da2b942b01549631bbf5c4d98054188ca4de4e` und annotierter Tag `v0.8.0`
+gepusht. Release-Lauf `35071964938`, CI `35071959184`, Website `35071959200`.
+Release-Notizen referenzieren Register-Snapshot
+`218fbc030b630d0dbe21761b09268261803e0a48` (Implementierungsstand vor Release-Arbeit).
 
 ## Questions
 
