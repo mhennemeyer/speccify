@@ -31,6 +31,14 @@ Dieses Dokument beschreibt den Ist-Zustand; geplante Ergänzungen stehen getrenn
 am Ende. Bei Änderungen an Navigation, Fähigkeit oder Abnahme im selben
 Änderungssatz nachführen. Historische Befunde bleiben in den jeweiligen Specs.
 
+**Korrektur 048, 2026-09-16:** Der gemeinsame Desktop-Markdown-Renderer zeigt
+Mermaid-Codeblöcke als lokal gebündelte SVG-Diagramme, mit Theme-Wechsel,
+aufklappbarem Quelltext und Fehlerhinweis bei ungültiger Syntax. Normale
+Codeblöcke bleiben Text. Version 0.7 vom bisherigen Download enthält diese
+Unterstützung noch nicht; hierfür ist ein neuer App-Build erforderlich.
+Chromium-Prüfung einschließlich des gemeldeten Programm-Playbooks erfolgreich;
+Windows-VM-Abnahme bleibt offen. Kein externer Diagrammdienst erforderlich.
+
 ## Kurzurteil
 
 Speccify hat bereits ein substanzielles Desktop-Arbeitsfenster: Spec-Board,

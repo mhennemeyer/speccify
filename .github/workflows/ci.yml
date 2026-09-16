@@ -155,6 +155,14 @@ jobs:
       - name: Typecheck + build (Tauri app frontend)
         run: pnpm --filter speccify-desktop build
 
+      - name: Install Chromium for Markdown regression
+        run: pnpm exec playwright install chromium
+
+      - name: Render Mermaid in Playbooks (Windows Chromium, no external requests)
+        run: node scripts/test_markdown_mermaid.mjs --serve
+        env:
+          SPECCIFY_TEST_BROWSER: chromium
+
       - name: Install pinned toolchain
         run: rustup show
 

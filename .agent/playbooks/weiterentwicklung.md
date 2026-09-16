@@ -789,6 +789,19 @@ Tool-Implementierung oder Plattformprüfung wurde durch diese Dokumentation abge
 
 ## Arbeitsweise: Speccify weiterentwickeln
 
+### Markdown-Diagramme (048)
+
+Mermaid-Codeblöcke werden im gemeinsamen Desktop-Markdown-Renderer lokal als
+SVG angezeigt. Die Bibliothek gehört zum App-Bundle; kein CDN oder externer
+Rendering-Dienst. Hell-/Dunkelmodus, Quelltextansicht und lesbarer Fehlerzustand
+sind Bestandteil der Anzeige. Diagramm-Callbacks werden nicht gebunden.
+Regression: `node scripts/test_markdown_mermaid.mjs` gegen den separaten
+Mock-Server; ein lokales Reproduktionsdokument kann per
+`SPECCIFY_MERMAID_DOCUMENT` nur für diesen Test eingelesen werden.
+Nicht mit einem bereits verteilten Release verwechseln: der bisherige
+Windows-Download 0.7 zeigt Mermaid als Code. Neue Funktion benötigt einen
+neuen App-Build; Windows-VM-Abnahme bleibt bis zum tatsächlichen Test offen.
+
 ### Laufende Nutzung und Abnahme
 
 Auftrag vom 2026-09-10; Umsetzung in

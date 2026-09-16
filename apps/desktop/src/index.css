@@ -131,6 +131,18 @@
   margin: 1rem 0;
 }
 
+.mermaid-diagram {
+  margin: 0 0 1rem;
+  padding: 0.75rem;
+  border: 1px solid var(--color-slate-300);
+  border-radius: 0.5rem;
+  background: var(--color-slate-50);
+}
+.mermaid-svg { overflow-x: auto; }
+.mermaid-svg > svg { display: block; min-width: 360px; margin: 0 auto; }
+.mermaid-diagram summary { cursor: pointer; color: var(--color-slate-600); }
+.mermaid-error { white-space: pre-wrap; }
+
 /* Inspektor (W7): Platzhalter nur, solange der sichtbare Slot leer ist. */
 .inspector-body:has([data-slot].flex:not(:empty)) .inspector-placeholder {
   display: none;
