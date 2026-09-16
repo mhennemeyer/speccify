@@ -1,5 +1,5 @@
 ---
-station: Doing
+station: Done
 order: 49
 needs_human: false
 ---
@@ -38,9 +38,9 @@ Updater-Bestand erklären; keine ungeprüfte automatische Update-Kette aktiviere
 ## Tasks
 
 - [x] Versionen, Release-Notizen und Website nachführen und prüfen.
-- [ ] Release-Commit und Tag pushen; Plattform-Builds prüfen.
-- [ ] Artefakte prüfen, Release veröffentlichen, öffentliche Downloads nachweisen.
-- [ ] Updater-Stand dokumentieren, lokale App erhalten, Register abschließen.
+- [x] Release-Commit und Tag pushen; Plattform-Builds prüfen.
+- [x] Artefakte prüfen, Release veröffentlichen, öffentliche Downloads nachweisen.
+- [x] Updater-Stand dokumentieren, lokale App erhalten, Register abschließen.
 
 ## Verification
 
@@ -63,6 +63,31 @@ Lokaler signierter App-Build 0.8.0, PID 32807: dieselben vier Fenster,
 keine laufenden Terminals/Entwürfe verloren. Signaturprüfung und echte native
 Mermaid-Prüfung im Programm-Playbook erfolgreich, Kundendatei unverändert.
 Temporären Website-Vorschauserver beendet; gebündelte App bleibt offen.
+
+Veröffentlichung 2026-09-16:
+
+- Release-Lauf `35071964938` vollständig grün: macOS Apple Silicon,
+  Windows x64 sowie Linux x86_64/arm64. Zehn erwartete Artefakte vollständig
+  hochgeladen, Versionen, Größen und SHA-256-Metadaten geprüft.
+- Windows-EXE und MSI sowie macOS-DMG und App-Archiv heruntergeladen und gegen
+  die veröffentlichten SHA-256-Werte geprüft. MSI-Metadaten: x64-Installer;
+  NSIS-EXE erkannt. Windows-VM-Installation bleibt beim Nutzer.
+- Release-App aus tar.gz und App im nur lesend eingebundenen DMG: Version
+  0.8.0, `codesign --verify --deep --strict`, `stapler validate` und `spctl`
+  erfolgreich (Notarized Developer ID). Image wieder ausgehängt.
+- https://github.com/mhennemeyer/speccify/releases/tag/v0.8.0 veröffentlicht
+  und als Latest gesetzt. Commit, Committer und Tagger sind Matthias Hennemeyer
+  `<mhennemeyer@me.com>`. Veröffentlichung über dessen `gh`-Konto; GitHub
+  behält `github-actions[bot]` als Ersteller des CI-Release-Entwurfs in den
+  Release-Metadaten. Keine Attributionstrailer.
+- Alle zehn öffentlichen Downloadziele liefern HTTP 200 mit passenden Größen.
+  Echter Browser auf `https://speccify.io/download/` zeigt Windows-EXE und MSI
+  unter v0.8.0; Startseite verlinkt `/releases/0-8-0/`.
+- Updater-Bestand anhand Code, GitHub-Konfigurationsnamen und offizieller
+  Tauri-Dokumentation erläutert. Keine Schlüssel erzeugt oder Secrets geändert.
+  Automatische Updates bleiben ausgeschaltet; manueller Installer ist verfügbar.
+- Skills/Werkzeuge: macos-notarize-tauri; pnpm, Playwright, gh, git, native QA,
+  codesign, stapler, spctl, hdiutil. Keine zweite App-Instanz gestartet.
 
 ## Questions
 
