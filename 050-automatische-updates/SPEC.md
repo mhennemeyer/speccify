@@ -3,7 +3,7 @@ station: Doing
 order: 50
 needs_human: true
 ready: true
-open_question: Q1
+open_question: null
 ---
 
 # Signierte automatische Updates für Desktop-Plattformen
@@ -45,6 +45,7 @@ GitHub Secrets; öffentlicher Prüfkey im App-Vertrag.
    Neustart laufender Arbeit. Linux-internes Update nur für AppImage gemäß Tauri.
 3. 2026-09-16: Ein nativer Koordinator hält Update, Download und Installationssperre
    für sämtliche Fenster. Frontend besitzt keine direkte Installationsberechtigung.
+4. 2026-09-16: BO gibt Veröffentlichung ausdrücklich frei: „Ja, 0.8.1 veröffentlichen“.
 
 ## Tasks
 
@@ -77,9 +78,13 @@ menschlichen Abnahme geparkt; danach Arbeit an 034.
 
 ## Questions
 
-### Q1 · open · 2026-09-16T10:01:00Z
+### Q1 · answered · 2026-09-16T10:01:00Z
 
 Soll Speccify 0.8.1 mit dem neuen Updater für Windows, macOS und Linux
 veröffentlicht werden? Bestehende 0.8.0-Installationen benötigen einmalig den
 neuen Installer. Implementierung und CI sind geprüft; Tags bleiben gemäß
 `.agent/agent.md` eine ausdrückliche Freigabe. Im Chat bereits gestellt.
+
+### A1 · bo · 2026-09-16
+
+Ja, 0.8.1 veröffentlichen.
