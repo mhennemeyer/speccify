@@ -401,6 +401,10 @@ Pakete kann der Workflow auf `main` mit `tag=<tag>` und `verify_only=true`
 gestartet werden. Dabei werden sämtliche Paket- und Signaturprüfungen erneut
 ausgeführt, ohne die Installer neu zu bauen. Vor Veröffentlichung zusätzlich
 die erfolgreichen Plattform-Builds des ursprünglichen Laufs prüfen.
+Die Prüflogik stammt dabei aus dem gestarteten Workflow-Stand; der öffentliche
+Prüfkey wird immer aus dem unveränderten Release-Tag gelesen. Temporäre
+`untagged-…`-Downloadadressen eines Entwurfs werden nur akzeptiert, wenn sie
+exakt zu dessen GitHub-ID gehören; im Manifest steht die spätere Tag-Adresse.
 
 Der zusätzliche macOS-Prüfjob notarisiert und stapelt das signierte DMG selbst.
 Das Ticket der enthaltenen App allein genügt nicht für die Prüfung des

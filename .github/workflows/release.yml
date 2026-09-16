@@ -627,7 +627,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.inputs.tag || github.ref }}
+          ref: ${{ github.sha }}
+          fetch-depth: 0
       - name: Install signature verifier
         run: sudo apt-get update && sudo apt-get install -y minisign
       - name: Verify all update packages
@@ -639,5 +640,6 @@ jobs:
           release_id=$(gh release view "$RELEASE_TAG" --json databaseId --jq .databaseId)
           gh api "repos/$GITHUB_REPOSITORY/releases/$release_id" > update-release.json
           gh release download "$RELEASE_TAG" --dir update-packages --pattern '*.sig' --pattern '*.app.tar.gz' --pattern '*-setup.exe' --pattern '*.AppImage'
+          git show "$RELEASE_TAG:apps/desktop/src-tauri/tauri.conf.json" > apps/desktop/src-tauri/tauri.conf.json
           python3 scripts/build_update_manifest.py update-release.json update-packages --output latest.json
           gh release upload "$RELEASE_TAG" latest.json --clobber

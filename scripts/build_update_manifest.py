@@ -64,8 +64,21 @@ def build_manifest(release: dict, directory: Path, public_key: str) -> dict:
             url = asset["browser_download_url"]
             expected = f"https://github.com/mhennemeyer/speccify/releases/download/{tag}/{name}"
             if url != expected:
-                raise ValueError(f"Unexpected download URL: {name}")
-            platforms[platform] = {"url": url, "signature": signature}
+                draft_page = release.get("html_url", "")
+                draft_prefix = "https://github.com/mhennemeyer/speccify/releases/tag/"
+                draft_id = draft_page.removeprefix(draft_prefix)
+                draft_url = (
+                    f"https://github.com/mhennemeyer/speccify/releases/download/{draft_id}/{name}"
+                )
+                if not (
+                    release.get("draft") is True
+                    and draft_page.startswith(draft_prefix)
+                    and re.fullmatch(r"untagged-[0-9a-f]+", draft_id)
+                    and url == draft_url
+                ):
+                    raise ValueError(f"Unexpected download URL: {name}")
+            # Draft URLs are temporary; publication exposes the immutable tag URL.
+            platforms[platform] = {"url": expected, "signature": signature}
     return {
         "version": version,
         "notes": release.get("body") or f"Speccify {version}",

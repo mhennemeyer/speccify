@@ -67,6 +67,37 @@ def test_wrong_download_origin_is_rejected(release_files):
         build_manifest(*release_files)
 
 
+def test_draft_urls_become_published_tag_urls(release_files):
+    release, _, _ = release_files
+    release.update(
+        draft=True,
+        html_url="https://github.com/mhennemeyer/speccify/releases/tag/untagged-a1b2c3",
+    )
+    for asset in release["assets"]:
+        asset["browser_download_url"] = asset["browser_download_url"].replace(
+            "/v1.2.3/", "/untagged-a1b2c3/"
+        )
+    manifest = build_manifest(*release_files)
+    assert all("/v1.2.3/" in p["url"] for p in manifest["platforms"].values())
+    release["draft"] = False
+    with pytest.raises(ValueError, match="Unexpected download URL"):
+        build_manifest(*release_files)
+
+
+@pytest.mark.parametrize("draft_id", ["untagged-other", "untagged-a1b2c4", "../v1.2.3"])
+def test_draft_asset_must_match_its_own_release(release_files, draft_id):
+    release, _, _ = release_files
+    release.update(
+        draft=True,
+        html_url="https://github.com/mhennemeyer/speccify/releases/tag/untagged-a1b2c3",
+    )
+    release["assets"][0]["browser_download_url"] = release["assets"][0][
+        "browser_download_url"
+    ].replace("/v1.2.3/", f"/{draft_id}/")
+    with pytest.raises(ValueError, match="Unexpected download URL"):
+        build_manifest(*release_files)
+
+
 @pytest.mark.parametrize("version", ["v1.2.3", "1.2.3-beta", "1.2/../3", "latest"])
 def test_only_stable_release_versions(version):
     with pytest.raises(ValueError):
