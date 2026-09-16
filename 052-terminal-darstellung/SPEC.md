@@ -31,13 +31,13 @@ Schriftgröße 8–32 px einstellbar und fensterübergreifend dauerhaft gespeich
 
 ## Tasks
 
-- [ ] Native Preferences und Grenzen.
-- [ ] Live-Thema, Schriftsteuerung und Größenanpassung.
+- [x] Native Preferences und Grenzen.
+- [x] Live-Thema, Schriftsteuerung und Größenanpassung.
 - [ ] Browser-/Native-Prüfung und Dokumentation.
 
 ## Verification
 
-Noch ausstehend.
+Browser-Suite `test_terminal_preferences.mjs` grün: Hell/Dunkel, UTF-8, 8–32 px, PTY-Resize ohne Neustart, Persistenz und fensterübergreifendes Event. Native Preferences-Test grün. Für die gemeinsame Prüfung der gebündelten App geparkt.
 
 ## Questions
 

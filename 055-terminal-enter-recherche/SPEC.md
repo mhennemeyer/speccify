@@ -1,5 +1,5 @@
 ---
-station: Backlog
+station: Doing
 order: 55
 created: 2026-09-16
 needs_human: true
@@ -32,7 +32,7 @@ auf automatisches Ausführen umstellen.
 
 ## Tasks
 
-- [ ] Bestehende Schreib-/Pastepfade und Host-Verhalten prüfen.
+- [x] Bestehende Schreib-/Pastepfade und Host-Verhalten prüfen.
 - [ ] Harmloser praktischer Test und Research-Ergebnis.
 
 ## Verification

@@ -1,0 +1,2 @@
+{"timestamp":"2026-09-16T15:44:52Z","spec_id":"055-terminal-enter-recherche","event_type":"spec_created","actor":"project","summary":"0.8.x-Findings auf ausdrücklichen Nutzerauftrag aufgenommen; vor 0.9.0 priorisiert."}
+{"timestamp":"2026-09-16T15:44:52Z","spec_id":"055-terminal-enter-recherche","event_type":"station_changed","actor":"project","summary":"Backlog → Doing gemäß Nutzerauftrag; 052–054 nach Teilprüfungen für gemeinsame native Abnahme geparkt, aktive Teil-Spec 055."}

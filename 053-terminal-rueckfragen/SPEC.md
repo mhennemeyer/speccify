@@ -1,5 +1,5 @@
 ---
-station: Backlog
+station: Doing
 order: 53
 created: 2026-09-16
 needs_human: true
@@ -32,13 +32,13 @@ aus. Meldungen gruppieren/entprellen; keine automatische Freigabe von Befehlen.
 
 ## Tasks
 
-- [ ] Host-Signale und bestehende Popup-/Notification-Wege prüfen.
-- [ ] Meldungen, Einstellungen und Fokussierung implementieren.
+- [x] Host-Signale und bestehende Popup-/Notification-Wege prüfen.
+- [x] Meldungen, Einstellungen und Fokussierung implementieren.
 - [ ] Rückfragen-/Redraw-/Mehrfenster-Regressionen prüfen.
 
 ## Verification
 
-Noch ausstehend.
+Browser-Suite grün: fragmentierte ANSI-Ausgabe, bekannte Freigabefrage bei verborgenem Terminal, OSC 9, Redraw-Deduplizierung, Sprung ohne PTY-Eingabe und deaktivierte Meldungen. Native OS-Prüfung folgt im gemeinsamen Build; Windows bleibt echte VM-Abnahme.
 
 ## Questions
 

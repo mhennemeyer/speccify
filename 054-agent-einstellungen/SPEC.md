@@ -1,5 +1,5 @@
 ---
-station: Backlog
+station: Doing
 order: 54
 created: 2026-09-16
 needs_human: true
@@ -37,14 +37,14 @@ Gültigkeitsbereich und notwendiger Terminal-Neustart sichtbar.
 
 ## Tasks
 
-- [ ] Konfigurationsschema, Gültigkeitsbereich und verfügbare Hosts prüfen.
-- [ ] Sichere Persistenz und Übergabe an den Host.
-- [ ] Strukturierte UI, Hilfe, Auswahl und Autonomieprofil.
+- [x] Konfigurationsschema, Gültigkeitsbereich und verfügbare Hosts prüfen.
+- [x] Sichere Persistenz und Übergabe an den Host.
+- [x] Strukturierte UI, Hilfe, Auswahl und Autonomieprofil.
 - [ ] Roundtrip-/Start-/UI-Prüfung und Dokumentation.
 
 ## Verification
 
-Noch ausstehend.
+Sechs native Config-Tests sowie Browser-Suite `test_agent_settings.mjs` grün. TOML-Kommentare, unbekannte Werte und Regeln erhalten; Syntax/Typ/Enum, parallele Änderungen, Entwurf, Suche, Hilfe, Rücknahme und Host-Wechsel geprüft. Installiert: Codex 0.154.0, Claude 2.1.273. Codex akzeptiert das Profil mit `features list`; keine echten Benutzerkonfigurationen geändert. Für gemeinsame native UI-Prüfung geparkt.
 
 ## Questions
 
