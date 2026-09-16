@@ -2,7 +2,7 @@
 station: Doing
 order: 44
 needs_human: true
-ready: false
+ready: true
 ---
 
 # Root-Dateien und gewöhnliche Ordner im Workspace
@@ -58,17 +58,37 @@ Das gemeinsame Wissensmodell ist Gegenstand von 045; Registerbindungen von 046.
 
 ## Tasks
 
-- [ ] Workspace-Modell und Navigation um den dauerhaften Root-Dateikontext ergänzen.
-- [ ] Öffnen/Bearbeiten/Entwürfe sowie Git-Zielbindung für gemischte Roots integrieren.
-- [ ] Akzeptanzfälle mit isolierten Fixtures nativ und in der Oberfläche prüfen.
-- [ ] Workspace-Doku, Produktvision und Bestandsbuch nachführen; lokal abnehmen lassen.
+- [x] Workspace-Modell und Navigation um den dauerhaften Root-Dateikontext ergänzen.
+- [x] Öffnen/Bearbeiten/Entwürfe sowie Git-Zielbindung für gemischte Roots integrieren.
+- [x] Akzeptanzfälle mit isolierten Fixtures nativ und in der Oberfläche prüfen.
+- [x] Workspace-Doku, Produktvision und Bestandsbuch nachführen; zur lokalen Abnahme bereitstellen.
 
 ## Verification
 
 Refinement: `apps/desktop/src-tauri/src/workspace_cmd.rs`, Funktion `scan`:
 Aufnahme nur bei Git/Markern; `found.is_empty()` schaltet den Root-Fallback.
 Struktureller Nutzerordner-Befund bestätigt normale Root-Inhalte neben Repos.
-Noch kein Implementierungs- oder Abnahmenachweis für diese Spec.
+
+Umsetzung am 2026-09-16:
+
+- `cargo test -p speccify-desktop`: 119 bestanden, drei bestehende Umgebungstests
+  ausgelassen. Root-Ziel unabhängig von Erkennung, normale/tiefe Dateien und
+  veralteter Schreibversuch aus zweitem Projektkontext nativ geprüft.
+- `cargo fmt --check`, Desktop-Typecheck, `git diff --check`: grün.
+- `test_workspace_root.mjs`: normale Ordner und Root-Datei, manuelles tiefes
+  Aufklappen, Git-Grenze, Konflikt mit zweitem Editor, Entwürfe nach Refresh
+  und Wiederöffnen grün. Konflikt lässt den Entwurf weiter bearbeiten.
+- `test_workspace_shell.mjs`: bisherige Datei-/Git-Ziele, gemeinsames Terminal,
+  Gruppenwechsel, Board und Ausfall eines Unterprojekts weiterhin grün.
+- Lokaler signierter App-Build erfolgreich; `codesign --verify --deep --strict`
+  grün. Native QA-Prüfung mit zwei temporären Repos und Resourcen/nested/info.md:
+  Root-Dateibaum geöffnet, Inhalt sichtbar, Speichern korrekt, veraltete Änderung
+  abgewiesen, kein Git/Workflow am Root angelegt. Test-Workspace entfernt.
+- App-PID 76213, alle vier ursprünglichen Fenster wiederhergestellt, keine
+  laufenden Terminals beendet. Kein Kundenrepo geändert. Menschliche Abnahme offen.
+- Website-Hilfe aktualisiert; Marketing-Build mit 101 Seiten und Doku-Sync grün.
+
+Umsetzung zur Abnahme geparkt; weitere autorisierte Specs können bearbeitet werden.
 
 ## Questions
 
