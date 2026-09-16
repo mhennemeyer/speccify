@@ -582,12 +582,44 @@ jobs:
           includeUpdaterJson: false
           args: --bundles appimage,deb,rpm
 
+  verify-macos-dmg:
+    name: Notarize and verify macOS installer
+    needs: release
+    if: ${{ always() && !cancelled() && (inputs.verify_only || needs.release.result == 'success') }}
+    runs-on: macos-14
+    timeout-minutes: 30
+    steps:
+      - name: Verify and staple the signed installer
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ github.event.inputs.tag || github.ref_name }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          test -n "$APPLE_ID" && test -n "$APPLE_PASSWORD" && test -n "$APPLE_TEAM_ID"
+          mkdir -p installer
+          gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --dir installer --pattern '*.dmg'
+          shopt -s nullglob
+          installers=(installer/*.dmg)
+          test "${#installers[@]}" -eq 1
+          dmg="${installers[0]}"
+          codesign --verify --strict "$dmg"
+          if ! xcrun stapler validate "$dmg"; then
+            xcrun notarytool submit "$dmg" --apple-id "$APPLE_ID" \
+              --password "$APPLE_PASSWORD" --team-id "$APPLE_TEAM_ID" --wait
+            xcrun stapler staple "$dmg"
+          fi
+          xcrun stapler validate "$dmg"
+          spctl --assess --type open --context context:primary-signature --verbose=2 "$dmg"
+          gh release upload "$RELEASE_TAG" "$dmg" --repo "$GITHUB_REPOSITORY" --clobber
+
   update-manifest:
     name: Verify signatures and publish complete update manifest
-    needs: [release, release-windows, release-linux, release-linux-arm64]
+    needs: [release, release-windows, release-linux, release-linux-arm64, verify-macos-dmg]
     if: >-
       ${{ always() && !cancelled() &&
-          (inputs.verify_only ||
+          needs.verify-macos-dmg.result == 'success' && (inputs.verify_only ||
            (needs.release.result == 'success' && needs.release-windows.result == 'success' &&
             needs.release-linux.result == 'success' && needs.release-linux-arm64.result == 'success')) }}
     runs-on: ubuntu-22.04

@@ -402,6 +402,12 @@ gestartet werden. Dabei werden sämtliche Paket- und Signaturprüfungen erneut
 ausgeführt, ohne die Installer neu zu bauen. Vor Veröffentlichung zusätzlich
 die erfolgreichen Plattform-Builds des ursprünglichen Laufs prüfen.
 
+Der zusätzliche macOS-Prüfjob notarisiert und stapelt das signierte DMG selbst.
+Das Ticket der enthaltenen App allein genügt nicht für die Prüfung des
+Installationsmediums. `stapler validate` und `spctl --type open` müssen für das
+DMG bestehen; erst danach wird das Update-Manifest erzeugt. Die App-Archive
+und ihre Update-Signaturen bleiben bei diesem Schritt unverändert.
+
 Endpoint:
 `https://github.com/mhennemeyer/speccify/releases/latest/download/latest.json`.
 Das Manifest enthält Version ohne `v`, Release-Notizen, RFC-3339-Datum und pro
