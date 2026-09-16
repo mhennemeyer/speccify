@@ -2,7 +2,7 @@
 station: Doing
 order: 45
 needs_human: true
-ready: false
+ready: true
 ---
 
 # Gemeinsames Board und Wissenslisten im Workspace
@@ -74,19 +74,49 @@ Registeridentität und Team-Synchronisierung werden in 046 vertieft; Drafts in
 
 ## Tasks
 
-- [ ] Gemeinsamen Quell-/Zielvertrag und Kollisionsdarstellung mit 046 festlegen.
-- [ ] Workspace-Navigation, Listen, Filter und herkunftsgebundene Aktionen integrieren.
-- [ ] Root-Katalog und gezielte Host-Anbindung mit Verfügbarkeitsstatus ergänzen.
-- [ ] Gleichnamige Skills/MCPs, relative Tools, Ausfall und Entwurfserhalt prüfen.
-- [ ] Doku und beide Produktplaybooks aktualisieren; realen Root-Roundtrip abnehmen lassen.
+- [x] Gemeinsamen Quell-/Zielvertrag und Kollisionsdarstellung mit 046 festlegen.
+- [x] Workspace-Navigation, Listen, Filter und herkunftsgebundene Aktionen integrieren.
+- [x] Root-Katalog und gezielte Host-Anbindung mit Verfügbarkeitsstatus ergänzen.
+- [x] Gleichnamige Skills/MCPs, relative Tools, Ausfall und Entwurfserhalt prüfen.
+- [x] Doku und beide Produktplaybooks aktualisieren; realen Root-Roundtrip durchführen und zur Abnahme bereitstellen.
 
 ## Verification
 
-Bestand: `WorkspaceShell.tsx` bindet Wissensbereiche je Worktree ein;
-`WorkspaceBoardView` aggregiert Specs bereits. Es wurde kein neuer
-Listen-/Host-Katalog implementiert oder als funktionsfähig abgenommen.
+Umgesetzt und geprüft am 2026-09-16:
+
+- Nativer Katalog über vorhandene Projektleser, inklusive Root und Wissensordnern
+  ohne Git. IDs enthalten Quelle und Dateipfad bzw. Host/MCP-Name. Geheimnisse,
+  Befehlsargumente und URLs aus MCP-Konfigurationen fehlen im Katalog.
+- Gemeinsame Listen mit Suche, Quellfilter, Herkunft und Playbook-Status. Import,
+  Neuanlage und Anbindungsauftrag haben explizite Ziele. Entfernte Quellen
+  sperren veraltete Aktionen. Ein gefundener Editorfehler beim Wiederwählen
+  derselben Datei wurde behoben; laufender Editor/Entwurf bleiben erhalten.
+- Rust: 124 Tests bestanden, 3 bestehende umgebungsabhängige Tests ignoriert.
+  Katalogtest mit drei Quellen, gleichnamigen Skills/Tools/MCPs, Drafts,
+  ausgeschlossener Credential-Ausgabe und verschwundener Quelle grün.
+- Typecheck und Format/Diff-Prüfung grün. Browser: gemeinsame Wissenslisten,
+  Herkunft bei Übergabe, Importziel, Playbook-Neuanlage, Entwurfserhalt,
+  Quellausfall und Filter nach Reload. Bestehende Workspace-/Root-/Register-
+  sowie Handover-/Draft-Suites grün.
+- Nativer Wegwerf-Workspace mit Root/api/web: gemeinsame Liste und Auswahl
+  geprüft. Tatsächlicher Codex-Lauf vom Root mit dem nativen Kontext: Skill aus
+  api vollständig gelesen; Tool aus web mit relativem Input im web-cwd
+  ausgeführt; ausdrücklich als qa_web konfigurierter Test-MCP per Handshake/
+  Tool-Aufruf genutzt. Root-cwd erhalten, alle Quelldateien byte-identisch.
+  Keine Änderung globaler Host-Konfiguration. Temporärer Workspace entfernt,
+  ursprüngliche vier Fenster erhalten.
+- Lokaler App-Build und Signaturprüfung grün, App PID 24629 offen. Website:
+  101 Seiten, Doku-Sync erfolgreich. Keine Veröffentlichung eines Release-Tags.
+
+MCP-Status im Katalog bleibt bewusst Konfigurationsstatus. Eine tatsächliche
+Root-Verbindung bestätigt der jeweilige Host; die App übernimmt keinen
+Handshake-Erfolg aus einem fremden Prozess als Nutzbarkeitsnachweis. Anbindung
+erfolgt gezielt über einen prüfbaren Auftrag, nicht durch automatisches Mergen
+von Konfiguration oder Zugangsdaten. Offizieller Codex-Vertrag für Projekt-
+Konfiguration und stdio-cwd geprüft:
+[MCP guide](https://learn.chatgpt.com/docs/extend/mcp?surface=cli).
+Menschliche Gesamt- und Windows-Abnahme bleiben offen; daher Doing/ready.
 
 ## Questions
 
-Die konkrete Katalogdarstellung im jeweiligen Host wird beim Vertragsentwurf
-gegen dessen verfügbare Schnittstellen geprüft; Anzeige ist kein Verfügbarkeitsnachweis.
+Keine Implementierungsfrage offen. Gesamtpaket zur menschlichen Abnahme bereit.
