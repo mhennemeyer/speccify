@@ -1,0 +1,2 @@
+# Signed payloads must retain their exact bytes on every checkout platform.
+apps/desktop/src-tauri/tests/fixtures/updater/payload.txt -text
