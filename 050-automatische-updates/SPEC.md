@@ -2,7 +2,7 @@
 station: Doing
 order: 50
 needs_human: true
-ready: true
+ready: false
 open_question: null
 ---
 
@@ -55,6 +55,8 @@ GitHub Secrets; öffentlicher Prüfkey im App-Vertrag.
 - [x] Zustands-, Signatur-, Fehler- und UI-Regressionen prüfen; lokale App aktualisieren.
 - [x] Dokumentation/Playbooks nachführen, committen/pushen; zu 034 weitergehen.
   Commits `379ea42` und `dbdabc7` auf main gepusht; plattformübergreifende CI grün.
+- [ ] (added) Freigegebenes Release 0.8.1 bauen, Artefakte prüfen und veröffentlichen.
+  Tag auf `dbb1c03`; Workflow `35083774597`, Release zunächst als Entwurf.
 
 ## Verification
 
