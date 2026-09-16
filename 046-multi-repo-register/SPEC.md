@@ -1,5 +1,5 @@
 ---
-station: Backlog
+station: Doing
 order: 46
 needs_human: true
 ready: false
@@ -74,6 +74,13 @@ persönlich geprüfter Repo-Zugriff dargestellt werden.
 4. 2026-09-16: Web-Board existiert bereits. Persönliche Benutzeranmeldung und
    individuelle Git-Autorisierung einer vollständigen Web-App werden nur im
    [Draft](../../playbooks/speccify-web-app.md) untersucht.
+5. 2026-09-16: Umsetzung im autorisierten Paket nach 044/047. Gemeinsamer
+   Vertrag: `workspace-registers.json` mit Formatversion, Workspace-ID,
+   benannten Register- und Code-Repo-IDs und optionalem Standardregister.
+   Checkouts, URLs und Zugangsdaten sind lokale Bindungen, keine Manifestfelder.
+   Das Manifest kann ausdrücklich in einem bestehenden Register gespeichert
+   oder von einem anderen Rechner übernommen werden; kein Kundenregister
+   wird dabei automatisch migriert.
 
 ## Tasks
 
