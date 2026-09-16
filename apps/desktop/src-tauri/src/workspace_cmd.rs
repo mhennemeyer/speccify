@@ -397,6 +397,13 @@ fn validate(workspace: &Workspace) -> Result<(), String> {
 }
 
 fn resolve_worktree(workspace: &Workspace, worktree_id: &str) -> Result<String, String> {
+    if worktree_id == format!("root:{}", workspace.id) {
+        let root = crate::project_cmd::resolve_project_root(&workspace.root)?;
+        if display(&root) != workspace.root {
+            return Err("Workspace-Wurzel verändert. Workspace erneut erkennen.".into());
+        }
+        return Ok(display(&root));
+    }
     let (repo, tree) = workspace
         .repositories
         .iter()
@@ -1246,6 +1253,33 @@ mod tests {
             version: 1,
             workspaces: vec![],
         }
+    }
+
+    #[test]
+    fn root_file_target_is_independent_of_discovery_and_does_not_create_a_repo() {
+        let fixture = tempfile::tempdir().unwrap();
+        let root = fixture.path().canonicalize().unwrap();
+        repo(&root.join("repo-a"));
+        repo(&root.join("repo-b"));
+        repo(&root.join("Resourcen/nested/deep-repo"));
+        fs::write(root.join("notes.md"), "root notes").unwrap();
+        fs::write(root.join("Resourcen/nested/info.md"), "resources").unwrap();
+        let workspace = merge(&mut empty_store(), &root, scan(&root, 1000, 1));
+        assert_eq!(workspace.repositories.len(), 2);
+        let target = resolve_worktree(&workspace, &format!("root:{}", workspace.id)).unwrap();
+        assert_eq!(target, display(&root));
+        for relative in ["notes.md", "Resourcen/nested/info.md"] {
+            assert!(
+                crate::project_cmd::safe_project_path(Path::new(&target), relative)
+                    .unwrap()
+                    .is_file()
+            );
+        }
+        assert!(!root.join(".git").exists());
+        assert!(!root.join(".agent").exists());
+        assert!(resolve_worktree(&workspace, "root:another-workspace").is_err());
+        fs::remove_dir_all(&root).unwrap();
+        assert!(resolve_worktree(&workspace, &format!("root:{}", workspace.id)).is_err());
     }
 
     #[test]

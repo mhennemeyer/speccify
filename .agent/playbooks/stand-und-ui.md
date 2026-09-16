@@ -77,10 +77,12 @@ deren Einrichtung oder Verfügbarkeit im gewählten Agenten.
 ### Multi-Projekt-Befund vom 2026-09-16
 
 - Die Erkennung in `workspace_cmd.rs` nimmt Git-/Projektmarker auf und bietet
-  den Root nur als Fallback an, wenn keine Projekte gefunden wurden. Damit fehlt
-  im gemischten Parent-Ordner ein verlässliches Dateiziel für normale Ordner
-  und Root-Dateien. [044](../specs/044-workspace-root-dateien/SPEC.md) ergänzt
-  diesen Kontext unabhängig von der Projekterkennungstiefe.
+  den Root nur als Fallback an, wenn keine Projekte gefunden wurden.
+  [044](../specs/044-workspace-root-dateien/SPEC.md) ergänzt deshalb einen
+  unabhängigen Root-Dateikontext in der Workspace-Navigation, ohne künstliches
+  Repository. Normale Ordner/Dateien und manuell aufgeklappte tiefere Inhalte
+  bleiben erreichbar. Root-/Unterprojekteditoren prüfen vor dem Speichern
+  den gelesenen Inhalt; ein Konflikt bewahrt den Entwurf.
 - Das gemeinsame bearbeitbare Workspace-Board aus 026 existiert. Die übrigen
   Wissensbereiche bleiben in `WorkspaceShell.tsx` pro Worktree gebunden.
   Ein gemeinsamer Katalog für Skills, Tools, MCPs und Playbooks samt Nutzung
@@ -101,8 +103,9 @@ deren Einrichtung oder Verfügbarkeit im gewählten Agenten.
   eine technische Ausführungssperre.
 
 Die Befunde und Folgespecs stehen in [Refinement 043](../specs/043-multiprojekt-refinement/SPEC.md).
-Es wurden keine Kunden-Repositories verändert und keine neuen Desktop-Funktionen
-oder Serverdienste eingerichtet.
+Das Refinement veränderte keine Kunden-Repositories und richtete keine
+Serverdienste ein. Der lokale Umsetzungsstand folgt anschließend je Spec;
+Programmänderungen benötigen weiterhin einen neuen Build/Start.
 
 ### Überblick
 

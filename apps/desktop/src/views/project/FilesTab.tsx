@@ -61,6 +61,7 @@ interface OpenFile {
   saved: string;
   revision: number;
   error: string | null;
+  loadFailed?: boolean;
   /** Aus dem Entwurfs-Speicher wiederhergestellt (noch nicht in der Datei). */
   restored?: boolean;
 }
@@ -111,11 +112,13 @@ export default function FilesTab({
   project,
   refresh,
   visible = true,
+  gitEnabled = true,
 }: {
   project: string;
   refresh?: number;
   /** Beim Sichtbarwerden offene Ordner neu lesen (neue Dateien von außen). */
   visible?: boolean;
+  gitEnabled?: boolean;
 }) {
   // Baum: Verzeichnis → Kinder; "" = Wurzel. Nur geladene Ordner sind offen.
   const [tree, setTree] = useState<Record<string, TreeEntry[]>>({});
@@ -174,7 +177,7 @@ export default function FilesTab({
 
   useEffect(() => {
     setHistoryCommit(null);
-    if (!active) {
+    if (!active || !gitEnabled) {
       setHistory([]);
       return;
     }
@@ -182,7 +185,7 @@ export default function FilesTab({
       .then(setHistory)
       .catch(() => setHistory([]));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [project, active, refresh]);
+  }, [project, active, refresh, gitEnabled]);
 
   useEffect(() => {
     if (!active || !historyCommit) {
@@ -351,7 +354,7 @@ export default function FilesTab({
     } catch (e) {
       setOpen((previous) => [
         ...previous,
-        { path, text: "", saved: "", revision: 0, error: String(e) },
+        { path, text: "", saved: "", revision: 0, error: String(e), loadFailed: true },
       ]);
     }
     setActive(path);
@@ -359,14 +362,14 @@ export default function FilesTab({
 
   // Blame der aktiven Datei — nachladen, wenn der gespeicherte Stand wechselt.
   useEffect(() => {
-    if (!blameOn || !active) {
+    if (!blameOn || !active || !gitEnabled) {
       setBlame(null);
       return;
     }
     void gitBlame(project, active)
       .then(setBlame)
       .catch(() => setBlame([]));
-  }, [project, active, blameOn, current?.saved]);
+  }, [project, active, blameOn, current?.saved, gitEnabled]);
 
   const reloadParent = (path: string) => {
     const dir = path.includes("/") ? path.slice(0, path.lastIndexOf("/")) : "";
@@ -452,7 +455,7 @@ export default function FilesTab({
       await trackActivity(
         "write",
         "Datei speichern",
-        () => invoke("project_write_file", { project, file: path, content }),
+        () => invoke("project_write_file", { project, file: path, content, expectedContent: file.saved }),
         path,
       );
       clearDraft(draftKey(project, path));
@@ -737,7 +740,7 @@ export default function FilesTab({
               <div className="space-y-1">
                 {current.error ? <p className="text-xs text-red-600">{current.error}</p> : null}
                 {info?.binary ? <p className="text-xs text-amber-700">Binärdatei — nicht editierbar.</p> : null}
-                {!current.error && !info?.binary ? (
+                {gitEnabled && !current.error && !info?.binary ? (
                   <label className="flex items-center gap-2 text-xs text-slate-600">
                     <input
                       type="checkbox"
@@ -844,7 +847,7 @@ export default function FilesTab({
               </div>
             ),
           },
-        ]}
+        ].filter(tab => gitEnabled || tab.id !== "history")}
       />
     </InspectorPortal>
   ) : null;
@@ -881,7 +884,7 @@ export default function FilesTab({
         ) : null}
         {details}
         {current ? (
-          current.error ? (
+          current.loadFailed ? (
             <p className="p-5 text-sm text-red-600">{current.error}</p>
           ) : (
             <div className="min-h-0 flex-1">

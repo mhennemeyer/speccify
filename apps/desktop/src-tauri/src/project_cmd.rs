@@ -439,9 +439,25 @@ fn read_project_file(project: String, file: String) -> Result<String, String> {
 /// Eine Datei unterhalb der Projektwurzel schreiben (D20: Plan-Editor).
 /// Legt keine Verzeichnisse an — der Zielordner muss existieren.
 #[tauri::command]
-pub fn project_write_file(project: String, file: String, content: String) -> Result<(), String> {
+pub fn project_write_file(
+    project: String,
+    file: String,
+    content: String,
+    expected_content: Option<String>,
+) -> Result<(), String> {
+    // Serialize in-app editors even when different project roots address the same file.
+    static WRITE_LOCK: Mutex<()> = Mutex::new(());
+    let _guard = WRITE_LOCK.lock().map_err(|e| e.to_string())?;
     let root = resolve_project_root(&project)?;
     let path = safe_project_path(&root, &file)?;
+    if let Some(expected) = expected_content {
+        let current = std::fs::read_to_string(&path).map_err(|e| {
+            format!("Datei vor dem Speichern nicht lesbar: {e}. Entwurf bleibt erhalten.")
+        })?;
+        if current != expected {
+            return Err("Datei wurde zwischenzeitlich geändert. Entwurf bleibt erhalten; Datei neu laden und Änderungen zusammenführen.".into());
+        }
+    }
     std::fs::write(&path, content).map_err(|e| format!("{}: {e}", path.display()))
 }
 
@@ -1164,6 +1180,33 @@ mod tests {
     }
 
     #[test]
+    fn checked_file_write_detects_another_root_editor_and_preserves_disk() {
+        let dir = tempfile::tempdir().unwrap();
+        let root = dir.path().canonicalize().unwrap();
+        std::fs::create_dir(root.join("repo")).unwrap();
+        std::fs::write(root.join("repo/shared.txt"), "original").unwrap();
+        project_write_file(
+            root.join("repo").to_string_lossy().into_owned(),
+            "shared.txt".into(),
+            "child edit".into(),
+            Some("original".into()),
+        )
+        .unwrap();
+        let error = project_write_file(
+            root.to_string_lossy().into_owned(),
+            "repo/shared.txt".into(),
+            "stale root edit".into(),
+            Some("original".into()),
+        )
+        .unwrap_err();
+        assert!(error.contains("zwischenzeitlich geändert"));
+        assert_eq!(
+            std::fs::read_to_string(root.join("repo/shared.txt")).unwrap(),
+            "child edit"
+        );
+    }
+
+    #[test]
     fn write_file_honors_the_traversal_guard() {
         let dir = project_fixture("write");
         let project = dir.to_string_lossy().into_owned();
@@ -1171,13 +1214,15 @@ mod tests {
             project.clone(),
             ".agent/plans/aktuell.md".into(),
             "---\nlifecycle: active\n---\n# Neu\n".into(),
+            None,
         )
         .unwrap();
         assert!(std::fs::read_to_string(dir.join(".agent/plans/aktuell.md"))
             .unwrap()
             .contains("# Neu"));
         for evil in ["../raus.md", "/etc/passwd"] {
-            let error = project_write_file(project.clone(), evil.into(), "x".into()).unwrap_err();
+            let error =
+                project_write_file(project.clone(), evil.into(), "x".into(), None).unwrap_err();
             assert!(error.contains("aus dem Projekt heraus"), "{evil} → {error}");
         }
         let _ = std::fs::remove_dir_all(&dir);

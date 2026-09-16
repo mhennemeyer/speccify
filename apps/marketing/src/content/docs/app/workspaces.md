@@ -66,6 +66,20 @@ separate repositories; linked Git worktrees share one repository identity.
 
 ## Saved workspaces
 
+### Ordinary folders and root files
+
+In the workspace's **Files** view, **Workspace-Ordner** opens the parent folder's
+file tree. This includes ordinary directories such as `Resources/` and files
+beside your repositories. If the root is already a recognized project, its
+existing entry serves this purpose. No extra Git repository is created.
+
+You can browse deeper folders while keeping project discovery at its default
+depth of 1. Git controls belong to actual repositories. If a file is open through
+both the root and a child project, saving checks for intervening changes and
+keeps a stale editor's draft instead of overwriting the other saved version.
+
+### Groups and the dashboard
+
 Every workspace you open stays in the dashboard under **Saved
 workspaces**, with a **rescan** button that picks up new repositories
 without touching the groups you made. Each repository starts as its

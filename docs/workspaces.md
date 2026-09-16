@@ -62,6 +62,26 @@ bound targets and drafts while hidden; independent project windows are unaffecte
 
 ## Persistence and concurrency
 
+### Root files
+
+The workspace's **Files** navigation includes a **Workspace-Ordner** target
+when the root is not already a recognized project. It exposes ordinary folders
+and root files without adding a project or initializing Git. Browsing nested
+folders does not change the project detection depth. A recognized root is reused
+instead of shown twice. Git controls remain scoped to actual repositories.
+
+The root target is resolved from the stored workspace identity and its canonical
+root; the client cannot substitute another path. Missing or replaced roots fail
+visibly. Existing filesystem traversal and symlink guards also apply here.
+
+Files can be opened through both the root and a child project. Saving checks the
+last read content and serializes writes from in-app file editors: a stale editor
+keeps its draft and reports a conflict instead of overwriting another saved edit.
+This detects stale content; it is not an atomic filesystem lock against external
+programs. Discarding a draft and refreshing reloads the current disk version.
+
+### Workspace metadata
+
 The native adapter serializes read/modify/write operations, checks the caller's
 expected workspace revision and atomically replaces the store via a same-directory
 temporary file. Missing store means empty; malformed/unsupported stores produce

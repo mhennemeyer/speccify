@@ -115,6 +115,12 @@ Umsetzungsschnitte: [Root-Dateien 044](../specs/044-workspace-root-dateien/SPEC.
 [Multi-Repo-Register 046](../specs/046-multi-repo-register/SPEC.md).
 Das sind verfeinerte Anforderungen, keine bereits implementierten Fähigkeiten.
 
+**Umsetzung 044, 2026-09-16:** Der Root-Dateikontext ist unabhängig von der
+Projektliste vorhanden. Normale Ordner bleiben bei Erkennungstiefe 1 manuell
+durchsuchbar; Speichern erkennt veraltete Inhalte auch zwischen Root- und
+Unterprojekteditor. Git bleibt an echte Repositories gebunden. Die übrigen
+Refinement-Punkte 045–047 bleiben davon getrennte Umsetzungsschritte.
+
 **Entschieden am 2026-09-10 (D-MR-01):** Erkannte Repos werden zunächst als eigene
 Projekte angeboten und können anschließend frei fachlich gruppiert werden.
 Erster Umsetzungsschnitt: [Spec 015](../specs/015-workspace-projekterkennung/SPEC.md).

@@ -33,17 +33,28 @@ import RegisterBar from "./views/project/RegisterBar";
 import WorkspaceBoardView, { type WorkspaceSpecEntry } from "./views/WorkspaceBoardView";
 
 interface Tree { id: string; path: string; relative_path: string; available: boolean }
-interface Repository { id: string; name: string; worktrees: Tree[] }
+interface Repository { id: string; name: string; common_dir?: string | null; worktrees: Tree[] }
 interface Project { id: string; name: string; repository_ids: string[] }
 interface Workspace { id: string; name: string; root: string; revision: number; projects: Project[]; repositories: Repository[]; partial: boolean; warnings: string[] }
 const tabs = PROJECT_TABS.map(({ id, label }) => [id, label] as const);
 type Tab = ProjectTab;
 interface ToolbarAction { name: string; command: string; confirmed: boolean; toolbar?: boolean; target: string; inputs?: unknown[] }
 interface PaneToolbar { ready: boolean; actions: ToolbarAction[] }
+interface Pane { tree: Tree; repo: Repository; group: Project; rootOnly?: boolean }
+function rootPane(workspace: Workspace): Pane | null {
+  if (workspace.repositories.some(repo => repo.worktrees.some(tree => tree.path === workspace.root))) return null;
+  const id = `root:${workspace.id}`;
+  return {
+    tree: { id, path: workspace.root, relative_path: ".", available: true },
+    repo: { id, name: "Workspace-Ordner", common_dir: null, worktrees: [] },
+    group: { id, name: workspace.name, repository_ids: [] },
+    rootOnly: true,
+  };
+}
 const button = "rounded border border-slate-300 px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-100 disabled:opacity-40";
 
 /** One immutable target per pane. Hiding never remounts editors or processes. */
-function WorktreePane({ workspaceId, tree, repo, group, tab, visited, active, choose, mainHost, registerHost, inspectorHost, refresh, spec, changed, boardSlot, navHost, agentRoot, command, updateCommand, outputHost, outputTabsHost, layout, updateLayout, reportToolbar }: {
+function WorktreePane({ workspaceId, tree, repo, group, rootOnly = false, tab, visited, active, choose, mainHost, registerHost, inspectorHost, refresh, spec, changed, boardSlot, navHost, agentRoot, command, updateCommand, outputHost, outputTabsHost, layout, updateLayout, reportToolbar }: {
   workspaceId: string; tree: Tree; repo: Repository; group: Project; tab: Tab; visited: Tab[];
   active: boolean; choose: () => void; mainHost: HTMLElement | null; inspectorHost: HTMLElement | null;
   registerHost: HTMLElement | null;
@@ -54,6 +65,7 @@ function WorktreePane({ workspaceId, tree, repo, group, tab, visited, active, ch
   outputHost: HTMLElement | null; outputTabsHost: HTMLElement | null; layout: ProjectLayout;
   updateLayout: (patch: Partial<ProjectLayout>) => void;
   reportToolbar: (id: string, value: PaneToolbar) => void;
+  rootOnly?: boolean;
 }) {
   const [root, setRoot] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -103,15 +115,15 @@ function WorktreePane({ workspaceId, tree, repo, group, tab, visited, active, ch
   useEffect(() => {
     let cancelled = false;
     reportToolbar(tree.id, { ready: enabled, actions: [] });
-    if (root && enabled) void invoke<{ actions: ToolbarAction[] }>("project_actions", { project: root }).then(snapshot => {
+    if (root && enabled && !rootOnly) void invoke<{ actions: ToolbarAction[] }>("project_actions", { project: root }).then(snapshot => {
       if (!cancelled) reportToolbar(tree.id, { ready: true, actions: snapshot.actions.filter(action => action.confirmed && action.target === "local" && !action.command.startsWith("toolui:")) });
     }).catch(() => {});
     return () => { cancelled = true; };
-  }, [root, enabled, totalRefresh, tree.id, reportToolbar]);
+  }, [root, enabled, rootOnly, totalRefresh, tree.id, reportToolbar]);
   return <ProjectActivity.Provider value={active && enabled}>
     <PanelsContext.Provider value={context}>
       <div onClickCapture={choose} onFocusCapture={choose}>
-      {registerHost && root && enabled && tree.available && createPortal(
+      {!rootOnly && registerHost && root && enabled && tree.available && createPortal(
         <section aria-label={`Team-Register ${tree.path}`} data-register-project={tree.path}>
           <RegisterBar project={root} contextLabel={repo.name} refresh={totalRefresh} onChanged={changed} />
         </section>, registerHost)}
@@ -132,9 +144,9 @@ function WorktreePane({ workspaceId, tree, repo, group, tab, visited, active, ch
       </section>, navHost)}
       {mainHost && root && createPortal(<section aria-label={`Arbeitsbereich ${tree.path}`} hidden={!active || tab === "board"} className="h-full min-h-0" inert={!enabled}>
         {error && <ErrorBox message={error} />}
-        {visited.filter(id => id !== "board").map(id => <div key={id} className={tab === id ? "h-full min-h-0" : "hidden"}>
-          {id === "files" && <FilesTab project={root} refresh={totalRefresh} visible={active && tab === id} />}
-          {id === "git" && <GitTab project={root} refresh={totalRefresh} visible={active && tab === id} />}
+          {visited.filter(id => id !== "board" && (!rootOnly || id === "files")).map(id => <div key={id} className={tab === id ? "h-full min-h-0" : "hidden"}>
+          {id === "files" && <FilesTab project={root} refresh={totalRefresh} visible={active && tab === id} gitEnabled={repo.common_dir !== null} />}
+          {id === "git" && (repo.common_dir !== null ? <GitTab project={root} refresh={totalRefresh} visible={active && tab === id} /> : <p>Dieser Ordner hat kein Git-Repository.</p>)}
           {id === "playbooks" && <PlaybooksTab project={root} refresh={totalRefresh} />}
           {id === "skills" && <SkillsTab project={root} refresh={totalRefresh} />}
           {id === "tools" && <ToolsTab project={root} refresh={totalRefresh} />}
@@ -142,6 +154,7 @@ function WorktreePane({ workspaceId, tree, repo, group, tab, visited, active, ch
           {id === "agent" && <AgentTab commandRoot={agentRoot} project={root} refresh={totalRefresh} agentCommand={command} onAgentCommand={updateCommand} />}
           {id === "actions" && <ActionsTab project={root} runNamespace={`workspace:${workspaceId}:${tree.id}`} refresh={totalRefresh} outputSlot={outputSlot} activeOutput={activeOutput} onOutputTabsChange={setOutputs} onRevealOutput={revealOutput} />}
         </div>)}
+        {rootOnly && tab !== "files" && <p>Hier liegen die Dateien des Workspace-Ordners. Für Git ein Repository auswählen.</p>}
       </section>, mainHost)}
       {inspectorHost && createPortal(<section hidden={!active} aria-label={`Inspektor ${tree.path}`} inert={!enabled} className="h-full min-h-0">
         <p className="truncate border-b border-slate-200 px-4 py-2 text-[11px] text-slate-500" title={tree.path}>{group.name} / {repo.name} · {tree.relative_path}</p>
@@ -167,7 +180,8 @@ function WorktreePane({ workspaceId, tree, repo, group, tab, visited, active, ch
 export default function WorkspaceShell() {
   const [theme, setTheme] = useTheme();
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
-  const [retainedPanes, setRetainedPanes] = useState<Record<string, { tree: Tree; repo: Repository; group: Project }>>({});
+  const [retainedPanes, setRetainedPanes] = useState<Record<string, Pane>>({});
+  const [rootNavHost, setRootNavHost] = useState<HTMLDivElement | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>("board");
   const [lastTab, setLastTab] = useState<Record<string, Tab>>({});
@@ -238,11 +252,13 @@ export default function WorkspaceShell() {
           const group = value.projects.find(group => group.repository_ids.includes(repo.id));
           if (group) for (const tree of repo.worktrees) next[tree.id] = { tree, repo, group };
         }
+        const root = rootPane(value);
+        if (root) next[root.tree.id] = root;
         return next;
       });
       setSelected(old => {
         const trees = value.repositories.flatMap(repo => repo.worktrees);
-        const next = trees.some(tree => tree.id === old) ? old : trees.find(tree => tree.available)?.id || "";
+        const next = trees.some(tree => tree.id === old) || rootPane(value)?.tree.id === old ? old : trees.find(tree => tree.available)?.id || rootPane(value)?.tree.id || "";
         selectionRef.current = next;
         return next;
       });
@@ -286,13 +302,14 @@ export default function WorkspaceShell() {
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [activate, lastTab, updateLayout]);
-  const target = workspace?.repositories.flatMap(repo => repo.worktrees).find(tree => tree.id === selected);
+  const target = retainedPanes[selected]?.tree;
+  const gitEnabled = retainedPanes[selected]?.repo.common_dir !== null;
   const activeToolbar = paneToolbars[selected];
   const toolbarActions = activeToolbar?.actions ?? [];
   const defaults = [...DEFAULT_TOOLBAR_BUILTINS, ...toolbarActions.filter(action => action.toolbar).map(action => `action:${action.command}`)];
   const toolbarIds = layout.toolbar ?? defaults;
   const builtins: ToolbarItem[] = TOOLBAR_BUILTINS.map(item => ({
-    ...item, disabled: item.id === "terminal" ? !workspace : !activeToolbar?.ready, icon: item.id === "terminal" ? <TerminalIcon /> : <GitIcon />,
+    ...item, disabled: item.id === "terminal" ? !workspace : !activeToolbar?.ready || !gitEnabled, icon: item.id === "terminal" ? <TerminalIcon /> : <GitIcon />,
     onClick: () => {
       if (item.id === "terminal") { showTerminal(); setStarted(true); }
       else { activate("git"); requestGit(item.id === "git-commit" ? "commit" : item.id === "git-pull" ? "pull" : "push"); }
@@ -341,6 +358,7 @@ export default function WorkspaceShell() {
           <button title="Workspace-Zuordnung aktualisieren" onClick={() => { setRefresh(value => value + 1); changed(); }} className="rounded px-1 hover:bg-slate-100">Aktualisieren</button>
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-2">
+          <div ref={setRootNavHost} className={tab === "files" ? "mt-2" : "hidden"} />
           {workspace?.projects.filter(group => group.repository_ids.length).map(group => <section key={group.id} aria-label={`Projektgruppe ${group.name}`} className="mt-2">
             <button aria-expanded={!collapsed[group.id]} onClick={() => setCollapsed(old => ({ ...old, [group.id]: !old[group.id] }))}
               className="flex w-full items-center gap-1 rounded px-1 py-1 text-left text-xs font-semibold text-slate-500 hover:bg-slate-100">
@@ -393,10 +411,10 @@ export default function WorkspaceShell() {
         </section>}
       </section>
     </div>
-    {workspace && Object.values(retainedPanes).map(({ tree, repo, group }) => {
-      const visible = workspace.repositories.some(repo => repo.worktrees.some(entry => entry.id === tree.id));
+    {workspace && Object.values(retainedPanes).map(({ tree, repo, group, rootOnly }) => {
+      const visible = rootOnly ? rootPane(workspace)?.tree.id === tree.id : workspace.repositories.some(repo => repo.worktrees.some(entry => entry.id === tree.id));
       return <WorktreePane key={`${tree.id}:${tree.path}`} workspaceId={workspace.id} tree={tree} repo={repo} group={group} tab={tab} visited={visited}
-        active={visible && selected === tree.id} choose={() => choose(tree.id)} mainHost={mainHost} registerHost={visible ? registerHost : null} inspectorHost={inspectorHost} refresh={refresh} spec={spec} changed={changed} boardSlot={boardSlot} navHost={visible ? groupSlots[group.id] ?? null : null}
+        rootOnly={rootOnly} active={visible && selected === tree.id} choose={() => choose(tree.id)} mainHost={mainHost} registerHost={visible ? registerHost : null} inspectorHost={inspectorHost} refresh={refresh} spec={spec} changed={changed} boardSlot={boardSlot} navHost={visible ? rootOnly ? rootNavHost : groupSlots[group.id] ?? null : null}
         agentRoot={workspace.root} command={command} updateCommand={updateCommand} outputHost={outputHost} outputTabsHost={outputTabsHost} layout={layout} updateLayout={updateLayout} reportToolbar={reportToolbar} />;
     })}
     {settingsOpen && <SettingsSheet theme={theme} onTheme={next => void setTheme(next)} layout={layout}

@@ -71,6 +71,7 @@ export function installWorkspaceFixture(responses) {
   };
   responses.workspace_resolve_target = ({ worktreeId }) => {
     if (window.__SPECCIFY_MOCK__.missingTarget === worktreeId) throw Error("Worktree nicht verfügbar");
+    if (worktreeId === `root:${read()[0].id}`) return read()[0].root;
     return read()[0].repositories.flatMap(repo => repo.worktrees).find(tree => tree.id === worktreeId).path;
   };
   const shell = new URLSearchParams(location.search).has("workspace-shell");
@@ -150,9 +151,23 @@ export function installWorkspaceFixture(responses) {
   if (shell && !marketing) {
     const calls = window.__SPECCIFY_MOCK__.workspaceCalls = [];
     const files = new Map();
-    responses.project_tree = ({ path }) => path ? [] : [{ name: "shared.txt", path: "shared.txt", is_dir: false, size: 20 }];
-    responses.project_read_file = ({ project, file }) => files.get(`${project}/${file}`) ?? `Only ${project}\n`;
-    responses.project_write_file = ({ project, file, content }) => { files.set(`${project}/${file}`, content); };
+    responses.project_tree = ({ project, dir: path }) => {
+      if (project !== root) return path ? [] : [{ name: "shared.txt", path: "shared.txt", is_dir: false, size: 20 }];
+      const entry = (name, path, is_dir = false) => ({ name, path, is_dir, size: 20 });
+      if (!path) return [entry("Resourcen", "Resourcen", true), entry("notes.md", "notes.md"), entry("api", "api", true)];
+      if (path === "Resourcen") return [entry("nested", "Resourcen/nested", true)];
+      if (path === "Resourcen/nested") return [entry("info.md", "Resourcen/nested/info.md")];
+      if (path === "api") return [entry("shared.txt", "api/shared.txt")];
+      return [];
+    };
+    responses.project_read_file = ({ project, file }) => files.get(`${project}/${file}`) ?? `Only ${project === root && file.startsWith("api/") ? `${root}/api` : project}\n`;
+    responses.project_write_file = ({ project, file, content, expectedContent }) => {
+      const path = `${project}/${file}`;
+      const baseline = project === root && file.startsWith("api/") ? `${root}/api` : project;
+      const current = files.get(path) ?? `Only ${baseline}\n`;
+      if (expectedContent !== undefined && current !== expectedContent) throw Error("Datei wurde zwischenzeitlich geändert. Entwurf bleibt erhalten.");
+      files.set(path, content);
+    };
     responses.terminal_open = ({ id, cwd }) => ({ cwd, startup: null });
     const originalBoard = responses.workspace_board;
     const done = new Set();
