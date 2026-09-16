@@ -56,6 +56,14 @@ gepusht. Release-Lauf `35071964938`, CI `35071959184`, Website `35071959200`.
 Release-Notizen referenzieren Register-Snapshot
 `218fbc030b630d0dbe21761b09268261803e0a48` (Implementierungsstand vor Release-Arbeit).
 
+CI `35071959184` vollständig grün (einschließlich Windows und Linux),
+Website-Deploy `35071959200` grün. Öffentliche Release-Seite `/releases/0-8-0/`
+liefert 0.8.0, Mermaid-Hinweis und den Hinweis auf manuelle Updates.
+Lokaler signierter App-Build 0.8.0, PID 32807: dieselben vier Fenster,
+keine laufenden Terminals/Entwürfe verloren. Signaturprüfung und echte native
+Mermaid-Prüfung im Programm-Playbook erfolgreich, Kundendatei unverändert.
+Temporären Website-Vorschauserver beendet; gebündelte App bleibt offen.
+
 ## Questions
 
 Keine für das beauftragte Release.
