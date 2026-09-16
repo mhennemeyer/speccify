@@ -270,6 +270,14 @@ Releases allein aufgrund dieses Playbooks auslösen.
 
 ### V1-03 — Integrationen: itsdcloud zuerst, lokal und bidirektional
 
+**Prototyp 034 / itsdcloud 0051 (2026-09-16):** Feature-Branch
+`feat/0051-speccify-board` ergänzt Katalogeintrag und eigene Projekt-Boardansicht.
+Chat und Ansicht teilen MCP-Verbindung, Secret und Tool-Auswahl; standardmäßig
+lesend. Echter Speccify-HTTP-MCP mit zwei Test-Registern abgeglichen, Board-UI
+in Deutsch/Englisch und beiden Themes geprüft. Produktive Installation und
+natürliche Chat-Antwort bleiben Abnahme; noch kein Merge auf itsdcloud master.
+Gedächtnis-/Chat-Export nach Speccify bleibt der separate nächste Vertrag 035.
+
 **Gewünscht:** UI-Anbindung und MCP-Zugang zu
 `/Users/mhennemeyer/WorkLocal/itsdcloud`. Projektgedächtnis steht dem gestarteten
 Agenten automatisch zur Verfügung. Umgekehrt lassen sich z. B. Entwicklungsstand,

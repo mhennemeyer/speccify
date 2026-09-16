@@ -7,6 +7,46 @@ Grundlage ist das gemeinsame Register aus `docs/specs-register.md`: der Branch
 `specs` jedes Repos ist die geteilte Wahrheit; das Board ist ein Leser und
 ein vorsichtiger Schreiber davon, kein zweiter Speicher.
 
+## In itsdcloud einrichten
+
+Der Board-Dienst muss vom itsdcloud-Backend erreichbar sein. `localhost` meint
+bei einem Container dessen eigenen Netzwerkraum. Den MCP-Token als
+`BOARD_MCP_TOKEN` in der Board-Umgebung setzen; HTTP Basic für die Web-Seite
+(`BOARD_PASSWORD`) ist davon getrennt. Außerhalb eines internen Testnetzes HTTPS
+verwenden. Tokens gehören in das Verbindungsformular, nicht in URL oder Git.
+
+### Bestehende itsdcloud-Version: MCP-Server
+
+1. Projekt → Integrationen → **MCP-Server** → Server hinzufügen.
+2. Namen, URL `https://<board>/mcp` und den Board-MCP-Token eintragen.
+3. Unter **Werkzeuge wählen** nur `board_summary`, `list_repos`, `list_specs`,
+   `get_spec`, `who_works_on_what` auswählen. `move_station`, `toggle_task` und
+   `refresh` abwählen.
+4. Im Projekt-Chat fragen: „Wer arbeitet gerade woran und auf welchem Branch?“,
+   „Welche Specs sind bereit zur Abnahme?“ oder „Zeige die Aufgaben von Spec 001
+   im Repo app.“ Repo-Namen gehören bei gleichen Spec-Nummern zur Identität.
+
+### Board-Prototyp: itsdcloud Spec 0051
+
+Der Feature-Branch `feat/0051-speccify-board` bietet **Speccify Board** direkt im
+Katalog. URL und Token genügen; die fünf lesenden Tools sind vorausgewählt.
+Die Projekt-Navigation öffnet die Boardansicht. Ein Klick auf eine Karte liest
+die Spec, **Neu laden** holt einen aktuellen Stand. Pro Register werden Commit,
+Aktualisierung und Fehler gezeigt. Ein fehlerhaftes Register bleibt als veraltet
+sichtbar; ein Verbindungsfehler wird nicht als leeres Board dargestellt.
+
+Ansicht und Chat benutzen dieselbe Integration und Tool-Auswahl. Wird etwa
+`get_spec` abgewählt, sind auch die Detailaufrufe gesperrt. Mitglieder lesen,
+Eigentümer verwalten die Verbindung. Die Ansicht schreibt keine Specs.
+
+![itsdcloud Board-Prototyp mit synthetischen Test-Registern](screenshots/itsdcloud-board-de-dark.png)
+
+Stand 2026-09-16: Prototyp mit echtem HTTP-MCP-Dienst und zwei synthetischen
+Git-Registern geprüft (drei Specs, Counts und Commits stimmen mit dem Web-Board
+überein). Deutsch/Englisch und Hell/Dunkel geprüft. Chat-Toolaufrufe sind mit einem
+deterministischen Testmodell geprüft; natürliche Modellantwort und produktive
+Einrichtung sind noch abzunehmen. Der Feature-Branch ist noch nicht auf master.
+
 ## Starten
 
 ```bash
@@ -123,14 +163,10 @@ Fehlercode statt Ausnahme:
 
 Ressourcen: `board://summary` (JSON) und `board://<repo>/<spec_id>` (Markdown).
 
-**In itsdcloud einbinden:** Projekt → Integrationen → „MCP-Server“ → URL
-`https://<board>/mcp` und den Token eintragen. itsdcloud prüft den Server und
-zeigt die Tools als wählbare Ressourcen; für PO-Projekte die schreibenden
-Tools (`move_station`, `toggle_task`) abwählen. Danach beantwortet der
-Projekt-Chat Fragen wie „Wer arbeitet gerade woran?“, „Was ist bereit zur
-Abnahme?“ oder „Was steht in Spec 12?“ mit den Daten des Boards. Die weiteren
-Schritte (Katalogeintrag, Board-Ansicht, Gedächtnis im Terminal) stehen im
-Integrationsplaybook `.agent/playbooks/itsdcloud-integration.md`.
+Einrichtung, lesende Tool-Auswahl und Beispielfragen stehen oben unter
+„In itsdcloud einrichten“. Der Katalogeintrag und die Board-Ansicht liegen
+als Prototyp auf dem dort genannten Feature-Branch. Das spätere Gedächtnis
+im Terminal beschreibt `.agent/playbooks/itsdcloud-integration.md`.
 
 Nicht enthalten: Login je Person (ein gemeinsames Passwort), Bearbeiten von
 Spec-Text, Anlegen von Specs, Echtzeit-Push in den Browser (die Seite lädt

@@ -57,6 +57,13 @@ allen Betriebssystemen. 0.8 benötigt einmalig den neuen Installer.
 
 ## Kurzurteil
 
+**itsdcloud 034 / 0051, 2026-09-16:** Separater Feature-Branch mit Katalogeintrag,
+lesenden Standard-Tools und Projekt-Board (drei Stationen, Tasks, Besitzer/Branch,
+Abnahme-/Frageflags, Register-Commits und Fehler). View und Chat verwenden den
+gleichen MCP-Vertrag. Mit echtem Speccify-Dienst und synthetischen Registern
+abgeglichen; Oberfläche in beiden Sprachen/Themes geprüft. Kein itsdcloud-master-
+Merge und keine produktive Installation; Memory-Rückkanal weiterhin 035.
+
 Speccify hat bereits ein substanzielles Desktop-Arbeitsfenster: Spec-Board,
 Datei-Editor, Git, Skills/Quellen/Export, Playbooks, Tool-Verträge, Aktionen,
 MCP-Konfiguration und ein natives Agent-Terminal. Es ist keine bloße Konzept-App.

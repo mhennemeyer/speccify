@@ -28,7 +28,25 @@ Specs [033](../specs/033-web-board-als-mcp-server/SPEC.md),
   gebaut und erprobt; danach wird das Konzept generalisiert (Abschnitt
   „Oberfläche in itsdcloud“).
 
-## Was beide Seiten heute können (Befund 2026-09-13, nur gelesen)
+## Implementierung und Ausgangspunkt
+
+### Umsetzungsstand 034 / itsdcloud 0051 (2026-09-16)
+
+Prototyp auf `feat/0051-speccify-board` im separaten Arbeitsbaum
+`/private/tmp/itsdcloud-speccify-board`, basierend auf itsdcloud master `ea54607`.
+Katalogeintrag mit fünf lesenden Standard-Tools, Projekt-Board und Spec-Details
+über dieselbe installierte MCP-Verbindung wie der Chat. Mitgliedschaft und
+Tool-Auswahl werden serverseitig durchgesetzt. Counts, Besitzer/Branch, Flags,
+Register-Commit, Aktualität/Fehler und Reload sind dargestellt.
+
+Echter HTTP-MCP-Nachweis mit Speccify-Dienst und zwei synthetischen Git-Registern:
+drei Specs, je eine in Backlog/Doing/Done; Counts und Commits identisch zum
+Web-Board. Deterministischer Chat-Test ruft freigegebene Tools ab; natürliche
+Modellantwort und produktive Installation bleiben menschliche Abnahme.
+UI-Prüfung Deutsch/Englisch, Hell/Dunkel, Offline/Retry, Details und Mobilbreite.
+Noch nicht auf master zusammengeführt oder in ein Kundenprojekt installiert.
+
+### Historischer Ausgangspunkt
 
 Speccify:
 
@@ -212,5 +230,5 @@ Jira könnte denselben Weg nehmen), wer die Zuordnung pflegt (Spec-Autor).
 
 - Jira: Produkt, Zugang, Pflege der Zuordnung (036).
 - itsdcloud-Tokenweg für Werkzeuge und Ereignis-API (035, Spec im itsdcloud-Repo).
-- Ob die Board-Ansicht in itsdcloud aus dem MCP oder direkt aus `board.json`
-  liest (034; Empfehlung MCP, ein Vertrag).
+- Generalisierung visueller MCP-Ansichten nach Abnahme von 034. Der Datenpfad
+  ist entschieden und umgesetzt: dieselben MCP-Tools wie im Chat.

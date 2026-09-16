@@ -48,6 +48,14 @@ DOC_MAPPINGS: tuple[DocMapping, ...] = (
     DocMapping("web-board.md", "web-board/index.md", "/web-board/"),
 )
 
+# Relative Bildpfade bleiben im Markdown erhalten; die Site erhält dieselben Bytes.
+ASSET_MAPPINGS: tuple[tuple[str, str], ...] = (
+    (
+        "screenshots/itsdcloud-board-de-dark.png",
+        "web-board/screenshots/itsdcloud-board-de-dark.png",
+    ),
+)
+
 # Basename → Site-URL für das Umschreiben relativer Markdown-Links.
 _LINK_URL_BY_SOURCE: dict[str, str] = {m.source: m.url for m in DOC_MAPPINGS}
 
@@ -171,6 +179,17 @@ def run_sync(*, check: bool) -> int:
             continue
         dest_path.parent.mkdir(parents=True, exist_ok=True)
         dest_path.write_text(rendered, encoding="utf-8")
+
+    for source, dest in ASSET_MAPPINGS:
+        expected = (_DOCS_DIR / source).read_bytes()
+        dest_path = _SITE_DOCS_DIR / dest
+        if check:
+            current_bytes = dest_path.read_bytes() if dest_path.exists() else None
+            if current_bytes != expected:
+                drift.append(str(dest_path.relative_to(_REPO_ROOT)))
+            continue
+        dest_path.parent.mkdir(parents=True, exist_ok=True)
+        dest_path.write_bytes(expected)
 
     if check and drift:
         sys.stderr.write(

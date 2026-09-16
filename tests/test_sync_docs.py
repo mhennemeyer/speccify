@@ -73,3 +73,25 @@ def test_check_detects_drift_and_write_heals(tmp_path) -> None:
         assert sync.run_sync(check=True) == 0
     finally:
         sync.run_sync(check=False)
+
+
+def test_asset_missing_or_changed_is_detected(tmp_path, monkeypatch) -> None:
+    docs = tmp_path / "docs"
+    site = tmp_path / "site"
+    docs.mkdir()
+    (docs / "shot.png").write_bytes(b"\x89PNG\r\n\x1a\nfixture")
+    monkeypatch.setattr(sync, "_REPO_ROOT", tmp_path)
+    monkeypatch.setattr(sync, "_DOCS_DIR", docs)
+    monkeypatch.setattr(sync, "_SITE_DOCS_DIR", site)
+    monkeypatch.setattr(sync, "DOC_MAPPINGS", ())
+    monkeypatch.setattr(sync, "ASSET_MAPPINGS", (("shot.png", "page/shot.png"),))
+
+    assert sync.run_sync(check=True) == 1
+    assert not site.exists()
+    assert sync.run_sync(check=False) == 0
+    assert (site / "page/shot.png").read_bytes() == (docs / "shot.png").read_bytes()
+    assert sync.run_sync(check=True) == 0
+    (site / "page/shot.png").write_bytes(b"changed")
+    assert sync.run_sync(check=True) == 1
+    assert sync.run_sync(check=False) == 0
+    assert sync.run_sync(check=True) == 0
