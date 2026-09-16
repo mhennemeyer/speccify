@@ -622,7 +622,7 @@ jobs:
           needs.verify-macos-dmg.result == 'success' && (inputs.verify_only ||
            (needs.release.result == 'success' && needs.release-windows.result == 'success' &&
             needs.release-linux.result == 'success' && needs.release-linux-arm64.result == 'success')) }}
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
