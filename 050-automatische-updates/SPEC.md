@@ -51,7 +51,8 @@ GitHub Secrets; öffentlicher Prüfkey im App-Vertrag.
 - [x] Appweite Anzeige, Einstellungen, Download/Abbruch/Installation ergänzen.
 - [x] Signierung, Schlüsselablage und Release-Manifest für alle Plattformen einrichten.
 - [x] Zustands-, Signatur-, Fehler- und UI-Regressionen prüfen; lokale App aktualisieren.
-- [ ] Dokumentation/Playbooks nachführen, committen/pushen; zu 034 weitergehen.
+- [x] Dokumentation/Playbooks nachführen, committen/pushen; zu 034 weitergehen.
+  Commit `379ea42` auf main gepusht; plattformübergreifende CI läuft.
 
 ## Verification
 

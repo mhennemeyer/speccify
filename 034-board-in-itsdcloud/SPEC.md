@@ -1,5 +1,5 @@
 ---
-station: Backlog
+station: Doing
 order: 15
 created: 2026-09-13
 needs_human: true
@@ -50,6 +50,13 @@ wenn ausgewählt), Jira (036), Echtzeit-Aktualisierung der Ansicht (Reload).
   Register-Commit je Repo; ist das Board nicht erreichbar, steht das dort.
 
 ## Decisions
+
+- D4, 2026-09-16: Nutzerauftrag „danach weiter mit der Integration“ startet nach
+  050 diese Spec einschließlich eigener itsdcloud-Umsetzung. Arbeitsbaum
+  `/private/tmp/itsdcloud-speccify-board`, Branch `feat/0051-speccify-board`, auf
+  aktuellem `origin/master` (`ea54607`). Der geöffnete Workflow-Migrationsbranch
+  bleibt erhalten. Master verwendet noch `docs/specs`; die eigene Spec 0051
+  folgt dort dem geltenden Format, ohne die separate Workflow-Migration zu mergen.
 
 - D1, 2026-09-13: Ein Vertrag (Board-MCP) für Chat und Ansicht; kein zweiter
   Lesepfad über `board.json`.
