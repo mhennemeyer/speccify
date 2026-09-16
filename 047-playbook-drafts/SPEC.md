@@ -2,7 +2,7 @@
 station: Doing
 order: 47
 needs_human: true
-ready: false
+ready: true
 ---
 
 # Playbook-Drafts ohne Einfluss auf den Entwicklungsflow
@@ -66,18 +66,37 @@ Aktivierung ist eine ausdrückliche Statusaktion, nicht Folge von Speichern,
 
 ## Tasks
 
-- [ ] Nativen Playbook-Vertrag um Status und kompatibles Parsing erweitern.
-- [ ] Liste, Filter, Anlegen, Editor und explizite Statusaktion integrieren.
-- [ ] Workflow-/Kontextauswahl und Handover für Drafts anpassen; Vorlagen nachführen.
-- [ ] Statuspersistenz, Metadatenerhalt, ungültige Werte und echte Prompt-Übergabe prüfen.
-- [ ] Hilfe und Produktplaybooks aktualisieren; Research-Draft in der App abnehmen lassen.
+- [x] Nativen Playbook-Vertrag um Status und kompatibles Parsing erweitern.
+- [x] Liste, Filter, Anlegen, Editor und explizite Statusaktion integrieren.
+- [x] Workflow-/Kontextauswahl und Handover für Drafts anpassen; Vorlagen nachführen.
+- [x] Statuspersistenz, Metadatenerhalt, ungültige Werte und echte Prompt-Übergabe prüfen.
+- [x] Hilfe und Produktplaybooks aktualisieren; Research-Draft in der App zur Abnahme bereitstellen.
 
 ## Verification
 
-Bestand: `PlaybookEntry` enthält `file`, `title`, `description`.
-`PlaybooksTab.tsx` übergibt Playbooks ohne fachlichen Status an `HandoverButton`;
-`handover.ts` besitzt nur den generischen Typ `playbook`. Die Repo-Regel aus
-043 gilt bereits; App- und Vorlagen-Unterstützung ist noch nicht implementiert.
+Umsetzung 2026-09-16:
+
+- `cargo test -p speccify-desktop`: 120 bestanden, drei bestehende Umgebungstests
+  ausgelassen; anschließend gezielte Playbook-Tests nach BOM-Ergänzung grün.
+  Legacy-Status, Draft/Active, CRLF, BOM, gequotete und ungültige/mehrfache
+  Werte sowie native Neuanlage geprüft. Policy v9 bleibt als bekannte alte
+  Vorlage migrierbar; individuelle Texte werden weiterhin geschützt.
+- `test_playbook_drafts.mjs`: Draft anlegen, Statuspersistenz, Aktivierung,
+  Filter, Metadatenerhalt beim Autosave und Wiederöffnen grün. Kopierter und
+  tatsächlich ins Testterminal eingefügter Text behalten den Draft-Hinweis,
+  auch bei eigener Prompt-Bearbeitung und externer Statusänderung nach Vorschau.
+  Ein veralteter Speicherversuch erhält den Text im Editor und überschreibt
+  die externe Aktivierung nicht.
+- `test_handover.mjs`, `test_workspace_root.mjs`, `test_workspace_shell.mjs`,
+  Typecheck, Format, Doku-Sync und `git diff --check` grün.
+- Lokaler signierter App-Build und Signaturprüfung erfolgreich. Native
+  QA-Prüfung des vorhandenen Research-Drafts: Statushinweis sichtbar,
+  Auftragsvorschau nichtbindend, nur Prüfen/Bearbeiten; Research-Datei unverändert.
+  Native Draft-Neuanlage/Liste in temporärem Projekt ebenfalls grün.
+- App-PID 66952, dieselben vier Fenster geöffnet, keine laufenden Terminals
+  beendet. Website-Hilfe gebaut: 101 Seiten. Keine Release-Veröffentlichung.
+
+Zur menschlichen Abnahme geparkt; die gemeinsame Workspace-Liste ergänzt 045.
 
 ## Questions
 
