@@ -661,8 +661,12 @@ werden können, ohne den Entwicklungsflow zu steuern. `status: draft` kennzeichn
 diesen Zustand; bestehende Playbooks ohne Status bleiben aktiv. Lesen und
 Bearbeiten eines Entwurfs aktiviert ihn nicht. Die Repo-Arbeitsanweisung beachtet
 diese Konvention bereits; Statusanzeige, explizite Aktivierung, Filter und
-statusbewusste Übergabe an den Host sind Gegenstand von
-[Spec 047](../specs/047-playbook-drafts/SPEC.md). Diese kleine Funktion ist
+statusbewusste Übergabe an den Host sind in
+[Spec 047](../specs/047-playbook-drafts/SPEC.md) implementiert. Policy v10
+ergänzt dieselbe Semantik für Projektanweisungen und Workspace-Kontext.
+Unbekannte/mehrdeutige Statuswerte werden nicht als aktive Anweisung behandelt;
+Autosave bewahrt Status und fremde Metadaten und erkennt zwischenzeitliche
+Änderungen. Diese Funktion ist
 unabhängig von einer Entscheidung zur Web-App umsetzbar.
 
 ### Rechercheentwurf: Speccify als Web-Anwendung

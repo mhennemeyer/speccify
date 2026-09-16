@@ -165,6 +165,24 @@ the code, with a `description` in the front matter and **Copy as
 prompt** to hand it to the agent. The *Playbooks* tab lists them,
 **+ Playbook** creates one, and the editor saves as you type.
 
+### Draft playbooks
+
+Choose **Draft** when creating a playbook to collect ideas or research without
+turning it into a standing instruction. The file stores `status: draft` in its
+front matter. Existing playbooks without a status remain active. The list can
+filter by status, and the detail view explains whether the content is binding.
+
+Use **Aktivieren** to explicitly make a draft active, or **Als Draft markieren**
+to make an active playbook a draft. Editing or saving alone preserves the status
+and other metadata. Concurrent changes produce a visible save conflict and keep
+your unsaved text.
+
+Draft handover offers review or editing, preserving the nonbinding status even
+in a customized prompt. Speccify rereads the file before copying or inserting the
+request. An unknown or duplicate status also requires clarification before use.
+Workflow policy v10 tells the host to treat drafts as ideas, not instructions;
+this is a workflow agreement, not a filesystem access restriction.
+
 ## Where the format comes from
 
 The spec workflow is modeled on

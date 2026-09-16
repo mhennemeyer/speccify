@@ -6,6 +6,7 @@
 
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { fencedPrompt } from "./prompt";
+import { playbookStatus, playbookNotice } from "./playbooks";
 
 export type HandoverKind = "implement" | "review" | "read" | "edit";
 export type HandoverItemType = "spec" | "playbook" | "skill" | "tool" | "file";
@@ -27,7 +28,8 @@ export const KIND_LABELS: Record<HandoverKind, string> = {
   edit: "Bearbeiten",
 };
 
-export function kindsFor(type: HandoverItemType): HandoverKind[] {
+export function kindsFor(type: HandoverItemType, content?: string | null): HandoverKind[] {
+  if (type === "playbook" && (content == null || playbookStatus(content) !== "active")) return ["review", "edit"];
   return type === "spec" ? ["implement", "review", "read"] : ["read", "edit"];
 }
 
@@ -51,6 +53,7 @@ function order(kind: HandoverKind, item: HandoverItem): string {
     case "implement":
       return "Auftrag: Arbeite diese Spec nach dem Spec-Workflow in `.agent/agent.md`: prüfe sie zuerst auf Lücken, hake Tasks ab, ergänze Decisions und Verification, hänge die History-Zeile an. Frag per ask_bo oder show_ui, wenn etwas unklar ist; committe nur im Rahmen der Projektregeln.";
     case "review":
+      if (item.type === "playbook") return "Auftrag: Besprich diesen Playbook-Entwurf, prüfe Annahmen und offene Fragen. Wende seine Vorschläge nicht an und ändere seinen Status nicht.";
       return "Auftrag: Prüfe diese Spec gegen ihre Acceptance-Punkte — versuche zu belegen, dass etwas nicht stimmt. Führe die genannten Prüfungen aus, ändere keinen Produktivcode, und schreibe Befunde als Notiz unter Verification.";
     case "edit":
       return `Auftrag: Bearbeite ${item.type === "spec" ? "diese Spec" : "diese Datei"} wie unten beschrieben; halte Dich an die Projektregeln in \`.agent/agent.md\` und ändere nichts anderes.`;
@@ -68,13 +71,22 @@ export function buildHandover(
   kind: HandoverKind,
   content: string,
 ): string {
+  const restricted = item.type === "playbook" && playbookStatus(content) !== "active";
+  const safeKind = restricted && kind !== "edit" ? "review" : kind;
   const head = [
     `Projekt: ${project}`,
     `${what(item)} — Datei: ${item.path} (Quelle der Wahrheit; Änderungen dort, nicht im Chat).`,
-    order(kind, item),
+    order(safeKind, item),
     "Regeln: `.agent/agent.md` (Spec-Workflow, Commit-Rechte, Herkunft).",
   ].join("\n");
-  return `${head}\n\n${fencedPrompt(item.path, content)}`;
+  return guardPlaybookHandover(item, content, `${head}\n\n${fencedPrompt(item.path, content)}`);
+}
+
+/** Preserve the current file's status even when a custom prompt was edited. */
+export function guardPlaybookHandover(item: HandoverItem, content: string, prompt: string): string {
+  if (item.type !== "playbook" || playbookStatus(content) === "active") return prompt;
+  const notice = playbookNotice(playbookStatus(content));
+  return prompt.startsWith(notice) ? prompt : `${notice}\nDieser Auftrag dient nur der Besprechung oder Bearbeitung dieses Inhalts; keine Umsetzung oder Aktivierung.\n\n${prompt}`;
 }
 
 // --- Zustellung ---------------------------------------------------------------

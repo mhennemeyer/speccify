@@ -3,13 +3,10 @@
 
 /** Zerlegt einen Text in Frontmatter-Zeilen und Body (flach, zeilenbasiert). */
 export function splitFrontmatter(text: string): { frontmatter: string[]; body: string } {
-  if (!text.startsWith("---\n")) return { frontmatter: [], body: text };
-  const end = text.indexOf("\n---", 4);
-  if (end === -1) return { frontmatter: [], body: text };
-  const frontmatter = text.slice(4, end).split("\n");
-  let body = text.slice(end + 4);
-  if (body.startsWith("\n")) body = body.slice(1);
-  return { frontmatter, body };
+  text = text.replace(/^\uFEFF+/, "");
+  const match = /^---\r?\n([\s\S]*?)^---(?:\r?\n|$)/m.exec(text);
+  if (match?.index !== 0) return { frontmatter: [], body: text };
+  return { frontmatter: match[1] ? match[1].replace(/\r?\n$/, "").split(/\r?\n/) : [], body: text.slice(match[0].length) };
 }
 
 /** Baut den Text neu: bekannte Felder ersetzt (oder ergänzt), unbekannte
@@ -21,16 +18,19 @@ export function assembleFrontmatter(
 ): string {
   const { frontmatter } = splitFrontmatter(original);
   const remaining = { ...fields };
-  const lines = frontmatter.map((line) => {
+  const replaced = new Set<string>();
+  const lines = frontmatter.flatMap((line) => {
     const colon = line.indexOf(":");
-    if (colon === -1) return line;
+    if (colon === -1) return [line];
     const key = line.slice(0, colon).trim();
+    if (replaced.has(key)) return [];
     if (key in remaining) {
       const value = remaining[key];
       delete remaining[key];
-      return `${key}: ${value}`;
+      replaced.add(key);
+      return [`${key}: ${value}`];
     }
-    return line;
+    return [line];
   });
   for (const [key, value] of Object.entries(remaining)) {
     if (value.trim() !== "") lines.push(`${key}: ${value}`);

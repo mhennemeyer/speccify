@@ -4,10 +4,11 @@
 // Onboarding). Liste links, rechts Ansicht oder Editor (description +
 // Body); „Als Prompt kopieren" gibt den Ablauf dem Agenten ins Terminal.
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import Markdown, { stripFrontmatter } from "../../components/Markdown";
 import { HandoverButton } from "../../components/HandoverSheet";
+import { playbookStatus, playbookNotice, PLAYBOOK_STATUS_LABELS, type PlaybookStatus } from "../../lib/playbooks";
 import {
   InspectorButton,
   InspectorPanel,
@@ -29,6 +30,24 @@ interface PlaybookEntry {
   file: string;
   title: string;
   description: string | null;
+  status?: PlaybookStatus;
+}
+
+function usePlaybookBody(project: string, file: string | null) {
+  const generation = useRef(0);
+  const [snapshot, setSnapshot] = useState<{ file: string | null; data: string | null; loading: boolean; error: string | null }>({ file: null, data: null, loading: false, error: null });
+  const reload = useCallback(async () => {
+    const request = ++generation.current;
+    setSnapshot(old => ({ file, data: old.file === file ? old.data : null, loading: !!file, error: null }));
+    try {
+      const data = file ? await invoke<string>("project_read_file", { project, file }) : null;
+      if (generation.current === request) setSnapshot({ file, data, loading: false, error: null });
+    } catch (error) {
+      if (generation.current === request) setSnapshot({ file, data: null, loading: false, error: String(error) });
+    }
+  }, [project, file]);
+  useEffect(() => { void reload(); return () => { generation.current++; }; }, [reload]);
+  return { ...snapshot, data: snapshot.file === file ? snapshot.data : null, loading: snapshot.loading || snapshot.file !== file, reload };
 }
 
 function frontmatterValue(frontmatter: string[], key: string): string {
@@ -57,42 +76,50 @@ function PlaybookEditor({
   const [initial] = useState(() => {
     const draft = readDraft(key);
     const restored = draft !== null && draft !== original;
-    return { restored, parts: splitPlan(restored ? draft : original) };
+    return { restored, original, parts: splitPlan(restored ? draft : original) };
   });
   const { restored, parts } = initial;
   const [description, setDescription] = useState(
     frontmatterValue(parts.frontmatter, "description"),
   );
   const [body, setBody] = useState(parts.body);
-  const content = assemblePlan(original, { description }, body);
+  const content = assemblePlan(initial.original, { description }, body);
+  const expected = useRef(initial.original);
+  const queue = useRef<Promise<void>>(Promise.resolve());
   const autosave = useAutosave({
     key,
     content,
-    original,
-    save: (text) =>
-      trackActivity(
-        "write",
-        "Playbook speichern",
-        () => invoke("project_write_file", { project, file, content: text }),
-        file,
-      ),
+    original: initial.original,
+    save: (text) => {
+      const saving = queue.current.then(async () => {
+        if (text === expected.current) return;
+        await trackActivity("write", "Playbook speichern", () => invoke("project_write_file", {
+          project, file, content: text, expectedContent: expected.current,
+        }), file);
+        expected.current = text;
+      });
+      queue.current = saving.catch(() => {});
+      return saving;
+    },
   });
 
   const finish = async () => {
     await autosave.flush();
-    onSaved();
+    if (expected.current === content) onSaved();
   };
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-3">
+      <p className="text-xs text-slate-500">Playbook-Status: {PLAYBOOK_STATUS_LABELS[playbookStatus(initial.original)]} · Speichern ändert den Status nicht.</p>
       {restored ? (
         <p className="rounded bg-amber-50 px-3 py-1.5 text-xs text-amber-800">
-          Ungespeicherter Entwurf wiederhergestellt — er wird gleich in die Datei geschrieben.
+          Ungespeicherte Bearbeitung wiederhergestellt — sie wird gleich in die Datei geschrieben.
         </p>
       ) : null}
       <div className="grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-2">
         <label className="text-xs font-medium text-slate-500">description</label>
         <input
+          aria-label="Playbook-Beschreibung"
           value={description}
           onChange={(event) => setDescription(event.target.value)}
           placeholder="Wofür ist dieser Ablauf da?"
@@ -101,6 +128,7 @@ function PlaybookEditor({
         />
       </div>
       <textarea
+        aria-label="Playbook-Inhalt"
         value={body}
         onChange={(event) => setBody(event.target.value)}
         spellCheck={false}
@@ -137,11 +165,12 @@ function NewPlaybook({ project, onCreated }: { project: string; onCreated: (file
   const [name, setName] = useState("");
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [status, setStatus] = useState<"active" | "draft">("active");
 
   const create = async () => {
     setError(null);
     try {
-      const file = await invoke<string>("project_playbook_create", { project, name });
+      const file = await invoke<string>("project_playbook_create", { project, name, status });
       setName("");
       setOpen(false);
       onCreated(file);
@@ -162,6 +191,11 @@ function NewPlaybook({ project, onCreated }: { project: string; onCreated: (file
   }
   return (
     <div className="space-y-1">
+      <label className="block text-xs">Playbook-Status
+        <select aria-label="Neues Playbook: Status" value={status} onChange={event => setStatus(event.target.value as "active" | "draft")} className="ml-2 rounded border border-slate-300 bg-white p-1">
+          <option value="active">Aktiv</option><option value="draft">Draft</option>
+        </select>
+      </label>
       <input
         autoFocus
         value={name}
@@ -192,14 +226,10 @@ export default function PlaybooksTab({
   );
   const [selected, setSelected] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
+  const [filter, setFilter] = useState("all");
+  const [statusError, setStatusError] = useState<string | null>(null);
   const inspector = useInspector("playbooks");
-  const body = useAsync(
-    () =>
-      selected
-        ? invoke<string>("project_read_file", { project, file: selected })
-        : Promise.resolve(""),
-    `playbook-body:${project}:${selected ?? ""}`,
-  );
+  const body = usePlaybookBody(project, selected);
 
   useEffect(() => {
     // Live-Reload — aber nie mitten ins Editieren hinein.
@@ -212,6 +242,16 @@ export default function PlaybooksTab({
 
   const playbooks = list.data ?? [];
   const selectedPlaybook = playbooks.find((entry) => entry.file === selected) ?? null;
+  const status = body.data == null ? selectedPlaybook?.status ?? "active" : playbookStatus(body.data);
+  const changeStatus = async (next: "active" | "draft") => {
+    if (!selectedPlaybook || body.data == null) return;
+    setStatusError(null);
+    try {
+      const content = assemblePlan(body.data, { status: next }, splitPlan(body.data).body);
+      await invoke("project_write_file", { project, file: selectedPlaybook.file, content, expectedContent: body.data });
+      await body.reload(); await list.reload();
+    } catch (error) { setStatusError(String(error)); }
+  };
 
   const remove = async (file: string) => {
     if (!window.confirm("Playbook wirklich löschen?")) return;
@@ -226,7 +266,12 @@ export default function PlaybooksTab({
       <div className="flex h-full min-h-0 gap-4">
         <NavigatorPortal tab="playbooks">
         <div className="space-y-1">
-          {playbooks.map((entry) => (
+          <label className="block text-xs text-slate-500">Status
+            <select aria-label="Playbooks nach Status filtern" value={filter} onChange={event => setFilter(event.target.value)} className="ml-2 rounded border border-slate-300 bg-white p-1">
+              <option value="all">Alle</option><option value="active">Aktiv</option><option value="draft">Draft</option><option value="invalid">Status prüfen</option>
+            </select>
+          </label>
+          {playbooks.filter(entry => filter === "all" || (entry.status ?? "active") === filter).map((entry) => (
             <button
               key={entry.file}
               onClick={() => {
@@ -246,6 +291,7 @@ export default function PlaybooksTab({
               title={entry.description ?? undefined}
             >
               <span className="block truncate">{entry.title}</span>
+              <span className="ml-2 text-[10px]" data-playbook-status={entry.status ?? "active"}>{PLAYBOOK_STATUS_LABELS[entry.status ?? "active"]}</span>
               {entry.description ? (
                 <span
                   className={`block truncate text-[11px] ${
@@ -280,10 +326,12 @@ export default function PlaybooksTab({
         <div className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-lg border border-slate-200 bg-white p-5">
           {selectedPlaybook ? (
             editing ? (
+              body.data === null ? <p>{body.error ?? "Playbook lesen…"}</p> :
               <PlaybookEditor
+                key={selectedPlaybook.file}
                 project={project}
                 file={selectedPlaybook.file}
-                original={body.data ?? ""}
+                original={body.data}
                 onSaved={() => {
                   setEditing(false);
                   void body.reload();
@@ -296,6 +344,8 @@ export default function PlaybooksTab({
                 onDoubleClick={() => setEditing(true)}
                 title="Doppelklick zum Bearbeiten"
               >
+                {status !== "active" && <p role="status" className="mb-3 rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">{playbookNotice(status)}</p>}
+                {statusError && <p role="alert" className="text-sm text-red-600">{statusError}</p>}
                 <InspectorPortal tab="playbooks" fallback={inlineInspector}>
                   <InspectorPanel
                     title={selectedPlaybook.title}
@@ -303,10 +353,13 @@ export default function PlaybooksTab({
                     meta={[
                       { label: "Beschreibung", value: selectedPlaybook.description ?? "—" },
                       { label: "Art", value: "Stehende Anleitung — kein Lifecycle" },
+                      { label: "Status", value: PLAYBOOK_STATUS_LABELS[status] },
                     ]}
                     actions={
                       <>
                         <HandoverButton project={project} item={{ type: "playbook", path: selectedPlaybook.file, title: selectedPlaybook.title }} known={body.data} />
+                        {status !== "active" && <InspectorButton disabled={body.loading || body.data == null} onClick={() => void changeStatus("active")}>Aktivieren</InspectorButton>}
+                        {status !== "draft" && <InspectorButton disabled={body.loading || body.data == null} onClick={() => void changeStatus("draft")}>Als Draft markieren</InspectorButton>}
                         <InspectorButton
                           disabled={body.loading || body.data === null}
                           onClick={() => setEditing(true)}

@@ -20,6 +20,13 @@ and attribution/provenance restrictions.
 - Spec history: `.agent/specs/<slug>/history.jsonl` (append-only).
 - Playbooks: `.agent/playbooks/<name>.md` — standing procedures, reused,
   never "worked off".
+  Frontmatter `status: draft` marks nonbinding ideas or research, not workflow
+  instructions or implementation authorization. Read or edit a draft only for
+  an explicit discussion/review/edit request; preserve its status. Applying a
+  playbook requires `status: active` or no status field (legacy default).
+  Unknown, duplicate or malformed status is not active; clarify it before use.
+  Only an explicit human decision activates a draft. General requests to work
+  according to playbooks do not activate drafts.
 - Skills: `.agent/skills/<name>/SKILL.md` · Tools: `.agent/tools/<name>/TOOL.md`.
 - Project actions: `.agent/actions.json` · Project settings: `.agent/settings.json`.
 

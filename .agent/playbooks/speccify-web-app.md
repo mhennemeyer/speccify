@@ -7,7 +7,8 @@ description: Unverbindliche Recherche zur serverbasierten Nutzung von Speccify m
 **Recherche: 2026-09-16 · Status: Draft · keine Arbeitsanweisung.**
 Dieser Text sammelt Befunde und Vorschläge. Er aktiviert keine Umsetzung,
 ändert keine Prioritäten und ersetzt keine bestehenden Playbooks. Die
-produktseitige Draft-Unterstützung ist in Spec 047 noch offen.
+produktseitige Draft-Unterstützung wird durch Spec 047 bereitgestellt; diese
+Recherche bleibt dadurch unverbindlich.
 
 ## Ergebnis
 

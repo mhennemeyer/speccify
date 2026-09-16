@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import {
   buildHandover,
+  guardPlaybookHandover,
   copyHandover,
   deliverToTerminal,
   kindsFor,
@@ -41,9 +42,10 @@ export default function HandoverSheet({
   known: string | null;
   onClose: () => void;
 }) {
-  const kinds = kindsFor(item.type);
-  const [kind, setKind] = useState<HandoverKind>(kinds[0]);
+  const [kind, setKind] = useState<HandoverKind>(() => kindsFor(item.type, known)[0]);
   const [content, setContent] = useState<string | null>(null);
+  const kinds = kindsFor(item.type, content);
+  const selectedKind = kinds.includes(kind) ? kind : kinds[0];
   const [readError, setReadError] = useState<string | null>(null);
   const [edited, setEdited] = useState<string | null>(null);
   const [result, setResult] = useState<string | null>(null);
@@ -80,10 +82,10 @@ export default function HandoverSheet({
   const changed =
     known !== null &&
     content !== null &&
-    stripFrontMatter(known).trimEnd() !== stripFrontMatter(content).trimEnd();
+    (item.type === "playbook" ? known !== content : stripFrontMatter(known).trimEnd() !== stripFrontMatter(content).trimEnd());
   const preview = useMemo(
-    () => (edited !== null ? edited : content !== null ? buildHandover(project, item, kind, content) : ""),
-    [edited, content, project, item, kind],
+    () => (content !== null ? edited !== null ? guardPlaybookHandover(item, content, edited) : buildHandover(project, item, selectedKind, content) : ""),
+    [edited, content, project, item, selectedKind],
   );
 
   const deliver = async () => {
@@ -94,7 +96,7 @@ export default function HandoverSheet({
       setResult("Datei konnte nicht gelesen werden — nichts zugestellt.");
       return;
     }
-    const text = edited !== null ? edited : buildHandover(project, item, kind, fresh);
+    const text = edited !== null ? guardPlaybookHandover(item, fresh, edited) : buildHandover(project, item, selectedKind, fresh);
     const outcome = await deliverToTerminal(text);
     if (outcome.status === "delivered") {
       setTone("ok");
@@ -109,8 +111,9 @@ export default function HandoverSheet({
   };
 
   const copy = async () => {
-    const fresh = content ?? (await read());
-    const text = edited !== null ? edited : fresh !== null ? buildHandover(project, item, kind, fresh) : "";
+    const fresh = await read();
+    if (fresh === null) return;
+    const text = edited !== null ? guardPlaybookHandover(item, fresh, edited) : buildHandover(project, item, selectedKind, fresh);
     await copyHandover(text);
     setTone("ok");
     setResult("In die Zwischenablage kopiert.");
@@ -132,7 +135,7 @@ export default function HandoverSheet({
             <button
               key={option}
               onClick={() => { setKind(option); setEdited(null); }}
-              className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${kind === option ? "bg-slate-800 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+              className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${selectedKind === option ? "bg-slate-800 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
             >
               {KIND_LABELS[option]}
             </button>

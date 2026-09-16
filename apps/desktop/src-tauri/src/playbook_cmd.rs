@@ -24,12 +24,50 @@ fn is_playbook_file(root: &Path, path: &Path) -> bool {
 
 /// Zeilen zwischen den `---`-Markern (flach; kein Frontmatter ⇒ leer).
 fn frontmatter_lines(text: &str) -> Vec<&str> {
-    let Some(rest) = text.strip_prefix("---\n") else {
+    let mut lines = text.trim_start_matches('\u{feff}').lines();
+    if lines.next() != Some("---") {
         return Vec::new();
+    }
+    lines.take_while(|line| *line != "---").collect()
+}
+
+#[derive(Clone, Copy, Serialize, Debug, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub(crate) enum PlaybookStatus {
+    Active,
+    Draft,
+    Invalid,
+}
+
+pub(crate) fn playbook_status(text: &str) -> PlaybookStatus {
+    let text = text.trim_start_matches('\u{feff}');
+    if text.lines().next() != Some("---") {
+        return PlaybookStatus::Active;
+    }
+    if !text.lines().skip(1).any(|line| line == "---") {
+        return PlaybookStatus::Invalid;
+    }
+    let values: Vec<_> = frontmatter_lines(text)
+        .into_iter()
+        .filter_map(|line| {
+            let (key, value) = line.split_once(':')?;
+            (key.trim() == "status").then_some(value.trim())
+        })
+        .collect();
+    let value = match values.as_slice() {
+        [] => return PlaybookStatus::Active,
+        [value] => value.split(" #").next().unwrap_or_default().trim(),
+        _ => return PlaybookStatus::Invalid,
     };
-    match rest.find("\n---") {
-        Some(end) => rest[..end].lines().collect(),
-        None => Vec::new(),
+    let value = value
+        .strip_prefix('"')
+        .and_then(|s| s.strip_suffix('"'))
+        .or_else(|| value.strip_prefix('\'').and_then(|s| s.strip_suffix('\'')))
+        .unwrap_or(value);
+    match value {
+        "active" => PlaybookStatus::Active,
+        "draft" => PlaybookStatus::Draft,
+        _ => PlaybookStatus::Invalid,
     }
 }
 
@@ -47,6 +85,7 @@ pub struct PlaybookEntry {
     file: String,
     title: String,
     description: Option<String>,
+    status: PlaybookStatus,
 }
 
 /// Playbooks aus `.agent/playbooks/`. Fehlender Ordner ⇒ leere Liste.
@@ -83,6 +122,7 @@ pub fn project_playbooks(project: String) -> Result<Vec<PlaybookEntry>, String> 
                 .map(|title| title.trim().to_string())
                 .unwrap_or(fallback),
             description: frontmatter_value(&text, "description").filter(|d| !d.is_empty()),
+            status: playbook_status(&text),
         });
     }
     Ok(out)
@@ -112,7 +152,15 @@ pub(crate) fn slugify(name: &str) -> String {
 /// Legt ein Playbook als `# <Name>`-Gerüst an. Rückgabe: der Pfad relativ
 /// zur Projektwurzel. Existierendes wird nie überschrieben.
 #[tauri::command]
-pub fn project_playbook_create(project: String, name: String) -> Result<String, String> {
+pub fn project_playbook_create(
+    project: String,
+    name: String,
+    status: Option<String>,
+) -> Result<String, String> {
+    let status = status.as_deref().unwrap_or("active");
+    if !matches!(status, "active" | "draft") {
+        return Err("Playbook-Status muss active oder draft sein.".into());
+    }
     let root = resolve_project_root(&project)?;
     let slug = slugify(&name);
     if slug.is_empty() {
@@ -124,8 +172,11 @@ pub fn project_playbook_create(project: String, name: String) -> Result<String, 
     if path.exists() {
         return Err(format!("Gibt es schon: .agent/playbooks/{slug}.md"));
     }
-    std::fs::write(&path, format!("# {}\n\n", name.trim()))
-        .map_err(|e| format!("{}: {e}", path.display()))?;
+    std::fs::write(
+        &path,
+        format!("---\nstatus: {status}\n---\n# {}\n\n", name.trim()),
+    )
+    .map_err(|e| format!("{}: {e}", path.display()))?;
     Ok(format!(".agent/playbooks/{slug}.md"))
 }
 
@@ -159,9 +210,12 @@ mod tests {
         // Ordner fehlt noch ⇒ leere Liste, kein Fehler.
         assert!(project_playbooks(project.clone()).unwrap().is_empty());
 
-        let file = project_playbook_create(project.clone(), "Release fährt raus".into()).unwrap();
+        let file =
+            project_playbook_create(project.clone(), "Release fährt raus".into(), None).unwrap();
         assert_eq!(file, ".agent/playbooks/release-faehrt-raus.md");
-        assert!(project_playbook_create(project.clone(), "Release fährt raus".into()).is_err());
+        assert!(
+            project_playbook_create(project.clone(), "Release fährt raus".into(), None).is_err()
+        );
 
         // Beschreibung kommt aus dem Frontmatter, Titel aus der Überschrift.
         std::fs::write(
@@ -181,6 +235,41 @@ mod tests {
         assert!(project_playbooks(project).unwrap().is_empty());
 
         let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn draft_status_is_explicit_and_invalid_values_are_not_active() {
+        for (text, expected) in [
+            ("# Legacy", PlaybookStatus::Active),
+            ("\u{feff}---\nstatus: draft\n---\n", PlaybookStatus::Draft),
+            (
+                "---\ndescription: Legacy\n---\n# Legacy",
+                PlaybookStatus::Active,
+            ),
+            ("---\nstatus: active\n---\n", PlaybookStatus::Active),
+            (
+                "---\r\nstatus: 'draft' # ideas\r\n---\r\n# Draft",
+                PlaybookStatus::Draft,
+            ),
+            ("---\nstatus: \"draft\"\n---\n", PlaybookStatus::Draft),
+            ("---\nstatus: published\n---\n", PlaybookStatus::Invalid),
+            (
+                "---\nstatus: draft\nstatus: active\n---\n",
+                PlaybookStatus::Invalid,
+            ),
+            ("---\nstatus: draft\n", PlaybookStatus::Invalid),
+        ] {
+            assert_eq!(playbook_status(text), expected, "{text}");
+        }
+        let dir = fixture("draft");
+        let project = dir.to_string_lossy().into_owned();
+        project_playbook_create(project.clone(), "Ideas".into(), Some("draft".into())).unwrap();
+        assert_eq!(
+            project_playbooks(project.clone()).unwrap()[0].status,
+            PlaybookStatus::Draft
+        );
+        assert!(project_playbook_create(project, "Invalid".into(), Some("yes".into())).is_err());
+        std::fs::remove_dir_all(dir).unwrap();
     }
 
     #[test]

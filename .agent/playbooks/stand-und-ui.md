@@ -93,14 +93,14 @@ deren Einrichtung oder Verfügbarkeit im gewählten Agenten.
   stabile Quellidentität, Team-Workspace-Bindung und Desktop-/Web-Parität sind
   noch offen: [046](../specs/046-multi-repo-register/SPEC.md). Ein Web-Board
   ersetzt keinen Server mit Benutzerkonten, Code-Checkouts und Agent-Terminals.
-- Playbooks haben im nativen Listenvertrag nur Datei, Titel und Beschreibung.
-  `PlaybooksTab` kennt keinen fachlichen Draft-Status; seine Editorentwürfe
-  betreffen ungespeicherte Änderungen. Für die Arbeit in diesem Repository gilt
-  jetzt `status: draft` als unverbindlicher Inhalt. UI, Filter, Aktivierung und
-  Übergabe berücksichtigen das erst mit [047](../specs/047-playbook-drafts/SPEC.md).
-  Der [Web-App-Draft](speccify-web-app.md) trägt deshalb zusätzlich einen
-  sichtbaren Titel und Hinweis; keine bestehende Schaltfläche bietet schon
-  eine technische Ausführungssperre.
+- [047](../specs/047-playbook-drafts/SPEC.md) ergänzt den nativen Listenvertrag
+  um active/draft/invalid. Liste, Detail, Editor, Neuanlage und Filter zeigen
+  den Inhaltsstatus getrennt von ungespeicherten Bearbeitungen. Statuswechsel
+  sind explizit; Autosave bewahrt Metadaten und lehnt veraltete Inhalte ab.
+  Handover liest auch vor dem Kopieren neu und versieht Draft-/ungültige Inhalte
+  mit einem nichtbindenden Auftrag. Policy v10 und Workspace-Kontext erklären
+  dieselbe Grenze. Externe Programme werden dadurch nicht am Dateilesen gehindert.
+  Der [Web-App-Draft](speccify-web-app.md) bleibt unverbindlich.
 
 Die Befunde und Folgespecs stehen in [Refinement 043](../specs/043-multiprojekt-refinement/SPEC.md).
 Das Refinement veränderte keine Kunden-Repositories und richtete keine
@@ -117,7 +117,7 @@ oder vollständige Plattformabnahme.
 | Projekte/Workspaces | begrenzte Erkennung, lokale IDs/Gruppen; 026: gemeinsames wiederherstellbares Arbeitsfenster, gruppierte Bereiche, gemeinsames Board mit herkunftsgebundener Bearbeitung und Watchern; 042: Register-Einrichtung/Sync/Konflikte pro Worktree im Board; eigene Fenster weiterhin möglich | keine Team-Verteilung der Workspace-Gruppen, keine Cross-Repo-Git-Schreibaktion oder automatischen Pfadumzüge; PTYs nach App-Quit nicht automatisch fortgesetzt |
 | Specs | Gesamtliste links, Suche/Themenfilter, Backlog/Doing/Done, gemeinsamer Task-Vertrag, Fragen und pfadgenaue Historie; Altbestand lesbar, kein Archivierungsschritt; seit 028 gemeinsames Register (Branch `specs` als Worktree) mit Sync und Konfliktentscheidung | keine Sperre gegenüber externen Editoren; Besitzer/Branch je Spec (029) und Teamsignale (030) fehlen |
 | Workflow-Setup | Policy v5 ohne Archivierungsschritt, versionierte Skills, bekannte Vorlagen sicher migrieren, konkrete Link-/Anpassungsdiagnose | individuelle/neue unbekannte Vorlagen und fremde Links bleiben zur manuellen Prüfung erhalten |
-| Playbooks | Liste, Markdown lesen/bearbeiten, neu/löschen, als Prompt kopieren; im Workspace pro Projekt/Worktree gekennzeichnet | keine automatische Team-Verteilung |
+| Playbooks | Liste, Markdown lesen/bearbeiten, neu/löschen, als Prompt kopieren; 047: Draft-Status, Statusfilter, explizite Aktivierung, konfliktbewusstes Autosave und nichtbindende Draft-Übergabe | im Workspace noch pro Projekt/Worktree; gemeinsame Liste 045, keine automatische Team-Verteilung |
 | Editor/Git | mehrere offene Dateien, Entwürfe, Suche, Dateioperationen, Diff, Staging auch pro Hunk, Commit, Branches, Remotes, Historie/Blame | echte IDE-Abnahme 002 offen; kein belegtes LSP-/Debugger-/Konfliktlösesystem |
 | Skills | Projektliste, Bibliotheken durchsuchen, globale/projekteigene Quellen, Import/Expand, Exportkommando | keine explizite Source-/Target-Rolle; Teile von 004 noch abnehmen |
 | Tools | Verträge, Plattformimplementierungen und Prüfstatus sichtbar | drei lokale Tool-Implementierungen fehlen laut Basisprüfung; 010 vereinheitlicht Meldungen |
