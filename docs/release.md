@@ -376,6 +376,13 @@ aller vier Fenster. Das ist kein Nachweis für eine veröffentlichte 0.8.0 ohne
 Prüfkey; Windows-/Linux-Installation und das Upgrade zwischen zwei
 veröffentlichten Updater-Versionen bleiben gesonderte Abnahmen.
 
+**0.8.2 veröffentlicht am 2026-09-17:** Der echte Update-Vorgang von der
+unveränderten veröffentlichten 0.8.1 auf die öffentliche 0.8.2 wurde auf diesem
+Mac geprüft: 30.615.166 Bytes heruntergeladen, Signaturprüfung bestanden,
+Installation über den Update-Dialog, Neustart und alle vier Fenster
+wiederhergestellt. Installierte Version 0.8.2, Signatur gültig, Update-Zustand
+`current`. Windows-/Linux-Installation bleibt als Plattformabnahme offen.
+
 ### Vollständiger Release-Feed
 
 Der Workflow verlangt signierte Pakete für alle unterstützten Update-Ziele:

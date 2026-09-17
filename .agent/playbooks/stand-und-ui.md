@@ -34,8 +34,9 @@ native Wegwerfprojekt-Prüfung grün; Windows-/Linux-OS-Zustellung offen.
 Enter getrennt von Paste mit echtem zsh-PTY nachgewiesen; bestehende Übergaben
 senden weiterhin kein Enter. [Research](../../docs/terminal-enter-research.md),
 [Bedienhilfe](../../apps/marketing/src/content/docs/app/terminal-settings.md).
-Veröffentlichung als 0.8.2 ist am 2026-09-17 ausdrücklich freigegeben;
-Build-/Publikationsnachweis in Spec 057. 0.9.0/itsdcloud ist geparkt.
+0.8.2 am 2026-09-17 veröffentlicht, Build-/Publikationsnachweis in Spec 057.
+Alle vier Update-Ziele signaturgeprüft; echter öffentlicher 0.8.1→0.8.2-Updater
+auf diesem Mac erfolgreich, vier Fenster wiederhergestellt. 0.9.0/itsdcloud ist geparkt.
 
 **Shift+Enter 056, Teil von 0.8.2:** Terminal überträgt die
 Kombination als CSI-u statt wie bisher als normales Enter. Im lokalen signierten

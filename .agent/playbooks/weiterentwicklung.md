@@ -14,8 +14,9 @@ Hilfe und überprüfbarem Autonomieprofil. Globale Benutzerkonfiguration nur auf
 Speichern ändern, andere Schlüssel und neuere externe Änderungen erhalten.
 Sandbox, Approval-Policy, automatische Prüfung und Windows-Ersteinrichtung
 getrennt erklären; möglichst wenige Rückfragen sind keine Zusage unbegrenzter
-Berechtigungen. Implementiert und lokal geprüft, noch kein neuer Release.
-BO-Freigabe am 2026-09-17: als 0.8.2 veröffentlichen, Durchführung in Spec 057.
+Berechtigungen. Implementiert, geprüft und als 0.8.2 am 2026-09-17 auf BO-Zuruf
+veröffentlicht. Durchführung in Spec 057: vier Plattform-Builds und Signaturen
+grün, öffentlicher 0.8.1→0.8.2-Updatetest auf diesem Mac erfolgreich.
 Native Windows-/Linux-Meldungsabnahme bleibt offen. Enter ist als separate
 PTY-Eingabe im Wegwerfprojekt belegt; ein neuer „Einfügen und senden“-Knopf
 bleibt Folgeentscheidung gemäß [Research](../../docs/terminal-enter-research.md).
