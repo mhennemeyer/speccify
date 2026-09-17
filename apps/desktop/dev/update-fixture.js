@@ -14,8 +14,13 @@ export function installUpdateFixture(responses, emit) {
   responses.update_check = () => {
     state.last_checked = Math.floor(Date.now()/1000);
     state.error = control.updateOffline ? 'Update server offline' : null;
-    state.phase = control.updateOffline ? 'error' : 'available';
-    if (!control.updateOffline) { state.version = '0.9.0'; state.notes = '# Improvements\n\nSigned app updates.'; }
+    // Mirrors apply_check: a finished download survives unless the feed moved on.
+    const feed = control.updateFeedVersion ?? '0.9.0';
+    const downloaded = state.phase === 'ready' ? state.version : null;
+    if (control.updateOffline) { state.phase = downloaded ? 'ready' : 'error'; return; }
+    if (downloaded === feed) return;
+    state.phase = 'available'; state.downloaded = 0; state.total = null;
+    state.version = feed; state.notes = '# Improvements\n\nSigned app updates.';
   };
   let finish;
   responses.update_download = () => {

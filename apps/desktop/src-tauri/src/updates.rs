@@ -142,7 +142,7 @@ pub async fn update_check(app: AppHandle, state: State<'_, Updates>) -> Result<(
     }
     {
         let mut s = state.0.lock().unwrap();
-        if busy(&s.phase) || s.bytes.is_some() {
+        if busy(&s.phase) {
             return Ok(());
         }
         s.phase = "checking".into();
@@ -157,9 +157,25 @@ pub async fn update_check(app: AppHandle, state: State<'_, Updates>) -> Result<(
         Ok(updater) => updater.check().await.map_err(|e| e.to_string()),
         Err(e) => Err(e.to_string()),
     };
-    let mut s = state.0.lock().unwrap();
+    apply_check(&mut state.0.lock().unwrap(), result);
+    Ok(())
+}
+/// A verified download stays installable unless the feed now offers a different
+/// version: then it is stale and must not hide the newer update.
+fn apply_check(s: &mut Inner, result: Result<Option<Update>, String>) {
+    let downloaded = s
+        .bytes
+        .as_ref()
+        .and(s.update.as_ref())
+        .map(|u| u.version.clone());
     match result {
+        Ok(Some(update)) if downloaded.as_deref() == Some(update.version.as_str()) => {
+            s.phase = "ready".into();
+        }
         Ok(update) => {
+            s.bytes = None;
+            s.downloaded = 0;
+            s.total = None;
             s.phase = if update.is_some() {
                 "available"
             } else {
@@ -169,11 +185,15 @@ pub async fn update_check(app: AppHandle, state: State<'_, Updates>) -> Result<(
             s.update = update;
         }
         Err(error) => {
-            s.phase = "error".into();
+            s.phase = if downloaded.is_some() {
+                "ready"
+            } else {
+                "error"
+            }
+            .into();
             s.error = Some(error);
         }
     }
-    Ok(())
 }
 #[tauri::command]
 pub async fn update_download(state: State<'_, Updates>) -> Result<(), String> {
@@ -359,7 +379,6 @@ pub fn start(app: AppHandle) {
             let s = state.0.lock().unwrap();
             s.preferences.automatic
                 && !busy(&s.phase)
-                && s.bytes.is_none()
                 && s.last_checked.is_none_or(|last| {
                     now().saturating_sub(last) >= s.preferences.interval_hours * 3600
                 })
@@ -439,6 +458,23 @@ mod tests {
                 bytes,
                 include_bytes!("../tests/fixtures/updater/payload.txt")
             );
+            // A finished download must not hide a newer release (0.8.2 vs 0.8.3).
+            let updates = Updates::default();
+            let mut s = updates.0.lock().unwrap();
+            s.update = Some(update.clone());
+            s.bytes = Some(bytes.clone());
+            apply_check(&mut s, Ok(updater.check().await.unwrap()));
+            assert_eq!((s.phase.as_str(), s.bytes.is_some()), ("ready", true));
+            apply_check(&mut s, Err("offline".into()));
+            assert_eq!((s.phase.as_str(), s.bytes.is_some()), ("ready", true));
+            assert_eq!(s.error.as_deref(), Some("offline"));
+            scenario.lock().unwrap().0 = "1000.0.0".into();
+            apply_check(&mut s, Ok(updater.check().await.unwrap()));
+            assert_eq!((s.phase.as_str(), s.bytes.is_some()), ("available", false));
+            assert_eq!(s.update.as_ref().unwrap().version, "1000.0.0");
+            apply_check(&mut s, Err("offline".into()));
+            assert_eq!(s.phase, "error");
+            drop(s);
             scenario.lock().unwrap().1 = true;
             assert!(update.download(|_, _| {}, || {}).await.is_err());
             scenario.lock().unwrap().0 = app.package_info().version.to_string();

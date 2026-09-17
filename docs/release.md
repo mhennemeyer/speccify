@@ -352,7 +352,12 @@ Vor der Installation sperrt er die Oberflächen und verlangt eine Antwort von
 jedem Fenster. Offene Editoren, bearbeitete Formulare, gespeicherte Entwürfe und
 laufende Terminals/Aktionen blockieren den Neustart. Erst speichern, die
 betroffenen Ansichten schließen und Prozesse beenden; dann erneut installieren.
-Ein fehlgeschlagener Vorabcheck behält den geprüften Download. Ein App-Neustart
+Ein fehlgeschlagener Vorabcheck behält den geprüften Download. Eine erneute
+Suche ist auch mit fertigem Download möglich (Spec 059): nennt der Feed
+inzwischen eine andere Version, wird der überholte Download verworfen und die
+neue Version angeboten; bei gleicher Version oder Suchfehler bleibt er
+installierbar. **0.8.1–0.8.3 suchen mit fertigem Download nicht erneut** — dort
+App neu starten oder das geladene Update erst installieren. Ein App-Neustart
 verwirft den Download im Arbeitsspeicher, die Sucheinstellungen bleiben erhalten.
 
 ### Schlüssel und Bootstrap

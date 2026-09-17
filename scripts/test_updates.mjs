@@ -55,6 +55,17 @@ try {
   await page.evaluate(()=>window.__SPECCIFY_MOCK__.finishUpdateDownload());
   const install=dialog.getByRole('button',{name:'Installieren und neu starten'});
   await install.waitFor();
+  // A finished download must not hide a newer release: searching again stays possible.
+  const search=dialog.getByRole('button',{name:'Jetzt suchen'});
+  await search.click();
+  await install.waitFor();
+  await page.evaluate(()=>{window.__SPECCIFY_MOCK__.updateFeedVersion='0.9.1';});
+  await search.click();
+  await dialog.getByRole('heading',{name:'Version 0.9.1'}).waitFor();
+  assert.equal(await install.count(),0);
+  await dialog.getByRole('button',{name:'Update herunterladen'}).click();
+  await page.evaluate(()=>window.__SPECCIFY_MOCK__.finishUpdateDownload());
+  await install.waitFor();
   await page.evaluate(()=>{ const editor=document.createElement('textarea');editor.id='test-editor';editor.value='Unsaved work';document.body.append(editor); });
   await install.click();
   await dialog.getByRole('alert').filter({hasText:'Editoransichten'}).waitFor();

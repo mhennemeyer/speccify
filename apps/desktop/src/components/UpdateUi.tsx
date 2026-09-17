@@ -41,7 +41,7 @@ export default function UpdateUi({ notifications = true }: { notifications?: boo
             <option value={6}>Alle 6 Stunden</option><option value={24}>Täglich</option><option value={168}>Wöchentlich</option>
           </select></label>
         <p className="my-2 text-xs text-slate-500">Automatische Suche beim Start und im gewählten Intervall. Installiert wird erst nach Deinem Klick.</p>
-        <button className="my-2 rounded border px-3 py-1" disabled={!state.supported || busy || state.phase === 'ready'} onClick={() => void run('update_check')}>Jetzt suchen</button>
+        <button className="my-2 rounded border px-3 py-1" disabled={!state.supported || busy} onClick={() => void run('update_check')}>Jetzt suchen</button>
         {state.last_checked && <p className="text-xs text-slate-500">Letzter Suchversuch: {new Date(state.last_checked * 1000).toLocaleString()}</p>}
         {state.phase === 'checking' && <p role="status">Updates werden gesucht…</p>}
         {state.phase === 'current' && <p role="status">Speccify ist aktuell.</p>}

@@ -38,6 +38,13 @@ senden weiterhin kein Enter. [Research](../../docs/terminal-enter-research.md),
 Alle vier Update-Ziele signaturgeprüft; echter öffentlicher 0.8.1→0.8.2-Updater
 auf diesem Mac erfolgreich, vier Fenster wiederhergestellt. 0.9.0/itsdcloud ist geparkt.
 
+**Update-Suche 059 (2026-09-17, noch nicht ausgeliefert):** Ein fertiger Download
+sperrte bisher jede weitere Suche (manuell und automatisch), sodass ein geladenes
+0.8.2 das veröffentlichte 0.8.3 verdeckte. Jetzt ist „Jetzt suchen“ auch in
+„bereit“ aktiv; ein überholter Download wird verworfen, bei gleicher Version oder
+Suchfehler bleibt er installierbar. Verteilte 0.8.1–0.8.3: App neu starten oder
+erst installieren. Rust-Test mit echtem Updater und Browser-Regression grün.
+
 **Update-Dialog 058, Teil von 0.8.3 (2026-09-17):** Im Dialog „Speccify-Updates“
 scrollt nur noch der Inhalt; Kopfzeile und Fehlermeldung bleiben stehen. Eine
 blockierte Installation zeigt ihren Grund damit immer am unteren Dialogrand, lange
