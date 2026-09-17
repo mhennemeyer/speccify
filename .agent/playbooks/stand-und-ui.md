@@ -18,7 +18,7 @@ Schnelleinstieg: [Fähigkeiten](#fähigkeiten-vorhanden-geprüft-offen) ·
 [Prüfstand](#verifikation-und-verbleibende-risiken) ·
 [UI-Ausbau](#vorgeschlagener-ui-ausbau--nicht-implementiert).
 
-**0.8.x-Findings 051–055, 2026-09-16 (noch unveröffentlicht):** Terminal inklusive
+**0.8.2-Findings 051–055, 2026-09-17:** Terminal inklusive
 Bedienelementen folgt Hell/Dunkel/System; Schrift 8–32 px (Standard 14), live und
 fensterübergreifend. Rückfragen-Hinweise über OSC 9/777, Bell und bekannte
 Freigabeformulierungen; Popup außerhalb verborgener Terminalflächen, Sprung zur
@@ -34,9 +34,10 @@ native Wegwerfprojekt-Prüfung grün; Windows-/Linux-OS-Zustellung offen.
 Enter getrennt von Paste mit echtem zsh-PTY nachgewiesen; bestehende Übergaben
 senden weiterhin kein Enter. [Research](../../docs/terminal-enter-research.md),
 [Bedienhilfe](../../apps/marketing/src/content/docs/app/terminal-settings.md).
-Öffentlich bleibt 0.8.1; nächster Release nur auf Zuruf. 0.9.0/itsdcloud ist geparkt.
+Veröffentlichung als 0.8.2 ist am 2026-09-17 ausdrücklich freigegeben;
+Build-/Publikationsnachweis in Spec 057. 0.9.0/itsdcloud ist geparkt.
 
-**Shift+Enter 056, 2026-09-16 (unveröffentlicht):** Terminal überträgt die
+**Shift+Enter 056, Teil von 0.8.2:** Terminal überträgt die
 Kombination als CSI-u statt wie bisher als normales Enter. Im lokalen signierten
 Build mit Codex 0.154.0 und Claude 2.1.273 geprüft: zwei getrennte Eingabezeilen,
 kein Absenden, beide Zeilen gemeinsam mit Ctrl-C verworfen. Browser-Regression

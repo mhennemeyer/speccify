@@ -5,8 +5,8 @@ sidebar:
   order: 7
 ---
 
-**Preview for the next 0.8.x update. These controls are not included in the
-published 0.8.1 installer yet.**
+**Available in Speccify 0.8.2.** See the [release notes](/releases/0-8-2/)
+for installation and update instructions.
 
 ## Appearance
 

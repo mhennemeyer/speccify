@@ -4,8 +4,16 @@ description: Website positioning, feature order and repeatable product screensho
 # Website: show what makes Speccify different
 
 Living playbook for `apps/marketing/`. Product direction: [Weiterentwicklung](weiterentwicklung.md).
-Current release work: [Spec 041](../specs/041-release-070-website/SPEC.md).
+Current release work: [Spec 057](../specs/057-release-082/SPEC.md).
 Initial visual direction: [Spec 023](../specs/023-landingpage-app-screenshots/SPEC.md).
+
+0.8.2 refresh (2026-09-17): release notes and terminal/settings guide describe
+the shipped controls, attention notices, configuration editor and Shift+Enter.
+Landing release link updated. All ten public demo images recaptured and inspected;
+board, actions, playbooks, workspace and discovery settings replace stale views.
+Playbook capture now allows the visible Active status between title and description.
+Repeated captures confirm stable changed images; transient Files raster variation
+returned to the original hash. No personal projects or configuration are pictured.
 
 ## Editorial decision · 2026-09-11
 

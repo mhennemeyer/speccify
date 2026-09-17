@@ -89,7 +89,7 @@ try {
   await page.getByRole("heading", { name: "Reliable Markdown export", exact: true }).waitFor();
   await capture("skills");
   await page.getByRole("tab", { name: "Playbooks", exact: true }).click();
-  await page.getByRole("button", { name: /Product direction Vision/ }).click();
+  await page.getByRole("button", { name: /Product direction.*Vision/ }).click();
   await page.getByRole("heading", { name: "A quieter place for your notes", exact: true }).waitFor();
   await capture("playbooks");
   await group("Technik");

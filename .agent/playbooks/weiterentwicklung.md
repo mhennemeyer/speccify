@@ -15,6 +15,7 @@ Speichern ändern, andere Schlüssel und neuere externe Änderungen erhalten.
 Sandbox, Approval-Policy, automatische Prüfung und Windows-Ersteinrichtung
 getrennt erklären; möglichst wenige Rückfragen sind keine Zusage unbegrenzter
 Berechtigungen. Implementiert und lokal geprüft, noch kein neuer Release.
+BO-Freigabe am 2026-09-17: als 0.8.2 veröffentlichen, Durchführung in Spec 057.
 Native Windows-/Linux-Meldungsabnahme bleibt offen. Enter ist als separate
 PTY-Eingabe im Wegwerfprojekt belegt; ein neuer „Einfügen und senden“-Knopf
 bleibt Folgeentscheidung gemäß [Research](../../docs/terminal-enter-research.md).
