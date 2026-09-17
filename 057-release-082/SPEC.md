@@ -56,6 +56,12 @@ Website `35191538572` und Docs `35191538558` erfolgreich; öffentliche
 Release-Notizen und Terminal-Hilfe auf speccify.io direkt geprüft.
 Responsiver Website-Test (1440/390/320 px, Tastatur, ohne JavaScript) grün.
 
+macOS sowie Linux x64/arm64 fertig gebaut. Heruntergeladene macOS-App und alle
+fünf ausführbaren Dateien unter Contents/MacOS bestehen codesign; App und DMG
+besitzen gültige Stapling-Tickets, Gatekeeper akzeptiert beide als Notarized
+Developer ID. Originales 0.8.1-Archiv für Updatetest per GitHub-SHA-256 und
+Code-Signatur geprüft. Windows/Manifest/Veröffentlichung noch in Arbeit.
+
 ## Questions
 
 Keine.
