@@ -32,9 +32,13 @@ step failed that way on 2026-09-11 and passed in isolation.
 
 ```sh
 sh scripts/fix-venv-hidden.sh
-.venv/bin/python -m pytest -q
+.venv/bin/python -m pytest
 .venv/bin/speccify verify      # same failure shows as "No module named speccify_cli"
 ```
+
+`uv run` hides the files again, so repeat the fix after every `uv run …`. With
+the project's `addopts = -q` an extra `-q` drops the summary line: run plain
+`.venv/bin/python -m pytest` to get "N passed", and check the exit code.
 
 `speccify verify` lists tools without an implementation for this platform as
 notes below its `ok` line; those are not drift.

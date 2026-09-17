@@ -74,7 +74,13 @@ The acceptance at the end of a release, on the installed previous version:
    `codesign --verify --deep --strict <Speccify.app>` passes.
 
 A blocked installation reports its reason in the dialog and in
-`update_snapshot.error`; the verified download is kept. Restarting the app
+`update_snapshot.error`; the verified download is kept. Every open terminal
+counts as running work, also a plain shell after the agent quit
+(`update_snapshot.active_work`, since 0.8.4). `update_stop_all` — the dialog's
+confirmed **Alles stoppen** — ends all terminals, actions and supervised
+processes. It interrupts the user's agents: never call it over the bridge
+without the user's explicit request. Up to 0.8.3 a finished download also
+suppressed every further search until the app restarted. Restarting the app
 discards the in-memory download, not the settings.
 
 ## Driving the bundled app
