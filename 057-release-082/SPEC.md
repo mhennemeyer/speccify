@@ -1,0 +1,49 @@
+---
+station: Doing
+order: 57
+created: 2026-09-17
+needs_human: false
+---
+# Speccify 0.8.2 veröffentlichen
+
+## Why
+
+Die fertig geprüften Terminal-Findings und Shift+Enter müssen als Update in der
+Windows-VM sowie auf macOS und Linux verfügbar werden.
+
+## What
+
+Release 0.8.2 für Specs 051–056, Website/Dokumentation und signierter Update-Feed.
+Keine itsdcloud-Erweiterung für 0.9.0 in diesem Änderungssatz.
+
+## Acceptance
+
+- Vier Plattform-Builds und vollständige Signatur-/Manifestprüfung erfolgreich.
+- GitHub-Release veröffentlicht, öffentliche Downloadziele und Feed erreichbar.
+- Website beschreibt die ausgelieferten Funktionen und verbleibenden Prüfgrenzen.
+- Lokale App läuft nach dem Update wieder mit den ursprünglichen Fenstern.
+
+## Decisions
+
+1. 2026-09-17: Nutzer autorisiert „Weiter mit 0.8.2 oder releasen, wenn fertig“.
+   Implementierung und CI von 8944f7c sind grün; Release vorbereiten und publizieren.
+2. 2026-09-17: Native Windows-/Linux-Systemzustellung bleibt eine benannte
+   Praxiserprobung, kein behaupteter Nachweis durch CI. Keine erneute Freigabe nötig.
+3. 2026-09-17: Specs 051–056 bleiben zur menschlichen Sichtabnahme ready;
+   Release-Freigabe wird nicht als nachträgliche Sichtabnahme umgedeutet.
+
+## Tasks
+
+- [x] Quellstand, CI und Release-Freigabe prüfen.
+- [ ] Version, Release-Notizen, Doku und Screenshot-Drift prüfen.
+- [ ] Release-Tag bauen; Installer und Signaturen prüfen.
+- [ ] Veröffentlichen, Feed/Website und lokales Update prüfen.
+
+## Verification
+
+8944f7c: CI 35124493388, Website 35124493358, Docs 35124493241 erfolgreich.
+Lokale App PID 44686, vier ursprüngliche Fenster, keine Entwürfe/Terminals.
+
+## Questions
+
+Keine.
