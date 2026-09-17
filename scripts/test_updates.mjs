@@ -65,6 +65,21 @@ try {
   await page.evaluate(()=>{window.__SPECCIFY_MOCK__.updateProcessRunning=true;});
   await install.click();
   await dialog.getByRole('alert').filter({hasText:'Terminals'}).waitFor();
+  // A blocked install must explain itself without scrolling (058).
+  const viewport = page.viewportSize();
+  await page.setViewportSize({width:900,height:420});
+  await page.evaluate(()=>{window.__SPECCIFY_MOCK__.update.notes='# Notes\n\n'+Array.from({length:40},(_,i)=>`- Item ${i+1}`).join('\n');});
+  await dialog.getByText('Item 40').waitFor({state:'attached'});
+  await install.click();
+  const alert = dialog.getByRole('alert').filter({hasText:'Terminals'});
+  await alert.waitFor();
+  // Wherever the dialog content is scrolled to, the message stays in view.
+  await dialog.evaluate(el=>{ for (const node of [el,...el.querySelectorAll('*')]) node.scrollTop=0; });
+  const box = await alert.boundingBox();
+  const frame = await dialog.boundingBox();
+  assert.ok(box && frame && box.y >= frame.y && box.y + box.height <= Math.min(420, frame.y + frame.height),
+    `Install error outside the visible dialog: ${JSON.stringify({box,frame})}`);
+  await page.setViewportSize(viewport);
   await page.evaluate(()=>{window.__SPECCIFY_MOCK__.updateProcessRunning=false;});
   await install.click();
   await page.waitForFunction(()=>window.__SPECCIFY_MOCK__.updateInstalls===1);

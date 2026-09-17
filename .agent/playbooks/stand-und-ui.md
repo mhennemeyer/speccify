@@ -38,6 +38,14 @@ senden weiterhin kein Enter. [Research](../../docs/terminal-enter-research.md),
 Alle vier Update-Ziele signaturgeprüft; echter öffentlicher 0.8.1→0.8.2-Updater
 auf diesem Mac erfolgreich, vier Fenster wiederhergestellt. 0.9.0/itsdcloud ist geparkt.
 
+**Update-Dialog 058, Teil von 0.8.3 (2026-09-17):** Im Dialog „Speccify-Updates“
+scrollt nur noch der Inhalt; Kopfzeile und Fehlermeldung bleiben stehen. Eine
+blockierte Installation zeigt ihren Grund damit immer am unteren Dialogrand, lange
+Blockerlisten scrollen in der Meldung selbst. Browser-Regression in
+`scripts/test_updates.mjs` (900×420, 40 Zeilen Notizen) schlägt mit dem alten
+Layout fehl und besteht mit dem neuen. Wiederkehrende Abläufe (Release, Prüfstand,
+lokale App) liegen seit 058 als Skills unter `.agent/skills/`.
+
 **Shift+Enter 056, Teil von 0.8.2:** Terminal überträgt die
 Kombination als CSI-u statt wie bisher als normales Enter. Im lokalen signierten
 Build mit Codex 0.154.0 und Claude 2.1.273 geprüft: zwei getrennte Eingabezeilen,

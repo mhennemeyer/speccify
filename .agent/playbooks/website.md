@@ -4,8 +4,11 @@ description: Website positioning, feature order and repeatable product screensho
 # Website: show what makes Speccify different
 
 Living playbook for `apps/marketing/`. Product direction: [Weiterentwicklung](weiterentwicklung.md).
-Current release work: [Spec 057](../specs/057-release-082/SPEC.md).
+Current release work: [Spec 058](../specs/058-release-083/SPEC.md).
 Initial visual direction: [Spec 023](../specs/023-landingpage-app-screenshots/SPEC.md).
+
+0.8.3 (2026-09-17): release notes for the pinned update error; landing release
+link points to 0.8.3. No screenshot change: the update dialog is not a demo image.
 
 0.8.2 refresh (2026-09-17): release notes and terminal/settings guide describe
 the shipped controls, attention notices, configuration editor and Shift+Enter.
