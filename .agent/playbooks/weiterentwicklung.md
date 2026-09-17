@@ -20,6 +20,11 @@ grün, öffentlicher 0.8.1→0.8.2-Updatetest auf diesem Mac erfolgreich.
 Native Windows-/Linux-Meldungsabnahme bleibt offen. Enter ist als separate
 PTY-Eingabe im Wegwerfprojekt belegt; ein neuer „Einfügen und senden“-Knopf
 bleibt Folgeentscheidung gemäß [Research](../../docs/terminal-enter-research.md).
+0.8.3 (Spec 058, 2026-09-17, BO-Zuruf) liefert den stets sichtbaren Fehlerhinweis
+im Update-Dialog. Dauerhafte Arbeitsweise seitdem: wiederkehrende Abläufe sind
+Skills (`release`, `project-checks`, `local-app`, `ui-browser-check`,
+`website-publish`); neue Fallstricke aus einem Lauf werden im selben
+Änderungssatz in den Skill zurückgeschrieben.
 Bestehende Übergaben bleiben Paste ohne Enter. Nach Abnahme zurück zu 0.9.0.
 
 **Ergänzung 056, 2026-09-16:** Shift+Enter als eigene modifizierte Taste an den

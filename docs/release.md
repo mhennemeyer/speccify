@@ -383,6 +383,12 @@ Installation über den Update-Dialog, Neustart und alle vier Fenster
 wiederhergestellt. Installierte Version 0.8.2, Signatur gültig, Update-Zustand
 `current`. Windows-/Linux-Installation bleibt als Plattformabnahme offen.
 
+**0.8.3 veröffentlicht am 2026-09-17:** Update von der veröffentlichten 0.8.2
+auf die öffentliche 0.8.3 auf diesem Mac geprüft (30.614.837 Bytes, Signatur
+bestanden, Neustart, vier Fenster wiederhergestellt, Zustand `current`). Der
+Ablauf steht seitdem als Skill unter `.agent/skills/release/SKILL.md`; dieses
+Dokument bleibt die Referenz für Einrichtung, Secrets und Hintergründe.
+
 ### Vollständiger Release-Feed
 
 Der Workflow verlangt signierte Pakete für alle unterstützten Update-Ziele:

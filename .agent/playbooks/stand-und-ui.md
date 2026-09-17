@@ -43,7 +43,10 @@ scrollt nur noch der Inhalt; Kopfzeile und Fehlermeldung bleiben stehen. Eine
 blockierte Installation zeigt ihren Grund damit immer am unteren Dialogrand, lange
 Blockerlisten scrollen in der Meldung selbst. Browser-Regression in
 `scripts/test_updates.mjs` (900×420, 40 Zeilen Notizen) schlägt mit dem alten
-Layout fehl und besteht mit dem neuen. Wiederkehrende Abläufe (Release, Prüfstand,
+Layout fehl und besteht mit dem neuen. 0.8.3 am 2026-09-17 veröffentlicht
+(Nachweis in Spec 058): vier Builds, 20 Assets, Manifest lokal unabhängig
+nachgebaut und identisch, echter öffentlicher 0.8.2→0.8.3-Updater auf diesem Mac
+mit vier wiederhergestellten Fenstern; Windows-/Linux-Installation offen. Wiederkehrende Abläufe (Release, Prüfstand,
 lokale App) liegen seit 058 als Skills unter `.agent/skills/`.
 
 **Shift+Enter 056, Teil von 0.8.2:** Terminal überträgt die

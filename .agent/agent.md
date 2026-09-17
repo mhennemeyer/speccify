@@ -116,6 +116,14 @@ vor einer Implementierung verstanden sein. Prüfe Implementierungen mit
 `speccify tool check <name>`; ändere den Status in `expansions.yaml` nie von
 Hand. `speccify verify` prüft Lock-, Bundle-, Expansions- und Tool-Drift.
 
+Wiederkehrende Projektabläufe liegen als Skills vor (Spec 058): `release`
+(Version bis Veröffentlichung und Update-Nachweis), `project-checks`
+(Prüfstand mit Zahlen), `local-app` (lokale App prüfen, bauen, neu starten,
+aktualisieren), `ui-browser-check` (UI-Findings im Browser nachstellen und
+absichern), `website-publish` und `app-screenshots`. Wird ein Ablauf zum
+zweiten Mal von Hand zusammengesucht oder lernt ein Lauf einen neuen
+Fallstrick, gehört das in den passenden Skill — im selben Änderungssatz.
+
 <!-- speccify:workflow:begin v10 -->
 ## Spec workflow
 
