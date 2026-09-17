@@ -1,3 +1,4 @@
 {"timestamp":"2026-09-17T11:04:02Z","spec_id":"059-update-suche-nach-download","event_type":"spec_created","actor":"project","summary":"BO-Befund: erneute Suche bleibt bei 0.8.2, obwohl 0.8.3 veröffentlicht ist; Branch main."}
 {"timestamp":"2026-09-17T11:04:02Z","spec_id":"059-update-suche-nach-download","event_type":"agent_run","actor":"project","summary":"Ursache: fertiger Download sperrte jede weitere Suche. apply_check im Koordinator, Suche im Dialog auch in ready, Fixture und Regressionen ergänzt. Skills: project-checks, ui-browser-check; Tools: cargo, pnpm, Playwright, curl, gh."}
 {"timestamp":"2026-09-17T11:04:02Z","spec_id":"059-update-suche-nach-download","event_type":"station_changed","actor":"project","summary":"Done: Fix und Tests grün; Auslieferung mit dem nächsten Release."}
+{"timestamp":"2026-09-17T11:56:34Z","spec_id":"059-update-suche-nach-download","event_type":"spec_edited","actor":"project","summary":"Ausgeliefert mit 0.8.4 (Spec 060)."}
