@@ -27,9 +27,10 @@ export default function UpdateUi({ notifications = true }: { notifications?: boo
       className="fixed bottom-3 right-3 z-50 rounded-lg border border-blue-400 bg-blue-700 px-3 py-2 text-sm text-white shadow-lg"
       onClick={() => setOpen(true)}>Update {state.version}{state.phase === 'ready' ? ' bereit' : ' verfügbar'}</button>}
     {open && <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-6">
-      <section role="dialog" aria-modal="true" aria-label="Speccify-Updates" className="max-h-[85vh] w-full max-w-xl overflow-auto rounded-xl bg-white p-5 text-slate-900 shadow-xl">
-        <div className="flex items-center justify-between"><h2 className="text-lg font-semibold">Speccify-Updates</h2>
+      <section role="dialog" aria-modal="true" aria-label="Speccify-Updates" className="flex max-h-[85vh] w-full max-w-xl flex-col rounded-xl bg-white p-5 text-slate-900 shadow-xl">
+        <div className="flex shrink-0 items-center justify-between"><h2 className="text-lg font-semibold">Speccify-Updates</h2>
           <button onClick={() => setOpen(false)} aria-label="Updates schließen">Schließen</button></div>
+        <div className="min-h-0 flex-1 overflow-auto">
         <p className="mt-2 text-sm">Installiert: {state.current_version}</p>
         {!state.supported && <p className="my-3 text-sm">{state.reason}</p>}
         <label className="mt-4 flex gap-2 text-sm"><input type="checkbox" checked={state.preferences.automatic} disabled={!state.supported || busy}
@@ -56,7 +57,8 @@ export default function UpdateUi({ notifications = true }: { notifications?: boo
             <button className="rounded bg-blue-700 px-3 py-2 text-white" disabled={busy} onClick={() => void run('update_install')}>Installieren und neu starten</button>
           </> : <button className="rounded border px-3 py-1" disabled={busy} onClick={() => void run('update_download')}>Update herunterladen</button>}
         </div>}
-        {(error || state.error) && <p role="alert" className="mt-3 whitespace-pre-wrap rounded bg-red-50 p-3 text-sm text-red-800">{error || state.error}</p>}
+        </div>
+        {(error || state.error) && <p role="alert" className="mt-3 max-h-40 shrink-0 overflow-auto whitespace-pre-wrap rounded bg-red-50 p-3 text-sm text-red-800">{error || state.error}</p>}
       </section>
     </div>}
   </div>;
