@@ -50,6 +50,12 @@ der Sandbox), TypeScript, Cargo fmt, Ruff lint/format grün. Marketing-Build gr�
 Zehn Demo-Bilder visuell geprüft; fünf veraltete Bilder ersetzt, Wiederholung
 bestätigt stabile Motive. Playbook-Selektor an sichtbaren Aktiv-Status angepasst.
 
+Commit/Tag: `6122c53`, `v0.8.2`; Release-Workflow `35191540790` gestartet.
+CI `35191538547` vollständig erfolgreich, einschließlich Windows und Linux.
+Website `35191538572` und Docs `35191538558` erfolgreich; öffentliche
+Release-Notizen und Terminal-Hilfe auf speccify.io direkt geprüft.
+Responsiver Website-Test (1440/390/320 px, Tastatur, ohne JavaScript) grün.
+
 ## Questions
 
 Keine.
