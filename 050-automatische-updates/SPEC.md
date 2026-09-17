@@ -102,6 +102,12 @@ lief korrekt weiter und wurde vor Installation als `ready` bestätigt.
 Dies ist kein Upgrade-Nachweis für veröffentlichte 0.8.0 ohne Key. Windows-/Linux-
 Installation und Upgrade zwischen zwei veröffentlichten Updater-Versionen offen.
 
+Nachtrag 2026-09-17, Spec 057: Upgrade zwischen unveränderter veröffentlichter
+0.8.1 und öffentlicher 0.8.2 auf diesem Mac bestanden. 30.615.166 Bytes
+signaturgeprüft heruntergeladen, über den Update-Dialog installiert, neu
+gestartet und alle vier Fenster wiederhergestellt. PID 25222, Version 0.8.2,
+gültige Code-Signatur, Update-Zustand `current`. Windows/Linux weiterhin offen.
+
 ## Questions
 
 ### Q1 · answered · 2026-09-16T10:01:00Z

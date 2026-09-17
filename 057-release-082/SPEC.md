@@ -1,5 +1,5 @@
 ---
-station: Doing
+station: Done
 order: 57
 created: 2026-09-17
 needs_human: false
@@ -36,8 +36,8 @@ Keine itsdcloud-Erweiterung für 0.9.0 in diesem Änderungssatz.
 
 - [x] Quellstand, CI und Release-Freigabe prüfen.
 - [x] Version, Release-Notizen, Doku und Screenshot-Drift prüfen.
-- [ ] Release-Tag bauen; Installer und Signaturen prüfen.
-- [ ] Veröffentlichen, Feed/Website und lokales Update prüfen.
+- [x] Release-Tag bauen; Installer und Signaturen prüfen.
+- [x] Veröffentlichen, Feed/Website und lokales Update prüfen.
 
 ## Verification
 
@@ -61,6 +61,27 @@ fünf ausführbaren Dateien unter Contents/MacOS bestehen codesign; App und DMG
 besitzen gültige Stapling-Tickets, Gatekeeper akzeptiert beide als Notarized
 Developer ID. Originales 0.8.1-Archiv für Updatetest per GitHub-SHA-256 und
 Code-Signatur geprüft. Windows/Manifest/Veröffentlichung noch in Arbeit.
+
+Abschluss 2026-09-17: Workflow 35191540790 vollständig erfolgreich. Der erste
+Manifest-Download scheiterte an GitHub HTTP 500; nur den fehlgeschlagenen Job
+wiederholt, anschließend erfolgreich. Keine Installer oder Tags geändert.
+20 Assets vollständig; vier heruntergeladene Update-Pakete unabhängig auf
+Dateigröße, SHA-256 und minisign geprüft. Manifest stimmt mit dieser Prüfung
+und den endgültigen Release-Notizen überein.
+
+Veröffentlicht 2026-09-17T08:07:29Z:
+https://github.com/mhennemeyer/speccify/releases/tag/v0.8.2.
+Öffentlicher latest.json identisch zum geprüften Manifest; alle vier Ziel-URLs
+liefern ohne Anmeldung HTTP 200. Website/Release-Hilfe veröffentlicht.
+
+Echter Upgrade-Nachweis zwischen zwei veröffentlichten Versionen: originales
+0.8.1-Archiv per SHA-256 geprüft und am bisherigen lokalen App-Ort gestartet.
+0.8.1 erkennt 0.8.2 in vier Fenstern; 30.615.166 Bytes vollständig und
+signaturgeprüft heruntergeladen. Update-Dialog geöffnet, Installationsknopf
+betätigt; Neustart PID 25222, Version 0.8.2, vier ursprüngliche Fenster,
+Zustand `current`, keine Fehler, installierte Code-Signatur gültig.
+Lokale gebündelte Release-App bleibt offen. Native Windows-/Linux-Installation
+und dortige tatsächliche Systemmeldungszustellung bleiben gesonderte Abnahmen.
 
 ## Questions
 
