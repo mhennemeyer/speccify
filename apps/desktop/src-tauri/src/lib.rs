@@ -409,7 +409,8 @@ pub fn run() {
             updates::update_download,
             updates::update_cancel,
             updates::update_guard_reply,
-            updates::update_install
+            updates::update_install,
+            updates::update_stop_all
         ]);
 
     // Updater erst anhängen, wenn ein Public Key hinterlegt ist — ohne

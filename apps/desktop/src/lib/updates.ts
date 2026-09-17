@@ -8,6 +8,7 @@ export interface UpdateSnapshot {
   phase: "idle" | "checking" | "available" | "current" | "downloading" | "ready" | "preparing" | "installing" | "error";
   version: string | null; notes: string | null; downloaded: number;
   total: number | null; last_checked: number | null; error: string | null;
+  active_work: number;
 }
 export function useUpdateSnapshot() {
   const [snapshot, setSnapshot] = useState<UpdateSnapshot>();

@@ -352,6 +352,11 @@ Vor der Installation sperrt er die Oberflächen und verlangt eine Antwort von
 jedem Fenster. Offene Editoren, bearbeitete Formulare, gespeicherte Entwürfe und
 laufende Terminals/Aktionen blockieren den Neustart. Erst speichern, die
 betroffenen Ansichten schließen und Prozesse beenden; dann erneut installieren.
+Jedes offene Terminal zählt, auch eine Shell ohne laufenden Agenten; eine von
+selbst beendete Shell zählt seit 0.8.4 nicht mehr. Seit 0.8.4 bietet die Meldung
+**Alles stoppen** an (Spec 060): nach bestätigendem zweitem Klick beendet
+`update_stop_all` alle Terminals, Aktionen und überwachten Prozesse, ohne zu
+installieren. Editoren, Formulare und Entwürfe werden nie automatisch geschlossen.
 Ein fehlgeschlagener Vorabcheck behält den geprüften Download. Eine erneute
 Suche ist auch mit fertigem Download möglich (Spec 059): nennt der Feed
 inzwischen eine andere Version, wird der überholte Download verworfen und die

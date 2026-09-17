@@ -38,7 +38,14 @@ senden weiterhin kein Enter. [Research](../../docs/terminal-enter-research.md),
 Alle vier Update-Ziele signaturgeprüft; echter öffentlicher 0.8.1→0.8.2-Updater
 auf diesem Mac erfolgreich, vier Fenster wiederhergestellt. 0.9.0/itsdcloud ist geparkt.
 
-**Update-Suche 059 (2026-09-17, noch nicht ausgeliefert):** Ein fertiger Download
+**„Alles stoppen“ 060, Teil von 0.8.4 (2026-09-17):** Blockiert laufende Arbeit die
+Installation, nennt die Meldung die Anzahl und erklärt, dass jedes offene Terminal
+zählt. Knopf **Alles stoppen** an der Meldung → Bestätigung „N Terminals/Aktionen
+jetzt beenden“ / Abbrechen → Statuszeile „N beendet. Du kannst jetzt installieren.“
+Beendet Terminals, Aktionen und überwachte Prozesse, installiert nicht; Editoren und
+Entwürfe bleiben unberührt. Von selbst beendete Shells zählen nicht mehr als Arbeit.
+
+**Update-Suche 059, Teil von 0.8.4 (2026-09-17):** Ein fertiger Download
 sperrte bisher jede weitere Suche (manuell und automatisch), sodass ein geladenes
 0.8.2 das veröffentlichte 0.8.3 verdeckte. Jetzt ist „Jetzt suchen“ auch in
 „bereit“ aktiv; ein überholter Download wird verworfen, bei gleicher Version oder

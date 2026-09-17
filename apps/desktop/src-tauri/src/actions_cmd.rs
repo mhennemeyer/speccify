@@ -210,6 +210,25 @@ impl ActionRuns {
             .values_mut()
             .any(|child| child.try_wait().ok().flatten().is_none())
     }
+    /// Kills every running action; the wait threads report the exits.
+    pub(crate) fn stop_all(&self) -> usize {
+        let mut runs = self.0.lock().unwrap();
+        let mut stopped = 0;
+        for child in runs.values_mut() {
+            if child.try_wait().ok().flatten().is_none() {
+                let _ = child.kill();
+                stopped += 1;
+            }
+        }
+        stopped
+    }
+    pub(crate) fn active_count(&self) -> usize {
+        let mut runs = self.0.lock().unwrap();
+        runs.values_mut()
+            .map(|child| child.try_wait().ok().flatten().is_none())
+            .filter(|running| *running)
+            .count()
+    }
 }
 
 impl Default for ActionRuns {

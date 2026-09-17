@@ -90,8 +90,20 @@ try {
   const frame = await dialog.boundingBox();
   assert.ok(box && frame && box.y >= frame.y && box.y + box.height <= Math.min(420, frame.y + frame.height),
     `Install error outside the visible dialog: ${JSON.stringify({box,frame})}`);
+  // The message offers the way out: stop everything, confirmed by a second click.
+  const stopAll = dialog.getByRole('button',{name:'Alles stoppen'});
+  const stopBox = await stopAll.boundingBox();
+  assert.ok(stopBox && stopBox.y + stopBox.height <= 420, 'Stop action outside the viewport');
+  await stopAll.click();
+  assert.equal(await page.evaluate(()=>window.__SPECCIFY_MOCK__.updateStops),0);
+  await dialog.getByRole('button',{name:'Abbrechen'}).click();
+  await stopAll.click();
+  await dialog.getByRole('button',{name:'2 Terminals/Aktionen jetzt beenden'}).click();
+  await dialog.getByRole('status').filter({hasText:'2 beendet'}).waitFor();
+  assert.equal(await page.evaluate(()=>window.__SPECCIFY_MOCK__.updateStops),1);
+  assert.equal(await dialog.getByRole('alert').count(),0);
+  assert.equal(await stopAll.count(),0);
   await page.setViewportSize(viewport);
-  await page.evaluate(()=>{window.__SPECCIFY_MOCK__.updateProcessRunning=false;});
   await install.click();
   await page.waitForFunction(()=>window.__SPECCIFY_MOCK__.updateInstalls===1);
   assert.equal(await page.evaluate(()=>document.documentElement.inert),false);

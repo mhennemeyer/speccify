@@ -35,6 +35,9 @@ pub struct Snapshot {
     pub total: Option<u64>,
     pub last_checked: Option<u64>,
     pub error: Option<String>,
+    /// Open terminals plus running actions and supervised processes: what
+    /// "Alles stoppen" would end.
+    pub active_work: usize,
 }
 struct Inner {
     preferences: Preferences,
@@ -118,7 +121,55 @@ pub fn update_snapshot(app: AppHandle, state: State<Updates>) -> Snapshot {
         total: s.total,
         last_checked: s.last_checked,
         error: s.error.clone(),
+        active_work: active_work(&app),
     }
+}
+fn active_work(app: &AppHandle) -> usize {
+    app.state::<crate::terminal::Terminals>().active_count()
+        + app.state::<crate::actions_cmd::ActionRuns>().active_count()
+        + app
+            .state::<crate::Supervisor>()
+            .0
+            .lock()
+            .unwrap()
+            .values_mut()
+            .map(|child| child.try_wait().ok().flatten().is_none())
+            .filter(|running| *running)
+            .count()
+}
+/// Ends all terminals, actions and supervised processes so a blocked
+/// installation can proceed. Explicit user action only; nothing is installed.
+#[tauri::command]
+pub async fn update_stop_all(app: AppHandle, state: State<'_, Updates>) -> Result<usize, String> {
+    if matches!(
+        state.0.lock().unwrap().phase.as_str(),
+        "preparing" | "installing"
+    ) {
+        return Err("Update-Installation wird vorbereitet.".into());
+    }
+    let mut stopped = app.state::<crate::terminal::Terminals>().stop_all()
+        + app.state::<crate::actions_cmd::ActionRuns>().stop_all();
+    for child in app
+        .state::<crate::Supervisor>()
+        .0
+        .lock()
+        .unwrap()
+        .values_mut()
+    {
+        if child.try_wait().ok().flatten().is_none() {
+            let _ = child.kill();
+            stopped += 1;
+        }
+    }
+    // Kills are asynchronous; wait until the processes are really gone.
+    for _ in 0..30 {
+        if active_work(&app) == 0 {
+            break;
+        }
+        tokio::time::sleep(Duration::from_millis(100)).await;
+    }
+    state.0.lock().unwrap().error = None;
+    Ok(stopped)
 }
 #[tauri::command]
 pub fn update_preferences(state: State<Updates>, preferences: Preferences) -> Result<(), String> {
@@ -344,7 +395,11 @@ pub async fn update_install(app: AppHandle, state: State<'_, Updates>) -> Result
                 .values_mut()
                 .any(|child| child.try_wait().ok().flatten().is_none())
         {
-            return Err("Terminals oder Aktionen laufen noch. Bitte zuerst beenden.".into());
+            return Err(format!(
+                "Terminals oder Aktionen laufen noch ({} offen). Auch ein offenes Terminal \
+                 ohne laufenden Agenten zählt. Bitte beenden oder „Alles stoppen“ wählen.",
+                active_work(&app).max(1)
+            ));
         }
         let (update, bytes) = {
             let mut s = state.0.lock().unwrap();

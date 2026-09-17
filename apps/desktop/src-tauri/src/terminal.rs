@@ -138,6 +138,26 @@ impl Terminals {
         !self.sessions.lock().unwrap().is_empty()
             || !self.workspace_claims.lock().unwrap().is_empty()
     }
+    pub(crate) fn active_count(&self) -> usize {
+        self.sessions.lock().unwrap().len()
+    }
+    /// Ends every shell but keeps the app usable: unlike `shutdown`, new
+    /// terminals may be opened afterwards. The reader threads report the exits.
+    pub(crate) fn stop_all(&self) -> usize {
+        // Kill outside the map lock; the reader threads take it on exit.
+        let sessions: Vec<_> = self.sessions.lock().unwrap().drain().collect();
+        let count = sessions.len();
+        for (id, mut session) in sessions {
+            let _ = session.killer.kill();
+            self.untrack(&id);
+        }
+        count
+    }
+    /// A shell that ended on its own is no running work any more.
+    fn forget(&self, id: &str) {
+        self.sessions.lock().unwrap().remove(id);
+        self.untrack(id);
+    }
     pub fn shutdown(&self) {
         self.shutting_down.store(true, Ordering::SeqCst);
         if let Ok(mut sessions) = self.sessions.lock() {
@@ -396,6 +416,8 @@ pub async fn terminal_open(
     let app_for_reader = app.clone();
     let id_for_reader = id.clone();
     let mut child = child;
+    let exited = Arc::new(AtomicBool::new(false));
+    let exited_for_reader = exited.clone();
     std::thread::spawn(move || {
         let mut buffer = [0u8; 8192];
         let mut chunker = Utf8Chunker::default();
@@ -418,6 +440,10 @@ pub async fn terminal_open(
         }
         emit(chunker.finish());
         let _ = child.wait();
+        // An ended shell must not count as running work (it blocked updates
+        // until its panel closed). The flag covers an exit before registration.
+        exited_for_reader.store(true, Ordering::SeqCst);
+        app_for_reader.state::<Terminals>().forget(&id_for_reader);
         let _ = app_for_reader.emit("term-exit", TermExit { id: id_for_reader });
     });
 
@@ -428,7 +454,7 @@ pub async fn terminal_open(
         return Err("Terminal-Fenster wurde geschlossen.".into());
     }
     sessions.insert(
-        id,
+        id.clone(),
         TerminalSession {
             writer,
             master: pty.master,
@@ -437,6 +463,9 @@ pub async fn terminal_open(
             _workspace_context: context_file,
         },
     );
+    if exited.load(Ordering::SeqCst) {
+        sessions.remove(&id);
+    }
     Ok(TerminalOpened {
         cwd: cwd.display().to_string(),
         startup,
@@ -602,6 +631,15 @@ mod tests {
                 _workspace_context: Some(context),
             },
         );
+        // "Alles stoppen": ends the work, releases claim and context, and
+        // leaves the app able to open terminals again.
+        assert_eq!(state.active_count(), 1);
+        assert!(state.has_active_work());
+        assert_eq!(state.stop_all(), 1);
+        assert!(!state.has_active_work());
+        assert!(!state.shutting_down.load(Ordering::SeqCst));
+        assert!(!context_path.exists());
+        state.forget("already-gone");
         state.shutdown();
         assert!(state.shutting_down.load(Ordering::SeqCst));
         assert!(state.sessions.lock().unwrap().is_empty());

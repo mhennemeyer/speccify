@@ -8,6 +8,8 @@ export default function UpdateUi({ notifications = true }: { notifications?: boo
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string>();
   const [acting, setActing] = useState(false);
+  const [confirmStop, setConfirmStop] = useState(false);
+  const [stopped, setStopped] = useState<number>();
   useEffect(installUpdateGuard, []);
   useEffect(() => {
     const show = () => setOpen(true);
@@ -17,8 +19,12 @@ export default function UpdateUi({ notifications = true }: { notifications?: boo
   if (!state) return null;
   const busy = acting || ["checking", "downloading", "preparing", "installing"].includes(state.phase);
   const run = async (command: string, args?: Record<string, unknown>) => {
-    setError(undefined); setActing(true);
-    try { await invoke(command, args); } catch (e) { setError(String(e)); }
+    setError(undefined); setActing(true); setConfirmStop(false);
+    setStopped(undefined);
+    try {
+      const result = await invoke(command, args);
+      if (command === 'update_stop_all') setStopped(Number(result));
+    } catch (e) { setError(String(e)); }
     finally { await refresh().catch(() => {}); setActing(false); }
   };
   const available = !!state.version && state.phase !== 'current';
@@ -58,7 +64,19 @@ export default function UpdateUi({ notifications = true }: { notifications?: boo
           </> : <button className="rounded border px-3 py-1" disabled={busy} onClick={() => void run('update_download')}>Update herunterladen</button>}
         </div>}
         </div>
-        {(error || state.error) && <p role="alert" className="mt-3 max-h-40 shrink-0 overflow-auto whitespace-pre-wrap rounded bg-red-50 p-3 text-sm text-red-800">{error || state.error}</p>}
+        {(error || state.error) && <div className="mt-3 shrink-0 rounded bg-red-50 p-3 text-sm text-red-800">
+          <p role="alert" className="max-h-40 overflow-auto whitespace-pre-wrap">{error || state.error}</p>
+          {state.phase === 'ready' && state.active_work > 0 && <div className="mt-2 flex flex-wrap items-center gap-2">
+            {confirmStop ? <>
+              <button className="rounded bg-red-700 px-3 py-1 text-white" disabled={busy} onClick={() => void run('update_stop_all')}>
+                {state.active_work === 1 ? '1 Terminal/Aktion jetzt beenden' : `${state.active_work} Terminals/Aktionen jetzt beenden`}</button>
+              <button className="rounded border border-red-300 px-3 py-1" onClick={() => setConfirmStop(false)}>Abbrechen</button>
+              <span className="text-xs">Laufende Agenten und Befehle werden abgebrochen; Agent-Sitzungen lassen sich danach fortsetzen.</span>
+            </> : <button className="rounded border border-red-400 bg-white px-3 py-1 font-medium text-red-800" disabled={busy} onClick={() => setConfirmStop(true)}>Alles stoppen</button>}
+          </div>}
+        </div>}
+        {!error && !state.error && state.phase === 'ready' && stopped !== undefined && <p role="status" className="mt-3 shrink-0 rounded bg-emerald-50 p-3 text-sm text-emerald-800">
+          {stopped} beendet. Du kannst jetzt installieren.</p>}
       </section>
     </div>}
   </div>;

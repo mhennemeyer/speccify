@@ -6,7 +6,13 @@ export function installUpdateFixture(responses, emit) {
     phase: 'idle', version: null, notes: null, downloaded: 0, total: null, last_checked: null, error: null,
   };
   control.updateInstalls = 0;
-  responses.update_snapshot = () => state;
+  control.updateStops = 0;
+  responses.update_snapshot = () => ({...state, active_work: control.updateProcessRunning ? 2 : 0});
+  responses.update_stop_all = () => {
+    const stopped = control.updateProcessRunning ? 2 : 0;
+    control.updateProcessRunning = false; control.updateStops++; state.error = null;
+    return stopped;
+  };
   responses.update_preferences = ({preferences}) => {
     state.preferences = preferences;
     localStorage.setItem('test.update-preferences', JSON.stringify(preferences));
