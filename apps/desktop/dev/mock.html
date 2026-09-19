@@ -110,6 +110,8 @@
           { ...base, id: "done-month", file: ".agent/specs/done-month/SPEC.md", title: "Vor drei Wochen fertig", station: "Done", parent: "notizen", done_at: daysAgo(21), body: "Etwas älter." },
           { ...base, id: "done-old", file: ".agent/specs/done-old/SPEC.md", title: "Vor einem Jahr fertig", station: "Done", done_at: daysAgo(365), body: "Alt." },
           { ...base, id: "done-undated", file: ".agent/specs/done-undated/SPEC.md", title: "Ohne Datum fertig", station: "Done", done_at: null, body: "Unbekannt." },
+          // Acht weitere frische Karten: mit den drei oben und der Basis-Done-Spec sind es zwölf → über dem Default von zehn.
+          ...Array.from({ length: 8 }, (_, i) => ({ ...base, id: `done-recent-${i + 1}`, file: `.agent/specs/done-recent-${i + 1}/SPEC.md`, title: `Kürzlich fertig ${i + 1}`, station: "Done", parent: "notizen", done_at: daysAgo(1.5 + i), body: "Kürzlich." })),
         );
       }
       if (new URLSearchParams(location.search).has("specnav")) {
@@ -145,6 +147,9 @@
       // Spec 061: gespeichertes Done-Fenster wie aus .agent/settings.json gelesen.
       if (new URLSearchParams(location.search).has("donedays")) {
         window.__SPECCIFY_MOCK__.projectSettings.board = { doneDays: Number(new URLSearchParams(location.search).get("donedays")) };
+      }
+      if (new URLSearchParams(location.search).has("donelimit")) {
+        window.__SPECCIFY_MOCK__.projectSettings.board = { ...(window.__SPECCIFY_MOCK__.projectSettings.board ?? {}), doneLimit: Number(new URLSearchParams(location.search).get("donelimit")) };
       }
       window.__SPECCIFY_MOCK__.uiAnswers = [];
       window.__SPECCIFY_MOCK__.terminalWrites = [];

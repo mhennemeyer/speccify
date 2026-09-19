@@ -4,7 +4,9 @@ import { invoke } from "@tauri-apps/api/core";
 import Markdown from "../components/Markdown";
 import { ErrorBox } from "../components/ui";
 import type { SpecEntry } from "./project/BoardTab";
-import { DONE_WINDOW_OPTIONS, splitDone, useDoneWindow } from "../lib/doneWindow";
+import { DONE_LIMIT_OPTIONS, DONE_WINDOW_OPTIONS, splitDone, useDoneBoard } from "../lib/doneWindow";
+import MoreList from "../components/MoreList";
+const DONE_SELECT = "rounded border border-transparent bg-transparent px-1 py-0.5 text-[10px] font-medium normal-case tracking-normal hover:border-slate-300";
 
 export interface WorkspaceSpecEntry {
   key: string; project_id: string; project_name: string;
@@ -42,7 +44,8 @@ export default function WorkspaceBoardView({ workspaceId, revision, refresh = 0,
   }, [workspaceId, revision, reload, refresh]);
   const data = snapshot?.workspace_id === workspaceId ? snapshot : null;
   // Spec 061: Done-Fenster des Workspace-Boards, gespeichert in der Workspace-Wurzel.
-  const [doneDays, setDoneDays, doneDaysError] = useDoneWindow(data?.root);
+  const done = useDoneBoard(data?.root);
+  const resetKey = `${search}|${filter}|${data?.revision ?? ""}`;
   const projects = [...new Map(data?.specs.map(entry => [entry.project_id, entry.project_name]) ?? []).entries()].sort((a,b) => a[1].localeCompare(b[1]));
   const query = search.trim().toLocaleLowerCase();
   const visible = (data?.specs ?? []).filter(entry => (!filter || entry.project_id === filter) &&
@@ -91,7 +94,7 @@ export default function WorkspaceBoardView({ workspaceId, revision, refresh = 0,
           const inStation = visible.filter(entry => entry.spec.station === station);
           const filtering = !!query || !!filter;
           const { recent, older } = station === "Done"
-            ? splitDone(inStation, entry => entry.spec.done_at, filtering ? 0 : doneDays)
+            ? splitDone(inStation, entry => entry.spec.done_at, filtering ? 0 : done.days)
             : { recent: inStation, older: [] as WorkspaceSpecEntry[] };
           const card = (entry: WorkspaceSpecEntry) => <button key={entry.key} data-workspace-spec={entry.key} data-selected={selected === entry.key} aria-pressed={selected === entry.key} onClick={() => choose(entry.key)}
             className={`mb-2 block w-full min-w-0 rounded-lg border p-2 text-left text-sm ${listSlots ? "spec-card text-slate-800" : selected === entry.key ? "tone-surface" : "border-slate-200 bg-white text-slate-800 hover:border-slate-400"}`}>
@@ -101,19 +104,25 @@ export default function WorkspaceBoardView({ workspaceId, revision, refresh = 0,
             <span className="mt-2 block text-xs">{entry.spec.tasks_done}/{entry.spec.tasks_total} Aufgaben{entry.spec.ready && entry.spec.needs_human ? " · Abnahme offen" : ""}{entry.spec.open_question ? ` · Frage ${entry.spec.open_question}` : ""}{entry.spec.archived ? " · Altbestand" : ""}</span>
           </button>;
           return <section key={station} aria-label={`Workspace-Spalte ${station}`} data-tone={tones[station] ?? "slate"} className={`min-w-0 rounded-lg p-2 ${listSlots ? "spec-lane min-h-0 overflow-y-auto" : "border border-slate-200 bg-slate-50"}`}>
-          <h3 className={`mb-2 flex items-center justify-between gap-2 text-sm font-semibold ${listSlots ? "tone-ink uppercase" : "text-slate-700"}`}>
-            <span>{station} <span className="text-xs font-normal">{inStation.length}</span></span>
-            {station === "Done" && <select aria-label="Done-Zeitraum" title="Nur Specs, die in diesem Zeitraum fertig wurden, liegen offen; ältere sind eingeklappt. Gilt für dieses Workspace-Board." value={doneDays} onChange={event => setDoneDays(Number(event.target.value))}
-              className="max-w-[9.5rem] rounded border border-transparent bg-transparent px-1 py-0.5 text-[10px] font-medium normal-case tracking-normal hover:border-slate-300">
-              {DONE_WINDOW_OPTIONS.map(option => <option key={option.days} value={option.days}>{option.label}</option>)}
-            </select>}
+          <h3 className={`mb-2 flex flex-wrap items-center justify-between gap-x-2 gap-y-1 text-sm font-semibold ${listSlots ? "tone-ink uppercase" : "text-slate-700"}`}>
+            <span className="whitespace-nowrap">{station} <span className="text-xs font-normal">{inStation.length}</span></span>
+            {station === "Done" && <span className="flex items-center gap-0.5 whitespace-nowrap">
+              <select aria-label="Done-Zeitraum" title="Nur Specs, die in diesem Zeitraum fertig wurden, liegen offen; ältere sind eingeklappt. Gilt für dieses Workspace-Board." value={done.days} onChange={event => done.setDays(Number(event.target.value))} className={DONE_SELECT}>
+                {DONE_WINDOW_OPTIONS.map(option => <option key={option.days} value={option.days}>{option.label}</option>)}
+              </select>
+              <select aria-label="Done-Anzahl" title="So viele Karten auf einmal; „Mehr anzeigen“ holt die nächsten. Gilt für dieses Workspace-Board." value={done.limit} onChange={event => done.setLimit(Number(event.target.value))} className={DONE_SELECT}>
+                {DONE_LIMIT_OPTIONS.map(option => <option key={option.limit} value={option.limit}>{option.label}</option>)}
+              </select>
+            </span>}
           </h3>
-          {station === "Done" && doneDaysError && <p role="alert" className="mb-2 text-[11px] text-red-700">{doneDaysError}</p>}
-          {recent.map(card)}
+          {station === "Done" && done.error && <p role="alert" className="mb-2 text-[11px] text-red-700">{done.error}</p>}
+          {station === "Done"
+            ? <MoreList items={recent} limit={done.limit} resetKey={resetKey} render={shown => shown.map(card)} />
+            : recent.map(card)}
           {station === "Done" && recent.length === 0 && older.length > 0 && <p className="mb-2 text-[11px] text-slate-500">Nichts in diesem Zeitraum fertig geworden.</p>}
           {older.length > 0 && <details data-done-older className="rounded-lg border border-dashed border-slate-300 p-1.5">
             <summary className="cursor-pointer px-1 text-[11px] font-semibold text-slate-500">Älter ({older.length})</summary>
-            <div className="mt-1.5">{older.map(card)}</div>
+            <div className="mt-1.5"><MoreList items={older} limit={done.limit} resetKey={resetKey} render={shown => shown.map(card)} /></div>
           </details>}
         </section>;
         })}

@@ -3,49 +3,72 @@ import { useCallback, useEffect, useState } from "react";
 
 /**
  * Spec 061: the Done column shows only what reached Done within a window of
- * days; everything older is collapsed. The window is a board setting stored
- * in the board root's `.agent/settings.json` (`board.doneDays`), so it is per
- * project or workspace and shared through Git. `0` means "all".
+ * days, and at most `limit` cards at once ("Mehr anzeigen" reveals more);
+ * everything older is collapsed. Both are board settings stored in the board
+ * root's `.agent/settings.json` (`board.doneDays`, `board.doneLimit`), so they
+ * are per project or workspace and shared through Git. `0` means "all".
  */
 export const DONE_WINDOW_DEFAULT = 14;
+export const DONE_LIMIT_DEFAULT = 10;
 export const DONE_WINDOW_OPTIONS: Array<{ days: number; label: string }> = [
-  { days: 7, label: "Letzte 7 Tage" },
-  { days: 14, label: "Letzte 14 Tage" },
-  { days: 30, label: "Letzte 30 Tage" },
-  { days: 90, label: "Letzte 90 Tage" },
-  { days: 0, label: "Alle anzeigen" },
+  { days: 7, label: "7 Tage" },
+  { days: 14, label: "14 Tage" },
+  { days: 30, label: "30 Tage" },
+  { days: 90, label: "90 Tage" },
+  { days: 0, label: "Alle Tage" },
+];
+export const DONE_LIMIT_OPTIONS: Array<{ limit: number; label: string }> = [
+  { limit: 5, label: "5 Karten" },
+  { limit: 10, label: "10 Karten" },
+  { limit: 20, label: "20 Karten" },
+  { limit: 50, label: "50 Karten" },
+  { limit: 0, label: "Alle Karten" },
 ];
 
-export function normaliseDoneWindow(value: unknown): number {
-  const days = typeof value === "number" ? value : Number(value);
-  return Number.isInteger(days) && days >= 0 ? days : DONE_WINDOW_DEFAULT;
+export function normaliseDoneSetting(value: unknown, fallback: number): number {
+  const number = typeof value === "number" ? value : Number(value);
+  return Number.isInteger(number) && number >= 0 ? number : fallback;
 }
 
-/** Reads and writes the board's window; `root` is the project or workspace root. */
-export function useDoneWindow(root: string | null | undefined): [number, (days: number) => void, string | null] {
-  const [days, setDays] = useState(DONE_WINDOW_DEFAULT);
+export interface DoneBoardSettings {
+  days: number;
+  limit: number;
+  setDays: (days: number) => void;
+  setLimit: (limit: number) => void;
+  error: string | null;
+}
+
+/** Reads and writes the board's Done settings; `root` is the project or workspace root. */
+export function useDoneBoard(root: string | null | undefined): DoneBoardSettings {
+  const [days, setDaysState] = useState(DONE_WINDOW_DEFAULT);
+  const [limit, setLimitState] = useState(DONE_LIMIT_DEFAULT);
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {
     if (!root) return;
     let stale = false;
-    setDays(DONE_WINDOW_DEFAULT);
+    setDaysState(DONE_WINDOW_DEFAULT);
+    setLimitState(DONE_LIMIT_DEFAULT);
     invoke<Record<string, unknown>>("project_settings_get", { project: root })
       .then(settings => {
-        const board = settings.board as Record<string, unknown> | undefined;
-        if (!stale && board && "doneDays" in board) setDays(normaliseDoneWindow(board.doneDays));
+        if (stale) return;
+        const board = (settings.board ?? {}) as Record<string, unknown>;
+        if ("doneDays" in board) setDaysState(normaliseDoneSetting(board.doneDays, DONE_WINDOW_DEFAULT));
+        if ("doneLimit" in board) setLimitState(normaliseDoneSetting(board.doneLimit, DONE_LIMIT_DEFAULT));
       })
-      .catch(() => { /* ohne Settings gilt der Default */ });
+      .catch(() => { /* ohne Settings gelten die Defaults */ });
     return () => { stale = true; };
   }, [root]);
-  const update = useCallback((next: number) => {
-    const previous = days;
-    setDays(next);
+  const persist = useCallback((key: string, value: number, fallback: number, apply: (v: number) => void, previous: number) => {
+    apply(value);
     setError(null);
     if (!root) return;
-    invoke("project_settings_set", { project: root, key: "board.doneDays", value: next === DONE_WINDOW_DEFAULT ? null : next })
-      .catch(e => { setDays(previous); setError(String(e)); });
-  }, [root, days]);
-  return [days, update, error];
+    // The default is not written: a board without the key behaves like every other.
+    invoke("project_settings_set", { project: root, key, value: value === fallback ? null : value })
+      .catch(e => { apply(previous); setError(String(e)); });
+  }, [root]);
+  const setDays = useCallback((next: number) => persist("board.doneDays", next, DONE_WINDOW_DEFAULT, setDaysState, days), [persist, days]);
+  const setLimit = useCallback((next: number) => persist("board.doneLimit", next, DONE_LIMIT_DEFAULT, setLimitState, limit), [persist, limit]);
+  return { days, limit, setDays, setLimit, error };
 }
 
 /** Splits Done specs into the recent window and the collapsed rest. */
@@ -60,4 +83,19 @@ export function splitDone<T>(items: T[], doneAt: (item: T) => string | null | un
     (Number.isNaN(stamp) || stamp >= cutoff ? recent : older).push(item);
   }
   return { recent, older };
+}
+
+/**
+ * Shows `limit` items, plus `limit` more per "Mehr anzeigen". `limit` 0 shows
+ * all. The count resets whenever the underlying list changes identity key.
+ */
+export function usePaged<T>(items: T[], limit: number, resetKey: string): { shown: T[]; hidden: number; more: () => void } {
+  const [pages, setPages] = useState(1);
+  useEffect(() => { setPages(1); }, [resetKey, limit]);
+  const visible = limit <= 0 ? items.length : Math.min(items.length, pages * limit);
+  return {
+    shown: items.slice(0, visible),
+    hidden: items.length - visible,
+    more: () => setPages(pages + 1),
+  };
 }

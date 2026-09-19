@@ -104,11 +104,13 @@ only specs waiting on you, and Done is grouped by parent so finished
 work stays legible.
 
 Done shows only what finished recently — by default the last 14 days,
-newest first; everything older sits collapsed under **Älter** and stays
-clickable and searchable. The column header holds the window (7, 14,
-30, 90 days or all). It is a board setting: Speccify stores it as
-`board.doneDays` in the project's or workspace's `.agent/settings.json`,
-so it is versioned and the same for the whole team. "Done since" is the
+newest first, and at most 10 cards at once; a link-styled **Mehr
+anzeigen** reveals the next 10. Everything older sits collapsed under
+**Älter** and stays clickable and searchable. The column header holds
+both settings (7, 14, 30, 90 days or all; 5, 10, 20, 50 cards or all).
+They are board settings: Speccify stores them as `board.doneDays` and
+`board.doneLimit` in the project's or workspace's `.agent/settings.json`,
+so they are versioned and the same for the whole team. "Done since" is the
 last move to Done in the spec's history; a spec without history counts
 by its file's modification time. A search or parent filter always shows
 every match.

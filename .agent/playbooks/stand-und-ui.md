@@ -43,7 +43,9 @@ innerhalb des Board-Fensters fertig wurde (Default 14 Tage, neueste zuerst, nach
 Thema gruppiert); Älteres eingeklappt unter „Älter (N)“, weiter klickbar. Fenster
 je Board in der Spaltenüberschrift (7/14/30/90/alle) → `board.doneDays` in
 `.agent/settings.json` der Projekt- bzw. Workspace-Wurzel; Default wird nicht
-geschrieben. „Done seit“ = letzter `station_changed` mit Done aus der History,
+geschrieben. Zusätzlich höchstens N Karten auf einmal (5/10/20/50/alle, Default
+10, `board.doneLimit`), darunter der Link „Mehr anzeigen (N weitere)“ ohne
+Button-Optik, der je Klick N weitere holt — auch innerhalb von „Älter“. „Done seit“ = letzter `station_changed` mit Done aus der History,
 sonst Dateiänderung, sonst `created`. Suche/Elternfilter zeigen alle Treffer.
 Rust-Test und Browser-Regression `scripts/test_board_done_window.mjs` grün.
 
@@ -486,7 +488,7 @@ Navigator · fünf Gruppen, zehn Tabs
 │   │   ├── Karten: Nummer/ID · Titel · Status-Badges · Aufgabenfortschritt
 │   │   ├── Drag-and-drop zwischen Stationen
 │   │   ├── Done nach Parent gruppiert, neueste zuerst; unbekannte Alt-Stationen unverändert als zusätzliche Lesespalten
-│   │   └── Done-Zeitraum (061) in der Spaltenüberschrift: 7/14/30/90 Tage/alle, Default 14; Älteres eingeklappt „Älter (N)“; `board.doneDays` in `.agent/settings.json` je Projekt/Workspace
+│   │   └── Done-Zeitraum und -Anzahl (061) in der Spaltenüberschrift: 7/14/30/90 Tage/alle (Default 14) · 5/10/20/50 Karten/alle (Default 10); Link „Mehr anzeigen (N weitere)“; Älteres eingeklappt „Älter (N)“; `board.doneDays`/`board.doneLimit` in `.agent/settings.json` je Projekt/Workspace
 │   ├── + Spec / Doppelklick → Spec-Dialog
 │   │   ├── Titel · Station · order · parent · bereit · braucht BO
 │   │   ├── Markdown-Inhalt / Standardvorlage

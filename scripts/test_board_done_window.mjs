@@ -1,5 +1,6 @@
-// Spec 061: the Done column shows only recent specs open; older ones collapse.
-// The window is a board setting (`board.doneDays` in the root's settings).
+// Spec 061: the Done column shows only recent specs open and at most N cards
+// at once; older ones collapse. Window and N are board settings
+// (`board.doneDays`, `board.doneLimit` in the root's settings).
 import assert from "node:assert/strict";
 import { pathToFileURL } from "node:url";
 const { chromium } = await import(process.env.PLAYWRIGHT_MODULE
@@ -16,13 +17,22 @@ try {
   const cards = () => lane.locator("[data-spec-card]");
   const older = lane.locator("[data-done-older]");
   const window_ = lane.getByRole("combobox", { name: "Done-Zeitraum" });
+  const limit = lane.getByRole("combobox", { name: "Done-Anzahl" });
+  const more = lane.locator(":scope > div > [data-done-more]");
   const inOlder = async (id) => (await older.locator(`[data-spec-card=".agent/specs/${id}/SPEC.md"]`).count()) === 1;
+  const settings = () => page.evaluate(() => JSON.stringify(window.__SPECCIFY_MOCK__.projectSettings.board));
 
-  // Default 14 days: yesterday, undated and the fixture's Done spec stay open;
-  // three weeks and one year collapse under "Älter"; the header counts all.
-  await lane.getByRole("heading", { name: /Done \(5\)/ }).waitFor();
+  // Defaults 14 days / 10 cards: 11 recent (yesterday, eight recent, undated,
+  // fixture Done) → 10 open plus a link-styled "Mehr anzeigen"; three weeks
+  // and one year collapse under "Älter"; the header counts all 13.
+  await lane.getByRole("heading", { name: /Done \(13\)/ }).waitFor();
   assert.equal(await window_.inputValue(), "14");
-  assert.equal(await cards().count(), 5);
+  assert.equal(await limit.inputValue(), "10");
+  await more.waitFor();
+  assert.equal(await more.textContent(), "Mehr anzeigen (1 weitere)");
+  assert.equal(await more.evaluate(el => getComputedStyle(el).textDecorationLine), "underline");
+  assert.deepEqual(await more.evaluate(el => [getComputedStyle(el).borderTopWidth, getComputedStyle(el).backgroundColor]), ["0px", "rgba(0, 0, 0, 0)"]);
+  assert.equal(await cards().count(), 12); // 10 open + 2 collapsed under Älter
   await older.getByText("Älter (2)").waitFor();
   assert.equal(await older.getAttribute("open"), null);
   assert.ok(await inOlder("done-month"));
@@ -31,32 +41,53 @@ try {
   assert.ok(!(await inOlder("done-undated")));
   // Newest first within the visible part.
   const visibleIds = await lane.locator("details[open] [data-spec-card], :scope > div > [data-spec-card]").evaluateAll(nodes => nodes.map(n => n.getAttribute("data-spec-card")));
-  assert.ok(visibleIds.indexOf(".agent/specs/done-fresh/SPEC.md") < visibleIds.indexOf(".agent/specs/notizen-ordner/SPEC.md"), visibleIds.join(","));
+  assert.ok(visibleIds.indexOf(".agent/specs/done-fresh/SPEC.md") < visibleIds.indexOf(".agent/specs/done-recent-1/SPEC.md"), visibleIds.join(","));
+  assert.ok(visibleIds.indexOf(".agent/specs/done-recent-1/SPEC.md") < visibleIds.indexOf(".agent/specs/done-recent-8/SPEC.md"), visibleIds.join(","));
+
+  // "Mehr anzeigen" reveals the rest and disappears.
+  await more.click();
+  await page.waitForFunction(() => document.querySelectorAll('[data-station="Done"] [data-spec-card]').length === 13);
+  assert.equal(await more.count(), 0);
 
   // Collapsed specs stay reachable.
   await older.locator(":scope > summary").click();
   await older.locator('[data-spec-card=".agent/specs/done-old/SPEC.md"]').click();
   await page.getByRole("heading", { name: "Vor einem Jahr fertig" }).first().waitFor();
 
+  // N = 5: five open, link names six more; each click adds five; setting written.
+  await limit.selectOption("5");
+  await more.waitFor();
+  assert.equal(await more.textContent(), "Mehr anzeigen (6 weitere)");
+  assert.equal(await settings(), JSON.stringify({ doneLimit: 5 }));
+  await more.click();
+  assert.equal(await more.textContent(), "Mehr anzeigen (1 weitere)");
+  // Back to the default removes the key; "all" shows everything without a link.
+  await limit.selectOption("10");
+  assert.equal(await settings(), undefined);
+  await limit.selectOption("0");
+  await page.waitForFunction(() => document.querySelectorAll('[data-station="Done"] [data-done-more]').length === 0);
+  assert.equal(await settings(), JSON.stringify({ doneLimit: 0 }));
+  await limit.selectOption("10");
+
   // 30 days: the three-week spec moves up; the setting is written as board.doneDays.
   await window_.selectOption("30");
   await older.getByText("Älter (1)").waitFor();
   assert.ok(!(await inOlder("done-month")));
-  assert.deepEqual(await page.evaluate(() => window.__SPECCIFY_MOCK__.projectSettings.board), { doneDays: 30 });
-  // 7 days keeps yesterday open; back to the default removes the key.
+  assert.equal(await settings(), JSON.stringify({ doneDays: 30 }));
   await window_.selectOption("7");
-  await older.getByText("Älter (2)").waitFor();
+  await older.getByText("Älter (4)").waitFor(); // recent 7 and 8 are 7.5 and 8.5 days old
   await window_.selectOption("14");
-  assert.equal(await page.evaluate(() => JSON.stringify(window.__SPECCIFY_MOCK__.projectSettings.board)), undefined);
-  // "All" restores the old behaviour.
+  assert.equal(await settings(), undefined);
   await window_.selectOption("0");
   await page.waitForFunction(() => document.querySelector('[data-station="Done"] [data-done-older]') === null);
 
-  // A saved setting is read on load.
-  await page.goto(`${url}?donewindow=1&donedays=90`);
-  await lane.getByRole("heading", { name: /Done \(5\)/ }).waitFor();
+  // Saved settings are read on load.
+  await page.goto(`${url}?donewindow=1&donedays=90&donelimit=20`);
+  await lane.getByRole("heading", { name: /Done \(13\)/ }).waitFor();
   await page.waitForFunction(() => document.querySelector('[data-station="Done"] select')?.value === "90");
+  assert.equal(await limit.inputValue(), "20");
   await older.getByText("Älter (1)").waitFor();
+  assert.equal(await more.count(), 0);
 
   // Search shows every match regardless of the window.
   await page.getByRole("textbox", { name: "Specs suchen", exact: true }).fill("Vor einem Jahr");
@@ -64,7 +95,7 @@ try {
   assert.equal(await older.count(), 0);
   assert.equal(await cards().count(), 1);
 
-  // Workspace board: same control, stored at the workspace root.
+  // Workspace board: same controls, stored at the workspace root.
   await page.goto(`${url}?dashboard=1&workspaces=1&donewindow=1`);
   await page.getByLabel("Ordner", { exact: true }).fill("/private/tmp/demo-workspace");
   await page.getByRole("button", { name: "Öffnen", exact: true }).click();
@@ -74,10 +105,11 @@ try {
   await wsWindow.waitFor();
   assert.equal(await wsWindow.inputValue(), "14");
   await wsWindow.selectOption("7");
-  const calls = await page.evaluate(() => window.__SPECCIFY_MOCK__.ownerCalls.filter(c => c.startsWith("settings:board.doneDays")));
-  assert.deepEqual(calls, ["settings:board.doneDays=7"]);
+  await wsDone.getByRole("combobox", { name: "Done-Anzahl" }).selectOption("5");
+  const calls = await page.evaluate(() => window.__SPECCIFY_MOCK__.ownerCalls.filter(c => c.startsWith("settings:board.")));
+  assert.deepEqual(calls, ["settings:board.doneDays=7", "settings:board.doneLimit=5"]);
   assert.deepEqual(errors, []);
-  console.log("PASS board done window: default 14 days, collapsed older, sorting, per-board setting, reload, search, all");
+  console.log("PASS board done window: defaults 14 days/10 cards, link-styled Mehr anzeigen, collapsed older, sorting, per-board settings, reload, search, all");
 } finally {
   await browser.close();
 }

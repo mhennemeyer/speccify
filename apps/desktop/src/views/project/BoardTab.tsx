@@ -11,7 +11,8 @@ import { listen } from "@tauri-apps/api/event";
 import Markdown from "../../components/Markdown";
 import { LoadingBoundary, useAsync } from "../../components/ui";
 import { HandoverButton } from "../../components/HandoverSheet";
-import { DONE_WINDOW_OPTIONS, splitDone, useDoneWindow } from "../../lib/doneWindow";
+import { DONE_LIMIT_OPTIONS, DONE_WINDOW_OPTIONS, splitDone, useDoneBoard } from "../../lib/doneWindow";
+import MoreList from "../../components/MoreList";
 import {
   InspectorButton,
   InspectorPanel,
@@ -232,6 +233,8 @@ function createdCompare(a: SpecEntry, b: SpecEntry) {
   if (createdA !== createdB) return createdA < createdB ? -1 : 1;
   return a.id < b.id ? -1 : 1;
 }
+
+const DONE_SELECT = "rounded border border-transparent bg-transparent px-1 py-0.5 text-[10px] font-medium normal-case tracking-normal hover:border-slate-300";
 
 /** Spec 061: Done newest first — what just finished sits on top. */
 function doneCompare(a: SpecEntry, b: SpecEntry) {
@@ -841,7 +844,7 @@ export default function BoardTab({ project, refresh, detailFile, detailOnly = fa
   const [parentFilter, setParentFilter] = useState("");
   const [search, setSearch] = useState("");
   // Spec 061: Done zeigt nur das Fenster der letzten Tage offen; Rest eingeklappt.
-  const [doneDays, setDoneDays, doneDaysError] = useDoneWindow(project);
+  const done = useDoneBoard(project);
   const branches = useAsync(
     () => invoke<BranchReport>("project_spec_branches", { project }).catch(() => null),
     `spec-branches:${project}`,
@@ -1221,28 +1224,42 @@ export default function BoardTab({ project, refresh, detailFile, detailOnly = fa
                 }}
                 className="spec-lane flex min-h-0 min-w-48 flex-1 flex-col rounded-lg p-2"
               >
-                <h2 className="tone-ink mb-2 flex items-center justify-between gap-2 px-1 text-xs font-semibold uppercase tracking-wide">
-                  <span>{STATION_LABELS[station] ?? station} ({inStation.length})</span>
+                <h2 className="tone-ink mb-2 flex flex-wrap items-center justify-between gap-x-2 gap-y-1 px-1 text-xs font-semibold uppercase tracking-wide">
+                  <span className="whitespace-nowrap">{STATION_LABELS[station] ?? station} ({inStation.length})</span>
                   {station === "Done" && (
-                    <select
-                      aria-label="Done-Zeitraum"
-                      title="Nur Specs, die in diesem Zeitraum fertig wurden, liegen offen; ältere sind eingeklappt. Gilt für dieses Board (.agent/settings.json)."
-                      className="max-w-[9.5rem] rounded border border-transparent bg-transparent px-1 py-0.5 text-[10px] font-medium normal-case tracking-normal hover:border-slate-300"
-                      value={doneDays}
-                      onChange={(event) => setDoneDays(Number(event.target.value))}
-                    >
-                      {DONE_WINDOW_OPTIONS.map((option) => (
-                        <option key={option.days} value={option.days}>{option.label}</option>
-                      ))}
-                    </select>
+                    <span className="flex items-center gap-0.5 whitespace-nowrap">
+                      <select
+                        aria-label="Done-Zeitraum"
+                        title="Nur Specs, die in diesem Zeitraum fertig wurden, liegen offen; ältere sind eingeklappt. Gilt für dieses Board (.agent/settings.json)."
+                        className={DONE_SELECT}
+                        value={done.days}
+                        onChange={(event) => done.setDays(Number(event.target.value))}
+                      >
+                        {DONE_WINDOW_OPTIONS.map((option) => (
+                          <option key={option.days} value={option.days}>{option.label}</option>
+                        ))}
+                      </select>
+                      <select
+                        aria-label="Done-Anzahl"
+                        title="So viele Karten auf einmal; „Mehr anzeigen“ holt die nächsten. Gilt für dieses Board (.agent/settings.json)."
+                        className={DONE_SELECT}
+                        value={done.limit}
+                        onChange={(event) => done.setLimit(Number(event.target.value))}
+                      >
+                        {DONE_LIMIT_OPTIONS.map((option) => (
+                          <option key={option.limit} value={option.limit}>{option.label}</option>
+                        ))}
+                      </select>
+                    </span>
                   )}
                 </h2>
-                {station === "Done" && doneDaysError && <p role="alert" className="mb-2 px-1 text-[11px] text-red-700">{doneDaysError}</p>}
+                {station === "Done" && done.error && <p role="alert" className="mb-2 px-1 text-[11px] text-red-700">{done.error}</p>}
                 <div className="min-h-0 flex-1 space-y-2 overflow-y-auto">
                   {station === "Done" ? (() => {
                     // A search or parent filter asks for everything that matches.
                     const filtering = !!query || !!parentFilter;
-                    const { recent, older } = splitDone(inStation, (spec) => spec.done_at, filtering ? 0 : doneDays);
+                    const { recent, older } = splitDone(inStation, (spec) => spec.done_at, filtering ? 0 : done.days);
+                    const resetKey = `${query}|${parentFilter}|${needsMe}|${mine}|${inStation.length}`;
                     const grouped = (items: SpecEntry[]) => parentFilter
                       ? items.map(card)
                       : groupDone(items).map(([parent, group]) => (
@@ -1254,7 +1271,7 @@ export default function BoardTab({ project, refresh, detailFile, detailOnly = fa
                         </details>
                       ));
                     return <>
-                      {grouped(recent)}
+                      <MoreList items={recent} limit={done.limit} resetKey={resetKey} render={grouped} />
                       {recent.length === 0 && older.length > 0 && (
                         <p className="px-1 text-[11px] text-slate-500">Nichts in diesem Zeitraum fertig geworden.</p>
                       )}
@@ -1263,7 +1280,9 @@ export default function BoardTab({ project, refresh, detailFile, detailOnly = fa
                           <summary className="cursor-pointer px-1 text-[11px] font-semibold text-slate-500">
                             Älter ({older.length})
                           </summary>
-                          <div className="mt-1.5 space-y-2">{grouped(older)}</div>
+                          <div className="mt-1.5 space-y-2">
+                            <MoreList items={older} limit={done.limit} resetKey={resetKey} render={grouped} />
+                          </div>
                         </details>
                       )}
                     </>;
