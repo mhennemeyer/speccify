@@ -3,6 +3,7 @@ station: Doing
 order: 61
 created: 2026-09-19
 needs_human: true
+ready: true
 ---
 # Done-Spalte: nur Aktuelles offen, Älteres eingeklappt, pro Board einstellbar
 
@@ -47,12 +48,34 @@ zeigen, den Rest eingeklappt; pro Board konfigurierbar mit vernünftigem Default
 
 ## Tasks
 
-- [ ] Rust: `done_at` je Spec aus History/mtime/created im Board-Eintrag.
-- [ ] Projekt-Board: Fenster aus Settings, Menü in der Done-Überschrift, „Älter (N)“.
-- [ ] Workspace-Board: gleiche Auswahl über die Workspace-Root-Settings.
-- [ ] Tests (Rust `done_at`, Browser-Regression Board), Playbooks, Fixture.
+- [x] Rust: `done_at` je Spec aus History/mtime/created im Board-Eintrag.
+- [x] Projekt-Board: Fenster aus Settings, Menü in der Done-Überschrift, „Älter (N)“.
+- [x] Workspace-Board: gleiche Auswahl über die Workspace-Root-Settings.
+- [x] Tests (Rust `done_at`, Browser-Regression Board), Playbooks, Fixture.
 
 ## Verification
+
+Rust `board_reads_specs_and_moves_byte_stable` erweitert: Done ohne History →
+RFC-3339-Änderungszeit; mit History gewinnt der letzte `station_changed` mit
+Done trotz späterer Ereignisse und kaputter Zeile; nicht-Done → kein `done_at`.
+Desktop-Rust 134 bestanden/3 ignoriert, Cargo fmt, TypeScript, Marketing-Build
+(113 Seiten) grün.
+
+Browser `scripts/test_board_done_window.mjs` (Fixture `?donewindow`, Alter
+relativ zu heute): Default 14 → 3 offen, „Älter (2)“ zu, Überschrift zählt 5,
+neueste zuerst; eingeklappte Karte anklickbar; 30 → `board.doneDays: 30` im
+Settings-Mock, 14 löscht den Schlüssel, 0 entfernt „Älter“; `?donedays=90`
+wird beim Laden gelesen; Suche zeigt Treffer trotz Fenster; Workspace-Board hat
+dieselbe Auswahl und schreibt `board.doneDays` an die Workspace-Wurzel.
+Nachbarsuiten workspace_board, spec_navigation, spec_register, spec_owner,
+team_signals grün. `test_workspace_ui` schlägt unabhängig davon auch auf dem
+unveränderten Stand fehl (Discovery-Tiefen-Text „Nicht durchsucht“) — nicht
+Teil dieser Spec, separat ansehen.
+
+Screenshot des Mock-Boards (1400×800) gesichtet: Auswahl „Letzte 14 Tage“
+in der Done-Überschrift, Gruppen, ältere Karten unten eingeklappt.
+Nicht nachgewiesen: Sichtprüfung in der gebauten App (braucht neuen Build);
+Verhalten mit echtem Register-Sync der `.agent/settings.json` im Team.
 
 ## Questions
 
