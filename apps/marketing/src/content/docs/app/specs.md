@@ -103,6 +103,16 @@ including when the navigator is hidden. The **needs me** filter shows
 only specs waiting on you, and Done is grouped by parent so finished
 work stays legible.
 
+Done shows only what finished recently — by default the last 14 days,
+newest first; everything older sits collapsed under **Älter** and stays
+clickable and searchable. The column header holds the window (7, 14,
+30, 90 days or all). It is a board setting: Speccify stores it as
+`board.doneDays` in the project's or workspace's `.agent/settings.json`,
+so it is versioned and the same for the whole team. "Done since" is the
+last move to Done in the spec's history; a spec without history counts
+by its file's modification time. A search or parent filter always shows
+every match.
+
 ## One register for the whole team
 
 Working in feature branches does not have to mean everyone sees a

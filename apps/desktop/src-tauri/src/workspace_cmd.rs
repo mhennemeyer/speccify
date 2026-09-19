@@ -1015,6 +1015,9 @@ struct WorkspaceSpec {
 #[derive(Serialize)]
 pub struct WorkspaceBoard {
     workspace_id: String,
+    /// Spec 061: Workspace-Wurzel — dort liegen die Board-Einstellungen
+    /// (`.agent/settings.json`, `board.doneDays`) wie bei einem Projekt.
+    root: String,
     revision: u64,
     captured_at: u64,
     specs: Vec<WorkspaceSpec>,
@@ -1036,6 +1039,7 @@ fn board_directory(path: &Path) -> Result<bool, String> {
 fn read_workspace_board(workspace: &Workspace, max_entries: usize) -> WorkspaceBoard {
     let mut result = WorkspaceBoard {
         workspace_id: workspace.id.clone(),
+        root: workspace.root.clone(),
         revision: workspace.revision,
         captured_at: std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)

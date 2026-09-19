@@ -104,7 +104,7 @@ export function installWorkspaceFixture(responses) {
         return marketingSpecs(tree).map(spec => ({ key: JSON.stringify([workspace.id, repo.id, tree.id, spec.file]), project_id: project.id, project_name: project.name,
           repository_id: repo.id, repository_name: repo.name, worktree_id: tree.id, worktree_path: tree.path, worktree_label: tree.relative_path, spec }));
       }));
-      return { workspace_id: workspace.id, revision: workspace.revision, captured_at: Date.parse("2026-09-01T10:00:00Z"), specs, partial: false, warnings: [] };
+      return { workspace_id: workspace.id, root: workspace.root, revision: workspace.revision, captured_at: Date.parse("2026-09-01T10:00:00Z"), specs, partial: false, warnings: [] };
     }
     const specs = workspace.repositories.flatMap(repo => repo.worktrees.map(tree => {
       const project = workspace.projects.find(project => project.repository_ids.includes(repo.id));
@@ -120,7 +120,7 @@ export function installWorkspaceFixture(responses) {
     if (flags.boardDelay) await new Promise(resolve => setTimeout(resolve, flags.boardDelay));
     if (flags.boardError) throw Error("Workspace nicht erreichbar");
     if (flags.boardUnknown && specs[0]) specs[0].spec.station = "Review";
-    return { workspace_id: workspace.id, revision: workspace.revision, captured_at: Date.now(), specs,
+    return { workspace_id: workspace.id, root: workspace.root, revision: workspace.revision, captured_at: Date.now(), specs,
       partial: !!flags.boardPartial, warnings: flags.boardPartial ? ["Nicht verfügbar: api-feature"] : [] };
   };
   responses.workspace_discover = ({ path }) => {

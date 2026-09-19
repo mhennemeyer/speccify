@@ -102,6 +102,16 @@
           { timestamp: "2026-08-31T11:52:00Z", spec_id:"live-test", event_type: "ticket_edited", actor: "user", summary: "Im Editor gespeichert" },
         ],
       };
+      if (new URLSearchParams(location.search).has("donewindow")) {
+        // Spec 061: Done-Alter relativ zu jetzt, damit der Test datumsunabhängig bleibt.
+        const daysAgo = (days) => new Date(Date.now() - days * 86400000).toISOString();
+        tickets.push(
+          { ...base, id: "done-fresh", file: ".agent/specs/done-fresh/SPEC.md", title: "Gestern fertig", station: "Done", parent: "notizen", done_at: daysAgo(1), body: "Frisch." },
+          { ...base, id: "done-month", file: ".agent/specs/done-month/SPEC.md", title: "Vor drei Wochen fertig", station: "Done", parent: "notizen", done_at: daysAgo(21), body: "Etwas älter." },
+          { ...base, id: "done-old", file: ".agent/specs/done-old/SPEC.md", title: "Vor einem Jahr fertig", station: "Done", done_at: daysAgo(365), body: "Alt." },
+          { ...base, id: "done-undated", file: ".agent/specs/done-undated/SPEC.md", title: "Ohne Datum fertig", station: "Done", done_at: null, body: "Unbekannt." },
+        );
+      }
       if (new URLSearchParams(location.search).has("specnav")) {
         tickets.push({ ...base, id: "notizen-zahlen", number: 12,
           file: ".agent/specs/archive/2026-09-01-notizen-zahlen/SPEC.md",
@@ -132,6 +142,10 @@
       window.__SPECCIFY_MOCK__ = { emit, actionStarts, failStart: false, failStop: false, taskCalls: [], staleTaskOnce: false, specs: tickets, workflowInstalls: 0, terminalOpens: [], sessionChecks: [], ownerCalls: [] };
       if (doingOwner) { const doing = tickets.find(s => s.station === "Doing"); doing.owner = doingOwner; doing.branch = `spec/${doing.id}`; }
       window.__SPECCIFY_MOCK__.projectSettings = {};
+      // Spec 061: gespeichertes Done-Fenster wie aus .agent/settings.json gelesen.
+      if (new URLSearchParams(location.search).has("donedays")) {
+        window.__SPECCIFY_MOCK__.projectSettings.board = { doneDays: Number(new URLSearchParams(location.search).get("donedays")) };
+      }
       window.__SPECCIFY_MOCK__.uiAnswers = [];
       window.__SPECCIFY_MOCK__.terminalWrites = [];
       window.__SPECCIFY_MOCK__.terminalResizes = [];
@@ -237,7 +251,16 @@
         }) : { head: null, me: null, specs: [] },
         project_webhook_test: () => { window.__SPECCIFY_MOCK__.ownerCalls.push("webhook-test"); return "Testnachricht gesendet an https://hooks.example.invalid/…"; },
         project_settings_get: () => window.__SPECCIFY_MOCK__.projectSettings,
-        project_settings_set: ({ key, value }) => { window.__SPECCIFY_MOCK__.ownerCalls.push(`settings:${key}=${value}`); const s = window.__SPECCIFY_MOCK__.projectSettings; if (key === "webhook.enabled") s.webhook = { ...(s.webhook ?? {}), enabled: value }; return s; },
+        project_settings_set: ({ key, value }) => {
+          window.__SPECCIFY_MOCK__.ownerCalls.push(`settings:${key}=${value}`);
+          const s = window.__SPECCIFY_MOCK__.projectSettings;
+          // Wie der native Befehl: verschachtelter Schlüssel, null löscht.
+          const parts = key.split("."); let cursor = s;
+          for (const part of parts.slice(0, -1)) cursor = cursor[part] ??= {};
+          if (value === null) delete cursor[parts.at(-1)]; else cursor[parts.at(-1)] = value;
+          for (const part of parts.slice(0, -1)) if (s[part] && Object.keys(s[part]).length === 0) delete s[part];
+          return s;
+        },
         // Spec 038: Agent-Fragen. ?askui=1 spielt eine Ad-hoc-UI ein.
         ask_bo_pending: () => window.__SPECCIFY_MOCK__.pendingAsk ?? [],
         "plugin:window|close": ({ label }) => { window.__SPECCIFY_MOCK__.windowCloses.push(label ?? "ask-1"); return null; },

@@ -38,6 +38,15 @@ senden weiterhin kein Enter. [Research](../../docs/terminal-enter-research.md),
 Alle vier Update-Ziele signaturgeprüft; echter öffentlicher 0.8.1→0.8.2-Updater
 auf diesem Mac erfolgreich, vier Fenster wiederhergestellt. 0.9.0/itsdcloud ist geparkt.
 
+**Done-Spalte 061 (2026-09-19, noch nicht ausgeliefert):** Done zeigt nur, was
+innerhalb des Board-Fensters fertig wurde (Default 14 Tage, neueste zuerst, nach
+Thema gruppiert); Älteres eingeklappt unter „Älter (N)“, weiter klickbar. Fenster
+je Board in der Spaltenüberschrift (7/14/30/90/alle) → `board.doneDays` in
+`.agent/settings.json` der Projekt- bzw. Workspace-Wurzel; Default wird nicht
+geschrieben. „Done seit“ = letzter `station_changed` mit Done aus der History,
+sonst Dateiänderung, sonst `created`. Suche/Elternfilter zeigen alle Treffer.
+Rust-Test und Browser-Regression `scripts/test_board_done_window.mjs` grün.
+
 **„Alles stoppen“ 060, Teil von 0.8.4 (2026-09-17):** Blockiert laufende Arbeit die
 Installation, nennt die Meldung die Anzahl und erklärt, dass jedes offene Terminal
 zählt. Knopf **Alles stoppen** an der Meldung → Bestätigung „N Terminals/Aktionen
@@ -476,7 +485,8 @@ Navigator · fünf Gruppen, zehn Tabs
 │   ├── Board: Backlog / Doing / Done (v1: Slate / Blau / Grün; getönte Flächen)
 │   │   ├── Karten: Nummer/ID · Titel · Status-Badges · Aufgabenfortschritt
 │   │   ├── Drag-and-drop zwischen Stationen
-│   │   └── Done nach Parent gruppiert; unbekannte Alt-Stationen unverändert als zusätzliche Lesespalten
+│   │   ├── Done nach Parent gruppiert, neueste zuerst; unbekannte Alt-Stationen unverändert als zusätzliche Lesespalten
+│   │   └── Done-Zeitraum (061) in der Spaltenüberschrift: 7/14/30/90 Tage/alle, Default 14; Älteres eingeklappt „Älter (N)“; `board.doneDays` in `.agent/settings.json` je Projekt/Workspace
 │   ├── + Spec / Doppelklick → Spec-Dialog
 │   │   ├── Titel · Station · order · parent · bereit · braucht BO
 │   │   ├── Markdown-Inhalt / Standardvorlage

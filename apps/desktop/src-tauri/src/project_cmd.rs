@@ -580,6 +580,10 @@ pub struct TicketEntry {
     /// Spec 029: Code-Branch der Arbeit (Konvention `spec/<NNN>-<slug>`).
     pub(crate) branch: Option<String>,
     created: Option<String>,
+    /// Spec 061: wann die Spec zuletzt nach Done kam — letzter
+    /// `station_changed`-Eintrag mit „Done“ in der History, sonst die
+    /// Änderungszeit der SPEC.md, sonst `created`. Nur in Done gesetzt.
+    done_at: Option<String>,
     pub(crate) ready: bool,
     needs_human: bool,
     /// Backlog-Sortierung: `order` → `created` → `id`; ohne `order` = Idee.
@@ -664,6 +668,34 @@ pub(crate) fn read_project_board(project: String) -> Result<Vec<TicketEntry>, St
     Ok(specs)
 }
 
+/// Spec 061: when the spec last reached Done. The history is append-only,
+/// so the last `station_changed` line naming Done wins; without one the
+/// file's modification time stands in (the register updates it on every
+/// sync). Returns RFC 3339 or whatever timestamp the history line carries.
+pub(crate) fn done_since(spec_path: &Path) -> Option<String> {
+    let dir = spec_path.parent()?;
+    let from_history = std::fs::read_to_string(dir.join("history.jsonl"))
+        .ok()
+        .and_then(|text| {
+            text.lines()
+                .rev()
+                .filter_map(|line| serde_json::from_str::<serde_json::Value>(line).ok())
+                .find(|event| {
+                    event["event_type"] == "station_changed"
+                        && event["summary"]
+                            .as_str()
+                            .is_some_and(|summary| summary.contains("Done"))
+                })
+                .and_then(|event| event["timestamp"].as_str().map(str::to_string))
+        });
+    from_history.or_else(|| {
+        let modified = std::fs::metadata(spec_path).ok()?.modified().ok()?;
+        time::OffsetDateTime::from(modified)
+            .format(&time::format_description::well_known::Rfc3339)
+            .ok()
+    })
+}
+
 /// Shared interpretation for project and read-only workspace boards.
 pub(crate) fn spec_from_text(root: &Path, path: &Path, text: &str) -> Option<TicketEntry> {
     let (fields, body) = parse_flat_frontmatter(text)?;
@@ -679,6 +711,11 @@ pub(crate) fn spec_from_text(root: &Path, path: &Path, text: &str) -> Option<Tic
             }
         });
     let tasks = crate::spec_tasks::parse_tasks(body);
+    let done_at = if station == "Done" {
+        done_since(path).or_else(|| flat_lookup(&fields, "created").map(str::to_string))
+    } else {
+        None
+    };
     let open_question = flat_lookup(&fields, "open_question")
         .filter(|q| !q.is_empty() && *q != "null")
         .map(str::to_string);
@@ -721,6 +758,7 @@ pub(crate) fn spec_from_text(root: &Path, path: &Path, text: &str) -> Option<Tic
             .filter(|v| !v.is_empty() && *v != "null")
             .map(str::to_string),
         created: flat_lookup(&fields, "created").map(str::to_string),
+        done_at,
         ready: flat_truthy(&fields, "ready"),
         needs_human: flat_truthy(&fields, "needs_human"),
         order: flat_lookup(&fields, "order").and_then(|raw| raw.parse().ok()),
@@ -1168,6 +1206,24 @@ mod tests {
         assert_eq!(old.station, "Done");
         assert_eq!(old.title, "alt");
         assert_eq!(old.parent.as_deref(), Some("thema"));
+        // Spec 061: Done ohne History → Änderungszeit der Datei (RFC 3339);
+        // nicht-Done → kein done_at.
+        assert!(first.done_at.is_none());
+        assert!(old.done_at.as_deref().is_some_and(|t| t.contains('T')));
+        // Mit History gewinnt der letzte Wechsel nach Done, auch wenn danach
+        // andere Ereignisse folgen.
+        std::fs::write(
+            dir.join(".agent/specs/archive/2026-09-01-alt/history.jsonl"),
+            concat!(
+                "{\"timestamp\":\"2026-09-01T08:00:00Z\",\"spec_id\":\"alt\",\"event_type\":\"station_changed\",\"actor\":\"a\",\"summary\":\"Backlog -> Doing\"}\n",
+                "{\"timestamp\":\"2026-09-02T09:00:00Z\",\"spec_id\":\"alt\",\"event_type\":\"station_changed\",\"actor\":\"a\",\"summary\":\"Doing → Done: fertig\"}\n",
+                "kaputte zeile\n",
+                "{\"timestamp\":\"2026-09-03T10:00:00Z\",\"spec_id\":\"alt\",\"event_type\":\"spec_edited\",\"actor\":\"a\",\"summary\":\"Done Tippfehler\"}\n",
+            ),
+        )
+        .unwrap();
+        let again = read_project_board(project.clone()).unwrap();
+        assert_eq!(again[1].done_at.as_deref(), Some("2026-09-02T09:00:00Z"));
 
         project_board_move(project.clone(), first.file.clone(), "Doing".into()).unwrap();
         let moved = std::fs::read_to_string(dir.join(".agent/specs/t-1/SPEC.md")).unwrap();

@@ -11,6 +11,7 @@ import { listen } from "@tauri-apps/api/event";
 import Markdown from "../../components/Markdown";
 import { LoadingBoundary, useAsync } from "../../components/ui";
 import { HandoverButton } from "../../components/HandoverSheet";
+import { DONE_WINDOW_OPTIONS, splitDone, useDoneWindow } from "../../lib/doneWindow";
 import {
   InspectorButton,
   InspectorPanel,
@@ -33,6 +34,8 @@ export interface SpecEntry {
   revision?: string;
   repositories?: string[];
   created: string | null;
+  /** Spec 061: wann die Spec zuletzt nach Done kam (History, sonst Dateiänderung). */
+  done_at?: string | null;
   ready: boolean;
   needs_human: boolean;
   order: number | null;
@@ -228,6 +231,14 @@ function createdCompare(a: SpecEntry, b: SpecEntry) {
   const createdB = b.created ?? "";
   if (createdA !== createdB) return createdA < createdB ? -1 : 1;
   return a.id < b.id ? -1 : 1;
+}
+
+/** Spec 061: Done newest first — what just finished sits on top. */
+function doneCompare(a: SpecEntry, b: SpecEntry) {
+  const doneA = a.done_at ?? a.created ?? "";
+  const doneB = b.done_at ?? b.created ?? "";
+  if (doneA !== doneB) return doneA > doneB ? -1 : 1;
+  return createdCompare(a, b);
 }
 
 function SpecBadges({ spec }: { spec: SpecEntry }) {
@@ -829,6 +840,8 @@ export default function BoardTab({ project, refresh, detailFile, detailOnly = fa
   const [byPerson, setByPerson] = useState(false);
   const [parentFilter, setParentFilter] = useState("");
   const [search, setSearch] = useState("");
+  // Spec 061: Done zeigt nur das Fenster der letzten Tage offen; Rest eingeklappt.
+  const [doneDays, setDoneDays, doneDaysError] = useDoneWindow(project);
   const branches = useAsync(
     () => invoke<BranchReport>("project_spec_branches", { project }).catch(() => null),
     `spec-branches:${project}`,
@@ -1167,7 +1180,7 @@ export default function BoardTab({ project, refresh, detailFile, detailOnly = fa
         <div className="flex min-h-0 flex-1 gap-3 overflow-x-auto">
           {stations.map((station) => {
             const inStation = specs.filter((spec) => spec.station === station);
-            inStation.sort(station === "Backlog" ? backlogCompare : createdCompare);
+            inStation.sort(station === "Backlog" ? backlogCompare : station === "Done" ? doneCompare : createdCompare);
             const card = (spec: SpecEntry) => (
               <SpecCard
                 key={spec.file}
@@ -1208,20 +1221,53 @@ export default function BoardTab({ project, refresh, detailFile, detailOnly = fa
                 }}
                 className="spec-lane flex min-h-0 min-w-48 flex-1 flex-col rounded-lg p-2"
               >
-                <h2 className="tone-ink mb-2 px-1 text-xs font-semibold uppercase tracking-wide">
-                  {STATION_LABELS[station] ?? station} ({inStation.length})
+                <h2 className="tone-ink mb-2 flex items-center justify-between gap-2 px-1 text-xs font-semibold uppercase tracking-wide">
+                  <span>{STATION_LABELS[station] ?? station} ({inStation.length})</span>
+                  {station === "Done" && (
+                    <select
+                      aria-label="Done-Zeitraum"
+                      title="Nur Specs, die in diesem Zeitraum fertig wurden, liegen offen; ältere sind eingeklappt. Gilt für dieses Board (.agent/settings.json)."
+                      className="max-w-[9.5rem] rounded border border-transparent bg-transparent px-1 py-0.5 text-[10px] font-medium normal-case tracking-normal hover:border-slate-300"
+                      value={doneDays}
+                      onChange={(event) => setDoneDays(Number(event.target.value))}
+                    >
+                      {DONE_WINDOW_OPTIONS.map((option) => (
+                        <option key={option.days} value={option.days}>{option.label}</option>
+                      ))}
+                    </select>
+                  )}
                 </h2>
+                {station === "Done" && doneDaysError && <p role="alert" className="mb-2 px-1 text-[11px] text-red-700">{doneDaysError}</p>}
                 <div className="min-h-0 flex-1 space-y-2 overflow-y-auto">
-                  {station === "Done" && !parentFilter
-                    ? groupDone(inStation).map(([parent, group]) => (
+                  {station === "Done" ? (() => {
+                    // A search or parent filter asks for everything that matches.
+                    const filtering = !!query || !!parentFilter;
+                    const { recent, older } = splitDone(inStation, (spec) => spec.done_at, filtering ? 0 : doneDays);
+                    const grouped = (items: SpecEntry[]) => parentFilter
+                      ? items.map(card)
+                      : groupDone(items).map(([parent, group]) => (
                         <details key={parent} className="rounded-lg bg-slate-200/60 p-1.5" open>
                           <summary className="cursor-pointer px-1 text-[11px] font-semibold text-slate-500">
                             {parent} ({group.length})
                           </summary>
                           <div className="mt-1.5 space-y-2">{group.map(card)}</div>
                         </details>
-                      ))
-                    : inStation.map(card)}
+                      ));
+                    return <>
+                      {grouped(recent)}
+                      {recent.length === 0 && older.length > 0 && (
+                        <p className="px-1 text-[11px] text-slate-500">Nichts in diesem Zeitraum fertig geworden.</p>
+                      )}
+                      {older.length > 0 && (
+                        <details data-done-older className="rounded-lg border border-dashed border-slate-300 p-1.5">
+                          <summary className="cursor-pointer px-1 text-[11px] font-semibold text-slate-500">
+                            Älter ({older.length})
+                          </summary>
+                          <div className="mt-1.5 space-y-2">{grouped(older)}</div>
+                        </details>
+                      )}
+                    </>;
+                  })() : inStation.map(card)}
                 </div>
               </div>
             );
