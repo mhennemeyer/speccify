@@ -1,0 +1,2 @@
+{"timestamp":"2026-09-19T08:03:57Z","spec_id":"061-done-spalte-aufraeumen","event_type":"spec_created","actor":"project","summary":"BO-Wunsch: Done-Spalte aufräumen, pro Board konfigurierbar; Branch main."}
+{"timestamp":"2026-09-19T08:03:57Z","spec_id":"061-done-spalte-aufraeumen","event_type":"station_changed","actor":"project","summary":"Doing: Nutzer beauftragt im Chat; Vorschlag (Done-seit, 14 Tage, settings.json) im Chat genannt."}
