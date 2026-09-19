@@ -45,6 +45,10 @@ zeigen, den Rest eingeklappt; pro Board konfigurierbar mit vernünftigem Default
 2. 2026-09-19: Ablage in `.agent/settings.json` statt Browser-Speicher: „pro
    Board“ heißt pro Projekt/Workspace und für alle gleich; kein neues Modell.
 3. 2026-09-19: Default 14 Tage; „alle“ stellt das bisherige Verhalten her.
+4. 2026-09-19 (BO-Nachtrag): Zusätzlich höchstens N Karten auf einmal, darunter
+   „Mehr anzeigen“ als Link ohne Button-Optik; N konfigurierbar. Default 10,
+   Optionen 5/10/20/50/alle, `board.doneLimit`; jeder Klick holt N weitere,
+   auch innerhalb von „Älter“. Zähler setzt sich bei Filter-/Suchwechsel zurück.
 
 ## Tasks
 
@@ -52,6 +56,7 @@ zeigen, den Rest eingeklappt; pro Board konfigurierbar mit vernünftigem Default
 - [x] Projekt-Board: Fenster aus Settings, Menü in der Done-Überschrift, „Älter (N)“.
 - [x] Workspace-Board: gleiche Auswahl über die Workspace-Root-Settings.
 - [x] Tests (Rust `done_at`, Browser-Regression Board), Playbooks, Fixture.
+- [x] (added) N Karten + Link „Mehr anzeigen“, `board.doneLimit`, beide Boards, Regression, Doku.
 
 ## Verification
 
