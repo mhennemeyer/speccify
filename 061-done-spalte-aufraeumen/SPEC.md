@@ -77,6 +77,15 @@ team_signals grün. `test_workspace_ui` schlägt unabhängig davon auch auf dem
 unveränderten Stand fehl (Discovery-Tiefen-Text „Nicht durchsucht“) — nicht
 Teil dieser Spec, separat ansehen.
 
+Nachtrag N: Fixture auf 13 Done-Specs (11 im Fenster). Regression prüft
+Default 10 → „Mehr anzeigen (1 weitere)“ als unterstrichener Text ohne Rahmen
+und Hintergrund, Klick zeigt alle und der Link verschwindet; N=5 → „6 weitere“,
+je Klick 5 mehr, `board.doneLimit: 5` gespeichert, Default löscht den Schlüssel,
+0 = alle ohne Link; `?donelimit=20` wird gelesen; Workspace-Board schreibt
+`board.doneDays=7` und `board.doneLimit=5` an die Wurzel. Screenshots (1400×900)
+gesichtet: beide Auswahlen in der zweiten Kopfzeile, Link unter den Karten,
+„Älter (2)“ darunter. Kopfzeile bricht statt zu beschneiden.
+
 Screenshot des Mock-Boards (1400×800) gesichtet: Auswahl „Letzte 14 Tage“
 in der Done-Überschrift, Gruppen, ältere Karten unten eingeklappt.
 Nicht nachgewiesen: Sichtprüfung in der gebauten App (braucht neuen Build);
