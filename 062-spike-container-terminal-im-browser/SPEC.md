@@ -110,18 +110,108 @@ Windows-/macOS-Container. Keine Änderung an `apps/desktop`, `crates/` oder `cor
 
 ## Tasks
 
-- [ ] Dockerfile + Startskript: Image, Nutzer, Volumes (`/workspace`, Home), Test-Repo.
-- [ ] Terminal-Server: PTY, WebSocket, Token-Prüfung, serverseitige Sitzungs-ID, Ringpuffer.
-- [ ] Browser-Seite: xterm.js, Verbinden/Wiederverbinden, Replay, Resize, Zwischenablage, Links.
-- [ ] Frage 3: Replay mit Alternate Screen prüfen; bei Darstellungsfehlern kopfloses Terminal mit Serialisierung gegentesten.
-- [ ] Frage 4: Bracketed Paste, Shift+Enter, OSC 9/777, Bell.
+- [x] Dockerfile + Startskript: Image, Nutzer, Volumes (`/workspace`, Home), Test-Repo.
+- [x] Terminal-Server: PTY, WebSocket, Token-Prüfung, serverseitige Sitzungs-ID, Ringpuffer.
+- [x] Browser-Seite: xterm.js, Verbinden/Wiederverbinden, Replay, Resize, Zwischenablage, Links.
+- [x] Frage 3: Replay mit Alternate Screen prüfen; bei Darstellungsfehlern kopfloses Terminal mit Serialisierung gegentesten.
+  Beide Arten gebaut und verglichen (`vi`, Claude-Startbildschirm, 4-KiB-Ring).
+- [x] Frage 4: Bracketed Paste, Shift+Enter, OSC 9/777, Bell.
+- [x] (added) Replay-Rahmen: Client verwirft Terminal-Antworten während des Abspielens.
+- [x] (added) Resize nur bei echter Größenänderung an die PTY geben.
+- [x] (added) OSC 52 → Browser-Zwischenablage, OSC-8-Links ohne `confirm()`.
+- [x] (added) `LANG=C.UTF-8` im Image.
 - [ ] Mensch: Claude-Login im Container, Neustart, `--resume` (Fragen 1, 5).
+  Vorbereitet bis zur URL-Anzeige; Checkliste in `experiments/remote-terminal/README.md`.
 - [ ] Mensch: Codex-Login per `--device-auth`, Neustart, `codex resume` (Fragen 2, 5).
+  `codex login --device-auth` zeigt im Container URL und Einmal-Code; nicht abgeschlossen.
+- [ ] Mensch: Tab während laufender Agent-Antwort ≥ 30 s schließen, neu verbinden (Abnahme 3).
+  (added) Braucht einen angemeldeten Agenten; ohne Login mit Shell-Ausgabe geprüft.
 - [ ] Frage 6: Pufferinhalt nach Login sichten; Gegenmaßnahme vorschlagen.
+  Bis zur URL gesichtet, Gegenmaßnahmen unten; offen: ob der eingefügte Code im Puffer steht.
 - [ ] Befunde und Empfehlung in `## Verification`; Recherche-Notiz und Draft `speccify-web-app.md` um die Befunde ergänzen (Status bleibt `draft`).
+  Zwischenstand unten; Notiz und Draft nach den Menschen-Tasks.
 
 ## Verification
 
-Noch nichts ausgeführt.
+Zwischenstand 2026-09-21, Agent-Teil. Umgebung: colima/Docker 29.2.1 linux/arm64,
+Image `node:22-bookworm-slim`, Claude Code 2.1.278, codex-cli 0.155.1, xterm.js 5.5,
+Playwright (Chromium) gegen `http://localhost:8791`. `cargo fmt --check` und
+`cargo clippy` für das Spike-Paket ohne Befund.
+
+**Abnahme „Token“ — erfüllt.** `GET /api/sessions` ohne Token → 401; WebSocket-Upgrade
+mit falschem Token → 401; danach 0 Shell-Prozesse im Container.
+
+**Abnahme „Bracketed Paste“ — erfüllt (gegen bash/readline).** Der dreizeilige Auftrag
+steht als ein Block am Prompt und wird nicht ausgeführt. Gegen den angemeldeten Agenten: Menschen-Task.
+
+**Frage 3 — geht, aber nicht mit dem Byte-Ringpuffer allein.**
+
+- Trennen während laufender Ausgabe, 4 s Pause, neu verbinden: `tick-1…16` je genau
+  einmal, `fertig` vorhanden, Sitzung lief mit 0 Betrachtern weiter, keine zweite Sitzung.
+- `vi` (Alternate Screen): beide Replay-Arten stellen `buffer.type = alternate` und den
+  Inhalt her; `:q` führt sauber zurück.
+- Claude-Startbildschirm: Bildschirmtext nach beiden Replay-Arten identisch zum
+  Live-Bild; Screenshot `experiments/remote-terminal/claude-first-run-after-replay.png`.
+- **Ringpuffer bricht, sobald vorne abgeschnitten wird:** Mit 4 KiB und 12 Pfeiltasten
+  in Claudes Auswahlmenü (≈ 28 KB Ausgabe, ≈ 2,4 KB je Tastendruck) ist der Bildschirm
+  nach dem Replay zerstört; der Bildschirmzustand aus dem mitlaufenden Parser bleibt
+  korrekt. Claude zeichnet fortlaufend relativ neu, jede endliche Puffergröße läuft in
+  einer langen Sitzung über.
+- **Rohes Replay beantwortet alte Terminal-Abfragen erneut:** xterm schickt beim
+  Abspielen `\e[?1;2c` (DA1) und bei Claude zusätzlich `\e[I` (Fokus) als *Eingabe* in
+  das laufende Programm; an der Shell stand danach `1;2c` am Prompt. Behoben durch
+  Replay-Rahmen (`{"type":"replay","bytes":N}` vor dem Schnappschuss, Client verwirft
+  `onData` bis zum Schreib-Callback); nachgeprüft: Prompt sauber, Antworten verworfen.
+- **Bildschirmzustand aus Crate `vt100` verliert:** normalen Bildschirm und Scrollback,
+  wenn während Alternate Screen verbunden wird; Fokus-Melde-Modus (`?1004`, von Claude
+  gesetzt; Bracketed Paste bleibt); OSC-8-Hyperlinks (Login-URL nach Replay nicht mehr
+  klickbar, mit Ringpuffer weiterhin).
+- Folgerung: Der Server braucht einen **vollwertigen kopflosen Emulator mit
+  Serialisierung** (Bildschirm, Scrollback, Modi, Hyperlinks). Kandidaten:
+  `xterm-headless` + Serialize-Addon (derselbe Emulator wie im Client, aber Node-Prozess),
+  `alacritty_terminal`, oder `vt100` plus eigene Modus-/Link-Verfolgung. Der Replay-Rahmen
+  bleibt in jedem Fall nötig.
+
+**Frage 4 — geht.** Shift+Enter kommt als `^[[13;2u` an (`cat -v`); OSC 9, OSC 777 und
+Bell erreichen den Client; Resize wirkt. Ein-/Ausgabe als binäre Frames: Umlaute, `€`
+und Emoji korrekt, **`Utf8Chunker` entfällt** (xterm setzt geteilte Folgen selbst
+zusammen). Nebenbefunde: ohne `LANG=C.UTF-8` gibt readline Umlaute im Echo oktal aus;
+eine umbrechende Kopfzeile der Testseite änderte die Höhe um eine Zeile und erzeugte
+je Verbinden zwei SIGWINCH — Server gibt Resize jetzt nur bei Änderung weiter (0 nach
+drei Wiederverbindungen).
+
+**Frage 1 — vorbereitet, Login selbst offen (Mensch).** Die unveränderte CLI zeigt im
+Container alle drei Anmeldewege. Die Login-URL ist **hart auf fünf Zeilen umbrochen**,
+gewöhnliche Link-Erkennung würde eine abgeschnittene URL öffnen. Claude Code liefert
+beide Auswege selbst: die URL ist als **OSC-8-Hyperlink** markiert (Klick auf eine
+mittlere Zeile öffnet die vollen 465 Zeichen) und **`c` sendet OSC 52** mit der
+vollständigen URL, die der Client in die Browser-Zwischenablage schreibt (bestätigt).
+xterms Standard fragt bei OSC 8 per `confirm()`; eigener `linkHandler` nötig.
+
+**Frage 2 — vorbereitet, Login offen (Mensch).** `codex login --device-auth` läuft im
+Container und zeigt eine einzeilige URL plus Einmal-Code (15 min gültig).
+
+**Frage 5 — teilweise.** Das Home-Volume überlebt Neuanlage des Containers (`~/.claude`
+von 07:53 nach vier `run.sh up`). `~/.claude.json` liegt **neben** `~/.claude/`: das
+Volume muss das ganze Home umfassen (oder `CLAUDE_CONFIG_DIR`). PTY-Sitzungen überleben
+einen Server-Neustart nicht; die Testseite versucht dann endlos neu zu verbinden (404) —
+der Client muss „Sitzung gibt es nicht mehr“ von „Verbindung weg“ unterscheiden.
+`--resume` nach Neustart: Menschen-Task.
+
+**Frage 6 — Zwischenbefund.** Nach dem Anmeldedialog stehen im 10-KB-Puffer die
+OAuth-URL 12× (mit `state` und `code_challenge`) und die OSC-52-Nutzlast. Keine
+Zugangsdaten (das PKCE-Geheimnis bleibt in der CLI), aber der Puffer hält alles, was
+über den Bildschirm lief — auch eine `setup-token`-Ausgabe. Vorschlag: Puffer nur im
+Speicher, kein Dump-Endpunkt und kein Diagnoseexport im Produkt; OSC 52 nicht ins
+Replay; ein Emulator-Zustand mit begrenztem Scrollback vergisst von selbst, ein
+Byte-Log nicht; Aktion „Verlauf leeren“ nach der Anmeldung. **Decision 8 praktisch
+belegt:** Der Query-Token stand in zwei Playwright-Konsolenlogs (WebSocket-URL) — im
+Produkt Cookie oder kurzlebiges Ticket statt Token in der URL.
+
+**Vorläufige Empfehlung.** Der Ansatz trägt: `portable-pty` wie in `terminal.rs`,
+serverseitige Sitzungen und xterm im Browser funktionieren mit der unveränderten CLI,
+und Claude Code bringt für den Container-Login alles Nötige mit. Mit `bridge.ts`
+und dem Service-Crate kann begonnen werden, sobald die Logins bestätigt sind; vor dem
+Sitzungsmanager ist die Emulator-Frage (oben) als eigene Entscheidung zu klären.
 
 ## Questions
