@@ -125,12 +125,20 @@ Windows-/macOS-Container. Keine Änderung an `apps/desktop`, `crates/` oder `cor
   und mit falschem Token, danach Token ins Feld + Enter, „Neue Sitzung“, Tippen mit echten Tastendrücken.
 - [ ] Mensch: Claude-Login im Container, Neustart, `--resume` (Fragen 1, 5).
   Vorbereitet bis zur URL-Anzeige; Checkliste in `experiments/remote-terminal/README.md`.
+  2026-09-21 BO: Login mit eigenem Konto im Browser-Terminal gelungen. Von außen bestätigt:
+  `~/.claude/.credentials.json` vorhanden, `-rw-------`, Besitzer `dev` (Inhalt nicht gelesen);
+  „Login successful“ im Sitzungspuffer. Offen: Neustart und `--resume`.
 - [ ] Mensch: Codex-Login per `--device-auth`, Neustart, `codex resume` (Fragen 2, 5).
   `codex login --device-auth` zeigt im Container URL und Einmal-Code; nicht abgeschlossen.
 - [ ] Mensch: Tab während laufender Agent-Antwort ≥ 30 s schließen, neu verbinden (Abnahme 3).
   (added) Braucht einen angemeldeten Agenten; ohne Login mit Shell-Ausgabe geprüft.
-- [ ] Frage 6: Pufferinhalt nach Login sichten; Gegenmaßnahme vorschlagen.
-  Bis zur URL gesichtet, Gegenmaßnahmen unten; offen: ob der eingefügte Code im Puffer steht.
+- [x] Frage 6: Pufferinhalt nach Login sichten; Gegenmaßnahme vorschlagen.
+  Bis zur URL gesichtet, Gegenmaßnahmen unten. Nach dem echten Login (12 KB Puffer, nichts
+  abgeschnitten) nur nach Form und Position ausgewertet, ohne Inhalte auszugeben: Der
+  Eingabeprompt `Paste code here if prompted >` wurde einmal gezeichnet, **dahinter steht
+  nichts** — Claude Code gibt den eingefügten Code nicht sichtbar aus. Keine code- oder
+  tokenförmige Zeichenfolge im Puffer; die zwei langen Treffer sind zusammengezogener
+  Oberflächentext. Enthalten sind die OAuth-URL und eine E-Mail-Adresse (Konto-Anzeige).
 - [ ] Befunde und Empfehlung in `## Verification`; Recherche-Notiz und Draft `speccify-web-app.md` um die Befunde ergänzen (Status bleibt `draft`).
   Zwischenstand unten; Notiz und Draft nach den Menschen-Tasks.
 
