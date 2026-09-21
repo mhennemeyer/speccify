@@ -89,6 +89,24 @@ Windows-/macOS-Container. Keine Änderung an `apps/desktop`, `crates/` oder `cor
 4. 2026-09-21: Die Anmeldungen (Fragen 1, 2) führt der Mensch mit seinem
    eigenen Konto aus; der Agent bereitet vor und protokolliert das Ergebnis.
    Deshalb `needs_human: true`.
+5. 2026-09-21 (Spec-Prüfung vor dem Bau): Server in **Rust** mit `portable-pty`
+   — dieselbe PTY-Schicht wie `terminal.rs`, damit die Befunde auf den späteren
+   Server übertragbar sind. Eigenes Cargo-Paket mit leerem `[workspace]`, damit
+   das Root-`Cargo.toml` unberührt bleibt.
+6. 2026-09-21: Ausgabe als **binäre** WebSocket-Frames (rohe PTY-Bytes), Eingabe
+   und Resize als JSON-Text. xterm.js setzt geteilte UTF-8-Folgen selbst
+   zusammen; ob der `Utf8Chunker` damit entfällt, ist Teil des Befunds.
+7. 2026-09-21: Frage 3 wird mit zwei umschaltbaren Replay-Arten beantwortet:
+   Byte-Ringpuffer und Bildschirmzustand aus einem mitlaufenden Parser (Crate
+   `vt100`). Ohne Anbieter-Login prüfbar mit Vollbildprogrammen (`vim`, `less`)
+   und dem Anmeldebildschirm der CLI; die Prüfung mit laufender Agent-Antwort
+   gehört zu den Menschen-Tasks.
+8. 2026-09-21: Token im Spike als Bearer-Header (HTTP) bzw. Query-Parameter
+   (WebSocket — Browser können dort keine Header setzen). Für das Produkt ist
+   das ungeeignet (Token in Logs/History); die Alternative wird im Befund benannt.
+9. 2026-09-21: Port 8791, auf dem Host nur an `127.0.0.1` veröffentlicht.
+   CLIs per npm (`@anthropic-ai/claude-code`, `@openai/codex`) unverändert
+   installiert; keine Zugangsdaten im Image.
 
 ## Tasks
 
