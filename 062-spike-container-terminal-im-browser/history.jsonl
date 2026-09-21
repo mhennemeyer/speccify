@@ -1,1 +1,2 @@
 {"timestamp":"2026-09-21T07:34:22Z","spec_id":"062-spike-container-terminal-im-browser","event_type":"spec_created","actor":"project","summary":"BO-Auftrag im Chat: Spike Agent-Terminal im Container, bedient aus dem Browser, mit persönlichem Abo; Backlog. Grundlage: Recherche-Notiz 2026-09-21."}
+{"timestamp":"2026-09-21T07:43:04Z","spec_id":"062-spike-container-terminal-im-browser","event_type":"station_changed","actor":"project","summary":"Doing: Nutzer beauftragt im Chat (\"starte mit Spec 62\"); Branch main."}
