@@ -15,6 +15,7 @@
   input, select, button { background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 5px; padding: 4px 8px; font: inherit; }
   button { cursor: pointer; }
   button:hover { border-color: var(--accent); }
+  input.missing { border-color: #e5534b; box-shadow: 0 0 0 2px rgba(229, 83, 75, .35); }
   #status { margin-left: auto; color: var(--dim); }
   #status.on { color: #7fd48a; }
   main { display: grid; grid-template-columns: 1fr 300px; min-height: 0; }
@@ -100,9 +101,33 @@ async function api(method, path, body) {
   if (!response.ok) throw new Error(method + " " + path + " → " + response.status);
   return response.status === 204 ? null : response.json();
 }
+// Without a valid token nothing works; say so where the person is looking.
+function showTokenHint(reason) {
+  if (state.hinted === reason) return;
+  state.hinted = reason;
+  $("token").classList.add("missing");
+  if (state.ws) return;
+  term.reset();
+  term.writeln("\x1b[1;33m" + reason + "\x1b[0m");
+  term.writeln("");
+  term.writeln("Im Ordner experiments/remote-terminal:");
+  term.writeln("  \x1b[36m./run.sh open\x1b[0m    öffnet diese Seite mit Token");
+  term.writeln("  \x1b[36m./run.sh token\x1b[0m   zeigt den Token zum Einfügen oben links (dann Enter)");
+}
+function clearTokenHint() {
+  $("token").classList.remove("missing");
+  if (!state.hinted) return;
+  state.hinted = null;
+  if (!state.ws) { term.reset(); term.writeln("Token angenommen. \x1b[36mNeue Sitzung\x1b[0m startet eine Shell im Container."); }
+}
 async function refreshSessions() {
   let list = [];
-  try { list = await api("GET", "/api/sessions"); } catch (error) { logEvent(String(error.message)); }
+  if (!token()) { showTokenHint("Kein Token – der Server lehnt alles ab."); return; }
+  try { list = await api("GET", "/api/sessions"); clearTokenHint(); }
+  catch (error) {
+    if (String(error.message).endsWith("401")) showTokenHint("Token falsch – der Server antwortet mit 401.");
+    else logEvent(String(error.message));
+  }
   $("sessions").replaceChildren(...list.map((s) => {
     const li = document.createElement("li");
     li.className = s.id === state.session ? "active" : "";
@@ -194,7 +219,9 @@ term.attachCustomKeyEventHandler((event) => {
 });
 new ResizeObserver(() => { fit.fit(); send({ type: "resize", cols: term.cols, rows: term.rows }); }).observe($("term"));
 
+$("token").onchange = () => { state.hinted = "recheck"; refreshSessions(); };
 $("create").onclick = async () => {
+  if (!token()) { state.hinted = null; showTokenHint("Kein Token – der Server lehnt alles ab."); $("token").focus(); return; }
   try {
     const created = await api("POST", "/api/sessions", { cols: term.cols, rows: term.rows, command: $("command").value });
     attach(created.id);

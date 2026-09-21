@@ -1,6 +1,7 @@
 #!/bin/sh
 # Spec 062 spike: build and run the container terminal.
 #   ./run.sh up        build image, (re)start container, print the URL
+#   ./run.sh open      open the page in the browser, token included
 #   ./run.sh restart   restart the container only (login and sessions on disk must survive)
 #   ./run.sh down      stop and remove the container; volumes stay
 #   ./run.sh wipe      remove the container and both volumes (forgets the logins)
@@ -33,6 +34,12 @@ case "${1:-up}" in
       "$IMAGE" >/dev/null
     echo "http://localhost:${PORT}/#token=$(token)"
     ;;
+  open)
+    # The page needs the token; a bare http://localhost:8791 can do nothing.
+    url="http://localhost:${PORT}/#token=$(token)"
+    if command -v open >/dev/null 2>&1; then open "$url"; else echo "$url"; fi
+    ;;
+  url) echo "http://localhost:${PORT}/#token=$(token)" ;;
   restart) docker restart "$NAME" >/dev/null && echo restarted ;;
   down) docker rm -f "$NAME" >/dev/null && echo removed ;;
   wipe)
@@ -41,5 +48,5 @@ case "${1:-up}" in
     ;;
   logs) docker logs -f "$NAME" ;;
   token) token ;;
-  *) echo "usage: $0 up|restart|down|wipe|logs|token" >&2; exit 2 ;;
+  *) echo "usage: $0 up|open|url|restart|down|wipe|logs|token" >&2; exit 2 ;;
 esac

@@ -12,6 +12,7 @@ Take findings from here, not files.
 
 ```sh
 ./run.sh up        # build image, start container, print http://localhost:8791/#token=…
+./run.sh open      # open the page in the browser, token included
 ./run.sh restart   # restart the container only
 ./run.sh down      # remove the container, keep the volumes (logins, sessions on disk)
 ./run.sh wipe      # remove container and volumes
@@ -19,8 +20,10 @@ SPIKE_RING_BYTES=4096 ./run.sh up   # provoke a truncated ring-buffer replay
 ```
 
 The port is published on `127.0.0.1` only. The token is generated once into
-`.spike-token` (ignored). Open the printed URL; the page keeps the token in
-`sessionStorage` and drops it from the address bar.
+`.spike-token` (ignored). Use `./run.sh open` or the printed URL; the page keeps
+the token in `sessionStorage` and drops it from the address bar. A bare
+`http://localhost:8791` has no token and can do nothing — the page says so and
+accepts the token (`./run.sh token`) in the field at the top left.
 
 ## What is in the box
 
