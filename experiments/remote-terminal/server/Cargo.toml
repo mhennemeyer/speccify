@@ -1,0 +1,18 @@
+[package]
+name = "remote-terminal-spike"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+# Spec 062: throwaway spike, deliberately outside the repo workspace.
+[workspace]
+
+[dependencies]
+axum = { version = "0.8", features = ["ws"] }
+futures-util = "0.3"
+portable-pty = "0.9"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "sync"] }
+uuid = { version = "1", features = ["v4"] }
+vt100 = "0.15"
