@@ -192,7 +192,7 @@ xterms Standard fragt bei OSC 8 per `confirm()`; eigener `linkHandler` nötig.
 Container und zeigt eine einzeilige URL plus Einmal-Code (15 min gültig).
 
 **Frage 5 — teilweise.** Das Home-Volume überlebt Neuanlage des Containers (`~/.claude`
-von 07:53 nach vier `run.sh up`). `~/.claude.json` liegt **neben** `~/.claude/`: das
+von 07:53 unverändert über mehrere `run.sh up` hinweg). `~/.claude.json` liegt **neben** `~/.claude/`: das
 Volume muss das ganze Home umfassen (oder `CLAUDE_CONFIG_DIR`). PTY-Sitzungen überleben
 einen Server-Neustart nicht; die Testseite versucht dann endlos neu zu verbinden (404) —
 der Client muss „Sitzung gibt es nicht mehr“ von „Verbindung weg“ unterscheiden.
