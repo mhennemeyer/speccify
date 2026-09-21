@@ -120,6 +120,9 @@ Windows-/macOS-Container. Keine Änderung an `apps/desktop`, `crates/` oder `cor
 - [x] (added) Resize nur bei echter Größenänderung an die PTY geben.
 - [x] (added) OSC 52 → Browser-Zwischenablage, OSC-8-Links ohne `confirm()`.
 - [x] (added) `LANG=C.UTF-8` im Image.
+- [x] (added) Fehlender/falscher Token sichtbar im Terminal statt nur als „401“ im Seitenpanel; `./run.sh open`.
+  BO-Befund 2026-09-21: `http://localhost:8791` ohne Token wirkte tot. Nachgeprüft: Hinweis ohne
+  und mit falschem Token, danach Token ins Feld + Enter, „Neue Sitzung“, Tippen mit echten Tastendrücken.
 - [ ] Mensch: Claude-Login im Container, Neustart, `--resume` (Fragen 1, 5).
   Vorbereitet bis zur URL-Anzeige; Checkliste in `experiments/remote-terminal/README.md`.
 - [ ] Mensch: Codex-Login per `--device-auth`, Neustart, `codex resume` (Fragen 2, 5).
