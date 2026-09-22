@@ -56,15 +56,35 @@ Stelle fällt.
 
 ## Tasks
 
-- [ ] `TOOL.md` mit Schema, Verhalten und Beispielen (plan ok, plan mit
+- [x] `TOOL.md` mit Schema, Verhalten und Beispielen (plan ok, plan mit
       ungültigem Schlüssel, plan ohne Projekte).
-- [ ] `macos.py`/`linux.py`: plan/check/apply gegen GitLab API v4.
-- [ ] `SKILL.md` mit Ablauf, Verify-Zeilen, Fallstricken, Projektabschnitt.
-- [ ] Katalog `agent-knowledge`; `speccify tool check`, `speccify verify`.
-- [ ] `mode: check` gegen git.itsd-consulting.de ausführen (lesend) und Befund notieren.
+- [x] `macos.py`/`linux.py`: plan/check/apply gegen GitLab API v4.
+- [x] `SKILL.md` mit Ablauf, Verify-Zeilen, Fallstricken, Projektabschnitt.
+- [x] Katalog `agent-knowledge`; `speccify tool check`, `speccify verify`.
+- [x] `mode: check` gegen git.itsd-consulting.de ausführen (lesend) und Befund notieren.
+- [ ] (BO) `mode: apply` mit Freigabe ausführen — Rechtevergabe, vom Auto-Modus
+      blockiert; Befehl steht im Chat und im Skill-Abschnitt „In this project“.
 
 ## Verification
 
-Noch nichts ausgeführt.
+2026-09-22:
+
+- `speccify tool check gitlab-deploy-key`: 3 Beispiele bestehen → `verified`
+  für macos in `expansions.yaml` (vom Werkzeug geschrieben). Unterwegs gelernt:
+  TOOL.md-Frontmatter ist YAML — Doppelpunkte in Beschreibungen brauchen
+  `>-`; `requires` listet nur ausführbare Programme (ein Umgebungs-Token dort
+  gilt als „not on PATH“); Fehlerausgaben müssen das `outputs`-Schema erfüllen
+  (`required: [ok]`).
+- `speccify verify`: ok, das Tool wird nicht mehr als fehlend/ungeprüft genannt.
+- Ohne `GITLAB_TOKEN`: `{"ok": false, "error": "GITLAB_TOKEN is not set …"}`,
+  exit 2, kein Netzwerkzugriff.
+- `mode: check` live gegen `git.itsd-consulting.de` (nur lesend): Nutzer
+  `matthias.hennemeyer`, Scope `api`, Zugriffsstufe 50 auf `avc/rekas` (398),
+  `avc/billi-legacy` (396), `avc/billi-ci` (397); Schlüssel
+  `SHA256:XTLqHKg7/8f+1dG7YKwhKXMtyXSsl/PziwT1eZc1IuQ` in allen drei `missing`.
+- `linux.py` identisch zu `macos.py`; ruff check/format ohne Befund.
+- Nicht ausgeführt: `apply` (Freigabe des Menschen), Windows-Implementierung,
+  Nachweis von der VM (`git pull`, abgewiesener `push`) — gehört zu Task 9 in
+  AVC/rekas 008.
 
 ## Questions
