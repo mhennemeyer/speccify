@@ -72,7 +72,8 @@ Verfügung stehen.
 - [x] Mock-Fixture `?modules=1` und Browser-Regression `test_spec_modules.mjs`.
 - [x] Doku: `specs.md`, Release-Notes 0.8.5, Landing-Link, Playbooks `stand-und-ui`/`weiterentwicklung`.
 - [x] Checks (project-checks), Commit.
-- [ ] Release 0.8.5 nach Skill `release` → Spec 064.
+- [x] Release 0.8.5 nach Skill `release` → Spec 064 (Done).
+- [x] (added) Modulkatalog für dieses Repo (13 Module, BO-bestätigt 2026-09-22), Commit `7e92dc6`.
 
 ## Verification
 
