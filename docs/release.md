@@ -412,6 +412,11 @@ brach im macOS-Job nach erfolgreicher Notarisierung in `bundle_dmg.sh` ab;
 installierten 0.8.5 zeigt das Board Katalog, Modul-Chips und eine echte
 Überschneidung (Spec 063).
 
+**0.8.6 veröffentlicht am 2026-09-22:** Update 0.8.5→0.8.6 auf diesem Mac über den
+echten Updater geprüft (30.650.645 Bytes, Signatur bestanden, vier Fenster
+wiederhergestellt, Zustand `current`, Bundle notarisiert). CI und Release-Lauf
+im ersten Anlauf grün. Inhalt: Agent-Fragen als Markdown mit Kopierknöpfen (065).
+
 ### Vollständiger Release-Feed
 
 Der Workflow verlangt signierte Pakete für alle unterstützten Update-Ziele:
