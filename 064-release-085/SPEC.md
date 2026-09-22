@@ -40,9 +40,13 @@ den Updater, nicht als lokaler Build.
 
 - [x] Version an vier Stellen.
 - [x] Release-Notes, Landing-Link, Doku.
-- [ ] Prüfstand (project-checks) mit Zahlen.
-- [ ] Commit `chore(release): prepare Speccify 0.8.5`, Push, CI/Site grün.
+- [x] Prüfstand (project-checks) mit Zahlen.
+- [x] Commit `chore(release): prepare Speccify 0.8.5`, Push, CI/Site grün.
+  Commit `2b91491`. Erster Lauf: Site-Deploy Kollision mit dem vorigen Deployment,
+  Windows-CI Timeout in `test_terminal_preferences` (Terminal unberührt, auf
+  `30463b8` grün) — beide Jobs wiederholt, beide grün; `/releases/0-8-5/` live.
 - [ ] Tag `v0.8.5`, Release-Text im Draft, Workflow beobachten.
+  Tag gepusht; Notes werden gesetzt, sobald der Draft existiert.
 - [ ] Draft unabhängig prüfen (Manifest, Signaturen), veröffentlichen, öffentlicher Nachweis.
 - [ ] Lokale App über den Updater aktualisieren (local-app).
 - [ ] Abschluss: `docs(release): record verified 0.8.5 publication`, Verification, Done.
