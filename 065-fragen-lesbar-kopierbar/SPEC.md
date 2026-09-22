@@ -44,12 +44,25 @@ hervorheben und mit einem Knopf zum Kopieren versehen, dazu mehr Struktur
 
 ## Tasks
 
-- [ ] `QuestionText`-Komponente (Markdown + Kopierknöpfe), in der Frage-Box für Frage und Antworten.
-- [ ] Mock: Clipboard-Kommando und Frage mit Markdown (`?qmd=1`); Regression `test_spec_questions.mjs`.
-- [ ] Typecheck, Nachbar-Suiten, lokaler Build.
+- [x] `QuestionText`-Komponente (Markdown + Kopierknöpfe), in der Frage-Box für Frage und Antworten.
+- [x] Mock: Clipboard-Kommando und Frage mit Markdown (`?qmd=1`); Regression `test_spec_questions.mjs`.
+- [x] Typecheck, Nachbar-Suiten.
+- [ ] Lokaler Build und Neustart der App (0.8.5-Bundle aus `main` `14e5806`).
 
 ## Verification
 
-Noch nichts ausgeführt.
+2026-09-22, Commit `14e5806`:
+
+- `pnpm --filter speccify-desktop typecheck` ohne Befund.
+- `test_spec_questions` ok: vier Absätze, zwei Listenpunkte, ein Codeblock, ein
+  harter Umbruch, drei Inline-Code-Stellen mit je einem Knopf plus Block-Knopf;
+  Klick schreibt exakt den Code (ohne Backticks) über
+  `plugin:clipboard-manager|write_text`, Knopf zeigt „✓ kopiert“ und fällt zurück;
+  reine Textfrage bleibt ein Absatz ohne Knöpfe. Gegen den alten `BoardTab.tsx`
+  schlägt die Suite fehl. Nachbarn grün: `test_spec_navigation`,
+  `test_team_signals`, `test_spec_modules`.
+- Sichtprüfung im Mock (Screenshot): Kopierknopf des Blocks lag zunächst über dem
+  Code → `padding-right` mit höherer Spezifität, nachgeprüft 88 px.
+- Nicht geprüft: Klick in der gebündelten App (folgt mit dem lokalen Build).
 
 ## Questions
