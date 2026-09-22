@@ -404,6 +404,14 @@ echten Updater geprüft (30.633.148 Bytes, vier Fenster wiederhergestellt). In d
 installierten 0.8.4 nativ nachgewiesen: beendete Shell zählt nicht mehr,
 `update_stop_all` beendet offene Sitzungen samt laufendem Befehl.
 
+**0.8.5 veröffentlicht am 2026-09-22:** Update 0.8.4→0.8.5 auf diesem Mac über den
+echten Updater geprüft (30.650.505 Bytes, Signatur bestanden, vier Fenster
+wiederhergestellt, Zustand `current`, Bundle notarisiert). Der erste Release-Lauf
+brach im macOS-Job nach erfolgreicher Notarisierung in `bundle_dmg.sh` ab;
+`gh run rerun --failed` reichte (Fallstrick im Release-Skill notiert). In der
+installierten 0.8.5 zeigt das Board Katalog, Modul-Chips und eine echte
+Überschneidung (Spec 063).
+
 ### Vollständiger Release-Feed
 
 Der Workflow verlangt signierte Pakete für alle unterstützten Update-Ziele:

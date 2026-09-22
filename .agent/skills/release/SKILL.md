@@ -109,8 +109,15 @@ Jobs: four platform builds → `verify-macos-dmg` (notarizes and staples the DMG
 
 ## 9. Repairing a failed run
 
-- Transient failure (GitHub HTTP 5xx, notarization timeout): re-run **only the
-  failed job**: `gh run rerun <id> --failed`.
+- Transient failure (GitHub HTTP 5xx, notarization timeout, or `failed to run
+  …/bundle_dmg.sh` right after "Notarizing Finished with status Accepted" —
+  the DMG packer on the macOS runner, seen on 0.8.5): re-run **only the
+  failed job**: `gh run rerun <id> --failed`. The skipped downstream jobs
+  (Windows, verify, manifest) run with it.
+- CI on the release commit can also fail for unrelated reasons: a "Deploy
+  site" collision with the previous push, or a Windows timeout in
+  `test_terminal_preferences` (0.8.5) — re-run the failed job before treating
+  it as a defect.
 - Re-verify existing packages without rebuilding installers:
   `gh workflow run release.yml --ref main -f tag=vX.Y.Z -f verify_only=true`.
 - Real defect: fix on `main`, release the next patch version. Do not move the tag.
