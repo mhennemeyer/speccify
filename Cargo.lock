@@ -4089,7 +4089,7 @@ dependencies = [
 
 [[package]]
 name = "speccify-desktop"
-version = "0.8.4"
+version = "0.8.5"
 dependencies = [
  "grep-matcher",
  "grep-regex",
