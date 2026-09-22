@@ -3,7 +3,7 @@ station: Doing
 order: 64
 created: 2026-09-22
 parent: 063-module-je-spec
-modules: release, docs
+modules: release, marketing
 ---
 # Release 0.8.5: Module je Spec
 

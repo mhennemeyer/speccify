@@ -2,7 +2,7 @@
 station: Doing
 order: 63
 created: 2026-09-22
-modules: board, workflow-policy, docs
+modules: board, workflow-policy, marketing
 ---
 # Module je Spec: parallel arbeiten ohne Kollisionen
 
