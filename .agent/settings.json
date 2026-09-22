@@ -1,0 +1,69 @@
+{
+  "modules": [
+    {
+      "name": "board",
+      "description": "Specs-Board, Inspektor, Spec-Dateien und History",
+      "paths": ["apps/desktop/src/views/project/BoardTab.tsx", "apps/desktop/src-tauri/src/board_cmd.rs", "apps/desktop/src-tauri/src/project_cmd.rs", "apps/desktop/src-tauri/src/spec_tasks.rs", "apps/desktop/src-tauri/src/spec_owner.rs", "apps/desktop/src-tauri/src/spec_register.rs", "apps/desktop/src-tauri/src/team_signals.rs"]
+    },
+    {
+      "name": "terminal",
+      "description": "PTY, Terminal-Panel, Darstellung und Aufmerksamkeit",
+      "paths": ["apps/desktop/src-tauri/src/terminal.rs", "apps/desktop/src-tauri/src/terminal_preferences.rs", "apps/desktop/src/components/TerminalPanel.tsx", "apps/desktop/src/lib/terminalAttention.ts"]
+    },
+    {
+      "name": "agent-session",
+      "description": "Agent-Start, Sitzungen, Übergabe von Aufträgen, Agent-Einstellungen",
+      "paths": ["apps/desktop/src-tauri/src/agent_session.rs", "apps/desktop/src-tauri/src/agent_startup.rs", "apps/desktop/src-tauri/src/agent_config.rs", "apps/desktop/src/lib/agents.ts", "apps/desktop/src/lib/handover.ts"]
+    },
+    {
+      "name": "workspace",
+      "description": "Workspaces, Projektfenster, Wissenskatalog, Watcher",
+      "paths": ["apps/desktop/src-tauri/src/workspace_cmd.rs", "apps/desktop/src-tauri/src/workspace_cmd", "apps/desktop/src-tauri/src/project_watch.rs", "apps/desktop/src/WorkspaceShell.tsx", "apps/desktop/src/ProjectShell.tsx"]
+    },
+    {
+      "name": "git",
+      "description": "Git-Tab, Branches, Diff, Commit",
+      "paths": ["apps/desktop/src-tauri/src/git_cmd.rs", "apps/desktop/src/views/project/GitTab.tsx", "apps/desktop/src/lib/git.ts"]
+    },
+    {
+      "name": "files",
+      "description": "Dateibaum, Editor, Suche",
+      "paths": ["apps/desktop/src-tauri/src/files_cmd.rs", "apps/desktop/src/views/project/FilesTab.tsx", "apps/desktop/src/components/CodeEditor.tsx"]
+    },
+    {
+      "name": "updates",
+      "description": "Updater, Manifest, Installationswächter",
+      "paths": ["apps/desktop/src-tauri/src/updates.rs", "apps/desktop/src/components/UpdateUi.tsx", "apps/desktop/src/lib/updates.ts", "scripts/build_update_manifest.py"]
+    },
+    {
+      "name": "desktop-ui",
+      "description": "ask_bo/show_ui-MCP, Popup-Fenster, QA-Brücke",
+      "paths": ["apps/desktop/src-tauri/src/desktop_ui.rs", "apps/desktop/src-tauri/src/qa_bridge.rs", "apps/desktop/src/AskWindow.tsx", "apps/desktop/src/components/AskBoPanel.tsx"]
+    },
+    {
+      "name": "workflow-policy",
+      "description": "Policy-Text, Einrichten, Skills-Vorlagen, Projekt-Settings",
+      "paths": ["apps/desktop/src-tauri/src/workflow_setup.rs", "apps/desktop/src-tauri/src/workflow_setup", "apps/desktop/src-tauri/templates"]
+    },
+    {
+      "name": "mcp-crates",
+      "description": "Rust-MCPs: exec, discovery, parallels, toolbox, mcp-core",
+      "paths": ["crates"]
+    },
+    {
+      "name": "core-python",
+      "description": "Python-Core, CLI, Python-MCP, Web-Board",
+      "paths": ["core", "cli", "mcp", "apps/board", "apps/web"]
+    },
+    {
+      "name": "marketing",
+      "description": "Website und Dokumentation",
+      "paths": ["apps/marketing"]
+    },
+    {
+      "name": "release",
+      "description": "Versionen, Release-Workflow, Signatur, Notarisierung",
+      "paths": [".github/workflows/release.yml", "docs/release.md", "scripts/build_sidecars.sh"]
+    }
+  ]
+}
