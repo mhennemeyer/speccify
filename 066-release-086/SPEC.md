@@ -35,10 +35,11 @@ Spec 065 soll den Kollegen über den Updater erreichen.
 
 ## Tasks
 
-- [ ] Version an vier Stellen.
-- [ ] Release-Notes, Landing-Link, Doku.
-- [ ] Prüfstand (project-checks) mit Zahlen.
+- [x] Version an vier Stellen.
+- [x] Release-Notes, Landing-Link, Doku (`questions.md`), `stand-und-ui`.
+- [x] Prüfstand (project-checks) mit Zahlen.
 - [ ] Commit `chore(release): prepare Speccify 0.8.6`, Push, CI/Site grün.
+  Commit `112658e` gepusht; CI läuft.
 - [ ] Tag `v0.8.6`, Release-Text im Draft, Workflow beobachten.
 - [ ] Draft unabhängig prüfen, veröffentlichen, öffentlicher Nachweis.
 - [ ] Lokale App über den Updater aktualisieren.
