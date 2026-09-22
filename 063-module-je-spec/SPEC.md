@@ -1,5 +1,5 @@
 ---
-station: Doing
+station: Done
 order: 63
 created: 2026-09-22
 modules: board, workflow-policy, marketing
@@ -100,7 +100,11 @@ auf 127.0.0.1:5199.
 - Eigene `agent.md`: Block v11 identisch zur Vorlage; Katalog für dieses Repo
   noch nicht angelegt (`.agent/settings.json` fehlt) — bewusst offen, damit BO
   die Modulliste bestätigt, statt dass der Agent sie setzt (Policy v11).
-- Nicht geprüft: Klick-Abnahme in der gebündelten App (kommt mit dem Update auf
-  0.8.5, Spec 064); Workspace-Board und Web-Board zeigen Module nicht.
+- Installierte 0.8.5 (nach dem Updater-Lauf aus 064), Projektfenster dieses
+  Repos über die QA-Brücke: Kopf „Module (13)“, Chips `terminal,agent-session`
+  (062), `board,workflow-policy,marketing` (063), `release,marketing` (064),
+  Überschneidungshinweis zwischen #63 und #64 in Doing — echt, nicht Fixture.
+- Nicht geprüft: Klick-Abnahme durch BO; Workspace-Board und Web-Board zeigen
+  Module nicht (bewusst außerhalb).
 
 ## Questions
