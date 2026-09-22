@@ -3,6 +3,7 @@ station: Doing
 order: 62
 created: 2026-09-21
 needs_human: true
+modules: terminal, agent-session
 ---
 # Spike: Agent-Terminal im Container, bedient aus dem Browser
 
