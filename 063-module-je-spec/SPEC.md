@@ -66,15 +66,40 @@ Verfügung stehen.
 
 ## Tasks
 
-- [ ] Rust: `modules` parsen (`TicketEntry`), Anlegen/Speichern mit Modul-Feld, Tests.
-- [ ] Policy v11 (Template, History v10, `WORKFLOW_VERSION`, eigene `agent.md`, Spec-Vorlage).
-- [ ] Frontend: Modul-Chips und Kollisionshinweis auf Karten, Inspektor-Zeile, Sheet-Feld, Katalog-Sheet im Board-Kopf, `lib/modules.ts`.
-- [ ] Mock-Fixture `?modules=1` und Browser-Regression `test_spec_modules.mjs`.
-- [ ] Doku: `specs.md`, Release-Notes 0.8.5, Landing-Link, Playbooks `stand-und-ui`/`weiterentwicklung`.
-- [ ] Checks (project-checks), Commit, Release 0.8.5 nach Skill `release` (eigene Spec).
+- [x] Rust: `modules` parsen (`TicketEntry`), Anlegen/Speichern mit Modul-Feld, Tests.
+- [x] Policy v11 (Template, History v10, `WORKFLOW_VERSION`, eigene `agent.md`, Spec-Vorlage).
+- [x] Frontend: Modul-Chips und Kollisionshinweis auf Karten, Inspektor-Zeile, Sheet-Feld, Katalog-Sheet im Board-Kopf, `lib/modules.ts`.
+- [x] Mock-Fixture `?modules=1` und Browser-Regression `test_spec_modules.mjs`.
+- [x] Doku: `specs.md`, Release-Notes 0.8.5, Landing-Link, Playbooks `stand-und-ui`/`weiterentwicklung`.
+- [x] Checks (project-checks), Commit.
+- [ ] Release 0.8.5 nach Skill `release` → Spec 064.
 
 ## Verification
 
-Noch nichts ausgeführt.
+2026-09-22, Umgebung macOS (Apple Silicon), Chrome über Playwright, Vite-Mock
+auf 127.0.0.1:5199.
+
+- `cargo test -p speccify-desktop`: 134 passed, 3 ignored (davon neu: Modul-
+  Parsing in `board_reads_specs_and_moves_byte_stable`, Anlegen/Speichern in
+  `create_save_history_and_kpis_roundtrip`, Policy-Version in
+  `workflow_setup`). `cargo fmt --check` ohne Befund.
+- `pnpm --filter speccify-desktop typecheck` ohne Befund.
+- Browser: `test_spec_modules` ok (Chips, Überschneidung Doing↔Doing und
+  Backlog↔Doing, Done ohne Hinweis, Inspektor „nicht im Katalog“ und „auch in
+  Doing: #12 …“, Sheet-Feld vorbelegt, Katalog-Dialog: Vorschlag übernehmen,
+  speichern → `projectSettings.modules` mit drei Einträgen, ungültiger Name
+  abgewiesen, `?modules=nocatalog` → „Module…“ und Hinweis im Inspektor).
+  Gegen den alten `BoardTab.tsx` schlägt die Suite fehl (Schritt unten).
+  Nachbarn grün: `test_board_done_window`, `test_spec_navigation`,
+  `test_spec_owner`, `test_spec_register`, `test_workspace_board`,
+  `test_team_signals` (je exit 0).
+- Python: 287 passed, 1 deselected; ruff check/format ohne Befund;
+  `speccify verify` ok (drei Tools ohne macOS-Implementierung, kein Drift).
+- `pnpm marketing:build`: `/releases/0-8-5/` und `/de/releases/0-8-5/` gebaut.
+- Eigene `agent.md`: Block v11 identisch zur Vorlage; Katalog für dieses Repo
+  noch nicht angelegt (`.agent/settings.json` fehlt) — bewusst offen, damit BO
+  die Modulliste bestätigt, statt dass der Agent sie setzt (Policy v11).
+- Nicht geprüft: Klick-Abnahme in der gebündelten App (kommt mit dem Update auf
+  0.8.5, Spec 064); Workspace-Board und Web-Board zeigen Module nicht.
 
 ## Questions
