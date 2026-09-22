@@ -89,6 +89,14 @@ tools:
     - libgit2-static-macos-app
     spec_sha256: 0d433c61208fbc8b3e1fc61f4f1260dc9c69477139bce9dc9c496699310894c4
     platforms: {}
+  gitlab-deploy-key:
+    from: []
+    spec_sha256: f707f49e6b7c14521b87c91620a305b654049a89809ff4db1e309104a6d5e0f3
+    platforms:
+      macos:
+        file: macos.py
+        status: verified
+        checked: '2026-09-22'
   verify-signatures:
     from:
     - macos-notarize-tauri

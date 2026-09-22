@@ -61,6 +61,11 @@
       "paths": ["apps/marketing"]
     },
     {
+      "name": "agent-knowledge",
+      "description": "Projekt-Skills, Tools und Playbooks unter .agent/",
+      "paths": [".agent/skills", ".agent/tools", ".agent/playbooks"]
+    },
+    {
       "name": "release",
       "description": "Versionen, Release-Workflow, Signatur, Notarisierung",
       "paths": [".github/workflows/release.yml", "docs/release.md", "scripts/build_sidecars.sh"]
