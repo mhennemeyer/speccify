@@ -66,7 +66,9 @@ hervorheben und mit einem Knopf zum Kopieren versehen, dazu mehr Struktur
 - Sichtprüfung im Mock (Screenshot): Kopierknopf des Blocks lag zunächst über dem
   Code → `padding-right` mit höherer Spezifität, nachgeprüft 88 px.
 - Lokale App neu gebaut und gestartet (pid neu, vier Fenster, `codesign` ok);
-  das gebündelte Frontend enthält `data-question-text`/`data-copy-code`. Eine
+  das mitgebaute Frontend (`apps/desktop/dist/assets/index-*.js`, 14:21, gleicher
+  Zeitstempel wie das Binary) enthält `data-question-text`/`data-copy-code`;
+  im Binary selbst sind die Assets komprimiert eingebettet, dort nicht grepbar. Eine
   offene Frage gibt es in diesem Repo gerade nicht — die Sichtprüfung in der
   echten App macht BO an der Frage zu Spec 008 im anderen Projekt.
 - Nicht veröffentlicht: kommt mit dem nächsten Release (Entscheidung 2).
