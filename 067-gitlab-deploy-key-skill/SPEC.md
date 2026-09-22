@@ -2,6 +2,8 @@
 station: Doing
 order: 67
 created: 2026-09-22
+needs_human: true
+ready: true
 modules: agent-knowledge
 ---
 # Skill und Tool: Nur-Lese-Deploy-Key in GitLab hinterlegen
