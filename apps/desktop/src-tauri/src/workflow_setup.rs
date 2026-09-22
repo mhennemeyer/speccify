@@ -19,7 +19,7 @@ use diagnostics::{collect_issues, file_state, policy_state, protected_path};
 /// v1 = Board/Ticket-Workflow (2026-08-31), v2 = Spec-Workflow
 /// (Plan spec-workflow.md, 2026-09-09): der Block in agent.md wird beim
 /// Einrichten ersetzt, angepasste Texte außerhalb der Marker bleiben.
-pub const WORKFLOW_VERSION: u32 = 10; // v10: nonbinding playbook drafts (Spec 047)
+pub const WORKFLOW_VERSION: u32 = 11; // v11: modules per spec, overlap check (Spec 063)
 
 const POLICY: &str = include_str!("../templates/workflow-policy.md");
 const BEGIN_PREFIX: &str = "<!-- speccify:workflow:begin v";
@@ -38,6 +38,10 @@ const TICKET_SKILLS: &[(&str, &str)] = &[
 ];
 
 const PREVIOUS_POLICY: &[(u32, &str)] = &[
+    (
+        10,
+        include_str!("../templates/history/workflow-policy-v10.md"),
+    ),
     (
         9,
         include_str!("../templates/history/workflow-policy-v9.md"),

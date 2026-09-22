@@ -13,6 +13,7 @@ import { LoadingBoundary, useAsync } from "../../components/ui";
 import { HandoverButton } from "../../components/HandoverSheet";
 import { DONE_LIMIT_OPTIONS, DONE_WINDOW_OPTIONS, splitDone, useDoneBoard } from "../../lib/doneWindow";
 import MoreList from "../../components/MoreList";
+import { moduleOverlaps, parseModuleList, specRef, useModuleCatalogue, type ModuleDefinition, type ModuleOverlap } from "../../lib/modules";
 import {
   InspectorButton,
   InspectorPanel,
@@ -34,6 +35,8 @@ export interface SpecEntry {
   branch: string | null;
   revision?: string;
   repositories?: string[];
+  /** Spec 063: Module des Projekts, die diese Spec anfasst (`modules: a, b`). */
+  modules?: string[];
   created: string | null;
   /** Spec 061: wann die Spec zuletzt nach Done kam (History, sonst Dateiänderung). */
   done_at?: string | null;
@@ -296,6 +299,7 @@ function SpecCard({
   conflict = false,
   changes = null,
   forMe = false,
+  overlaps = [],
   onSeen,
   onSelect,
   onEdit,
@@ -308,6 +312,8 @@ function SpecCard({
   changes?: SpecChanges | null;
   /** Spec 030: die offene Frage ist an mich adressiert. */
   forMe?: boolean;
+  /** Spec 063: Module, die auch eine andere Spec in Doing anfasst. */
+  overlaps?: ModuleOverlap[];
   onSeen?: () => void;
   onSelect: () => void;
   /** Doppelklick öffnet den Editor (BO 2026-09-08). */
@@ -362,6 +368,27 @@ function SpecCard({
           ) : null}
           {spec.archived ? <span>Altbestand · nur lesen</span> : null}
         </div>
+        {(spec.modules?.length ?? 0) > 0 ? (
+          <div className="mt-1 flex flex-wrap gap-1 text-[10px]" data-spec-modules={spec.modules!.join(",")}>
+            {spec.modules!.map((module) => {
+              const overlap = overlaps.find((entry) => entry.module === module);
+              return overlap ? (
+                <span
+                  key={module}
+                  data-module-overlap={module}
+                  className="rounded bg-rose-100 px-1.5 py-0.5 font-semibold text-rose-800"
+                  title={`Modul ${module} wird gerade auch bearbeitet: ${overlap.with.map((other) => `${specRef(other)} ${other.title}${other.owner ? ` (${ownerName(other.owner)})` : ""}`).join(", ")}`}
+                >
+                  ⚠ {module} · auch {overlap.with.map(specRef).join(", ")}
+                </span>
+              ) : (
+                <span key={module} className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-slate-600" title={`Modul ${module}`}>
+                  {module}
+                </span>
+              );
+            })}
+          </div>
+        ) : null}
       </button>
       {changes ? (
         <button
@@ -381,6 +408,8 @@ function SpecCard({
 interface SheetState {
   revision?: string;
   repositories: string;
+  /** Spec 063: kommagetrennte Module. */
+  modules: string;
   file: string | null; // null = neue Spec
   title: string;
   station: string;
@@ -394,6 +423,7 @@ interface SheetState {
 function emptySheet(station: string): SheetState {
   return {
     repositories: "",
+    modules: "",
     file: null,
     title: "",
     station,
@@ -409,6 +439,7 @@ function sheetFor(spec: SpecEntry): SheetState {
   return {
     revision: spec.revision,
     repositories: (spec.repositories ?? []).join(", "),
+    modules: (spec.modules ?? []).join(", "),
     file: spec.file,
     title: spec.title,
     station: spec.station,
@@ -423,6 +454,7 @@ function sheetFor(spec: SpecEntry): SheetState {
 function SpecSheet({
   sheet,
   parents,
+  moduleNames,
   onChange,
   onSave,
   onDelete,
@@ -432,6 +464,8 @@ function SpecSheet({
 }: {
   sheet: SheetState;
   parents: string[];
+  /** Spec 063: Katalognamen als Vorschläge. */
+  moduleNames: string[];
   onChange: (next: SheetState) => void;
   onSave: () => void;
   onDelete: () => void;
@@ -509,6 +543,12 @@ function SpecSheet({
             braucht BO
           </label>
         </div>
+        <label className="text-xs">Module, die diese Spec anfasst (mit Komma getrennt{moduleNames.length ? `; Katalog: ${moduleNames.join(", ")}` : "; noch kein Katalog — „Module…“ über dem Board"})
+          <input aria-label="Module" value={sheet.modules} onChange={e => onChange({ ...sheet, modules: e.target.value })} list="speccify-spec-modules" spellCheck={false} className="mt-1 block w-full rounded border p-2 font-mono" placeholder="terminal, board" />
+          <datalist id="speccify-spec-modules">
+            {moduleNames.map((name) => <option key={name} value={parseModuleList(sheet.modules).includes(name) ? sheet.modules : `${sheet.modules.trim() ? `${sheet.modules.trim().replace(/,\s*$/, "")}, ` : ""}${name}`} label={name} />)}
+          </datalist>
+        </label>
         <label className="text-xs">Betroffene Code-Repos (Repo-ID oder Repo-ID@Branch, mit Komma getrennt)
           <input aria-label="Betroffene Code-Repos" value={sheet.repositories} onChange={e => onChange({ ...sheet, repositories: e.target.value })} className="mt-1 block w-full rounded border p-2 font-mono" placeholder="api@spec/048-login, web@spec/048-login" />
         </label>
@@ -554,6 +594,92 @@ function SpecSheet({
               {busy ? "Speichert…" : "Speichern"}
             </button>
           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Spec 063: der Modulkatalog des Projekts — die Architektur-Idee, entlang der
+ *  Specs geschnitten werden. Gespeichert als `modules` in `.agent/settings.json`. */
+function ModulesSheet({
+  modules,
+  inUse,
+  error,
+  onSave,
+  onClose,
+}: {
+  modules: ModuleDefinition[];
+  /** Modulnamen, die Specs bereits nennen — als Vorschlag für fehlende Einträge. */
+  inUse: string[];
+  error: string | null;
+  onSave: (next: ModuleDefinition[]) => Promise<void>;
+  onClose: () => void;
+}) {
+  const [rows, setRows] = useState<Array<{ name: string; description: string; paths: string }>>(() =>
+    modules.map((module) => ({ name: module.name, description: module.description, paths: module.paths.join(", ") })),
+  );
+  const [busy, setBusy] = useState(false);
+  const [problem, setProblem] = useState<string | null>(null);
+  const names = rows.map((row) => row.name.trim().toLowerCase());
+  const missing = inUse.filter((name) => !names.includes(name));
+  const update = (index: number, patch: Partial<{ name: string; description: string; paths: string }>) =>
+    setRows((previous) => previous.map((row, i) => (i === index ? { ...row, ...patch } : row)));
+  const save = async () => {
+    const next: ModuleDefinition[] = [];
+    for (const row of rows) {
+      const name = row.name.trim().toLowerCase();
+      if (!name) continue;
+      if (!/^[a-z0-9][a-z0-9_-]*$/.test(name)) { setProblem(`Modulname „${row.name}“: nur Kleinbuchstaben, Ziffern, - und _.`); return; }
+      if (next.some((module) => module.name === name)) { setProblem(`Modul „${name}“ ist doppelt.`); return; }
+      next.push({ name, description: row.description.trim(), paths: parseModuleList(row.paths).map((p) => p) });
+    }
+    setProblem(null);
+    setBusy(true);
+    try { await onSave(next); } catch { /* Fehler kommt über `error` */ } finally { setBusy(false); }
+  };
+  return (
+    <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/40 p-6" data-modules-sheet>
+      <div className="flex max-h-full w-[760px] flex-col gap-3 overflow-y-auto rounded-xl bg-white p-5 shadow-xl">
+        <h3 className="text-sm font-semibold text-slate-800">Module des Projekts</h3>
+        <p className="text-xs text-slate-600">
+          Die Architektur-Idee, entlang der Specs geschnitten werden: jedes Modul ein Name (Slug), eine Zeile Beschreibung,
+          optional Pfade. Specs nennen ihre Module im Frontmatter (<code>modules: a, b</code>); das Board zeigt, wenn zwei
+          Specs in Doing dasselbe Modul anfassen. Gespeichert als <code>modules</code> in <code>.agent/settings.json</code>.
+        </p>
+        {rows.length === 0 ? (
+          <p className="rounded border border-dashed border-amber-300 bg-amber-50 p-2 text-xs text-amber-800">
+            Noch kein Katalog. Ohne Modulliste kann niemand prüfen, ob zwei Specs kollidieren — der Agent soll dann einen
+            Vorschlag aus der Code-Struktur machen und nachfragen.
+          </p>
+        ) : null}
+        <div className="space-y-2">
+          {rows.map((row, index) => (
+            <div key={index} className="grid grid-cols-[10rem_1fr_1fr_auto] items-start gap-2 text-xs" data-module-entry>
+              <input aria-label="Modulname" value={row.name} onChange={(e) => update(index, { name: e.target.value })} placeholder="terminal" spellCheck={false} className="rounded border border-slate-300 px-2 py-1 font-mono" />
+              <input aria-label="Beschreibung" value={row.description} onChange={(e) => update(index, { description: e.target.value })} placeholder="PTY, Agent-Start, Sitzungen" className="rounded border border-slate-300 px-2 py-1" />
+              <input aria-label="Pfade" value={row.paths} onChange={(e) => update(index, { paths: e.target.value })} placeholder="src-tauri/src/terminal.rs, src/components/TerminalPanel.tsx" spellCheck={false} className="rounded border border-slate-300 px-2 py-1 font-mono" />
+              <button onClick={() => setRows((previous) => previous.filter((_, i) => i !== index))} title="Modul entfernen" className="rounded px-2 py-1 text-slate-500 hover:bg-slate-100">✕</button>
+            </div>
+          ))}
+        </div>
+        <div className="flex flex-wrap items-center gap-2 text-xs">
+          <button onClick={() => setRows((previous) => [...previous, { name: "", description: "", paths: "" }])} className="rounded border border-slate-300 px-2 py-1 text-slate-700 hover:bg-slate-100">+ Modul</button>
+          {missing.length > 0 ? (
+            <span className="text-slate-600">
+              In Specs genannt, aber nicht im Katalog:{" "}
+              {missing.map((name) => (
+                <button key={name} data-module-suggest={name} onClick={() => setRows((previous) => [...previous, { name, description: "", paths: "" }])} className="mr-1 rounded bg-amber-100 px-1.5 py-0.5 font-mono text-amber-800 hover:bg-amber-200" title="In den Katalog übernehmen">
+                  {name}
+                </button>
+              ))}
+            </span>
+          ) : null}
+        </div>
+        {problem || error ? <p role="alert" className="text-xs text-red-600">{problem ?? error}</p> : null}
+        <div className="flex justify-end gap-2">
+          <button onClick={onClose} disabled={busy} className="rounded px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100">Abbrechen</button>
+          <button onClick={() => void save()} disabled={busy} className="rounded bg-slate-800 px-3 py-1.5 text-sm text-white hover:bg-slate-700 disabled:opacity-50">{busy ? "Speichert…" : "Speichern"}</button>
         </div>
       </div>
     </div>
@@ -644,6 +770,9 @@ function SpecDetail({
   onClose,
   inInspector,
   report = null,
+  overlaps = [],
+  catalogue = [],
+  catalogueLoaded = false,
   onTake,
   onRelease,
   onSwitchBranch,
@@ -652,6 +781,10 @@ function SpecDetail({
   spec: SpecEntry;
   history: HistoryEvent[];
   questions: SpecQuestion[];
+  /** Spec 063: Modul-Überschneidungen mit Doing und der Projektkatalog. */
+  overlaps?: ModuleOverlap[];
+  catalogue?: ModuleDefinition[];
+  catalogueLoaded?: boolean;
   onAnswer: (number: number, text: string) => void;
   onToggleTask: (index: number, done: boolean) => void;
   busy: boolean;
@@ -700,10 +833,43 @@ function SpecDetail({
       </div>
     </div>
   ) : null;
+  // Spec 063: je Modul Katalogstand und Überschneidung mit Doing.
+  const modules = spec.modules ?? [];
+  const unknownModules = catalogueLoaded && catalogue.length > 0 ? modules.filter((module) => !catalogue.some((entry) => entry.name === module)) : [];
+  const moduleSection = modules.length > 0 || (!spec.archived && spec.station !== "Done") ? (
+    <div className="mb-3 rounded-lg border border-slate-200 bg-slate-50 p-2 text-xs text-slate-700" role="region" aria-label="Module">
+      {modules.length === 0 ? (
+        <p className="text-slate-500">Keine Module eingetragen — <code>modules: a, b</code> im Frontmatter sagt, was diese Spec anfasst.</p>
+      ) : (
+        <ul className="space-y-0.5">
+          {modules.map((module) => {
+            const overlap = overlaps.find((entry) => entry.module === module);
+            const definition = catalogue.find((entry) => entry.name === module);
+            return (
+              <li key={module} data-module-row={module} className="flex flex-wrap items-baseline gap-x-2">
+                <code className="font-semibold">{module}</code>
+                {definition?.description ? <span className="text-slate-500">{definition.description}</span> : null}
+                {unknownModules.includes(module) ? <span className="text-amber-700">nicht im Katalog</span> : null}
+                {overlap ? (
+                  <span className="text-rose-700">
+                    ⚠ auch in Doing: {overlap.with.map((other) => `${specRef(other)} ${other.title}${other.owner ? ` (${ownerName(other.owner)})` : ""}`).join(", ")}
+                  </span>
+                ) : null}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+      {catalogueLoaded && catalogue.length === 0 ? (
+        <p className="mt-1 text-amber-700">Kein Modulkatalog im Projekt — „Module…“ über dem Board legt ihn an (<code>modules</code> in <code>.agent/settings.json</code>).</p>
+      ) : null}
+    </div>
+  ) : null;
   const overview = (
     <>
       {spec.archived ? <p className="mb-2 text-xs text-slate-500">Altbestand · nur lesen. Datei und Historie bleiben am ursprünglichen Ort erhalten.</p> : null}
       {ownership}
+      {moduleSection}
       <QuestionsSection questions={questions} onAnswer={onAnswer} busy={busy || spec.archived} />
       {stripQuestions(spec.body) ? (
         <Markdown text={stripQuestions(spec.body)} />
@@ -727,6 +893,7 @@ function SpecDetail({
         ...(spec.owner ? [{ label: "Besitz", value: ownerName(spec.owner) }] : []),
         ...(spec.branch ? [{ label: "Branch", value: spec.branch }] : []),
         ...((spec.repositories?.length ?? 0) > 0 ? [{ label: "Code-Repos", value: spec.repositories!.join(", ") }] : []),
+        ...(modules.length > 0 ? [{ label: "Module", value: `${modules.join(", ")}${overlaps.length ? ` · ${overlaps.length} Überschneidung${overlaps.length === 1 ? "" : "en"}` : ""}` }] : []),
         { label: "Ober-Spec", value: spec.parent ?? "—" },
         {
           label: "Tasks",
@@ -845,6 +1012,10 @@ export default function BoardTab({ project, refresh, detailFile, detailOnly = fa
   const [search, setSearch] = useState("");
   // Spec 061: Done zeigt nur das Fenster der letzten Tage offen; Rest eingeklappt.
   const done = useDoneBoard(project);
+  // Spec 063: Modulkatalog des Projekts und Überschneidungen mit Doing.
+  const catalogue = useModuleCatalogue(project);
+  const [modulesSheet, setModulesSheet] = useState(false);
+  const overlapsFor = (spec: SpecEntry): ModuleOverlap[] => moduleOverlaps(spec, data ?? []);
   const branches = useAsync(
     () => invoke<BranchReport>("project_spec_branches", { project }).catch(() => null),
     `spec-branches:${project}`,
@@ -974,11 +1145,13 @@ export default function BoardTab({ project, refresh, detailFile, detailOnly = fa
           parent: sheet.parent.trim() === "" ? null : sheet.parent.trim(),
           order: sheet.order === "" ? null : Number(sheet.order),
           repositories: sheet.repositories,
+          modules: sheet.modules,
         });
         setSelected(file);
       } else {
         const patch = {
             repositories: sheet.repositories,
+            modules: sheet.modules,
             title: sheet.title,
             station: sheet.station,
             ready: sheet.ready,
@@ -1112,6 +1285,16 @@ export default function BoardTab({ project, refresh, detailFile, detailOnly = fa
             >
               Doing nach Person
             </button>
+            <button
+              onClick={() => setModulesSheet(true)}
+              data-modules-button
+              title={catalogue.modules.length ? `Modulkatalog des Projekts (${catalogue.modules.map((module) => module.name).join(", ")}) — modules in .agent/settings.json` : "Noch kein Modulkatalog: die Architektur-Idee, entlang der Specs geschnitten werden (modules in .agent/settings.json)"}
+              className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${
+                catalogue.loaded && catalogue.modules.length === 0 ? "bg-amber-100 text-amber-800 hover:bg-amber-200" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+              }`}
+            >
+              {catalogue.modules.length ? `Module (${catalogue.modules.length})` : "Module…"}
+            </button>
             {unnumbered > 0 ? (
               <button
                 onClick={() => void numberSpecs()}
@@ -1191,6 +1374,7 @@ export default function BoardTab({ project, refresh, detailFile, detailOnly = fa
                 conflict={conflictIds.includes(spec.id)}
                 changes={changesFor(spec)}
                 forMe={forMe(spec)}
+                overlaps={overlapsFor(spec)}
                 onSeen={() => markSeen(spec)}
                 selected={selected === spec.file}
                 onSelect={() => setSelected(selected === spec.file ? null : spec.file)}
@@ -1316,6 +1500,9 @@ export default function BoardTab({ project, refresh, detailFile, detailOnly = fa
               onClose={() => setSelected(null)}
               inInspector={inspector.slot !== null}
               report={report}
+              overlaps={overlapsFor(selectedSpec)}
+              catalogue={catalogue.modules}
+              catalogueLoaded={catalogue.loaded}
               onTake={() => void run(async () => { await checked(selectedSpec.file, selectedSpec.revision, { kind: "take" }, "project_spec_take", {}); await branches.reload(); })}
               onRelease={() => void run(() => checked(selectedSpec.file, selectedSpec.revision, { kind: "release" }, "project_spec_release", {}))}
               onSwitchBranch={(branch, create) => void run(async () => { await invoke("project_git_switch", { project, branch, create }); await branches.reload(); })}
@@ -1326,12 +1513,22 @@ export default function BoardTab({ project, refresh, detailFile, detailOnly = fa
           <SpecSheet
             sheet={sheet}
             parents={parents}
+            moduleNames={catalogue.modules.map((module) => module.name)}
             onChange={setSheet}
             onSave={() => void saveSheet()}
             onDelete={() => void deleteSheet()}
             onClose={() => setSheet(null)}
             busy={busy}
             error={actionError}
+          />
+        ) : null}
+        {modulesSheet ? (
+          <ModulesSheet
+            modules={catalogue.modules}
+            inUse={[...new Set((data ?? []).flatMap((spec) => spec.modules ?? []))]}
+            error={catalogue.error}
+            onSave={async (next) => { await catalogue.save(next); setModulesSheet(false); }}
+            onClose={() => setModulesSheet(false)}
           />
         ) : null}
       </div>

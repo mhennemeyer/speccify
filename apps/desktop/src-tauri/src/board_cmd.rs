@@ -407,6 +407,7 @@ pub fn project_ticket_create(
     parent: Option<String>,
     order: Option<i64>,
     repositories: Option<String>,
+    modules: Option<String>,
 ) -> Result<String, String> {
     if !BOARD_STATIONS.contains(&station.as_str()) {
         return Err(format!("Unbekannte Station: {station}"));
@@ -442,6 +443,11 @@ pub fn project_ticket_create(
         frontmatter.push(format!("order: {order}"));
     }
     frontmatter.push(format!("created: {}", &now_iso()[..10]));
+    if let Some(value) = modules.as_deref().map(module_list) {
+        if !value.is_empty() {
+            frontmatter.push(format!("modules: {value}"));
+        }
+    }
     if needs_human {
         frontmatter.push("needs_human: true".into());
     }
@@ -589,9 +595,16 @@ pub fn project_specs_number(project: String) -> Result<Vec<String>, String> {
     Ok(renamed.into_iter().map(|(_, new_id)| new_id).collect())
 }
 
+/// Spec 063: `modules` fürs Frontmatter — normalisiert wie beim Lesen.
+fn module_list(value: &str) -> String {
+    crate::project_cmd::parse_modules(value).join(", ")
+}
+
 #[derive(Deserialize)]
 pub struct TicketPatch {
     repositories: Option<String>,
+    /// Spec 063: kommagetrennte Module; `Some("")` entfernt die Zeile.
+    modules: Option<String>,
     title: String,
     station: String,
     ready: bool,
@@ -646,6 +659,9 @@ pub fn project_ticket_save(
     if let Some(value) = patch.repositories {
         let value = repository_references(&value)?;
         updates.push(("repositories", (!value.is_empty()).then_some(value)));
+    }
+    if let Some(value) = patch.modules.as_deref().map(module_list) {
+        updates.push(("modules", (!value.is_empty()).then_some(value)));
     }
     let body = body_with_title(&patch.body, patch.title.trim());
     let updated = update_ticket_text(&text, &updates, Some(&body))?;
@@ -1009,6 +1025,7 @@ mod tests {
             old.clone(),
             TicketPatch {
                 repositories: None,
+                modules: None,
                 title: "Changed".into(),
                 station: "Doing".into(),
                 ready: false,
@@ -1077,6 +1094,7 @@ mod tests {
             None,
             None,
             Some("api@spec/001, web@spec/001".into()),
+            None,
         )
         .unwrap();
         let original = std::fs::read_to_string(dir.join(&file)).unwrap();
@@ -1231,11 +1249,13 @@ mod tests {
             Some("projektfenster".into()),
             Some(1),
             None,
+            Some("Board, terminal, board".into()),
         )
         .unwrap();
         assert_eq!(file, ".agent/specs/001-board-tab-bauen/SPEC.md");
         let text = std::fs::read_to_string(dir.join(&file)).unwrap();
         assert!(text.starts_with("---\nstation: Backlog\norder: 1\ncreated: "));
+        assert!(text.contains("\nmodules: board, terminal\n")); // Spec 063: normalisiert
         assert!(text.contains("needs_human: true"));
         assert!(text.contains("parent: projektfenster"));
         assert!(text.contains("# Board-Tab bauen!\n"));
@@ -1251,9 +1271,13 @@ mod tests {
             None,
             None,
             None,
+            None,
         )
         .unwrap();
         assert_eq!(second, ".agent/specs/002-board-tab-bauen/SPEC.md");
+        assert!(!std::fs::read_to_string(dir.join(&second))
+            .unwrap()
+            .contains("modules:"));
         project_ticket_delete(project.clone(), second).unwrap();
         // Nachnummerieren: unnummerierte Specs bekommen die nächste Nummer,
         // parent-Verweise ziehen mit.
@@ -1291,6 +1315,7 @@ mod tests {
             file.clone(),
             TicketPatch {
                 repositories: Some("api@spec/001, web@spec/001".into()),
+                modules: Some("terminal, Updates".into()),
                 title: "Board-Tab bauen".into(),
                 station: "Doing".into(),
                 ready: true,
@@ -1303,6 +1328,7 @@ mod tests {
         let saved = std::fs::read_to_string(dir.join(&file)).unwrap();
         assert!(saved.contains("station: Doing"));
         assert!(saved.contains("ready: true"));
+        assert!(saved.contains("\nmodules: terminal, updates\n")); // Spec 063: ersetzt, klein
         assert!(saved.contains("# Board-Tab bauen\n")); // Titel in der Überschrift
         assert!(!saved.contains("title:"));
         assert!(saved.ends_with("Mehr.\n"));

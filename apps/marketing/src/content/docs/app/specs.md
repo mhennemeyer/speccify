@@ -30,6 +30,7 @@ needs_human: false
 ready: false
 open_question: null
 parent: null
+modules: sources, dashboard
 ---
 # Import skills from any git repository
 
@@ -115,6 +116,35 @@ last move to Done in the spec's history; a spec without history counts
 by its file's modification time. A search or parent filter always shows
 every match.
 
+## Modules: who touches what
+
+Several agents (or people) working on one project collide when two specs
+change the same part of the system at the same time. Speccify makes that
+visible instead of hoping it won't happen:
+
+- **The project names its modules** — its architecture map — under `modules`
+  in `.agent/settings.json`: a name (a slug such as `terminal`, `board`,
+  `api-auth`), one line of description and optional paths. **Module…** above
+  the board edits the list; it is versioned with the project and the same for
+  the whole team. Specs are cut along these modules: as few per spec as
+  possible, so that specs can run in parallel.
+- **Every spec names the modules it touches** in its front matter:
+  `modules: terminal, board`. The editor sheet has a field for it with the
+  catalogue as suggestions; the agent maintains the field itself and adds a
+  module before it changes code there.
+- **The board warns about overlaps.** A card whose module is also named by
+  *another* spec in Doing carries a red chip — `⚠ terminal · auch #12` — and
+  the inspector says which spec and who owns it. Backlog specs are compared
+  against Doing too, so the warning is there before you move a spec and an
+  agent starts. Done never counts. Modules that are not in the catalogue are
+  marked in the inspector; without a catalogue, the board says so.
+
+The app warns, it does not block: whether to proceed, wait or re-cut is your
+call. The workflow policy (v11, "Modules and parallel work") tells the agent
+to check overlaps before starting, to keep modules per spec minimal, and —
+when no module list exists — to propose one from the code structure and ask
+rather than guess.
+
 ## One register for the whole team
 
 Working in feature branches does not have to mean everyone sees a
@@ -193,7 +223,8 @@ Draft handover offers review or editing, preserving the nonbinding status even
 in a customized prompt. Speccify rereads the file before copying or inserting the
 request. An unknown or duplicate status also requires clarification before use.
 Workflow policy v10 tells the host to treat drafts as ideas, not instructions;
-this is a workflow agreement, not a filesystem access restriction.
+this is a workflow agreement, not a filesystem access restriction. Policy v11
+adds the module rules described under [Modules](#modules-who-touches-what).
 
 ## Where the format comes from
 

@@ -728,6 +728,20 @@ Autosave bewahrt Status und fremde Metadaten und erkennt zwischenzeitliche
 Änderungen. Diese Funktion ist
 unabhängig von einer Entscheidung zur Web-App umsetzbar.
 
+## Module je Spec und paralleles Arbeiten (063)
+
+Nutzerwunsch 2026-09-22: Mehrere Agenten sollen gleichzeitig an einem System
+arbeiten, ohne sich in die Quere zu kommen. Dafür nennt jede Spec im Frontmatter
+die Module, die sie anfasst (`modules: a, b`); der Katalog der Module — die
+Architektur-Idee, entlang der Specs geschnitten werden — steht als `modules` in
+`.agent/settings.json` und wird im Board-Kopf gepflegt. Das Board zeigt
+Überschneidungen mit anderen Specs in Doing auf Karten und im Inspektor; es warnt,
+es verbietet nicht. Policy v11 („Modules and parallel work“) verpflichtet den
+Agenten, vor dem Start Überschneidungen zu melden, beim Zuschnitt Module je Spec
+zu minimieren und ohne Modulliste zuerst einen Vorschlag aus der Code-Struktur zu
+machen und nachzufragen. Unabhängig von der Container-Neuausrichtung (Spec 062,
+Branch `spec/062-spike-container-terminal-im-browser`); Release 0.8.5.
+
 ### Rechercheentwurf: Speccify als Web-Anwendung
 
 [Speccify als Web-App](speccify-web-app.md) ist seit 2026-09-16 ein Playbook

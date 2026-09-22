@@ -28,8 +28,7 @@ and attribution/provenance restrictions.
   Only an explicit human decision activates a draft. General requests to work
   according to playbooks do not activate drafts.
 - Skills: `.agent/skills/<name>/SKILL.md` · Tools: `.agent/tools/<name>/TOOL.md`.
-- Project actions: `.agent/actions.json` · Project settings: `.agent/settings.json`,
-  including the project's module list (`modules`, see below).
+- Project actions: `.agent/actions.json` · Project settings: `.agent/settings.json`.
 
 ### What a spec is
 
@@ -40,32 +39,7 @@ then …" statements), `## Decisions` (numbered, dated), `## Tasks`
 (checkboxes — the steps, not separate files), `## Verification` (what was
 run, what was seen), `## Questions`. Too big for one review → child specs
 with `parent: <slug>`; too small → a task in an existing spec. A spec
-without `order` is an idea and sorts last. Its front matter names the
-modules it touches (`modules: a, b`, see "Modules and parallel work").
-
-### Modules and parallel work
-
-Several agents may work on the same project at once. What keeps them from
-colliding is knowing which parts of the system each spec touches:
-
-- `.agent/settings.json` → `modules` is the project's architecture map: a list
-  of `{ "name", "description", "paths" }` entries (`paths` optional). Names are
-  slugs (`terminal`, `board`, `api-auth`). The human maintains it in the app;
-  you may propose entries.
-- Every spec names the modules it touches in its front matter:
-  `modules: terminal, board` (comma-separated). You own this field: when you
-  touch a module the spec does not list, add it — before the change, not after.
-- **Before you start a spec**, compare its `modules` with every other spec in
-  `Doing`. Any overlap means another agent or person may be changing the same
-  code right now: say so, name the specs, and let the human decide whether to
-  proceed, wait or re-cut. Never start on an overlap silently. The board shows
-  the same overlap on the cards; it warns, it does not block.
-- **When you cut specs** (new specs, child specs, splitting): keep the set of
-  modules per spec as small as possible and split along module boundaries, so
-  that specs can run in parallel. Cutting requires an architecture idea that
-  names the modules. If `modules` in `.agent/settings.json` is missing or does
-  not cover the affected code, do not guess: propose a module list derived
-  from the code structure and ask the human to confirm it first.
+without `order` is an idea and sorts last.
 
 ### Getting started
 
@@ -85,8 +59,7 @@ the spec.
    rest (below).
 3. Work through `## Tasks`: tick `- [x]` as you go, add tasks you discover
    (mark them `(added)`), keep short notes indented under a task. Never
-   rewrite front matter you do not own (`modules` is yours; `owner`,
-   `branch` and the human's flags are not).
+   rewrite front matter you do not own.
    The board counts Markdown task lists throughout the spec body, excluding
    code blocks. Put illustrative checkboxes in fenced code blocks.
 4. Record decisions in `## Decisions` and what you verified in

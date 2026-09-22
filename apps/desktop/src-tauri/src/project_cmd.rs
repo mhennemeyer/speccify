@@ -569,6 +569,10 @@ pub(crate) fn heading_title(body: &str) -> Option<String> {
 pub struct TicketEntry {
     pub(crate) revision: String,
     pub(crate) repositories: Vec<String>,
+    /// Spec 063: Module des Projekts, die diese Spec anfasst (`modules: a, b`),
+    /// normalisiert (klein, ohne Dubletten). Das Board zeigt Überschneidungen
+    /// mit anderen Specs in Doing; der Katalog steht in `.agent/settings.json`.
+    pub(crate) modules: Vec<String>,
     /// Relativ zur Projektwurzel (Schlüssel für `project_board_move`).
     pub(crate) file: String,
     pub(crate) id: String,
@@ -632,6 +636,21 @@ pub(crate) fn flat_lookup<'a>(fields: &'a [(String, String)], key: &str) -> Opti
         .iter()
         .find(|(k, _)| k.eq_ignore_ascii_case(key))
         .map(|(_, v)| v.as_str())
+}
+
+/// Spec 063: `modules: Board, terminal, board` → `["board", "terminal"]`.
+/// Kommagetrennt, klein, ohne Leerwerte, `null` und Dubletten; die Reihenfolge
+/// der ersten Nennung bleibt.
+pub(crate) fn parse_modules(value: &str) -> Vec<String> {
+    let mut modules: Vec<String> = Vec::new();
+    for raw in value.split(',') {
+        let name = raw.trim().to_ascii_lowercase();
+        if name.is_empty() || name == "null" || modules.contains(&name) {
+            continue;
+        }
+        modules.push(name);
+    }
+    modules
 }
 
 fn flat_truthy(fields: &[(String, String)], key: &str) -> bool {
@@ -740,6 +759,7 @@ pub(crate) fn spec_from_text(root: &Path, path: &Path, text: &str) -> Option<Tic
             .filter(|v| !v.is_empty())
             .map(str::to_string)
             .collect(),
+        modules: parse_modules(flat_lookup(&fields, "modules").unwrap_or("")),
         file: path
             .strip_prefix(root)
             .unwrap_or(path)
@@ -1171,7 +1191,7 @@ mod tests {
         std::fs::create_dir_all(dir.join(".agent/specs/kein-spec")).unwrap();
         // Zusatzfelder bewusst dabei: move darf NUR die station-Zeile
         // anfassen (byte-stabiler Rest).
-        let spec = "---\nstation: Backlog\ncreated: 2026-08-28\norder: 2\nready: true\nparent: null\ncustom: bleibt  erhalten\n---\n# Fenster testen\n\nBody bleibt unangetastet.\n\n## Tasks\n\n- [x] eins\n- [ ] zwei\n* [X] drei\n";
+        let spec = "---\nstation: Backlog\ncreated: 2026-08-28\norder: 2\nready: true\nparent: null\nmodules: Terminal, board, terminal,\ncustom: bleibt  erhalten\n---\n# Fenster testen\n\nBody bleibt unangetastet.\n\n## Tasks\n\n- [x] eins\n- [ ] zwei\n* [X] drei\n";
         std::fs::write(dir.join(".agent/specs/t-1/SPEC.md"), spec).unwrap();
         std::fs::write(
             dir.join(".agent/specs/archive/2026-09-01-alt/SPEC.md"),
@@ -1196,6 +1216,13 @@ mod tests {
         assert!(first.ready);
         assert!(!first.needs_human);
         assert_eq!(first.parent, None); // `null` zählt nicht
+        assert_eq!(
+            // Spec 063: Module klein, ohne Dubletten und Leerwerte; ohne Feld leer.
+            first.modules,
+            vec!["terminal".to_string(), "board".to_string()]
+        );
+        assert!(specs[1].modules.is_empty());
+        assert_eq!(parse_modules("null"), Vec::<String>::new());
         assert_eq!((first.tasks_done, first.tasks_total), (2, 3));
         assert!(!first.archived);
         assert!(first.body.contains("Body bleibt"));

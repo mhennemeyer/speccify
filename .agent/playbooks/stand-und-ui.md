@@ -485,7 +485,8 @@ Navigator · fünf Gruppen, zehn Tabs
 │   ├── Register-Kopf (028): Einrichten… → Bestätigung → Jetzt einrichten · Einhängen · blockiert (Grund)
 │   │   └── eingehängt: Stand (aktuell / n nicht gesendet / n zu pushen / n neu vom Team) · Sync · Konflikte je Datei (Team / Meine / bearbeitet / Abbrechen)
 │   ├── Board: Backlog / Doing / Done (v1: Slate / Blau / Grün; getönte Flächen)
-│   │   ├── Karten: Nummer/ID · Titel · Status-Badges · Aufgabenfortschritt
+│   │   ├── Karten: Nummer/ID · Titel · Status-Badges · Aufgabenfortschritt · Modul-Chips (063); rot „⚠ modul · auch #12“, wenn eine andere Spec in Doing dasselbe Modul nennt (Backlog wird gegen Doing verglichen, Done zählt nicht)
+│   │   ├── Kopf: „Module (n)“/„Module…“ (063) → Katalog-Dialog (Name/Beschreibung/Pfade, Vorschläge aus Specs) → `modules` in `.agent/settings.json`; Inspektor-Region „Module“ mit Katalogstand („nicht im Katalog“) und Überschneidung; Sheet-Feld „Module“ mit Katalogvorschlägen
 │   │   ├── Drag-and-drop zwischen Stationen
 │   │   ├── Done nach Parent gruppiert, neueste zuerst; unbekannte Alt-Stationen unverändert als zusätzliche Lesespalten
 │   │   └── Done-Zeitraum und -Anzahl (061) in der Spaltenüberschrift: 7/14/30/90 Tage/alle (Default 14) · 5/10/20/50 Karten/alle (Default 10); Link „Mehr anzeigen (N weitere)“; Älteres eingeklappt „Älter (N)“; `board.doneDays`/`board.doneLimit` in `.agent/settings.json` je Projekt/Workspace
@@ -597,6 +598,7 @@ Diese Tabelle verändert keine Station oder Reihenfolge.
 | [031 Team-Board im Web](../specs/031-team-board-im-web/SPEC.md) | Done (BO 2026-09-14) | `speccify board` (Core `board.py`) rendert eine statische Seite aus dem Register; Pages-/Docs-Workflow bauen sie aus `origin/specs`, Nav-Link „Board“; live unter speccify.io/board/, Trigger aus dem Branch `specs` |
 | [032 Web-Board-Dienst](../specs/032-web-board-dienst/SPEC.md) | Done (BO 2026-09-14) | `apps/board` (`speccify-board`, FastAPI): beliebig viele Repos per URL (Klon von `specs`) oder Pfad/Workspace, Auffrischung, Station/Tasks zurück ins Register mit Commit/Push/Nachholen, Basic Auth, Dockerfile + Compose; Tests über echte Remotes, Container geprüft; Team-Abnahme offen |
 | [033 Web-Board als MCP](../specs/033-web-board-als-mcp-server/SPEC.md) | Done (BO 2026-09-14) | Board-MCP unter `/mcp` (acht Tools, zwei Ressourcen, Bearer `BOARD_MCP_TOKEN`), Tests mit echtem MCP-Client, Container geprüft; Installation in itsdcloud offen |
+| [063 Module je Spec](../specs/063-module-je-spec/SPEC.md) | Doing (2026-09-22) | Frontmatter `modules: a, b` (`project_cmd.rs`, Anlegen/Speichern in `board_cmd.rs`), Katalog `modules` in `.agent/settings.json` (`lib/modules.ts`, Dialog im Board-Kopf), Überschneidung mit Doing auf Karten und im Inspektor, Policy v11 „Modules and parallel work“, Suite `test_spec_modules`; Release 0.8.5 |
 | [034 Board in itsdcloud](../specs/034-board-in-itsdcloud/SPEC.md) | Backlog | Vertrag/Anleitung hier, Umsetzung als itsdcloud-Spec; BO 2026-09-13: eigene Oberfläche in itsdcloud, zuerst im Feature-Branch, danach Generalisierung „MCP mit strukturierten Daten visuell“ (Playbook-Abschnitt „Oberfläche in itsdcloud“) |
 | [035 itsdcloud im Terminal](../specs/035-itsdcloud-gedaechtnis-im-terminal/SPEC.md) | Backlog | `speccify-itsdcloud`-MCP, Ereignispuffer, Panel; braucht itsdcloud-Tokenweg |
 | [036 Jira-Zuordnung](../specs/036-jira-zuordnung/SPEC.md) | Backlog (Idee) | TBD, Q1 offen |
