@@ -41,6 +41,12 @@
 .accent-tab:focus-visible, .file-row:focus-visible, .spec-card button:focus-visible { outline: 2px solid var(--accent-blue-ink); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { .spec-card { transition: none; } }
 
+/* Spec 065: Fragen des Agenten — orange Palette der Frage-Box, Code hebt sich
+   ab, Blöcke lassen Platz für den Kopierknopf. */
+.markdown-body.question-text { color: var(--color-orange-900, #7c2d12); }
+.markdown-body.question-text p, .markdown-body.question-text ul, .markdown-body.question-text ol { margin: 0.35rem 0; }
+.markdown-body.question-text pre { padding-right: 5.5rem; }
+
 /* Markdown-Anzeige (Pläne, SKILL.md) — kompaktes Dokument-Layout ohne
    Typography-Plugin. */
 .markdown-body {

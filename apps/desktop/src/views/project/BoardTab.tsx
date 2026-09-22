@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import Markdown from "../../components/Markdown";
+import QuestionText from "../../components/QuestionText";
 import { LoadingBoundary, useAsync } from "../../components/ui";
 import { HandoverButton } from "../../components/HandoverSheet";
 import { DONE_LIMIT_OPTIONS, DONE_WINDOW_OPTIONS, splitDone, useDoneBoard } from "../../lib/doneWindow";
@@ -707,7 +708,7 @@ function QuestionsSection({
           <p className="text-xs font-semibold text-orange-800">
             Q{current.number} · der Agent wartet auf eine Antwort
           </p>
-          <p className="mt-1 whitespace-pre-wrap text-sm text-orange-900">{current.text}</p>
+          <div className="mt-1"><QuestionText text={current.text} /></div>
           <div className="mt-2 flex gap-2">
             <textarea
               value={draft}
@@ -746,9 +747,10 @@ function QuestionsSection({
                 <p className="font-medium">
                   Q{question.number}: {question.text}
                 </p>
-                <p className="mt-0.5 whitespace-pre-wrap text-orange-800">
-                  A: {question.answer}
-                </p>
+                <div className="mt-0.5 flex gap-1 text-orange-800">
+                  <span className="shrink-0 font-medium">A:</span>
+                  <QuestionText text={question.answer ?? ""} />
+                </div>
               </li>
             ))}
           </ul>

@@ -86,7 +86,10 @@
             number: 1,
             open: true,
             asked_at: "2026-08-31T11:40:00Z",
-            text: "Soll der Beweis-Text auf Deutsch oder Englisch erscheinen?",
+            // Spec 065: ?qmd=1 liefert eine Frage mit Absätzen, Liste und Code.
+            text: new URLSearchParams(location.search).has("qmd")
+              ? "Task 7: Der Agent darf auf der VM keinen SSH-Schlüssel erzeugen.\nBitte einmal selbst ausführen:\n\n`ssh billi-vm \"ssh-keygen -t ed25519 -f C:\\Users\\billi\\.ssh\\id_deploy\"`\n\nDanach den Schlüssel hinterlegen:\n\n- als **Deploy Key** für `avc/rekas`\n- für `avc/billi-ci`\n\n```sh\ngit remote set-url origin git@gitlab:avc/rekas.git\ngit pull\n```\n\nAlternativ: Task 7 streichen — dann bitte hier sagen."
+              : "Soll der Beweis-Text auf Deutsch oder Englisch erscheinen?",
             answer: null,
             answered_at: null,
           },
@@ -512,6 +515,8 @@
         terminal_kill: () => null,
         terminal_attention: args => { (window.__SPECCIFY_MOCK__.terminalAttention ??= []).push(args); return null; },
         terminal_notification_test: () => null,
+        // Spec 065: Kopierknöpfe schreiben über das Clipboard-Plugin.
+        "plugin:clipboard-manager|write_text": ({ text, data }) => { (window.__SPECCIFY_MOCK__.clipboard ??= []).push(text ?? data); return null; },
         "plugin:event|emit": () => null,
         "plugin:event|listen": ({ event, handler }) => {
           const id = ++eventId;
