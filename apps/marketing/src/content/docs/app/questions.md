@@ -55,6 +55,12 @@ away under a collapsible **Answered (n)** section.
 
 ![An open question at the top of the spec's inspector, with the answer field](../../../assets/app/question.png)
 
+The question box renders the agent's text as Markdown — paragraphs, lists,
+bold, code blocks — and every span in backticks carries a **Kopieren** button
+that puts exactly its content on the clipboard (since 0.8.6). Questions often
+hold the very command, path or repository name you have to carry into a
+terminal; the agent writes those in backticks, you click instead of selecting.
+
 The effect, months later: every "why is it like this?" has a
 findable, timestamped answer sitting in the spec that made the
 decision — not in a chat log nobody can search.
