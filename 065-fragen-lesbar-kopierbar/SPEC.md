@@ -1,5 +1,5 @@
 ---
-station: Doing
+station: Done
 order: 65
 created: 2026-09-22
 modules: board
@@ -47,7 +47,9 @@ hervorheben und mit einem Knopf zum Kopieren versehen, dazu mehr Struktur
 - [x] `QuestionText`-Komponente (Markdown + Kopierknöpfe), in der Frage-Box für Frage und Antworten.
 - [x] Mock: Clipboard-Kommando und Frage mit Markdown (`?qmd=1`); Regression `test_spec_questions.mjs`.
 - [x] Typecheck, Nachbar-Suiten.
-- [ ] Lokaler Build und Neustart der App (0.8.5-Bundle aus `main` `14e5806`).
+- [x] Lokaler Build und Neustart der App (0.8.5-Bundle aus `main` `14e5806`).
+  App per Quit beendet (kein Terminal aktiv), `dev.sh --app --prepared --skip-engine`,
+  neu gestartet mit vier Fenstern; Bundle enthält die Komponente.
 
 ## Verification
 
@@ -63,6 +65,10 @@ hervorheben und mit einem Knopf zum Kopieren versehen, dazu mehr Struktur
   `test_team_signals`, `test_spec_modules`.
 - Sichtprüfung im Mock (Screenshot): Kopierknopf des Blocks lag zunächst über dem
   Code → `padding-right` mit höherer Spezifität, nachgeprüft 88 px.
-- Nicht geprüft: Klick in der gebündelten App (folgt mit dem lokalen Build).
+- Lokale App neu gebaut und gestartet (pid neu, vier Fenster, `codesign` ok);
+  das gebündelte Frontend enthält `data-question-text`/`data-copy-code`. Eine
+  offene Frage gibt es in diesem Repo gerade nicht — die Sichtprüfung in der
+  echten App macht BO an der Frage zu Spec 008 im anderen Projekt.
+- Nicht veröffentlicht: kommt mit dem nächsten Release (Entscheidung 2).
 
 ## Questions
