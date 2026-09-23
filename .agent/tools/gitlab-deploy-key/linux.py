@@ -135,7 +135,14 @@ def access_level(project: dict) -> int:
     return max(int(level or 0) for level in levels)
 
 
-def inspect_project(api: Api, path: str, fingerprint: str, can_push: bool) -> dict:
+def blob_of(key_line: str) -> str:
+    parts = key_line.split()
+    return parts[1] if len(parts) >= 2 else ""
+
+
+def inspect_project(
+    api: Api, path: str, fingerprint: str, can_push: bool, key_line: str = ""
+) -> dict:
     encoded = urllib.parse.quote(path, safe="")
     status, project = api.call("GET", f"/projects/{encoded}")
     if status != 200:
@@ -149,8 +156,17 @@ def inspect_project(api: Api, path: str, fingerprint: str, can_push: bool) -> di
     if status != 200:
         entry.update(state="error", detail=f"deploy_keys HTTP {status}: {keys.get('message')}")
         return entry
+    # GitLab reports `fingerprint_sha256` without the `SHA256:` prefix (19.x);
+    # compare the bare digest, and fall back to the key blob itself.
+    wanted = fingerprint.removeprefix("SHA256:").rstrip("=")
     match = next(
-        (k for k in keys if (k.get("fingerprint_sha256") or "").rstrip("=") == fingerprint), None
+        (
+            k
+            for k in keys
+            if (k.get("fingerprint_sha256") or "").removeprefix("SHA256:").rstrip("=") == wanted
+            or blob_of(k.get("key") or "") == blob_of(key_line)
+        ),
+        None,
     )
     if match is None:
         entry["state"] = "missing"
@@ -194,7 +210,8 @@ def main() -> None:
         result["scopes"] = list(own.get("scopes") or [])
 
     projects = [
-        inspect_project(api, p, spec["fingerprint"], spec["can_push"]) for p in spec["projects"]
+        inspect_project(api, p, spec["fingerprint"], spec["can_push"], spec["key"])
+        for p in spec["projects"]
     ]
 
     if spec["mode"] == "apply":
@@ -233,7 +250,9 @@ def main() -> None:
         # Prove it: read again, keep what apply did as the state, verify presence.
         for entry in projects:
             if entry.get("state") in ("created", "enabled"):
-                again = inspect_project(api, entry["path"], spec["fingerprint"], spec["can_push"])
+                again = inspect_project(
+                    api, entry["path"], spec["fingerprint"], spec["can_push"], spec["key"]
+                )
                 if again.get("state") != "present":
                     seen = f"{again.get('state')}: {again.get('detail', '')}".strip(": ")
                     entry.update(state="error", detail=f"after apply the key is {seen}")

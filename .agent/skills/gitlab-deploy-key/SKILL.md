@@ -99,6 +99,10 @@ fix the key.
 - **Wrong host key on first contact.** `git ls-remote` on a fresh machine
   prompts to accept the host key; do it once, interactively, not by disabling
   checking.
+- **`fingerprint_sha256` comes without the `SHA256:` prefix** (GitLab 19.x),
+  while `ssh-keygen -l` prints it with. Compare the bare digest, or the key
+  blob. The first `apply` on 2026-09-22 wrote the key correctly and then
+  reported it "missing" for exactly this reason.
 - **The key line is public, the token is not.** Keys may be pasted into a
   chat or a spec; `GITLAB_TOKEN` stays in the environment. The tool refuses
   to read it from the input for that reason.
