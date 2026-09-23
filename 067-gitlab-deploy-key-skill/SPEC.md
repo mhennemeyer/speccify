@@ -64,8 +64,13 @@ Stelle fällt.
 - [x] `SKILL.md` mit Ablauf, Verify-Zeilen, Fallstricken, Projektabschnitt.
 - [x] Katalog `agent-knowledge`; `speccify tool check`, `speccify verify`.
 - [x] `mode: check` gegen git.itsd-consulting.de ausführen (lesend) und Befund notieren.
-- [ ] (BO) `mode: apply` mit Freigabe ausführen — Rechtevergabe, vom Auto-Modus
+- [x] (BO) `mode: apply` mit Freigabe ausführen — Rechtevergabe, vom Auto-Modus
       blockiert; Befehl steht im Chat und im Skill-Abschnitt „In this project“.
+      BO hat `apply` am 2026-09-22 per `!` ausgeführt: Schlüssel-ID 92 angelegt
+      (rekas) und aktiviert (billi-legacy, billi-ci).
+- [x] (added) Befund aus dem echten `apply`: Nachlesen meldete „missing“, weil
+      GitLab 19.3 `fingerprint_sha256` ohne `SHA256:`-Präfix liefert → Vergleich
+      normalisiert, Rückfall auf den Schlüssel-Blob, Fallstrick im Skill.
 
 ## Verification
 
@@ -85,8 +90,12 @@ Stelle fällt.
   `avc/billi-legacy` (396), `avc/billi-ci` (397); Schlüssel
   `SHA256:XTLqHKg7/8f+1dG7YKwhKXMtyXSsl/PziwT1eZc1IuQ` in allen drei `missing`.
 - `linux.py` identisch zu `macos.py`; ruff check/format ohne Befund.
-- Nicht ausgeführt: `apply` (Freigabe des Menschen), Windows-Implementierung,
-  Nachweis von der VM (`git pull`, abgewiesener `push`) — gehört zu Task 9 in
-  AVC/rekas 008.
+- `apply` (BO, 2026-09-22): Schreibschritte erfolgreich (ID 92 created/enabled),
+  Nachlesen fälschlich „missing“ → Fix (Commit danach), `tool check` weiter 3/3,
+  `check` danach: alle drei Projekte `present`, `can_push: false`, ID 92.
+  Evaluate: kein weiteres Projekt trägt den Schlüssel; kein `mismatch`; Token
+  weder in Spec noch History noch Commits.
+- Nicht ausgeführt: Windows-Implementierung; Nachweis von der VM (`git pull`,
+  abgewiesener `push`) — Task 9 in AVC/rekas 008.
 
 ## Questions
