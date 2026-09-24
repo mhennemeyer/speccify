@@ -59,7 +59,7 @@ Speccify:
   Workspace-Kontext wird dem Agenten per Datei und `--append-system-prompt-file`
   (Claude) bzw. Prompt (Codex) übergeben.
 
-itsdcloud (`/Users/mhennemeyer/WorkLocal/itsdcloud/app`, FastAPI + Angular,
+itsdcloud (`/Users/mhennemeyer/WorkLocal/DevCloud/itsdcloud/app`, FastAPI + Angular,
 Keycloak-Bearer, Speccify-Workflow v5 mit Specs 0001–0039):
 
 - **MCP-Server als Projekt-Integration** (Spec 0030): Katalogeintrag `mcp`,

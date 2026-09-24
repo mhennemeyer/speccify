@@ -308,7 +308,7 @@ natürliche Chat-Antwort bleiben Abnahme; noch kein Merge auf itsdcloud master.
 Gedächtnis-/Chat-Export nach Speccify bleibt der separate nächste Vertrag 035.
 
 **Gewünscht:** UI-Anbindung und MCP-Zugang zu
-`/Users/mhennemeyer/WorkLocal/itsdcloud`. Projektgedächtnis steht dem gestarteten
+`/Users/mhennemeyer/WorkLocal/DevCloud/itsdcloud`. Projektgedächtnis steht dem gestarteten
 Agenten automatisch zur Verfügung. Umgekehrt lassen sich z. B. Entwicklungsstand,
 Entscheidungen und offene Punkte eines Features zurückschreiben. Später weitere
 Adapter, insbesondere iKanban als Kandidat.
