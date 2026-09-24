@@ -83,6 +83,27 @@ try {
   await input.press('Alt+Enter');
   await input.press('Control+c');
   assert.deepEqual(await page.evaluate(()=>window.__SPECCIFY_MOCK__.terminalWrites.map(w=>w.data)),['\x1b[13;2u','\r','\x1b\r','\x03']);
+  // Spec 068: ⌘C kopiert die xterm-Auswahl über das Clipboard-Plugin, sendet kein ^C
+  // und schließt das Tastenereignis ab (kein Fehlerton) — auch mit Fokus außerhalb.
+  await output('\r\nKOPIERTEST 068\r\n');
+  await page.waitForFunction(()=>window.__speccifyQa.terminalText().includes('KOPIERTEST 068'));
+  await page.evaluate(()=>{window.__SPECCIFY_MOCK__.terminalWrites.length=0; window.__SPECCIFY_MOCK__.clipboard=[];});
+  assert.ok(await page.evaluate(()=>window.__speccifyQa.terminalSelect('KOPIERTEST 068')));
+  const prevented=await page.evaluate(()=>new Promise(resolve=>{
+    window.addEventListener('keydown',e=>{ if(e.key==='c') setTimeout(()=>resolve(e.defaultPrevented),0); },{once:true});
+    document.querySelector('.xterm-helper-textarea').dispatchEvent(new KeyboardEvent('keydown',{key:'c',code:'KeyC',metaKey:true,bubbles:true,cancelable:true}));
+  }));
+  assert.equal(prevented,true,'⌘C with a selection must be marked handled');
+  await page.waitForFunction(()=>window.__SPECCIFY_MOCK__.clipboard.at(-1)==='KOPIERTEST 068');
+  await page.getByRole('status',{name:'Zwischenablage'}).waitFor({state:'visible'});
+  assert.deepEqual(await page.evaluate(()=>window.__SPECCIFY_MOCK__.terminalWrites),[],'⌘C with selection never sends ^C');
+  await page.evaluate(()=>{window.__SPECCIFY_MOCK__.clipboard.length=0; document.body.focus();});
+  await page.keyboard.press('Meta+c');
+  await page.waitForFunction(()=>window.__SPECCIFY_MOCK__.clipboard.at(-1)==='KOPIERTEST 068');
+  await page.evaluate(()=>{window.__speccifyQa.terminalClearSelection(); window.__SPECCIFY_MOCK__.clipboard.length=0;});
+  await input.press('Meta+c');
+  await page.waitForTimeout(200);
+  assert.equal(await page.evaluate(()=>window.__SPECCIFY_MOCK__.clipboard.length),0,'no selection: ⌘C stays with the terminal');
   assert.deepEqual(errors,[]);
-  console.log('PASS terminal: themes, font/PTY resize, persistence, hidden-pane prompt, split/ANSI output, redraw dedupe, OSC notification, focus, no automatic answers, preferences');
+  console.log('PASS terminal: themes, font/PTY resize, persistence, hidden-pane prompt, split/ANSI output, redraw dedupe, OSC notification, focus, no automatic answers, preferences, copy shortcut');
 } finally {await browser?.close();server.kill();}

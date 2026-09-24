@@ -12,6 +12,12 @@ export interface QaHooks {
   /** Ob ein Terminal Aufträge annimmt (Spec 011). */
   terminalReady: () => boolean;
   terminalAppearance: () => { fontSize: number | undefined; background: string | undefined; cols: number; rows: number } | null;
+  /** Spec 068, Prüfhilfe: markiert das erste Vorkommen von `text` im Puffer wie
+   *  ein Mausziehen — keine Eingabe an den PTY. `false`, wenn nicht gefunden. */
+  terminalSelect: (text: string) => boolean;
+  terminalClearSelection: () => void;
+  /** Aktuell markierter Text, `null` ohne Terminal. */
+  terminalSelection: () => string | null;
 }
 
 declare global {
@@ -44,8 +50,24 @@ export function terminalText(): string | null {
   return lines.join("\n").replace(/\s+$/, "");
 }
 
+export function terminalSelect(text: string): boolean {
+  if (!terminal || !text) return false;
+  const buffer = terminal.buffer.active;
+  for (let y = 0; y < buffer.length; y += 1) {
+    const column = buffer.getLine(y)?.translateToString(true).indexOf(text) ?? -1;
+    if (column >= 0) {
+      terminal.select(column, y, text.length);
+      return true;
+    }
+  }
+  return false;
+}
+
 export function installQaHooks(): void {
   window.__speccifyQa = { terminalText, terminalReady,
     terminalAppearance: () => terminal ? { fontSize: terminal.options.fontSize, background: terminal.options.theme?.background, cols: terminal.cols, rows: terminal.rows } : null,
+    terminalSelect,
+    terminalClearSelection: () => terminal?.clearSelection(),
+    terminalSelection: () => terminal ? terminal.getSelection() : null,
   };
 }

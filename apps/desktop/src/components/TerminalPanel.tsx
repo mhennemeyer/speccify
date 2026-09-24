@@ -20,6 +20,7 @@ import { deliverToTerminal, registerTerminalWriter } from "../lib/handover";
 import { registerQaTerminal } from "../lib/qa";
 import { terminalTheme, useTerminalPreferences } from "../lib/terminalPreferences";
 import { observeTerminalAttention, type TerminalAttention } from "../lib/terminalAttention";
+import { foreignSelection, isCopyShortcut, isPasteShortcut, writeClipboard } from "../lib/terminalClipboard";
 
 export interface TerminalOpened {
   cwd: string;
@@ -67,6 +68,14 @@ export default function TerminalPanel({
   preferencesRef.current = preferences;
   const [attention, setAttention] = useState<TerminalAttention | null>(null);
   const [notificationError, setNotificationError] = useState("");
+  // Spec 068: kurze Rückmeldung zum Kopieren („Kopiert" oder der Fehlergrund).
+  const [clipboardHint, setClipboardHint] = useState("");
+  const hintTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const showHint = useCallback((text: string, ms = 1800) => {
+    setClipboardHint(text);
+    if (hintTimer.current) clearTimeout(hintTimer.current);
+    hintTimer.current = setTimeout(() => setClipboardHint(""), ms);
+  }, []);
 
   // W6/D24 → Spec 011: „ins Terminal tippen" läuft über die bestätigte
   // Zustellung; das alte Event bleibt für Aufrufer ohne Rückmeldung.
@@ -121,6 +130,8 @@ export default function TerminalPanel({
       cursorBlink: true,
       theme: terminalTheme(document.documentElement.dataset.theme === "dark"),
       minimumContrastRatio: 4.5,
+      // Spec 068: beansprucht ein TUI die Maus, markiert ⌥-Ziehen trotzdem Text.
+      macOptionClickForcesSelection: true,
     });
     const fit = new FitAddon();
     terminal.loadAddon(fit);
@@ -175,9 +186,39 @@ export default function TerminalPanel({
       }
     });
 
-    // Kopieren/Einfügen (BO-Finding): ⌘C kopiert die Selektion (ohne
-    // Selektion normal weiterreichen — ^C bleibt SIGINT), ⌘V fügt ein.
-    // Tauri-Clipboard-Plugin statt navigator.clipboard (WKWebView-sicher).
+    // Kopieren (Spec 068, nach BO-Finding 2026-07-27 und 2026-09-24): xterm hält
+    // die Auswahl selbst, der DOM hat keine. Deshalb kopiert ein fensterweiter
+    // Handler in der Capture-Phase — unabhängig davon, wo der Fokus liegt — und
+    // schließt das Ereignis mit preventDefault ab; sonst sucht macOS im
+    // Systemmenü ein „Kopieren", findet ohne DOM-Auswahl keins und piept.
+    // Ohne Auswahl bleibt ^C dem Terminal (SIGINT). Tauri-Clipboard-Plugin
+    // zuerst (WKWebView-sicher), mit Rückfallwegen und sichtbarem Ergebnis.
+    const copySelection = () => {
+      const text = terminal.getSelection();
+      if (!text) return false;
+      writeClipboard(text, writeText)
+        .then(() => showHint("Kopiert"))
+        .catch((error) => showHint(`Kopieren fehlgeschlagen: ${String(error)}`, 6000));
+      return true;
+    };
+    const copyKeyListener = (event: KeyboardEvent) => {
+      if (!isCopyShortcut(event) || !terminal.hasSelection()) return;
+      if (container.clientWidth === 0) return; // verstecktes Terminal
+      if (foreignSelection(document.activeElement, container)) return;
+      event.preventDefault();
+      copySelection();
+    };
+    // Menü „Bearbeiten → Kopieren" und Kontextmenü lösen ein copy-Ereignis aus.
+    const nativeCopyListener = (event: ClipboardEvent) => {
+      if (!terminal.hasSelection() || container.clientWidth === 0) return;
+      if (foreignSelection(document.activeElement, container)) return;
+      event.clipboardData?.setData("text/plain", terminal.getSelection());
+      event.preventDefault();
+      showHint("Kopiert");
+    };
+    window.addEventListener("keydown", copyKeyListener, true);
+    document.addEventListener("copy", nativeCopyListener, true);
+
     terminal.attachCustomKeyEventHandler((event) => {
       if (event.type !== "keydown") return true;
       // xterm 5.5 drops Shift on Enter. CSI-u preserves the modifier for
@@ -188,19 +229,19 @@ export default function TerminalPanel({
         terminal.input("\x1b[13;2u", true);
         return false;
       }
-      const modifier = event.metaKey || (event.ctrlKey && event.shiftKey);
-      if (!modifier) return true;
-      const key = event.key.toLowerCase();
-      if (key === "c" && terminal.hasSelection()) {
-        void writeText(terminal.getSelection());
+      if (isCopyShortcut(event)) {
+        // Kopiert hat bereits der fensterweite Handler; hier nur ^C unterdrücken.
+        if (!terminal.hasSelection()) return true;
+        event.preventDefault();
         return false;
       }
-      if (key === "v") {
+      if (isPasteShortcut(event)) {
+        event.preventDefault();
         void readText()
           .then((text) => {
             if (text) terminal.paste(text);
           })
-          .catch(() => {});
+          .catch((error) => showHint(`Einfügen fehlgeschlagen: ${String(error)}`, 6000));
         return false;
       }
       return true;
@@ -285,6 +326,9 @@ export default function TerminalPanel({
       disposed = true;
       unregisterWriter?.();
       unregisterQa();
+      window.removeEventListener("keydown", copyKeyListener, true);
+      document.removeEventListener("copy", nativeCopyListener, true);
+      if (hintTimer.current) clearTimeout(hintTimer.current);
       if (idleTimer.current) clearTimeout(idleTimer.current);
       if (busyRef.current) endActivity(busyRef.current, "cancelled");
       busyRef.current = null;
@@ -377,6 +421,7 @@ export default function TerminalPanel({
         </button>
       </div>
       {status ? <p className="px-3 py-1 text-xs text-red-400">{status}</p> : null}
+      {clipboardHint ? <p role="status" aria-label="Zwischenablage" className="px-3 py-1 text-xs text-slate-400">{clipboardHint}</p> : null}
       {preferencesError ? <p role="alert" className="px-3 text-xs text-red-400">{preferencesError}</p> : null}
       <div ref={containerRef} className="min-h-0 flex-1 p-1" />
     </div>

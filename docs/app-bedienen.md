@@ -56,7 +56,11 @@ Das Fenster folgt dem Muster von Xcode und iKanban: **Navigator** links,
   Kasten über dem Inhalt.
 - **Agent-Terminal.** Unten unter dem Inhalt, höhenverstellbar; wer es
   lieber rechts hat, legt es mit *nach rechts* als zweiten Tab in die
-  rechte Seitenleiste.
+  rechte Seitenleiste. Markierter Text geht mit ⌘C (Windows/Linux:
+  Strg+Umschalt+C) in die Zwischenablage, auch wenn der Fokus gerade woanders
+  im Fenster liegt; der Terminalkopf meldet *Kopiert* oder den Grund, falls es
+  nicht klappt. Ohne Markierung bleibt Ctrl-C das Abbruchsignal für den Agenten.
+  ⌘V fügt ein. Beansprucht ein Programm die Maus, markiert ⌥-Ziehen trotzdem.
 - **Toolbar.** Links der Projektname. In der Mitte die **Knöpfe**:
   eingebaute (*Pull*, *Push*, *Commit*, *Agent*) und Aktionen aus
   `.agent/actions.json` (im Aktionen-Tab mit *Toolbar* markiert, ein
