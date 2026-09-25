@@ -41,6 +41,7 @@
       "binaries/speccify-exec-mcp",
       "binaries/speccify-discovery-mcp",
       "binaries/speccify-parallels-mcp",
+      "binaries/speccify-pty-host",
       "binaries/speccify-uv"
     ],
     "resources": [

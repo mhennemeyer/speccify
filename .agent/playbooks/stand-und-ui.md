@@ -384,6 +384,7 @@ Projektfenster · ein Projektpfad (Startbereich: Specs)
 │   ├── QA-Brücke (039): nur mit `--qa-bridge` — kein UI, Fenster/`eval`/`invoke`/Screenshot per HTTP; `window.__speccifyQa` liest Terminalpuffer und Bereitschaft
 │   ├── Agent-Fragen (038): ask_bo-Karten über dem Terminal · Ad-hoc-UI als eigenes Popup-Fenster `ask-<n>` (iframe, Formular/data-answer, Anzeige mit Schließen), schließt nach Antwort
 │   ├── Dock unten (069): Griff und Terminal über alle Spalten, Navigator/Inspektor enden darüber · Dock rechts unverändert
+│   ├── Überleben (070, opt-in „Terminals überleben App-Neustarts"): PTY im Sidecar `speccify-pty-host` (Loopback, Token in `~/.speccify/pty-host.json`, Ringpuffer 2 MiB) · App-Ende trennt nur, Fenster-Schließen/Neu starten beenden · Fenster hängt sich beim Start per `terminal_live`/`terminal_attach` wieder an (Replay, dann live) · gehostete Sitzungen blockieren keine Updates · Host endet 60 s nach letzter Sitzung
 │   ├── Kopieren (068): ⌘C/Strg+Umschalt+C kopiert die xterm-Auswahl fensterweit (auch bei Fokus außerhalb) · Hinweis „Kopiert"/Fehlergrund im Kopf · ohne Auswahl bleibt Ctrl-C SIGINT · ⌥-Ziehen markiert trotz Maus-Modus
 │   └── laufend: cwd · Startdetails · PTY · Neustart · Dock wechseln
 └── Splitter: Größen ändern/zurücksetzen; Layout pro Projekt gespeichert

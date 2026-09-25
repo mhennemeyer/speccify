@@ -11,6 +11,8 @@ pub struct Preferences {
     pub font_size: u16,
     pub popups: bool,
     pub system_notifications: bool,
+    /// Spec 070: Terminals laufen im PTY-Host und überleben App-Neustarts.
+    pub persist_sessions: bool,
 }
 
 impl Default for Preferences {
@@ -19,6 +21,7 @@ impl Default for Preferences {
             font_size: 14,
             popups: true,
             system_notifications: true,
+            persist_sessions: false,
         }
     }
 }
@@ -48,7 +51,11 @@ fn patched(
     font_size: Option<u16>,
     popups: Option<bool>,
     system_notifications: Option<bool>,
+    persist_sessions: Option<bool>,
 ) -> Result<Preferences, String> {
+    if let Some(value) = persist_sessions {
+        prefs.persist_sessions = value;
+    }
     if let Some(size) = font_size {
         if !(8..=32).contains(&size) {
             return Err("Terminal-Schriftgröße muss zwischen 8 und 32 px liegen.".into());
@@ -76,10 +83,17 @@ pub fn terminal_preferences_update(
     font_size: Option<u16>,
     popups: Option<bool>,
     system_notifications: Option<bool>,
+    persist_sessions: Option<bool>,
 ) -> Result<Preferences, String> {
     let _guard = LOCK.lock().map_err(|e| e.to_string())?;
     let path = path()?;
-    let prefs = patched(read(&path)?, font_size, popups, system_notifications)?;
+    let prefs = patched(
+        read(&path)?,
+        font_size,
+        popups,
+        system_notifications,
+        persist_sessions,
+    )?;
     let parent = path.parent().unwrap();
     std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
     let mut file = tempfile::NamedTempFile::new_in(parent).map_err(|e| e.to_string())?;
@@ -104,8 +118,9 @@ mod tests {
             font_size: 20,
             popups: false,
             system_notifications: false,
+            persist_sessions: true,
         };
-        let changed = patched(existing.clone(), Some(24), None, None).unwrap();
+        let changed = patched(existing.clone(), Some(24), None, None, None).unwrap();
         assert_eq!(
             changed,
             Preferences {
@@ -114,7 +129,7 @@ mod tests {
             }
         );
         for size in [0, 7, 33, u16::MAX] {
-            assert!(patched(existing.clone(), Some(size), None, None).is_err());
+            assert!(patched(existing.clone(), Some(size), None, None, None).is_err());
         }
         assert_eq!(
             serde_json::from_str::<Preferences>("{}").unwrap(),

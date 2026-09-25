@@ -27,6 +27,8 @@ export interface TerminalOpened {
   startup: AgentStartupReport | null;
   session: AgentSession | null;
   launch: string;
+  /** Spec 070: re-attached to a session that kept running in the PTY host. */
+  reattached?: boolean;
 }
 
 /** Relativer Pfad mit Endung + `:zeile` (optional `:spalte`), wie Compiler
@@ -118,7 +120,9 @@ export default function TerminalPanel({
     const container = containerRef.current;
     if (!container) return;
 
-    const id = `term-${crypto.randomUUID()}`;
+    // Spec 070: beim Wiederanhängen ist die Id die der laufenden Host-Sitzung.
+    const attachTo = sessionRef.current?.mode === "attach" ? sessionRef.current.id : null;
+    const id = attachTo ?? `term-${crypto.randomUUID()}`;
     idRef.current = id;
     setStatus("");
     setStartup(null);
@@ -276,12 +280,15 @@ export default function TerminalPanel({
           unlisteners.forEach((unlisten) => unlisten());
           return;
         }
-        setStatus("Startumgebung wird geprüft…");
+        setStatus(attachTo ? "Laufende Sitzung wird wieder verbunden…" : "Startumgebung wird geprüft…");
         // Listeners above are live before this call: early PTY output is not lost.
-        const opened = await invoke<TerminalOpened>("terminal_open", {
-          id, cols: terminal.cols, rows: terminal.rows, cwd: cwdProp, autostart, workspaceId,
-          session: sessionRef.current ?? { mode: "new" },
-        });
+        // Spec 070: `terminal_attach` sends the host's buffer as term-out before it returns.
+        const opened = attachTo
+          ? await invoke<TerminalOpened>("terminal_attach", { id, cols: terminal.cols, rows: terminal.rows })
+          : await invoke<TerminalOpened>("terminal_open", {
+            id, cols: terminal.cols, rows: terminal.rows, cwd: cwdProp, autostart, workspaceId,
+            session: sessionRef.current ?? { mode: "new" },
+          });
         if (disposed) {
           await invoke("terminal_kill", { id });
           return;

@@ -4091,10 +4091,12 @@ dependencies = [
 name = "speccify-desktop"
 version = "0.8.6"
 dependencies = [
+ "base64 0.22.1",
  "grep-matcher",
  "grep-regex",
  "grep-searcher",
  "ignore",
+ "libc",
  "portable-pty",
  "pulldown-cmark",
  "reqwest",
@@ -4104,6 +4106,7 @@ dependencies = [
  "sha2",
  "shell-words",
  "speccify-mcp-core",
+ "speccify-pty-host",
  "speccify-toolbox",
  "tauri",
  "tauri-build",
@@ -4162,6 +4165,17 @@ dependencies = [
  "shlex 1.3.0",
  "speccify-mcp-core",
  "wait-timeout",
+]
+
+[[package]]
+name = "speccify-pty-host"
+version = "0.0.0"
+dependencies = [
+ "base64 0.22.1",
+ "portable-pty",
+ "serde",
+ "serde_json",
+ "uuid",
 ]
 
 [[package]]

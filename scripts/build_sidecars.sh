@@ -33,7 +33,7 @@ done
 # weil es geladen statt gebaut wird. Idempotent: No-Op, wenn schon da.
 ./scripts/fetch_uv.sh
 
-BINARIES=(speccify-exec-mcp speccify-discovery-mcp speccify-parallels-mcp)
+BINARIES=(speccify-exec-mcp speccify-discovery-mcp speccify-parallels-mcp speccify-pty-host)
 TARGET_DIR="$REPO_ROOT/apps/desktop/src-tauri/binaries"
 TRIPLE="$(rustc -vV | awk '/^host: /{print $2}')"
 

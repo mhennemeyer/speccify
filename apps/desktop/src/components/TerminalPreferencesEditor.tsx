@@ -21,6 +21,12 @@ export default function TerminalPreferencesEditor() {
     <p>Reagiert auf Terminal-Signale und erkannte Freigabefragen. Antworten erfolgen im Terminal.
       Freie Textfragen werden nicht immer erkannt. Systemmeldungen benötigen die Erlaubnis des Betriebssystems;
       auf Windows die installierte App verwenden.</p>
+    <label className="flex items-center gap-2"><input type="checkbox" checked={preferences.persist_sessions}
+      onChange={e => void update({ persist_sessions: e.target.checked })} />Terminals überleben App-Neustarts</label>
+    <p>Neue Terminals laufen dann in einem eigenen Host-Prozess. Wird die App beendet oder neu gebaut,
+      läuft der Agent weiter; das Fenster hängt sich beim nächsten Start wieder an und zeigt die bisherige
+      Ausgabe. Fenster schließen oder <em>Neu starten</em> beenden die Sitzung weiterhin. Gilt für Terminals,
+      die nach dem Einschalten gestartet werden.</p>
     <button className="rounded border px-2 py-1" onClick={() => {
       void invoke("terminal_notification_test").then(() => setNotificationStatus("Test gesendet. Falls nichts erscheint, Speccify in den Mitteilungseinstellungen des Systems erlauben."))
         .catch(error => setNotificationStatus(String(error)));

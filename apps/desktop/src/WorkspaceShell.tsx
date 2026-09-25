@@ -18,7 +18,7 @@ import ActivityView from "./components/ActivityView";
 import AgentStartup from "./components/AgentStartup";
 import HelpView from "./views/HelpView";
 import { DEFAULT_LAYOUT, DEFAULT_TOOLBAR_BUILTINS, TOOLBAR_BUILTINS, HANDLE_SIZE, LAYOUT_LIMITS, clamp, loadLayout, saveLayout, type ProjectLayout } from "./lib/layout";
-import { AGENT_PRESETS } from "./lib/agents";
+import { AGENT_PRESETS, type LiveSession, type SessionRequest } from "./lib/agents";
 import { requestGit } from "./lib/git";
 import FilesTab from "./views/project/FilesTab";
 import GitTab from "./views/project/GitTab";
@@ -214,6 +214,18 @@ export default function WorkspaceShell() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [started, setStarted] = useState(false);
   const [command, setCommand] = useState("");
+  // Spec 070: eine noch laufende Host-Sitzung dieses Fensters wird wieder angehängt.
+  const [attachSession, setAttachSession] = useState<SessionRequest | undefined>(undefined);
+  useEffect(() => {
+    if (!workspace) return;
+    let cancelled = false;
+    invoke<LiveSession[]>("terminal_live").then(sessions => {
+      if (cancelled || !sessions.length) return;
+      setAttachSession({ mode: "attach", id: sessions[0].id });
+      setStarted(true);
+    }).catch(() => { /* kein Host, keine Sitzung */ });
+    return () => { cancelled = true; };
+  }, [workspace?.id]);
   useEffect(() => {
     if (workspace) { try { setCommand(localStorage.getItem(`speccify.workspace.agentCommand:${workspace.id}`) ?? ""); } catch { /* Session-only fallback. */ } }
   }, [workspace?.id]);
@@ -424,7 +436,7 @@ export default function WorkspaceShell() {
           </div>
           <p className="px-3 text-[10px] text-slate-400">Eine gemeinsame Sitzung für alle Repos · Projektwechsel ändert das Terminal-Ziel nicht.</p>
           <WorkspaceAgentContext revision={workspace.revision + refresh} />
-          {started ? <TerminalPanel workspaceId={workspace.id} cwd={workspace.root} visible={terminalVisible} autostart={command} /> : <div className="flex min-h-0 flex-1 flex-col items-center gap-3 overflow-auto p-4">
+          {started ? <TerminalPanel workspaceId={workspace.id} cwd={workspace.root} visible={terminalVisible} autostart={command} session={attachSession} /> : <div className="flex min-h-0 flex-1 flex-col items-center gap-3 overflow-auto p-4">
             <label className="w-full max-w-md text-xs text-slate-400">Agent-Kommando (leer = nur Shell)
               <input aria-label="Workspace-Terminal-Kommando" value={command} onChange={event => updateCommand(event.target.value)} className="mt-1 block w-full rounded border border-slate-600 bg-slate-800 px-3 py-2 font-mono text-sm text-slate-100" />
             </label>

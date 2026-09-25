@@ -48,6 +48,9 @@ grep-matcher = "0.1"
 trash = "5"
 speccify-mcp-core = { path = "../../../crates/mcp-core" }
 speccify-toolbox = { path = "../../../crates/toolbox" }
+# Spec 070: Terminals überleben App-Neustarts (Host-Prozess + Client)
+speccify-pty-host = { path = "../../../crates/pty-host" }
+base64 = "0.22"
 tauri-plugin-updater = "2.10.1"
 tokio = { version = "1", features = ["macros", "sync", "time"] }
 # Spec 030: ausgehender Webhook (Updater bringt reqwest ohnehin mit)
@@ -55,6 +58,9 @@ reqwest = { version = "0.13", default-features = false, features = ["rustls", "j
 tauri-plugin-window-state = "2"
 # Spec 039: QA-Brücke (nur mit --qa-bridge aktiv)
 tiny_http = "0.12"
+
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
 
 [dev-dependencies]
 tauri = { version = "2", features = ["test"] }

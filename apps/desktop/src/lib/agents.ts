@@ -37,7 +37,19 @@ export type SessionRequest =
   | { mode: "new" }
   | { mode: "resume"; host: string; id: string | null }
   | { mode: "pick" }
-  | { mode: "latest" };
+  | { mode: "latest" }
+  /** Spec 070: re-attach to a session still running in the PTY host. */
+  | { mode: "attach"; id: string };
+
+/** A session running in the PTY host that belongs to this window (Spec 070). */
+export interface LiveSession {
+  id: string;
+  cwd: string;
+  launch: string;
+  autostart: string;
+  session: AgentSession | null;
+  started_at: number;
+}
 
 /** Host name of a plain agent command; `null` for free commands or shell-only.
  *  Mirrors the native `known_host` for labelling only — the native side decides. */
@@ -64,6 +76,8 @@ export function describeSessionRequest(request: SessionRequest, host: string | n
           : `${host} resume (Auswahl)`;
     case "pick":
       return host === "claude" ? `${host} --resume (Auswahl)` : `${host} resume (Auswahl)`;
+    case "attach":
+      return "Laufende Sitzung wieder verbunden";
     case "latest":
       return host === "claude"
         ? `${host} --continue — neueste Sitzung des Hosts in diesem Ordner, nicht zwingend die gemerkte`

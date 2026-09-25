@@ -7,9 +7,11 @@ export interface TerminalPreferences {
   font_size: number;
   popups: boolean;
   system_notifications: boolean;
+  /** Spec 070: terminals run in the PTY host and survive app restarts. */
+  persist_sessions: boolean;
 }
 export function useTerminalPreferences() {
-  const [preferences, setPreferences] = useState<TerminalPreferences>({ font_size: 14, popups: true, system_notifications: true });
+  const [preferences, setPreferences] = useState<TerminalPreferences>({ font_size: 14, popups: true, system_notifications: true, persist_sessions: false });
   const [error, setError] = useState("");
   useEffect(() => {
     let disposed = false;
@@ -23,6 +25,7 @@ export function useTerminalPreferences() {
     try {
       const next = await invoke<TerminalPreferences>("terminal_preferences_update", {
         fontSize: patch.font_size, popups: patch.popups, systemNotifications: patch.system_notifications,
+        persistSessions: patch.persist_sessions,
       });
       setPreferences(next); setError("");
     } catch (e) { setError(String(e)); }

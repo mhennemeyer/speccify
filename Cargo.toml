@@ -10,6 +10,7 @@ members = [
     "crates/discovery-mcp",
     "crates/parallels-mcp",
     "crates/toolbox",
+    "crates/pty-host",
     "apps/desktop/src-tauri",
 ]
 

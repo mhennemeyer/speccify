@@ -1,0 +1,22 @@
+[package]
+name = "speccify-pty-host"
+description = "PTY-Host: besitzt die Agent-Terminals außerhalb des App-Prozesses, damit sie App-Neustarts überleben (Spec 070). Zeilenweises JSON über TCP 127.0.0.1 mit Token; Ringpuffer je Sitzung; Client-Modul für die App."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+base64 = "0.22"
+portable-pty = "0.9"
+uuid = { version = "1", features = ["v4"] }
+
+[lib]
+name = "speccify_pty_host"
+path = "src/lib.rs"
+
+[[bin]]
+name = "speccify-pty-host"
+path = "src/main.rs"

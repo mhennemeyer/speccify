@@ -155,7 +155,7 @@
           if (listener.event === event) window[`_${listener.handler}`]({ event, id, payload });
         }
       };
-      window.__SPECCIFY_MOCK__ = { emit, actionStarts, failStart: false, failStop: false, taskCalls: [], staleTaskOnce: false, specs: tickets, workflowInstalls: 0, terminalOpens: [], sessionChecks: [], ownerCalls: [] };
+      window.__SPECCIFY_MOCK__ = { emit, actionStarts, failStart: false, failStop: false, taskCalls: [], staleTaskOnce: false, specs: tickets, workflowInstalls: 0, terminalOpens: [], terminalAttaches: [], sessionChecks: [], ownerCalls: [] };
       if (doingOwner) { const doing = tickets.find(s => s.station === "Doing"); doing.owner = doingOwner; doing.branch = `spec/${doing.id}`; }
       window.__SPECCIFY_MOCK__.projectSettings = {};
       // Spec 063: Modulkatalog wie aus .agent/settings.json; ?modules=nocatalog lässt ihn weg.
@@ -490,11 +490,12 @@
         get_settings: () => ({ working_dir: null, terminal_autostart_command: "claude", skill_library: null, theme: "light", skill_sources: SOURCES.filter((s) => s.scope === "global").map((s) => s.location), project_discovery_depth: 1, ...JSON.parse(localStorage.getItem("speccify.test.settings") ?? "{}") }),
         save_settings: ({ settings }) => { localStorage.setItem("speccify.test.settings", JSON.stringify(settings)); },
         terminal_preferences: () => JSON.parse(localStorage.getItem("test.terminal-preferences") ?? '{"font_size":14,"popups":true,"system_notifications":true}'),
-        terminal_preferences_update: ({ fontSize, popups, systemNotifications }) => {
+        terminal_preferences_update: ({ fontSize, popups, systemNotifications, persistSessions }) => {
           const prefs = responses.terminal_preferences();
           if (fontSize !== undefined) prefs.font_size = fontSize;
           if (popups !== undefined) prefs.popups = popups;
           if (systemNotifications !== undefined) prefs.system_notifications = systemNotifications;
+          if (persistSessions !== undefined) prefs.persist_sessions = persistSessions;
           localStorage.setItem("test.terminal-preferences", JSON.stringify(prefs));
           emit("terminal-preferences", prefs); return prefs;
         },
@@ -513,6 +514,16 @@
         terminal_write: (args) => { window.__SPECCIFY_MOCK__.terminalWrites.push(args); return null; },
         terminal_resize: args => { window.__SPECCIFY_MOCK__.terminalResizes.push(args); return null; },
         terminal_kill: () => null,
+        // Spec 070: ?live=1 → eine Sitzung läuft noch im PTY-Host und wird wieder angehängt.
+        terminal_live: () => new URLSearchParams(location.search).has("live")
+          ? [{ id: "term-live-070", cwd: project, launch: "claude --session-id aaaaaaaa-0000-4000-8000-000000000070", autostart: "claude",
+               session: { host: "claude", id: "aaaaaaaa-0000-4000-8000-000000000070" }, started_at: 1 }] : [],
+        terminal_attach: (args) => {
+          window.__SPECCIFY_MOCK__.terminalAttaches.push(args);
+          emit("term-out", { id: args.id, data: "Puffer aus dem PTY-Host\r\n$ tick 41\r\n" });
+          return { cwd: project, startup: null, launch: "claude --session-id aaaaaaaa-0000-4000-8000-000000000070",
+                   session: { host: "claude", id: "aaaaaaaa-0000-4000-8000-000000000070" }, reattached: true };
+        },
         terminal_attention: args => { (window.__SPECCIFY_MOCK__.terminalAttention ??= []).push(args); return null; },
         terminal_notification_test: () => null,
         // Spec 065: Kopierknöpfe schreiben über das Clipboard-Plugin.

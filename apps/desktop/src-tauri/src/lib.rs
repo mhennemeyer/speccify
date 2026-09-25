@@ -22,6 +22,7 @@ mod help_docs;
 mod playbook_cmd;
 mod project_cmd;
 mod project_watch;
+mod pty_host;
 mod qa_bridge;
 mod settings;
 mod sidecar;
@@ -393,6 +394,8 @@ pub fn run() {
             system_cmd::kb_list,
             agent_session::agent_session_check,
             terminal::terminal_open,
+            terminal::terminal_live,
+            terminal::terminal_attach,
             terminal::terminal_attention,
             terminal::terminal_notification_test,
             terminal::terminal_write,
@@ -422,15 +425,47 @@ pub fn run() {
     };
 
     builder
+        // Spec 070: Fensterzustand nicht nur beim Beenden sichern, sondern
+        // entprellt nach jedem Verschieben/Vergrößern — ein harter Abbruch
+        // verliert dann höchstens die letzte Sekunde.
+        .on_window_event(|window, event| {
+            if matches!(
+                event,
+                tauri::WindowEvent::Moved(_) | tauri::WindowEvent::Resized(_)
+            ) && !window.label().starts_with("ask-")
+            {
+                schedule_window_state_save(window.app_handle().clone());
+            }
+        })
         .build(context)
         .expect("error while building tauri application")
         .run(|app, event| {
+            // Spec 070, D3: ab hier trennen zerstörte Fenster ihre gehosteten
+            // Terminals nur noch, statt sie zu beenden.
+            if matches!(event, tauri::RunEvent::ExitRequested { .. }) {
+                app.state::<terminal::Terminals>().begin_shutdown();
+            }
             // Explicit cleanup before the runtime exits; managed-state Drop is
             // not guaranteed on process exit, including temporary context files.
             if matches!(event, tauri::RunEvent::Exit) {
                 app.state::<terminal::Terminals>().shutdown();
             }
         });
+}
+
+/// Coalesces a burst of move/resize events into one save ~750 ms later.
+fn schedule_window_state_save(app: AppHandle) {
+    use std::sync::atomic::{AtomicBool, Ordering};
+    static PENDING: AtomicBool = AtomicBool::new(false);
+    if PENDING.swap(true, Ordering::SeqCst) {
+        return;
+    }
+    std::thread::spawn(move || {
+        std::thread::sleep(std::time::Duration::from_millis(750));
+        PENDING.store(false, Ordering::SeqCst);
+        use tauri_plugin_window_state::{AppHandleExt, StateFlags};
+        let _ = app.save_window_state(StateFlags::all());
+    });
 }
 
 #[cfg(test)]

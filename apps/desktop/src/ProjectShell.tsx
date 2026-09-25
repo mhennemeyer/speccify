@@ -39,6 +39,7 @@ import {
   loadSessionRecord,
   saveSessionRecord,
   type AgentSessionRecord,
+  type LiveSession,
   type SessionRequest,
 } from "./lib/agents";
 import ProjectNavigation, { PROJECT_TABS as TABS, PROJECT_GROUPS as GROUPS, projectGroupOf as groupOf, type ProjectTab as TabId } from "./components/ProjectNavigation";
@@ -128,9 +129,27 @@ export default function ProjectShell() {
     setSessionRequest({ mode: "new" });
   };
   const [layout, setLayout] = useState<ProjectLayout>(DEFAULT_LAYOUT);
+  // Spec 070: läuft für dieses Fenster noch eine Sitzung im PTY-Host, wird
+  // sie wieder angehängt — vor jeder Fortsetzungs-Logik, unabhängig von
+  // „automatisch fortsetzen“ (der Agent läuft ja bereits).
+  const [live, setLive] = useState<LiveSession[] | null>(null);
+  useEffect(() => {
+    if (!project) return;
+    let cancelled = false;
+    invoke<LiveSession[]>("terminal_live")
+      .then((sessions) => { if (!cancelled) setLive(sessions); })
+      .catch(() => { if (!cancelled) setLive([]); });
+    return () => { cancelled = true; };
+  }, [project]);
   // Automatisch fortsetzen: nur die genau bekannte, vorhandene Sitzung.
   useEffect(() => {
-    if (autoResumed.current || !project || !layout.resumeAgent || terminalStarted) return;
+    if (autoResumed.current || !project || terminalStarted || live === null) return;
+    if (live.length > 0) {
+      autoResumed.current = true;
+      startTerminal({ mode: "attach", id: live[0].id });
+      return;
+    }
+    if (!layout.resumeAgent) return;
     if (sessionState.kind === "exact" && hostOf(agentCommand)) {
       autoResumed.current = true;
       startTerminal({ mode: "resume", host: hostOf(agentCommand) ?? "", id: sessionState.id });
@@ -138,7 +157,7 @@ export default function ProjectShell() {
       autoResumed.current = true; // sichtbar bleiben, nicht still ersetzen
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionState, project, layout.resumeAgent, terminalStarted]);
+  }, [sessionState, project, layout.resumeAgent, terminalStarted, live]);
   const [navSlots, setNavSlots] = useState<Slots>({});
   const [inspectorSlots, setInspectorSlots] = useState<Slots>({});
   const [outputSlot, setOutputSlot] = useState<HTMLDivElement | null>(null);

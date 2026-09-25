@@ -31,7 +31,14 @@ curl -s -H "Authorization: Bearer $TOKEN" "$URL/windows"
 ## Restart rules
 
 Restarts for updates are permitted and wanted; announce them briefly, do not ask
-each time. A current "do not restart now" wins. Before stopping:
+each time. A current "do not restart now" wins. With the terminal preference
+"Terminals überleben App-Neustarts" on (Spec 070), hosted agent terminals
+survive a regular quit and re-attach after the restart; only terminals started
+before the preference was enabled, explicit window closes and "Neu starten"
+end a session. Quit the app regularly (⌘Q or `osascript -e 'tell application
+"Speccify" to quit'`), never `kill -9` (window state would be lost). After a
+change in `crates/pty-host`, rebuild the sidecars first
+(`scripts/build_sidecars.sh --debug`). Before stopping:
 
 - Look for drafts, open editors, running terminals and actions. The update
   coordinator refuses installation while any exist — treat that as information,

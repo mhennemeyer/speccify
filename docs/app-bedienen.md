@@ -61,6 +61,12 @@ Das Fenster folgt dem Muster von Xcode und iKanban: **Navigator** links,
   im Fenster liegt; der Terminalkopf meldet *Kopiert* oder den Grund, falls es
   nicht klappt. Ohne Markierung bleibt Ctrl-C das Abbruchsignal für den Agenten.
   ⌘V fügt ein. Beansprucht ein Programm die Maus, markiert ⌥-Ziehen trotzdem.
+  **Terminals überleben App-Neustarts** (Terminal-Einstellungen): dann laufen
+  neue Terminals in einem eigenen Host-Prozess. Wird die App beendet oder neu
+  gebaut, arbeitet der Agent weiter; das Projekt- oder Workspace-Fenster hängt
+  sich beim nächsten Start wieder an, zeigt die bisherige Ausgabe und nimmt
+  Eingaben entgegen. Fenster schließen und *Neu starten* beenden die Sitzung
+  weiterhin. Der Host beendet sich selbst, sobald keine Sitzung mehr läuft.
 - **Toolbar.** Links der Projektname. In der Mitte die **Knöpfe**:
   eingebaute (*Pull*, *Push*, *Commit*, *Agent*) und Aktionen aus
   `.agent/actions.json` (im Aktionen-Tab mit *Toolbar* markiert, ein

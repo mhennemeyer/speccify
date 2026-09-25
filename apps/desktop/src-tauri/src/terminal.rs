@@ -9,15 +9,18 @@
 
 use std::collections::{HashMap, HashSet};
 use std::io::{Read, Write};
+use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 
 use portable_pty::{native_pty_system, ChildKiller, CommandBuilder, MasterPty, PtySize};
 use serde::Serialize;
+use serde_json::{json, Value};
 use tauri::{AppHandle, Emitter, Manager, State};
 
 use crate::agent_session::{self, AgentSession, SessionRequest, Utf8Chunker};
 use crate::agent_startup::{self, login_shell, StartupReport};
+use crate::pty_host::HostLink;
 use crate::settings;
 
 #[tauri::command]
@@ -65,12 +68,79 @@ pub fn terminal_notification_test(app: AppHandle) -> Result<(), String> {
     )
 }
 
+/// Wo das PTY lebt: im App-Prozess (wie bisher) oder im PTY-Host (Spec 070),
+/// dessen Sitzungen das App-Ende überleben.
+enum Backend {
+    Local {
+        writer: Box<dyn Write + Send>,
+        master: Box<dyn MasterPty + Send>,
+        killer: Box<dyn ChildKiller + Send + Sync>,
+    },
+    Hosted {
+        client: Arc<speccify_pty_host::Client>,
+    },
+}
+
 struct TerminalSession {
-    writer: Box<dyn Write + Send>,
-    master: Box<dyn MasterPty + Send>,
-    killer: Box<dyn ChildKiller + Send + Sync>,
+    id: String,
+    backend: Backend,
     _workspace_claim: Option<WorkspaceClaim>,
     _workspace_context: Option<tempfile::NamedTempFile>,
+    /// Kontextdatei einer gehosteten Sitzung (D4): bleibt liegen, bis die
+    /// Sitzung bewusst beendet wird.
+    hosted_context: Option<PathBuf>,
+}
+
+impl TerminalSession {
+    fn hosted(&self) -> bool {
+        matches!(self.backend, Backend::Hosted { .. })
+    }
+    fn write(&mut self, data: &[u8]) -> Result<(), String> {
+        match &mut self.backend {
+            Backend::Local { writer, .. } => writer
+                .write_all(data)
+                .and_then(|_| writer.flush())
+                .map_err(|e| e.to_string()),
+            Backend::Hosted { client } => client.write(&self.id, data),
+        }
+    }
+    fn resize(&self, cols: u16, rows: u16) -> Result<(), String> {
+        match &self.backend {
+            Backend::Local { master, .. } => master
+                .resize(PtySize {
+                    rows,
+                    cols,
+                    pixel_width: 0,
+                    pixel_height: 0,
+                })
+                .map_err(|e| e.to_string()),
+            Backend::Hosted { client } => client.resize(&self.id, cols, rows),
+        }
+    }
+    /// Beendet den Prozess — auch im Host.
+    fn kill(&mut self) {
+        match &mut self.backend {
+            Backend::Local { killer, .. } => {
+                let _ = killer.kill();
+            }
+            Backend::Hosted { client } => {
+                let _ = client.kill(&self.id);
+            }
+        }
+        if let Some(path) = self.hosted_context.take() {
+            let _ = std::fs::remove_file(path);
+        }
+    }
+    /// Lässt eine gehostete Sitzung weiterlaufen und trennt nur die App;
+    /// eine lokale Sitzung kann nicht getrennt werden und wird beendet.
+    fn detach_or_kill(&mut self) {
+        match &self.backend {
+            Backend::Hosted { client } => {
+                let _ = client.detach(&self.id);
+            }
+            Backend::Local { .. } => self.kill(),
+        }
+    }
 }
 
 struct WorkspaceClaim {
@@ -124,22 +194,30 @@ struct WindowTerminals {
     alive: Arc<AtomicBool>,
 }
 
-/// Laufende Terminals; Drop killt die Shells beim App-Quit.
+/// Laufende Terminals; Drop killt die lokalen Shells beim App-Quit, gehostete
+/// (Spec 070) werden nur getrennt.
 #[derive(Default)]
 pub struct Terminals {
     sessions: Mutex<HashMap<String, TerminalSession>>,
     workspace_claims: Arc<Mutex<HashSet<String>>>,
     windows: Mutex<HashMap<String, WindowTerminals>>,
     shutting_down: AtomicBool,
+    pub(crate) host: HostLink,
 }
 
 impl Terminals {
+    /// Running work that a restart would destroy: local shells only — hosted
+    /// sessions survive the app (Spec 070), so they never block an update.
     pub(crate) fn has_active_work(&self) -> bool {
-        !self.sessions.lock().unwrap().is_empty()
-            || !self.workspace_claims.lock().unwrap().is_empty()
+        self.sessions.lock().unwrap().values().any(|s| !s.hosted())
     }
     pub(crate) fn active_count(&self) -> usize {
-        self.sessions.lock().unwrap().len()
+        self.sessions
+            .lock()
+            .unwrap()
+            .values()
+            .filter(|s| !s.hosted())
+            .count()
     }
     /// Ends every shell but keeps the app usable: unlike `shutdown`, new
     /// terminals may be opened afterwards. The reader threads report the exits.
@@ -148,21 +226,52 @@ impl Terminals {
         let sessions: Vec<_> = self.sessions.lock().unwrap().drain().collect();
         let count = sessions.len();
         for (id, mut session) in sessions {
-            let _ = session.killer.kill();
+            session.kill();
             self.untrack(&id);
         }
+        self.release_host_if_unused();
         count
     }
     /// A shell that ended on its own is no running work any more.
-    fn forget(&self, id: &str) {
+    pub(crate) fn forget(&self, id: &str) {
         self.sessions.lock().unwrap().remove(id);
         self.untrack(id);
+        self.release_host_if_unused();
+    }
+    /// Without hosted sessions the app drops its host connection, so a host
+    /// with no sessions and no clients can end itself (Spec 070).
+    fn release_host_if_unused(&self) {
+        let hosted = self.sessions.lock().unwrap().values().any(|s| s.hosted());
+        if !hosted {
+            self.host.disconnect();
+        }
+    }
+    /// The app is about to exit: from now on a destroyed window detaches its
+    /// hosted terminals instead of killing them (D3).
+    pub(crate) fn begin_shutdown(&self) {
+        self.shutting_down.store(true, Ordering::SeqCst);
+    }
+    /// A window went away: kill local terminals; hosted ones only when the
+    /// window was closed deliberately, not when the whole app exits.
+    fn release(&self, id: &str) {
+        self.untrack(id);
+        let removed = self.sessions.lock().unwrap().remove(id);
+        if let Some(mut session) = removed {
+            if self.shutting_down.load(Ordering::SeqCst) {
+                session.detach_or_kill();
+            } else {
+                session.kill();
+            }
+        }
+        if !self.shutting_down.load(Ordering::SeqCst) {
+            self.release_host_if_unused();
+        }
     }
     pub fn shutdown(&self) {
         self.shutting_down.store(true, Ordering::SeqCst);
         if let Ok(mut sessions) = self.sessions.lock() {
             for (_, mut session) in sessions.drain() {
-                let _ = session.killer.kill();
+                session.detach_or_kill();
             }
         }
         if let Ok(mut windows) = self.windows.lock() {
@@ -191,7 +300,7 @@ impl Terminals {
                         .map(|entry| entry.ids)
                         .unwrap_or_default();
                     for id in ids {
-                        let _ = terminal_kill(app.state(), id);
+                        state.release(&id);
                     }
                 }
             });
@@ -220,14 +329,14 @@ impl Drop for Terminals {
 }
 
 #[derive(Clone, Serialize)]
-struct TermOut {
-    id: String,
-    data: String,
+pub(crate) struct TermOut {
+    pub id: String,
+    pub data: String,
 }
 
 #[derive(Clone, Serialize)]
-struct TermExit {
-    id: String,
+pub(crate) struct TermExit {
+    pub id: String,
 }
 
 #[derive(Serialize)]
@@ -238,6 +347,20 @@ pub struct TerminalOpened {
     session: Option<AgentSession>,
     /// The command line that was typed into the shell.
     launch: String,
+    /// Spec 070: the terminal was re-attached to a session that kept running
+    /// in the PTY host; nothing was started.
+    reattached: bool,
+}
+
+/// A session in the PTY host that belongs to a window (Spec 070).
+#[derive(Serialize)]
+pub struct LiveSession {
+    id: String,
+    cwd: String,
+    launch: String,
+    autostart: String,
+    session: Option<AgentSession>,
+    started_at: u64,
 }
 
 /// Öffnet ein Terminal und tippt den Autostart-Command vor. Ohne `cwd`/
@@ -351,6 +474,134 @@ pub async fn terminal_open(
         agent_session::session_launch(&autostart, &launch_base, &session, &home)
             .inspect_err(|_| state.untrack(&id))?;
 
+    let shell = login_shell();
+    // Autostart-Command vortippen (die tty-Eingabe puffert, bis die Shell
+    // liest). Leer = reines Terminal.
+    let preamble = startup
+        .as_ref()
+        .map(|report| {
+            agent_startup::path_setup(report.runtime_dir.as_deref().map(std::path::Path::new))
+        })
+        .unwrap_or_default();
+    let input = if preamble.is_empty() && launch.is_empty() {
+        String::new()
+    } else {
+        format!("{preamble}{launch}\r")
+    };
+    let persist = crate::terminal_preferences::terminal_preferences()
+        .map(|prefs| prefs.persist_sessions)
+        .unwrap_or(false);
+    // Spec 070, D4: die Kontextdatei einer gehosteten Sitzung muss den
+    // App-Prozess überleben — Kopie außerhalb des App-Temp.
+    let hosted_context = if persist {
+        context_file
+            .as_ref()
+            .map(|file| -> Result<PathBuf, String> {
+                let target = crate::pty_host::context_dir()?.join(format!("{id}-context.md"));
+                std::fs::copy(file.path(), &target).map_err(|e| e.to_string())?;
+                Ok(target)
+            })
+            .transpose()?
+    } else {
+        None
+    };
+    let mut env: Vec<(String, String)> = vec![
+        ("TERM".into(), "xterm-256color".into()),
+        (
+            "PATH".into(),
+            crate::augmented_path().to_string_lossy().into_owned(),
+        ),
+    ];
+    if let Some(file) = &context_file {
+        env.push(("SPECCIFY_WORKSPACE_ROOT".into(), cwd.display().to_string()));
+        let path = hosted_context.as_deref().unwrap_or(file.path());
+        env.push((
+            "SPECCIFY_WORKSPACE_CONTEXT".into(),
+            path.display().to_string(),
+        ));
+    }
+
+    if persist {
+        let kind = if window_workspace.is_some() {
+            "workspace"
+        } else if window.label() == "main" {
+            "dashboard"
+        } else {
+            "project"
+        };
+        let meta = json!({
+            "window": window.label(),
+            "kind": kind,
+            "cwd": cwd.display().to_string(),
+            "autostart": autostart,
+            "launch": launch,
+            "session": identity,
+            "workspace_id": window_workspace,
+            "context": hosted_context.as_ref().map(|p| p.display().to_string()),
+        });
+        let mut args: Vec<String> = Vec::new();
+        #[cfg(not(windows))]
+        args.push("-l".into()); // Login-Shell: PATH/Profile des Users
+        let hosted = state.host.client(&app).and_then(|client| {
+            client
+                .open(
+                    &id,
+                    &shell,
+                    &args,
+                    &cwd.display().to_string(),
+                    &env,
+                    cols,
+                    rows,
+                    input.as_bytes(),
+                    meta,
+                )
+                .map(|_| client)
+        });
+        match hosted {
+            Ok(client) => {
+                let mut sessions = state.sessions.lock().map_err(|e| e.to_string())?;
+                if !alive.load(Ordering::SeqCst) || state.shutting_down.load(Ordering::SeqCst) {
+                    let _ = client.kill(&id);
+                    state.untrack(&id);
+                    return Err("Terminal-Fenster wurde geschlossen.".into());
+                }
+                sessions.insert(
+                    id.clone(),
+                    TerminalSession {
+                        id: id.clone(),
+                        backend: Backend::Hosted { client },
+                        _workspace_claim: claim,
+                        _workspace_context: None,
+                        hosted_context,
+                    },
+                );
+                return Ok(TerminalOpened {
+                    cwd: cwd.display().to_string(),
+                    startup,
+                    session: identity,
+                    launch,
+                    reattached: false,
+                });
+            }
+            Err(error) => {
+                // Sichtbarer Rückfall auf den App-Prozess statt stillem Scheitern.
+                eprintln!("PTY-Host: {error}");
+                let _ = app.emit(
+                    "term-out",
+                    TermOut {
+                        id: id.clone(),
+                        data: format!(
+                            "\x1b[33m[PTY-Host nicht verfügbar: {error} — dieses Terminal läuft im App-Prozess und überlebt keinen Neustart]\x1b[0m\r\n"
+                        ),
+                    },
+                );
+                if let Some(path) = &hosted_context {
+                    let _ = std::fs::remove_file(path);
+                }
+            }
+        }
+    }
+
     let pty = native_pty_system()
         .openpty(PtySize {
             rows,
@@ -360,16 +611,12 @@ pub async fn terminal_open(
         })
         .map_err(|e| format!("PTY: {e}"))?;
 
-    let shell = login_shell();
     let mut command = CommandBuilder::new(&shell);
     #[cfg(not(windows))]
     command.arg("-l"); // Login-Shell: PATH/Profile des Users
     command.cwd(&cwd);
-    command.env("TERM", "xterm-256color");
-    command.env("PATH", crate::augmented_path());
-    if let Some(file) = &context_file {
-        command.env("SPECCIFY_WORKSPACE_ROOT", &cwd);
-        command.env("SPECCIFY_WORKSPACE_CONTEXT", file.path());
+    for (key, value) in &env {
+        command.env(key, value);
     }
 
     let child = pty
@@ -387,17 +634,9 @@ pub async fn terminal_open(
         .take_writer()
         .map_err(|e| format!("PTY-Writer: {e}"))?;
 
-    // Autostart-Command vortippen (die tty-Eingabe puffert, bis die Shell
-    // liest). Leer = reines Terminal.
-    let preamble = startup
-        .as_ref()
-        .map(|report| {
-            agent_startup::path_setup(report.runtime_dir.as_deref().map(std::path::Path::new))
-        })
-        .unwrap_or_default();
-    if !preamble.is_empty() || !launch.is_empty() {
+    if !input.is_empty() {
         if let Err(error) = writer
-            .write_all(format!("{preamble}{launch}\r").as_bytes())
+            .write_all(input.as_bytes())
             .and_then(|_| writer.flush())
         {
             let _ = killer.kill();
@@ -456,11 +695,15 @@ pub async fn terminal_open(
     sessions.insert(
         id.clone(),
         TerminalSession {
-            writer,
-            master: pty.master,
-            killer,
+            id: id.clone(),
+            backend: Backend::Local {
+                writer,
+                master: pty.master,
+                killer,
+            },
             _workspace_claim: claim,
             _workspace_context: context_file,
+            hosted_context: None,
         },
     );
     if exited.load(Ordering::SeqCst) {
@@ -471,6 +714,127 @@ pub async fn terminal_open(
         startup,
         session: identity,
         launch,
+        reattached: false,
+    })
+}
+
+fn meta_str(meta: &Value, key: &str) -> String {
+    meta.get(key)
+        .and_then(Value::as_str)
+        .unwrap_or("")
+        .to_owned()
+}
+
+fn meta_session(meta: &Value) -> Option<AgentSession> {
+    meta.get("session")
+        .cloned()
+        .and_then(|value| serde_json::from_value(value).ok())
+}
+
+/// Spec 070: Sitzungen im PTY-Host, die zu diesem Fenster gehören und noch
+/// laufen. Leer, wenn die Einstellung aus ist oder kein Host läuft; startet
+/// keinen Host.
+#[tauri::command]
+pub fn terminal_live(
+    app: AppHandle,
+    window: tauri::WebviewWindow,
+    state: State<'_, Terminals>,
+) -> Result<Vec<LiveSession>, String> {
+    let attached: HashSet<String> = state.sessions.lock().unwrap().keys().cloned().collect();
+    Ok(state
+        .host
+        .live_sessions(&app)
+        .into_iter()
+        .filter(|entry| {
+            entry.get("meta").map(|m| meta_str(m, "window")) == Some(window.label().to_owned())
+        })
+        .filter(|entry| !attached.contains(entry.get("id").and_then(Value::as_str).unwrap_or("")))
+        .map(|entry| {
+            let meta = entry.get("meta").cloned().unwrap_or(Value::Null);
+            LiveSession {
+                id: entry
+                    .get("id")
+                    .and_then(Value::as_str)
+                    .unwrap_or("")
+                    .to_owned(),
+                cwd: meta_str(&meta, "cwd"),
+                launch: meta_str(&meta, "launch"),
+                autostart: meta_str(&meta, "autostart"),
+                session: meta_session(&meta),
+                started_at: entry.get("started_at").and_then(Value::as_u64).unwrap_or(0),
+            }
+        })
+        .collect())
+}
+
+/// Spec 070: hängt das Fenster wieder an eine laufende Host-Sitzung. Der
+/// Puffer kommt als `term-out`, bevor der Aufruf zurückkehrt; danach folgt
+/// die lebende Ausgabe in Reihenfolge.
+#[tauri::command]
+pub async fn terminal_attach(
+    app: AppHandle,
+    window: tauri::WebviewWindow,
+    state: State<'_, Terminals>,
+    id: String,
+    cols: u16,
+    rows: u16,
+) -> Result<TerminalOpened, String> {
+    let window_workspace = window.label().strip_prefix("workspace-");
+    let claim = window_workspace
+        .map(|ws| WorkspaceClaim::acquire(ws.to_owned(), state.workspace_claims.clone()))
+        .transpose()?;
+    let alive = state.track(&window, &id)?;
+    let client = state
+        .host
+        .client(&app)
+        .inspect_err(|_| state.untrack(&id))?;
+    let listed = client
+        .list()
+        .inspect_err(|_| state.untrack(&id))?
+        .into_iter()
+        .find(|entry| entry.get("id").and_then(Value::as_str) == Some(id.as_str()))
+        .ok_or_else(|| {
+            state.untrack(&id);
+            format!("Keine laufende Sitzung {id} im PTY-Host.")
+        })?;
+    let meta = listed.get("meta").cloned().unwrap_or(Value::Null);
+    if meta_str(&meta, "window") != window.label() {
+        state.untrack(&id);
+        return Err("Die Sitzung gehört zu einem anderen Fenster.".into());
+    }
+    let reply = state
+        .host
+        .attach(&app, &client, &id)
+        .inspect_err(|_| state.untrack(&id))?;
+    let _ = client.resize(&id, cols, rows);
+    let mut sessions = state.sessions.lock().map_err(|e| e.to_string())?;
+    if !alive.load(Ordering::SeqCst) || state.shutting_down.load(Ordering::SeqCst) {
+        let _ = client.detach(&id);
+        state.untrack(&id);
+        return Err("Terminal-Fenster wurde geschlossen.".into());
+    }
+    sessions.insert(
+        id.clone(),
+        TerminalSession {
+            id: id.clone(),
+            backend: Backend::Hosted { client },
+            _workspace_claim: claim,
+            _workspace_context: None,
+            hosted_context: meta
+                .get("context")
+                .and_then(Value::as_str)
+                .map(PathBuf::from),
+        },
+    );
+    if reply.exit_code.is_some() {
+        sessions.remove(&id);
+    }
+    Ok(TerminalOpened {
+        cwd: meta_str(&meta, "cwd"),
+        startup: None,
+        session: meta_session(&meta),
+        launch: meta_str(&meta, "launch"),
+        reattached: true,
     })
 }
 
@@ -480,11 +844,7 @@ pub fn terminal_write(state: State<Terminals>, id: String, data: String) -> Resu
     let session = sessions
         .get_mut(&id)
         .ok_or_else(|| format!("Kein Terminal: {id}"))?;
-    session
-        .writer
-        .write_all(data.as_bytes())
-        .and_then(|_| session.writer.flush())
-        .map_err(|e| e.to_string())
+    session.write(data.as_bytes())
 }
 
 #[tauri::command]
@@ -498,27 +858,24 @@ pub fn terminal_resize(
     let session = sessions
         .get(&id)
         .ok_or_else(|| format!("Kein Terminal: {id}"))?;
-    session
-        .master
-        .resize(PtySize {
-            rows,
-            cols,
-            pixel_width: 0,
-            pixel_height: 0,
-        })
-        .map_err(|e| e.to_string())
+    session.resize(cols, rows)
 }
 
+/// Beendet ein Terminal bewusst — auch eine gehostete Sitzung („Neu starten“,
+/// Panel geschlossen).
 #[tauri::command]
 pub fn terminal_kill(state: State<Terminals>, id: String) -> Result<bool, String> {
     state.untrack(&id);
-    match state.sessions.lock().unwrap().remove(&id) {
+    let removed = state.sessions.lock().unwrap().remove(&id);
+    let existed = match removed {
         Some(mut session) => {
-            let _ = session.killer.kill();
-            Ok(true)
+            session.kill();
+            true
         }
-        None => Ok(false),
-    }
+        None => false,
+    };
+    state.release_host_if_unused();
+    Ok(existed)
 }
 
 #[cfg(test)]
@@ -624,11 +981,15 @@ mod tests {
         state.sessions.lock().unwrap().insert(
             "test".into(),
             TerminalSession {
-                writer,
-                master: pty.master,
-                killer: child.clone_killer(),
+                id: "test".into(),
+                backend: Backend::Local {
+                    writer,
+                    master: pty.master,
+                    killer: child.clone_killer(),
+                },
                 _workspace_claim: Some(claim),
                 _workspace_context: Some(context),
+                hosted_context: None,
             },
         );
         // "Alles stoppen": ends the work, releases claim and context, and

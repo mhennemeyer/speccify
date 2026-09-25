@@ -30,6 +30,9 @@ pub enum SessionRequest {
     Pick,
     /// The host's "most recent session" convenience — not this session.
     Latest,
+    /// Spec 070: re-attach to a session running in the PTY host. Handled by
+    /// `terminal_attach`; `terminal_open` refuses it.
+    Attach { id: String },
 }
 
 impl Default for SessionRequest {
@@ -155,6 +158,9 @@ pub fn session_launch(
             },
             Some(AgentSession { host, id: None }),
         )),
+        SessionRequest::Attach { .. } => Err(
+            "Wiederanhängen läuft über terminal_attach, nicht über einen Neustart.".into(),
+        ),
     }
 }
 

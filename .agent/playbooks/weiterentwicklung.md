@@ -875,6 +875,16 @@ Auftrag vom 2026-09-10; Umsetzung in
 ./scripts/dev.sh --app --prepared --ui-port=18768
 ```
 
+**Terminals überleben Neustarts (Spec 070, seit 2026-09-25):** Mit der
+Terminal-Einstellung „Terminals überleben App-Neustarts“ laufen neue Terminals
+im Sidecar `speccify-pty-host`. Ein reguläres Beenden (⌘Q, `quit` per
+AppleScript) trennt nur; nach Neubau und Neustart hängen sich Projekt- und
+Workspace-Fenster an ihre laufenden Sitzungen wieder an. Ein hartes `kill -9`
+der App trennt ebenfalls (der Host lebt in eigener Sitzung), ein bewusstes
+Schließen des Fensters oder „Neu starten“ beendet die Sitzung. Für Änderungen
+an `crates/pty-host` vorher `scripts/build_sidecars.sh --debug`; ein laufender
+Host mit anderem Protokoll wird gemeldet, nicht still ersetzt.
+
 026 Betriebsprüfung: „App läuft“ wird über ausführbare Binary-Mappings mit
 nichtleerer PID-Liste geprüft. Rein lesende Handles von macOS-Prüfdiensten zählen
 nicht als App-Instanz; auch lsof-Exit 0 ohne Ausgabe reicht nicht. Fremde Dienste
