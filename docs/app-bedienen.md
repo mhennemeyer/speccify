@@ -54,9 +54,9 @@ Das Fenster folgt dem Muster von Xcode und iKanban: **Navigator** links,
   bei der Aktion den letzten Lauf und *Ausführen*, im Git-Tab das
   Commit-Panel. Ist der Inspektor ausgeblendet, erscheint dasselbe als
   Kasten über dem Inhalt.
-- **Agent-Terminal.** Unten unter dem Inhalt, höhenverstellbar; wer es
-  lieber rechts hat, legt es mit *nach rechts* als zweiten Tab in die
-  rechte Seitenleiste. Markierter Text geht mit ⌘C (Windows/Linux:
+- **Agent-Terminal.** Unten über die ganze Fensterbreite, unter Navigator,
+  Inhalt und Inspektor, höhenverstellbar; wer es lieber rechts hat, legt es
+  mit *nach rechts* als zweiten Tab in die rechte Seitenleiste. Markierter Text geht mit ⌘C (Windows/Linux:
   Strg+Umschalt+C) in die Zwischenablage, auch wenn der Fokus gerade woanders
   im Fenster liegt; der Terminalkopf meldet *Kopiert* oder den Grund, falls es
   nicht klappt. Ohne Markierung bleibt Ctrl-C das Abbruchsignal für den Agenten.

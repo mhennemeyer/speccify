@@ -78,7 +78,19 @@ try {
   const terminalId = (await calls("terminal_open"))[0].args.id;
   await page.getByRole("region", { name: "Agent-Terminal", exact: true }).getByTitle("Terminal nach rechts legen", { exact: true }).click();
   await terminal.locator(".xterm").waitFor();
+  const dockGeometry = () => page.evaluate(() => {
+    const rect = selector => document.querySelector(selector).getBoundingClientRect();
+    const t = rect(".terminal-surface"), n = rect("nav"), m = rect("main");
+    return { left: t.left, right: Math.round(t.right), top: Math.round(t.top), width: window.innerWidth, navBottom: Math.round(n.bottom), mainBottom: Math.round(m.bottom), navRight: Math.round(n.right) };
+  });
+  const rightDock = await dockGeometry();
+  assert.ok(rightDock.left >= rightDock.navRight && rightDock.navBottom > rightDock.top, "right dock sits beside the navigator");
   await page.getByRole("region", { name: "Agent-Terminal", exact: true }).getByTitle("Terminal nach unten legen", { exact: true }).click();
+  // Spec 069: the bottom dock spans the whole window; navigator and content end above it.
+  const bottomDock = await dockGeometry();
+  assert.equal(bottomDock.left, 0, "bottom terminal starts at the window's left edge");
+  assert.equal(bottomDock.right, bottomDock.width, "bottom terminal ends at the window's right edge");
+  assert.ok(bottomDock.navBottom <= bottomDock.top + 1 && bottomDock.mainBottom <= bottomDock.top + 1, "navigator and content end above the terminal");
   assert.equal((await calls("terminal_open")).length, 1, "docking does not create a new PTY");
   assert.ok((await calls("terminal_kill")).every(call => call.args.id !== terminalId), "docking keeps the running PTY alive");
 

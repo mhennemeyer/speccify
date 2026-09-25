@@ -34,6 +34,22 @@ try {
     }, { dock, layout: DEFAULT_LAYOUT });
     await page.goto(`${process.env.SPECCIFY_MOCK_URL ?? "http://127.0.0.1:1421/dev/mock.html"}?actions=manual&listeners=delayed`);
     const output = page.getByLabel("Aktionsausgabe", { exact: true });
+    // Spec 069: the bottom dock spans the whole window; navigator ends above it.
+    const geometry = () => page.evaluate(() => {
+      const terminal = document.querySelector(".terminal-surface").getBoundingClientRect();
+      const nav = document.querySelector("nav").getBoundingClientRect();
+      const main = document.querySelector("main").getBoundingClientRect();
+      return { left: terminal.left, right: Math.round(terminal.right), width: window.innerWidth,
+        top: terminal.top, navBottom: nav.bottom, mainBottom: main.bottom };
+    });
+    if (dock === "bottom") {
+      await page.locator(".terminal-surface").waitFor({ state: "visible" });
+      const geo = await geometry();
+      assert.equal(geo.left, 0, "bottom terminal starts at the window's left edge");
+      assert.equal(geo.right, geo.width, "bottom terminal ends at the window's right edge");
+      assert.ok(geo.navBottom <= geo.top + 1, "navigator ends above the terminal");
+      assert.ok(geo.mainBottom <= geo.top + 1, "content ends above the terminal");
+    }
     const tests = page.getByRole("button", { name: "Tests — uv run pytest", exact: true });
     const testsTab = page.getByRole("button", { name: "Ausgabe: Tests", exact: true });
     await tests.click();

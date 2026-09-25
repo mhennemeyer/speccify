@@ -390,6 +390,8 @@ export default function ProjectShell() {
 
   // Spalten: Navigator | Griff | Inhalt | Griff | rechte Seitenleiste.
   // Zeilen: Toolbar | Tabzeile rechts | Körper | Griff | Bottom-Bar.
+  // Spec 069: die Bottom-Bar (Terminal unten) liegt in voller Fensterbreite
+  // unter Navigator, Inhalt und Seitenleiste — die Spalten enden über ihr.
   const gridStyle: CSSProperties = {
     display: "grid",
     gridTemplateColumns: [
@@ -409,8 +411,8 @@ export default function ProjectShell() {
   };
   const terminalCell: CSSProperties =
     terminalDock === "right"
-      ? { gridColumn: 5, gridRow: "3 / -1" }
-      : { gridColumn: 3, gridRow: 5 };
+      ? { gridColumn: 5, gridRow: "3 / 4" }
+      : { gridColumn: "1 / -1", gridRow: 5 };
 
   // Toolbar (I3): eingebaute Knöpfe + Aktionen, Auswahl und Reihenfolge aus
   // dem Layout (`toolbar`), Default = Git-Knöpfe + Aktionen mit `toolbar: true`.
@@ -557,7 +559,7 @@ export default function ProjectShell() {
         {/* Navigator: Icon-Tab-Leiste (iKanban SidebarTabBar) + Liste des Tabs */}
         <nav
           className={`${navShown ? "flex" : "hidden"} min-h-0 flex-col border-r border-slate-200 bg-white`}
-          style={{ gridColumn: 1, gridRow: "2 / -1" }}
+          style={{ gridColumn: 1, gridRow: "2 / 4" }}
         >
           <ProjectNavigation active={active} lastTab={lastTab} activate={activateTab} />
           {/* Ein Listen-Slot pro Tab — die Tabs portalen ihre Liste hinein
@@ -583,7 +585,7 @@ export default function ProjectShell() {
             size={layout.navWidth}
             onResize={(next) => updateLayout({ navWidth: clamp(next, LAYOUT_LIMITS.nav) })}
             onReset={() => updateLayout({ navWidth: DEFAULT_LAYOUT.navWidth })}
-            style={{ gridColumn: 2, gridRow: "2 / -1" }}
+            style={{ gridColumn: 2, gridRow: "2 / 4" }}
           />
         ) : null}
 
@@ -658,7 +660,7 @@ export default function ProjectShell() {
             invert
             onResize={(next) => updateLayout({ bottomHeight: clamp(next, LAYOUT_LIMITS.bottom) })}
             onReset={() => updateLayout({ bottomHeight: DEFAULT_LAYOUT.bottomHeight })}
-            style={{ gridColumn: 3, gridRow: 4 }}
+            style={{ gridColumn: "1 / -1", gridRow: 4 }}
           />
         ) : null}
 
@@ -670,7 +672,7 @@ export default function ProjectShell() {
             invert
             onResize={(next) => updateLayout({ rightWidth: clamp(next, LAYOUT_LIMITS.right) })}
             onReset={() => updateLayout({ rightWidth: DEFAULT_LAYOUT.rightWidth })}
-            style={{ gridColumn: 4, gridRow: "2 / -1" }}
+            style={{ gridColumn: 4, gridRow: "2 / 4" }}
           />
         ) : null}
         <div
@@ -727,10 +729,10 @@ export default function ProjectShell() {
         </div>
         <div ref={setOutputSlot} aria-label="Aktionsausgabe"
           className={`${rightShown && activeOutput !== null ? "flex" : "hidden"} min-h-0 min-w-0 flex-col overflow-hidden border-l border-slate-700`}
-          style={{ gridColumn: 5, gridRow: "3 / -1" }} />
+          style={{ gridColumn: 5, gridRow: "3 / 4" }} />
         <aside
           className={`inspector-body ${inspectorVisible ? "flex" : "hidden"} min-h-0 flex-col overflow-y-auto border-l border-slate-200 bg-white`}
-          style={{ gridColumn: 5, gridRow: "3 / -1" }}
+          style={{ gridColumn: 5, gridRow: "3 / 4" }}
         >
           {/* Ein Slot pro Tab — nur der aktive ist sichtbar; die Tabs
               portalen ihr Detail hinein (lib/panels.tsx). */}

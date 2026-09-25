@@ -383,6 +383,7 @@ Projektfenster · ein Projektpfad (Startbereich: Specs)
 │   │   Sitzung auswählen / Neueste Sitzung (ohne ID, verschwunden, Hostwechsel) · Startfehler sichtbar
 │   ├── QA-Brücke (039): nur mit `--qa-bridge` — kein UI, Fenster/`eval`/`invoke`/Screenshot per HTTP; `window.__speccifyQa` liest Terminalpuffer und Bereitschaft
 │   ├── Agent-Fragen (038): ask_bo-Karten über dem Terminal · Ad-hoc-UI als eigenes Popup-Fenster `ask-<n>` (iframe, Formular/data-answer, Anzeige mit Schließen), schließt nach Antwort
+│   ├── Dock unten (069): Griff und Terminal über alle Spalten, Navigator/Inspektor enden darüber · Dock rechts unverändert
 │   ├── Kopieren (068): ⌘C/Strg+Umschalt+C kopiert die xterm-Auswahl fensterweit (auch bei Fokus außerhalb) · Hinweis „Kopiert"/Fehlergrund im Kopf · ohne Auswahl bleibt Ctrl-C SIGINT · ⌥-Ziehen markiert trotz Maus-Modus
 │   └── laufend: cwd · Startdetails · PTY · Neustart · Dock wechseln
 └── Splitter: Größen ändern/zurücksetzen; Layout pro Projekt gespeichert

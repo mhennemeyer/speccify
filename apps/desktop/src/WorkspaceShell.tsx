@@ -372,7 +372,8 @@ export default function WorkspaceShell() {
             <ToolbarButton title="Einstellungen" active={settingsOpen} onClick={() => setSettingsOpen(true)}><GearIcon /></ToolbarButton>
           </>} />
       </div>
-      <nav aria-label="Workspace-Projekte" className={`${navShown ? "flex" : "hidden"} min-h-0 flex-col border-r border-slate-200 bg-white`} style={{ gridColumn: 1, gridRow: "2 / -1" }}>
+      {/* Spec 069: Spalten enden über der Bottom-Bar; das Terminal unten nimmt die volle Breite. */}
+      <nav aria-label="Workspace-Projekte" className={`${navShown ? "flex" : "hidden"} min-h-0 flex-col border-r border-slate-200 bg-white`} style={{ gridColumn: 1, gridRow: "2 / 4" }}>
         <ProjectNavigation active={tab} lastTab={lastTab} activate={activate} />
         <div className="flex items-center justify-between border-b border-slate-200 px-3 py-1 text-[11px] text-slate-500">
           <span>{isKnowledge(tab) ? "Wissen im Workspace" : `Projekte · ${workspace?.repositories.length ?? 0}`}</span>
@@ -390,7 +391,7 @@ export default function WorkspaceShell() {
           </section>)}
         </div>
       </nav>
-      {navShown && <SplitHandle axis="x" size={layout.navWidth} onResize={next => updateLayout({ navWidth: clamp(next, LAYOUT_LIMITS.nav) })} onReset={() => updateLayout({ navWidth: DEFAULT_LAYOUT.navWidth })} style={{ gridColumn: 2, gridRow: "2 / -1" }} />}
+      {navShown && <SplitHandle axis="x" size={layout.navWidth} onResize={next => updateLayout({ navWidth: clamp(next, LAYOUT_LIMITS.nav) })} onReset={() => updateLayout({ navWidth: DEFAULT_LAYOUT.navWidth })} style={{ gridColumn: 2, gridRow: "2 / 4" }} />}
       <main className="flex min-h-0 min-w-0 flex-col overflow-hidden p-5" style={{ gridColumn: 3, gridRow: "2 / 4" }}>
         {error && <ErrorBox message={error} />}
         <p aria-label="Aktives Projektziel" className="mb-3 truncate text-[11px] text-slate-500" title={target?.path}>
@@ -406,15 +407,15 @@ export default function WorkspaceShell() {
         <div className={tab === "help" ? "min-h-0 flex-1" : "hidden"}>{visited.includes("help") && <HelpView />}</div>
         <div ref={setMainHost} className={tab === "board" || tab === "help" ? "hidden" : "min-h-0 flex-1 overflow-auto"} />
       </main>
-      {bottomVisible && <SplitHandle axis="y" size={layout.bottomHeight} invert onResize={next => updateLayout({ bottomHeight: clamp(next, LAYOUT_LIMITS.bottom) })} onReset={() => updateLayout({ bottomHeight: DEFAULT_LAYOUT.bottomHeight })} style={{ gridColumn: 3, gridRow: 4 }} />}
-      {rightShown && <SplitHandle axis="x" size={layout.rightWidth} invert onResize={next => updateLayout({ rightWidth: clamp(next, LAYOUT_LIMITS.right) })} onReset={() => updateLayout({ rightWidth: DEFAULT_LAYOUT.rightWidth })} style={{ gridColumn: 4, gridRow: "2 / -1" }} />}
+      {bottomVisible && <SplitHandle axis="y" size={layout.bottomHeight} invert onResize={next => updateLayout({ bottomHeight: clamp(next, LAYOUT_LIMITS.bottom) })} onReset={() => updateLayout({ bottomHeight: DEFAULT_LAYOUT.bottomHeight })} style={{ gridColumn: "1 / -1", gridRow: 4 }} />}
+      {rightShown && <SplitHandle axis="x" size={layout.rightWidth} invert onResize={next => updateLayout({ rightWidth: clamp(next, LAYOUT_LIMITS.right) })} onReset={() => updateLayout({ rightWidth: DEFAULT_LAYOUT.rightWidth })} style={{ gridColumn: 4, gridRow: "2 / 4" }} />}
       <div aria-label="Rechte Seitenleiste" className={`${rightShown ? "flex" : "hidden"} min-w-0 items-stretch overflow-x-auto border-b border-l border-slate-200 bg-white text-xs`} style={{ gridColumn: 5, gridRow: 2 }}>
         {(terminalDock === "right" ? [["inspector", "Inspektor"], ["terminal", "Terminal"]] as const : [["inspector", "Inspektor"]] as const).map(([id, label]) => <button key={id} aria-pressed={layout.rightTab === id} onClick={() => updateLayout({ rightTab: id })} className={`shrink-0 px-3 py-1.5 font-medium ${layout.rightTab === id ? "border-b-2 border-slate-800 text-slate-800" : "text-slate-400 hover:text-slate-700"}`}>{label}</button>)}
         <div ref={setOutputTabsHost} className="flex" />
       </div>
-      <div ref={setOutputHost} aria-label="Aktionsausgabe" className={`${outputVisible ? "flex" : "hidden"} min-h-0 min-w-0 flex-col overflow-hidden`} style={{ gridColumn: 5, gridRow: "3 / -1" }} />
-      <aside ref={setInspectorHost} aria-label="Workspace-Inspektor" className={`inspector-body ${rightShown && layout.rightTab === "inspector" ? "flex" : "hidden"} min-h-0 min-w-0 flex-col overflow-y-auto border-l border-slate-200 bg-white`} style={{ gridColumn: 5, gridRow: "3 / -1" }} />
-      <section aria-label="Agent-Terminal" className={`terminal-surface ${terminalVisible ? "flex" : "hidden"} min-h-0 min-w-0 flex-col bg-slate-900 ${terminalDock === "right" ? "border-l" : "border-t"} border-slate-700`} style={terminalDock === "right" ? { gridColumn: 5, gridRow: "3 / -1" } : { gridColumn: 3, gridRow: 5 }}>
+      <div ref={setOutputHost} aria-label="Aktionsausgabe" className={`${outputVisible ? "flex" : "hidden"} min-h-0 min-w-0 flex-col overflow-hidden`} style={{ gridColumn: 5, gridRow: "3 / 4" }} />
+      <aside ref={setInspectorHost} aria-label="Workspace-Inspektor" className={`inspector-body ${rightShown && layout.rightTab === "inspector" ? "flex" : "hidden"} min-h-0 min-w-0 flex-col overflow-y-auto border-l border-slate-200 bg-white`} style={{ gridColumn: 5, gridRow: "3 / 4" }} />
+      <section aria-label="Agent-Terminal" className={`terminal-surface ${terminalVisible ? "flex" : "hidden"} min-h-0 min-w-0 flex-col bg-slate-900 ${terminalDock === "right" ? "border-l" : "border-t"} border-slate-700`} style={terminalDock === "right" ? { gridColumn: 5, gridRow: "3 / 4" } : { gridColumn: "1 / -1", gridRow: 5 }}>
         <div className="flex justify-end px-2 pt-1"><button onClick={toggleDock} title={terminalDock === "right" ? "Terminal nach unten legen" : "Terminal nach rechts legen"} className="rounded px-2 py-0.5 text-xs text-slate-500 hover:bg-slate-800 hover:text-slate-300">{terminalDock === "right" ? "⬓ nach unten" : "⬔ nach rechts"}</button></div>
         {workspace && <section aria-label={`Terminal ${workspace.root}`} className="flex min-h-0 flex-1 flex-col">
           <div className="flex items-center justify-between gap-2 px-3 py-1">
