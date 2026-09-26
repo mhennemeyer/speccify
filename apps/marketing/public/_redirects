@@ -1,0 +1,6 @@
+# Netlify redirects (Spec 071). Stable download and updater addresses on
+# speccify.io; the asset host behind them may change without rebuilding the app.
+# The release notes live at /releases/<x-y-z>/ — downloads use /download/ so the
+# two never collide.
+/download/latest.json  https://github.com/mhennemeyer/speccify/releases/latest/download/latest.json  302
+/download/*            https://github.com/mhennemeyer/speccify/releases/latest/download/:splat      302

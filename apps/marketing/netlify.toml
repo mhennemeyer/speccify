@@ -1,0 +1,8 @@
+# Netlify site "speccify" (Spec 071). The site is built in CI (docs sync,
+# drift checks, team board) and only the finished `dist/` is deployed with
+# `netlify deploy --prod --dir=dist`; Netlify never builds it itself.
+# Redirects and headers live in public/_redirects and public/_headers so they
+# ship inside `dist/` for every deploy method.
+[build]
+  publish = "dist"
+  command = "echo 'built in CI; deploy with netlify deploy --dir=dist'"

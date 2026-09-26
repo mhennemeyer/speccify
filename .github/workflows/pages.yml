@@ -1,6 +1,8 @@
 name: Deploy site
 
-# Publishes apps/marketing/ to GitHub Pages on every push to main.
+# Publishes apps/marketing/ on every push to main — to Netlify (Spec 071, the
+# host that stays when the repository goes private or moves) and, until the
+# DNS cutover of speccify.io is done, still to GitHub Pages.
 #
 # The build itself (drift checks, link check, markdown lint) lives in
 # docs.yml and gates pull requests. This workflow only ships what is already
@@ -105,8 +107,38 @@ jobs:
         with:
           path: apps/marketing/dist
 
+  # Spec 071: Netlify is the target that survives a private or moved repo. The
+  # job runs only when the token is configured, so the workflow stays green
+  # (and Pages keeps deploying) until both secrets exist.
+  deploy-netlify:
+    name: deploy (Netlify)
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+      NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+    steps:
+      - name: Download site
+        if: env.NETLIFY_AUTH_TOKEN != '' && env.NETLIFY_SITE_ID != ''
+        uses: actions/download-artifact@v4
+        with:
+          name: github-pages
+          path: site
+      - name: Unpack
+        if: env.NETLIFY_AUTH_TOKEN != '' && env.NETLIFY_SITE_ID != ''
+        run: mkdir -p dist && tar -xf site/artifact.tar -C dist
+      - name: Deploy to Netlify
+        if: env.NETLIFY_AUTH_TOKEN != '' && env.NETLIFY_SITE_ID != ''
+        run: |
+          npx --yes netlify-cli@latest deploy --prod --no-build --dir=dist \
+            --message "main@${GITHUB_SHA::7} via GitHub Actions"
+      - name: Skipped
+        if: env.NETLIFY_AUTH_TOKEN == '' || env.NETLIFY_SITE_ID == ''
+        run: echo "NETLIFY_AUTH_TOKEN/NETLIFY_SITE_ID not set — Netlify deploy skipped"
+
   deploy:
-    name: deploy
+    name: deploy (GitHub Pages, until DNS cutover)
     needs: build
     runs-on: ubuntu-latest
     environment:

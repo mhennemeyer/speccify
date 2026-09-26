@@ -11,6 +11,20 @@ English. Design rules, motifs and approval state live in the living playbook
 claims. A push to `main` touching `apps/marketing/**`, `docs/**` or the docs sync
 scripts deploys through `pages.yml`. There is no staging: what is pushed is public.
 
+Hosting (Spec 071, since 2026-09-26): the site is deployed to **Netlify**
+(site `speccify`, account `mhennemeyer`, `https://speccify.netlify.app`) with
+`netlify deploy --prod --no-build --dir=<absolute path to apps/marketing/dist>`;
+the CLI resolves a relative `--dir` against the repository root, so pass the
+absolute path. Redirects and headers ship inside `dist/` from
+`apps/marketing/public/_redirects` and `_headers`; `/download/latest.json` and
+`/download/<asset>` are the stable download addresses that forward to the
+current asset host. GitHub Pages keeps receiving deploys until the DNS of
+`speccify.io` points at Netlify; then the Pages job in `pages.yml` goes. The
+workflow needs the secrets `NETLIFY_SITE_ID` (set) and `NETLIFY_AUTH_TOKEN`
+(personal access token from app.netlify.com → User settings → Applications);
+without the token the Netlify job skips itself and only Pages deploys. A manual
+deploy from a machine with `netlify login` works the same way.
+
 ## Steps
 
 1. Edit. Release notes: `src/content/docs/releases/<x-y-z>.md`; landing:
