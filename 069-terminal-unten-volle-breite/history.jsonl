@@ -1,0 +1,3 @@
+{"timestamp":"2026-09-25T06:40:00Z","spec_id":"069-terminal-unten-volle-breite","event_type":"spec_created","actor":"project","summary":"Nutzerwunsch: unteres Terminal in voller Fensterbreite unter den Seitenleisten."}
+{"timestamp":"2026-09-25T06:40:00Z","spec_id":"069-terminal-unten-volle-breite","event_type":"station_changed","actor":"project","summary":"Doing auf Zuruf des Nutzers; Branch main."}
+{"timestamp":"2026-09-25T07:20:00Z","spec_id":"069-terminal-unten-volle-breite","event_type":"spec_edited","actor":"project","summary":"Rasterzellen umgestellt, Geometrie-Regressionen in beiden Browser-Tests, App neu gebaut und im Projektfenster gemessen; ready."}
