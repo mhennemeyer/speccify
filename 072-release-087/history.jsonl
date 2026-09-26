@@ -1,2 +1,4 @@
 {"timestamp":"2026-09-26T08:30:00Z","spec_id":"072-release-087","event_type":"spec_created","actor":"project","summary":"BO-Auftrag: Release 0.8.7 mit dem aktuellen Terminal-Stand (Specs 067–070), ohne itsdcloud-Integration."}
 {"timestamp":"2026-09-26T08:30:00Z","spec_id":"072-release-087","event_type":"station_changed","actor":"project","summary":"Doing auf ausdrücklichen Release-Auftrag des Nutzers; Branch main."}
+{"timestamp":"2026-09-26T10:30:00Z","spec_id":"072-release-087","event_type":"agent_run","actor":"project","summary":"Release 0.8.7: CI repariert (Sidecar in Windows/Linux-Jobs, Clippy), Version, Notes, Tag, Release-Lauf grün, Draft unabhängig geprüft, veröffentlicht, lokale App per Updater auf 0.8.7; skills: release, project-checks, local-app, website-publish"}
+{"timestamp":"2026-09-26T10:30:00Z","spec_id":"072-release-087","event_type":"station_changed","actor":"project","summary":"Done: 0.8.7 veröffentlicht und lokal per Updater bestätigt."}
