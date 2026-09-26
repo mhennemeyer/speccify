@@ -875,6 +875,16 @@ Auftrag vom 2026-09-10; Umsetzung in
 ./scripts/dev.sh --app --prepared --ui-port=18768
 ```
 
+**Stand 2026-09-26:** 0.8.7 ist veröffentlicht und lokal installiert; das
+Bundle unter `target/debug/bundle/macos/` ist seitdem der Release-Build und wird
+mit `./scripts/dev.sh --open --ui-port=18768 --qa-bridge=18769` geöffnet. Die
+Produktrichtung steht in Spec 071: Speccify wird eigenes Produkt, zuerst die
+Brücke (GitHub privat, Netlify, Releases-Repo), dann der Umzug ins itsd-GitLab,
+sobald dort Runner für macOS/Windows/Linux stehen. Offene BO-Entscheidungen:
+Netlify-Token, DNS bei domainfactory, Peters Einladung, Rückfragen-MCP beim
+Agentenstart automatisch mitgeben, Board-Verbesserungen (Überschneidung nur
+gegen aktiv bearbeitete Specs, „Alle als gesehen“).
+
 **Terminals überleben Neustarts (Spec 070, seit 2026-09-25):** Mit der
 Terminal-Einstellung „Terminals überleben App-Neustarts“ laufen neue Terminals
 im Sidecar `speccify-pty-host`. Ein reguläres Beenden (⌘Q, `quit` per

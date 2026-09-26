@@ -18,6 +18,16 @@ Schnelleinstieg: [Fähigkeiten](#fähigkeiten-vorhanden-geprüft-offen) ·
 [Prüfstand](#verifikation-und-verbleibende-risiken) ·
 [UI-Ausbau](#vorgeschlagener-ui-ausbau--nicht-implementiert).
 
+**0.8.7 veröffentlicht, 2026-09-26** (Spec 072, Codebasis `53323c4`): Terminals
+überleben App-Neustarts (070, opt-in über die Terminal-Einstellungen, Sidecar
+`speccify-pty-host`, Wiederanhängen in Projekt- und Workspace-Fenstern,
+Fensterzustand entprellt gesichert), Kopieren aus dem Terminal fensterweit
+(068), Bottom-Dock in voller Breite (069), Skill `gitlab-deploy-key` (067).
+Updater-Nachweis 0.8.6→0.8.7 auf macOS mit weiterlaufendem gehostetem
+Terminal. Nicht geprüft: Host-Prozess unter Windows/Linux, Dashboard-Terminal
+hängt sich nicht wieder an. Richtung: Speccify wird eigenes Produkt (Spec 071):
+Brücke GitHub privat + Netlify, später itsd-GitLab.
+
 **0.8.2-Findings 051–055, 2026-09-17:** Terminal inklusive
 Bedienelementen folgt Hell/Dunkel/System; Schrift 8–32 px (Standard 14), live und
 fensterübergreifend. Rückfragen-Hinweise über OSC 9/777, Bell und bekannte
