@@ -7,6 +7,12 @@ Living playbook for `apps/marketing/`. Product direction: [Weiterentwicklung](we
 Current release work: [Spec 060](../specs/060-release-084/SPEC.md).
 Initial visual direction: [Spec 023](../specs/023-landingpage-app-screenshots/SPEC.md).
 
+0.8.7 (2026-09-26): release notes for terminals that survive restarts (Spec 070),
+copying from the terminal (068) and the full-width bottom dock (069); terminal
+settings page gains the new switch; landing link points to 0.8.7. No screenshot
+change: none of the demo motifs shows a terminal preference. Hosting: Netlify in
+parallel to GitHub Pages until the DNS cutover (Spec 071).
+
 0.8.4 (2026-09-17): release notes for "Alles stoppen", finished shells and the
 renewed update search, including the workaround for 0.8.1–0.8.3. Landing link
 points to 0.8.4. No screenshot change.

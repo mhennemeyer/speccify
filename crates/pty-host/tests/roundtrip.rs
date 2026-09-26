@@ -142,11 +142,11 @@ fn exit_is_reported_and_retained_for_late_attach() {
     let mut exit = None;
     let deadline = Instant::now() + Duration::from_secs(5);
     while Instant::now() < deadline {
-        if let Ok(Event::Exit { id, code }) = events.recv_timeout(Duration::from_millis(200)) {
-            if id == "s2" {
-                exit = code;
-                break;
-            }
+        if let Ok(Event::Exit { id, code }) = events.recv_timeout(Duration::from_millis(200))
+            && id == "s2"
+        {
+            exit = code;
+            break;
         }
     }
     assert_eq!(exit, Some(3));

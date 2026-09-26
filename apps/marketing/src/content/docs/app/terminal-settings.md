@@ -16,6 +16,17 @@ in Settings, to choose **8–32 px**. The default is 14 px. The setting is share
 across windows and saved locally. Changing it resizes the terminal without
 restarting the shell or agent.
 
+## Terminals that survive app restarts
+
+**Available in Speccify 0.8.7.** The switch **Terminals überleben App-Neustarts**
+runs new terminals in a host process next to the app. Quitting or rebuilding the
+app only disconnects them; the project or workspace window re-attaches on the
+next start, shows the output so far and accepts input. Closing the window or
+**Neu starten** still end the session, and the host process ends itself a minute
+after its last session. Terminals started before the switch was turned on keep
+running inside the app process. Copy with ⌘C (Ctrl+Shift+C) wherever the focus
+is; the header confirms with **Kopiert**.
+
 ## Notice waiting questions
 
 Settings provides two independent switches:

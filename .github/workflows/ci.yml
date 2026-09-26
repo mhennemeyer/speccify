@@ -197,11 +197,11 @@ jobs:
       - name: Build sidecars (debug)
         shell: pwsh
         run: |
-          cargo build -p speccify-exec-mcp -p speccify-discovery-mcp -p speccify-parallels-mcp
+          cargo build -p speccify-exec-mcp -p speccify-discovery-mcp -p speccify-parallels-mcp -p speccify-pty-host
           $triple = (rustc -vV | Select-String '^host: (.+)$').Matches.Groups[1].Value
           $bin = "apps/desktop/src-tauri/binaries"
           New-Item -ItemType Directory -Force $bin | Out-Null
-          foreach ($name in "speccify-exec-mcp", "speccify-discovery-mcp", "speccify-parallels-mcp") {
+          foreach ($name in "speccify-exec-mcp", "speccify-discovery-mcp", "speccify-parallels-mcp", "speccify-pty-host") {
             Copy-Item "target/debug/$name.exe" "$bin/$name-$triple.exe"
           }
           Copy-Item (Get-Command uv).Source "$bin/speccify-uv-$triple.exe"
@@ -261,11 +261,11 @@ jobs:
       # existieren — Debug-Sidecars, uv vom Runner, Platzhalter-Resource.
       - name: Build sidecars (debug)
         run: |
-          cargo build -p speccify-exec-mcp -p speccify-discovery-mcp -p speccify-parallels-mcp
+          cargo build -p speccify-exec-mcp -p speccify-discovery-mcp -p speccify-parallels-mcp -p speccify-pty-host
           triple="$(rustc -vV | awk '/^host: /{print $2}')"
           bin=apps/desktop/src-tauri/binaries
           mkdir -p "$bin" apps/desktop/src-tauri/resources
-          for name in speccify-exec-mcp speccify-discovery-mcp speccify-parallels-mcp; do
+          for name in speccify-exec-mcp speccify-discovery-mcp speccify-parallels-mcp speccify-pty-host; do
             cp "target/debug/$name" "$bin/$name-$triple"
           done
           cp "$(command -v uv)" "$bin/speccify-uv-$triple"

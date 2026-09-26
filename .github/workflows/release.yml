@@ -263,12 +263,12 @@ jobs:
       - name: Build sidecars (release)
         shell: pwsh
         run: |
-          cargo build --release -p speccify-exec-mcp -p speccify-discovery-mcp -p speccify-parallels-mcp
+          cargo build --release -p speccify-exec-mcp -p speccify-discovery-mcp -p speccify-parallels-mcp -p speccify-pty-host
           if ($LASTEXITCODE -ne 0) { exit 1 }
           $triple = (rustc -vV | Select-String '^host: (.+)$').Matches.Groups[1].Value
           $bin = "apps/desktop/src-tauri/binaries"
           New-Item -ItemType Directory -Force $bin | Out-Null
-          foreach ($name in "speccify-exec-mcp", "speccify-discovery-mcp", "speccify-parallels-mcp") {
+          foreach ($name in "speccify-exec-mcp", "speccify-discovery-mcp", "speccify-parallels-mcp", "speccify-pty-host") {
             Copy-Item "target/release/$name.exe" "$bin/$name-$triple.exe"
           }
           Copy-Item (Get-Command uv).Source "$bin/speccify-uv-$triple.exe"
