@@ -463,8 +463,14 @@ fn schedule_window_state_save(app: AppHandle) {
     std::thread::spawn(move || {
         std::thread::sleep(std::time::Duration::from_millis(750));
         PENDING.store(false, Ordering::SeqCst);
-        use tauri_plugin_window_state::{AppHandleExt, StateFlags};
-        let _ = app.save_window_state(StateFlags::all());
+        // Fenstergeometrie darf auf macOS nur der Main-Thread lesen; das
+        // Speichern selbst wird deshalb dorthin gereicht (Absturz 2026-09-26
+        // beim Öffnen eines Projektfensters).
+        let handle = app.clone();
+        let _ = app.run_on_main_thread(move || {
+            use tauri_plugin_window_state::{AppHandleExt, StateFlags};
+            let _ = handle.save_window_state(StateFlags::all());
+        });
     });
 }
 
