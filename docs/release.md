@@ -417,6 +417,16 @@ echten Updater geprüft (30.650.645 Bytes, Signatur bestanden, vier Fenster
 wiederhergestellt, Zustand `current`, Bundle notarisiert). CI und Release-Lauf
 im ersten Anlauf grün. Inhalt: Agent-Fragen als Markdown mit Kopierknöpfen (065).
 
+**0.8.7 veröffentlicht am 2026-09-26:** Update 0.8.6→0.8.7 auf diesem Mac über den
+echten Updater geprüft (31.185.538 Bytes, Signatur bestanden, beide Fenster
+wiederhergestellt, Zustand `current`, Bundle notarisiert, Sidecar
+`speccify-pty-host` im Bundle signiert). Das gehostete Workspace-Terminal
+(Spec 070) lief über den Update-Neustart weiter und hing sich wieder an. CI und
+Release-Lauf im ersten Anlauf grün, nachdem der neue Sidecar in die
+Sidecar-Schritte der Windows-/Linux-Jobs aufgenommen war. Inhalt: Terminals
+überleben Neustarts (070), Kopieren (068), Dock in voller Breite (069),
+Skill `gitlab-deploy-key` (067); Website zusätzlich auf Netlify (071).
+
 ### Vollständiger Release-Feed
 
 Der Workflow verlangt signierte Pakete für alle unterstützten Update-Ziele:
