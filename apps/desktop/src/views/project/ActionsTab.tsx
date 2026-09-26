@@ -24,6 +24,7 @@ import {
 } from "../../lib/panels";
 import { beginActivity, endActivity } from "../../lib/activity";
 import { useProjectActivity } from "../../lib/projectActivity";
+import { t } from "../../i18n";
 
 interface ActionInput {
   name: string;
@@ -249,7 +250,7 @@ function InputField({
           className="max-w-48 truncate rounded border border-slate-300 px-2 py-1 font-mono"
           title={value}
         >
-          {value || "wählen…"}
+          {value || t("wählen…")}
         </button>
       </label>
     );
@@ -294,10 +295,10 @@ function OutputPanel({ run, onStop, fill = false }: { run: RunState; onStop: () 
         <span className="text-slate-400">
           {run.running
             ? progress
-              ? `läuft … ${progress}`
-              : "läuft …"
+              ? t("läuft … {progress}", { progress })
+              : t("läuft …")
             : run.error
-              ? `Fehler: ${run.error}`
+              ? t("Fehler: {error}", { error: run.error })
               : `exit ${run.exitCode ?? "?"} · ${Math.round((run.durationMs ?? 0) / 1000)}s`}
         </span>
         {run.running ? (
@@ -310,7 +311,7 @@ function OutputPanel({ run, onStop, fill = false }: { run: RunState; onStop: () 
         ) : null}
       </div>
       <div ref={scroller} className={`${fill ? "min-h-0 flex-1" : "max-h-64"} overflow-y-auto break-words`}>
-        {run.items.length === 0 && run.running ? <p className="text-xs text-slate-400">Warte auf Ausgabe …</p> : null}
+        {run.items.length === 0 && run.running ? <p className="text-xs text-slate-400">{t("Warte auf Ausgabe …")}</p> : null}
         {run.items.map((item, index) =>
           item.kind === "chart" ? (
             <ChartBlock key={index} chart={item.chart} />
@@ -542,23 +543,21 @@ export default function ActionsTab({
         <OutputPanel key={activeOutput} run={runs[activeOutput]} fill onStop={() => void stop(activeOutput)} />,
         outputSlot,
       ) : null}
-    <LoadingBoundary loading={snapshot.loading} error={snapshot.error} label="Aktionen lesen…">
+    <LoadingBoundary loading={snapshot.loading} error={snapshot.error} label={t("Aktionen lesen…")}>
       <div className="max-w-3xl space-y-5 overflow-y-auto pr-1">
         <NavigatorPortal tab="actions" fallback={() => null}>
           {confirmed.length === 0 && proposals.length + pending.length === 0 ? (
             <NavEmpty
-              title="Noch keine Aktionen"
+              title={t("Noch keine Aktionen")}
               action={{
-                label: "+ Aktion anlegen",
+                label: t("+ Aktion anlegen"),
                 onClick: () =>
                   document
                     .querySelector("[data-new-action]")
                     ?.scrollIntoView({ block: "start", behavior: "smooth" }),
               }}
             >
-              Aktionen sind benannte Kommandos aus <code>.agent/actions.json</code> —
-              Tests, Build, Start. Die App führt sie mit Live-Ausgabe aus. Unten
-              anlegen, oder den Agenten im Terminal bitten, welche vorzuschlagen.
+              {t("Aktionen sind benannte Kommandos aus")}{" "}<code>.agent/actions.json</code>{" "}{t("— Tests, Build, Start. Die App führt sie mit Live-Ausgabe aus. Unten anlegen, oder den Agenten im Terminal bitten, welche vorzuschlagen.")}
             </NavEmpty>
           ) : (
             <div className="space-y-0.5">
@@ -580,7 +579,7 @@ export default function ActionsTab({
               ))}
               {proposals.length + pending.length > 0 ? (
                 <p className="px-2 pt-2 text-[11px] text-amber-700">
-                  {proposals.length + pending.length} Vorschläge des Agenten — unten im Inhalt.
+                  {proposals.length + pending.length}{" "}{t("Vorschläge des Agenten — unten im Inhalt.")}
                 </p>
               ) : null}
             </div>
@@ -597,7 +596,7 @@ export default function ActionsTab({
                 subtitle={action.command}
                 meta={[
                   { label: "Beschreibung", value: action.description ?? "—" },
-                  { label: "Quelle", value: action.source },
+                  { label: t("Quelle"), value: action.source },
                   { label: "Ziel", value: action.target },
                   {
                     label: "Eingaben",
@@ -605,12 +604,12 @@ export default function ActionsTab({
                   },
                   { label: "Toolbar", value: action.toolbar ? "ja" : "nein" },
                   {
-                    label: "Letzter Lauf",
+                    label: t("Letzter Lauf"),
                     value: run
                       ? run.running
-                        ? "läuft …"
+                        ? t("läuft …")
                         : run.error
-                          ? `Fehler: ${run.error}`
+                          ? t("Fehler: {error}", { error: run.error })
                           : `Exit ${run.exitCode ?? "?"}${run.durationMs !== null ? ` · ${Math.round(run.durationMs / 1000)} s` : ""}`
                       : "—",
                   },
@@ -623,7 +622,7 @@ export default function ActionsTab({
                         disabled={run?.running}
                         onClick={() => void start(action)}
                       >
-                        {run?.running ? "läuft…" : "Ausführen"}
+                        {run?.running ? t("läuft…") : t("Ausführen")}
                       </InspectorButton>
                     ) : null}
                     <InspectorButton
@@ -636,7 +635,7 @@ export default function ActionsTab({
                         )
                       }
                     >
-                      {action.toolbar ? "Aus der Toolbar nehmen" : "In die Toolbar"}
+                      {action.toolbar ? t("Aus der Toolbar nehmen") : t("In die Toolbar")}
                     </InspectorButton>
                   </>
                 }
@@ -652,8 +651,7 @@ export default function ActionsTab({
           </h2>
           {confirmed.length === 0 ? (
             <p className="text-sm text-slate-500">
-              Keine Aktionen in <code>.agent/actions.json</code> — unten anlegen, oder den
-              Agenten bitten, welche vorzuschlagen.
+              {t("Keine Aktionen in")}{" "}<code>.agent/actions.json</code>{" "}{t("— unten anlegen, oder den Agenten bitten, welche vorzuschlagen.")}
             </p>
           ) : (
             <div className="space-y-3">
@@ -678,12 +676,12 @@ export default function ActionsTab({
                       <div className="flex shrink-0 items-center gap-2">
                         {action.target === "parallels" ? (
                           <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[10px] text-slate-600">
-                            Parallels — folgt
+                            {t("Parallels — folgt")}
                           </span>
                         ) : null}
                         {action.command.startsWith("toolui:") ? (
                           <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[10px] text-slate-600">
-                            App-Panel — folgt
+                            {t("App-Panel — folgt")}
                           </span>
                         ) : null}
                         {runnable(action) ? (
@@ -698,8 +696,8 @@ export default function ActionsTab({
                             }
                             title={
                               action.toolbar
-                                ? "Aus der Toolbar nehmen"
-                                : "Als Knopf in die Toolbar legen"
+                                ? t("Aus der Toolbar nehmen")
+                                : t("Als Knopf in die Toolbar legen")
                             }
                             aria-pressed={Boolean(action.toolbar)}
                             className={`rounded border px-2 py-1 text-xs ${
@@ -717,7 +715,7 @@ export default function ActionsTab({
                             disabled={run?.running}
                             className="rounded bg-slate-800 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-700 disabled:opacity-50"
                           >
-                            {run?.running ? "läuft…" : "Ausführen"}
+                            {run?.running ? t("läuft…") : t("Ausführen")}
                           </button>
                         ) : null}
                         <button
@@ -757,7 +755,7 @@ export default function ActionsTab({
                     ) : null}
                     {run && onRevealOutput ? (
                       <button className="mt-2 text-xs text-blue-700 hover:underline" onClick={() => onRevealOutput(action.command)}>
-                        Ausgabe anzeigen{run.running ? " · läuft …" : ""}
+                        Ausgabe anzeigen{run.running ? t(" · läuft …") : ""}
                       </button>
                     ) : run ? (
                       <OutputPanel
@@ -799,7 +797,7 @@ export default function ActionsTab({
                     }
                     className="shrink-0 rounded bg-amber-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-amber-700"
                   >
-                    Bestätigen
+                    {t("Bestätigen")}
                   </button>
                 </div>
               ))}
@@ -822,7 +820,7 @@ export default function ActionsTab({
                     }
                     className="shrink-0 rounded bg-amber-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-amber-700"
                   >
-                    Bestätigen + freigeben
+                    {t("Bestätigen + freigeben")}
                   </button>
                 </div>
               ))}
@@ -832,7 +830,7 @@ export default function ActionsTab({
 
         <section data-new-action>
           <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Neue Aktion
+            {t("Neue Aktion")}
           </h2>
           <div className="flex flex-wrap items-end gap-2">
             <label className="text-xs text-slate-600">
@@ -844,7 +842,7 @@ export default function ActionsTab({
               />
             </label>
             <label className="text-xs text-slate-600">
-              Kommando (argv, ohne Shell)
+              {t("Kommando (argv, ohne Shell)")}
               <input
                 value={draft.command}
                 onChange={(event) => setDraft({ ...draft, command: event.target.value })}
@@ -883,7 +881,7 @@ export default function ActionsTab({
               disabled={draft.name.trim() === "" || draft.command.trim() === ""}
               className="rounded bg-slate-800 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-700 disabled:opacity-50"
             >
-              Anlegen
+              {t("Anlegen")}
             </button>
           </div>
         </section>

@@ -281,7 +281,9 @@ liest sie aus der Datei.
 
 Das Zahnrad in der Toolbar öffnet die **Einstellungen** des
 Projektfensters: Erscheinungsbild (System, Hell, Dunkel — gilt für alle
-Fenster, auch im Dashboard unter *Settings*), Terminal-Position,
+Fenster, auch im Dashboard unter *Settings*), **Sprache** (System, Deutsch,
+English — wirkt sofort in allen Fenstern; „System“ folgt der Systemsprache,
+Deutsch bei `de*`, sonst Englisch), Terminal-Position,
 „Agent-Sitzung nach Neustart fortsetzen", die **Toolbar-Knöpfe** (an- und
 abwählen, mit den Pfeilen sortieren) und „Layout zurücksetzen".
 
@@ -318,8 +320,8 @@ macht es genauso (*Settings → Agent-Sitzung*).
 - **Bibliothek** — oben die **Skill-Quellen** für alle Projekte (Git-URL
   oder Ordner; hinzufügen, aktualisieren, entfernen), darunter die
   Toolbox-Manifeste.
-- **Settings** — Erscheinungsbild, Agent-Sitzung, Working Dir und
-  Terminal-Autostart.
+- **Settings** — Erscheinungsbild, Sprache (Deutsch/English), Agent-Sitzung,
+  Working Dir und Terminal-Autostart.
 
 ## Abnahmen automatisieren
 

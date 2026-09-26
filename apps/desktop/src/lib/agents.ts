@@ -1,3 +1,4 @@
+import { t } from "../i18n";
 export interface AgentPreset {
   id: "claude" | "codex" | "shell";
   label: string;
@@ -65,7 +66,7 @@ export function describeSessionRequest(request: SessionRequest, host: string | n
   if (!host) return "";
   switch (request.mode) {
     case "new":
-      return host === "claude" ? "Neue Sitzung mit fester Sitzungs-ID" : "Neue Sitzung";
+      return host === "claude" ? t("Neue Sitzung mit fester Sitzungs-ID") : t("Neue Sitzung");
     case "resume":
       return request.id
         ? host === "claude"
@@ -77,11 +78,11 @@ export function describeSessionRequest(request: SessionRequest, host: string | n
     case "pick":
       return host === "claude" ? `${host} --resume (Auswahl)` : `${host} resume (Auswahl)`;
     case "attach":
-      return "Laufende Sitzung wieder verbunden";
+      return t("Laufende Sitzung wieder verbunden");
     case "latest":
       return host === "claude"
-        ? `${host} --continue — neueste Sitzung des Hosts in diesem Ordner, nicht zwingend die gemerkte`
-        : `${host} resume --last — neueste Sitzung des Hosts, nicht zwingend die gemerkte`;
+        ? t("{host} --continue — neueste Sitzung des Hosts in diesem Ordner, nicht zwingend die gemerkte", { host })
+        : t("{host} resume --last — neueste Sitzung des Hosts, nicht zwingend die gemerkte", { host });
   }
 }
 

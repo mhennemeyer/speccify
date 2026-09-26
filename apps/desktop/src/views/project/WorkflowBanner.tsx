@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { trackActivity } from "../../lib/activity";
 import { useAsync } from "../../components/ui";
+import { t } from "../../i18n";
 
 interface WorkflowStatus {
   state: "missing" | "outdated" | "current";
@@ -41,7 +42,7 @@ export default function WorkflowBanner({ project, refresh }: { project: string; 
     setBusy(true);
     setError(null);
     try {
-      await trackActivity("setup", "Workflow einrichten", () =>
+      await trackActivity("setup", t("Workflow einrichten"), () =>
         invoke("project_workflow_install", { project }),
       );
       await reload();
@@ -59,10 +60,10 @@ export default function WorkflowBanner({ project, refresh }: { project: string; 
         <div className="text-xs text-amber-900">
           <p className="font-semibold">
             {data.state === "missing"
-              ? "Agent-Workflow ist noch nicht eingerichtet."
+              ? t("Agent-Workflow ist noch nicht eingerichtet.")
               : data.installed_version !== null && data.installed_version < data.current_version
-                ? `Agent-Workflow aktualisieren (v${data.installed_version} → v${data.current_version}).`
-                : "Workflow-Einrichtung braucht Prüfung."}
+                ? t("Agent-Workflow aktualisieren (v{installed_version} → v{current_version}).", { installed_version: data.installed_version, current_version: data.current_version })
+                : t("Workflow-Einrichtung braucht Prüfung.")}
           </p>
           {installable.length > 0 ? (
             <p className="mt-1">
@@ -83,7 +84,7 @@ export default function WorkflowBanner({ project, refresh }: { project: string; 
             disabled={busy}
             className="shrink-0 rounded bg-amber-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-amber-700 disabled:opacity-50"
           >
-            {busy ? "Richtet ein…" : "Einrichten"}
+            {busy ? t("Richtet ein…") : t("Einrichten")}
           </button>
         ) : null}
       </div>

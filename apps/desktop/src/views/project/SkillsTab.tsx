@@ -24,6 +24,7 @@ import {
 import { HandoverButton } from "../../components/HandoverSheet";
 import { deliverToTerminal } from "../../lib/handover";
 import type { KnowledgeSelection } from "../../lib/workspaceKnowledge";
+import { t } from "../../i18n";
 
 export interface SkillEntry {
   name: string;
@@ -87,16 +88,16 @@ function SourceBrowser({ project }: { project: string }) {
     const command = importCommand(skill, active.location, project);
     if (!command) {
       setNotice(
-        `${skill.name} hat kein metadata.speccify.scope — ohne Id kann speccify add nicht adressieren. Skill von Hand übernehmen oder scope ergänzen.`,
+        t("{name} hat kein metadata.speccify.scope — ohne Id kann speccify add nicht adressieren. Skill von Hand übernehmen oder scope ergänzen.", { name: skill.name }),
       );
       return;
     }
     void deliverToTerminal(command).then((outcome) =>
       setNotice(
         outcome.status === "delivered"
-          ? `Kommando ins Agent-Terminal eingefügt (Enter dort bestätigt): ${skill.name} importieren.`
+          ? t("Kommando ins Agent-Terminal eingefügt (Enter dort bestätigt): {name} importieren.", { name: skill.name })
           : outcome.status === "no-terminal"
-            ? `Kein Agent-Terminal bereit — zuerst starten, dann erneut: ${command}`
+            ? t("Kein Agent-Terminal bereit — zuerst starten, dann erneut: {command}", { command })
             : `Zustellung fehlgeschlagen: ${outcome.message}`,
       ),
     );
@@ -122,21 +123,21 @@ function SourceBrowser({ project }: { project: string }) {
             }}
             className="min-w-0 flex-1 rounded border border-slate-300 px-2 py-1.5 text-xs"
           >
-            {all.length === 0 ? <option value="">— keine Quelle —</option> : null}
+            {all.length === 0 ? <option value="">{t("— keine Quelle —")}</option> : null}
             {all.map((entry) => (
               <option key={entry.location} value={entry.location}>
                 {entry.name} · {entry.scope === "project" ? "Projekt" : "global"}
                 {entry.kind === "git" ? " · Git" : ""}
-                {entry.state !== "ready" ? " · nicht geklont" : ""}
+                {entry.state !== "ready" ? t(" · nicht geklont") : ""}
               </option>
             ))}
           </select>
           <button
             onClick={() => setAdding((value) => !value)}
             className="rounded border border-slate-300 px-2.5 py-1.5 text-xs text-slate-600 hover:bg-slate-100"
-            title="Git-URL oder Ordner für dieses Projekt anbinden"
+            title={t("Git-URL oder Ordner für dieses Projekt anbinden")}
           >
-            {adding ? "Abbrechen" : "+ Quelle"}
+            {adding ? t("Abbrechen") : t("+ Quelle")}
           </button>
         </div>
         {adding ? (
@@ -173,24 +174,22 @@ function SourceBrowser({ project }: { project: string }) {
       {all.length === 0 ? (
         <NavigatorPortal tab="skills" fallback={(children) => children}>
           <NavEmpty
-            title="Keine Skill-Quelle"
-            action={{ label: "+ Quelle für dieses Projekt", onClick: () => setAdding(true) }}
+            title={t("Keine Skill-Quelle")}
+            action={{ label: t("+ Quelle für dieses Projekt"), onClick: () => setAdding(true) }}
           >
             Ein Repo (GitHub, GitLab, …) oder ein Ordner mit{" "}
-            <code>skills/&lt;name&gt;/SKILL.md</code>. Global für alle Projekte im
-            Dashboard unter <strong>Bibliothek</strong>, oder hier nur für dieses
-            Projekt.
+            <code>skills/&lt;name&gt;/SKILL.md</code>{t(". Global für alle Projekte im Dashboard unter")}{" "}<strong>Bibliothek</strong>{t(", oder hier nur für dieses Projekt.")}
           </NavEmpty>
         </NavigatorPortal>
       ) : (
         <div className="flex min-h-0 flex-1 gap-4">
           <NavigatorPortal tab="skills">
-            <LoadingBoundary loading={skills.loading} error={skills.error} label="Quelle lesen…">
+            <LoadingBoundary loading={skills.loading} error={skills.error} label={t("Quelle lesen…")}>
               {(skills.data ?? []).length === 0 ? (
-                <p className="text-sm text-slate-500">Keine Skills in dieser Quelle.</p>
+                <p className="text-sm text-slate-500">{t("Keine Skills in dieser Quelle.")}</p>
               ) : (
                 [...grouped.entries()].map(([category, entries]) => (
-                  <details key={category || "(wurzel)"} open className="mb-2">
+                  <details key={category || t("(wurzel)")} open className="mb-2">
                     <summary className="cursor-pointer px-1 text-xs font-semibold text-slate-500">
                       {category === "" ? "•" : category} ({entries.length})
                     </summary>
@@ -236,7 +235,7 @@ function SourceBrowser({ project }: { project: string }) {
                         subtitle={selected}
                         meta={[
                           {
-                            label: "Quelle",
+                            label: t("Quelle"),
                             value: (
                               <span>
                                 {active?.name}{" "}
@@ -244,13 +243,13 @@ function SourceBrowser({ project }: { project: string }) {
                               </span>
                             ),
                           },
-                          { label: "Kategorie", value: skill.category || "— (Wurzel)" },
+                          { label: t("Kategorie"), value: skill.category || t("— (Wurzel)") },
                           {
                             label: "Id",
                             value: skill.id ? (
                               <span className="font-mono">{skill.id}</span>
                             ) : (
-                              "— kein metadata.speccify.scope"
+                              t("— kein metadata.speccify.scope")
                             ),
                           },
                           { label: "Beschreibung", value: skill.description ?? "—" },
@@ -258,10 +257,10 @@ function SourceBrowser({ project }: { project: string }) {
                         actions={
                           <InspectorButton
                             tone="primary"
-                            title="Tippt speccify add + expand ins Agent-Terminal"
+                            title={t("Tippt speccify add + expand ins Agent-Terminal")}
                             onClick={() => importSkill(skill)}
                           >
-                            Importieren (expand)
+                            {t("Importieren (expand)")}
                           </InspectorButton>
                         }
                       />
@@ -271,13 +270,13 @@ function SourceBrowser({ project }: { project: string }) {
                 <LoadingBoundary
                   loading={preview.loading}
                   error={preview.error}
-                  label="SKILL.md lesen…"
+                  label={t("SKILL.md lesen…")}
                 >
                   <Markdown text={stripFrontmatter(preview.data ?? "")} />
                 </LoadingBoundary>
               </>
             ) : (
-              <p className="text-sm text-slate-400">Skill links auswählen.</p>
+              <p className="text-sm text-slate-400">{t("Skill links auswählen.")}</p>
             )}
           </div>
         </div>
@@ -306,8 +305,7 @@ function ExportForm({
   if (!target) {
     return (
       <p className="rounded bg-amber-50 px-3 py-2 text-xs text-amber-800">
-        Keine Quelle bereit — im Modus „Quellen durchsuchen“ eine anbinden (Git-URL oder
-        Ordner) oder im Dashboard unter Bibliothek.
+        {t("Keine Quelle bereit — im Modus „Quellen durchsuchen“ eine anbinden (Git-URL oder Ordner) oder im Dashboard unter Bibliothek.")}
       </p>
     );
   }
@@ -316,7 +314,7 @@ function ExportForm({
   return (
     <div className="space-y-2 rounded border border-slate-200 bg-slate-50 p-3 text-xs">
       <label className="block">
-        <span className="mb-1 block font-medium text-slate-600">Quelle</span>
+        <span className="mb-1 block font-medium text-slate-600">{t("Quelle")}</span>
         <select
           value={target.location}
           onChange={(event) => setLocation(event.target.value)}
@@ -331,7 +329,7 @@ function ExportForm({
         </select>
       </label>
       <label className="block">
-        <span className="mb-1 block font-medium text-slate-600">Ordner in der Quelle (Kategorie)</span>
+        <span className="mb-1 block font-medium text-slate-600">{t("Ordner in der Quelle (Kategorie)")}</span>
         <input
           value={category}
           onChange={(event) => setCategory(event.target.value)}
@@ -343,9 +341,7 @@ function ExportForm({
         {command}
       </pre>
       <p className="text-slate-500">
-        Der Export streicht „## In this project“, setzt Version und Scope, nimmt Tools als
-        Vertrag mit und listet Stellen, die projektspezifisch aussehen. Committen und Pushen
-        passiert danach im Quell-Checkout — per Git-Tab oder Agent.
+        {t("Der Export streicht „## In this project“, setzt Version und Scope, nimmt Tools als Vertrag mit und listet Stellen, die projektspezifisch aussehen. Committen und Pushen passiert danach im Quell-Checkout — per Git-Tab oder Agent.")}
       </p>
       <div className="flex gap-2">
         <button
@@ -353,20 +349,20 @@ function ExportForm({
             void deliverToTerminal(command).then((outcome) =>
               onDone(
                 outcome.status === "delivered"
-                  ? `Kommando ins Agent-Terminal eingefügt (Enter dort bestätigt): ${skill} nach ${target.name} exportieren.`
-                  : `Kein Agent-Terminal bereit — Kommando: ${command}`,
+                  ? t("Kommando ins Agent-Terminal eingefügt (Enter dort bestätigt): {skill} nach {name} exportieren.", { skill, name: target.name })
+                  : t("Kein Agent-Terminal bereit — Kommando: {command}", { command }),
               ),
             );
           }}
           className="rounded bg-slate-800 px-3 py-1.5 text-white hover:bg-slate-700"
         >
-          Ins Terminal tippen
+          {t("Ins Terminal tippen")}
         </button>
         <button
           onClick={() => onDone(null)}
           className="rounded px-3 py-1.5 text-slate-500 hover:bg-slate-100"
         >
-          Abbrechen
+          {t("Abbrechen")}
         </button>
       </div>
     </div>
@@ -411,8 +407,8 @@ export default function SkillsTab({ project, refresh, workspace = false, selecti
       <div className="mb-3 flex gap-1">
         {(
           [
-            ["project", "Im Projekt"],
-            ["browse", "Quellen durchsuchen"],
+            ["project", t("Im Projekt")],
+            ["browse", t("Quellen durchsuchen")],
           ] as const
         ).map(([id, label]) => (
           <button
@@ -432,22 +428,20 @@ export default function SkillsTab({ project, refresh, workspace = false, selecti
       {mode === "browse" ? (
         <SourceBrowser project={project} />
       ) : (
-        <LoadingBoundary loading={loading} error={error} label="Skills lesen…">
+        <LoadingBoundary loading={loading} error={error} label={t("Skills lesen…")}>
           {skills.length === 0 ? (
             <>
               <NavigatorPortal tab="skills" fallback={() => null}>
                 <NavEmpty
-                  title="Noch keine Skills im Projekt"
-                  action={{ label: "Quellen durchsuchen", onClick: () => setMode("browse") }}
+                  title={t("Noch keine Skills im Projekt")}
+                  action={{ label: t("Quellen durchsuchen"), onClick: () => setMode("browse") }}
                 >
-                  Skills liegen unter <code>.agent/skills/</code> und kommen per{" "}
-                  <code>speccify expand</code> aus einer Quelle. Durchsuche eine Quelle
-                  und importiere — oder bitte den Agenten im Terminal darum.
+                  {t("Skills liegen unter")}{" "}<code>.agent/skills/</code>{" "}{t("und kommen per")}{" "}
+                  <code>speccify expand</code>{" "}{t("aus einer Quelle. Durchsuche eine Quelle und importiere — oder bitte den Agenten im Terminal darum.")}
                 </NavEmpty>
               </NavigatorPortal>
               <p className="text-sm text-slate-500">
-                Keine Skills unter <code>.agent/skills/</code> — über „Quellen
-                durchsuchen" importieren oder den Agenten im Terminal bitten
+                {t("Keine Skills unter")}{" "}<code>.agent/skills/</code>{" "}{t("— über „Quellen durchsuchen“ importieren oder den Agenten im Terminal bitten")}{" "}
                 (<code>speccify expand</code>).
               </p>
             </>
@@ -519,17 +513,17 @@ export default function SkillsTab({ project, refresh, workspace = false, selecti
                             <HandoverButton project={project} item={{ type: "skill", path: skill.file, title: skill.name }} known={body.data} />
                             {skill.origin && skill.origin.tools.length > 0 ? (
                               <InspectorButton onClick={() => showTab("tools")}>
-                                Tools ansehen
+                                {t("Tools ansehen")}
                               </InspectorButton>
                             ) : null}
                             <InspectorButton
-                              title="Als allgemeinen Skill in eine Quelle exportieren (speccify export)"
+                              title={t("Als allgemeinen Skill in eine Quelle exportieren (speccify export)")}
                               onClick={() => {
                                 setExportNotice(null);
                                 setExporting(exporting === skill.name ? null : skill.name);
                               }}
                             >
-                              Exportieren…
+                              {t("Exportieren…")}
                             </InspectorButton>
                           </>
                         }
@@ -554,13 +548,13 @@ export default function SkillsTab({ project, refresh, workspace = false, selecti
                     <LoadingBoundary
                       loading={body.loading}
                       error={body.error}
-                      label="SKILL.md lesen…"
+                      label={t("SKILL.md lesen…")}
                     >
                       <Markdown text={stripFrontmatter(body.data ?? "")} />
                     </LoadingBoundary>
                   </>
                 ) : (
-                  <p className="text-sm text-slate-400">Skill links auswählen.</p>
+                  <p className="text-sm text-slate-400">{t("Skill links auswählen.")}</p>
                 )}
               </div>
             </div>

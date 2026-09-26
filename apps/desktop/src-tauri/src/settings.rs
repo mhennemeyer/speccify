@@ -23,6 +23,10 @@ pub struct AppSettings {
     /// (Plan projektfenster.md, W7c). Die Auswertung macht das Frontend.
     #[serde(default = "default_theme")]
     pub theme: String,
+    /// Oberflächensprache aller Fenster (Spec 073): `system` | `de` | `en`.
+    /// Die Auswertung macht das Frontend.
+    #[serde(default = "default_language")]
+    pub language: String,
     /// Globale Skill-Quellen (Plan skill-quellen-und-export.md, D2):
     /// Git-URLs oder Ordner. `skill_library` wird beim Lesen zum ersten
     /// Eintrag migriert und bleibt als Feld für ältere Stände.
@@ -35,6 +39,10 @@ pub struct AppSettings {
 }
 
 fn default_theme() -> String {
+    "system".into()
+}
+
+fn default_language() -> String {
     "system".into()
 }
 
@@ -61,6 +69,7 @@ impl Default for AppSettings {
             working_dir: None,
             skill_library: None,
             theme: default_theme(),
+            language: default_language(),
             skill_sources: Vec::new(),
             webhook_url: None,
             terminal_autostart_command: if cfg!(windows) {

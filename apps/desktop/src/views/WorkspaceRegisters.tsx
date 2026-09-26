@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { ErrorBox } from "../components/ui";
+import { t } from "../i18n";
 
 interface Identity { id: string; name: string }
 interface Manifest { version: number; id: string; name: string; sources: Identity[]; repositories: Identity[]; default_source: string | null }
@@ -38,30 +39,30 @@ export default function WorkspaceRegisters({ workspaceId, name, targets, onChang
   const operation = async (action: () => Promise<void>) => { setBusy(true); setError(null); try { await action(); } catch (e) { setError(String(e)); } finally { setBusy(false); } };
   return <section aria-label="Registerquellen" className="mb-3 space-y-2 rounded border border-slate-200 p-2 text-xs">
     <div className="flex flex-wrap items-center gap-2">
-      <button className={button} disabled={!loaded || busy} onClick={edit}>Registerquellen…</button>
-      <label>Neue Spec in <select aria-label="Kanonisches Register" className="ml-1 rounded border bg-white p-1" value={destination} onChange={e => setDestination(e.target.value)}>
-        <option value="">Speicherort wählen…</option>{choices.map(choice => <option key={choice.id} value={choice.id}>{choice.name}</option>)}
+      <button className={button} disabled={!loaded || busy} onClick={edit}>{t("Registerquellen…")}</button>
+      <label>{t("Neue Spec in")} <select aria-label={t("Kanonisches Register")} className="ml-1 rounded border bg-white p-1" value={destination} onChange={e => setDestination(e.target.value)}>
+        <option value="">{t("Speicherort wählen…")}</option>{choices.map(choice => <option key={choice.id} value={choice.id}>{choice.name}</option>)}
       </select></label>
-      <button className={button} disabled={!loaded || busy || !choices.find(choice => choice.id === destination)?.tree} onClick={() => { const tree = choices.find(choice => choice.id === destination)?.tree; if (tree) onCreate(tree); }}>+ Übergreifende Spec</button>
-      <span>{saved ? `${saved.manifest.sources.length} gebundene Register · ${saved.manifest.name}` : "Lokale Quellen · noch keine gemeinsame Registerbindung"}</span>
+      <button className={button} disabled={!loaded || busy || !choices.find(choice => choice.id === destination)?.tree} onClick={() => { const tree = choices.find(choice => choice.id === destination)?.tree; if (tree) onCreate(tree); }}>{t("+ Übergreifende Spec")}</button>
+      <span>{saved ? t("{sources} gebundene Register · {name}", { sources: saved.manifest.sources.length, name: saved.manifest.name }) : t("Lokale Quellen · noch keine gemeinsame Registerbindung")}</span>
     </div>
     {error && <ErrorBox message={error} />}
-    {editing && <div role="dialog" aria-label="Registerquellen bearbeiten" className="space-y-3 border-t pt-3">
-      <p>Geteilte Register-IDs und Code-Repo-IDs bleiben auf allen Rechnern gleich. Lokale Checkouts werden hier zugeordnet. Der erste Checkout ist das Schreibziel. Weitere Checkouts dienen dem Vergleich.</p>
-      <label className="block">Geteiltes Manifest<textarea aria-label="Registermanifest" className="mt-1 block w-full rounded border p-2 font-mono" rows={8} value={manifest} onChange={e => setManifest(e.target.value)} /></label>
+    {editing && <div role="dialog" aria-label={t("Registerquellen bearbeiten")} className="space-y-3 border-t pt-3">
+      <p>{t("Geteilte Register-IDs und Code-Repo-IDs bleiben auf allen Rechnern gleich. Lokale Checkouts werden hier zugeordnet. Der erste Checkout ist das Schreibziel. Weitere Checkouts dienen dem Vergleich.")}</p>
+      <label className="block">{t("Geteiltes Manifest")}<textarea aria-label="Registermanifest" className="mt-1 block w-full rounded border p-2 font-mono" rows={8} value={manifest} onChange={e => setManifest(e.target.value)} /></label>
       {parsed?.sources.map(source => <div key={source.id} className="space-y-1"><strong>{source.name}</strong> <code>{source.id}</code>
         <select aria-label={`Schreibziel ${source.name}`} className="ml-2 rounded border bg-white p-1" value={bindings[source.id]?.[0] ?? ""} onChange={e => setBindings(old => ({ ...old, [source.id]: e.target.value ? [e.target.value, ...(old[source.id] ?? []).filter(id => id !== e.target.value)] : [] }))}>
-          <option value="">Lokalen Checkout wählen…</option>{targets.map(target => <option key={target.id} value={target.id}>{target.name} · {target.path}</option>)}
+          <option value="">{t("Lokalen Checkout wählen…")}</option>{targets.map(target => <option key={target.id} value={target.id}>{target.name} · {target.path}</option>)}
         </select>
         <div className="flex flex-wrap gap-2">{targets.filter(target => target.id !== bindings[source.id]?.[0]).map(target => <label key={target.id}><input type="checkbox" checked={(bindings[source.id] ?? []).includes(target.id)} onChange={e => setBindings(old => ({ ...old, [source.id]: e.target.checked ? [...(old[source.id] ?? []), target.id] : (old[source.id] ?? []).filter(id => id !== target.id) }))} /> {target.name} vergleichen</label>)}</div>
       </div>)}
-      <label className="block">Manifest in vorhandenem Register <select aria-label="Manifest-Speicherort" className="ml-1 rounded border bg-white p-1" value={storage} onChange={e => setStorage(e.target.value)}><option value="">Nur lokale Bindung speichern</option>{targets.map(target => <option key={target.id} value={target.id}>{target.name}</option>)}</select></label>
+      <label className="block">{t("Manifest in vorhandenem Register")} <select aria-label="Manifest-Speicherort" className="ml-1 rounded border bg-white p-1" value={storage} onChange={e => setStorage(e.target.value)}><option value="">{t("Nur lokale Bindung speichern")}</option>{targets.map(target => <option key={target.id} value={target.id}>{target.name}</option>)}</select></label>
       <div className="flex gap-2">
-        <button className={button} disabled={!storage || busy} onClick={() => void operation(async () => { const value = await invoke<Manifest>("workspace_register_import", { workspaceId, worktreeId: storage }); setManifest(JSON.stringify(value, null, 2)); setBindings({}); })}>Manifest von dort laden</button>
-        <button className={button} disabled={!parsed || busy} onClick={() => void operation(async () => { const selectedBindings = Object.fromEntries((parsed?.sources ?? []).map(source => [source.id, bindings[source.id] ?? []])); const value = await invoke<Binding>("workspace_register_save", { workspaceId, manifest, bindings: selectedBindings, exportTarget: storage || null }); setSaved(value); setDestination(value.manifest.default_source ?? ""); setEditing(false); onChanged(); })}>Bindung speichern{storage ? " und Manifest teilen" : ""}</button>
-        <button className={button} disabled={busy} onClick={() => setEditing(false)}>Abbrechen</button>
+        <button className={button} disabled={!storage || busy} onClick={() => void operation(async () => { const value = await invoke<Manifest>("workspace_register_import", { workspaceId, worktreeId: storage }); setManifest(JSON.stringify(value, null, 2)); setBindings({}); })}>{t("Manifest von dort laden")}</button>
+        <button className={button} disabled={!parsed || busy} onClick={() => void operation(async () => { const selectedBindings = Object.fromEntries((parsed?.sources ?? []).map(source => [source.id, bindings[source.id] ?? []])); const value = await invoke<Binding>("workspace_register_save", { workspaceId, manifest, bindings: selectedBindings, exportTarget: storage || null }); setSaved(value); setDestination(value.manifest.default_source ?? ""); setEditing(false); onChanged(); })}>{t("Bindung speichern")}{storage ? t(" und Manifest teilen") : ""}</button>
+        <button className={button} disabled={busy} onClick={() => setEditing(false)}>{t("Abbrechen")}</button>
       </div>
-      <p>Das Manifest enthält keine lokalen Pfade oder Zugangsdaten. Ein Export schreibt ausschließlich workspace-registers.json in das gewählte Register. Bestehende Specs werden nicht verschoben.</p>
+      <p>{t("Das Manifest enthält keine lokalen Pfade oder Zugangsdaten. Ein Export schreibt ausschließlich workspace-registers.json in das gewählte Register. Bestehende Specs werden nicht verschoben.")}</p>
     </div>}
   </section>;
 }

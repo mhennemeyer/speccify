@@ -43,6 +43,7 @@ interface TermOut {
 // Ohne `cwd`/`autostart` gelten die App-Settings (Dashboard); das
 // Projektfenster übergibt beides (cwd = Projektwurzel, Agent-Kommando).
 import { useProjectActivity } from "../lib/projectActivity";
+import { t } from "../i18n";
 
 export default function TerminalPanel({
   visible,
@@ -245,7 +246,7 @@ export default function TerminalPanel({
           .then((text) => {
             if (text) terminal.paste(text);
           })
-          .catch((error) => showHint(`Einfügen fehlgeschlagen: ${String(error)}`, 6000));
+          .catch((error) => showHint(t("Einfügen fehlgeschlagen: {error}", { error: String(error) }), 6000));
         return false;
       }
       return true;
@@ -262,7 +263,7 @@ export default function TerminalPanel({
             if (event.payload.id !== id) return;
             terminal.write(event.payload.data);
             // Output indicates terminal activity, not a successful task.
-            if (!busyRef.current) busyRef.current = beginActivity("agent", "Agent-Terminal arbeitet");
+            if (!busyRef.current) busyRef.current = beginActivity("agent", t("Agent-Terminal arbeitet"));
             if (idleTimer.current) clearTimeout(idleTimer.current);
             idleTimer.current = setTimeout(() => {
               if (busyRef.current) endActivity(busyRef.current, "ok");
@@ -272,7 +273,7 @@ export default function TerminalPanel({
           await listen<TermOut>("term-exit", (event) => {
             if (event.payload.id === id) {
               setAttention(null);
-              terminal.writeln("\r\n\x1b[33m[Shell beendet — bitte 'Neu starten']\x1b[0m");
+              terminal.writeln(`\r\n\x1b[33m[${t("Shell beendet — bitte „Neu starten“")}]\x1b[0m`);
             }
           }),
         );
@@ -280,7 +281,7 @@ export default function TerminalPanel({
           unlisteners.forEach((unlisten) => unlisten());
           return;
         }
-        setStatus(attachTo ? "Laufende Sitzung wird wieder verbunden…" : "Startumgebung wird geprüft…");
+        setStatus(attachTo ? t("Laufende Sitzung wird wieder verbunden…") : t("Startumgebung wird geprüft…"));
         // Listeners above are live before this call: early PTY output is not lost.
         // Spec 070: `terminal_attach` sends the host's buffer as term-out before it returns.
         const opened = attachTo
@@ -298,7 +299,7 @@ export default function TerminalPanel({
         setStatus("");
         // Spec 011: nur ein laufendes Terminal nimmt Aufträge an — nur das aktive Projekt.
         unregisterWriter = registerTerminalWriter(async (data) => {
-          if (!projectActive.current) throw new Error("Terminal gehört zu einem anderen Projekt.");
+          if (!projectActive.current) throw new Error(t("Terminal gehört zu einem anderen Projekt."));
           await invoke("terminal_write", { id, data });
         });
         // BO-Finding: nach Start/Neustart soll die Eingabe sofort im Terminal landen.
@@ -386,9 +387,9 @@ export default function TerminalPanel({
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       {attention && preferences.popups && createPortal(
-        <aside role="alert" aria-label="Terminal braucht Aufmerksamkeit"
+        <aside role="alert" aria-label={t("Terminal braucht Aufmerksamkeit")}
           className="fixed bottom-5 right-5 z-[100] w-96 max-w-[calc(100vw-2rem)] rounded-xl border border-amber-400 bg-white p-4 text-slate-800 shadow-xl">
-          <h3 className="font-semibold">Terminal braucht Aufmerksamkeit</h3>
+          <h3 className="font-semibold">{t("Terminal braucht Aufmerksamkeit")}</h3>
           <p className="mt-1 text-sm">{attention.message}</p>
           <p className="my-2 break-all font-mono text-xs">{cwd || cwdProp}</p>
           {notificationError && <p className="text-xs text-amber-700">Systemmeldung: {notificationError}</p>}
@@ -398,8 +399,8 @@ export default function TerminalPanel({
               terminalRef.current?.scrollToBottom();
               terminalRef.current?.focus();
               setAttention(null);
-            }}>Zum Terminal</button>
-            <button className="rounded border px-3 py-1 text-sm" onClick={() => setAttention(null)}>Schließen</button>
+            }}>{t("Zum Terminal")}</button>
+            <button className="rounded border px-3 py-1 text-sm" onClick={() => setAttention(null)}>{t("Schließen")}</button>
           </div>
         </aside>, document.body) }
       {startup ? (
@@ -409,14 +410,14 @@ export default function TerminalPanel({
         </details>
       ) : null}
       <div className="flex items-center gap-2 border-b border-slate-700 px-3 py-1.5">
-        <span className="text-xs font-semibold text-slate-300">Agent-Terminal</span>
-        <button aria-label="Terminal-Schrift verkleinern" disabled={preferences.font_size <= 8}
+        <span className="text-xs font-semibold text-slate-300">{t("Agent-Terminal")}</span>
+        <button aria-label={t("Terminal-Schrift verkleinern")} disabled={preferences.font_size <= 8}
           className="rounded border px-1 text-xs disabled:opacity-30"
-          onClick={() => void updatePreferences({ font_size: preferences.font_size - 1 })}>A−</button>
-        <span className="text-xs text-slate-500" aria-label="Aktuelle Terminal-Schriftgröße">{preferences.font_size} px</span>
-        <button aria-label="Terminal-Schrift vergrößern" disabled={preferences.font_size >= 32}
+          onClick={() => void updatePreferences({ font_size: preferences.font_size - 1 })}>{"A−"}</button>
+        <span className="text-xs text-slate-500" aria-label={t("Aktuelle Terminal-Schriftgröße")}>{preferences.font_size} px</span>
+        <button aria-label={t("Terminal-Schrift vergrößern")} disabled={preferences.font_size >= 32}
           className="rounded border px-1 text-xs disabled:opacity-30"
-          onClick={() => void updatePreferences({ font_size: preferences.font_size + 1 })}>A+</button>
+          onClick={() => void updatePreferences({ font_size: preferences.font_size + 1 })}>{"A+"}</button>
         <span className="truncate font-mono text-[10px] text-slate-500" title={cwd}>
           {cwd}
         </span>
@@ -424,7 +425,7 @@ export default function TerminalPanel({
           onClick={restart}
           className="ml-auto rounded bg-slate-700 px-2 py-0.5 text-xs text-slate-200 hover:bg-slate-600"
         >
-          Neu starten
+          {t("Neu starten")}
         </button>
       </div>
       {status ? <p className="px-3 py-1 text-xs text-red-400">{status}</p> : null}

@@ -10,8 +10,10 @@ import { ActionButton, ErrorBox } from "../components/ui";
 import { AGENT_PRESETS } from "../lib/agents";
 import { useTheme } from "../lib/theme";
 import ThemePicker from "../components/ThemePicker";
+import LanguagePicker from "../components/LanguagePicker";
 import TerminalPreferencesEditor from "../components/TerminalPreferencesEditor";
 import { DASHBOARD_RESUME_KEY } from "../App";
+import { t } from "../i18n";
 
 interface AppSettings {
   project_discovery_depth: number;
@@ -77,7 +79,7 @@ export default function SettingsView() {
     try {
       await invoke("save_settings", { settings: next });
       setSettings(next);
-      setStatus("Gespeichert.");
+      setStatus(t("Gespeichert."));
       await refreshBriefings(next.working_dir);
     } catch (e) {
       setError(String(e));
@@ -85,36 +87,42 @@ export default function SettingsView() {
   };
 
   if (!settings) {
-    return error ? <ErrorBox message={error} /> : <p className="text-slate-500">lädt…</p>;
+    return error ? <ErrorBox message={error} /> : <p className="text-slate-500">{t("lädt…")}</p>;
   }
 
   return (
     <div className="max-w-xl space-y-6">
       <section>
-        <h3 className="mb-2 text-sm font-semibold text-slate-700">Erscheinungsbild</h3>
+        <h3 className="mb-2 text-sm font-semibold text-slate-700">{t("Erscheinungsbild")}</h3>
         <p className="mb-2 text-sm text-slate-600">
-          Hell, dunkel oder wie das System — gilt für Dashboard und alle
-          Projektfenster.
+          {t("Hell, dunkel oder wie das System — gilt für Dashboard und alle Projektfenster.")}
         </p>
         <ThemePicker value={theme} onChange={(next) => void setTheme(next)} />
         <TerminalPreferencesEditor />
       </section>
 
       <section>
-        <h3 className="mb-2 text-sm font-semibold text-slate-700">Projekt-Erkennung</h3>
+        <h3 className="mb-2 text-sm font-semibold text-slate-700">{t("Sprache")}</h3>
+        <p className="mb-2 text-sm text-slate-600">
+          {t("Deutsch, Englisch oder wie das System — gilt sofort für alle Fenster. Meldungen aus dem Systemteil bleiben vorerst deutsch.")}
+        </p>
+        <LanguagePicker />
+      </section>
+
+      <section>
+        <h3 className="mb-2 text-sm font-semibold text-slate-700">{t("Projekt-Erkennung")}</h3>
         <label className="block text-sm text-slate-600">Projekt-Erkennungstiefe
-          <select aria-label="Projekt-Erkennungstiefe" value={settings.project_discovery_depth ?? 1}
+          <select aria-label={t("Projekt-Erkennungstiefe")} value={settings.project_discovery_depth ?? 1}
             onChange={event => setSettings({ ...settings, project_discovery_depth: Number(event.target.value) })}
             className="ml-3 rounded border border-slate-300 bg-white px-2 py-1 text-sm">
             {Array.from({ length: 16 }, (_, i) => i + 1).map(depth => <option key={depth} value={depth}>{depth}</option>)}
           </select>
         </label>
-        <p className="mt-2 text-sm text-slate-500">Standard 1: geöffneter Ordner und direkte Unterordner. Tiefere Projekte werden ignoriert.
-          Nach dem Speichern den Workspace aktualisieren; für neu hinzugekommene Projekte „Erneut erkennen“ wählen.</p>
+        <p className="mt-2 text-sm text-slate-500">{t("Standard 1: geöffneter Ordner und direkte Unterordner. Tiefere Projekte werden ignoriert. Nach dem Speichern den Workspace aktualisieren; für neu hinzugekommene Projekte „Erneut erkennen“ wählen.")}</p>
       </section>
 
       <section>
-        <h3 className="mb-2 text-sm font-semibold text-slate-700">Agent-Sitzung</h3>
+        <h3 className="mb-2 text-sm font-semibold text-slate-700">{t("Agent-Sitzung")}</h3>
         <label className="flex items-start gap-2 text-sm text-slate-600">
           <input
             type="checkbox"
@@ -130,20 +138,15 @@ export default function SettingsView() {
             className="mt-1"
           />
           <span>
-            Das Dashboard-Terminal setzt nach einem Neustart genau die gemerkte Sitzung
-            fort (<code>claude --resume &lt;id&gt;</code>). Ohne bekannte Sitzungs-ID fragt
-            die Seitenleiste ausdrücklich nach. Projektfenster haben denselben Schalter
-            in ihren Einstellungen.
+            {t("Das Dashboard-Terminal setzt nach einem Neustart genau die gemerkte Sitzung fort")} (<code>{"claude --resume <id>"}</code>). {t("Ohne bekannte Sitzungs-ID fragt die Seitenleiste ausdrücklich nach. Projektfenster haben denselben Schalter in ihren Einstellungen.")}
           </span>
         </label>
       </section>
 
       <section>
-        <h3 className="mb-2 text-sm font-semibold text-slate-700">Teamsignale</h3>
+        <h3 className="mb-2 text-sm font-semibold text-slate-700">{t("Teamsignale")}</h3>
         <p className="mb-2 text-sm text-slate-600">
-          Webhook-URL (Slack, Teams, Mattermost) für Nachrichten aus Projekten, die den Webhook in
-          ihren Einstellungen aktiviert haben. Bleibt auf diesem Rechner; alternativ die
-          Umgebungsvariable <code>SPECCIFY_WEBHOOK_URL</code>.
+          {t("Webhook-URL (Slack, Teams, Mattermost) für Nachrichten aus Projekten, die den Webhook in ihren Einstellungen aktiviert haben. Bleibt auf diesem Rechner; alternativ die Umgebungsvariable")} <code>SPECCIFY_WEBHOOK_URL</code>.
         </p>
         <input
           aria-label="Webhook-URL"
@@ -154,10 +157,9 @@ export default function SettingsView() {
           className="mb-6 w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm"
           spellCheck={false}
         />
-        <h3 className="mb-2 text-sm font-semibold text-slate-700">Working Dir</h3>
+        <h3 className="mb-2 text-sm font-semibold text-slate-700">{t("Working Dir")}</h3>
         <p className="mb-2 text-sm text-slate-600">
-          Hier landen eigene Tools/MCPs (<code>.speccify/toolbox/</code>) und
-          Aktionen; der Terminal-Agent startet in diesem Verzeichnis.
+          {t("Hier landen eigene Tools/MCPs")} (<code>.speccify/toolbox/</code>) {t("und Aktionen; der Terminal-Agent startet in diesem Verzeichnis.")}
         </p>
         <div className="flex gap-2">
           <input
@@ -171,34 +173,32 @@ export default function SettingsView() {
           />
           <button
             onClick={async () => {
-              const picked = await open({ directory: true, title: "Working Dir wählen" });
+              const picked = await open({ directory: true, title: t("Working Dir wählen") });
               if (typeof picked === "string") {
                 await save({ ...settings, working_dir: picked });
               }
             }}
             className="shrink-0 rounded border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 hover:bg-slate-100"
           >
-            Auswählen…
+            {t("Auswählen…")}
           </button>
         </div>
       </section>
 
       <section>
-        <h3 className="mb-2 text-sm font-semibold text-slate-700">Skill-Quellen</h3>
+        <h3 className="mb-2 text-sm font-semibold text-slate-700">{t("Skill-Quellen")}</h3>
         <p className="text-sm text-slate-600">
-          Repos und Ordner, aus denen Projekte Skills importieren, verwaltest Du
-          unter <strong>Bibliothek</strong> (Git-URL oder Ordner, global für alle
-          Projekte). Projekte binden im Skills-Tab weitere Quellen an.
+          {t("Repos und Ordner, aus denen Projekte Skills importieren, verwaltest Du unter")}{" "}<strong>{t("Bibliothek")}</strong>{" "}{t("(Git-URL oder Ordner, global für alle Projekte). Projekte binden im Skills-Tab weitere Quellen an.")}
           {settings.skill_sources.length > 0
-            ? ` Aktuell: ${settings.skill_sources.length} Quelle${settings.skill_sources.length === 1 ? "" : "n"}.`
+            ? t(" Aktuell: {skill_sources} Quelle{skill_sources2}.", { skill_sources: settings.skill_sources.length, skill_sources2: settings.skill_sources.length === 1 ? "" : "n" })
             : ""}
         </p>
       </section>
 
       <section>
-        <h3 className="mb-2 text-sm font-semibold text-slate-700">Terminal-Agent</h3>
+        <h3 className="mb-2 text-sm font-semibold text-slate-700">{t("Terminal-Agent")}</h3>
         <label className="mb-1 block text-xs font-medium text-slate-500">
-          Autostart-Command (läuft beim Öffnen der Terminal-Seitenleiste)
+          {t("Autostart-Command (läuft beim Öffnen der Terminal-Seitenleiste)")}
         </label>
         <input
           value={settings.terminal_autostart_command}
@@ -222,7 +222,7 @@ export default function SettingsView() {
                   : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
               }`}
             >
-              {preset.label}
+              {t(preset.label)}
             </button>
           ))}
         </div>
@@ -232,16 +232,16 @@ export default function SettingsView() {
         onClick={() => save(settings)}
         className="bg-slate-800 text-white hover:bg-slate-700"
       >
-        Speichern
+        {t("Speichern")}
       </ActionButton>
 
       <section>
         <h3 className="mb-2 text-sm font-semibold text-slate-700">
-          Agent-Einweisung im Working Dir
+          {t("Agent-Einweisung im Working Dir")}
         </h3>
         {!settings.working_dir ? (
           <p className="text-sm text-slate-500">
-            Erst ein Working Dir wählen und speichern.
+            {t("Erst ein Working Dir wählen und speichern.")}
           </p>
         ) : (
           <div className="space-y-2">
@@ -252,7 +252,7 @@ export default function SettingsView() {
               >
                 <span className="font-mono">{briefing.relative_path}</span>
                 {briefing.exists ? (
-                  <span className="text-emerald-600">vorhanden ✓</span>
+                  <span className="text-emerald-600">{t("vorhanden ✓")}</span>
                 ) : (
                   <ActionButton
                     onClick={async () => {
@@ -269,7 +269,7 @@ export default function SettingsView() {
                       }
                     }}
                   >
-                    anlegen
+                    {t("anlegen")}
                   </ActionButton>
                 )}
               </div>

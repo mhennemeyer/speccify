@@ -8,6 +8,7 @@ import { invoke } from "@tauri-apps/api/core";
 import Markdown from "../components/Markdown";
 import { LoadingBoundary, useAsync } from "../components/ui";
 import { InspectorPanel, InspectorPortal, NavigatorPortal, inlineInspector } from "../lib/panels";
+import { t } from "../i18n";
 
 interface HelpDocMeta {
   slug: string;
@@ -30,7 +31,7 @@ export default function HelpView() {
   );
 
   return (
-    <LoadingBoundary loading={list.loading} error={list.error} label="Hilfe laden…">
+    <LoadingBoundary loading={list.loading} error={list.error} label={t("Hilfe laden…")}>
       <div className="flex h-full min-h-0 gap-4">
         <NavigatorPortal tab="help">
         <nav className="space-y-1">
@@ -66,18 +67,17 @@ export default function HelpView() {
                   meta={[
                     { label: "Inhalt", value: current.description },
                     {
-                      label: "Quelle",
+                      label: t("Quelle"),
                       value: (
                         <span>
-                          <span className="font-mono">{current.source_path}</span> im Repository —
-                          wer etwas ändern will, ändert diese Datei.
+                          <span className="font-mono">{current.source_path}</span>{" "}{t("im Repository — wer etwas ändern will, ändert diese Datei.")}
                         </span>
                       ),
                     },
                   ]}
                 />
               </InspectorPortal>
-              <LoadingBoundary loading={body.loading} error={body.error} label="Dokument laden…">
+              <LoadingBoundary loading={body.loading} error={body.error} label={t("Dokument laden…")}>
                 <Markdown text={body.data ?? ""} />
               </LoadingBoundary>
             </>

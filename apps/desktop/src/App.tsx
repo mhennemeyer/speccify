@@ -24,17 +24,18 @@ import EnvironmentView from "./views/EnvironmentView";
 import ServersView from "./views/ServersView";
 import SettingsView from "./views/SettingsView";
 import KnowledgebasesView from "./views/KnowledgebasesView";
+import { t } from "./i18n";
 
 const SECTIONS = [
   // Projekte statt Composer (Plan projektfenster.md, D18 — Composer in P3 zurückgebaut).
-  { id: "projects", label: "Projekte", view: <ProjectsView /> },
-  { id: "library", label: "Bibliothek", view: <LibraryView /> },
-  { id: "knowledgebases", label: "Knowledgebases", view: <KnowledgebasesView /> },
-  { id: "environment", label: "Umgebung", view: <EnvironmentView /> },
-  { id: "servers", label: "Server", view: <ServersView /> },
-  { id: "agents", label: "Agents", view: <AgentsView /> },
-  { id: "settings", label: "Settings", view: <SettingsView /> },
-  { id: "help", label: "Hilfe", view: <HelpView /> },
+  { id: "projects", label: "Projekte", View: ProjectsView },
+  { id: "library", label: "Bibliothek", View: LibraryView },
+  { id: "knowledgebases", label: "Knowledgebases", View: KnowledgebasesView },
+  { id: "environment", label: "Umgebung", View: EnvironmentView },
+  { id: "servers", label: "Server", View: ServersView },
+  { id: "agents", label: "Agents", View: AgentsView },
+  { id: "settings", label: "Settings", View: SettingsView },
+  { id: "help", label: "Hilfe", View: HelpView },
 ] as const;
 
 type SectionId = (typeof SECTIONS)[number]["id"];
@@ -209,7 +210,7 @@ export default function App() {
                 : "text-slate-700 hover:bg-slate-100"
             }`}
           >
-            {s.label}
+            {t(s.label)}
           </button>
         ))}
         <button
@@ -220,7 +221,7 @@ export default function App() {
               : "text-slate-700 hover:bg-slate-100"
           }`}
         >
-          ⌨ Terminal
+          {t("⌨ Terminal")}
           {interactions.some((interaction) => !interaction.answered) ? (
             <span className="ml-2 rounded-full bg-amber-500 px-1.5 text-xs text-white">
               ?
@@ -233,8 +234,8 @@ export default function App() {
             ist damit sofortig und der Fetch-State bleibt erhalten. */}
         {SECTIONS.map((s) => (
           <div key={s.id} className={active === s.id ? "" : "hidden"}>
-            <h2 className="mb-4 text-xl font-semibold">{s.label}</h2>
-            {s.view}
+            <h2 className="mb-4 text-xl font-semibold">{t(s.label)}</h2>
+            <s.View />
           </div>
         ))}
       </main>

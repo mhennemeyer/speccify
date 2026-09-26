@@ -1,5 +1,6 @@
 import TabIcon from "./TabIcon";
 import { isMac } from "../lib/platform";
+import { t } from "../i18n";
 
 export const PROJECT_TABS = [
   { id: "board", label: "Specs" }, { id: "files", label: "Dateien" },
@@ -27,24 +28,24 @@ export default function ProjectNavigation({ active, lastTab, activate }: {
   const activeGroup = projectGroupOf(active);
   return <>
     <div className="px-2 py-1.5">
-      <div role="tablist" aria-label="Bereiche" className="flex gap-0.5 rounded-full bg-slate-100 p-0.5">
+      <div role="tablist" aria-label={t("Bereiche")} className="flex gap-0.5 rounded-full bg-slate-100 p-0.5">
         {PROJECT_GROUPS.map((group, index) => <button key={group.id} role="tab"
-          aria-selected={activeGroup.id === group.id} data-tone={group.tone} aria-label={group.label}
-          title={`${group.label} (${isMac ? "⌘" : "Strg+"}${index + 1})`}
+          aria-selected={activeGroup.id === group.id} data-tone={group.tone} aria-label={t(group.label)}
+          title={`${t(group.label)} (${isMac ? "⌘" : t("Strg+")}${index + 1})`}
           onClick={() => activate(lastTab[group.id] ?? group.tabs[0])}
           className="accent-tab flex min-h-7 flex-1 items-center justify-center rounded-full">
           <TabIcon id={group.id} />
         </button>)}
       </div>
     </div>
-    {activeGroup.tabs.length > 1 ? <div role="tablist" aria-label={activeGroup.label} className="flex gap-1 px-2 pb-1">
+    {activeGroup.tabs.length > 1 ? <div role="tablist" aria-label={t(activeGroup.label)} className="flex gap-1 px-2 pb-1">
       {activeGroup.tabs.map(id => <button key={id} role="tab" aria-selected={active === id}
         data-tone={activeGroup.tone} onClick={() => activate(id)}
         className="accent-tab rounded px-2 py-1 text-xs font-medium">
-        {PROJECT_TABS.find(tab => tab.id === id)?.label}
+        {t(PROJECT_TABS.find(tab => tab.id === id)?.label ?? id)}
       </button>)}
     </div> : <h2 className="px-3 pb-1 text-xs font-semibold text-slate-500">
-      {PROJECT_TABS.find(tab => tab.id === active)?.label}
+      {t(PROJECT_TABS.find(tab => tab.id === active)?.label ?? active)}
     </h2>}
   </>;
 }

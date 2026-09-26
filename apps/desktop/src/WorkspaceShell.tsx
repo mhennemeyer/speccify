@@ -34,6 +34,7 @@ import WorkspaceBoardView, { type WorkspaceSpecEntry } from "./views/WorkspaceBo
 import WorkspaceRegisters from "./views/WorkspaceRegisters";
 import WorkspaceKnowledgeView from "./views/WorkspaceKnowledgeView";
 import { isKnowledge, type KnowledgeCatalog, type KnowledgeEntry, type KnowledgeKind, type KnowledgeSelection } from "./lib/workspaceKnowledge";
+import { t } from "./i18n";
 
 interface Tree { id: string; path: string; relative_path: string; available: boolean }
 interface Repository { id: string; name: string; common_dir?: string | null; worktrees: Tree[] }
@@ -93,7 +94,7 @@ function WorktreePane({ workspaceId, tree, repo, group, rootOnly = false, tab, v
     let cancelled = false;
     void invoke<string>("workspace_resolve_target", { workspaceId, worktreeId: tree.id }).then(path => {
       if (cancelled) return;
-      if (path !== tree.path) { setError("Pfadbindung verändert. Workspace neu öffnen; laufende Prozesse behalten ihr bisheriges Ziel."); return; }
+      if (path !== tree.path) { setError(t("Pfadbindung verändert. Workspace neu öffnen; laufende Prozesse behalten ihr bisheriges Ziel.")); return; }
       setRoot(path); setError(null);
     }).catch(e => { if (!cancelled) setError(String(e)); });
     return () => { cancelled = true; };
@@ -131,30 +132,30 @@ function WorktreePane({ workspaceId, tree, repo, group, rootOnly = false, tab, v
     <PanelsContext.Provider value={context}>
       <div onClickCapture={choose} onFocusCapture={choose}>
       {!rootOnly && registerHost && root && enabled && tree.available && createPortal(
-        <section aria-label={`Team-Register ${tree.path}`} data-register-project={tree.path}>
+        <section aria-label={t("Team-Register {path}", { path: tree.path })} data-register-project={tree.path}>
           <RegisterBar project={root} contextLabel={repo.name} refresh={totalRefresh} onChanged={changed} />
         </section>, registerHost)}
-      {navHost && createPortal(<section hidden={isKnowledge(tab) && !active} aria-label={`Projektbereich ${group.name} / ${repo.name} / ${tree.relative_path}`} data-worktree-id={tree.id}
+      {navHost && createPortal(<section hidden={isKnowledge(tab) && !active} aria-label={t("Projektbereich {group} / {repo} / {path}", { group: group.name, repo: repo.name, path: tree.relative_path })} data-worktree-id={tree.id}
         onClickCapture={choose} onFocusCapture={choose} className="mb-2 min-w-0">
         <button hidden={isKnowledge(tab)} aria-pressed={active} onClick={choose} data-tone="blue" className={`w-full rounded px-2 py-1 text-left text-xs ${active ? "tone-surface" : "text-slate-700 hover:bg-slate-100"}`}>
           <span className="block font-semibold">{repo.name}{repo.worktrees.length > 1 ? ` · ${tree.relative_path}` : ""}</span>
           <span className="mt-1 block break-all font-mono text-[10px]">{tree.relative_path || "."}</span>
-          {!tree.available && <span className="block">Nicht verfügbar</span>}
-          {outputs.some(output => output.running) && <span className="block">● Aktion läuft</span>}
+          {!tree.available && <span className="block">{t("Nicht verfügbar")}</span>}
+          {outputs.some(output => output.running) && <span className="block">{t("● Aktion läuft")}</span>}
         </button>
         {error && <ErrorBox message={error} />}
-        {isKnowledge(tab) && active && <p className="break-all px-2 text-[11px]">Aktionen für: {tree.relative_path || "."}{!knowledgeValid ? " · Quelle/Eintrag nicht verfügbar" : ""}</p>}
-        {!root && !error && <p className="p-2 text-xs text-slate-500">Ziel prüfen…</p>}
+        {isKnowledge(tab) && active && <p className="break-all px-2 text-[11px]">{t("Aktionen für:")}{" "}{tree.relative_path || "."}{!knowledgeValid ? t(" · Quelle/Eintrag nicht verfügbar") : ""}</p>}
+        {!root && !error && <p className="p-2 text-xs text-slate-500">{t("Ziel prüfen…")}</p>}
         <div inert={!enabled} className={!enabled ? "opacity-50" : ""}>
           {tabs.map(([id]) => <div key={id} ref={navRefs[id]} data-workspace-nav={id} className={tab === id ? "p-2" : "hidden"} />)}
           {tab === "board" && <button className={`${button} m-2`} disabled={!enabled} onClick={() => setCreateRequest(value => value + 1)}>+ Spec in {repo.name}</button>}
         </div>
       </section>, navHost)}
-      {mainHost && root && createPortal(<section aria-label={`Arbeitsbereich ${tree.path}`} hidden={!active || tab === "board"} className="h-full min-h-0" inert={!enabled}>
+      {mainHost && root && createPortal(<section aria-label={t("Arbeitsbereich {path}", { path: tree.path })} hidden={!active || tab === "board"} className="h-full min-h-0" inert={!enabled}>
         {error && <ErrorBox message={error} />}
           {visited.filter(id => id !== "board" && (!rootOnly || id === "files" || isKnowledge(id))).map(id => <div key={id} className={tab === id ? "h-full min-h-0" : "hidden"}>
           {id === "files" && <FilesTab project={root} refresh={totalRefresh} visible={active && tab === id} gitEnabled={repo.common_dir !== null} />}
-          {id === "git" && (repo.common_dir !== null ? <GitTab project={root} refresh={totalRefresh} visible={active && tab === id} /> : <p>Dieser Ordner hat kein Git-Repository.</p>)}
+          {id === "git" && (repo.common_dir !== null ? <GitTab project={root} refresh={totalRefresh} visible={active && tab === id} /> : <p>{t("Dieser Ordner hat kein Git-Repository.")}</p>)}
           {id === "playbooks" && <PlaybooksTab workspace selection={knowledgeSelections?.playbooks} project={root} refresh={totalRefresh} />}
           {id === "skills" && <SkillsTab workspace selection={knowledgeSelections?.skills} project={root} refresh={totalRefresh} />}
           {id === "tools" && <ToolsTab workspace selection={knowledgeSelections?.tools} project={root} refresh={totalRefresh} />}
@@ -162,23 +163,23 @@ function WorktreePane({ workspaceId, tree, repo, group, rootOnly = false, tab, v
           {id === "agent" && <AgentTab commandRoot={agentRoot} project={root} refresh={totalRefresh} agentCommand={command} onAgentCommand={updateCommand} />}
           {id === "actions" && <ActionsTab project={root} runNamespace={`workspace:${workspaceId}:${tree.id}`} refresh={totalRefresh} outputSlot={outputSlot} activeOutput={activeOutput} onOutputTabsChange={setOutputs} onRevealOutput={revealOutput} />}
         </div>)}
-        {rootOnly && tab !== "files" && !isKnowledge(tab) && <p>Hier liegen die Dateien des Workspace-Ordners. Für Git ein Repository auswählen.</p>}
+        {rootOnly && tab !== "files" && !isKnowledge(tab) && <p>{t("Hier liegen die Dateien des Workspace-Ordners. Für Git ein Repository auswählen.")}</p>}
       </section>, mainHost)}
-      {inspectorHost && createPortal(<section hidden={!active} aria-label={`Inspektor ${tree.path}`} inert={!enabled} className="h-full min-h-0">
+      {inspectorHost && createPortal(<section hidden={!active} aria-label={t("Inspektor {path}", { path: tree.path })} inert={!enabled} className="h-full min-h-0">
         <p className="truncate border-b border-slate-200 px-4 py-2 text-[11px] text-slate-500" title={tree.path}>{group.name} / {repo.name} · {tree.relative_path}</p>
         {tabs.map(([id]) => <div key={id} ref={inspectorRefs[id]} data-workspace-inspector={id} className={tab === id ? "min-h-0" : "hidden"} />)}
         {(detailSpec || createRequest > 0) && root && enabled && <div className={tab === "board" && (ownSpec || createRequest > 0) ? "contents" : "hidden"}>
           <BoardTab project={root} detailFile={detailSpec?.spec.file} detailOnly refresh={totalRefresh} onMutated={changed} createRequest={createRequest} />
         </div>}
-        {tab === "board" && !ownSpec && <p className="p-3 text-xs text-slate-500">Eine Spec im gemeinsamen Board auswählen.</p>}
+        {tab === "board" && !ownSpec && <p className="p-3 text-xs text-slate-500">{t("Eine Spec im gemeinsamen Board auswählen.")}</p>}
       </section>, inspectorHost)}
       {outputTabsHost && createPortal(<div className={active ? "flex" : "hidden"}>
         {outputs.map(output => <div key={output.id} className="flex shrink-0 items-center">
           <button className="px-3 py-1.5 text-xs" aria-label={`Ausgabe: ${output.name}`} aria-pressed={activeOutput === output.id} onClick={() => revealOutput(output.id)}>{output.running ? "● " : output.failed ? "! " : "✓ "}{output.name}</button>
-          <button aria-label={`Ausgabe schließen: ${output.name}`} disabled={output.running} className="mr-1 px-1 disabled:opacity-25" onClick={() => { output.close(); if (activeOutput === output.id) updateLayout({ rightTab: "inspector" }); }}>×</button>
+          <button aria-label={t("Ausgabe schließen: {name}", { name: output.name })} disabled={output.running} className="mr-1 px-1 disabled:opacity-25" onClick={() => { output.close(); if (activeOutput === output.id) updateLayout({ rightTab: "inspector" }); }}>×</button>
         </div>)}
       </div>, outputTabsHost)}
-      {outputHost && createPortal(<div ref={setOutputSlot} aria-label={`Aktionsausgabe ${tree.relative_path}`} className={active && activeOutput ? "flex h-full min-h-0 flex-col" : "hidden"} />, outputHost)}
+      {outputHost && createPortal(<div ref={setOutputSlot} aria-label={t("Aktionsausgabe {path}", { path: tree.relative_path })} className={active && activeOutput ? "flex h-full min-h-0 flex-col" : "hidden"} />, outputHost)}
 
       </div>
     </PanelsContext.Provider>
@@ -342,7 +343,7 @@ export default function WorkspaceShell() {
   const defaults = [...DEFAULT_TOOLBAR_BUILTINS, ...toolbarActions.filter(action => action.toolbar).map(action => `action:${action.command}`)];
   const toolbarIds = layout.toolbar ?? defaults;
   const builtins: ToolbarItem[] = TOOLBAR_BUILTINS.map(item => ({
-    ...item, disabled: item.id === "terminal" ? !workspace : !activeToolbar?.ready || !gitEnabled, icon: item.id === "terminal" ? <TerminalIcon /> : <GitIcon />,
+    ...item, title: t(item.title), label: t(item.label), disabled: item.id === "terminal" ? !workspace : !activeToolbar?.ready || !gitEnabled, icon: item.id === "terminal" ? <TerminalIcon /> : <GitIcon />,
     onClick: () => {
       if (item.id === "terminal") { showTerminal(); setStarted(true); }
       else { activate("git"); requestGit(item.id === "git-commit" ? "commit" : item.id === "git-pull" ? "pull" : "push"); }
@@ -357,7 +358,7 @@ export default function WorkspaceShell() {
     },
   }));
   const toolbarItems = toolbarIds.map(id => [...builtins, ...actionItems].find(item => item.id === id)).filter((item): item is ToolbarItem => !!item);
-  const toolbarChoices = [...TOOLBAR_BUILTINS.map(item => ({ id: item.id, label: item.label, hint: item.title })),
+  const toolbarChoices = [...TOOLBAR_BUILTINS.map(item => ({ id: item.id, label: t(item.label), hint: t(item.title) })),
     ...toolbarActions.map(action => ({ id: `action:${action.command}`, label: action.name, hint: action.command }))];
   const { navShown, rightShown, terminalDock } = layout;
   const bottomVisible = terminalDock === "bottom" && layout.bottomShown;
@@ -374,27 +375,27 @@ export default function WorkspaceShell() {
   return <>
     <div className="h-screen min-w-0 bg-slate-50 text-slate-900" style={gridStyle}>
       <div style={{ gridColumn: "1 / -1", gridRow: 1 }}>
-        <Toolbar title={workspace?.name ?? "Workspace laden…"} subtitle={workspace?.root} items={toolbarItems} center={<ActivityView />}
+        <Toolbar title={workspace?.name ?? t("Workspace laden…")} subtitle={workspace?.root} items={toolbarItems} center={<ActivityView />}
           trailing={<>
-            <ToolbarButton active={navShown} title={`${navShown ? "Navigator ausblenden" : "Navigator einblenden"} (${isMac ? "⌘" : "Strg+"}0)`} onClick={() => updateLayout({ navShown: !navShown })}><PanelIcon part="nav" /></ToolbarButton>
-            <ToolbarButton active={bottomVisible} title={terminalDock === "bottom" ? bottomVisible ? "Terminal unten ausblenden" : "Terminal unten einblenden" : "Terminal nach unten legen"} onClick={() => terminalDock === "bottom" ? updateLayout({ bottomShown: !layout.bottomShown }) : toggleDock()}><PanelIcon part="bottom" /></ToolbarButton>
-            <ToolbarButton active={rightShown} title={`${rightShown ? "Inspektor ausblenden" : "Inspektor einblenden"} (${isMac ? "⌥⌘" : "Strg+Alt+"}0)`} onClick={() => updateLayout({ rightShown: !rightShown })}><PanelIcon part="right" /></ToolbarButton>
+            <ToolbarButton active={navShown} title={`${navShown ? t("Navigator ausblenden") : t("Navigator einblenden")} (${isMac ? "⌘" : t("Strg+")}0)`} onClick={() => updateLayout({ navShown: !navShown })}><PanelIcon part="nav" /></ToolbarButton>
+            <ToolbarButton active={bottomVisible} title={terminalDock === "bottom" ? bottomVisible ? t("Terminal unten ausblenden") : t("Terminal unten einblenden") : t("Terminal nach unten legen")} onClick={() => terminalDock === "bottom" ? updateLayout({ bottomShown: !layout.bottomShown }) : toggleDock()}><PanelIcon part="bottom" /></ToolbarButton>
+            <ToolbarButton active={rightShown} title={`${rightShown ? t("Inspektor ausblenden") : t("Inspektor einblenden")} (${isMac ? "⌥⌘" : t("Strg+Alt+")}0)`} onClick={() => updateLayout({ rightShown: !rightShown })}><PanelIcon part="right" /></ToolbarButton>
             <span className="mx-1 h-4 w-px bg-slate-200" aria-hidden="true" />
-            <ToolbarButton title={isDark(theme) ? "Hell schalten" : "Dunkel schalten"} onClick={() => void setTheme(isDark(theme) ? "light" : "dark")}>{isDark(theme) ? <SunIcon /> : <MoonIcon />}</ToolbarButton>
-            <ToolbarButton title="Einstellungen" active={settingsOpen} onClick={() => setSettingsOpen(true)}><GearIcon /></ToolbarButton>
+            <ToolbarButton title={isDark(theme) ? t("Hell schalten") : t("Dunkel schalten")} onClick={() => void setTheme(isDark(theme) ? "light" : "dark")}>{isDark(theme) ? <SunIcon /> : <MoonIcon />}</ToolbarButton>
+            <ToolbarButton title={t("Einstellungen")} active={settingsOpen} onClick={() => setSettingsOpen(true)}><GearIcon /></ToolbarButton>
           </>} />
       </div>
       {/* Spec 069: Spalten enden über der Bottom-Bar; das Terminal unten nimmt die volle Breite. */}
-      <nav aria-label="Workspace-Projekte" className={`${navShown ? "flex" : "hidden"} min-h-0 flex-col border-r border-slate-200 bg-white`} style={{ gridColumn: 1, gridRow: "2 / 4" }}>
+      <nav aria-label={t("Workspace-Projekte")} className={`${navShown ? "flex" : "hidden"} min-h-0 flex-col border-r border-slate-200 bg-white`} style={{ gridColumn: 1, gridRow: "2 / 4" }}>
         <ProjectNavigation active={tab} lastTab={lastTab} activate={activate} />
         <div className="flex items-center justify-between border-b border-slate-200 px-3 py-1 text-[11px] text-slate-500">
-          <span>{isKnowledge(tab) ? "Wissen im Workspace" : `Projekte · ${workspace?.repositories.length ?? 0}`}</span>
-          <button title="Workspace-Zuordnung aktualisieren" onClick={() => { setRefresh(value => value + 1); changed(); }} className="rounded px-1 hover:bg-slate-100">Aktualisieren</button>
+          <span>{isKnowledge(tab) ? t("Wissen im Workspace") : t("Projekte · {workspace}", { workspace: workspace?.repositories.length ?? 0 })}</span>
+          <button title={t("Workspace-Zuordnung aktualisieren")} onClick={() => { setRefresh(value => value + 1); changed(); }} className="rounded px-1 hover:bg-slate-100">{t("Aktualisieren")}</button>
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-2">
           {workspace && isKnowledge(tab) && <WorkspaceKnowledgeView key={`${workspace.id}:${tab}`} workspaceId={workspace.id} root={workspace.root} kind={tab} refresh={refresh + boardRefresh} onSelect={selectKnowledge} onManage={manageKnowledge} onSnapshot={setKnowledgeCatalog} />}
           <div ref={setRootNavHost} className={tab === "files" || isKnowledge(tab) ? "mt-2" : "hidden"} />
-          {workspace?.projects.filter(group => group.repository_ids.length).map(group => <section key={group.id} aria-label={`Projektgruppe ${group.name}`} className="mt-2">
+          {workspace?.projects.filter(group => group.repository_ids.length).map(group => <section key={group.id} aria-label={t("Projektgruppe {name}", { name: group.name })} className="mt-2">
             <button hidden={isKnowledge(tab)} aria-expanded={!collapsed[group.id]} onClick={() => setCollapsed(old => ({ ...old, [group.id]: !old[group.id] }))}
               className="flex w-full items-center gap-1 rounded px-1 py-1 text-left text-xs font-semibold text-slate-500 hover:bg-slate-100">
               <span aria-hidden="true">{collapsed[group.id] ? "▸" : "▾"}</span>{group.name}
@@ -406,12 +407,12 @@ export default function WorkspaceShell() {
       {navShown && <SplitHandle axis="x" size={layout.navWidth} onResize={next => updateLayout({ navWidth: clamp(next, LAYOUT_LIMITS.nav) })} onReset={() => updateLayout({ navWidth: DEFAULT_LAYOUT.navWidth })} style={{ gridColumn: 2, gridRow: "2 / 4" }} />}
       <main className="flex min-h-0 min-w-0 flex-col overflow-hidden p-5" style={{ gridColumn: 3, gridRow: "2 / 4" }}>
         {error && <ErrorBox message={error} />}
-        <p aria-label="Aktives Projektziel" className="mb-3 truncate text-[11px] text-slate-500" title={target?.path}>
-          {tab === "board" ? "Gemeinsames Board" : "Aktives Ziel"} · {target?.path ?? "Kein verfügbares Projekt"}
+        <p aria-label={t("Aktives Projektziel")} className="mb-3 truncate text-[11px] text-slate-500" title={target?.path}>
+          {tab === "board" ? t("Gemeinsames Board") : t("Aktives Ziel")} · {target?.path ?? t("Kein verfügbares Projekt")}
         </p>
         <div className={tab === "board" ? "flex min-h-0 flex-1 flex-col" : "hidden"}>
           {workspace && <WorkspaceRegisters workspaceId={workspace.id} name={workspace.name} targets={Object.values(retainedPanes).filter(pane => pane.tree.available).map(pane => ({ id: pane.tree.id, name: `${pane.repo.name} · ${pane.tree.relative_path}`, path: pane.tree.path }))} onChanged={changed} onCreate={id => { choose(id); setCreateSpec(old => ({ id, request: (old?.request ?? 0) + 1 })); updateLayout({ rightShown: true, rightTab: "inspector" }); }} />}
-          <div ref={setRegisterHost} aria-label="Team-Register im Workspace" className="max-h-[40%] shrink-0 overflow-y-auto" />
+          <div ref={setRegisterHost} aria-label={t("Team-Register im Workspace")} className="max-h-[40%] shrink-0 overflow-y-auto" />
           <div className="min-h-0 flex-1 overflow-auto">
           {workspace && <WorkspaceBoardView workspaceId={workspace.id} revision={workspace.revision} refresh={boardRefresh} onSelect={selectSpec} listSlots={boardSlots} />}
           </div>
@@ -421,28 +422,28 @@ export default function WorkspaceShell() {
       </main>
       {bottomVisible && <SplitHandle axis="y" size={layout.bottomHeight} invert onResize={next => updateLayout({ bottomHeight: clamp(next, LAYOUT_LIMITS.bottom) })} onReset={() => updateLayout({ bottomHeight: DEFAULT_LAYOUT.bottomHeight })} style={{ gridColumn: "1 / -1", gridRow: 4 }} />}
       {rightShown && <SplitHandle axis="x" size={layout.rightWidth} invert onResize={next => updateLayout({ rightWidth: clamp(next, LAYOUT_LIMITS.right) })} onReset={() => updateLayout({ rightWidth: DEFAULT_LAYOUT.rightWidth })} style={{ gridColumn: 4, gridRow: "2 / 4" }} />}
-      <div aria-label="Rechte Seitenleiste" className={`${rightShown ? "flex" : "hidden"} min-w-0 items-stretch overflow-x-auto border-b border-l border-slate-200 bg-white text-xs`} style={{ gridColumn: 5, gridRow: 2 }}>
+      <div aria-label={t("Rechte Seitenleiste")} className={`${rightShown ? "flex" : "hidden"} min-w-0 items-stretch overflow-x-auto border-b border-l border-slate-200 bg-white text-xs`} style={{ gridColumn: 5, gridRow: 2 }}>
         {(terminalDock === "right" ? [["inspector", "Inspektor"], ["terminal", "Terminal"]] as const : [["inspector", "Inspektor"]] as const).map(([id, label]) => <button key={id} aria-pressed={layout.rightTab === id} onClick={() => updateLayout({ rightTab: id })} className={`shrink-0 px-3 py-1.5 font-medium ${layout.rightTab === id ? "border-b-2 border-slate-800 text-slate-800" : "text-slate-400 hover:text-slate-700"}`}>{label}</button>)}
         <div ref={setOutputTabsHost} className="flex" />
       </div>
       <div ref={setOutputHost} aria-label="Aktionsausgabe" className={`${outputVisible ? "flex" : "hidden"} min-h-0 min-w-0 flex-col overflow-hidden`} style={{ gridColumn: 5, gridRow: "3 / 4" }} />
       <aside ref={setInspectorHost} aria-label="Workspace-Inspektor" className={`inspector-body ${rightShown && layout.rightTab === "inspector" ? "flex" : "hidden"} min-h-0 min-w-0 flex-col overflow-y-auto border-l border-slate-200 bg-white`} style={{ gridColumn: 5, gridRow: "3 / 4" }} />
-      <section aria-label="Agent-Terminal" className={`terminal-surface ${terminalVisible ? "flex" : "hidden"} min-h-0 min-w-0 flex-col bg-slate-900 ${terminalDock === "right" ? "border-l" : "border-t"} border-slate-700`} style={terminalDock === "right" ? { gridColumn: 5, gridRow: "3 / 4" } : { gridColumn: "1 / -1", gridRow: 5 }}>
-        <div className="flex justify-end px-2 pt-1"><button onClick={toggleDock} title={terminalDock === "right" ? "Terminal nach unten legen" : "Terminal nach rechts legen"} className="rounded px-2 py-0.5 text-xs text-slate-500 hover:bg-slate-800 hover:text-slate-300">{terminalDock === "right" ? "⬓ nach unten" : "⬔ nach rechts"}</button></div>
-        {workspace && <section aria-label={`Terminal ${workspace.root}`} className="flex min-h-0 flex-1 flex-col">
+      <section aria-label={t("Agent-Terminal")} className={`terminal-surface ${terminalVisible ? "flex" : "hidden"} min-h-0 min-w-0 flex-col bg-slate-900 ${terminalDock === "right" ? "border-l" : "border-t"} border-slate-700`} style={terminalDock === "right" ? { gridColumn: 5, gridRow: "3 / 4" } : { gridColumn: "1 / -1", gridRow: 5 }}>
+        <div className="flex justify-end px-2 pt-1"><button onClick={toggleDock} title={terminalDock === "right" ? t("Terminal nach unten legen") : t("Terminal nach rechts legen")} className="rounded px-2 py-0.5 text-xs text-slate-500 hover:bg-slate-800 hover:text-slate-300">{terminalDock === "right" ? t("⬓ nach unten") : t("⬔ nach rechts")}</button></div>
+        {workspace && <section aria-label={t("Terminal {root}", { root: workspace.root })} className="flex min-h-0 flex-1 flex-col">
           <div className="flex items-center justify-between gap-2 px-3 py-1">
-            <p className="truncate font-mono text-[10px] text-slate-400" title={workspace.root}>Workspace-Terminal · {workspace.root}</p>
-            {!started && <button className="shrink-0 rounded bg-slate-700 px-3 py-1 text-xs text-slate-200" onClick={() => setStarted(true)}>Agent-Terminal starten</button>}
+            <p className="truncate font-mono text-[10px] text-slate-400" title={workspace.root}>{t("Workspace-Terminal ·")}{" "}{workspace.root}</p>
+            {!started && <button className="shrink-0 rounded bg-slate-700 px-3 py-1 text-xs text-slate-200" onClick={() => setStarted(true)}>{t("Agent-Terminal starten")}</button>}
           </div>
-          <p className="px-3 text-[10px] text-slate-400">Eine gemeinsame Sitzung für alle Repos · Projektwechsel ändert das Terminal-Ziel nicht.</p>
+          <p className="px-3 text-[10px] text-slate-400">{t("Eine gemeinsame Sitzung für alle Repos · Projektwechsel ändert das Terminal-Ziel nicht.")}</p>
           <WorkspaceAgentContext revision={workspace.revision + refresh} />
           {started ? <TerminalPanel workspaceId={workspace.id} cwd={workspace.root} visible={terminalVisible} autostart={command} session={attachSession}
             onOpened={() => setAttachSession(undefined)} onFailed={() => setAttachSession(undefined)} /> : <div className="flex min-h-0 flex-1 flex-col items-center gap-3 overflow-auto p-4">
-            <label className="w-full max-w-md text-xs text-slate-400">Agent-Kommando (leer = nur Shell)
-              <input aria-label="Workspace-Terminal-Kommando" value={command} onChange={event => updateCommand(event.target.value)} className="mt-1 block w-full rounded border border-slate-600 bg-slate-800 px-3 py-2 font-mono text-sm text-slate-100" />
+            <label className="w-full max-w-md text-xs text-slate-400">{t("Agent-Kommando (leer = nur Shell)")}
+              <input aria-label={t("Workspace-Terminal-Kommando")} value={command} onChange={event => updateCommand(event.target.value)} className="mt-1 block w-full rounded border border-slate-600 bg-slate-800 px-3 py-2 font-mono text-sm text-slate-100" />
             </label>
-            <div className="flex flex-wrap gap-1.5">{AGENT_PRESETS.map(preset => <button key={preset.id} onClick={() => updateCommand(preset.command)} className="rounded bg-slate-800 px-2 py-1 text-xs text-slate-400 hover:text-slate-200">{preset.label}</button>)}</div>
-            <p className="max-w-md text-xs text-slate-400">Die Presets Codex und Claude erhalten die Workspace-Struktur automatisch. Bei eigenen Kommandos: Kontextdatei aus SPECCIFY_WORKSPACE_CONTEXT an den Host übergeben. Repo-Anweisungen bleiben getrennt; Berechtigungen des Hosts gelten weiterhin.</p>
+            <div className="flex flex-wrap gap-1.5">{AGENT_PRESETS.map(preset => <button key={preset.id} onClick={() => updateCommand(preset.command)} className="rounded bg-slate-800 px-2 py-1 text-xs text-slate-400 hover:text-slate-200">{t(preset.label)}</button>)}</div>
+            <p className="max-w-md text-xs text-slate-400">{t("Die Presets Codex und Claude erhalten die Workspace-Struktur automatisch. Bei eigenen Kommandos: Kontextdatei aus SPECCIFY_WORKSPACE_CONTEXT an den Host übergeben. Repo-Anweisungen bleiben getrennt; Berechtigungen des Hosts gelten weiterhin.")}</p>
             {terminalVisible && <div className="w-full max-w-md text-slate-400"><AgentStartup project={workspace.root} command={command} /></div>}
           </div>}
         </section>}

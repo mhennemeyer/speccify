@@ -5,6 +5,7 @@ import { useState } from "react";
 import { openPath } from "@tauri-apps/plugin-opener";
 import { fetchKnowledgebases, type Knowledgebase } from "../lib/system";
 import { ActionButton, LoadingBoundary, Spinner, useAsync } from "../components/ui";
+import { t } from "../i18n";
 
 export default function KnowledgebasesView() {
   const { data, loading, refreshing, error, reload } = useAsync(
@@ -24,7 +25,7 @@ export default function KnowledgebasesView() {
           onClick={reload}
           className="bg-slate-800 text-white hover:bg-slate-700"
         >
-          Aktualisieren
+          {t("Aktualisieren")}
         </ActionButton>
         {refreshing && <Spinner />}
         {data && (
@@ -37,15 +38,15 @@ export default function KnowledgebasesView() {
       <LoadingBoundary
         loading={loading}
         error={error}
-        label="Knowledgebases werden geladen…"
+        label={t("Knowledgebases werden geladen…")}
       >
         {kbs.length === 0 ? (
           <div className="rounded-lg border border-slate-200 bg-white p-6 text-slate-500">
-            <p className="font-medium text-slate-700">Keine Knowledgebases</p>
+            <p className="font-medium text-slate-700">{t("Keine Knowledgebases")}</p>
             <p className="mt-1 text-sm">
-              Erstelle eine mit:{" "}
+              {t("Erstelle eine mit:")}{" "}
               <code className="rounded bg-slate-100 px-1">
-                dotagent kb init &lt;books-dir&gt; --name &lt;name&gt;
+                {t("dotagent kb init <books-dir> --name <name>")}
               </code>
             </p>
           </div>
@@ -64,7 +65,7 @@ export default function KnowledgebasesView() {
                 >
                   <p className="font-medium text-slate-900">📚 {kb.name}</p>
                   <p className="mt-0.5 text-xs text-slate-500">
-                    {kb.books} Bücher · {kb.chunks.toLocaleString("de-DE")} Chunks ·{" "}
+                    {kb.books} {t("Bücher")} · {kb.chunks.toLocaleString()} Chunks ·{" "}
                     {kb.index_size_mb.toLocaleString("de-DE")} MB
                   </p>
                 </button>
@@ -94,7 +95,7 @@ function KnowledgebaseDetail({ kb }: { kb: Knowledgebase }) {
     try {
       await openPath(path);
     } catch (e) {
-      setOpenError(`Öffnen fehlgeschlagen: ${e}`);
+      setOpenError(t("Öffnen fehlgeschlagen: {e}", { e: String(e) }));
     }
   };
 
@@ -111,7 +112,7 @@ function KnowledgebaseDetail({ kb }: { kb: Knowledgebase }) {
       <dl className="mt-4 grid grid-cols-3 gap-3">
         {(
           [
-            ["Bücher", String(kb.books)],
+            [t("Bücher"), String(kb.books)],
             ["Chunks", kb.chunks.toLocaleString("de-DE")],
             ["Index", `${kb.index_size_mb.toLocaleString("de-DE")} MB`],
           ] as const
@@ -135,7 +136,7 @@ function KnowledgebaseDetail({ kb }: { kb: Knowledgebase }) {
               onClick={() => copy(command)}
               className="shrink-0 rounded bg-slate-800 px-2 py-0.5 text-xs text-white hover:bg-slate-700"
             >
-              {copied === command ? "✓" : "Kopieren"}
+              {copied === command ? "✓" : t("Kopieren")}
             </button>
           </div>
         ))}
@@ -164,7 +165,7 @@ function KnowledgebaseDetail({ kb }: { kb: Knowledgebase }) {
                 title={book.path}
                 className="shrink-0 rounded bg-slate-800 px-2 py-0.5 text-xs text-white hover:bg-slate-700"
               >
-                Öffnen
+                {t("Öffnen")}
               </button>
             )}
           </li>

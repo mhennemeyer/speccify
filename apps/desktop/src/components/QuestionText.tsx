@@ -7,6 +7,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import type { Components } from "react-markdown";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
+import { t } from "../i18n";
 
 /** Einzelne Zeilenumbrüche des Agenten bleiben Umbrüche (harter Umbruch),
  *  Leerzeilen werden Absätze; Codeblöcke bleiben unangetastet. */
@@ -28,7 +29,7 @@ function CopyButton({ text, block = false }: { text: string; block?: boolean }) 
     <button
       type="button"
       data-copy-code={text}
-      title="In die Zwischenablage kopieren"
+      title={t("In die Zwischenablage kopieren")}
       onClick={(event) => {
         event.stopPropagation();
         void writeText(text).then(() => setState("copied")).catch(() => setState("failed"));
@@ -39,7 +40,7 @@ function CopyButton({ text, block = false }: { text: string; block?: boolean }) 
           : "border-orange-300 bg-white text-orange-700 hover:bg-orange-100"
       }`}
     >
-      {state === "copied" ? "✓ kopiert" : state === "failed" ? "Kopieren fehlgeschlagen" : "Kopieren"}
+      {state === "copied" ? t("✓ kopiert") : state === "failed" ? t("Kopieren fehlgeschlagen") : t("Kopieren")}
     </button>
   );
 }

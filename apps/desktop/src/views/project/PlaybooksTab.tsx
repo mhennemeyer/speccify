@@ -25,6 +25,7 @@ import {
   assembleFrontmatter as assemblePlan,
   splitFrontmatter as splitPlan,
 } from "../../lib/frontmatter";
+import { t } from "../../i18n";
 
 interface PlaybookEntry {
   file: string;
@@ -93,7 +94,7 @@ function PlaybookEditor({
     save: (text) => {
       const saving = queue.current.then(async () => {
         if (text === expected.current) return;
-        await trackActivity("write", "Playbook speichern", () => invoke("project_write_file", {
+        await trackActivity("write", t("Playbook speichern"), () => invoke("project_write_file", {
           project, file, content: text, expectedContent: expected.current,
         }), file);
         expected.current = text;
@@ -110,10 +111,10 @@ function PlaybookEditor({
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-3">
-      <p className="text-xs text-slate-500">Playbook-Status: {PLAYBOOK_STATUS_LABELS[playbookStatus(initial.original)]} · Speichern ändert den Status nicht.</p>
+      <p className="text-xs text-slate-500">{t("Playbook-Status:")} {t(PLAYBOOK_STATUS_LABELS[playbookStatus(initial.original)])}{" "}{t("· Speichern ändert den Status nicht.")}</p>
       {restored ? (
         <p className="rounded bg-amber-50 px-3 py-1.5 text-xs text-amber-800">
-          Ungespeicherte Bearbeitung wiederhergestellt — sie wird gleich in die Datei geschrieben.
+          {t("Ungespeicherte Bearbeitung wiederhergestellt — sie wird gleich in die Datei geschrieben.")}
         </p>
       ) : null}
       <div className="grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-2">
@@ -122,7 +123,7 @@ function PlaybookEditor({
           aria-label="Playbook-Beschreibung"
           value={description}
           onChange={(event) => setDescription(event.target.value)}
-          placeholder="Wofür ist dieser Ablauf da?"
+          placeholder={t("Wofür ist dieser Ablauf da?")}
           spellCheck={false}
           className="rounded border border-slate-300 px-2 py-1 font-mono text-sm"
         />
@@ -147,7 +148,7 @@ function PlaybookEditor({
           disabled={autosave.status === "saved" || autosave.status === "saving"}
           className="rounded px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100 disabled:opacity-40"
         >
-          Jetzt speichern
+          {t("Jetzt speichern")}
         </button>
         <button
           onClick={() => void finish()}
@@ -186,15 +187,15 @@ function NewPlaybook({ project, onCreated, request = 0 }: { project: string; onC
         onClick={() => setOpen(true)}
         className="w-full rounded border border-dashed border-slate-300 px-2 py-1.5 text-left text-sm text-slate-500 hover:border-slate-400 hover:text-slate-700"
       >
-        + Playbook
+        {t("+ Playbook")}
       </button>
     );
   }
   return (
     <div className="space-y-1">
       <label className="block text-xs">Playbook-Status
-        <select aria-label="Neues Playbook: Status" value={status} onChange={event => setStatus(event.target.value as "active" | "draft")} className="ml-2 rounded border border-slate-300 bg-white p-1">
-          <option value="active">Aktiv</option><option value="draft">Draft</option>
+        <select aria-label={t("Neues Playbook: Status")} value={status} onChange={event => setStatus(event.target.value as "active" | "draft")} className="ml-2 rounded border border-slate-300 bg-white p-1">
+          <option value="active">{t("Aktiv")}</option><option value="draft">Draft</option>
         </select>
       </label>
       <input
@@ -205,7 +206,7 @@ function NewPlaybook({ project, onCreated, request = 0 }: { project: string; onC
           if (event.key === "Enter" && name.trim() !== "") void create();
           if (event.key === "Escape") setOpen(false);
         }}
-        placeholder="Name, z. B. Release"
+        placeholder={t("Name, z. B. Release")}
         spellCheck={false}
         className="w-full rounded border border-slate-300 px-2 py-1 text-sm"
       />
@@ -260,7 +261,7 @@ export default function PlaybooksTab({
   };
 
   const remove = async (file: string) => {
-    if (!window.confirm("Playbook wirklich löschen?")) return;
+    if (!window.confirm(t("Playbook wirklich löschen?"))) return;
     await invoke("project_playbook_delete", { project, file });
     setSelected(null);
     setEditing(false);
@@ -268,13 +269,13 @@ export default function PlaybooksTab({
   };
 
   return (
-    <LoadingBoundary loading={list.loading} error={list.error} label="Playbooks lesen…">
+    <LoadingBoundary loading={list.loading} error={list.error} label={t("Playbooks lesen…")}>
       <div className="flex h-full min-h-0 gap-4">
         <NavigatorPortal tab="playbooks">
         <div className="space-y-1">
           {!workspace && <label className="block text-xs text-slate-500">Status
-            <select aria-label="Playbooks nach Status filtern" value={filter} onChange={event => setFilter(event.target.value)} className="ml-2 rounded border border-slate-300 bg-white p-1">
-              <option value="all">Alle</option><option value="active">Aktiv</option><option value="draft">Draft</option><option value="invalid">Status prüfen</option>
+            <select aria-label={t("Playbooks nach Status filtern")} value={filter} onChange={event => setFilter(event.target.value)} className="ml-2 rounded border border-slate-300 bg-white p-1">
+              <option value="all">{t("Alle")}</option><option value="active">{t("Aktiv")}</option><option value="draft">Draft</option><option value="invalid">{t("Status prüfen")}</option>
             </select>
           </label>}
           {(workspace ? [] : playbooks).filter(entry => filter === "all" || (entry.status ?? "active") === filter).map((entry) => (
@@ -297,7 +298,7 @@ export default function PlaybooksTab({
               title={entry.description ?? undefined}
             >
               <span className="block truncate">{entry.title}</span>
-              <span className="ml-2 text-[10px]" data-playbook-status={entry.status ?? "active"}>{PLAYBOOK_STATUS_LABELS[entry.status ?? "active"]}</span>
+              <span className="ml-2 text-[10px]" data-playbook-status={entry.status ?? "active"}>{t(PLAYBOOK_STATUS_LABELS[entry.status ?? "active"])}</span>
               {entry.description ? (
                 <span
                   className={`block truncate text-[11px] ${
@@ -320,11 +321,8 @@ export default function PlaybooksTab({
           />
           {playbooks.length === 0 ? (
             <div className="pt-2">
-              <NavEmpty title="Noch keine Playbooks">
-                Stehende Abläufe unter <code>.agent/playbooks/</code> — Release, Deploy,
-                Onboarding. Anders als Pläne werden sie nicht abgearbeitet, sondern
-                immer wieder benutzt. Mit „+ Playbook" anlegen, dann im Editor
-                beschreiben oder den Agenten den Ablauf aufschreiben lassen.
+              <NavEmpty title={t("Noch keine Playbooks")}>
+                {t("Stehende Abläufe unter")}{" "}<code>.agent/playbooks/</code>{" "}{t("— Release, Deploy, Onboarding. Anders als Pläne werden sie nicht abgearbeitet, sondern immer wieder benutzt. Mit „+ Playbook\" anlegen, dann im Editor beschreiben oder den Agenten den Ablauf aufschreiben lassen.")}
               </NavEmpty>
             </div>
           ) : null}
@@ -333,7 +331,7 @@ export default function PlaybooksTab({
         <div className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-lg border border-slate-200 bg-white p-5">
           {selectedPlaybook ? (
             editing ? (
-              body.data === null ? <p>{body.error ?? "Playbook lesen…"}</p> :
+              body.data === null ? <p>{body.error ?? t("Playbook lesen…")}</p> :
               <PlaybookEditor
                 key={selectedPlaybook.file}
                 project={project}
@@ -349,7 +347,7 @@ export default function PlaybooksTab({
               <div
                 className="min-h-0 flex-1 overflow-y-auto"
                 onDoubleClick={() => setEditing(true)}
-                title="Doppelklick zum Bearbeiten"
+                title={t("Doppelklick zum Bearbeiten")}
               >
                 {status !== "active" && <p role="status" className="mb-3 rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">{playbookNotice(status)}</p>}
                 {statusError && <p role="alert" className="text-sm text-red-600">{statusError}</p>}
@@ -360,13 +358,13 @@ export default function PlaybooksTab({
                     meta={[
                       { label: "Beschreibung", value: selectedPlaybook.description ?? "—" },
                       { label: "Art", value: "Stehende Anleitung — kein Lifecycle" },
-                      { label: "Status", value: PLAYBOOK_STATUS_LABELS[status] },
+                      { label: t("Status"), value: t(PLAYBOOK_STATUS_LABELS[status]) },
                     ]}
                     actions={
                       <>
                         <HandoverButton project={project} item={{ type: "playbook", path: selectedPlaybook.file, title: selectedPlaybook.title }} known={body.data} />
                         {status !== "active" && <InspectorButton disabled={body.loading || body.data == null} onClick={() => void changeStatus("active")}>Aktivieren</InspectorButton>}
-                        {status !== "draft" && <InspectorButton disabled={body.loading || body.data == null} onClick={() => void changeStatus("draft")}>Als Draft markieren</InspectorButton>}
+                        {status !== "draft" && <InspectorButton disabled={body.loading || body.data == null} onClick={() => void changeStatus("draft")}>{t("Als Draft markieren")}</InspectorButton>}
                         <InspectorButton
                           disabled={body.loading || body.data === null}
                           onClick={() => setEditing(true)}
@@ -377,19 +375,19 @@ export default function PlaybooksTab({
                           tone="danger"
                           onClick={() => void remove(selectedPlaybook.file)}
                         >
-                          Löschen
+                          {t("Löschen")}
                         </InspectorButton>
                       </>
                     }
                   />
                 </InspectorPortal>
-                <LoadingBoundary loading={body.loading} error={body.error} label="Playbook lesen…">
+                <LoadingBoundary loading={body.loading} error={body.error} label={t("Playbook lesen…")}>
                   <Markdown text={stripFrontmatter(body.data ?? "")} />
                 </LoadingBoundary>
               </div>
             )
           ) : (
-            <p className="text-sm text-slate-400">Playbook links auswählen oder anlegen.</p>
+            <p className="text-sm text-slate-400">{t("Playbook links auswählen oder anlegen.")}</p>
           )}
         </div>
       </div>

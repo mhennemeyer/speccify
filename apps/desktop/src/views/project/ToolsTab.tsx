@@ -19,6 +19,7 @@ import {
 import { HandoverButton } from "../../components/HandoverSheet";
 import type { KnowledgeSelection } from "../../lib/workspaceKnowledge";
 import { copyHandover } from "../../lib/handover";
+import { t } from "../../i18n";
 
 interface ToolPlatform {
   name: string;
@@ -73,23 +74,21 @@ export default function ToolsTab({ project, refresh, workspace = false, selectio
     tool.platforms.find((entry) => entry.name === here)?.status ?? null;
 
   return (
-    <LoadingBoundary loading={list.loading} error={list.error} label="Tools lesen…">
-      {workspace && selection?.manage && <NavigatorPortal tab="tools"><button className="rounded border px-2 py-1 text-xs" onClick={() => void copyHandover(`Zielprojekt und cwd: ${project}\nBitte entwirf hier einen neuen Tool-Vertrag unter .agent/tools/<name>/TOOL.md. Lies zuerst die Projektregeln und kläre Zweck, Eingaben, Ausgaben und Seiteneffekte mit mir. Die Implementierung folgt dem geprüften Vertrag. Das gemeinsame Terminal bleibt im Workspace-Root.`)}>Tool-Anlage für dieses Ziel kopieren</button></NavigatorPortal>}
+    <LoadingBoundary loading={list.loading} error={list.error} label={t("Tools lesen…")}>
+      {workspace && selection?.manage && <NavigatorPortal tab="tools"><button className="rounded border px-2 py-1 text-xs" onClick={() => void copyHandover(`Zielprojekt und cwd: ${project}\nBitte entwirf hier einen neuen Tool-Vertrag unter .agent/tools/<name>/TOOL.md. Lies zuerst die Projektregeln und kläre Zweck, Eingaben, Ausgaben und Seiteneffekte mit mir. Die Implementierung folgt dem geprüften Vertrag. Das gemeinsame Terminal bleibt im Workspace-Root.`)}>{t("Tool-Anlage für dieses Ziel kopieren")}</button></NavigatorPortal>}
       {tools.length === 0 ? (
         <>
           <NavigatorPortal tab="tools" fallback={() => null}>
             <NavEmpty
-              title="Noch keine Tools"
-              action={{ label: "Skills durchsuchen", onClick: () => showTab("skills") }}
+              title={t("Noch keine Tools")}
+              action={{ label: t("Skills durchsuchen"), onClick: () => showTab("skills") }}
             >
-              Tool-Verträge (<code>TOOL.md</code>) kommen mit Skills über{" "}
-              <code>speccify expand</code> ins Projekt. Importiere einen Skill, der
-              Tools mitbringt — die Implementierung schreibt dann der Agent.
+              {t("Tool-Verträge")} (<code>TOOL.md</code>) {t("kommen mit Skills über")}{" "}
+              <code>speccify expand</code>{" "}{t("ins Projekt. Importiere einen Skill, der Tools mitbringt — die Implementierung schreibt dann der Agent.")}
             </NavEmpty>
           </NavigatorPortal>
           <p className="text-sm text-slate-500">
-            Keine Tools unter <code>.agent/tools/</code> — Tool-Specs kommen mit
-            Skills über <code>speccify expand</code> ins Projekt.
+            {t("Keine Tools unter")}{" "}<code>.agent/tools/</code>{" "}{t("— Tool-Specs kommen mit Skills über")}{" "}<code>speccify expand</code>{" "}{t("ins Projekt.")}
           </p>
         </>
       ) : (
@@ -113,7 +112,7 @@ export default function ToolsTab({ project, refresh, workspace = false, selectio
                     <span
                       className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${statusTone(hereStatus(tool))}`}
                     >
-                      {hereStatus(tool) ?? "fehlt hier"}
+                      {hereStatus(tool) ?? t("fehlt hier")}
                     </span>
                   </button>
                 </li>
@@ -137,7 +136,7 @@ export default function ToolsTab({ project, refresh, workspace = false, selectio
                               <span
                                 key={entry.name}
                                 className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${statusTone(entry.status)}`}
-                                title={entry.checked ? `geprüft ${entry.checked}` : undefined}
+                                title={entry.checked ? t("geprüft {checked}", { checked: entry.checked }) : undefined}
                               >
                                 {entry.name}: {entry.status ?? "fehlt"}
                               </span>
@@ -146,16 +145,16 @@ export default function ToolsTab({ project, refresh, workspace = false, selectio
                         ),
                       },
                       {
-                        label: "Aus Skill",
+                        label: t("Aus Skill"),
                         value: selectedTool.from.length > 0 ? selectedTool.from.join(", ") : "—",
                       },
                       {
-                        label: "Dateien",
+                        label: t("Dateien"),
                         value:
                           selectedTool.files.length > 0 ? (
                             <span className="font-mono">{selectedTool.files.join(", ")}</span>
                           ) : (
-                            "— noch keine Implementierung"
+                            t("— noch keine Implementierung")
                           ),
                       },
                     ]}
@@ -166,19 +165,19 @@ export default function ToolsTab({ project, refresh, workspace = false, selectio
                     {hereStatus(selectedTool) === null && here ? (
                       <p className="rounded border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
                         <span className="font-semibold">Fehlt auf dieser Plattform ({here}).</span>{" "}
-                        Bitte den Agenten im Terminal, die Implementierung zu schreiben —
+                        {t("Bitte den Agenten im Terminal, die Implementierung zu schreiben —")}
                         <code className="mx-1">speccify tool check {selectedTool.name}</code>
-                        verifiziert sie.
+                        {t("verifiziert sie.")}
                       </p>
                     ) : null}
                   </InspectorPanel>
                 </InspectorPortal>
-                <LoadingBoundary loading={spec.loading} error={spec.error} label="Spec lesen…">
+                <LoadingBoundary loading={spec.loading} error={spec.error} label={t("Spec lesen…")}>
                   <Markdown text={stripFrontmatter(spec.data ?? "")} />
                 </LoadingBoundary>
               </>
             ) : (
-              <p className="text-sm text-slate-400">Tool links auswählen.</p>
+              <p className="text-sm text-slate-400">{t("Tool links auswählen.")}</p>
             )}
           </div>
         </div>

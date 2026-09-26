@@ -1,5 +1,6 @@
 import codex from "./schemas/codex.json";
 import claude from "./schemas/claude.json";
+import { t } from "../i18n";
 
 interface Schema {
   $ref?: string; type?: string | string[]; description?: string; enum?: unknown[];
@@ -27,12 +28,12 @@ function resolve(schema: Schema, root: Schema, depth = 0): Schema {
 }
 function group(path: string[]) {
   const key = path.join(".").toLowerCase();
-  if (/permission|approval|sandbox|trust|network|writable|allow|deny|auto_review/.test(key)) return "Berechtigungen und Sandbox";
-  if (/model|reason|effort|thinking|token|context|compact/.test(key)) return "Modell und Denken";
-  if (/tui|notif|theme|output|terminal|status|language/.test(key)) return "Terminal und Darstellung";
-  if (/mcp|hook|plugin|skill|tool|apps|agent/.test(key)) return "Tools und Erweiterungen";
-  if (/auth|login|key|provider|credential|env|proxy/.test(key)) return "Anmeldung und Umgebung";
-  return "Weitere Einstellungen";
+  if (/permission|approval|sandbox|trust|network|writable|allow|deny|auto_review/.test(key)) return t("Berechtigungen und Sandbox");
+  if (/model|reason|effort|thinking|token|context|compact/.test(key)) return t("Modell und Denken");
+  if (/tui|notif|theme|output|terminal|status|language/.test(key)) return t("Terminal und Darstellung");
+  if (/mcp|hook|plugin|skill|tool|apps|agent/.test(key)) return t("Tools und Erweiterungen");
+  if (/auth|login|key|provider|credential|env|proxy/.test(key)) return t("Anmeldung und Umgebung");
+  return t("Weitere Einstellungen");
 }
 const overrides: Record<string, Partial<SettingField>> = {
   approval_policy: { type: "json", options: ["on-request", "never"], help: "on-request: Der Host entscheidet, wann eine Freigabe nötig ist. never: Keine Rückfrage; gesperrte Aktionen scheitern stattdessen. Granulare Regeln können als JSON gesetzt werden." },
@@ -49,7 +50,7 @@ export function settingsFields(id: string): SettingField[] {
     for (const [key, raw] of Object.entries(properties)) {
       const schema = resolve(raw, root), path = [...parent, key];
       if (schema.properties && depth < 4 && !schema.additionalProperties) walk(schema.properties, path, depth + 1);
-      else result.push({ path, help: schema.description ?? raw.description ?? "Strukturierter Host-Wert. Einzelheiten in der Referenz; komplexe Werte als JSON bearbeiten.",
+      else result.push({ path, help: schema.description ?? raw.description ?? t("Strukturierter Host-Wert. Einzelheiten in der Referenz; komplexe Werte als JSON bearbeiten."),
         type: typeof schema.type === "string" ? schema.type : "json", options: schema.enum, group: group(path),
         minimum: schema.minimum, maximum: schema.maximum, ...overrides[path.join(".")] });
     }

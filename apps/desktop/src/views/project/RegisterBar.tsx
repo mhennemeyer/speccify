@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { trackActivity } from "../../lib/activity";
+import { t } from "../../i18n";
 
 export interface RegisterConflict {
   file: string;
@@ -105,8 +106,8 @@ export default function RegisterBar({
 
   if (!status || status.mode === "none") return error ? (
     <div role="alert" data-register="error" className="mb-3 rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-900">
-      {context}<p>Register-Status konnte nicht geladen werden: {error}</p>
-      <button className="mt-2 underline" onClick={() => setRetry(value => value + 1)}>Erneut prüfen</button>
+      {context}<p>{t("Register-Status konnte nicht geladen werden:")}{" "}{error}</p>
+      <button className="mt-2 underline" onClick={() => setRetry(value => value + 1)}>{t("Erneut prüfen")}</button>
     </div>
   ) : null;
 
@@ -121,34 +122,32 @@ export default function RegisterBar({
           <div className="min-w-0 flex-1 basis-64">
             <p className="font-semibold">
               {status.mode === "migratable"
-                ? "Specs als gemeinsames Team-Register führen?"
-                : "Team-Register vorhanden, noch nicht eingehängt."}
+                ? t("Specs als gemeinsames Team-Register führen?")
+                : t("Team-Register vorhanden, noch nicht eingehängt.")}
             </p>
             <p className="mt-1">{status.reason}</p>
             {confirming && status.mode === "migratable" ? (
               <p className="mt-1 text-sky-800">
-                Das legt den Branch <code>specs</code> mit dem heutigen Stand von <code>.agent/specs</code> an,
-                entfernt den Ordner aus <code>{status.code_branch ?? "main"}</code>, trägt ihn in{" "}
-                <code>.gitignore</code> ein, committet das und pusht <code>specs</code> und{" "}
-                <code>{status.code_branch ?? "main"}</code>. Andere Branches, die <code>.agent/specs</code> noch
-                tracken, vorher auf main rebasen.
+                {t("Das legt den Branch")}{" "}<code>specs</code> {t("mit dem heutigen Stand von")} <code>.agent/specs</code>{" "}{t("an, entfernt den Ordner aus")}{" "}<code>{status.code_branch ?? "main"}</code>{t(", trägt ihn in")}{" "}
+                <code>.gitignore</code> {t("ein, committet das und pusht")} <code>specs</code> {t("und")}{" "}
+                <code>{status.code_branch ?? "main"}</code>{t(". Andere Branches, die")}{" "}<code>.agent/specs</code>{" "}{t("noch tracken, vorher auf main rebasen.")}
               </p>
             ) : null}
             {error ? <p className="mt-1 text-red-700">{error}</p> : null}
           </div>
           <div className="flex shrink-0 flex-wrap gap-2">
-            {confirming && !busy && <button className={quiet} onClick={() => setConfirming(false)}>Abbrechen</button>}
+            {confirming && !busy && <button className={quiet} onClick={() => setConfirming(false)}>{t("Abbrechen")}</button>}
             {status.mode === "migratable" && !confirming ? (
               <button className={button} onClick={() => setConfirming(true)}>
-                Register einrichten…
+                {t("Register einrichten…")}
               </button>
             ) : (
               <button
                 className={button}
                 disabled={busy !== null}
-                onClick={() => void run(status.mode === "migratable" ? "Spec-Register anlegen" : "Spec-Register einhängen", "project_register_setup")}
+                onClick={() => void run(status.mode === "migratable" ? t("Spec-Register anlegen") : t("Spec-Register einhängen"), "project_register_setup")}
               >
-                {busy ? "Läuft…" : status.mode === "migratable" ? "Jetzt einrichten" : "Einhängen"}
+                {busy ? t("Läuft…") : status.mode === "migratable" ? t("Jetzt einrichten") : t("Einhängen")}
               </button>
             )}
           </div>
@@ -161,7 +160,7 @@ export default function RegisterBar({
     return (
       <div className="mb-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-900" data-register="blocked">
         {context}
-        <p className="font-semibold">Spec-Register blockiert.</p>
+        <p className="font-semibold">{t("Spec-Register blockiert.")}</p>
         <p className="mt-1">{status.reason}</p>
         {error && <p className="mt-1">{error}</p>}
       </div>
@@ -169,10 +168,10 @@ export default function RegisterBar({
   }
 
   const parts: string[] = [];
-  if (status.rebasing) parts.push(`Konflikt in ${status.conflicts.length} Datei${status.conflicts.length === 1 ? "" : "en"}`);
-  else if (status.unsent > 0) parts.push(`${status.unsent} nicht gesendet`);
+  if (status.rebasing) parts.push(t("Konflikt in {conflicts} Datei{conflicts2}", { conflicts: status.conflicts.length, conflicts2: status.conflicts.length === 1 ? "" : "en" }));
+  else if (status.unsent > 0) parts.push(t("{unsent} nicht gesendet", { unsent: status.unsent }));
   if (status.ahead > 0) parts.push(`${status.ahead} zu pushen`);
-  if (status.behind > 0) parts.push(`${status.behind} neu vom Team`);
+  if (status.behind > 0) parts.push(t("{behind} neu vom Team", { behind: status.behind }));
   if (parts.length === 0) parts.push("aktuell");
 
   return (
@@ -185,15 +184,15 @@ export default function RegisterBar({
         {status.last_error ? <span className="text-red-700">· {status.last_error}</span> : null}
         {webhookError ? <span className="text-red-700" data-webhook-error>· Webhook: {webhookError}</span> : null}
         {status.reason && !status.rebasing ? <span className="text-amber-700">· {status.reason}</span> : null}
-        <button className={quiet} disabled={busy !== null} onClick={() => void run("Spec-Register synchronisieren", "project_register_sync")}>
-          {busy ? "Läuft…" : "Sync"}
+        <button className={quiet} disabled={busy !== null} onClick={() => void run(t("Spec-Register synchronisieren"), "project_register_sync")}>
+          {busy ? t("Läuft…") : "Sync"}
         </button>
         {error ? <span className="text-red-700">{error}</span> : null}
       </div>
       {status.rebasing ? (
         <div className="mt-2 space-y-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-amber-900" role="region" aria-label="Register-Konflikte">
           <p className="font-semibold">
-            {status.reason ?? "Konflikt: dieselben Zeilen wurden im Team und hier geändert."} Nichts geht verloren; bis zur Entscheidung wird nicht synchronisiert.
+            {status.reason ?? t("Konflikt: dieselben Zeilen wurden im Team und hier geändert.")} Nichts geht verloren; bis zur Entscheidung wird nicht synchronisiert.
           </p>
           {status.conflicts.map((conflict) => (
             <div key={conflict.file} className="rounded border border-amber-200 bg-white p-2" data-register-conflict={conflict.spec_id}>
@@ -204,25 +203,25 @@ export default function RegisterBar({
                   <pre className="max-h-48 overflow-auto rounded bg-slate-50 p-2 font-mono text-[11px] text-slate-700">{conflict.team}</pre>
                 </div>
                 <div>
-                  <p className="mb-1 font-semibold">Meine Fassung</p>
+                  <p className="mb-1 font-semibold">{t("Meine Fassung")}</p>
                   <pre className="max-h-48 overflow-auto rounded bg-slate-50 p-2 font-mono text-[11px] text-slate-700">{conflict.mine}</pre>
                 </div>
               </div>
               <div className="mt-2 flex flex-wrap gap-2">
-                <button className={button} disabled={busy !== null} onClick={() => void run("Konflikt: Team-Fassung", "project_register_resolve", { file: conflict.file, choice: "team" })}>
-                  Team-Fassung übernehmen
+                <button className={button} disabled={busy !== null} onClick={() => void run(t("Konflikt: Team-Fassung"), "project_register_resolve", { file: conflict.file, choice: "team" })}>
+                  {t("Team-Fassung übernehmen")}
                 </button>
-                <button className={button} disabled={busy !== null} onClick={() => void run("Konflikt: eigene Fassung", "project_register_resolve", { file: conflict.file, choice: "mine" })}>
-                  Meine Fassung behalten
+                <button className={button} disabled={busy !== null} onClick={() => void run(t("Konflikt: eigene Fassung"), "project_register_resolve", { file: conflict.file, choice: "mine" })}>
+                  {t("Meine Fassung behalten")}
                 </button>
-                <button className={quiet} disabled={busy !== null} title="Die Datei wurde im Editor bereinigt (keine Konfliktmarker mehr)." onClick={() => void run("Konflikt: bearbeitet", "project_register_resolve", { file: conflict.file, choice: "edited" })}>
-                  Bearbeitet — als gelöst markieren
+                <button className={quiet} disabled={busy !== null} title={t("Die Datei wurde im Editor bereinigt (keine Konfliktmarker mehr).")} onClick={() => void run(t("Konflikt: bearbeitet"), "project_register_resolve", { file: conflict.file, choice: "edited" })}>
+                  {t("Bearbeitet — als gelöst markieren")}
                 </button>
               </div>
             </div>
           ))}
-          <button className={quiet} disabled={busy !== null} onClick={() => void run("Konflikt: Rebase abbrechen", "project_register_abort")}>
-            Abbrechen — eigenen Stand behalten, später erneut
+          <button className={quiet} disabled={busy !== null} onClick={() => void run(t("Konflikt: Rebase abbrechen"), "project_register_abort")}>
+            {t("Abbrechen — eigenen Stand behalten, später erneut")}
           </button>
         </div>
       ) : null}

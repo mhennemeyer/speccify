@@ -3,6 +3,7 @@
 
 import type { ReactNode } from "react";
 import { parseDiff } from "../lib/git";
+import { t } from "../i18n";
 
 function tone(line: string): string {
   if (line.startsWith("+++") || line.startsWith("---")) return "text-slate-500";
@@ -24,7 +25,7 @@ export default function DiffView({
   compact?: boolean;
 }) {
   if (!text.trim()) {
-    return <p className="p-4 text-xs text-slate-400">Kein Unterschied.</p>;
+    return <p className="p-4 text-xs text-slate-400">{t("Kein Unterschied.")}</p>;
   }
   const diff = parseDiff(text);
   const size = compact ? "text-[10.5px] leading-4" : "text-[11.5px] leading-5";

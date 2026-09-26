@@ -70,9 +70,11 @@ User decision: defer German localization. New marketing copy, captions, alt text
 and demo documents are English. `/de/` redirects to `/`; no duplicate DE Features
 page. Existing translated documentation remains reachable and is not deleted or
 translated further in this iteration. Full documentation-language cleanup is separate.
-The actual app still has German controls. Do not disguise them in screenshots:
-the Features introduction explains the current language mix. App localization is
-not part of screenshot production.
+Since Spec 073 (2026-09-26) the app itself is bilingual: Settings → Language
+(System/Deutsch/English), effective at once in every window. Take new
+screenshots with the language set to English; older screenshots may still show
+German controls until they are retaken. Messages coming from the Rust side are
+still German (follow-up spec).
 
 ## Canonical sources
 

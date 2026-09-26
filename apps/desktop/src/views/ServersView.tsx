@@ -14,6 +14,7 @@ import {
   Spinner,
   useAsync,
 } from "../components/ui";
+import { t } from "../i18n";
 
 interface McpServerStatus {
   manifest: ToolboxManifest;
@@ -126,15 +127,15 @@ export default function ServersView() {
           onClick={reload}
           className="bg-slate-800 text-white hover:bg-slate-700"
         >
-          Aktualisieren
+          {t("Aktualisieren")}
         </ActionButton>
         {refreshing && <Spinner />}
         <span className="text-xs text-slate-400">
-          Quelle: Toolbox-Manifeste · Start/Stop über den App-Supervisor
+          {t("Quelle: Toolbox-Manifeste · Start/Stop über den App-Supervisor")}
         </span>
       </div>
 
-      <LoadingBoundary loading={loading} error={error} label="Server werden geladen…">
+      <LoadingBoundary loading={loading} error={error} label={t("Server werden geladen…")}>
         <section className="space-y-3">
           {servers.map((server) => {
             const startedByUs = startedIds.has(server.supervisor_id);
@@ -152,9 +153,9 @@ export default function ServersView() {
                     }`}
                     title={
                       server.running === null
-                        ? "stdio — wird vom Client gestartet"
+                        ? t("stdio — wird vom Client gestartet")
                         : server.running
-                          ? "läuft"
+                          ? t("läuft")
                           : "gestoppt"
                     }
                   />
@@ -162,9 +163,9 @@ export default function ServersView() {
                   <span className="text-xs text-slate-400">
                     {server.manifest.slug}
                     {server.port ? ` · :${server.port}` : " · stdio"}
-                    {server.running && !startedByUs ? " · läuft (extern)" : ""}
+                    {server.running && !startedByUs ? t(" · läuft (extern)") : ""}
                     {server.binary_found
-                      ? ` · Binary: ${BINARY_SOURCE_LABEL[server.binary_source]}`
+                      ? ` · Binary: ${t(BINARY_SOURCE_LABEL[server.binary_source])}`
                       : ""}
                   </span>
                   <div className="ml-auto flex gap-2">
@@ -183,7 +184,7 @@ export default function ServersView() {
                           title={
                             server.binary_found
                               ? undefined
-                              : "Binary weder im App-Bundle noch im PATH — siehe docs/toolkit.md"
+                              : t("Binary weder im App-Bundle noch im PATH — siehe docs/toolkit.md")
                           }
                         >
                           Start
@@ -191,7 +192,7 @@ export default function ServersView() {
                       )
                     ) : (
                       <span className="self-center text-xs text-slate-400">
-                        stdio — startet der Client
+                        {t("stdio — startet der Client")}
                       </span>
                     )}
                     <ActionButton
@@ -209,11 +210,10 @@ export default function ServersView() {
 
                 {!server.binary_found && server.manifest.run ? (
                   <p className="mt-2 text-xs text-amber-600">
-                    ⚠ <code>{server.manifest.run.command}</code> nicht gefunden — weder
-                    im App-Bundle noch im PATH. Aus dem Repo:{" "}
+                    ⚠ <code>{server.manifest.run.command}</code>{" "}{t("nicht gefunden — weder im App-Bundle noch im PATH. Aus dem Repo:")}{" "}
                     <code>./scripts/build_sidecars.sh</code> vor{" "}
-                    <code>pnpm run desktop:build</code> (oder{" "}
-                    <code>cargo install --path crates/…</code>), siehe docs/toolkit.md.
+                    <code>{t("pnpm run desktop:build")}</code> (oder{" "}
+                    <code>{"cargo install --path crates/…"}</code>), siehe docs/toolkit.md.
                   </p>
                 ) : null}
 
@@ -228,7 +228,7 @@ export default function ServersView() {
                         onClick={() => void copyConfig(server)}
                         className="rounded bg-slate-800 px-2 py-0.5 text-xs text-white hover:bg-slate-700"
                       >
-                        {copied === server.manifest.slug ? "✓ kopiert" : "Kopieren"}
+                        {copied === server.manifest.slug ? t("✓ kopiert") : t("Kopieren")}
                       </button>
                     </div>
                     <pre className="max-h-40 overflow-auto rounded bg-slate-900 p-3 text-xs text-sky-200">
@@ -250,7 +250,7 @@ export default function ServersView() {
             );
           })}
           {servers.length === 0 && (
-            <p className="text-slate-500">Keine MCP-Server in der Toolbox.</p>
+            <p className="text-slate-500">{t("Keine MCP-Server in der Toolbox.")}</p>
           )}
         </section>
       </LoadingBoundary>

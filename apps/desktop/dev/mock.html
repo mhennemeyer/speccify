@@ -155,6 +155,8 @@
           if (listener.event === event) window[`_${listener.handler}`]({ event, id, payload });
         }
       };
+      // Spec 073: Sprache steht vor dem ersten Render fest (Cache wie in der App), Vorgabe Deutsch.
+      try { localStorage.setItem("speccify.language", new URLSearchParams(location.search).get("lang") ?? "de"); } catch {}
       window.__SPECCIFY_MOCK__ = { emit, actionStarts, failStart: false, failStop: false, taskCalls: [], staleTaskOnce: false, specs: tickets, workflowInstalls: 0, terminalOpens: [], terminalAttaches: [], sessionChecks: [], ownerCalls: [] };
       if (doingOwner) { const doing = tickets.find(s => s.station === "Doing"); doing.owner = doingOwner; doing.branch = `spec/${doing.id}`; }
       window.__SPECCIFY_MOCK__.projectSettings = {};
@@ -487,7 +489,7 @@
           { slug: "toolkit", title: "Toolkit", description: "Werkzeuge", source_path: "docs/toolkit.md" },
         ]),
         help_doc: () => "# Die App bedienen\n\nText.\n",
-        get_settings: () => ({ working_dir: null, terminal_autostart_command: "claude", skill_library: null, theme: "light", skill_sources: SOURCES.filter((s) => s.scope === "global").map((s) => s.location), project_discovery_depth: 1, ...JSON.parse(localStorage.getItem("speccify.test.settings") ?? "{}") }),
+        get_settings: () => ({ working_dir: null, terminal_autostart_command: "claude", skill_library: null, theme: "light", language: new URLSearchParams(location.search).get("lang") ?? "de", skill_sources: SOURCES.filter((s) => s.scope === "global").map((s) => s.location), project_discovery_depth: 1, ...JSON.parse(localStorage.getItem("speccify.test.settings") ?? "{}") }),
         save_settings: ({ settings }) => { localStorage.setItem("speccify.test.settings", JSON.stringify(settings)); },
         terminal_preferences: () => JSON.parse(localStorage.getItem("test.terminal-preferences") ?? '{"font_size":14,"popups":true,"system_notifications":true}'),
         terminal_preferences_update: ({ fontSize, popups, systemNotifications, persistSessions }) => {

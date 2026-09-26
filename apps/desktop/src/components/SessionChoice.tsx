@@ -10,6 +10,7 @@ import {
   type AgentSessionRecord,
   type SessionRequest,
 } from "../lib/agents";
+import { t } from "../i18n";
 
 export type SessionState =
   /** Kein Merker oder Shell-only: einfach starten. */
@@ -47,7 +48,7 @@ export function useSessionState(record: AgentSessionRecord | null, command: stri
       return;
     }
     if (!recordHost) {
-      setState({ kind: "unknown", reason: "Aus einer früheren Sitzung ist keine Sitzungs-ID bekannt." });
+      setState({ kind: "unknown", reason: t("Aus einer früheren Sitzung ist keine Sitzungs-ID bekannt.") });
       return;
     }
     if (recordHost !== host) {
@@ -57,7 +58,7 @@ export function useSessionState(record: AgentSessionRecord | null, command: stri
     if (!recordId) {
       setState({
         kind: "unknown",
-        reason: `${recordHost} vergibt beim Start keine wählbare Sitzungs-ID.`,
+        reason: t("{recordHost} vergibt beim Start keine wählbare Sitzungs-ID.", { recordHost }),
       });
       return;
     }
@@ -82,13 +83,13 @@ export function useSessionState(record: AgentSessionRecord | null, command: stri
 export function sessionNotice(state: SessionState): string | null {
   switch (state.kind) {
     case "missing":
-      return `Die gemerkte Sitzung ${state.id.slice(0, 8)} wurde im Speicher des Hosts nicht gefunden. Bitte ausdrücklich wählen.`;
+      return t("Die gemerkte Sitzung {id} wurde im Speicher des Hosts nicht gefunden. Bitte ausdrücklich wählen.", { id: state.id.slice(0, 8) });
     case "host":
-      return `Die gemerkte Sitzung gehört zu ${state.recorded}; das Kommando startet jetzt einen anderen Host. Bitte ausdrücklich wählen.`;
+      return t("Die gemerkte Sitzung gehört zu {recorded}; das Kommando startet jetzt einen anderen Host. Bitte ausdrücklich wählen.", { recorded: state.recorded });
     case "unknown":
-      return `${state.reason} Fortsetzen nur über die Auswahl des Hosts; „Neueste Sitzung“ ist eine Komfortfunktion, nicht zwingend die gemerkte.`;
+      return t("{reason} Fortsetzen nur über die Auswahl des Hosts; „Neueste Sitzung“ ist eine Komfortfunktion, nicht zwingend die gemerkte.", { reason: state.reason });
     case "free":
-      return "Freies Kommando: kein automatisches Fortsetzen. Eine Resume-Option gehört dann ins Kommando selbst.";
+      return t("Freies Kommando: kein automatisches Fortsetzen. Eine Resume-Option gehört dann ins Kommando selbst.");
     default:
       return null;
   }
@@ -130,7 +131,7 @@ export default function SessionChoice({
             className={primary}
             title={describeSessionRequest({ mode: "resume", host, id: state.id }, host)}
           >
-            Sitzung fortsetzen
+            {t("Sitzung fortsetzen")}
           </button>
         ) : null}
         {chooser && host ? (
@@ -140,14 +141,14 @@ export default function SessionChoice({
               className={primary}
               title={describeSessionRequest({ mode: "pick" }, host)}
             >
-              Sitzung auswählen
+              {t("Sitzung auswählen")}
             </button>
             <button
               onClick={() => onStart({ mode: "latest" })}
               className={secondary}
               title={describeSessionRequest({ mode: "latest" }, host)}
             >
-              Neueste Sitzung
+              {t("Neueste Sitzung")}
             </button>
           </>
         ) : null}
@@ -158,10 +159,10 @@ export default function SessionChoice({
           title={host ? describeSessionRequest({ mode: "new" }, host) : undefined}
         >
           {state.kind === "checking"
-            ? "Sitzung wird geprüft…"
+            ? t("Sitzung wird geprüft…")
             : record && command.trim()
-              ? "Neu starten"
-              : "Agent-Terminal starten"}
+              ? t("Neu starten")
+              : t("Agent-Terminal starten")}
         </button>
       </div>
     </div>

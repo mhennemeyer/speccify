@@ -64,7 +64,7 @@ try {
   assert.equal(await view.getByRole("heading", { name: /Stale name/ }).count(), 0);
   await openFolder("/private/tmp/partial");
   await view.getByText("Suche begrenzt", { exact: true }).waitFor();
-  await view.getByText(/Nicht durchsucht: api\/deep\/project/).waitFor();
+  await view.getByRole("status").getByText(/api\/deep\/project/).waitFor();
   await view.getByText(/Verfügbare Projekte können geöffnet werden/).waitFor();
   await view.getByRole("button", { name: "Erneut erkennen", exact: true }).click();
   await view.getByText("Suche begrenzt", { exact: true }).waitFor({ state: "hidden" });

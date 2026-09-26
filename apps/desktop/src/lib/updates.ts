@@ -1,6 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { useCallback, useEffect, useState } from "react";
+import { t } from "../i18n";
 
 export interface UpdateSnapshot {
   current_version: string; supported: boolean; reason: string | null;
@@ -36,18 +37,18 @@ export function updateBlockers(): string[] {
     if (editor instanceof HTMLTextAreaElement) return !editor.readOnly && editor.value.length > 0;
     return true;
   })) {
-    blockers.push("Editoransichten zuerst speichern und schließen.");
+    blockers.push(t("Editoransichten zuerst speichern und schließen."));
   }
   for (const field of changedFields) {
     if (!field.isConnected || field.closest('[data-update-dirty="false"]')
       || (field instanceof HTMLInputElement && field.type === 'text' && !field.value)) changedFields.delete(field);
   }
-  if (changedFields.size) blockers.push("Bearbeitete Formulare zuerst speichern und schließen.");
+  if (changedFields.size) blockers.push(t("Bearbeitete Formulare zuerst speichern und schließen."));
   try {
     if (Object.keys(localStorage).some(key => key.startsWith("speccify.draft:"))) {
-      blockers.push("Es gibt noch ungespeicherte Dokumententwürfe.");
+      blockers.push(t("Es gibt noch ungespeicherte Dokumententwürfe."));
     }
-  } catch { blockers.push("Entwurfsspeicher kann nicht geprüft werden."); }
+  } catch { blockers.push(t("Entwurfsspeicher kann nicht geprüft werden.")); }
   return blockers;
 }
 

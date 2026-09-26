@@ -23,6 +23,7 @@ import {
   NavigatorPortal,
   useInspector,
 } from "../../lib/panels";
+import { t } from "../../i18n";
 
 export interface SpecEntry {
   file: string;
@@ -169,15 +170,15 @@ function branchHints(spec: SpecEntry, report: BranchReport | null): string[] {
   const seen = report.specs.find((entry) => entry.file === spec.file);
   const hints: string[] = [];
   if (report.current && report.current !== spec.branch) {
-    hints.push(`Du stehst auf ${report.current}, die Spec gehört zu ${spec.branch}.`);
+    hints.push(t("Du stehst auf {current}, die Spec gehört zu {branch}.", { current: report.current, branch: spec.branch }));
   }
   if (seen) {
-    if (!seen.remote && !seen.local) hints.push(`Branch ${spec.branch} existiert weder lokal noch auf origin.`);
-    else if (!seen.remote) hints.push(`Branch ${spec.branch} ist noch nicht auf origin.`);
+    if (!seen.remote && !seen.local) hints.push(t("Branch {branch} existiert weder lokal noch auf origin.", { branch: spec.branch }));
+    else if (!seen.remote) hints.push(t("Branch {branch} ist noch nicht auf origin.", { branch: spec.branch }));
     if (seen.last_email && report.me && seen.last_email.toLowerCase() !== report.me.email.toLowerCase()) {
-      hints.push(`Zuletzt hat ${seen.last_author ?? seen.last_email} auf diesen Branch gepusht${seen.last_date ? ` (${seen.last_date.slice(0, 10)})` : ""}.`);
+      hints.push(t("Zuletzt hat {author} auf diesen Branch gepusht{date}.", { author: seen.last_author ?? seen.last_email ?? "?", date: seen.last_date ? ` (${seen.last_date.slice(0, 10)})` : "" }));
     }
-    if (seen.stale_days !== null && seen.stale_days >= 3) hints.push(`Seit ${seen.stale_days} Tagen keine Bewegung auf ${spec.branch}.`);
+    if (seen.stale_days !== null && seen.stale_days >= 3) hints.push(t("Seit {stale_days} Tagen keine Bewegung auf {branch}.", { stale_days: seen.stale_days, branch: spec.branch }));
   }
   return hints;
 }
@@ -253,12 +254,12 @@ function SpecBadges({ spec }: { spec: SpecEntry }) {
     <span className="inline-flex flex-wrap gap-1">
       {spec.ready ? (
         <span className="rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-medium text-emerald-800">
-          bereit
+          {t("bereit")}
         </span>
       ) : null}
       {spec.needs_human ? (
         <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-800">
-          braucht BO
+          {t("braucht BO")}
         </span>
       ) : null}
       {spec.open_question ? (
@@ -335,7 +336,7 @@ function SpecCard({
       <button
         onClick={onSelect}
         onDoubleClick={onEdit}
-        title="Doppelklick zum Bearbeiten"
+        title={t("Doppelklick zum Bearbeiten")}
         className="block w-full text-left"
       >
         <span className="text-sm font-medium text-slate-800">
@@ -358,16 +359,16 @@ function SpecCard({
           <Progress spec={spec} compact />
           <SpecBadges spec={spec} />
           {conflict ? (
-            <span className="rounded bg-amber-100 px-1.5 py-0.5 font-semibold text-amber-800" title="Register-Konflikt: oben entscheiden">
+            <span className="rounded bg-amber-100 px-1.5 py-0.5 font-semibold text-amber-800" title={t("Register-Konflikt: oben entscheiden")}>
               Konflikt
             </span>
           ) : null}
           {forMe ? (
-            <span className="rounded bg-orange-100 px-1.5 py-0.5 font-semibold text-orange-800" title={`Frage ${spec.open_question ?? ""} ist an Dich adressiert`}>
-              Frage an Dich
+            <span className="rounded bg-orange-100 px-1.5 py-0.5 font-semibold text-orange-800" title={t("Frage {q} ist an Dich adressiert", { q: spec.open_question ?? "" })}>
+              {t("Frage an Dich")}
             </span>
           ) : null}
-          {spec.archived ? <span>Altbestand · nur lesen</span> : null}
+          {spec.archived ? <span>{t("Altbestand · nur lesen")}</span> : null}
         </div>
         {(spec.modules?.length ?? 0) > 0 ? (
           <div className="mt-1 flex flex-wrap gap-1 text-[10px]" data-spec-modules={spec.modules!.join(",")}>
@@ -378,12 +379,12 @@ function SpecCard({
                   key={module}
                   data-module-overlap={module}
                   className="rounded bg-rose-100 px-1.5 py-0.5 font-semibold text-rose-800"
-                  title={`Modul ${module} wird gerade auch bearbeitet: ${overlap.with.map((other) => `${specRef(other)} ${other.title}${other.owner ? ` (${ownerName(other.owner)})` : ""}`).join(", ")}`}
+                  title={`${t("Modul {module} wird gerade auch bearbeitet:", { module })} ${overlap.with.map((other) => `${specRef(other)} ${other.title}${other.owner ? ` (${ownerName(other.owner)})` : ""}`).join(", ")}`}
                 >
                   ⚠ {module} · auch {overlap.with.map(specRef).join(", ")}
                 </span>
               ) : (
-                <span key={module} className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-slate-600" title={`Modul ${module}`}>
+                <span key={module} className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-slate-600" title={t("Modul {module}", { module })}>
                   {module}
                 </span>
               );
@@ -396,7 +397,7 @@ function SpecCard({
           type="button"
           onClick={(event) => { event.stopPropagation(); onSeen?.(); }}
           data-spec-new={spec.id}
-          title={`Neu vom Team — Klick bestätigt:\n${changes.commits.map((commit) => `${commit.date.slice(0, 16).replace("T", " ")} ${commit.author}: ${commit.subject}`).join("\n")}`}
+          title={`${t("Neu vom Team — Klick bestätigt:")}\n${changes.commits.map((commit) => `${commit.date.slice(0, 16).replace("T", " ")} ${commit.author}: ${commit.subject}`).join("\n")}`}
           className="mt-1 rounded bg-sky-600 px-1.5 py-0.5 text-[10px] font-semibold text-white hover:bg-sky-700"
         >
           neu · {changes.commits.length} von {[...new Set(changes.commits.map((commit) => commit.author))].join(", ")}
@@ -478,12 +479,12 @@ function SpecSheet({
     <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/40 p-6">
       <div className="flex max-h-full w-[720px] flex-col gap-3 overflow-y-auto rounded-xl bg-white p-5 shadow-xl">
         <h3 className="text-sm font-semibold text-slate-800">
-          {sheet.file ? "Spec bearbeiten" : "Neue Spec"}
+          {sheet.file ? t("Spec bearbeiten") : t("Neue Spec")}
         </h3>
         <input
           value={sheet.title}
           onChange={(event) => onChange({ ...sheet, title: event.target.value })}
-          placeholder="Titel — was gebaut wird, in einem Satz"
+          placeholder={t("Titel — was gebaut wird, in einem Satz")}
           spellCheck={false}
           autoFocus
           className="rounded border border-slate-300 px-3 py-2 text-sm"
@@ -517,7 +518,7 @@ function SpecSheet({
               value={sheet.parent}
               onChange={(event) => onChange({ ...sheet, parent: event.target.value })}
               list="speccify-spec-parents"
-              placeholder="Ober-Spec (optional)"
+              placeholder={t("Ober-Spec (optional)")}
               spellCheck={false}
               className="w-44 rounded border border-slate-300 px-2 py-1 font-mono"
             />
@@ -533,7 +534,7 @@ function SpecSheet({
               checked={sheet.ready}
               onChange={(event) => onChange({ ...sheet, ready: event.target.checked })}
             />
-            bereit
+            {t("bereit")}
           </label>
           <label className="flex items-center gap-1.5 text-xs text-slate-600">
             <input
@@ -541,17 +542,17 @@ function SpecSheet({
               checked={sheet.needsHuman}
               onChange={(event) => onChange({ ...sheet, needsHuman: event.target.checked })}
             />
-            braucht BO
+            {t("braucht BO")}
           </label>
         </div>
-        <label className="text-xs">Module, die diese Spec anfasst (mit Komma getrennt{moduleNames.length ? `; Katalog: ${moduleNames.join(", ")}` : "; noch kein Katalog — „Module…“ über dem Board"})
-          <input aria-label="Module" value={sheet.modules} onChange={e => onChange({ ...sheet, modules: e.target.value })} list="speccify-spec-modules" spellCheck={false} className="mt-1 block w-full rounded border p-2 font-mono" placeholder="terminal, board" />
+        <label className="text-xs">Module, die diese Spec anfasst (mit Komma getrennt{moduleNames.length ? `; Katalog: ${moduleNames.join(", ")}` : t("; noch kein Katalog — „Module…“ über dem Board")})
+          <input aria-label="Module" value={sheet.modules} onChange={e => onChange({ ...sheet, modules: e.target.value })} list="speccify-spec-modules" spellCheck={false} className="mt-1 block w-full rounded border p-2 font-mono" placeholder={"terminal, board"} />
           <datalist id="speccify-spec-modules">
             {moduleNames.map((name) => <option key={name} value={parseModuleList(sheet.modules).includes(name) ? sheet.modules : `${sheet.modules.trim() ? `${sheet.modules.trim().replace(/,\s*$/, "")}, ` : ""}${name}`} label={name} />)}
           </datalist>
         </label>
-        <label className="text-xs">Betroffene Code-Repos (Repo-ID oder Repo-ID@Branch, mit Komma getrennt)
-          <input aria-label="Betroffene Code-Repos" value={sheet.repositories} onChange={e => onChange({ ...sheet, repositories: e.target.value })} className="mt-1 block w-full rounded border p-2 font-mono" placeholder="api@spec/048-login, web@spec/048-login" />
+        <label className="text-xs">{t("Betroffene Code-Repos (Repo-ID oder Repo-ID@Branch, mit Komma getrennt)")}
+          <input aria-label={t("Betroffene Code-Repos")} value={sheet.repositories} onChange={e => onChange({ ...sheet, repositories: e.target.value })} className="mt-1 block w-full rounded border p-2 font-mono" placeholder={"api@spec/048-login, web@spec/048-login"} />
         </label>
         <textarea
           value={sheet.body}
@@ -561,7 +562,7 @@ function SpecSheet({
           placeholder={
             sheet.file
               ? ""
-              : "Leer lassen = Vorlage mit Why / What / Acceptance / Decisions / Tasks / Verification / Questions."
+              : t("Leer lassen = Vorlage mit Why / What / Acceptance / Decisions / Tasks / Verification / Questions.")
           }
           className="resize-none rounded border border-slate-300 p-3 font-mono text-xs leading-5"
         />
@@ -572,9 +573,9 @@ function SpecSheet({
               onClick={onDelete}
               disabled={busy}
               className="rounded px-3 py-1.5 text-xs text-red-600 hover:bg-red-50"
-              title="Löscht den ganzen Spec-Ordner samt History"
+              title={t("Löscht den ganzen Spec-Ordner samt History")}
             >
-              Löschen
+              {t("Löschen")}
             </button>
           ) : (
             <span />
@@ -585,14 +586,14 @@ function SpecSheet({
               disabled={busy}
               className="rounded px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100"
             >
-              Abbrechen
+              {t("Abbrechen")}
             </button>
             <button
               onClick={onSave}
               disabled={busy || sheet.title.trim() === ""}
               className="rounded bg-slate-800 px-3 py-1.5 text-sm text-white hover:bg-slate-700 disabled:opacity-50"
             >
-              {busy ? "Speichert…" : "Speichern"}
+              {busy ? t("Speichert…") : t("Speichern")}
             </button>
           </div>
         </div>
@@ -631,8 +632,8 @@ function ModulesSheet({
     for (const row of rows) {
       const name = row.name.trim().toLowerCase();
       if (!name) continue;
-      if (!/^[a-z0-9][a-z0-9_-]*$/.test(name)) { setProblem(`Modulname „${row.name}“: nur Kleinbuchstaben, Ziffern, - und _.`); return; }
-      if (next.some((module) => module.name === name)) { setProblem(`Modul „${name}“ ist doppelt.`); return; }
+      if (!/^[a-z0-9][a-z0-9_-]*$/.test(name)) { setProblem(t("Modulname „{name}“: nur Kleinbuchstaben, Ziffern, - und _.", { name: row.name })); return; }
+      if (next.some((module) => module.name === name)) { setProblem(t("Modul „{name}“ ist doppelt.", { name })); return; }
       next.push({ name, description: row.description.trim(), paths: parseModuleList(row.paths).map((p) => p) });
     }
     setProblem(null);
@@ -642,35 +643,32 @@ function ModulesSheet({
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/40 p-6" data-modules-sheet>
       <div className="flex max-h-full w-[760px] flex-col gap-3 overflow-y-auto rounded-xl bg-white p-5 shadow-xl">
-        <h3 className="text-sm font-semibold text-slate-800">Module des Projekts</h3>
+        <h3 className="text-sm font-semibold text-slate-800">{t("Module des Projekts")}</h3>
         <p className="text-xs text-slate-600">
-          Die Architektur-Idee, entlang der Specs geschnitten werden: jedes Modul ein Name (Slug), eine Zeile Beschreibung,
-          optional Pfade. Specs nennen ihre Module im Frontmatter (<code>modules: a, b</code>); das Board zeigt, wenn zwei
-          Specs in Doing dasselbe Modul anfassen. Gespeichert als <code>modules</code> in <code>.agent/settings.json</code>.
+          {t("Die Architektur-Idee, entlang der Specs geschnitten werden: jedes Modul ein Name (Slug), eine Zeile Beschreibung, optional Pfade. Specs nennen ihre Module im Frontmatter")} (<code>{"modules: a, b"}</code>); {t("das Board zeigt, wenn zwei Specs in Doing dasselbe Modul anfassen. Gespeichert als")} <code>modules</code> {t("in")} <code>.agent/settings.json</code>.
         </p>
         {rows.length === 0 ? (
           <p className="rounded border border-dashed border-amber-300 bg-amber-50 p-2 text-xs text-amber-800">
-            Noch kein Katalog. Ohne Modulliste kann niemand prüfen, ob zwei Specs kollidieren — der Agent soll dann einen
-            Vorschlag aus der Code-Struktur machen und nachfragen.
+            {t("Noch kein Katalog. Ohne Modulliste kann niemand prüfen, ob zwei Specs kollidieren — der Agent soll dann einen Vorschlag aus der Code-Struktur machen und nachfragen.")}
           </p>
         ) : null}
         <div className="space-y-2">
           {rows.map((row, index) => (
             <div key={index} className="grid grid-cols-[10rem_1fr_1fr_auto] items-start gap-2 text-xs" data-module-entry>
               <input aria-label="Modulname" value={row.name} onChange={(e) => update(index, { name: e.target.value })} placeholder="terminal" spellCheck={false} className="rounded border border-slate-300 px-2 py-1 font-mono" />
-              <input aria-label="Beschreibung" value={row.description} onChange={(e) => update(index, { description: e.target.value })} placeholder="PTY, Agent-Start, Sitzungen" className="rounded border border-slate-300 px-2 py-1" />
-              <input aria-label="Pfade" value={row.paths} onChange={(e) => update(index, { paths: e.target.value })} placeholder="src-tauri/src/terminal.rs, src/components/TerminalPanel.tsx" spellCheck={false} className="rounded border border-slate-300 px-2 py-1 font-mono" />
-              <button onClick={() => setRows((previous) => previous.filter((_, i) => i !== index))} title="Modul entfernen" className="rounded px-2 py-1 text-slate-500 hover:bg-slate-100">✕</button>
+              <input aria-label="Beschreibung" value={row.description} onChange={(e) => update(index, { description: e.target.value })} placeholder={t("PTY, Agent-Start, Sitzungen")} className="rounded border border-slate-300 px-2 py-1" />
+              <input aria-label="Pfade" value={row.paths} onChange={(e) => update(index, { paths: e.target.value })} placeholder={"src-tauri/src/terminal.rs, src/components/TerminalPanel.tsx"} spellCheck={false} className="rounded border border-slate-300 px-2 py-1 font-mono" />
+              <button onClick={() => setRows((previous) => previous.filter((_, i) => i !== index))} title={t("Modul entfernen")} className="rounded px-2 py-1 text-slate-500 hover:bg-slate-100">✕</button>
             </div>
           ))}
         </div>
         <div className="flex flex-wrap items-center gap-2 text-xs">
-          <button onClick={() => setRows((previous) => [...previous, { name: "", description: "", paths: "" }])} className="rounded border border-slate-300 px-2 py-1 text-slate-700 hover:bg-slate-100">+ Modul</button>
+          <button onClick={() => setRows((previous) => [...previous, { name: "", description: "", paths: "" }])} className="rounded border border-slate-300 px-2 py-1 text-slate-700 hover:bg-slate-100">{t("+ Modul")}</button>
           {missing.length > 0 ? (
             <span className="text-slate-600">
-              In Specs genannt, aber nicht im Katalog:{" "}
+              {t("In Specs genannt, aber nicht im Katalog:")}{" "}
               {missing.map((name) => (
-                <button key={name} data-module-suggest={name} onClick={() => setRows((previous) => [...previous, { name, description: "", paths: "" }])} className="mr-1 rounded bg-amber-100 px-1.5 py-0.5 font-mono text-amber-800 hover:bg-amber-200" title="In den Katalog übernehmen">
+                <button key={name} data-module-suggest={name} onClick={() => setRows((previous) => [...previous, { name, description: "", paths: "" }])} className="mr-1 rounded bg-amber-100 px-1.5 py-0.5 font-mono text-amber-800 hover:bg-amber-200" title={t("In den Katalog übernehmen")}>
                   {name}
                 </button>
               ))}
@@ -679,8 +677,8 @@ function ModulesSheet({
         </div>
         {problem || error ? <p role="alert" className="text-xs text-red-600">{problem ?? error}</p> : null}
         <div className="flex justify-end gap-2">
-          <button onClick={onClose} disabled={busy} className="rounded px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100">Abbrechen</button>
-          <button onClick={() => void save()} disabled={busy} className="rounded bg-slate-800 px-3 py-1.5 text-sm text-white hover:bg-slate-700 disabled:opacity-50">{busy ? "Speichert…" : "Speichern"}</button>
+          <button onClick={onClose} disabled={busy} className="rounded px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100">{t("Abbrechen")}</button>
+          <button onClick={() => void save()} disabled={busy} className="rounded bg-slate-800 px-3 py-1.5 text-sm text-white hover:bg-slate-700 disabled:opacity-50">{busy ? t("Speichert…") : t("Speichern")}</button>
         </div>
       </div>
     </div>
@@ -706,7 +704,7 @@ function QuestionsSection({
       {current ? (
         <div>
           <p className="text-xs font-semibold text-orange-800">
-            Q{current.number} · der Agent wartet auf eine Antwort
+            Q{current.number}{" "}{t("· der Agent wartet auf eine Antwort")}
           </p>
           <div className="mt-1"><QuestionText text={current.text} /></div>
           <div className="mt-2 flex gap-2">
@@ -715,7 +713,7 @@ function QuestionsSection({
               disabled={busy}
               onChange={(event) => setDraft(event.target.value)}
               rows={2}
-              placeholder="Antwort…"
+              placeholder={t("Antwort…")}
               className="flex-1 rounded border border-orange-200 bg-white p-2 text-sm"
             />
             <button
@@ -813,7 +811,7 @@ function SpecDetail({
   const canRelease = !spec.archived && ownedByMe && spec.station === "Doing";
   const canSwitch = !spec.archived && !!spec.branch && !!report && report.current !== spec.branch && !!onSwitchBranch;
   const ownership = (spec.owner || spec.branch || hints.length > 0 || canTake) ? (
-    <div className="mb-3 rounded-lg border border-slate-200 bg-slate-50 p-2 text-xs text-slate-700" role="region" aria-label="Besitz und Branch">
+    <div className="mb-3 rounded-lg border border-slate-200 bg-slate-50 p-2 text-xs text-slate-700" role="region" aria-label={t("Besitz und Branch")}>
       <p>
         <span className="font-semibold">Besitz:</span> {spec.owner ? `${ownerName(spec.owner)}${ownedByMe ? " (ich)" : ""}` : "niemand"}
         {spec.branch ? <> · <span className="font-semibold">Branch:</span> <code>{spec.branch}</code></> : null}
@@ -821,15 +819,15 @@ function SpecDetail({
       </p>
       {hints.map((hint) => <p key={hint} className="mt-1 text-amber-700">⚠ {hint}</p>)}
       <div className="mt-2 flex flex-wrap gap-2">
-        {canTake ? <InspectorButton onClick={() => onTake?.()} title="Station Doing, Besitzer = Deine Git-Identität, Branch-Vorschlag spec/<id>">Übernehmen</InspectorButton> : null}
-        {canRelease ? <InspectorButton onClick={() => onRelease?.()} title="Zurück ins Backlog, Besitzer entfernen; Branch bleibt als Spur">Abgeben</InspectorButton> : null}
+        {canTake ? <InspectorButton onClick={() => onTake?.()} title={t("Station Doing, Besitzer = Deine Git-Identität, Branch-Vorschlag spec/<id>")}>{t("Übernehmen")}</InspectorButton> : null}
+        {canRelease ? <InspectorButton onClick={() => onRelease?.()} title={t("Zurück ins Backlog, Besitzer entfernen; Branch bleibt als Spur")}>{t("Abgeben")}</InspectorButton> : null}
         {canSwitch && !switchArmed ? <InspectorButton onClick={() => setSwitchArmed(true)}>Zu {spec.branch} wechseln…</InspectorButton> : null}
         {canSwitch && switchArmed ? (
           <>
             <InspectorButton onClick={() => { setSwitchArmed(false); onSwitchBranch?.(spec.branch!, !(seen?.local ?? false)); }}>
-              {seen?.local ? "Jetzt wechseln" : "Branch anlegen und wechseln"}
+              {seen?.local ? t("Jetzt wechseln") : t("Branch anlegen und wechseln")}
             </InspectorButton>
-            <InspectorButton onClick={() => setSwitchArmed(false)}>Doch nicht</InspectorButton>
+            <InspectorButton onClick={() => setSwitchArmed(false)}>{t("Doch nicht")}</InspectorButton>
           </>
         ) : null}
       </div>
@@ -841,7 +839,7 @@ function SpecDetail({
   const moduleSection = modules.length > 0 || (!spec.archived && spec.station !== "Done") ? (
     <div className="mb-3 rounded-lg border border-slate-200 bg-slate-50 p-2 text-xs text-slate-700" role="region" aria-label="Module">
       {modules.length === 0 ? (
-        <p className="text-slate-500">Keine Module eingetragen — <code>modules: a, b</code> im Frontmatter sagt, was diese Spec anfasst.</p>
+        <p className="text-slate-500">{t("Keine Module eingetragen —")} <code>{"modules: a, b"}</code> {t("im Frontmatter sagt, was diese Spec anfasst.")}</p>
       ) : (
         <ul className="space-y-0.5">
           {modules.map((module) => {
@@ -851,10 +849,10 @@ function SpecDetail({
               <li key={module} data-module-row={module} className="flex flex-wrap items-baseline gap-x-2">
                 <code className="font-semibold">{module}</code>
                 {definition?.description ? <span className="text-slate-500">{definition.description}</span> : null}
-                {unknownModules.includes(module) ? <span className="text-amber-700">nicht im Katalog</span> : null}
+                {unknownModules.includes(module) ? <span className="text-amber-700">{t("nicht im Katalog")}</span> : null}
                 {overlap ? (
                   <span className="text-rose-700">
-                    ⚠ auch in Doing: {overlap.with.map((other) => `${specRef(other)} ${other.title}${other.owner ? ` (${ownerName(other.owner)})` : ""}`).join(", ")}
+                    {t("⚠ auch in Doing:")}{" "}{overlap.with.map((other) => `${specRef(other)} ${other.title}${other.owner ? ` (${ownerName(other.owner)})` : ""}`).join(", ")}
                   </span>
                 ) : null}
               </li>
@@ -863,28 +861,28 @@ function SpecDetail({
         </ul>
       )}
       {catalogueLoaded && catalogue.length === 0 ? (
-        <p className="mt-1 text-amber-700">Kein Modulkatalog im Projekt — „Module…“ über dem Board legt ihn an (<code>modules</code> in <code>.agent/settings.json</code>).</p>
+        <p className="mt-1 text-amber-700">{t("Kein Modulkatalog im Projekt — „Module…“ über dem Board legt ihn an (")}<code>modules</code> in <code>.agent/settings.json</code>).</p>
       ) : null}
     </div>
   ) : null;
   const overview = (
     <>
-      {spec.archived ? <p className="mb-2 text-xs text-slate-500">Altbestand · nur lesen. Datei und Historie bleiben am ursprünglichen Ort erhalten.</p> : null}
+      {spec.archived ? <p className="mb-2 text-xs text-slate-500">{t("Altbestand · nur lesen. Datei und Historie bleiben am ursprünglichen Ort erhalten.")}</p> : null}
       {ownership}
       {moduleSection}
       <QuestionsSection questions={questions} onAnswer={onAnswer} busy={busy || spec.archived} />
       {stripQuestions(spec.body) ? (
         <Markdown text={stripQuestions(spec.body)} />
       ) : (
-        <p className="text-xs text-slate-400">Kein Text.</p>
+        <p className="text-xs text-slate-400">{t("Kein Text.")}</p>
       )}
     </>
   );
   const flags = [
-    spec.ready ? "bereit" : null,
-    spec.needs_human ? "braucht BO" : null,
-    spec.open_question ? `Frage ${spec.open_question}` : null,
-    spec.archived ? "Altbestand · nur lesen" : null,
+    spec.ready ? t("bereit") : null,
+    spec.needs_human ? t("braucht BO") : null,
+    spec.open_question ? t("Frage {q}", { q: spec.open_question }) : null,
+    spec.archived ? t("Altbestand · nur lesen") : null,
   ].filter(Boolean);
   const panel = (
     <InspectorPanel
@@ -899,7 +897,7 @@ function SpecDetail({
         { label: "Ober-Spec", value: spec.parent ?? "—" },
         {
           label: "Tasks",
-          value: spec.tasks_total > 0 ? <Progress spec={spec} /> : "— keine Checkboxen",
+          value: spec.tasks_total > 0 ? <Progress spec={spec} /> : t("— keine Checkboxen"),
         },
         ...(flags.length > 0 ? [{ label: "Flags", value: flags.join(", ") }] : []),
       ]}
@@ -911,18 +909,18 @@ function SpecDetail({
             known={spec.body}
           />
           {!spec.archived ? <InspectorButton onClick={onEdit}>Bearbeiten</InspectorButton> : null}
-          <InspectorButton onClick={onClose}>Schließen</InspectorButton>
+          <InspectorButton onClick={onClose}>{t("Schließen")}</InspectorButton>
         </>
       }
       tabs={[
-        { id: "overview", label: "Übersicht", content: overview },
+        { id: "overview", label: t("Übersicht"), content: overview },
         {
           id: "tasks",
           label: `Tasks${spec.tasks_total ? ` ${spec.tasks_done}/${spec.tasks_total}` : ""}`,
           content:
             tasks.length === 0 ? (
               <p className="text-xs text-slate-400">
-                Keine Tasks — Checkboxen unter <code>## Tasks</code> in der Spec anlegen.
+                {t("Keine Tasks — Checkboxen unter")}{" "}<code>## Tasks</code>{" "}{t("in der Spec anlegen.")}
               </p>
             ) : (
               <ul className="space-y-1">
@@ -949,7 +947,7 @@ function SpecDetail({
           content: (
             <div>
               {shown.length === 0 ? (
-                <p className="text-xs text-slate-400">Noch keine History.</p>
+                <p className="text-xs text-slate-400">{t("Noch keine History.")}</p>
               ) : (
                 <ul className="space-y-0.5 font-mono text-[11px] text-slate-600">
                   {shown.map((event, index) => (
@@ -960,7 +958,7 @@ function SpecDetail({
                     </li>
                   ))}
                   {history.length > shown.length ? (
-                    <li className="text-slate-400">… {history.length - shown.length} ältere Events</li>
+                    <li className="text-slate-400">… {history.length - shown.length}{" "}{t("ältere Events")}</li>
                   ) : null}
                 </ul>
               )}
@@ -1169,7 +1167,7 @@ export default function BoardTab({ project, refresh, detailFile, detailOnly = fa
 
   const deleteSheet = async () => {
     if (!sheet?.file) return;
-    if (!window.confirm("Spec samt Ordner und History wirklich löschen?")) return;
+    if (!window.confirm(t("Spec samt Ordner und History wirklich löschen?"))) return;
     const file = sheet.file;
     const ok = await run(() => checked(file, sheet.revision, { kind: "delete" }, "project_ticket_delete", {}));
     if (ok) {
@@ -1182,7 +1180,7 @@ export default function BoardTab({ project, refresh, detailFile, detailOnly = fa
   // ältere per Knopf — Ordner werden umbenannt, parent-Verweise ziehen mit.
   const unnumbered = live.filter((spec) => spec.number === null).length;
   const numberSpecs = async () => {
-    if (!window.confirm(`${unnumbered} Spec(s) nummerieren? Die Ordner werden umbenannt (slug → NNN-slug).`)) return;
+    if (!window.confirm(t("{unnumbered} Spec(s) nummerieren? Die Ordner werden umbenannt (slug → NNN-slug).", { unnumbered }))) return;
     const ok = await run(() => invoke<string[]>("project_specs_number", { project }));
     if (ok) setSelected(null);
   };
@@ -1190,23 +1188,22 @@ export default function BoardTab({ project, refresh, detailFile, detailOnly = fa
   const kpi = kpis.data;
 
   return (
-    <LoadingBoundary loading={loading} error={error} label="Specs lesen…">
+    <LoadingBoundary loading={loading} error={error} label={t("Specs lesen…")}>
       <div className="flex h-full min-h-0 flex-col">
         {!detailOnly && <>
         <NavigatorPortal tab="board" fallback={() => null}>
           {allSpecs.length === 0 ? (
             <NavEmpty
-              title="Noch keine Spec"
-              action={{ label: "+ Spec", onClick: () => setSheet(emptySheet("Backlog")) }}
+              title={t("Noch keine Spec")}
+              action={{ label: t("+ Spec"), onClick: () => setSheet(emptySheet("Backlog")) }}
             >
-              Eine Spec ist eine Arbeitseinheit — ein Feature, ein Umbau, eine Untersuchung —
-              als <code>.agent/specs/&lt;slug&gt;/SPEC.md</code> mit Tasks als Checkboxen.
-              Backlog → Doing ist Deine Freigabe; der Agent arbeitet die Tasks ab
-              (<em>/spec-next</em> im Terminal).
+              {t("Eine Spec ist eine Arbeitseinheit — ein Feature, ein Umbau, eine Untersuchung — als")}{" "}
+              <code>.agent/specs/&lt;slug&gt;/SPEC.md</code> {t("mit Tasks als Checkboxen. Backlog → Doing ist Deine Freigabe; der Agent arbeitet die Tasks ab")}{" "}
+              (<em>/spec-next</em> {t("im Terminal")}).
             </NavEmpty>
           ) : (
-            <div className="space-y-1" aria-label="Spec-Liste">
-              <p className="px-2 py-1 text-[11px] text-slate-500">Specs · {listed.length}/{allSpecs.length}</p>
+            <div className="space-y-1" aria-label={t("Spec-Liste")}>
+              <p className="px-2 py-1 text-[11px] text-slate-500">{t("Specs ·")}{" "}{listed.length}/{allSpecs.length}</p>
               {listed.map(spec => (
                 <button key={spec.file} data-spec-file={spec.file}
                   aria-current={selected === spec.file ? "true" : undefined}
@@ -1221,35 +1218,35 @@ export default function BoardTab({ project, refresh, detailFile, detailOnly = fa
                     <span className="tone-ink font-medium" data-tone={STATION_TONES[spec.station] ?? "slate"}>{spec.station}</span>
                     <span>{spec.tasks_done}/{spec.tasks_total}</span>
                     <SpecBadges spec={spec} />
-                    {spec.archived ? <span>Altbestand · nur lesen</span> : null}
+                    {spec.archived ? <span>{t("Altbestand · nur lesen")}</span> : null}
                   </span>
                 </button>
               ))}
-              {listed.length === 0 ? <p className="p-2 text-xs text-slate-500">Keine passenden Specs. Filter zurücksetzen oder Suche ändern.</p> : null}
+              {listed.length === 0 ? <p className="p-2 text-xs text-slate-500">{t("Keine passenden Specs. Filter zurücksetzen oder Suche ändern.")}</p> : null}
             </div>
           )}
         </NavigatorPortal>
         <div className="mb-2 flex flex-wrap items-center gap-2">
-          <input aria-label="Specs suchen" placeholder="Specs suchen · Titel, Nummer, Pfad…" value={search}
+          <input aria-label={t("Specs suchen")} placeholder={t("Specs suchen · Titel, Nummer, Pfad…")} value={search}
             onChange={event => setSearch(event.target.value)}
             className="min-w-40 flex-1 rounded border border-slate-300 bg-white px-2 py-1.5 text-xs text-slate-800" />
-          <select aria-label="Ober-Spec filtern" value={parentFilter} onChange={event => setParentFilter(event.target.value)}
+          <select aria-label={t("Ober-Spec filtern")} value={parentFilter} onChange={event => setParentFilter(event.target.value)}
             className="max-w-48 rounded border border-slate-300 bg-white px-2 py-1.5 text-xs text-slate-700">
-            <option value="">Alle Themen</option>
+            <option value="">{t("Alle Themen")}</option>
             {parents.map(parent => <option key={parent} value={parent}>{parent}</option>)}
           </select>
           {search || parentFilter || needsMe || mine ? <button className="text-xs text-slate-600 underline"
-            onClick={() => { setSearch(""); setParentFilter(""); setNeedsMe(false); setMine(false); }}>Filter zurücksetzen</button> : null}
+            onClick={() => { setSearch(""); setParentFilter(""); setNeedsMe(false); setMine(false); }}>{t("Filter zurücksetzen")}</button> : null}
         </div>
         <div className="mb-2 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             {kpi && kpi.run_count > 0 ? (
               <button
                 onClick={() => setShowRuns((previous) => !previous)}
-                title="Agent-Läufe aus der Spec-History"
+                title={t("Agent-Läufe aus der Spec-History")}
                 className="rounded-full bg-slate-100 px-2.5 py-1 font-mono text-[11px] text-slate-600 hover:bg-slate-200"
               >
-                {kpi.run_count} {kpi.run_count === 1 ? "Lauf" : "Läufe"} · ↑
+                {kpi.run_count} {kpi.run_count === 1 ? t("Lauf") : t("Läufe")} · ↑
                 {abbreviate(kpi.tokens_in)} ↓{abbreviate(kpi.tokens_out)} ·{" "}
                 {formatDuration(kpi.duration_ms)}
               </button>
@@ -1262,12 +1259,12 @@ export default function BoardTab({ project, refresh, detailFile, detailOnly = fa
                   : "bg-slate-100 text-slate-600 hover:bg-slate-200"
               }`}
             >
-              braucht mich
+              {t("braucht mich")}
             </button>
             <button
               onClick={() => setMine((previous) => !previous)}
               disabled={!myEmail}
-              title={myEmail ? `Specs, die ${myEmail} übernommen hat` : "Keine Git-Identität im Projekt"}
+              title={myEmail ? t("Specs, die {myEmail} übernommen hat", { myEmail }) : t("Keine Git-Identität im Projekt")}
               className={`rounded-full px-2.5 py-1 text-[11px] font-medium disabled:opacity-40 ${
                 mine ? "bg-sky-700 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
               }`}
@@ -1276,7 +1273,7 @@ export default function BoardTab({ project, refresh, detailFile, detailOnly = fa
             </button>
             {questionsForMe > 0 ? (
               <span className="rounded-full bg-orange-100 px-2.5 py-1 text-[11px] font-semibold text-orange-800" data-questions-for-me={questionsForMe}>
-                {questionsForMe} {questionsForMe === 1 ? "Frage" : "Fragen"} an Dich
+                {questionsForMe} {questionsForMe === 1 ? t("Frage") : t("Fragen")}{" "}{t("an Dich")}
               </span>
             ) : null}
             <button
@@ -1285,23 +1282,23 @@ export default function BoardTab({ project, refresh, detailFile, detailOnly = fa
                 byPerson ? "bg-slate-700 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
               }`}
             >
-              Doing nach Person
+              {t("Doing nach Person")}
             </button>
             <button
               onClick={() => setModulesSheet(true)}
               data-modules-button
-              title={catalogue.modules.length ? `Modulkatalog des Projekts (${catalogue.modules.map((module) => module.name).join(", ")}) — modules in .agent/settings.json` : "Noch kein Modulkatalog: die Architektur-Idee, entlang der Specs geschnitten werden (modules in .agent/settings.json)"}
+              title={catalogue.modules.length ? `Modulkatalog des Projekts (${catalogue.modules.map((module) => module.name).join(", ")}) — modules in .agent/settings.json` : t("Noch kein Modulkatalog: die Architektur-Idee, entlang der Specs geschnitten werden (modules in .agent/settings.json)")}
               className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${
                 catalogue.loaded && catalogue.modules.length === 0 ? "bg-amber-100 text-amber-800 hover:bg-amber-200" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
               }`}
             >
-              {catalogue.modules.length ? `Module (${catalogue.modules.length})` : "Module…"}
+              {catalogue.modules.length ? t("Module ({modules})", { modules: catalogue.modules.length }) : t("Module…")}
             </button>
             {unnumbered > 0 ? (
               <button
                 onClick={() => void numberSpecs()}
                 disabled={busy}
-                title="Specs ohne laufende Nummer umbenennen: slug → NNN-slug"
+                title={t("Specs ohne laufende Nummer umbenennen: slug → NNN-slug")}
                 className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-600 hover:bg-slate-200 disabled:opacity-40"
               >
                 {unnumbered} ohne Nummer · nummerieren
@@ -1315,11 +1312,11 @@ export default function BoardTab({ project, refresh, detailFile, detailOnly = fa
             onClick={() => setSheet(emptySheet("Backlog"))}
             className="rounded bg-slate-800 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-700"
           >
-            + Spec
+            {t("+ Spec")}
           </button>
         </div>
         {byPerson ? (
-          <div className="mb-2 max-h-48 overflow-y-auto rounded-lg border border-slate-200 bg-white p-3" role="region" aria-label="Doing nach Person">
+          <div className="mb-2 max-h-48 overflow-y-auto rounded-lg border border-slate-200 bg-white p-3" role="region" aria-label={t("Doing nach Person")}>
             {(() => {
               const doing = live.filter((spec) => spec.station === "Doing");
               const groups = new Map<string, SpecEntry[]>();
@@ -1327,10 +1324,10 @@ export default function BoardTab({ project, refresh, detailFile, detailOnly = fa
                 const key = spec.owner ?? "";
                 groups.set(key, [...(groups.get(key) ?? []), spec]);
               }
-              if (doing.length === 0) return <p className="text-xs text-slate-400">Nichts in Doing.</p>;
+              if (doing.length === 0) return <p className="text-xs text-slate-400">{t("Nichts in Doing.")}</p>;
               return [...groups.entries()].sort(([a], [b]) => (a === "" ? 1 : b === "" ? -1 : a.localeCompare(b))).map(([owner, group]) => (
                 <div key={owner || "—"} className="mb-2 last:mb-0">
-                  <p className="text-[11px] font-semibold text-slate-700">{owner ? ownerName(owner) : "ohne Besitzer"}{owner && myEmail && ownerEmail(owner) === myEmail ? " (ich)" : ""}</p>
+                  <p className="text-[11px] font-semibold text-slate-700">{owner ? ownerName(owner) : t("ohne Besitzer")}{owner && myEmail && ownerEmail(owner) === myEmail ? " (ich)" : ""}</p>
                   <ul className="mt-0.5 space-y-0.5 text-[11px] text-slate-600">
                     {group.map((spec) => {
                       const seen = report?.specs.find((entry) => entry.file === spec.file);
@@ -1339,7 +1336,7 @@ export default function BoardTab({ project, refresh, detailFile, detailOnly = fa
                           <button className="underline-offset-2 hover:underline" onClick={() => setSelected(spec.file)}>
                             {spec.number !== null ? `#${spec.number} ` : ""}{spec.title}
                           </button>
-                          {spec.branch ? <span className="font-mono text-slate-500">⎇ {spec.branch}</span> : <span className="text-slate-400">kein Branch</span>}
+                          {spec.branch ? <span className="font-mono text-slate-500">⎇ {spec.branch}</span> : <span className="text-slate-400">{t("kein Branch")}</span>}
                           {seen?.last_date ? <span className="text-slate-400">· zuletzt {seen.last_date.slice(0, 10)} von {seen.last_author ?? "?"}</span> : null}
                           {branchHints(spec, report).length > 0 ? <span className="text-amber-700">· {branchHints(spec, report).length} Hinweis{branchHints(spec, report).length === 1 ? "" : "e"}</span> : null}
                         </li>
@@ -1416,24 +1413,24 @@ export default function BoardTab({ project, refresh, detailFile, detailOnly = fa
                     <span className="flex items-center gap-0.5 whitespace-nowrap">
                       <select
                         aria-label="Done-Zeitraum"
-                        title="Nur Specs, die in diesem Zeitraum fertig wurden, liegen offen; ältere sind eingeklappt. Gilt für dieses Board (.agent/settings.json)."
+                        title={t("Nur Specs, die in diesem Zeitraum fertig wurden, liegen offen; ältere sind eingeklappt. Gilt für dieses Board (.agent/settings.json).")}
                         className={DONE_SELECT}
                         value={done.days}
                         onChange={(event) => done.setDays(Number(event.target.value))}
                       >
                         {DONE_WINDOW_OPTIONS.map((option) => (
-                          <option key={option.days} value={option.days}>{option.label}</option>
+                          <option key={option.days} value={option.days}>{t(option.label)}</option>
                         ))}
                       </select>
                       <select
                         aria-label="Done-Anzahl"
-                        title="So viele Karten auf einmal; „Mehr anzeigen“ holt die nächsten. Gilt für dieses Board (.agent/settings.json)."
+                        title={t("So viele Karten auf einmal; „Mehr anzeigen“ holt die nächsten. Gilt für dieses Board (.agent/settings.json).")}
                         className={DONE_SELECT}
                         value={done.limit}
                         onChange={(event) => done.setLimit(Number(event.target.value))}
                       >
                         {DONE_LIMIT_OPTIONS.map((option) => (
-                          <option key={option.limit} value={option.limit}>{option.label}</option>
+                          <option key={option.limit} value={option.limit}>{t(option.label)}</option>
                         ))}
                       </select>
                     </span>
@@ -1459,7 +1456,7 @@ export default function BoardTab({ project, refresh, detailFile, detailOnly = fa
                     return <>
                       <MoreList items={recent} limit={done.limit} resetKey={resetKey} render={grouped} />
                       {recent.length === 0 && older.length > 0 && (
-                        <p className="px-1 text-[11px] text-slate-500">Nichts in diesem Zeitraum fertig geworden.</p>
+                        <p className="px-1 text-[11px] text-slate-500">{t("Nichts in diesem Zeitraum fertig geworden.")}</p>
                       )}
                       {older.length > 0 && (
                         <details data-done-older className="rounded-lg border border-dashed border-slate-300 p-1.5">
@@ -1542,7 +1539,7 @@ export default function BoardTab({ project, refresh, detailFile, detailOnly = fa
 function groupDone(specs: SpecEntry[]): Array<[string, SpecEntry[]]> {
   const groups = new Map<string, SpecEntry[]>();
   for (const spec of specs) {
-    const key = spec.parent ?? "Ohne Thema";
+    const key = spec.parent ?? t("Ohne Thema");
     const group = groups.get(key) ?? [];
     group.push(spec);
     groups.set(key, group);

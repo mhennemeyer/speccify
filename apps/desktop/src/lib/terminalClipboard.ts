@@ -1,3 +1,4 @@
+import { t } from "../i18n";
 // Kopieren aus dem Agent-Terminal (Spec 068). xterm hält seine Auswahl selbst,
 // der DOM hat keine — deshalb bietet das Systemmenü „Kopieren" nichts an, macOS
 // quittiert ⌘C mit dem Fehlerton, und ein unbeantwortetes Tastenereignis landet
@@ -58,7 +59,7 @@ export async function writeClipboard(text: string, primary: ClipboardWriter): Pr
     // weiter zum letzten Weg
   }
   if (legacyCopy(text)) return;
-  throw failure instanceof Error ? failure : new Error(String(failure ?? "Zwischenablage nicht erreichbar"));
+  throw failure instanceof Error ? failure : new Error(String(failure ?? t("Zwischenablage nicht erreichbar")));
 }
 
 function legacyCopy(text: string): boolean {

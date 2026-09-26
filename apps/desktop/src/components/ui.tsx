@@ -1,6 +1,7 @@
 // Gemeinsame UI-Bausteine: Spinner, Loading-Wrapper, Buttons mit Busy-Feedback.
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { t } from "../i18n";
 
 export function Spinner({ large = false }: { large?: boolean }) {
   const size = large ? "h-8 w-8 border-[3px]" : "h-4 w-4 border-2";
@@ -36,7 +37,7 @@ export function LoadingBoundary({
     return (
       <div className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white p-6 text-slate-500">
         <Spinner large />
-        {label ?? "lädt…"}
+        {label ?? t("lädt…")}
       </div>
     );
   return <>{children}</>;

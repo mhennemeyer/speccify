@@ -18,6 +18,7 @@ import {
   inlineInspector,
   useInspector,
 } from "../../lib/panels";
+import { t } from "../../i18n";
 
 interface McpInfo {
   claude_servers: Record<string, unknown> | null;
@@ -114,21 +115,19 @@ export default function McpsTab({ project, refresh, workspace = false, selection
 
   const copyAddPrompt = async () => {
     await writeText(`Zielprojekt und cwd: ${project}\n${ADD_MCP_PROMPT}`);
-    setNotice("Prompt in der Zwischenablage — ins Agent-Terminal einfügen.");
+    setNotice(t("Prompt in der Zwischenablage — ins Agent-Terminal einfügen."));
   };
 
   const navigator = (
     <NavigatorPortal tab="mcps">
-      {workspace && selection?.manage && <button className="rounded border px-2 py-1" onClick={() => void copyAddPrompt()}>MCP-Anlage für dieses Ziel kopieren</button>}
+      {workspace && selection?.manage && <button className="rounded border px-2 py-1" onClick={() => void copyAddPrompt()}>{t("MCP-Anlage für dieses Ziel kopieren")}</button>}
       {servers.length === 0 ? (
         <NavEmpty
-          title="Keine projekteigenen MCPs"
-          action={{ label: "Prompt für den Agenten kopieren", onClick: () => void copyAddPrompt() }}
+          title={t("Keine projekteigenen MCPs")}
+          action={{ label: t("Prompt für den Agenten kopieren"), onClick: () => void copyAddPrompt() }}
         >
-          MCP-Server dieses Projekts stehen in <code>.mcp.json</code> (Claude) und{" "}
-          <code>.codex/config.toml</code> (Codex). Am einfachsten trägt der Agent sie
-          ein — der Prompt sagt ihm, wie. Globale Server verwaltet das Dashboard
-          unter <em>Server</em>.
+          {t("MCP-Server dieses Projekts stehen in")} <code>.mcp.json</code> (Claude) {t("und")}{" "}
+          <code>.codex/config.toml</code> (Codex). {t("Am einfachsten trägt der Agent sie ein — der Prompt sagt ihm, wie. Globale Server verwaltet das Dashboard unter")} <em>Server</em>.
         </NavEmpty>
       ) : (
         <div className="space-y-0.5">
@@ -172,10 +171,10 @@ export default function McpsTab({ project, refresh, workspace = false, selection
         ]}
         actions={
           <InspectorButton
-            title="Konfiguration als JSON in die Zwischenablage"
+            title={t("Konfiguration als JSON in die Zwischenablage")}
             onClick={() => void writeText(JSON.stringify(current.config, null, 2))}
           >
-            Konfiguration kopieren
+            {t("Konfiguration kopieren")}
           </InspectorButton>
         }
       >
@@ -187,7 +186,7 @@ export default function McpsTab({ project, refresh, workspace = false, selection
   ) : null;
 
   return (
-    <LoadingBoundary loading={loading} error={error} label="MCPs lesen…">
+    <LoadingBoundary loading={loading} error={error} label={t("MCPs lesen…")}>
       <div className="flex h-full min-h-0 gap-4">
         {navigator}
         <div className="min-w-0 flex-1 overflow-y-auto">
@@ -198,15 +197,14 @@ export default function McpsTab({ project, refresh, workspace = false, selection
           {empty ? (
             <div className="max-w-xl space-y-3 text-sm text-slate-600">
               <p>
-                Weder <code>.mcp.json</code> noch <code>.codex/config.toml</code> oder eine
-                Claude-Allowlist — dieses Projekt bringt keine eigenen MCPs mit.
+                {t("Weder")} <code>.mcp.json</code> {t("noch")} <code>.codex/config.toml</code>{" "}{t("oder eine Claude-Allowlist — dieses Projekt bringt keine eigenen MCPs mit.")}
               </p>
               <p>
                 <button
                   onClick={() => void copyAddPrompt()}
                   className="rounded bg-slate-800 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-700"
                 >
-                  Prompt für den Agenten kopieren
+                  {t("Prompt für den Agenten kopieren")}
                 </button>
               </p>
             </div>
@@ -217,9 +215,9 @@ export default function McpsTab({ project, refresh, workspace = false, selection
               ) : (
                 servers.map((entry) => <ServerCard key={entry.key} entry={entry} />)
               )}
-              <AllowList title="Claude-Allowlist (.claude/settings.json)" entries={allow} />
+              <AllowList title={t("Claude-Allowlist (.claude/settings.json)")} entries={allow} />
               <AllowList
-                title="Claude-Allowlist (.claude/settings.local.json)"
+                title={t("Claude-Allowlist (.claude/settings.local.json)")}
                 entries={allowLocal}
               />
             </div>

@@ -68,6 +68,7 @@ import SkillsTab from "./views/project/SkillsTab";
 import ToolsTab from "./views/project/ToolsTab";
 import WorkflowBanner from "./views/project/WorkflowBanner";
 import RegisterBar, { type RegisterStatus } from "./views/project/RegisterBar";
+import { t } from "./i18n";
 
 
 /** Aktion aus actions.json, soweit die Toolbar sie braucht. */
@@ -121,8 +122,8 @@ export default function ProjectShell() {
         setSessionRequest({ mode: "new" });
       }
     }
-    recordActivity("agent", "Terminal geöffnet", {
-      detail: opened.launch || "Nur Shell",
+    recordActivity("agent", t("Terminal geöffnet"), {
+      detail: opened.launch || t("Nur Shell"),
     });
   };
   const terminalFailed = (error: string) => {
@@ -200,7 +201,7 @@ export default function ProjectShell() {
     void invoke<string | null>("project_current")
       .then((root) => {
         if (!root) {
-          setError("Dieses Fenster kennt kein Projekt (project_current leer).");
+          setError(t("Dieses Fenster kennt kein Projekt (project_current leer)."));
           return;
         }
         setProject(root);
@@ -452,8 +453,8 @@ export default function ProjectShell() {
       item.id,
       {
         id: item.id,
-        title: item.title,
-        label: item.label,
+        title: t(item.title),
+        label: t(item.label),
         icon: item.id === "terminal" ? <TerminalIcon /> : <GitIcon />,
         onClick: () => {
           if (item.id === "terminal") showTerminal();
@@ -499,7 +500,7 @@ export default function ProjectShell() {
     .map((id) => builtinItems[id] ?? actionItems[id])
     .filter((item): item is ToolbarItem => Boolean(item));
   const toolbarChoices = [
-    ...TOOLBAR_BUILTINS.map((item) => ({ id: item.id, label: item.label, hint: item.title })),
+    ...TOOLBAR_BUILTINS.map((item) => ({ id: item.id, label: t(item.label), hint: t(item.title) })),
     ...toolbarActions.map((action) => ({
       id: `action:${action.command}`,
       label: action.name,
@@ -507,7 +508,7 @@ export default function ProjectShell() {
     })),
   ];
 
-  const dockLabel = terminalDock === "right" ? "⬓ nach unten" : "⬔ nach rechts";
+  const dockLabel = terminalDock === "right" ? t("⬓ nach unten") : t("⬔ nach rechts");
   const toggleDock = () =>
     updateLayout((previous) =>
       previous.terminalDock === "right"
@@ -530,7 +531,7 @@ export default function ProjectShell() {
               <>
             <ToolbarButton
               active={navShown}
-              title={`${navShown ? "Navigator ausblenden" : "Navigator einblenden"} (${isMac ? "⌘" : "Strg+"}0)`}
+              title={`${navShown ? t("Navigator ausblenden") : t("Navigator einblenden")} (${isMac ? "⌘" : t("Strg+")}0)`}
               onClick={() => updateLayout({ navShown: !navShown })}
             >
               <PanelIcon part="nav" />
@@ -540,9 +541,9 @@ export default function ProjectShell() {
               title={
                 terminalDock === "bottom"
                   ? bottomVisible
-                    ? "Terminal unten ausblenden"
-                    : "Terminal unten einblenden"
-                  : "Terminal nach unten legen"
+                    ? t("Terminal unten ausblenden")
+                    : t("Terminal unten einblenden")
+                  : t("Terminal nach unten legen")
               }
               onClick={() =>
                 terminalDock === "bottom"
@@ -554,20 +555,20 @@ export default function ProjectShell() {
             </ToolbarButton>
             <ToolbarButton
               active={rightShown}
-              title={`${rightShown ? "Inspektor ausblenden" : "Inspektor einblenden"} (${isMac ? "⌥⌘" : "Strg+Alt+"}0)`}
+              title={`${rightShown ? t("Inspektor ausblenden") : t("Inspektor einblenden")} (${isMac ? "⌥⌘" : t("Strg+Alt+")}0)`}
               onClick={() => updateLayout({ rightShown: !rightShown })}
             >
               <PanelIcon part="right" />
             </ToolbarButton>
             <span className="mx-1 h-4 w-px bg-slate-200" aria-hidden="true" />
             <ToolbarButton
-              title={isDark(theme) ? "Hell schalten" : "Dunkel schalten"}
+              title={isDark(theme) ? t("Hell schalten") : t("Dunkel schalten")}
               onClick={() => void setTheme(isDark(theme) ? "light" : "dark")}
             >
               {isDark(theme) ? <SunIcon /> : <MoonIcon />}
             </ToolbarButton>
             <ToolbarButton
-              title="Einstellungen"
+              title={t("Einstellungen")}
               onClick={() => setSettingsOpen(true)}
               active={settingsOpen}
             >
@@ -698,7 +699,7 @@ export default function ProjectShell() {
           />
         ) : null}
         <div
-          aria-label="Rechte Seitenleiste"
+          aria-label={t("Rechte Seitenleiste")}
           className={`${rightShown ? "flex" : "hidden"} min-w-0 items-stretch overflow-x-auto border-b border-l border-slate-200 bg-white text-xs`}
           style={{ gridColumn: 5, gridRow: 2 }}
         >
@@ -728,8 +729,8 @@ export default function ProjectShell() {
               <button
                 type="button"
                 aria-pressed={activeOutput === tab.id}
-                aria-label={`Ausgabe: ${tab.name}`}
-                title={`${tab.name} · ${tab.running ? "läuft" : tab.failed ? "fehlgeschlagen" : "beendet"}\n${tab.id}`}
+                aria-label={t("Ausgabe: {name}", { name: tab.name })}
+                title={`${tab.name} · ${tab.running ? t("läuft") : tab.failed ? t("fehlgeschlagen") : t("beendet")}\n${tab.id}`}
                 ref={(node) => { if (activeOutput === tab.id) node?.scrollIntoView({ block: "nearest", inline: "nearest" }); }}
                 onClick={() => revealOutput(tab.id)}
                 className="flex max-w-48 items-center gap-1.5 py-1.5 pl-3 pr-1 font-medium hover:text-slate-800"
@@ -737,8 +738,8 @@ export default function ProjectShell() {
                 <span aria-hidden="true" className={tab.running ? "animate-pulse text-blue-600" : tab.failed ? "text-red-600" : "text-emerald-600"}>{tab.running ? "●" : tab.failed ? "!" : "✓"}</span>
                 <span className="truncate">{tab.name}</span>
               </button>
-              <button type="button" aria-label={`Ausgabe schließen: ${tab.name}`}
-                title={tab.running ? "Laufende Aktion zuerst stoppen" : "Ausgabe schließen"}
+              <button type="button" aria-label={t("Ausgabe schließen: {name}", { name: tab.name })}
+                title={tab.running ? t("Laufende Aktion zuerst stoppen") : t("Ausgabe schließen")}
                 disabled={tab.running}
                 onClick={() => {
                   tab.close();
@@ -769,8 +770,7 @@ export default function ProjectShell() {
               ))
             : null}
           <p className="inspector-placeholder p-4 text-xs text-slate-400">
-            Nichts ausgewählt. Der Inspektor zeigt Details und Aktionen zur Auswahl —
-            wähle links etwas aus der Liste oder auf dem Board eine Spec.
+            {t("Nichts ausgewählt. Der Inspektor zeigt Details und Aktionen zur Auswahl — wähle links etwas aus der Liste oder auf dem Board eine Spec.")}
           </p>
         </aside>
 
@@ -785,7 +785,7 @@ export default function ProjectShell() {
             <button
               onClick={toggleDock}
               title={
-                terminalDock === "right" ? "Terminal nach unten legen" : "Terminal nach rechts legen"
+                terminalDock === "right" ? t("Terminal nach unten legen") : t("Terminal nach rechts legen")
               }
               className="rounded px-2 py-0.5 text-xs text-slate-500 hover:bg-slate-800 hover:text-slate-300"
             >
@@ -806,7 +806,7 @@ export default function ProjectShell() {
             <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6">
               <label className="w-full max-w-xs">
                 <span className="mb-1 block text-xs font-medium text-slate-400">
-                  Agent-Kommando (leer = nur Shell)
+                  {t("Agent-Kommando (leer = nur Shell)")}
                 </span>
                 <input
                   value={agentCommand}
@@ -827,7 +827,7 @@ export default function ProjectShell() {
                           : "bg-slate-800 text-slate-400 hover:text-slate-200"
                       }`}
                     >
-                      {preset.label}
+                      {t(preset.label)}
                     </button>
                   ))}
                 </span>
@@ -843,8 +843,8 @@ export default function ProjectShell() {
                 onStart={startTerminal}
               />
               <p className="max-w-xs text-center text-xs text-slate-500">
-                Startet im Projektverzeichnis — Skills leben unter{" "}
-                <code>.agent/skills</code> und werden für den gewählten Host verlinkt.
+                {t("Startet im Projektverzeichnis — Skills leben unter")}{" "}
+                <code>.agent/skills</code>{" "}{t("und werden für den gewählten Host verlinkt.")}
               </p>
             </div>
           )}

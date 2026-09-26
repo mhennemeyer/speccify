@@ -10,6 +10,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import HtmlInteractionCard from "./HtmlInteractionCard";
+import { t } from "../i18n";
 
 export interface AskBoField {
   label: string;
@@ -172,7 +173,7 @@ function InteractionCard({
             })}
           </div>
           {!done ? (
-            <p className="mt-1 text-[10px] text-slate-500">←/→ wählen · Enter bestätigen</p>
+            <p className="mt-1 text-[10px] text-slate-500">{t("←/→ wählen · Enter bestätigen")}</p>
           ) : null}
         </>
       ) : null}
@@ -220,7 +221,7 @@ function InteractionCard({
                 OK
               </button>
               <span className="text-[10px] text-slate-500">
-                ↑/↓ wählen · Space an/aus · Enter senden
+                {t("↑/↓ wählen · Space an/aus · Enter senden")}
               </span>
             </div>
           ) : null}
@@ -265,10 +266,10 @@ function InteractionCard({
                 tabIndex={-1}
                 className="rounded bg-slate-700 px-2.5 py-1 text-xs text-slate-200 hover:bg-slate-600"
               >
-                Antworten senden
+                {t("Antworten senden")}
               </button>
               <span className="text-[10px] text-slate-500">
-                Enter = weiter/senden · leer = Empfehlung gilt
+                {t("Enter = weiter/senden · leer = Empfehlung gilt")}
               </span>
             </div>
           ) : null}
@@ -277,11 +278,11 @@ function InteractionCard({
 
       {!["buttons", "multi_select", "form"].includes(interaction.kind) ? (
         <p className="text-xs text-amber-400">
-          Unbekannte Interaktions-Art „{interaction.kind}" — App aktualisieren.
+          {t("Unbekannte Interaktions-Art „{kind}“ — App aktualisieren.", { kind: interaction.kind })}
         </p>
       ) : null}
 
-      {done ? <p className="mt-1 text-[10px] text-emerald-500">beantwortet ✓</p> : null}
+      {done ? <p className="mt-1 text-[10px] text-emerald-500">{t("beantwortet ✓")}</p> : null}
     </div>
   );
 }

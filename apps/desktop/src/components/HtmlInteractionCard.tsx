@@ -9,6 +9,7 @@ import { invoke } from "@tauri-apps/api/core";
 // Vendored copy of @tailwindcss/browser (the package exports only its entry, not the file).
 import tailwindBrowser from "../assets/tailwind-browser.js?raw";
 import type { AskBoInteraction } from "./AskBoPanel";
+import { t } from "../i18n";
 
 const BRIDGE = String.raw`
 (function () {
@@ -108,7 +109,7 @@ export default function HtmlInteractionCard({ interaction }: { interaction: AskB
             onClick={() => { setClosed(true); send({ closed: true }); }}
             className="ml-auto rounded bg-slate-700 px-2 py-0.5 text-xs text-slate-200 hover:bg-slate-600"
           >
-            Schließen
+            {t("Schließen")}
           </button>
         ) : null}
       </div>

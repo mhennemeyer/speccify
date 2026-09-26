@@ -8,6 +8,15 @@ sidebar:
 **Available in Speccify 0.8.2.** See the [release notes](/releases/0-8-2/)
 for installation and update instructions.
 
+## Language
+
+The app speaks English and German. **Settings → Language** in the dashboard,
+or the gear in a project or workspace window, offers **System**, **Deutsch**
+and **English**. *System* follows the operating system (German for `de*`
+locales, English otherwise). The choice applies at once in every open window
+and is stored in `~/.speccify/settings.json` as `language`. Messages that come
+straight from the native side are still German for now.
+
 ## Appearance
 
 The terminal follows Light, Dark, or System appearance, including its controls,

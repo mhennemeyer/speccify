@@ -7,6 +7,7 @@
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { fencedPrompt } from "./prompt";
 import { playbookStatus, playbookNotice } from "./playbooks";
+import { t } from "../i18n";
 
 export type HandoverKind = "implement" | "review" | "read" | "edit";
 export type HandoverItemType = "spec" | "playbook" | "skill" | "tool" | "file";
@@ -24,7 +25,7 @@ export interface HandoverItem {
 export const KIND_LABELS: Record<HandoverKind, string> = {
   implement: "Umsetzen",
   review: "Prüfen",
-  read: "Lesen und anwenden",
+  read: t("Lesen und anwenden"),
   edit: "Bearbeiten",
 };
 

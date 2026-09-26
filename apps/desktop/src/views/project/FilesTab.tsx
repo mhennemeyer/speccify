@@ -39,6 +39,7 @@ import {
   inlineInspector,
   useInspector,
 } from "../../lib/panels";
+import { t } from "../../i18n";
 
 interface TreeEntry {
   name: string;
@@ -99,10 +100,10 @@ function RenameForm({
         onClick={() => onSubmit(value)}
         className="rounded bg-slate-800 px-2 py-1 text-[11px] text-white hover:bg-slate-700"
       >
-        Umbenennen
+        {t("Umbenennen")}
       </button>
       <button onClick={onCancel} className="rounded px-2 py-1 text-[11px] text-slate-500 hover:bg-slate-100">
-        Abbrechen
+        {t("Abbrechen")}
       </button>
     </div>
   );
@@ -436,7 +437,7 @@ export default function FilesTab({
 
   const closeFile = (path: string) => {
     const file = openRef.current.find((entry) => entry.path === path);
-    if (file && file.text !== file.saved && !window.confirm(`${path}: ungespeicherte Änderungen verwerfen?`)) {
+    if (file && file.text !== file.saved && !window.confirm(t("{path}: ungespeicherte Änderungen verwerfen?", { path }))) {
       return;
     }
     clearDraft(draftKey(project, path));
@@ -454,7 +455,7 @@ export default function FilesTab({
     try {
       await trackActivity(
         "write",
-        "Datei speichern",
+        t("Datei speichern"),
         () => invoke("project_write_file", { project, file: path, content, expectedContent: file.saved }),
         path,
       );
@@ -538,7 +539,7 @@ export default function FilesTab({
           {(
             [
               ["tree", "Dateien"],
-              ["search", "Suchen"],
+              ["search", t("Suchen")],
             ] as const
           ).map(([id, label]) => (
             <button
@@ -556,16 +557,16 @@ export default function FilesTab({
         <button
           onClick={() => setCreating({ isDir: false, path: activeDir })}
           className="rounded px-1.5 py-0.5 text-[11px] text-slate-500 hover:bg-slate-100 hover:text-slate-800"
-          title="Neue Datei (Pfad relativ zum Projekt)"
+          title={t("Neue Datei (Pfad relativ zum Projekt)")}
         >
-          + Datei
+          {t("+ Datei")}
         </button>
         <button
           onClick={() => setCreating({ isDir: true, path: activeDir })}
           className="rounded px-1.5 py-0.5 text-[11px] text-slate-500 hover:bg-slate-100 hover:text-slate-800"
-          title="Neuer Ordner"
+          title={t("Neuer Ordner")}
         >
-          + Ordner
+          {t("+ Ordner")}
         </button>
       </div>
       {creating ? (
@@ -586,7 +587,7 @@ export default function FilesTab({
             onClick={() => void createEntry()}
             className="rounded bg-slate-800 px-2 py-1 text-[11px] text-white hover:bg-slate-700"
           >
-            {creating.isDir ? "Ordner anlegen" : "Anlegen"}
+            {creating.isDir ? t("Ordner anlegen") : t("Anlegen")}
           </button>
         </div>
       ) : null}
@@ -598,28 +599,28 @@ export default function FilesTab({
               autoFocus
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="In Dateien suchen…"
+              placeholder={t("In Dateien suchen…")}
               spellCheck={false}
               className="min-w-0 flex-1 rounded border border-slate-300 bg-white px-2 py-1 text-xs"
             />
             <button
               onClick={() => setSearchCase((value) => !value)}
               className={`rounded border px-1.5 text-[11px] ${searchCase ? "border-slate-800 bg-slate-800 text-white" : "border-slate-300 text-slate-500"}`}
-              title="Groß-/Kleinschreibung beachten"
+              title={t("Groß-/Kleinschreibung beachten")}
             >
               Aa
             </button>
             <button
               onClick={() => setSearchRegex((value) => !value)}
               className={`rounded border px-1.5 font-mono text-[11px] ${searchRegex ? "border-slate-800 bg-slate-800 text-white" : "border-slate-300 text-slate-500"}`}
-              title="Regulärer Ausdruck"
+              title={t("Regulärer Ausdruck")}
             >
               .*
             </button>
           </div>
           {searchError ? <p className="mb-2 text-xs text-red-600">{searchError}</p> : null}
           {query.trim() && hits.length === 0 && !searchError ? (
-            <p className="text-xs text-slate-400">Keine Treffer.</p>
+            <p className="text-xs text-slate-400">{t("Keine Treffer.")}</p>
           ) : null}
           {hits.length > 0 ? (
             <p className="mb-1 text-[11px] text-slate-400">
@@ -661,15 +662,15 @@ export default function FilesTab({
         <input
           value={filter}
           onChange={(event) => setFilter(event.target.value)}
-          placeholder="Dateiname filtern…"
+          placeholder={t("Dateiname filtern…")}
           spellCheck={false}
           className="mb-2 w-full rounded border border-slate-300 bg-white px-2 py-1 text-xs"
         />
       ) : null}
       {treeError ? <p className="mb-2 text-xs text-red-600">{treeError}</p> : null}
       {mode === "search" ? null : tree[""] && tree[""].length === 0 ? (
-        <NavEmpty title="Leeres Projekt">
-          Hier liegen noch keine Dateien — oder alle sind per <code>.gitignore</code>
+        <NavEmpty title={t("Leeres Projekt")}>
+          {t("Hier liegen noch keine Dateien — oder alle sind per")}{" "}<code>.gitignore</code>
           ausgeblendet.
         </NavEmpty>
       ) : (
@@ -685,26 +686,26 @@ export default function FilesTab({
         title={current.path.split("/").pop() ?? current.path}
         subtitle={current.path}
         meta={[
-          { label: "Größe", value: info ? formatSize(info.size) : "—" },
-          { label: "Zeilen", value: info?.lines ?? "—" },
+          { label: t("Größe"), value: info ? formatSize(info.size) : "—" },
+          { label: t("Zeilen"), value: info?.lines ?? "—" },
           {
-            label: "Geändert",
+            label: t("Geändert"),
             value: info?.modified ? info.modified.replace("T", " ").slice(0, 16) : "—",
           },
           {
             label: "Zustand",
             value: current.restored
-              ? "Entwurf wiederhergestellt — noch nicht gespeichert (⌘S)"
+              ? t("Entwurf wiederhergestellt — noch nicht gespeichert (⌘S)")
               : dirty
-                ? "ungespeichert (Entwurf gesichert)"
+                ? t("ungespeichert (Entwurf gesichert)")
                 : "gespeichert",
           },
-          { label: "Cursor", value: `Zeile ${cursorLine}` },
+          { label: "Cursor", value: t("Zeile {line}", { line: cursorLine }) },
         ]}
         actions={
           <>
             <InspectorButton tone="primary" disabled={!dirty} onClick={() => void save(current.path)}>
-              Speichern
+              {t("Speichern")}
             </InspectorButton>
             <InspectorButton
               disabled={!dirty}
@@ -719,27 +720,27 @@ export default function FilesTab({
                 );
               }}
             >
-              Verwerfen
+              {t("Verwerfen")}
             </InspectorButton>
             <InspectorButton
-              title="Pfad:Zeile + Inhalt als Markdown-Prompt in die Zwischenablage"
+              title={t("Pfad:Zeile + Inhalt als Markdown-Prompt in die Zwischenablage")}
               onClick={() => void writeText(fencedPrompt(`${current.path}:${cursorLine}`, current.text))}
             >
-              Als Prompt kopieren
+              {t("Als Prompt kopieren")}
             </InspectorButton>
             <InspectorButton onClick={() => void writeText(`${current.path}:${cursorLine}`)}>
-              Pfad kopieren
+              {t("Pfad kopieren")}
             </InspectorButton>
           </>
         }
         tabs={[
           {
             id: "file",
-            label: "Datei",
+            label: t("Datei"),
             content: (
               <div className="space-y-1">
                 {current.error ? <p className="text-xs text-red-600">{current.error}</p> : null}
-                {info?.binary ? <p className="text-xs text-amber-700">Binärdatei — nicht editierbar.</p> : null}
+                {info?.binary ? <p className="text-xs text-amber-700">{t("Binärdatei — nicht editierbar.")}</p> : null}
                 {gitEnabled && !current.error && !info?.binary ? (
                   <label className="flex items-center gap-2 text-xs text-slate-600">
                     <input
@@ -748,13 +749,13 @@ export default function FilesTab({
                       onChange={(event) => setBlameOn(event.target.checked)}
                     />
                     <span>
-                      Blame am Rand{" "}
-                      <span className="text-slate-400">(Commit und Autor je Zeile)</span>
+                      {t("Blame am Rand")}{" "}
+                      <span className="text-slate-400">{t("(Commit und Autor je Zeile)")}</span>
                     </span>
                   </label>
                 ) : null}
                 {blameOn && blame && blame.length === 0 ? (
-                  <p className="text-xs text-slate-400">Kein Blame — Datei nicht committet oder kein Repository.</p>
+                  <p className="text-xs text-slate-400">{t("Kein Blame — Datei nicht committet oder kein Repository.")}</p>
                 ) : null}
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   {renaming === current.path ? (
@@ -765,29 +766,28 @@ export default function FilesTab({
                     />
                   ) : (
                     <InspectorButton onClick={() => setRenaming(current.path)}>
-                      Umbenennen…
+                      {t("Umbenennen…")}
                     </InspectorButton>
                   )}
                   {deleteArmed ? (
                     <>
                       <InspectorButton tone="danger" onClick={() => void deleteEntry(current.path)}>
-                        In den Papierkorb
+                        {t("In den Papierkorb")}
                       </InspectorButton>
-                      <InspectorButton onClick={() => setDeleteArmed(false)}>Abbrechen</InspectorButton>
+                      <InspectorButton onClick={() => setDeleteArmed(false)}>{t("Abbrechen")}</InspectorButton>
                     </>
                   ) : (
                     <InspectorButton
-                      title="Datei in den Papierkorb legen (zweiter Klick bestätigt)"
+                      title={t("Datei in den Papierkorb legen (zweiter Klick bestätigt)")}
                       onClick={() => setDeleteArmed(true)}
                     >
-                      Löschen…
+                      {t("Löschen…")}
                     </InspectorButton>
                   )}
                 </div>
                 {fileError ? <p className="text-xs text-red-600">{fileError}</p> : null}
                 <p className="text-xs text-slate-400">
-                  ⌘S speichert; Entwürfe werden automatisch gesichert. Git-Zustand und Diff im
-                  Git-Tab.
+                  {t("⌘S speichert; Entwürfe werden automatisch gesichert. Git-Zustand und Diff im Git-Tab.")}
                 </p>
               </div>
             ),
@@ -799,7 +799,7 @@ export default function FilesTab({
               <div>
                 {history.length === 0 ? (
                   <p className="text-xs text-slate-400">
-                    Keine Commits für diese Datei — neu, unversioniert oder kein Repository.
+                    {t("Keine Commits für diese Datei — neu, unversioniert oder kein Repository.")}
                   </p>
                 ) : (
                   <ul className="space-y-0.5 text-xs">
@@ -832,13 +832,13 @@ export default function FilesTab({
                 {historyCommit ? (
                   <div className="mt-2 rounded border border-slate-200 bg-white">
                     <div className="flex items-center justify-between border-b border-slate-200 px-2 py-1 font-mono text-[10px] text-slate-500">
-                      <span>Commit {historyCommit.slice(0, 7)} · diese Datei</span>
+                      <span>Commit {historyCommit.slice(0, 7)}{" "}{t("· diese Datei")}</span>
                       <button
                         onClick={() => void writeText(fencedPrompt(`git show ${historyCommit.slice(0, 7)} -- ${current.path}`, historyDiff))}
                         className="text-slate-400 hover:text-slate-800"
-                        title="Diff als Markdown-Prompt in die Zwischenablage"
+                        title={t("Diff als Markdown-Prompt in die Zwischenablage")}
                       >
-                        als Prompt
+                        {t("als Prompt")}
                       </button>
                     </div>
                     <DiffView text={historyDiff} compact />
@@ -874,7 +874,7 @@ export default function FilesTab({
                 <button
                   onClick={() => closeFile(file.path)}
                   className="px-2 py-1.5 text-slate-400 hover:text-slate-800"
-                  title="Schließen"
+                  title={t("Schließen")}
                 >
                   ×
                 </button>
@@ -903,8 +903,7 @@ export default function FilesTab({
           )
         ) : (
           <p className="p-5 text-sm text-slate-400">
-            Datei links im Baum öffnen. Cmd/Ctrl-S speichert, der Inspektor zeigt Größe, Zeilen
-            und Zustand.
+            {t("Datei links im Baum öffnen. Cmd/Ctrl-S speichert, der Inspektor zeigt Größe, Zeilen und Zustand.")}
           </p>
         )}
       </div>

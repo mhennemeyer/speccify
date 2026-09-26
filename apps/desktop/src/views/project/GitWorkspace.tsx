@@ -1,6 +1,7 @@
 import { useRef, useState, type RefObject } from "react";
 import { clearDraft, draftKey, readDraft, writeDraft } from "../../lib/autosave";
 import type { GitBranch, GitStatus } from "../../lib/git";
+import { t } from "../../i18n";
 
 export type BranchAction = "switch" | "create" | "rename" | "delete";
 const button = "rounded border border-slate-300 px-2 py-1 text-xs hover:bg-slate-100 disabled:opacity-40";
@@ -32,9 +33,9 @@ export default function GitWorkspace({ project, status, branches, stagedCount, b
     setDraftSaved(readDraft(key) === next);
     setMessage(next);
   };
-  const reason = busy ? "Git-Aktion läuft…" : !subject.trim() ? "Bitte einen Betreff eingeben."
-    : stagedCount === 0 ? "Erst Dateien oder Hunks stagen (+ in der Liste)."
-    : status.entries.some(entry => entry.conflicted) ? "Zuerst die Konflikte auflösen." : null;
+  const reason = busy ? t("Git-Aktion läuft…") : !subject.trim() ? t("Bitte einen Betreff eingeben.")
+    : stagedCount === 0 ? t("Erst Dateien oder Hunks stagen (+ in der Liste).")
+    : status.entries.some(entry => entry.conflicted) ? t("Zuerst die Konflikte auflösen.") : null;
   const submit = async () => {
     if (reason || submitting.current) return;
     submitting.current = true;
@@ -60,7 +61,7 @@ export default function GitWorkspace({ project, status, branches, stagedCount, b
     <section aria-label="Git-Arbeitsbereich" className="rounded-lg border border-slate-200 bg-white p-3">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <div className="min-w-0">
-          <p className="text-[10px] uppercase tracking-wide text-slate-500">Repository / Worktree</p>
+          <p className="text-[10px] uppercase tracking-wide text-slate-500">{t("Repository / Worktree")}</p>
           <p className="break-all font-mono text-xs text-slate-600">{project}</p>
         </div>
         <button data-tone="blue" className="tone-surface rounded border px-3 py-1.5 text-xs font-semibold"
@@ -68,27 +69,27 @@ export default function GitWorkspace({ project, status, branches, stagedCount, b
           ⎇ {status.branch ?? "Detached HEAD"} · Branches {showBranches ? "▴" : "▾"}
         </button>
       </div>
-      <form aria-label="Commit erstellen" onSubmit={event => { event.preventDefault(); void submit(); }}
+      <form aria-label={t("Commit erstellen")} onSubmit={event => { event.preventDefault(); void submit(); }}
         onKeyDown={event => { if ((event.metaKey || event.ctrlKey) && event.key === "Enter") { event.preventDefault(); void submit(); } }}>
         <label className="block text-xs font-semibold text-slate-700">Commit-Betreff
           <input ref={messageRef} value={subject} disabled={busy} onChange={event => edit(event.target.value, body)}
-            placeholder="feat: …" spellCheck={false} className={`${field} mt-1 font-mono`} />
+            placeholder={"feat: …"} spellCheck={false} className={`${field} mt-1 font-mono`} />
         </label>
         <label className="mt-2 block text-[11px] text-slate-500">Beschreibung (optional)
           <textarea value={body} disabled={busy} onChange={event => edit(subject, event.target.value)} rows={2}
-            placeholder="Was ändert sich und warum?" spellCheck={false} className={`${field} mt-1 font-mono`} />
+            placeholder={t("Was ändert sich und warum?")} spellCheck={false} className={`${field} mt-1 font-mono`} />
         </label>
         <div className="mt-2 flex flex-wrap items-center gap-2">
           <button type="submit" data-tone="green" disabled={!!reason}
             className="tone-surface rounded border px-3 py-1.5 text-xs font-semibold disabled:opacity-40">
             {stagedCount} gestagete Datei(en) committen
           </button>
-          <button type="button" className={button} disabled={busy} onClick={onAgent}>Commit-Auftrag ans Terminal</button>
-          <span className="text-[11px] text-slate-500">Nur Index · kein Push · ⌘/Ctrl+Enter</span>
+          <button type="button" className={button} disabled={busy} onClick={onAgent}>{t("Commit-Auftrag ans Terminal")}</button>
+          <span className="text-[11px] text-slate-500">{t("Nur Index · kein Push · ⌘/Ctrl+Enter")}</span>
         </div>
         <p className="mt-2 text-[11px] text-slate-500" role="status">
-          {reason ?? "Bereit zum Commit. Nicht gestagete Änderungen bleiben unangetastet."}
-          {message ? draftSaved ? " Entwurf lokal gesichert." : " Lokaler Speicher nicht verfügbar: Entwurf vor Neustart kopieren." : ""}
+          {reason ?? t("Bereit zum Commit. Nicht gestagete Änderungen bleiben unangetastet.")}
+          {message ? draftSaved ? t(" Entwurf lokal gesichert.") : t(" Lokaler Speicher nicht verfügbar: Entwurf vor Neustart kopieren.") : ""}
         </p>
         {stagedCount > 0 ? <details className="mt-2 text-xs text-slate-600">
           <summary className="cursor-pointer">Index prüfen ({stagedCount} Dateien)</summary>
@@ -101,9 +102,9 @@ export default function GitWorkspace({ project, status, branches, stagedCount, b
       {showBranches ? (
         <section id="git-branches" aria-label="Branch-Verwaltung" className="mt-3 border-t border-slate-200 pt-3">
           <div className="flex gap-2">
-            <input aria-label="Branches suchen" value={query} onChange={event => setQuery(event.target.value)}
-              placeholder="Lokale und Remote-Branches suchen…" className={field} />
-            <button className={`${button} shrink-0`} disabled={busy} onClick={() => choose("create")}>Neuer Branch</button>
+            <input aria-label={t("Branches suchen")} value={query} onChange={event => setQuery(event.target.value)}
+              placeholder={t("Lokale und Remote-Branches suchen…")} className={field} />
+            <button className={`${button} shrink-0`} disabled={busy} onClick={() => choose("create")}>{t("Neuer Branch")}</button>
           </div>
           <ul className="mt-2 max-h-48 space-y-1 overflow-y-auto">
             {branches.filter(branch => branch.name.toLowerCase().includes(query.toLowerCase())).map(branch => (
@@ -112,7 +113,7 @@ export default function GitWorkspace({ project, status, branches, stagedCount, b
                 <div className="min-w-0 flex-1">
                   <p className="break-all font-mono text-xs">{branch.current ? "● " : "⎇ "}{branch.name}</p>
                   <p className="break-all text-[10px] text-slate-500">
-                    {branch.remote ? "Remote · nur Anzeige" : branch.current ? "Lokal · aktuell" : "Lokal"}
+                    {branch.remote ? t("Remote · nur Anzeige") : branch.current ? t("Lokal · aktuell") : t("Lokal")}
                     {branch.upstream ? ` · verfolgt ${branch.upstream}` : ""}
                     {branch.worktree && !branch.current ? ` · Worktree: ${branch.worktree}` : ""}
                   </p>
@@ -121,33 +122,33 @@ export default function GitWorkspace({ project, status, branches, stagedCount, b
                   <button className={button} disabled={busy || branch.current || !!branch.worktree}
                     onClick={() => choose("switch", branch.name)}>Wechseln</button>
                   <button className={button} disabled={busy || (!!branch.worktree && !branch.current)}
-                    onClick={() => choose("rename", branch.name)}>Umbenennen</button>
+                    onClick={() => choose("rename", branch.name)}>{t("Umbenennen")}</button>
                   <button className={button} disabled={busy || branch.current || !!branch.worktree}
-                    onClick={() => choose("delete", branch.name)}>Löschen…</button>
+                    onClick={() => choose("delete", branch.name)}>{t("Löschen…")}</button>
                 </div> : null}
               </li>
             ))}
           </ul>
           {!branches.some(branch => branch.name.toLowerCase().includes(query.toLowerCase())) ?
-            <p className="mt-2 text-xs text-slate-500">Keine passenden Branches.</p> : null}
-          {pending ? <form aria-label="Branch-Aktion bestätigen" data-tone={pending.action === "delete" ? "rose" : "blue"}
+            <p className="mt-2 text-xs text-slate-500">{t("Keine passenden Branches.")}</p> : null}
+          {pending ? <form aria-label={t("Branch-Aktion bestätigen")} data-tone={pending.action === "delete" ? "rose" : "blue"}
             className="tone-surface mt-3 rounded border p-3" onSubmit={event => { event.preventDefault(); void perform(); }}>
             <p className="break-all text-xs">{project} · aktuell: {pending.from ?? "Detached HEAD"}</p>
             <p className="my-2 break-all text-xs font-semibold">
-              {pending.action === "create" ? "Neuen Branch anlegen und wechseln" : `${pending.branch} — ${pending.action === "switch" ? "dorthin wechseln?" : pending.action === "rename" ? "umbenennen" : "lokal löschen?"}`}
+              {pending.action === "create" ? t("Neuen Branch anlegen und wechseln") : `${pending.branch} — ${pending.action === "switch" ? t("dorthin wechseln?") : pending.action === "rename" ? t("umbenennen") : t("lokal löschen?")}`}
             </p>
             {needsName ? <input autoFocus aria-label="Branch-Name" value={name} disabled={busy}
               onChange={event => setName(event.target.value)} className={field} /> : null}
             <p className="my-2 text-[11px]">
-              {pending.action === "delete" ? "Nur wenn vollständig in HEAD integriert. Kein Force-Delete; Remote bleibt unverändert."
-                : "Lokale Änderungen werden nicht verworfen oder gestasht. Git bricht bei gefährdeten Änderungen ab."}
+              {pending.action === "delete" ? t("Nur wenn vollständig in HEAD integriert. Kein Force-Delete; Remote bleibt unverändert.")
+                : t("Lokale Änderungen werden nicht verworfen oder gestasht. Git bricht bei gefährdeten Änderungen ab.")}
             </p>
-            {branchChanged ? <p className="mb-2 text-xs">Branch hat sich inzwischen geändert. Bitte Aktion neu auswählen.</p> : null}
+            {branchChanged ? <p className="mb-2 text-xs">{t("Branch hat sich inzwischen geändert. Bitte Aktion neu auswählen.")}</p> : null}
             <div className="flex gap-2">
               <button className={button} type="submit" disabled={busy || branchChanged || (needsName && !name.trim())}>
-                {busy ? "Läuft…" : "Bestätigen"}
+                {busy ? t("Läuft…") : t("Bestätigen")}
               </button>
-              <button className={button} type="button" disabled={busy} onClick={() => setPending(null)}>Abbrechen</button>
+              <button className={button} type="button" disabled={busy} onClick={() => setPending(null)}>{t("Abbrechen")}</button>
             </div>
           </form> : null}
         </section>

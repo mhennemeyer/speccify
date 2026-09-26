@@ -8,6 +8,7 @@
 // und stellt ihn wieder her.
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { t } from "../i18n";
 
 export type AutosaveStatus = "saved" | "dirty" | "saving" | "error";
 
@@ -114,12 +115,12 @@ export function useAutosave({
 export function autosaveLabel(status: AutosaveStatus): string {
   switch (status) {
     case "saved":
-      return "Gespeichert";
+      return t("Gespeichert");
     case "dirty":
-      return "Entwurf gesichert · speichert gleich…";
+      return t("Entwurf gesichert · speichert gleich…");
     case "saving":
-      return "Speichert…";
+      return t("Speichert…");
     case "error":
-      return "Speichern fehlgeschlagen — Entwurf bleibt gesichert";
+      return t("Speichern fehlgeschlagen — Entwurf bleibt gesichert");
   }
 }

@@ -4,6 +4,7 @@
 
 import { useEffect, useState } from "react";
 import { runningActivities, useActivities, type Activity } from "../lib/activity";
+import { t } from "../i18n";
 
 function duration(entry: Activity, now: number): string {
   const ms = Math.max(0, (entry.endedAt ?? now) - entry.startedAt);
@@ -52,10 +53,10 @@ export default function ActivityView() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        title="Aktivität"
+        title={t("Aktivität")}
         className="rounded px-2 py-0.5 text-[11px] text-slate-400 hover:bg-slate-100 hover:text-slate-600"
       >
-        {activities.length === 0 ? "Ruhe" : `${activities.length} Aktivitäten`}
+        {activities.length === 0 ? t("Ruhe") : t("{activities} Aktivitäten", { activities: activities.length })}
       </button>
     );
   }
@@ -66,7 +67,7 @@ export default function ActivityView() {
         type="button"
         onClick={() => setOpen((previous) => !previous)}
         className="flex max-w-[360px] items-center gap-2 rounded bg-slate-100 px-2.5 py-0.5 text-[11px] text-slate-700 hover:bg-slate-200"
-        title="Aktivität — Klick für die Liste"
+        title={t("Aktivität — Klick für die Liste")}
       >
         {running.length > 0 ? (
           <>
@@ -84,20 +85,20 @@ export default function ActivityView() {
             <span className="font-mono text-slate-500">{duration(recentlyFinished, now)}</span>
           </>
         ) : (
-          <span>Aktivität</span>
+          <span>{t("Aktivität")}</span>
         )}
       </button>
       {open ? (
         <div className="fixed inset-0 z-40" onClick={() => setOpen(false)}>
           <div
             role="dialog"
-            aria-label="Aktivität"
+            aria-label={t("Aktivität")}
             onClick={(event) => event.stopPropagation()}
             className="absolute left-1/2 top-9 w-[440px] -translate-x-1/2 rounded-xl border border-slate-200 bg-white p-3 shadow-xl"
           >
-            <h3 className="mb-2 text-xs font-semibold text-slate-500">Aktivität in diesem Fenster</h3>
+            <h3 className="mb-2 text-xs font-semibold text-slate-500">{t("Aktivität in diesem Fenster")}</h3>
             {activities.length === 0 ? (
-              <p className="text-xs text-slate-400">Noch nichts passiert.</p>
+              <p className="text-xs text-slate-400">{t("Noch nichts passiert.")}</p>
             ) : (
               <ul className="max-h-72 space-y-1 overflow-y-auto text-xs">
                 {activities.slice(0, 50).map((entry) => (

@@ -1,3 +1,4 @@
+import { t } from "../i18n";
 export type PlaybookStatus = "active" | "draft" | "invalid";
 
 /** Flat frontmatter contract shared with playbook_cmd::playbook_status. */
@@ -20,6 +21,6 @@ export const PLAYBOOK_STATUS_LABELS: Record<PlaybookStatus, string> = {
 
 export function playbookNotice(status: PlaybookStatus): string {
   return status === "draft"
-    ? "Draft — unverbindlicher Entwurf. Keine Arbeitsanweisung oder Umsetzungsfreigabe. Beim Bearbeiten den Draft-Status erhalten."
-    : "Unbekannter oder ungültiger Playbook-Status — keine Arbeitsanweisung. Status vor einer Anwendung ausdrücklich klären.";
+    ? t("Draft — unverbindlicher Entwurf. Keine Arbeitsanweisung oder Umsetzungsfreigabe. Beim Bearbeiten den Draft-Status erhalten.")
+    : t("Unbekannter oder ungültiger Playbook-Status — keine Arbeitsanweisung. Status vor einer Anwendung ausdrücklich klären.");
 }

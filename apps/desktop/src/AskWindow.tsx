@@ -8,6 +8,7 @@ import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import AskBoPanel from "./components/AskBoPanel";
 import { useAskBo } from "./lib/askBo";
 import { useTheme } from "./lib/theme";
+import { t } from "./i18n";
 
 export default function AskWindow() {
   useTheme();
@@ -28,13 +29,13 @@ export default function AskWindow() {
   return (
     <div className="keep-dark flex h-screen flex-col bg-slate-800 text-slate-100">
       <div data-tauri-drag-region className="flex h-9 shrink-0 items-center justify-center text-[11px] text-slate-400">
-        {mine[0]?.title || mine[0]?.prompt || "Agent fragt"}
+        {mine[0]?.title || mine[0]?.prompt || t("Agent fragt")}
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto" data-ask-window={id}>
         {mine.length > 0 ? (
           <AskBoPanel interactions={mine} onAnswer={askBo.answer} htmlInline />
         ) : (
-          <p className="p-4 text-sm text-slate-400">Frage wird geladen…</p>
+          <p className="p-4 text-sm text-slate-400">{t("Frage wird geladen…")}</p>
         )}
       </div>
     </div>

@@ -28,6 +28,14 @@ Terminal. Nicht geprüft: Host-Prozess unter Windows/Linux, Dashboard-Terminal
 hängt sich nicht wieder an. Richtung: Speccify wird eigenes Produkt (Spec 071):
 Brücke GitHub privat + Netlify, später itsd-GitLab.
 
+**Oberfläche zweisprachig, 2026-09-26** (Spec 073, auf main nach 0.8.7):
+Einstellung `language` (System/Deutsch/English) im Dashboard und im
+Einstellungs-Popover, sofort in allen Fenstern. Deutsch bleibt Quelltext
+(`t("…")` in `apps/desktop/src/i18n`), Englisch aus `en.ts` (~830 Einträge);
+`scripts/check_i18n.py` meldet fehlende Einträge, `scripts/test_language.mjs`
+prüft den Wechsel. Noch deutsch: Meldungen aus dem Rust-Teil und die an den
+Agenten gerichteten Auftragstexte (bewusst, Folge-Spec).
+
 **0.8.2-Findings 051–055, 2026-09-17:** Terminal inklusive
 Bedienelementen folgt Hell/Dunkel/System; Schrift 8–32 px (Standard 14), live und
 fensterübergreifend. Rückfragen-Hinweise über OSC 9/777, Bell und bekannte
@@ -335,6 +343,7 @@ Speccify · Dashboard
 │   ├── Settings
 │   │   ├── Projekt-Erkennungstiefe 1–16 (Standard 1): Root + direkte Unterordner
 │   │   ├── Erscheinungsbild: System / Hell / Dunkel (fensterübergreifend)
+│   │   ├── Sprache: System / Deutsch / English (073, sofort in allen Fenstern; Rust-Meldungen noch deutsch)
 │   │   ├── Terminal: Schriftgröße 8–32 px · Popup-Hinweise · Systemmeldungen testen
 │   │   ├── Agent-Sitzung: Dashboard-Fortsetzung nach Neustart
 │   │   ├── Teamsignale: Webhook-URL (030)
@@ -367,6 +376,7 @@ Projektfenster · ein Projektpfad (Startbereich: Specs)
 │   ├── Hell/Dunkel umschalten
 │   └── Einstellungen-Popover
 │       ├── Erscheinungsbild: System / Hell / Dunkel
+│       ├── Sprache: System / Deutsch / English
 │       ├── Agent-Terminal: Unten / Rechts
 │       ├── Agent-Sitzung: automatisch fortsetzen
 │       ├── Teamsignale: Webhook je Projekt · Testnachricht (030)

@@ -4,10 +4,12 @@ import { useState } from "react";
 // bleibt im Agent-Tab und am Terminal-Start.
 
 import ThemePicker from "./ThemePicker";
+import LanguagePicker from "./LanguagePicker";
 import TerminalPreferencesEditor from "./TerminalPreferencesEditor";
 import AgentSettingsDialog from "./AgentSettingsDialog";
 import type { ThemePref } from "../lib/theme";
 import type { ProjectLayout, TerminalDock } from "../lib/layout";
+import { t } from "../i18n";
 
 export default function SettingsSheet({
   theme,
@@ -43,25 +45,31 @@ export default function SettingsSheet({
     <div className="fixed inset-0 z-40" onClick={onClose}>
       <div
         role="dialog"
-        aria-label="Einstellungen"
+        aria-label={t("Einstellungen")}
         onClick={(event) => event.stopPropagation()}
-        className="absolute right-2 top-9 w-[400px] rounded-xl border border-slate-200 bg-white p-5 shadow-xl"
+        className="absolute right-2 top-9 max-h-[calc(100vh-3rem)] w-[400px] overflow-y-auto rounded-xl border border-slate-200 bg-white p-5 shadow-xl"
       >
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-slate-800">Einstellungen</h2>
+          <h2 className="text-sm font-semibold text-slate-800">{t("Einstellungen")}</h2>
           <button onClick={onClose} className="text-xs text-slate-400 hover:text-slate-700">
-            Schließen
+            {t("Schließen")}
           </button>
         </div>
 
         <section className="mb-4">
-          <h3 className="mb-1 text-xs font-semibold text-slate-500">Erscheinungsbild</h3>
-          <p className="mb-2 text-xs text-slate-500">Gilt für alle Fenster.</p>
+          <h3 className="mb-1 text-xs font-semibold text-slate-500">{t("Erscheinungsbild")}</h3>
+          <p className="mb-2 text-xs text-slate-500">{t("Gilt für alle Fenster.")}</p>
           <ThemePicker value={theme} onChange={onTheme} />
         </section>
 
         <section className="mb-4">
-          <h3 className="mb-1 text-xs font-semibold text-slate-500">Agent-Terminal</h3>
+          <h3 className="mb-1 text-xs font-semibold text-slate-500">{t("Sprache")}</h3>
+          <p className="mb-2 text-xs text-slate-500">{t("Gilt sofort für alle Fenster.")}</p>
+          <LanguagePicker />
+        </section>
+
+        <section className="mb-4">
+          <h3 className="mb-1 text-xs font-semibold text-slate-500">{t("Agent-Terminal")}</h3>
           <TerminalPreferencesEditor />
           <div className="mb-3"><AgentSettingsDialog /></div>
           <div role="radiogroup" className="inline-flex gap-0.5 rounded-full bg-slate-100 p-0.5">
@@ -90,7 +98,7 @@ export default function SettingsSheet({
         </section>
 
         <section className="mb-4">
-          <h3 className="mb-1 text-xs font-semibold text-slate-500">Agent-Sitzung</h3>
+          <h3 className="mb-1 text-xs font-semibold text-slate-500">{t("Agent-Sitzung")}</h3>
           {onResumeAgent ? <label className="flex items-start gap-2 text-xs text-slate-600">
             <input
               type="checkbox"
@@ -99,18 +107,17 @@ export default function SettingsSheet({
               className="mt-0.5"
             />
             <span>
-              Nach einem Neustart der App genau die gemerkte Sitzung automatisch fortsetzen
-              (<code>claude --resume &lt;id&gt;</code>). Ohne bekannte Sitzungs-ID (Codex,
-              verschwundene Sitzung) fragt die Startansicht ausdrücklich nach.
+              {t("Nach einem Neustart der App genau die gemerkte Sitzung automatisch fortsetzen")}{" "}
+              (<code>{"claude --resume <id>"}</code>). {t("Ohne bekannte Sitzungs-ID (Codex, verschwundene Sitzung) fragt die Startansicht ausdrücklich nach.")}
             </span>
-          </label> : <p className="text-xs text-slate-500">Im Workspace startest Du eine gemeinsame Sitzung im Parent-Ordner ausdrücklich. Beim App-Neustart wird keine Sitzung automatisch gestartet.</p>}
+          </label> : <p className="text-xs text-slate-500">{t("Im Workspace startest Du eine gemeinsame Sitzung im Parent-Ordner ausdrücklich. Beim App-Neustart wird keine Sitzung automatisch gestartet.")}</p>}
         </section>
 
         <section className="mb-4">
           <h3 className="mb-1 text-xs font-semibold text-slate-500">Toolbar</h3>
           <p className="mb-2 text-xs text-slate-500">
-            Knöpfe in der Mitte der Toolbar — eingebaute und Aktionen aus{" "}
-            <code>actions.json</code>; Reihenfolge per Pfeil. Pro Projekt gemerkt.
+            {t("Knöpfe in der Mitte der Toolbar — eingebaute und Aktionen aus")}{" "}
+            <code>actions.json</code>; {t("Reihenfolge per Pfeil. Pro Projekt gemerkt.")}
           </p>
           <ul className="max-h-48 space-y-0.5 overflow-y-auto rounded border border-slate-200 p-1.5">
             {[
@@ -153,7 +160,7 @@ export default function SettingsSheet({
                         onClick={() => move(-1)}
                         disabled={position === 0}
                         className="rounded px-1 text-slate-400 hover:text-slate-800 disabled:opacity-30"
-                        title="nach links"
+                        title={t("nach links")}
                       >
                         ↑
                       </button>
@@ -161,7 +168,7 @@ export default function SettingsSheet({
                         onClick={() => move(1)}
                         disabled={position === toolbar.length - 1}
                         className="rounded px-1 text-slate-400 hover:text-slate-800 disabled:opacity-30"
-                        title="nach rechts"
+                        title={t("nach rechts")}
                       >
                         ↓
                       </button>
@@ -179,9 +186,8 @@ export default function SettingsSheet({
             <label className="flex items-start gap-2 text-xs text-slate-600">
               <input type="checkbox" checked={webhook.enabled} onChange={(event) => webhook.onToggle(event.target.checked)} className="mt-0.5" />
               <span>
-                Webhook für dieses Projekt: Stationswechsel, <em>bereit</em>, neue Frage und Register-Konflikt,
-                die hier entstehen, als Nachricht senden (Slack/Teams/Mattermost). Die URL steht nur in
-                <code>SPECCIFY_WEBHOOK_URL</code> oder in den Dashboard-Settings, nie im Projekt.
+                {t("Webhook für dieses Projekt: Stationswechsel, „bereit“, neue Frage und Register-Konflikt, die hier entstehen, als Nachricht senden (Slack/Teams/Mattermost). Die URL steht nur in")}{" "}
+                <code>SPECCIFY_WEBHOOK_URL</code>{" "}{t("oder in den Dashboard-Settings, nie im Projekt.")}
               </span>
             </label>
             <div className="mt-2 flex items-center gap-2">
@@ -189,7 +195,7 @@ export default function SettingsSheet({
                 className="rounded border border-slate-300 px-2.5 py-1 text-xs text-slate-700 hover:bg-slate-100"
                 onClick={() => void webhook.onTest().then(setTestResult).catch((error: unknown) => setTestResult(String(error)))}
               >
-                Testnachricht senden
+                {t("Testnachricht senden")}
               </button>
               {testResult ? <span className="text-xs text-slate-500">{testResult}</span> : null}
             </div>
@@ -198,13 +204,13 @@ export default function SettingsSheet({
         <section>
           <h3 className="mb-1 text-xs font-semibold text-slate-500">Layout</h3>
           <p className="mb-2 text-xs text-slate-500">
-            Breiten, Sichtbarkeiten und Toolbar werden pro Projekt gemerkt.
+            {t("Breiten, Sichtbarkeiten und Toolbar werden pro Projekt gemerkt.")}
           </p>
           <button
             onClick={onResetLayout}
             className="rounded border border-slate-300 px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-100"
           >
-            Layout zurücksetzen
+            {t("Layout zurücksetzen")}
           </button>
         </section>
       </div>

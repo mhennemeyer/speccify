@@ -13,6 +13,7 @@ import {
   removeSource,
   type SourceInfo,
 } from "../lib/sources";
+import { t } from "../i18n";
 
 export function SourceAddForm({
   project,
@@ -44,7 +45,7 @@ export function SourceAddForm({
   };
 
   const pickFolder = async () => {
-    const picked = await openDialog({ directory: true, title: "Skill-Ordner wählen" });
+    const picked = await openDialog({ directory: true, title: t("Skill-Ordner wählen") });
     if (typeof picked === "string") await submit(picked);
   };
 
@@ -68,14 +69,14 @@ export function SourceAddForm({
           disabled={busy || !location.trim()}
           className={`shrink-0 rounded bg-slate-800 text-white hover:bg-slate-700 disabled:opacity-40 ${size}`}
         >
-          {busy ? (looksLikeGit(location) ? "Klont…" : "Prüft…") : "Hinzufügen"}
+          {busy ? (looksLikeGit(location) ? t("Klont…") : t("Prüft…")) : t("Hinzufügen")}
         </button>
         <button
           onClick={() => void pickFolder()}
           disabled={busy}
           className={`shrink-0 rounded border border-slate-300 bg-white text-slate-700 hover:bg-slate-100 ${size}`}
         >
-          Ordner…
+          {t("Ordner…")}
         </button>
       </div>
       {error ? (
@@ -131,7 +132,7 @@ export function SourceRow({
           {SOURCE_SCOPE_LABEL[source.scope]}
         </span>
         <span className={`rounded px-1.5 py-0.5 text-[11px] ${stateBadge}`}>
-          {source.state === "ready" ? "bereit" : "nicht geklont"}
+          {source.state === "ready" ? t("bereit") : t("nicht geklont")}
         </span>
       </div>
       <p className="mt-0.5 truncate font-mono text-xs text-slate-500" title={source.location}>
@@ -151,20 +152,20 @@ export function SourceRow({
             <button
               onClick={() => void run("refresh")}
               disabled={busy !== null}
-              title="git pull --ff-only (bzw. klonen)"
+              title={t("git pull --ff-only (bzw. klonen)")}
               className="rounded px-2 py-1 text-xs text-slate-600 hover:bg-slate-100 disabled:opacity-40"
             >
-              {busy === "refresh" ? "Zieht…" : "Aktualisieren"}
+              {busy === "refresh" ? t("Zieht…") : t("Aktualisieren")}
             </button>
           ) : null}
           {removable ? (
             <button
               onClick={() => void run("remove")}
               disabled={busy !== null}
-              title="Aus der Liste nehmen — der Checkout bleibt als Cache"
+              title={t("Aus der Liste nehmen — der Checkout bleibt als Cache")}
               className="rounded px-2 py-1 text-xs text-slate-400 hover:text-red-600 disabled:opacity-40"
             >
-              {busy === "remove" ? "Entfernt…" : "Entfernen"}
+              {busy === "remove" ? t("Entfernt…") : t("Entfernen")}
             </button>
           ) : null}
         </div>

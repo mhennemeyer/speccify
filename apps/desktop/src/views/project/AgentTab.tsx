@@ -19,6 +19,7 @@ import {
 import { HandoverButton } from "../../components/HandoverSheet";
 import AgentStartup from "../../components/AgentStartup";
 import AgentSettingsDialog from "../../components/AgentSettingsDialog";
+import { t } from "../../i18n";
 
 export default function AgentTab({
   project,
@@ -59,9 +60,9 @@ export default function AgentTab({
   return (
     <div className="flex h-full min-h-0 flex-col gap-4">
       <div className="max-w-md">
-        {commandRoot && <p className="mb-2 break-all text-xs text-slate-500">Gemeinsamer Workspace-Agent: {commandRoot}. Die Anweisungsdateien unten gehören weiterhin zu diesem Projekt.</p>}
+        {commandRoot && <p className="mb-2 break-all text-xs text-slate-500">{t("Gemeinsamer Workspace-Agent:")}{" "}{commandRoot}{t(". Die Anweisungsdateien unten gehören weiterhin zu diesem Projekt.")}</p>}
         <label className="mb-1 block text-xs font-medium text-slate-500">
-          Agent-Kommando (Terminal-Autostart, leer = nur Shell)
+          {t("Agent-Kommando (Terminal-Autostart, leer = nur Shell)")}
         </label>
         <input
           value={agentCommand}
@@ -81,25 +82,24 @@ export default function AgentTab({
                   : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
               }`}
             >
-              {preset.label}
+              {t(preset.label)}
             </button>
           ))}
         </div>
       </div>
       <AgentStartup project={commandRoot ?? project} command={agentCommand} />
       <div><AgentSettingsDialog /></div>
-      <LoadingBoundary loading={files.loading} error={files.error} label="Agent-Dateien suchen…">
+      <LoadingBoundary loading={files.loading} error={files.error} label={t("Agent-Dateien suchen…")}>
         {available.length === 0 ? (
           <>
             <NavigatorPortal tab="agent" fallback={() => null}>
-              <NavEmpty title="Noch keine Agent-Dateien">
-                <code>CLAUDE.md</code>, <code>AGENTS.md</code> und <code>.agent/agent.md</code>{" "}
-                legt das Workflow-Banner oben mit <em>Einrichten</em> an — sie sind der
-                Vertrag zwischen Dir und dem Agenten.
+              <NavEmpty title={t("Noch keine Agent-Dateien")}>
+                <code>CLAUDE.md</code>, <code>AGENTS.md</code> {t("und")} <code>.agent/agent.md</code>{" "}
+                {t("legt das Workflow-Banner oben mit")}{" "}<em>{t("Einrichten")}</em>{" "}{t("an — sie sind der Vertrag zwischen Dir und dem Agenten.")}
               </NavEmpty>
             </NavigatorPortal>
             <p className="text-sm text-slate-500">
-              Keine <code>CLAUDE.md</code>/<code>AGENTS.md</code> im Projekt.
+              {t("Keine")} <code>CLAUDE.md</code>/<code>AGENTS.md</code>{" "}{t("im Projekt.")}
             </p>
           </>
         ) : (
@@ -124,10 +124,10 @@ export default function AgentTab({
                       label: "Rolle",
                       value:
                         current === ".agent/agent.md"
-                          ? "Kanonischer Vertrag — von jedem Agenten gelesen"
-                          : "Host-Adapter — verweist auf .agent/agent.md",
+                          ? t("Kanonischer Vertrag — von jedem Agenten gelesen")
+                          : t("Host-Adapter — verweist auf .agent/agent.md"),
                     },
-                    { label: "Terminal-Kommando", value: agentCommand || "nur Shell" },
+                    { label: t("Terminal-Kommando"), value: agentCommand || t("nur Shell") },
                   ]}
                   actions={
                     <HandoverButton project={project} item={{ type: "file", path: current }} known={body.data} />
@@ -136,7 +136,7 @@ export default function AgentTab({
               </InspectorPortal>
             ) : null}
             <div className="min-h-0 flex-1 overflow-y-auto rounded-lg border border-slate-200 bg-white p-5">
-              <LoadingBoundary loading={body.loading} error={body.error} label="Datei lesen…">
+              <LoadingBoundary loading={body.loading} error={body.error} label={t("Datei lesen…")}>
                 <Markdown text={stripFrontmatter(body.data ?? "")} />
               </LoadingBoundary>
             </div>

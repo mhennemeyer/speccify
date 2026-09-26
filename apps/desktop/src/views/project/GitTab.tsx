@@ -120,6 +120,7 @@ function CommitList({
 }
 
 import { useProjectActivity } from "../../lib/projectActivity";
+import { t } from "../../i18n";
 
 export default function GitTab({
   project,
@@ -172,9 +173,9 @@ export default function GitTab({
     void deliverToTerminal(`Ziel-Repository: ${JSON.stringify(project)}. Ausschließlich dort arbeiten. ${prompt}`).then((outcome) =>
       setNotice(
         outcome.status === "delivered"
-          ? "Auftrag ins Agent-Terminal eingefügt — dort mit Enter bestätigen."
+          ? t("Auftrag ins Agent-Terminal eingefügt — dort mit Enter bestätigen.")
           : outcome.status === "no-terminal"
-            ? "Kein Agent-Terminal bereit — zuerst „Agent-Terminal starten“, dann erneut."
+            ? t("Kein Agent-Terminal bereit — zuerst „Agent-Terminal starten“, dann erneut.")
             : `Zustellung fehlgeschlagen: ${outcome.message}`,
       ),
     );
@@ -429,7 +430,7 @@ export default function GitTab({
         <button
           onClick={() => void stage([entry.path], !stagedList)}
           disabled={busy}
-          title={stagedList ? "Aus dem Index nehmen" : "Stagen"}
+          title={stagedList ? t("Aus dem Index nehmen") : "Stagen"}
           className={`px-1.5 text-xs ${active ? "text-slate-300 hover:text-white" : "text-slate-400 hover:text-slate-800"}`}
         >
           {stagedList ? "−" : "+"}
@@ -442,14 +443,13 @@ export default function GitTab({
     <NavigatorPortal tab="git">
       {status && !status.repo ? (
         <NavEmpty
-          title="Kein Git-Repository"
+          title={t("Kein Git-Repository")}
           action={{
-            label: "Repository anlegen (git init)",
+            label: t("Repository anlegen (git init)"),
             onClick: () => void guard(() => trackActivity("action", "git init", () => gitInit(project))),
           }}
         >
-          Dieses Projekt ist noch kein Git-Repository. Mit einem Repository sieht der Agent
-          seine Änderungen, und Commits nennen die Spec, zu der sie gehören.
+          {t("Dieses Projekt ist noch kein Git-Repository. Mit einem Repository sieht der Agent seine Änderungen, und Commits nennen die Spec, zu der sie gehören.")}
         </NavEmpty>
       ) : (
         <>
@@ -458,21 +458,21 @@ export default function GitTab({
               <button
                 onClick={() => { setShowBranches(true); openCommitPanel(); }}
                 className="truncate font-mono text-xs font-semibold text-slate-800 hover:underline"
-                title="Branch-Verwaltung öffnen"
+                title={t("Branch-Verwaltung öffnen")}
               >
-                {status?.branch ?? "(kein Branch)"}
+                {status?.branch ?? t("(kein Branch)")}
               </button>
               <span className="shrink-0 font-mono text-[10px] text-slate-500">
-                {status?.upstream ? `↑${status.ahead} ↓${status.behind}` : "kein Upstream"}
+                {status?.upstream ? `↑${status.ahead} ↓${status.behind}` : t("kein Upstream")}
               </span>
             </div>
             <div className="mt-1.5 flex flex-wrap gap-1">
               <button
                 onClick={openCommitPanel}
                 className="rounded bg-slate-800 px-2 py-0.5 text-[11px] font-medium text-white hover:bg-slate-700"
-                title="Commit-Nachricht schreiben oder den Agenten committen lassen"
+                title={t("Commit-Nachricht schreiben oder den Agenten committen lassen")}
               >
-                Commit…
+                {t("Commit…")}
               </button>
               {(["fetch", "pull", "push"] as const).map((verb) => (
                 <button
@@ -487,9 +487,8 @@ export default function GitTab({
             </div>
           </div>
           {entries.length === 0 ? (
-            <NavEmpty title="Alles committet">
-              Keine Änderungen im Arbeitsverzeichnis. Was der Agent ändert, erscheint hier
-              sofort — zum Sichten, Stagen und Committen.
+            <NavEmpty title={t("Alles committet")}>
+              {t("Keine Änderungen im Arbeitsverzeichnis. Was der Agent ändert, erscheint hier sofort — zum Sichten, Stagen und Committen.")}
             </NavEmpty>
           ) : (
             <>
@@ -503,7 +502,7 @@ export default function GitTab({
                     onClick={() => void stage(staged.map((entry) => entry.path), false)}
                     className="text-[11px] text-slate-400 hover:text-slate-800"
                   >
-                    alle −
+                    {t("alle −")}
                   </button>
                 ) : null}
               </div>
@@ -518,7 +517,7 @@ export default function GitTab({
                     onClick={() => void stage(unstaged.map((entry) => entry.path), true)}
                     className="text-[11px] text-slate-400 hover:text-slate-800"
                   >
-                    alle +
+                    {t("alle +")}
                   </button>
                 ) : null}
               </div>
@@ -549,7 +548,7 @@ export default function GitTab({
               disabled={busy}
               onClick={() => void stage([current.path], !selected.staged)}
             >
-              {selected.staged ? "Aus dem Index nehmen" : "Stagen"}
+              {selected.staged ? t("Aus dem Index nehmen") : "Stagen"}
             </InspectorButton>
             <InspectorButton
               onClick={() => {
@@ -557,28 +556,28 @@ export default function GitTab({
                 showTab("files");
               }}
             >
-              Im Editor öffnen
+              {t("Im Editor öffnen")}
             </InspectorButton>
             <InspectorButton
-              title="Diff als Markdown-Prompt in die Zwischenablage"
+              title={t("Diff als Markdown-Prompt in die Zwischenablage")}
               onClick={() => void writeText(fencedPrompt(`git diff ${current.path}`, diff))}
             >
-              Diff als Prompt
+              {t("Diff als Prompt")}
             </InspectorButton>
             {!selected.staged ? (
               discardArmed === current.path ? (
                 <>
                   <InspectorButton tone="danger" disabled={busy} onClick={() => void discard(current.path)}>
-                    Ja, verwerfen
+                    {t("Ja, verwerfen")}
                   </InspectorButton>
-                  <InspectorButton onClick={() => setDiscardArmed(null)}>Abbrechen</InspectorButton>
+                  <InspectorButton onClick={() => setDiscardArmed(null)}>{t("Abbrechen")}</InspectorButton>
                 </>
               ) : (
                 <InspectorButton
-                  title={current.untracked ? "Datei löschen (git clean)" : "Änderungen im Arbeitsbaum zurücksetzen (git restore)"}
+                  title={current.untracked ? t("Datei löschen (git clean)") : t("Änderungen im Arbeitsbaum zurücksetzen (git restore)")}
                   onClick={() => setDiscardArmed(current.path)}
                 >
-                  Verwerfen…
+                  {t("Verwerfen…")}
                 </InspectorButton>
               )
             ) : null}
@@ -587,20 +586,20 @@ export default function GitTab({
         tabs={[
           {
             id: "changes",
-            label: "Änderungen",
+            label: t("Änderungen"),
             content: (
               <p className="text-xs text-slate-500">
                 {current.untracked
-                  ? "Neue Datei — komplett stagen oder verwerfen."
+                  ? t("Neue Datei — komplett stagen oder verwerfen.")
                   : selected.staged
-                    ? "Der Diff in der Mitte zeigt den Index. „Hunk zurücknehmen“ holt einzelne Blöcke wieder heraus."
-                    : "Der Diff in der Mitte zeigt den Arbeitsbaum gegen den Index. „Hunk stagen“ übernimmt einzelne Blöcke."}
+                    ? t("Der Diff in der Mitte zeigt den Index. „Hunk zurücknehmen“ holt einzelne Blöcke wieder heraus.")
+                    : t("Der Diff in der Mitte zeigt den Arbeitsbaum gegen den Index. „Hunk stagen“ übernimmt einzelne Blöcke.")}
                 {historyCommit ? (
                   <button
                     onClick={() => setHistoryCommit(null)}
                     className="ml-1 text-sky-700 hover:underline"
                   >
-                    Zurück zum aktuellen Diff.
+                    {t("Zurück zum aktuellen Diff.")}
                   </button>
                 ) : null}
               </p>
@@ -614,7 +613,7 @@ export default function GitTab({
                 commits={fileHistory}
                 selected={historyCommit}
                 onSelect={(hash) => setHistoryCommit((previous) => (previous === hash ? null : hash))}
-                empty={current.untracked ? "Noch nie committet." : "Keine Historie."}
+                empty={current.untracked ? t("Noch nie committet.") : t("Keine Historie.")}
               />
             ),
           },
@@ -631,24 +630,24 @@ export default function GitTab({
           subtitle={`${commitDetail.short} · ${commitDetail.author} · ${shortDate(commitDetail.date)}`}
           meta={[
             { label: "Hash", value: <span className="font-mono">{commitDetail.hash}</span> },
-            { label: "Dateien", value: `${commitDetail.files.length}` },
+            { label: t("Dateien"), value: `${commitDetail.files.length}` },
           ]}
           actions={
             <>
-              <InspectorButton onClick={() => void writeText(commitDetail.hash)}>Hash kopieren</InspectorButton>
+              <InspectorButton onClick={() => void writeText(commitDetail.hash)}>{t("Hash kopieren")}</InspectorButton>
               <InspectorButton
-                title="Diff des Commits als Markdown-Prompt in die Zwischenablage"
+                title={t("Diff des Commits als Markdown-Prompt in die Zwischenablage")}
                 onClick={() => void writeText(fencedPrompt(`git show ${commitDetail.short}`, commitDiff))}
               >
-                Diff als Prompt
+                {t("Diff als Prompt")}
               </InspectorButton>
-              <InspectorButton onClick={() => setSelectedCommit(null)}>Schließen</InspectorButton>
+              <InspectorButton onClick={() => setSelectedCommit(null)}>{t("Schließen")}</InspectorButton>
             </>
           }
           tabs={[
             {
               id: "files",
-              label: `Dateien (${commitDetail.files.length})`,
+              label: t("Dateien ({n})", { n: commitDetail.files.length }),
               content: (
                 <ul className="space-y-0.5 text-xs">
                   <li>
@@ -656,7 +655,7 @@ export default function GitTab({
                       onClick={() => setCommitFile(null)}
                       className={`w-full rounded px-1.5 py-1 text-left ${commitFile === null ? "bg-slate-800 text-white" : "hover:bg-slate-100"}`}
                     >
-                      Alle Dateien
+                      {t("Alle Dateien")}
                     </button>
                   </li>
                   {commitDetail.files.map((file) => (
@@ -664,7 +663,7 @@ export default function GitTab({
                       <button
                         onClick={() => setCommitFile(file.path)}
                         className={`flex w-full gap-2 rounded px-1.5 py-1 text-left ${commitFile === file.path ? "bg-slate-800 text-white" : "hover:bg-slate-100"}`}
-                        title={STATUS_LABEL[file.status] ?? file.status}
+                        title={t(STATUS_LABEL[file.status] ?? file.status)}
                       >
                         <span className={`w-3 shrink-0 text-center font-mono ${commitFile === file.path ? "text-slate-300" : "text-slate-400"}`}>
                           {file.status}
@@ -696,7 +695,7 @@ export default function GitTab({
       ? `Commit ${historyCommit.slice(0, 7)} · ${selected.path}`
       : `${selected.staged ? "Index" : "Arbeitsbaum"} · ${selected.path}`
     : selectedCommit && commitDetail
-      ? `Commit ${commitDetail.short}${commitFile ? ` · ${commitFile}` : " · alle Dateien"}`
+      ? `Commit ${commitDetail.short}${commitFile ? ` · ${commitFile}` : t(" · alle Dateien")}`
       : null;
   const shownDiff = selected ? (historyCommit ? historyDiff : diff) : selectedCommit ? commitDiff : "";
   const hunkActions =
@@ -705,9 +704,9 @@ export default function GitTab({
           <HunkButton
             onClick={() => void stageHunk(index, selected.staged)}
             disabled={busy}
-            title={selected.staged ? "Diesen Block aus dem Index nehmen" : "Nur diesen Block stagen"}
+            title={selected.staged ? t("Diesen Block aus dem Index nehmen") : t("Nur diesen Block stagen")}
           >
-            {selected.staged ? "Hunk zurücknehmen" : "Hunk stagen"}
+            {selected.staged ? t("Hunk zurücknehmen") : t("Hunk stagen")}
           </HunkButton>
         )
       : undefined;
@@ -721,13 +720,13 @@ export default function GitTab({
           messageRef={messageRef} onCommit={commit} onBranch={branchAction} onAgent={() => askAgentToCommit(staged.length)} /> : null}
         {details}
         {commitPanelDetail}
-        {busy ? <p role="status" className="text-xs text-slate-500">Git-Aktion läuft…</p> : null}
+        {busy ? <p role="status" className="text-xs text-slate-500">{t("Git-Aktion läuft…")}</p> : null}
         {notice ? <p role="status" className="text-xs text-sky-800">{notice}</p> : null}
         {error ? <div role="alert" className="rounded bg-red-50 px-3 py-2 text-xs text-red-700">{error}
-          <button className="ml-2 underline" onClick={() => setError(null)}>Schließen</button></div> : null}
+          <button className="ml-2 underline" onClick={() => setError(null)}>{t("Schließen")}</button></div> : null}
         {status?.repo && !selected && !selectedCommit && !run ? (
           <p className="text-sm text-slate-400">
-            Datei links wählen für den Diff, Commit unten für Details. Oben den Index committen oder Branches verwalten.
+            {t("Datei links wählen für den Diff, Commit unten für Details. Oben den Index committen oder Branches verwalten.")}
           </p>
         ) : null}
         {run ? (
@@ -735,9 +734,9 @@ export default function GitTab({
             <div className="mb-1 flex items-center justify-between text-slate-400">
               <span>git {run.id.split(":")[1]}</span>
               <span className="flex items-center gap-2">
-                {run.running ? "läuft…" : run.exit === 0 ? "✓ fertig" : `✕ Exit ${run.exit ?? "?"}`}
+                {run.running ? t("läuft…") : run.exit === 0 ? t("✓ fertig") : `✕ Exit ${run.exit ?? "?"}`}
                 {!run.running ? (
-                  <button onClick={() => setRun(null)} className="text-slate-500 hover:text-white" title="Ausgabe schließen">
+                  <button onClick={() => setRun(null)} className="text-slate-500 hover:text-white" title={t("Ausgabe schließen")}>
                     ×
                   </button>
                 ) : null}
@@ -757,7 +756,7 @@ export default function GitTab({
         {status?.repo ? (
           <div className="rounded-lg border border-slate-200 bg-white p-3">
             <h3 className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-              Letzte Commits
+              {t("Letzte Commits")}
             </h3>
             <CommitList
               commits={log}
@@ -769,7 +768,7 @@ export default function GitTab({
                 setSelectedCommit((previous) => (previous === hash ? null : hash));
                 inspector.reveal();
               }}
-              empty="Noch kein Commit."
+              empty={t("Noch kein Commit.")}
             />
           </div>
         ) : null}

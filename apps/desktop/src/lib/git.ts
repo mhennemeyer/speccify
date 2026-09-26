@@ -4,6 +4,7 @@
 // (Diff-Kopf + ein Hunk), Rust wendet ihn nur an.
 
 import { invoke } from "@tauri-apps/api/core";
+import { t } from "../i18n";
 
 export interface GitEntry {
   path: string;
@@ -66,7 +67,7 @@ export function entryLabel(entry: GitEntry, staged: boolean): string {
   if (entry.conflicted) return "Konflikt";
   if (entry.untracked) return "unversioniert";
   const code = staged ? entry.index : entry.worktree;
-  return STATUS_LABEL[code] ?? code;
+  return t(STATUS_LABEL[code] ?? code);
 }
 
 export function isStaged(entry: GitEntry): boolean {

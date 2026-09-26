@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import DOMPurify from "dompurify";
+import { t } from "../i18n";
 
 // Mermaid has process-wide configuration and temporary DOM. Keep initialize/render
 // together, including when several documents or theme changes render concurrently.
@@ -9,7 +10,7 @@ let nextId = 0;
 function renderDiagram(source: string, dark: boolean, cancelled: () => boolean): Promise<string> {
   const job = pending.catch(() => {}).then(async () => {
     if (cancelled()) return "";
-    if (source.length > 50_000) throw new Error("Diagramm ist zu groß (maximal 50.000 Zeichen).");
+    if (source.length > 50_000) throw new Error(t("Diagramm ist zu groß (maximal 50.000 Zeichen)."));
     const { default: mermaid } = await import("mermaid");
     if (cancelled()) return "";
     mermaid.initialize({
@@ -65,7 +66,7 @@ export default function MermaidDiagram({ source }: { source: string }) {
   return (
     <figure className="mermaid-diagram" aria-label="Mermaid-Diagramm">
       {current?.svg ? <div className="mermaid-svg" role="img" aria-label="Diagramm" dangerouslySetInnerHTML={{ __html: current.svg }} />
-        : <p role="status">{current?.error ? "Diagramm konnte nicht dargestellt werden." : "Diagramm wird geladen…"}</p>}
+        : <p role="status">{current?.error ? t("Diagramm konnte nicht dargestellt werden.") : t("Diagramm wird geladen…")}</p>}
       {current?.error && <pre className="mermaid-error">{current.error}</pre>}
       <details open={!!current?.error}>
         <summary>Mermaid-Quelltext</summary>

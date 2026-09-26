@@ -11,6 +11,7 @@ import {
 import { ActionButton, ErrorBox, LoadingBoundary, Spinner, useAsync } from "../components/ui";
 import { SourceAddForm, SourceRow } from "../components/SourcesPanel";
 import { listSources } from "../lib/sources";
+import { t } from "../i18n";
 
 /// Globale Skill-Quellen (Plan skill-quellen-und-export.md, Q2): für die
 /// meisten reicht eine — Git-URL oder Ordner; Projekte ergänzen eigene.
@@ -19,19 +20,15 @@ function SkillSourcesSection() {
   const entries = sources.data ?? [];
   return (
     <section className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-      <h3 className="text-sm font-semibold text-slate-700">Skill-Quellen</h3>
+      <h3 className="text-sm font-semibold text-slate-700">{t("Skill-Quellen")}</h3>
       <p className="mb-3 mt-1 text-sm text-slate-600">
-        Repos oder Ordner, aus denen alle Projekte Skills importieren (und in die
-        sie exportieren) können. Git-Quellen werden einmal geklont und liegen
-        unter <code>~/.speccify/sources/</code>; Zugang läuft über dasselbe{" "}
-        <code>git</code> wie im Terminal. Projekte können in ihrem Skills-Tab
-        weitere Quellen anbinden.
+        {t("Repos oder Ordner, aus denen alle Projekte Skills importieren (und in die sie exportieren) können. Git-Quellen werden einmal geklont und liegen unter")} <code>~/.speccify/sources/</code>; {t("Zugang läuft über dasselbe")}{" "}
+        <code>git</code>{" "}{t("wie im Terminal. Projekte können in ihrem Skills-Tab weitere Quellen anbinden.")}
       </p>
-      <LoadingBoundary loading={sources.loading} error={sources.error} label="Quellen lesen…">
+      <LoadingBoundary loading={sources.loading} error={sources.error} label={t("Quellen lesen…")}>
         {entries.length === 0 ? (
           <p className="mb-3 text-sm text-slate-500">
-            Noch keine Quelle — eine Git-URL (GitHub, GitLab, …) oder einen Ordner
-            eintragen. Ein Repo mit <code>skills/&lt;name&gt;/SKILL.md</code> reicht.
+            {t("Noch keine Quelle — eine Git-URL (GitHub, GitLab, …) oder einen Ordner eintragen. Ein Repo mit")} <code>skills/&lt;name&gt;/SKILL.md</code> {t("reicht.")}
           </p>
         ) : (
           <ul className="mb-3 space-y-2">
@@ -132,13 +129,13 @@ export default function LibraryView() {
           onClick={reload}
           className="bg-slate-800 text-white hover:bg-slate-700"
         >
-          Aktualisieren
+          {t("Aktualisieren")}
         </ActionButton>
         <button
           onClick={() => setScaffoldOpen((open) => !open)}
           className="rounded bg-slate-100 px-3 py-1 text-sm text-slate-700 hover:bg-slate-200"
         >
-          + Neues Manifest
+          {t("+ Neues Manifest")}
         </button>
         {refreshing && <Spinner />}
         {allTags.map((tag) => (
@@ -181,7 +178,7 @@ export default function LibraryView() {
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-xs text-slate-500">Name (optional)</label>
+            <label className="mb-1 block text-xs text-slate-500">{t("Name (optional)")}</label>
             <input
               value={scaffoldName}
               onChange={(e) => setScaffoldName(e.target.value)}
@@ -192,17 +189,17 @@ export default function LibraryView() {
             onClick={submitScaffold}
             className="bg-slate-800 text-white hover:bg-slate-700"
           >
-            ins Working Dir anlegen
+            {t("ins Working Dir anlegen")}
           </ActionButton>
           <span className="text-xs text-slate-400">
-            → &lt;Working Dir&gt;/.speccify/toolbox/&lt;slug&gt;.toml
+            {t("→ <Working Dir>/.speccify/toolbox/<slug>.toml")}
           </span>
         </div>
       ) : null}
       {scaffoldError ? <ErrorBox message={scaffoldError} /> : null}
       {scaffoldStatus ? <p className="text-xs text-slate-500">{scaffoldStatus}</p> : null}
 
-      <LoadingBoundary loading={loading} error={error} label="Toolbox wird geladen…">
+      <LoadingBoundary loading={loading} error={error} label={t("Toolbox wird geladen…")}>
         {(data?.warnings ?? []).map((w) => (
           <p key={w} className="text-sm text-amber-600">⚠ {w}</p>
         ))}
@@ -236,7 +233,7 @@ export default function LibraryView() {
                       {m.requires_binaries.length > 0 &&
                         (missingFor(m).length === 0 ? (
                           <span className="ml-auto rounded bg-green-100 px-1.5 py-0.5 text-xs text-green-800">
-                            ✓ bereit
+                            {t("✓ bereit")}
                           </span>
                         ) : (
                           <span className="ml-auto rounded bg-amber-100 px-1.5 py-0.5 text-xs text-amber-800">
@@ -259,7 +256,7 @@ export default function LibraryView() {
         })}
 
         {manifests.length === 0 && (
-          <p className="text-slate-500">Toolbox ist leer.</p>
+          <p className="text-slate-500">{t("Toolbox ist leer.")}</p>
         )}
       </LoadingBoundary>
     </div>

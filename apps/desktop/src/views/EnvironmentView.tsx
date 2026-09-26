@@ -24,6 +24,7 @@ import {
   Spinner,
   useAsync,
 } from "../components/ui";
+import { t } from "../i18n";
 
 interface EnvData {
   checks: DoctorCheck[];
@@ -52,21 +53,20 @@ export default function EnvironmentView() {
           onClick={reload}
           className="bg-slate-800 text-white hover:bg-slate-700"
         >
-          Neu prüfen
+          {t("Neu prüfen")}
         </ActionButton>
         {refreshing && <Spinner />}
       </div>
 
-      <LoadingBoundary loading={loading} error={error} label="Umgebung wird geprüft…">
+      <LoadingBoundary loading={loading} error={error} label={t("Umgebung wird geprüft…")}>
         {data && (
           <>
             <UpdateCard updater={data.updater} />
             <section className="rounded-lg border border-slate-200 bg-white p-4 text-sm">
-              <h3 className="font-medium text-slate-900">Fragen-MCP dieser App</h3>
+              <h3 className="font-medium text-slate-900">{t("Fragen-MCP dieser App")}</h3>
               <code className="text-xs">{data.desktopUiEndpoint}</code>
               <p className="mt-1 text-xs text-slate-500">
-                Konfigurierter Endpoint, kein Verbindungstest. Neue Einweisungsdateien
-                verwenden diesen Port; vorhandene MCP-Konfigurationen bleiben unverändert.
+                {t("Konfigurierter Endpoint, kein Verbindungstest. Neue Einweisungsdateien verwenden diesen Port; vorhandene MCP-Konfigurationen bleiben unverändert.")}
               </p>
             </section>
             <EngineCard engine={data.engine} onChanged={reload} />
@@ -102,7 +102,7 @@ function UpdateCard({ updater }: { updater: UpdaterStatus }) {
         <span className="text-sm text-slate-500">Version {updater.current_version}</span>
       </div>
       <ActionButton onClick={async () => { window.dispatchEvent(new Event("speccify:updates")); }}
-        className="mt-3 bg-slate-800 text-white hover:bg-slate-700">Updates und Einstellungen</ActionButton>
+        className="mt-3 bg-slate-800 text-white hover:bg-slate-700">{t("Updates und Einstellungen")}</ActionButton>
     </article>
   );
 }
@@ -151,10 +151,10 @@ function EngineCard({
     : engine.needs_update
       ? {
           icon: "⚠️",
-          text: "veraltet (App wurde aktualisiert)",
+          text: t("veraltet (App wurde aktualisiert)"),
           tone: "border-amber-200 bg-amber-50",
         }
-      : { icon: "❌", text: "nicht installiert", tone: "border-amber-200 bg-amber-50" };
+      : { icon: "❌", text: t("nicht installiert"), tone: "border-amber-200 bg-amber-50" };
 
   return (
     <article className={`mb-3 rounded-lg border p-4 ${state.tone}`}>
@@ -168,7 +168,7 @@ function EngineCard({
 
       {!engine.payload_found ? (
         <p className="mt-2 text-sm text-amber-800">
-          Kein Engine-Payload im App-Bundle — vor dem Build einmal{" "}
+          {t("Kein Engine-Payload im App-Bundle — vor dem Build einmal")}{" "}
           <code className="rounded bg-amber-100 px-1">
             ./scripts/build_engine_payload.sh
           </code>{" "}
@@ -178,25 +178,24 @@ function EngineCard({
         <div className="mt-3 flex items-center gap-3 border-t border-slate-100 pt-3">
           {engine.uv_source === "missing" ? (
             <span className="text-xs text-amber-700">
-              braucht uv (<code>brew install uv</code>)
+              braucht uv (<code>{t("brew install uv")}</code>)
             </span>
           ) : (
             <ActionButton
               onClick={install}
               className="bg-slate-800 text-white hover:bg-slate-700"
-              title="uv venv + uv pip install aus dem mitgelieferten Payload"
+              title={t("uv venv + uv pip install aus dem mitgelieferten Payload")}
             >
               {engine.ready
-                ? "Neu installieren"
+                ? t("Neu installieren")
                 : engine.needs_update
-                  ? "Aktualisieren"
-                  : "Engine installieren"}
+                  ? t("Aktualisieren")
+                  : t("Engine installieren")}
             </ActionButton>
           )}
           {busy && <Spinner />}
           <span className="text-xs text-slate-500">
-            Python {engine.python_version ?? "?"} · erste Installation lädt einmalig
-            aus dem Netz
+            Python {engine.python_version ?? "?"} · {t("erste Installation lädt einmalig aus dem Netz")}
           </span>
         </div>
       )}
@@ -246,9 +245,9 @@ function CheckCard({ check: c }: { check: DoctorCheck }) {
           <button
             onClick={() => navigator.clipboard.writeText(c.hint)}
             className="shrink-0 rounded bg-amber-200 px-2 py-0.5 text-xs hover:bg-amber-300"
-            title="Install-Befehl kopieren"
+            title={t("Install-Befehl kopieren")}
           >
-            Kopieren
+            {t("Kopieren")}
           </button>
         </p>
       )}
@@ -299,7 +298,7 @@ function PythonCard({
 
       {pythons.available.length > 0 && (
         <div className="mt-3 flex items-center gap-2 border-t border-slate-100 pt-3">
-          <label className="text-sm text-slate-600">Weitere Version:</label>
+          <label className="text-sm text-slate-600">{t("Weitere Version:")}</label>
           <select
             value={selected}
             onChange={(e) => setSelected(e.target.value)}
@@ -321,7 +320,7 @@ function PythonCard({
             </ActionButton>
           ) : (
             <span className="text-xs text-amber-700">
-              braucht uv (<code>brew install uv</code>)
+              braucht uv (<code>{t("brew install uv")}</code>)
             </span>
           )}
         </div>
