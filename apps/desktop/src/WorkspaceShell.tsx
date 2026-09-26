@@ -436,7 +436,8 @@ export default function WorkspaceShell() {
           </div>
           <p className="px-3 text-[10px] text-slate-400">Eine gemeinsame Sitzung für alle Repos · Projektwechsel ändert das Terminal-Ziel nicht.</p>
           <WorkspaceAgentContext revision={workspace.revision + refresh} />
-          {started ? <TerminalPanel workspaceId={workspace.id} cwd={workspace.root} visible={terminalVisible} autostart={command} session={attachSession} /> : <div className="flex min-h-0 flex-1 flex-col items-center gap-3 overflow-auto p-4">
+          {started ? <TerminalPanel workspaceId={workspace.id} cwd={workspace.root} visible={terminalVisible} autostart={command} session={attachSession}
+            onOpened={() => setAttachSession(undefined)} onFailed={() => setAttachSession(undefined)} /> : <div className="flex min-h-0 flex-1 flex-col items-center gap-3 overflow-auto p-4">
             <label className="w-full max-w-md text-xs text-slate-400">Agent-Kommando (leer = nur Shell)
               <input aria-label="Workspace-Terminal-Kommando" value={command} onChange={event => updateCommand(event.target.value)} className="mt-1 block w-full rounded border border-slate-600 bg-slate-800 px-3 py-2 font-mono text-sm text-slate-100" />
             </label>

@@ -116,6 +116,9 @@ export default function ProjectShell() {
       // Der Panel-Knopf „Neu starten“ nimmt danach dieselbe Sitzung wieder auf.
       if (opened.session?.id) {
         setSessionRequest({ mode: "resume", host: opened.session.host, id: opened.session.id });
+      } else if (opened.reattached) {
+        // Spec 070: die Host-Sitzung ist nach „Neu starten“ weg — dann neu, nicht erneut anhängen.
+        setSessionRequest({ mode: "new" });
       }
     }
     recordActivity("agent", "Terminal geöffnet", {

@@ -459,13 +459,37 @@ pub async fn terminal_open(
         state.untrack(&id);
         return Err("Terminal-Fenster wurde geschlossen.".into());
     }
+    let persist = crate::terminal_preferences::terminal_preferences()
+        .map(|prefs| prefs.persist_sessions)
+        .unwrap_or(false);
+    // Spec 070, D4: die Kontextdatei einer gehosteten Sitzung muss den
+    // App-Prozess überleben — Kopie außerhalb des App-Temp. Sie ist dann auch
+    // der Pfad in der Startzeile; die Temp-Datei verschwindet mit diesem Aufruf
+    // (Fehlbild 2026-09-26: „Append system prompt file not found“).
+    let hosted_context = if persist {
+        context_file
+            .as_ref()
+            .map(|file| -> Result<PathBuf, String> {
+                let target = crate::pty_host::context_dir()?.join(format!("{id}-context.md"));
+                std::fs::copy(file.path(), &target).map_err(|e| e.to_string())?;
+                Ok(target)
+            })
+            .transpose()?
+    } else {
+        None
+    };
+    let context_path = context_file.as_ref().map(|file| {
+        hosted_context
+            .clone()
+            .unwrap_or_else(|| file.path().to_path_buf())
+    });
     let launch_base = startup
         .as_ref()
         .map(|r| r.launch.as_str())
         .unwrap_or(&autostart);
-    let launch_base = context_file
-        .as_ref()
-        .map(|file| workspace_launch(&autostart, launch_base, file.path()))
+    let launch_base = context_path
+        .as_deref()
+        .map(|path| workspace_launch(&autostart, launch_base, path))
         .unwrap_or_else(|| launch_base.to_owned());
     // Exact resume or a fresh identity — checked before anything is spawned,
     // so a missing session is an error, never a silently different session.
@@ -488,23 +512,6 @@ pub async fn terminal_open(
     } else {
         format!("{preamble}{launch}\r")
     };
-    let persist = crate::terminal_preferences::terminal_preferences()
-        .map(|prefs| prefs.persist_sessions)
-        .unwrap_or(false);
-    // Spec 070, D4: die Kontextdatei einer gehosteten Sitzung muss den
-    // App-Prozess überleben — Kopie außerhalb des App-Temp.
-    let hosted_context = if persist {
-        context_file
-            .as_ref()
-            .map(|file| -> Result<PathBuf, String> {
-                let target = crate::pty_host::context_dir()?.join(format!("{id}-context.md"));
-                std::fs::copy(file.path(), &target).map_err(|e| e.to_string())?;
-                Ok(target)
-            })
-            .transpose()?
-    } else {
-        None
-    };
     let mut env: Vec<(String, String)> = vec![
         ("TERM".into(), "xterm-256color".into()),
         (
@@ -512,9 +519,8 @@ pub async fn terminal_open(
             crate::augmented_path().to_string_lossy().into_owned(),
         ),
     ];
-    if let Some(file) = &context_file {
+    if let Some(path) = &context_path {
         env.push(("SPECCIFY_WORKSPACE_ROOT".into(), cwd.display().to_string()));
-        let path = hosted_context.as_deref().unwrap_or(file.path());
         env.push((
             "SPECCIFY_WORKSPACE_CONTEXT".into(),
             path.display().to_string(),

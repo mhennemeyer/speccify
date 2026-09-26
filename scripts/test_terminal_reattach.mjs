@@ -21,6 +21,12 @@ try {
   assert.equal(await page.getByText("Sitzung auswählen", { exact: true }).count(), 0, "no session dialog while a live session exists");
   await page.locator(".xterm-helper-textarea").press("x");
   await page.waitForFunction(() => window.__SPECCIFY_MOCK__.terminalWrites.some(w => w.id === "term-live-070" && w.data === "x"));
+  // "Neu starten" after a re-attach must open a fresh session, not attach again
+  // (the host session was ended by the restart).
+  await page.getByRole("button", { name: "Neu starten", exact: true }).click();
+  await page.waitForFunction(() => window.__SPECCIFY_MOCK__.terminalOpens.length === 1);
+  assert.equal(await page.evaluate(() => window.__SPECCIFY_MOCK__.terminalAttaches.length), 1, "restart does not attach a second time");
+  assert.notEqual(await page.evaluate(() => window.__SPECCIFY_MOCK__.terminalOpens[0].id), "term-live-070");
   await page.close();
 
   // 2) Without a live session the previous behaviour stays: the missing remembered
